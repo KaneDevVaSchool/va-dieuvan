@@ -1,3 +1,7 @@
+<!-- markdownlint-disable MD033 MD041 -->
+
+# va-dieuvan
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
@@ -6,6 +10,23 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
+
+## Phần mềm điều vận (Vehicle Dispatching System)
+
+Repo này là scaffold cho hệ thống “Phần mềm điều vận” theo BRD, dùng:
+
+- **Backend**: Laravel (REST API, auth bằng Sanctum)
+- **Frontend**: Vue 3 (component-based, responsive)
+- **Database**: MySQL
+
+Tài liệu triển khai các bước tiếp theo:
+
+- `docs/NEXT_STEPS.md`
+- `docs/API_CONVENTIONS.md`
+- `docs/FLOWS_AND_FEATURES_FOR_BA.md`
+- `docs/TONG_QUAN_TINH_NANG_NON_TECH.md`
+
+---
 
 ## About Laravel
 
@@ -64,4 +85,3 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-"# va-dieuvan" 
