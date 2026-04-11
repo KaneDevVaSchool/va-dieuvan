@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --va-brand: #8b1538;
+    --va-brand-dark: #6f112d;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-va-700/40 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900;
+  }
+}
+
+/* Smooth defaults */
+html, body {
+  height: 100%;
+}
+

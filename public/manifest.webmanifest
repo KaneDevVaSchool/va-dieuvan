@@ -1,0 +1,18 @@
+{
+  "name": "Điều vận — Vietnam America Schools",
+  "short_name": "Điều vận",
+  "description": "Vehicle dispatching — Vietnam America Schools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b1538",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "/images/logo/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

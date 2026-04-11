@@ -39,10 +39,10 @@ Hệ thống đã hỗ trợ tạo yêu cầu với các loại:
 - Công tác
 - Hàng hóa
 
-Nguồn yêu cầu:
-- **Tạo trực tiếp trên hệ thống**
-- **Nhận từ Zalo** (Dispatcher có thể tạo thay người đề xuất)
-- **Phiếu giấy đề xuất** (nhận phiếu sau, lưu online)
+Nguồn yêu cầu (trường **kênh** trên form, để phân loại nguồn tin):
+- **Tạo trực tiếp trên hệ thống** (portal)
+- **Ghi nhận nguồn Zalo** — Dispatcher có thể tạo yêu cầu và chọn kênh `zalo` khi nhập thay; **chưa có** tích hợp bot/OA Zalo tự động đẩy yêu cầu vào hệ thống.
+- **Phiếu giấy đề xuất** (`paper`): lưu online, upload scan, đánh dấu đã nhận phiếu (theo quyền)
 
 Quy tắc:
 - **Yêu cầu nên tạo trước ≥ 2 tiếng**
@@ -84,22 +84,43 @@ Chi phí gắn với Trip:
 ### F) Lưu trữ file (chứng từ/POD/phiếu đề xuất)
 
 Hệ thống đã hỗ trợ upload file để lưu online, ví dụ:
-- Scan/PDF phiếu đề xuất
-- Ảnh POD (Proof of delivery) cho hàng hóa
-- Hóa đơn/biên lai chi phí
+- **Phiếu đề xuất / scan**: trên web có upload kèm tiến trình; danh sách scan trên chi tiết yêu cầu; có thể **đánh dấu đã nhận phiếu giấy** (cập nhật trạng thái phiếu, mã tham chiếu, thời điểm nhận — chỉ user được cấp quyền quản lý phiếu giấy).
+- **POD hàng hóa**: upload POD theo từng shipment; trên danh sách cargo **hiển thị các POD đã có** (link + xem nhanh ảnh nếu là file ảnh).
+- Hóa đơn/biên lai chi phí (gắn Trip/cost qua API attachment — tùy quyền)
 
 ### G) Báo cáo tổng quan (bản cơ bản)
 
-Có báo cáo tổng hợp:
+**API** trả về trong khoảng thời gian chọn:
 - Số chuyến theo trạng thái
-- Tổng chi phí theo loại (xăng/cầu đường/…)
-- Tổng chi phí theo NCC/nội bộ
-- Số đơn hàng hóa đang vi phạm SLA
+- Tổng chi phí **đã confirmed** theo loại (xăng/cầu đường/…)
+- Tổng chi phí theo **NCC / nội bộ** (từng nhà cung cấp hoặc nội bộ)
+- Số shipment hàng hóa **đang trễ SLA** (chưa giao/chưa hủy nhưng đã quá hạn SLA)
+
+**Giao diện web** (Tổng quan + trang Báo cáo) hiện hiển thị chủ yếu **ba khối**: trips theo trạng thái, chi phí theo loại, và số lần vi phạm SLA cargo. **Chưa có bảng/chart “chi phí theo NCC” trên màn hình** — dữ liệu đã có ở backend, có thể bổ sung UI sau.
 
 ### H) Phân quyền & nhật ký hệ thống
 
 - Người dùng chỉ thao tác theo vai trò/quyền được cấp
 - Có **audit log** ghi nhận ai làm gì, lúc nào (các thao tác chính)
+- Một số thao tác ghi nhận trùng lặp được giảm nhờ **Idempotency-Key** (gửi lại cùng một thao tác không tạo bản ghi trùng) — chi tiết kỹ thuật không bắt buộc với BA.
+
+### I) Giao diện web (Vue) — đối chiếu với bản triển khai hiện tại
+
+Đã có **ứng dụng web** (đăng nhập, menu, responsive) với các trang chính:
+
+| Trang (đường dẫn) | Việc làm được trên UI (mức vận hành) |
+| --- | --- |
+| Tổng quan `/` | Xem nhanh 3 chỉ số báo cáo; link thao tác nhanh |
+| Yêu cầu `/requests`, chi tiết `/requests/:id` | Lọc (trạng thái, loại, kênh, **trạng thái phiếu giấy**); tạo mới qua `/dispatch-requests/new`; duyệt/từ chối; upload scan; đánh dấu đã nhận phiếu |
+| Chuyến `/trips`, `/trips/:id` | Lọc danh sách; xem chi tiết; **gán** xe/tài xế/NCC (nhập ID); đổi trạng thái chuyến |
+| Chi phí `/costs` | Danh sách chi phí; form nhập chi phí nhanh (cần **Trip ID**) |
+| Đối soát & thanh toán `/payments` | Tạo kỳ, khóa kỳ, tạo payment theo Trip ID, thực hiện thanh toán (form cơ bản) |
+| Hàng hóa `/cargo` | Tạo shipment; lọc; **xem POD đã có + upload POD mới** |
+| Tuyến D2D `/routes`, Học sinh `/students` | **Xem danh sách** (dạng tối giản); chưa có đủ wizard nghiệp vụ trên UI |
+| Báo cáo `/reports` | Chọn từ–đến, tải cùng loại số liệu như tổng quan |
+| Activity log `/audit-logs` | Xem nhật ký (theo API) |
+
+**Ghi chú:** Nhiều màn hình vẫn dùng **nhập số ID** (xe, tài xế, trip…) thay vì chọn từ danh bạ — phù hợp giai đoạn nối API, chưa phải form nghiệp vụ “đóng gói” hoàn chỉnh.
 
 ---
 
@@ -107,13 +128,13 @@ Có báo cáo tổng hợp:
 
 ### A) Giao diện người dùng (UI)
 
-Hiện tại phần lớn là **API + nền dữ liệu**, chưa có đầy đủ màn hình nghiệp vụ cho:
-- Nhập/duyệt yêu cầu theo form chuẩn
-- Lịch xe/tài xế (calendar)
-- Màn hình theo dõi Trip theo thời gian thực (dashboard)
-- Màn hình đối soát/biên bản thanh toán
-- Màn hình quản lý tuyến door-to-door, quản lý học sinh
-- Màn hình quản lý hàng hóa & POD
+**Đã có** nền tảng web và các trang cốt lõi (mục **3.I**). Phần còn **mỏng hoặc chưa đủ** so với vận hành “đóng hộp”:
+- Form chọn **xe / tài xế / NCC** từ danh sách (thay vì gõ ID); kiểm tra lịch trực quan
+- **Lịch** xe/tài xế (calendar) và dashboard theo thời gian thực
+- Màn đối soát dạng **biên bản / chứng từ** (in/xuất) trực tiếp trên UI
+- Door-to-door & học sinh: UI chủ yếu **đọc danh sách** — thiếu quy trình đầy đủ (tạo tuyến, duyệt version, gán HS…) trên màn hình
+- Cargo: có danh sách + POD; thiếu **máy trạng thái** (workflow) và cảnh báo chủ động trên UI
+- Báo cáo: thiếu hiển thị **chi phí theo NCC** và báo cáo chi tiết/xuất file trên giao diện (xem thêm **4.E**)
 
 ### B) Door-to-door “đúng nghiệp vụ”
 
@@ -125,7 +146,7 @@ Hiện tại phần lớn là **API + nền dữ liệu**, chưa có đầy đ�
 
 ### C) Hàng hóa (Cargo) “đủ SLA 3 giờ”
 
-Đã có SLA + POD + cảnh báo nội bộ, còn thiếu:
+Đã có SLA mặc định khi tạo shipment, đếm vi phạm SLA trên báo cáo, upload/list POD trên web; còn thiếu:
 - Luồng nghiệp vụ chi tiết theo từng trạng thái (đang xử lý/đã giao/hoàn trả…)
 - Tự sinh mã tracking chuẩn
 - Thông báo đa kênh (email/Zalo OA/SMS) nếu cần

@@ -14,6 +14,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RbacSeeder::class,
+            ReferencePricingSeeder::class,
+            DemoFlowSeeder::class,
         ]);
 
         // \App\Models\User::factory()->create([

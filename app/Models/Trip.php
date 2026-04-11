@@ -26,6 +26,8 @@ class Trip extends Model
         'started_at',
         'completed_at',
         'lock_version',
+        'payment_status',
+        'paid_at',
     ];
 
     protected $casts = [
@@ -33,7 +35,13 @@ class Trip extends Model
         'arrive_by' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'paid_at' => 'datetime',
     ];
+
+    public function isPaid(): bool
+    {
+        return ($this->payment_status ?? 'unpaid') === 'paid';
+    }
 
     public function dispatchRequest(): BelongsTo
     {
@@ -75,4 +83,3 @@ class Trip extends Model
         return $this->hasMany(TripEvent::class);
     }
 }
-

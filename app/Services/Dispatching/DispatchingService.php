@@ -4,6 +4,7 @@ namespace App\Services\Dispatching;
 
 use App\Models\Trip;
 use App\Services\Auditing\AuditLogger;
+use App\Support\FinancialDataLock;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,9 @@ class DispatchingService
     public function assignResources(Trip $trip, array $payload): Trip
     {
         return DB::transaction(function () use ($trip, $payload) {
+            $trip->refresh();
+            FinancialDataLock::assertTripNotPaid($trip);
+
             $expectedVersion = (int) ($payload['lock_version'] ?? $trip->lock_version);
 
             $departAt = $trip->depart_at instanceof Carbon ? $trip->depart_at : Carbon::parse($trip->depart_at);
@@ -31,7 +35,7 @@ class DispatchingService
             // Nếu trip.arrive_by null, dùng depart_at + 2h làm planned end.
             $dbDriver = DB::getDriverName();
             $plannedEndExpr = $dbDriver === 'mysql'
-                ? "COALESCE(arrive_by, DATE_ADD(depart_at, INTERVAL 2 HOUR))"
+                ? 'COALESCE(arrive_by, DATE_ADD(depart_at, INTERVAL 2 HOUR))'
                 : "COALESCE(arrive_by, datetime(depart_at, '+2 hours'))";
 
             $conflictBase = Trip::query()
@@ -96,4 +100,3 @@ class DispatchingService
         });
     }
 }
-

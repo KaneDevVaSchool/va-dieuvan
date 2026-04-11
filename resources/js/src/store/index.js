@@ -1,9 +1,61 @@
 import { defineStore } from 'pinia'
+import { http, TOKEN_KEY } from '../api/http'
+import * as authApi from '../api/auth'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
-    roles: [],
+    token: null,
   }),
+  getters: {
+    isLoggedIn: (s) => !!s.token || !!localStorage.getItem(TOKEN_KEY),
+    roleNames: (s) => (s.user?.roles ?? []).map((r) => r.name),
+    permissionNames: (s) => s.user?.permissions ?? [],
+  },
+  actions: {
+    initFromStorage() {
+      const t = localStorage.getItem(TOKEN_KEY)
+      if (t) {
+        this.token = t
+      }
+    },
+    setToken(token) {
+      this.token = token
+      if (token) {
+        localStorage.setItem(TOKEN_KEY, token)
+      } else {
+        localStorage.removeItem(TOKEN_KEY)
+      }
+    },
+    async login(email, password, deviceName = 'web') {
+      const res = await authApi.login({ email, password, device_name: deviceName })
+      this.setToken(res.token)
+      this.user = res.user
+      return res
+    },
+    async logout() {
+      try {
+        await authApi.logout()
+      } catch {
+        // ignore
+      }
+      this.user = null
+      this.setToken(null)
+    },
+    async fetchMe() {
+      const { data } = await http.get('/user')
+      this.user = data
+      return this.user
+    },
+    hasPermission(name) {
+      const u = this.user
+      if (!u || !name) return false
+      if ((u.roles ?? []).some((r) => r.name === 'admin')) return true
+      return (u.permissions ?? []).includes(name)
+    },
+    hasAnyPermission(list) {
+      if (!list || !list.length) return true
+      return list.some((p) => this.hasPermission(p))
+    },
+  },
 })
-
