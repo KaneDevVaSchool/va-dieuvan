@@ -108,16 +108,13 @@ onMounted(async () => {
   min-height: 100svh;
   width: 100%;
   background-color: #9a0036;
-  background-image: url('/images/background/background-logo.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow-x: hidden;
+  isolation: isolate;
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
     max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   box-sizing: border-box;
@@ -129,6 +126,23 @@ onMounted(async () => {
     'Helvetica Neue',
     Arial,
     sans-serif;
+}
+
+/* Hình nền rồng: phủ trọn viewport, tăng độ sáng/tương phản để nổi trên nền đỏ */
+.login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: transparent;
+  background-image: url('/images/background/background-logo.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  /* Nâng silhouette tối (xám/đen) để thấy rõ trên #9a0036 */
+  filter: brightness(1.45) contrast(1.15) saturate(1.05);
+  opacity: 0.92;
+  pointer-events: none;
 }
 
 .login-container {
@@ -276,11 +290,10 @@ onMounted(async () => {
   }
 }
 
-/* Màn hình rộng: nền không bị kéo méo quá mức, vẫn phủ full */
+/* Màn hình rộng: căn hình nền hơi lên trên để bố cục cân */
 @media (min-width: 1600px) {
-  .login-page {
-    background-size: cover;
-    background-position: center 40%;
+  .login-page::before {
+    background-position: center 38%;
   }
 }
 
