@@ -51,47 +51,116 @@
 
     <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scrollbar-hidden px-1 py-2 md:px-2 md:py-2.5">
       <nav class="space-y-0.5" :aria-label="t('app.title')">
-        <template v-for="(section, si) in sections" :key="'v' + si">
-          <div
-            v-if="section.headingKey && !ui.sidebarCollapsed"
-            class="mb-1.5 px-2 text-xs font-medium text-slate-500 dark:text-slate-400"
-            :class="si >= 1 ? 'mt-5 border-t border-slate-200/80 pt-4 dark:border-slate-700/80' : 'mt-3'"
-          >
-            {{ t(section.headingKey) }}
-          </div>
-          <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
-            <template v-if="item.children?.length">
-              <div
-                v-if="!ui.sidebarCollapsed"
-                class="mb-1.5 px-2 text-xs font-medium text-slate-500 dark:text-slate-400"
-                :class="ii > 0 || si > 0 ? 'mt-4' : 'mt-2'"
+        <template v-for="(section, si) in sections" :key="'vsec' + si">
+          <!-- Khối không có tiêu đề section (trang đầu) -->
+          <template v-if="!section.headingKey">
+            <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
+              <template v-if="item.children?.length">
+                <div v-if="!ui.sidebarCollapsed" class="px-1">
+                  <button
+                    type="button"
+                    class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                    :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0.5'"
+                    :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
+                    @click="toggleGroup(subGroupKey(si, ii))"
+                  >
+                    <span class="truncate">{{ t(item.labelKey) }}</span>
+                    <ChevronDownIcon
+                      class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                      :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+                <div
+                  v-show="ui.sidebarCollapsed || isGroupOpen(subGroupKey(si, ii))"
+                  class="space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
+                  :class="ui.sidebarCollapsed ? 'ml-0 border-l-0 pl-0' : 'ml-2'"
+                >
+                  <SidebarNavItem
+                    v-for="c in item.children"
+                    :key="'vc' + c.to"
+                    :to="c.to"
+                    :label="t(c.labelKey)"
+                    :icon="c.icon"
+                    :badge-count="badgeCount(c)"
+                    :variant="navVariant"
+                  />
+                </div>
+              </template>
+              <SidebarNavItem
+                v-else
+                :to="item.to"
+                :label="t(item.labelKey)"
+                :icon="item.icon"
+                :badge-count="badgeCount(item)"
+                :variant="navVariant"
+              />
+            </template>
+          </template>
+
+          <!-- Section có tiêu đề: collapse cả khối -->
+          <div v-else :class="si >= 1 ? 'mt-4 border-t border-slate-200/80 pt-3 dark:border-slate-700/80' : 'mt-2'">
+            <div v-if="!ui.sidebarCollapsed" class="mb-1.5 px-1">
+              <button
+                type="button"
+                class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                :aria-expanded="isGroupOpen(sectionGroupKey(si))"
+                @click="toggleGroup(sectionGroupKey(si))"
               >
-                {{ t(item.labelKey) }}
-              </div>
-              <div
-                class="space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
-                :class="ui.sidebarCollapsed ? 'ml-0 border-l-0 pl-0' : 'ml-2'"
-              >
+                <span class="truncate">{{ t(section.headingKey) }}</span>
+                <ChevronDownIcon
+                  class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                  :class="isGroupOpen(sectionGroupKey(si)) ? 'rotate-0' : '-rotate-90'"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <div v-show="ui.sidebarCollapsed || isGroupOpen(sectionGroupKey(si))" class="space-y-0.5">
+              <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
+                <template v-if="item.children?.length">
+                  <div v-if="!ui.sidebarCollapsed" class="px-1">
+                    <button
+                      type="button"
+                      class="mt-2 flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                      :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
+                      @click="toggleGroup(subGroupKey(si, ii))"
+                    >
+                      <span class="truncate">{{ t(item.labelKey) }}</span>
+                      <ChevronDownIcon
+                        class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                        :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                  <div
+                    v-show="ui.sidebarCollapsed || isGroupOpen(subGroupKey(si, ii))"
+                    class="space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
+                    :class="ui.sidebarCollapsed ? 'ml-0 border-l-0 pl-0' : 'ml-2'"
+                  >
+                    <SidebarNavItem
+                      v-for="c in item.children"
+                      :key="'vc' + c.to"
+                      :to="c.to"
+                      :label="t(c.labelKey)"
+                      :icon="c.icon"
+                      :badge-count="badgeCount(c)"
+                      :variant="navVariant"
+                    />
+                  </div>
+                </template>
                 <SidebarNavItem
-                  v-for="c in item.children"
-                  :key="'vc' + c.to"
-                  :to="c.to"
-                  :label="t(c.labelKey)"
-                  :icon="c.icon"
-                  :badge-count="badgeCount(c)"
+                  v-else
+                  :to="item.to"
+                  :label="t(item.labelKey)"
+                  :icon="item.icon"
+                  :badge-count="badgeCount(item)"
                   :variant="navVariant"
                 />
-              </div>
-            </template>
-            <SidebarNavItem
-              v-else
-              :to="item.to"
-              :label="t(item.labelKey)"
-              :icon="item.icon"
-              :badge-count="badgeCount(item)"
-              :variant="navVariant"
-            />
-          </template>
+              </template>
+            </div>
+          </div>
         </template>
       </nav>
     </div>
@@ -188,9 +257,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/vue/24/outline'
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
 import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'
@@ -209,6 +278,25 @@ const ui = useUiStore()
 const navVariant = computed(() =>
   ui.sidebarCollapsed ? 'vertical-compact' : 'vertical-full',
 )
+
+/** Mở/đóng nhóm menu (mặc định mở) */
+const openGroups = reactive({})
+
+function sectionGroupKey(si) {
+  return `sec-${si}`
+}
+
+function subGroupKey(si, ii) {
+  return `sub-${si}-${ii}`
+}
+
+function isGroupOpen(key) {
+  return openGroups[key] !== false
+}
+
+function toggleGroup(key) {
+  openGroups[key] = !isGroupOpen(key)
+}
 
 const verticalAsideClass = computed(() => {
   const base = [
