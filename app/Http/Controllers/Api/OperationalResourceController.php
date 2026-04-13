@@ -8,6 +8,9 @@ use App\Http\Requests\Api\Operational\ListDriversRequest;
 use App\Http\Requests\Api\Operational\ListTransportProvidersRequest;
 use App\Http\Requests\Api\Operational\ListVehiclesRequest;
 use App\Http\Requests\Api\Operational\StoreDriverFromUserRequest;
+use App\Http\Requests\Api\Operational\StoreTransportProviderRequest;
+use App\Http\Requests\Api\Operational\StoreVehicleRequest;
+use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
 use App\Models\Driver;
 use App\Models\TransportProvider;
@@ -92,8 +95,12 @@ class OperationalResourceController extends Controller
         $perPage = (int) ($data['per_page'] ?? 100);
         $results = $q->paginate($perPage);
 
+        $items = collect($results->items())
+            ->map(fn (TransportProvider $p) => $this->serializeTransportProvider($p))
+            ->all();
+
         return $this->ok([
-            'items' => $results->items(),
+            'items' => $items,
             'meta' => [
                 'current_page' => $results->currentPage(),
                 'per_page' => $results->perPage(),
@@ -101,6 +108,29 @@ class OperationalResourceController extends Controller
                 'last_page' => $results->lastPage(),
             ],
         ]);
+    }
+
+    public function storeTransportProvider(StoreTransportProviderRequest $request)
+    {
+        $p = TransportProvider::create($request->validated());
+
+        return $this->created($this->serializeTransportProvider($p));
+    }
+
+    public function updateTransportProvider(UpdateTransportProviderRequest $request, TransportProvider $transportProvider)
+    {
+        $transportProvider->fill($request->validated());
+        $transportProvider->save();
+
+        return $this->ok($this->serializeTransportProvider($transportProvider->fresh()));
+    }
+
+    public function storeVehicle(StoreVehicleRequest $request)
+    {
+        $vehicle = Vehicle::create($request->validated());
+        $vehicle->load(['defaultDriver.user:id,name,email,phone,employee_code,avatar_url']);
+
+        return $this->created($this->serializeVehicle($vehicle));
     }
 
     public function storeDriverFromUser(StoreDriverFromUserRequest $request)
@@ -125,11 +155,8 @@ class OperationalResourceController extends Controller
 
     public function updateVehicle(UpdateVehicleRequest $request, Vehicle $vehicle)
     {
-        $validated = $request->validated();
-        if (array_key_exists('default_driver_id', $validated)) {
-            $vehicle->default_driver_id = $validated['default_driver_id'];
-            $vehicle->save();
-        }
+        $vehicle->fill($request->validated());
+        $vehicle->save();
 
         $vehicle->load(['defaultDriver.user:id,name,email,phone,employee_code,avatar_url']);
 
@@ -149,6 +176,24 @@ class OperationalResourceController extends Controller
             'inspection_expires_at' => $v->inspection_expires_at?->format('Y-m-d'),
             'insurance_expires_at' => $v->insurance_expires_at?->format('Y-m-d'),
             'default_driver' => $v->defaultDriver ? $this->serializeDriver($v->defaultDriver) : null,
+        ];
+    }
+
+    private function serializeTransportProvider(TransportProvider $p): array
+    {
+        return [
+            'id' => $p->id,
+            'name' => $p->name,
+            'type' => $p->type,
+            'contact_name' => $p->contact_name,
+            'contact_phone' => $p->contact_phone,
+            'contact_email' => $p->contact_email,
+            'notes' => $p->notes,
+            'is_active' => $p->is_active,
+            'contract_number' => $p->contract_number,
+            'contract_signed_at' => $p->contract_signed_at?->format('Y-m-d'),
+            'contract_expires_at' => $p->contract_expires_at?->format('Y-m-d'),
+            'services' => $p->services ?? [],
         ];
     }
 

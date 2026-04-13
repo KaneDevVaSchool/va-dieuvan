@@ -59,13 +59,22 @@ class DemoFlowSeeder extends Seeder
         $internal->syncRoles(['internal_user']);
         $admin->syncRoles(['admin']);
 
-        TransportProvider::firstOrCreate(
+        TransportProvider::updateOrCreate(
             ['name' => 'NCC Demo TP.HCM'],
             [
                 'type' => 'vendor',
                 'contact_name' => 'Liên hệ NCC',
                 'contact_phone' => '0280000000',
+                'contact_email' => 'ncc-demo@va.local',
                 'is_active' => true,
+                'contract_number' => 'HD-DEMO-2026-001',
+                'contract_signed_at' => now()->subMonths(3)->toDateString(),
+                'contract_expires_at' => now()->addMonths(9)->toDateString(),
+                'services' => [
+                    ['kind' => 'solution', 'name' => 'Thuê xe theo chuyến nội thành', 'note' => 'Ưu tiên khối trường'],
+                    ['kind' => 'solution', 'name' => 'Gói cố định theo tháng', 'note' => ''],
+                    ['kind' => 'service', 'name' => 'Điều xe gấp trong giờ hành chính', 'note' => 'Hotline 24/7'],
+                ],
             ]
         );
 

@@ -42,6 +42,22 @@
               {{ t('resources.assign_driver') }}
             </button>
             <button
+              v-else-if="activeTab === 'vehicles' && canManageVehicles"
+              type="button"
+              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              @click="openVehicleForm(null)"
+            >
+              {{ t('resources.add_vehicle') }}
+            </button>
+            <button
+              v-else-if="activeTab === 'suppliers' && canManageProviders"
+              type="button"
+              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              @click="openProviderForm(null)"
+            >
+              {{ t('resources.add_supplier') }}
+            </button>
+            <button
               v-else
               type="button"
               class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
@@ -91,6 +107,18 @@
             <option value="exp">{{ t('resources.compliance_exp') }}</option>
           </select>
         </label>
+        <label v-if="activeTab === 'suppliers'" class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+          {{ t('resources.filter_contract') }}
+          <select
+            v-model="filters.contract"
+            class="mt-1 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          >
+            <option value="">{{ t('resources.filter_all') }}</option>
+            <option value="ok">{{ t('resources.compliance_ok') }}</option>
+            <option value="soon">{{ t('resources.compliance_soon') }}</option>
+            <option value="exp">{{ t('resources.compliance_exp') }}</option>
+          </select>
+        </label>
       </div>
     </div>
 
@@ -126,7 +154,7 @@
                 <td class="px-4 py-3 align-middle">
                   <div class="flex items-center gap-3">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
-                      <TruckIcon class="h-5 w-5" aria-hidden="true" />
+                      <component :is="vehicleIconComponent(v.iconKind)" class="h-5 w-5" aria-hidden="true" />
                     </div>
                     <div>
                       <div class="font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
@@ -190,22 +218,46 @@
           v-else
           class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
         >
-          <table class="w-full min-w-[720px] border-separate border-spacing-0 text-left text-sm">
+          <table class="w-full min-w-[900px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
                 <th class="border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_supplier') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_contact') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_service') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_solutions_services') }}</th>
+                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_contract') }}</th>
+                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                <th class="border-b border-slate-200 px-4 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="s in filteredSuppliers" :key="s.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ s.name }}</td>
-                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ s.contact }}</td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{{ s.service }}</td>
-                <td class="px-4 py-3">
-                  <span :class="statusBadgeClass(s.uiStatus)">{{ labelVehicleStatus(s.uiStatus) }}</span>
+              <tr
+                v-for="s in filteredSuppliers"
+                :key="s.id"
+                class="cursor-pointer transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
+                :class="selectedSupplier?.id === s.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
+                @click="selectSupplier(s)"
+              >
+                <td class="px-4 py-3 align-middle">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+                      <BuildingOffice2Icon class="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <div class="font-semibold text-slate-900 dark:text-white">{{ s.name }}</div>
+                      <div class="text-xs text-slate-500">{{ s.typeLabel }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="max-w-[240px] px-4 py-3 align-middle text-slate-600 dark:text-slate-400">
+                  <span class="line-clamp-2 text-xs">{{ s.serviceSummary }}</span>
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <span :class="compliancePillClass(s.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(s.contract) }}</span>
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <span :class="statusBadgeClass(s.uiStatus)">{{ labelProviderStatus(s.uiStatus) }}</span>
+                </td>
+                <td class="px-4 py-3 align-middle text-right text-slate-400">
+                  <ChevronRightIcon class="ml-auto inline h-5 w-5" aria-hidden="true" />
                 </td>
               </tr>
             </tbody>
@@ -245,7 +297,7 @@
               <div class="flex items-start justify-between gap-2">
                 <div class="flex items-center gap-3">
                   <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
-                    <TruckIcon class="h-7 w-7" aria-hidden="true" />
+                    <component :is="vehicleIconComponent(selectedVehicle.iconKind)" class="h-7 w-7" aria-hidden="true" />
                   </div>
                   <div>
                     <div class="text-lg font-semibold text-slate-900 dark:text-white">{{ selectedVehicle.code }}</div>
@@ -269,8 +321,17 @@
               </div>
               <div class="mt-4 grid grid-cols-2 gap-2">
                 <button
+                  v-if="canManageVehicles"
                   type="button"
                   class="rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500"
+                  @click="openVehicleForm(selectedVehicle)"
+                >
+                  {{ t('resources.action_edit') }}
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  class="rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white opacity-50"
                   disabled
                 >
                   {{ t('resources.action_edit') }}
@@ -368,9 +429,219 @@
           </div>
         </aside>
       </Transition>
+
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="translate-x-4 opacity-0"
+        enter-to-class="translate-x-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="translate-x-0 opacity-100"
+        leave-to-class="translate-x-4 opacity-0"
+      >
+        <aside
+          v-if="activeTab === 'suppliers' && selectedSupplier"
+          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-3 backdrop-blur-sm lg:static lg:z-auto lg:inset-auto lg:flex lg:w-[420px] lg:shrink-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-0"
+          @click.self="closePanel"
+        >
+          <div
+            class="flex h-full w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-600 dark:bg-slate-900 lg:max-w-none lg:rounded-none lg:border-l lg:border-y-0 lg:border-r-0"
+            @click.stop
+          >
+            <div class="border-b border-slate-200 p-4 dark:border-slate-700">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+                    <BuildingOffice2Icon class="h-7 w-7" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <div class="text-lg font-semibold text-slate-900 dark:text-white">{{ selectedSupplier.name }}</div>
+                    <div class="text-sm text-slate-600 dark:text-slate-400">{{ selectedSupplier.typeLabel }}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:hidden dark:hover:bg-slate-800 dark:hover:text-white"
+                  :aria-label="t('resources.close_panel')"
+                  @click="closePanel"
+                >
+                  <span class="text-xl leading-none">×</span>
+                </button>
+              </div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span :class="['rounded-full border px-2.5 py-0.5 text-xs font-medium', statusOutlineClass(selectedSupplier.uiStatus)]">
+                  {{ labelProviderStatus(selectedSupplier.uiStatus) }}
+                </span>
+                <span :class="compliancePillClass(selectedSupplier.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(selectedSupplier.contract) }}</span>
+              </div>
+              <div class="mt-4">
+                <button
+                  v-if="canManageProviders"
+                  type="button"
+                  class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500"
+                  @click="openProviderForm(selectedSupplier)"
+                >
+                  {{ t('resources.action_edit') }}
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white opacity-50"
+                  disabled
+                >
+                  {{ t('resources.action_edit') }}
+                </button>
+              </div>
+            </div>
+
+            <div class="min-h-0 flex-1 overflow-y-auto p-4">
+              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_supplier_contact') }}</div>
+              <div class="mt-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+                <div v-if="selectedSupplier.contact_name" class="font-medium text-slate-900 dark:text-white">{{ selectedSupplier.contact_name }}</div>
+                <div v-if="selectedSupplier.contact_phone" class="text-slate-700 dark:text-slate-300">{{ selectedSupplier.contact_phone }}</div>
+                <div v-if="selectedSupplier.contact_email" class="text-xs text-slate-600 dark:text-slate-400">{{ selectedSupplier.contact_email }}</div>
+                <p v-if="selectedSupplier.notes" class="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-600 dark:border-slate-600 dark:text-slate-400">{{ selectedSupplier.notes }}</p>
+                <p v-if="!selectedSupplier.contact_name && !selectedSupplier.contact_phone && !selectedSupplier.contact_email && !selectedSupplier.notes" class="text-xs text-slate-500">
+                  {{ t('resources.empty') }}
+                </p>
+              </div>
+
+              <div class="mt-6 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_supplier_contract') }}</div>
+              <div
+                class="mt-2 rounded-lg border p-3"
+                :class="
+                  selectedSupplier.contract.state === 'exp'
+                    ? 'border-rose-300 bg-rose-50 dark:border-rose-500/70 dark:bg-rose-950/20'
+                    : selectedSupplier.contract.state === 'soon'
+                      ? 'border-amber-300 bg-amber-50 dark:border-amber-500/70 dark:bg-amber-950/20'
+                      : selectedSupplier.contract.state === 'none'
+                        ? 'border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/40'
+                        : 'border-emerald-200 bg-emerald-50 dark:border-emerald-600/50 dark:bg-emerald-950/10'
+                "
+              >
+                <div v-if="selectedSupplier.contract_number" class="text-sm font-medium text-slate-900 dark:text-white">
+                  {{ t('resources.provider_form_contract_number') }}: {{ selectedSupplier.contract_number }}
+                </div>
+                <div class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ complianceDocLine(selectedSupplier.contract) }}</div>
+                <div v-if="selectedSupplier.contract_signed_at" class="mt-1 text-xs text-slate-500">
+                  {{ t('resources.provider_form_contract_signed') }}: {{ selectedSupplier.contract_signed_at }}
+                </div>
+              </div>
+
+              <div class="mt-6 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_supplier_services') }}</div>
+              <p v-if="!selectedSupplier.servicesList?.length" class="mt-2 text-xs text-slate-500">{{ t('resources.empty') }}</p>
+              <ul v-else class="mt-2 space-y-2">
+                <li
+                  v-for="(svc, i) in selectedSupplier.servicesList"
+                  :key="i"
+                  class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800/60"
+                >
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                      :class="
+                        svc.kind === 'solution'
+                          ? 'bg-violet-100 text-violet-900 dark:bg-violet-950/60 dark:text-violet-300'
+                          : 'bg-sky-100 text-sky-900 dark:bg-sky-950/60 dark:text-sky-300'
+                      "
+                    >
+                      {{ svc.kind === 'solution' ? t('resources.provider_kind_solution') : t('resources.provider_kind_service') }}
+                    </span>
+                    <span class="text-sm font-medium text-slate-900 dark:text-white">{{ svc.name }}</span>
+                  </div>
+                  <p v-if="svc.note" class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ svc.note }}</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </Transition>
     </div>
 
     <p class="border-t border-slate-200 px-4 py-3 text-center text-[11px] text-slate-500 dark:border-slate-700">{{ t('resources.demo_note') }}</p>
+
+    <!-- Modal: thêm / sửa xe -->
+    <Teleport to="body">
+      <div
+        v-if="vehicleModalOpen"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        @click.self="vehicleModalOpen = false"
+      >
+        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
+          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+              {{ vehicleForm.id ? t('resources.vehicle_form_title_edit') : t('resources.vehicle_form_title_add') }}
+            </h2>
+          </div>
+          <form class="max-h-[70vh] space-y-3 overflow-y-auto p-4" @submit.prevent="submitVehicleForm">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.vehicle_form_plate') }}
+              <input
+                v-model="vehicleForm.license_plate"
+                type="text"
+                required
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.vehicle_form_type') }}
+              <input v-model="vehicleForm.type" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.vehicle_form_seats') }}
+                <input v-model="vehicleForm.seat_count" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.vehicle_form_payload') }}
+                <input v-model="vehicleForm.payload_kg" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+            </div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.filter_status') }} (API)
+              <select v-model="vehicleForm.status" class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
+                <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
+                <option value="maintenance">{{ t('resources.vehicle_status_maintenance') }}</option>
+                <option value="broken">{{ t('resources.vehicle_status_broken') }}</option>
+              </select>
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.vehicle_form_odometer') }}
+              <input v-model="vehicleForm.odometer_km" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.vehicle_form_inspection') }}
+                <input v-model="vehicleForm.inspection_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.vehicle_form_insurance') }}
+                <input v-model="vehicleForm.insurance_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+            </div>
+            <p v-if="vehicleFormError" class="text-xs text-rose-600">{{ vehicleFormError }}</p>
+            <div class="flex gap-2 pt-2">
+              <button
+                type="button"
+                class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                @click="vehicleModalOpen = false"
+              >
+                {{ t('app.cancel') }}
+              </button>
+              <button
+                type="submit"
+                class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                :disabled="vehicleSaving"
+              >
+                {{ vehicleSaving ? t('resources.loading') : t('resources.vehicle_form_save') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Modal: gán tài xế từ user -->
     <Teleport to="body">
@@ -437,23 +708,159 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Modal: thêm / sửa nhà cung cấp -->
+    <Teleport to="body">
+      <div
+        v-if="providerModalOpen"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        @click.self="providerModalOpen = false"
+      >
+        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
+          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+              {{ providerForm.id ? t('resources.provider_form_title_edit') : t('resources.provider_form_title_add') }}
+            </h2>
+          </div>
+          <form class="max-h-[70vh] space-y-3 overflow-y-auto p-4" @submit.prevent="submitProviderForm">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.provider_form_name') }}
+              <input
+                v-model="providerForm.name"
+                type="text"
+                required
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.provider_form_type') }}
+              <select v-model="providerForm.type" class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                <option value="vendor">{{ t('resources.provider_form_type_vendor') }}</option>
+                <option value="taxi">{{ t('resources.provider_form_type_taxi') }}</option>
+              </select>
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.provider_form_contact_name') }}
+                <input v-model="providerForm.contact_name" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.provider_form_contact_phone') }}
+                <input v-model="providerForm.contact_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+            </div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.provider_form_contact_email') }}
+              <input v-model="providerForm.contact_email" type="email" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            </label>
+            <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+              <input v-model="providerForm.is_active" type="checkbox" class="rounded border-slate-300 text-teal-600" />
+              {{ t('resources.provider_active') }}
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.provider_form_notes') }}
+              <textarea v-model="providerForm.notes" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.provider_form_contract_number') }}
+                <input v-model="providerForm.contract_number" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('resources.provider_form_contract_signed') }}
+                <input v-model="providerForm.contract_signed_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+            </div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.provider_form_contract_expires') }}
+              <input v-model="providerForm.contract_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            </label>
+
+            <div class="border-t border-slate-200 pt-3 dark:border-slate-700">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.section_supplier_services') }}</span>
+                <button type="button" class="text-xs font-medium text-teal-700 hover:text-teal-800 dark:text-teal-400" @click="addProviderServiceRow">
+                  {{ t('resources.provider_form_add_row') }}
+                </button>
+              </div>
+              <div v-for="(row, idx) in providerForm.services" :key="idx" class="mb-2 grid gap-2 rounded-lg border border-slate-100 p-2 dark:border-slate-700">
+                <div class="flex flex-wrap items-center gap-2">
+                  <select v-model="row.kind" class="rounded border border-slate-200 py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-800">
+                    <option value="solution">{{ t('resources.provider_kind_solution') }}</option>
+                    <option value="service">{{ t('resources.provider_kind_service') }}</option>
+                  </select>
+                  <button
+                    v-if="providerForm.services.length > 1"
+                    type="button"
+                    class="ml-auto text-xs text-rose-600 hover:underline"
+                    @click="removeProviderServiceRow(idx)"
+                  >
+                    {{ t('resources.provider_form_remove_row') }}
+                  </button>
+                </div>
+                <input
+                  v-model="row.name"
+                  type="text"
+                  :placeholder="t('resources.provider_form_service_name')"
+                  class="w-full rounded border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+                />
+                <input
+                  v-model="row.note"
+                  type="text"
+                  :placeholder="t('resources.provider_form_service_note')"
+                  class="w-full rounded border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-800"
+                />
+              </div>
+            </div>
+
+            <p v-if="providerFormError" class="text-xs text-rose-600">{{ providerFormError }}</p>
+            <div class="flex gap-2 pt-2">
+              <button
+                type="button"
+                class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                @click="providerModalOpen = false"
+              >
+                {{ t('app.cancel') }}
+              </button>
+              <button
+                type="submit"
+                class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                :disabled="providerSaving"
+              >
+                {{ providerSaving ? t('resources.loading') : t('resources.provider_form_save') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronRightIcon, TruckIcon } from '@heroicons/vue/24/outline'
+import { BuildingOffice2Icon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import {
   createDriverFromUser,
+  createTransportProvider,
+  createVehicle,
   listDrivers,
   listTransportProviders,
   listVehicles,
   searchUsersForDriverAssignment,
+  updateTransportProvider,
   updateVehicle,
 } from '../../api/operational'
+import { useAuthStore } from '../../store'
+import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
 const { t } = useI18n()
+const auth = useAuthStore()
+const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
+const canManageProviders = computed(() => auth.hasPermission('resource.provider.manage'))
 
 const tabs = [
   { id: 'vehicles', labelKey: 'resources.tab_vehicles' },
@@ -464,6 +871,7 @@ const tabs = [
 const activeTab = ref('vehicles')
 const search = ref('')
 const selectedVehicle = ref(null)
+const selectedSupplier = ref(null)
 const loading = ref(true)
 const error = ref('')
 
@@ -475,6 +883,7 @@ const filters = ref({
   status: '',
   type: '',
   compliance: '',
+  contract: '',
 })
 
 const assignModalOpen = ref(false)
@@ -486,6 +895,53 @@ const pickedUser = ref(null)
 const assignSubmitting = ref(false)
 const assignError = ref('')
 let userSearchTimer = null
+
+const vehicleModalOpen = ref(false)
+const vehicleSaving = ref(false)
+const vehicleFormError = ref('')
+
+function emptyVehicleForm() {
+  return {
+    id: null,
+    license_plate: '',
+    type: '',
+    seat_count: '',
+    payload_kg: '',
+    status: 'ready',
+    odometer_km: 0,
+    inspection_expires_at: '',
+    insurance_expires_at: '',
+  }
+}
+
+const vehicleForm = ref(emptyVehicleForm())
+
+const providerModalOpen = ref(false)
+const providerSaving = ref(false)
+const providerFormError = ref('')
+
+function emptyProviderServiceRow() {
+  return { kind: 'solution', name: '', note: '' }
+}
+
+function emptyProviderForm() {
+  return {
+    id: null,
+    name: '',
+    type: 'vendor',
+    contact_name: '',
+    contact_phone: '',
+    contact_email: '',
+    notes: '',
+    is_active: true,
+    contract_number: '',
+    contract_signed_at: '',
+    contract_expires_at: '',
+    services: [emptyProviderServiceRow()],
+  }
+}
+
+const providerForm = ref(emptyProviderForm())
 
 const searchPlaceholder = computed(() => {
   if (activeTab.value === 'vehicles') return t('resources.search_vehicles')
@@ -512,14 +968,22 @@ function docStateFromDate(iso) {
   return { state: 'ok', days: null, until }
 }
 
-function inferTypeKey(v) {
-  if (v.payload_kg) return 'truck'
-  const n = v.seat_count
-  if (n != null && n >= 28) return 'bus'
-  const s = (v.type || '').toLowerCase()
-  if (/van|500|1000|tải|kg/.test(s)) return 'truck'
-  if (/28|45|bus|coach|thaco|xe khách lớn/.test(s)) return 'bus'
-  return 'van'
+/** Hợp đồng NCC: không có ngày hết hạn → trạng thái riêng (không gộp với hết hạn xe). */
+function contractStateFromDate(iso) {
+  if (!iso) {
+    return { state: 'none', days: null, until: null }
+  }
+  const d = new Date(`${iso}T12:00:00`)
+  const ms = d.getTime() - Date.now()
+  const days = Math.ceil(ms / 86400000)
+  const until = iso
+  if (days < 0) return { state: 'exp', days, until }
+  if (days <= 30) return { state: 'soon', days, until }
+  return { state: 'ok', days: null, until }
+}
+
+function vehicleIconComponent(kind) {
+  return VEHICLE_ICON_COMPONENTS[kind] || VEHICLE_ICON_COMPONENTS.van
 }
 
 function vehicleUiStatus(apiStatus) {
@@ -544,13 +1008,21 @@ function enrichVehicle(raw) {
   return {
     id: raw.id,
     code: raw.license_plate,
+    license_plate: raw.license_plate,
     model: raw.type || '—',
+    type: raw.type ?? '',
     typeLabel,
     capacityLabel,
-    typeKey: inferTypeKey(raw),
+    iconKind: vehicleIconKind(raw),
+    seat_count: raw.seat_count,
+    payload_kg: raw.payload_kg,
+    odometer_km: raw.odometer_km ?? 0,
+    apiStatus: raw.status,
     status: vehicleUiStatus(raw.status),
     insurance: docStateFromDate(raw.insurance_expires_at),
     inspection: docStateFromDate(raw.inspection_expires_at),
+    inspection_expires_at: raw.inspection_expires_at,
+    insurance_expires_at: raw.insurance_expires_at,
     defaultDriver: dd,
     driverName,
     assignments: [],
@@ -578,13 +1050,29 @@ function enrichDriver(raw) {
 }
 
 function enrichProvider(raw) {
+  const typeLabel = raw.type === 'taxi' ? t('resources.provider_form_type_taxi') : t('resources.provider_form_type_vendor')
   const contact = [raw.contact_name, raw.contact_phone].filter(Boolean).join(' · ') || '—'
-  const service = raw.type === 'taxi' ? 'Taxi' : 'Vendor / nhà xe'
+  const servicesList = Array.isArray(raw.services) ? raw.services.filter((x) => x && String(x.name || '').trim()) : []
+  const serviceSummary = servicesList.length ? servicesList.map((s) => s.name).join(' · ') : '—'
+  const contract = contractStateFromDate(raw.contract_expires_at)
   return {
     id: raw.id,
     name: raw.name,
+    type: raw.type,
+    typeLabel,
+    contact_name: raw.contact_name ?? '',
+    contact_phone: raw.contact_phone ?? '',
+    contact_email: raw.contact_email ?? '',
+    notes: raw.notes ?? '',
+    is_active: raw.is_active,
+    contract_number: raw.contract_number ?? '',
+    contract_signed_at: raw.contract_signed_at ?? '',
+    contract_expires_at: raw.contract_expires_at ?? '',
+    contract,
+    servicesList,
+    serviceSummary,
     contact,
-    service,
+    service: serviceSummary,
     uiStatus: raw.is_active ? 'active' : 'inactive',
   }
 }
@@ -606,6 +1094,10 @@ async function loadAll() {
       const id = selectedVehicle.value.id
       selectedVehicle.value = vehicles.value.find((x) => x.id === id) ?? null
     }
+    if (selectedSupplier.value) {
+      const sid = selectedSupplier.value.id
+      selectedSupplier.value = suppliers.value.find((x) => x.id === sid) ?? null
+    }
   } catch {
     error.value = t('resources.load_error')
   } finally {
@@ -618,14 +1110,20 @@ onMounted(loadAll)
 function setTab(id) {
   activeTab.value = id
   selectedVehicle.value = null
+  selectedSupplier.value = null
 }
 
 function closePanel() {
   selectedVehicle.value = null
+  selectedSupplier.value = null
 }
 
 function selectVehicle(v) {
   selectedVehicle.value = v
+}
+
+function selectSupplier(s) {
+  selectedSupplier.value = s
 }
 
 function labelVehicleStatus(s) {
@@ -658,6 +1156,9 @@ function statusOutlineClass(s) {
 }
 
 function compliancePillClass(doc) {
+  if (doc.state === 'none') {
+    return 'inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+  }
   if (doc.state === 'ok') {
     return 'inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300'
   }
@@ -668,12 +1169,13 @@ function compliancePillClass(doc) {
 }
 
 function insuranceHint(doc) {
-  if (doc.state === 'ok') return ''
+  if (doc.state === 'none' || doc.state === 'ok') return ''
   if (doc.state === 'soon') return `${doc.days}d`
   return t('resources.exp_short')
 }
 
 function complianceDocLine(doc) {
+  if (doc.state === 'none') return t('resources.contract_date_unset')
   if (!doc.until) return '—'
   if (doc.state === 'ok') return t('resources.valid_until', { date: doc.until })
   if (doc.state === 'soon') return t('resources.exp_in_days', { n: doc.days })
@@ -696,9 +1198,16 @@ function matchesDriverEmployment(d) {
 function matchesSupplierActive(s) {
   const f = filters.value.status
   if (!f) return true
+  if (f === 'maintenance') return false
   if (f === 'active') return s.uiStatus === 'active'
   if (f === 'inactive') return s.uiStatus === 'inactive'
   return true
+}
+
+function matchesSupplierContract(s) {
+  const f = filters.value.contract
+  if (!f) return true
+  return s.contract.state === f
 }
 
 function matchesCompliance(v) {
@@ -715,7 +1224,7 @@ const filteredVehicles = computed(() => {
   const q = search.value.trim().toLowerCase()
   return vehicles.value.filter((v) => {
     if (!matchesVehicleStatus(v)) return false
-    if (filters.value.type && v.typeKey !== filters.value.type) return false
+    if (filters.value.type && v.iconKind !== filters.value.type) return false
     if (!matchesCompliance(v)) return false
     if (!q) return true
     const hay = `${v.code} ${v.model} ${v.driverName ?? ''}`.toLowerCase()
@@ -736,8 +1245,11 @@ const filteredSuppliers = computed(() => {
   const q = search.value.trim().toLowerCase()
   return suppliers.value.filter((s) => {
     if (!matchesSupplierActive(s)) return false
+    if (!matchesSupplierContract(s)) return false
     if (!q) return true
-    return `${s.name} ${s.contact} ${s.service}`.toLowerCase().includes(q)
+    const svcHay = (s.servicesList || []).map((x) => `${x.name} ${x.note || ''}`).join(' ')
+    const hay = `${s.name} ${s.contact} ${s.service} ${s.contract_number || ''} ${s.contact_email || ''} ${svcHay}`.toLowerCase()
+    return hay.includes(q)
   })
 })
 
@@ -746,10 +1258,106 @@ watch(filteredVehicles, (list) => {
   if (!list.some((x) => x.id === selectedVehicle.value.id)) selectedVehicle.value = null
 })
 
+watch(filteredSuppliers, (list) => {
+  if (!selectedSupplier.value) return
+  if (!list.some((x) => x.id === selectedSupplier.value.id)) selectedSupplier.value = null
+})
+
 watch(activeTab, () => {
   search.value = ''
-  filters.value = { status: '', type: '', compliance: '' }
+  filters.value = { status: '', type: '', compliance: '', contract: '' }
 })
+
+function labelProviderStatus(s) {
+  if (s === 'active') return t('resources.provider_active')
+  return t('resources.provider_inactive')
+}
+
+function addProviderServiceRow() {
+  providerForm.value.services.push(emptyProviderServiceRow())
+}
+
+function removeProviderServiceRow(idx) {
+  if (providerForm.value.services.length <= 1) return
+  providerForm.value.services.splice(idx, 1)
+}
+
+function openProviderForm(s) {
+  providerFormError.value = ''
+  if (s) {
+    const rows = (s.servicesList && s.servicesList.length ? s.servicesList : [emptyProviderServiceRow()]).map((r) => ({
+      kind: r.kind === 'service' ? 'service' : 'solution',
+      name: r.name || '',
+      note: r.note || '',
+    }))
+    providerForm.value = {
+      id: s.id,
+      name: s.name,
+      type: s.type === 'taxi' ? 'taxi' : 'vendor',
+      contact_name: s.contact_name || '',
+      contact_phone: s.contact_phone || '',
+      contact_email: s.contact_email || '',
+      notes: s.notes || '',
+      is_active: !!s.is_active,
+      contract_number: s.contract_number || '',
+      contract_signed_at: s.contract_signed_at || '',
+      contract_expires_at: s.contract_expires_at || '',
+      services: rows,
+    }
+  } else {
+    providerForm.value = emptyProviderForm()
+  }
+  providerModalOpen.value = true
+}
+
+function buildProviderPayload() {
+  const f = providerForm.value
+  const services = (f.services || [])
+    .map((r) => ({
+      kind: r.kind === 'service' ? 'service' : 'solution',
+      name: String(r.name || '').trim(),
+      note: String(r.note || '').trim() || null,
+    }))
+    .filter((r) => r.name.length > 0)
+  return {
+    name: f.name.trim(),
+    type: f.type,
+    contact_name: f.contact_name?.trim() || null,
+    contact_phone: f.contact_phone?.trim() || null,
+    contact_email: f.contact_email?.trim() || null,
+    notes: f.notes?.trim() || null,
+    is_active: !!f.is_active,
+    contract_number: f.contract_number?.trim() || null,
+    contract_signed_at: f.contract_signed_at || null,
+    contract_expires_at: f.contract_expires_at || null,
+    services,
+  }
+}
+
+async function submitProviderForm() {
+  providerSaving.value = true
+  providerFormError.value = ''
+  try {
+    const payload = buildProviderPayload()
+    const f = providerForm.value
+    if (f.id) {
+      await updateTransportProvider(f.id, payload)
+    } else {
+      await createTransportProvider(payload)
+    }
+    providerModalOpen.value = false
+    await loadAll()
+  } catch (e) {
+    const msg = e?.response?.data?.message
+    const errs = e?.response?.data?.errors
+    providerFormError.value =
+      (typeof msg === 'string' && msg) ||
+      (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+      t('resources.load_error')
+  } finally {
+    providerSaving.value = false
+  }
+}
 
 function openAssignModal(vehicleId) {
   assignVehicleId.value = vehicleId
@@ -815,4 +1423,64 @@ watch(assignModalOpen, (open) => {
     pickedUser.value = null
   }
 })
+
+function openVehicleForm(v) {
+  vehicleFormError.value = ''
+  if (v) {
+    vehicleForm.value = {
+      id: v.id,
+      license_plate: v.license_plate,
+      type: v.type || '',
+      seat_count: v.seat_count ?? '',
+      payload_kg: v.payload_kg ?? '',
+      status: v.apiStatus,
+      odometer_km: v.odometer_km ?? 0,
+      inspection_expires_at: v.inspection_expires_at || '',
+      insurance_expires_at: v.insurance_expires_at || '',
+    }
+  } else {
+    vehicleForm.value = emptyVehicleForm()
+  }
+  vehicleModalOpen.value = true
+}
+
+function numOrNull(v) {
+  if (v === '' || v === null || v === undefined) return null
+  const n = Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
+async function submitVehicleForm() {
+  vehicleSaving.value = true
+  vehicleFormError.value = ''
+  try {
+    const f = vehicleForm.value
+    const payload = {
+      license_plate: f.license_plate.trim(),
+      type: f.type || null,
+      seat_count: numOrNull(f.seat_count),
+      payload_kg: numOrNull(f.payload_kg),
+      status: f.status,
+      odometer_km: Number(f.odometer_km) || 0,
+      inspection_expires_at: f.inspection_expires_at || null,
+      insurance_expires_at: f.insurance_expires_at || null,
+    }
+    if (f.id) {
+      await updateVehicle(f.id, payload)
+    } else {
+      await createVehicle(payload)
+    }
+    vehicleModalOpen.value = false
+    await loadAll()
+  } catch (e) {
+    const msg = e?.response?.data?.message
+    const errs = e?.response?.data?.errors
+    vehicleFormError.value =
+      (typeof msg === 'string' && msg) ||
+      (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+      t('resources.load_error')
+  } finally {
+    vehicleSaving.value = false
+  }
+}
 </script>

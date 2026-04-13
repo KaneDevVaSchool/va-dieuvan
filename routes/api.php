@@ -194,7 +194,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Operational resources (mutating)
         Route::post('/drivers/from-user', [OperationalResourceController::class, 'storeDriverFromUser'])
             ->middleware('throttle:30,1');
+        Route::post('/vehicles', [OperationalResourceController::class, 'storeVehicle'])
+            ->middleware('throttle:30,1');
         Route::patch('/vehicles/{vehicle}', [OperationalResourceController::class, 'updateVehicle'])
+            ->middleware('throttle:30,1');
+        Route::post('/transport-providers', [OperationalResourceController::class, 'storeTransportProvider'])
+            ->middleware('throttle:30,1');
+        Route::patch('/transport-providers/{transportProvider}', [OperationalResourceController::class, 'updateTransportProvider'])
             ->middleware('throttle:30,1');
 
         // Attachments can be heavier; keep separate throttle

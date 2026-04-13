@@ -78,7 +78,8 @@ Query chung (tùy endpoint): `per_page`, lọc theo trạng thái nếu có.
 |--------|------|----------------|-------------|
 | GET | `/users/for-driver-assignment` | `q` (tối thiểu 2 ký tự) | `resource.driver.manage` **hoặc** `trip.assign` |
 | POST | `/drivers/from-user` | `{ "user_id": <id> }` | `resource.driver.manage` hoặc `trip.assign` |
-| PATCH | `/vehicles/{vehicle}` | `{ "default_driver_id": <id> \| null }` | `resource.vehicle.manage` hoặc `trip.assign` |
+| POST | `/vehicles` | Tạo xe: `license_plate` (bắt buộc, unique), `type`, `seat_count`, `payload_kg`, `status`, `odometer_km`, `inspection_expires_at`, `insurance_expires_at`, `default_driver_id` | `resource.vehicle.manage` |
+| PATCH | `/vehicles/{vehicle}` | Cập nhật các trường trên (tùy chọn). User chỉ có `trip.assign` chỉ được gửi `default_driver_id`. | `resource.vehicle.manage` (đầy đủ) hoặc `trip.assign` (chỉ tài xế mặc định) |
 
 **Luồng gán tài xế từ user**
 
@@ -101,6 +102,6 @@ Response thành công theo convention: `{ "data": ... }` (xem `docs/API_CONVENTI
 ## 8. Trạng thái triển khai (codebase)
 
 - Migration `2026_04_13_100000_add_default_driver_id_to_vehicles_table.php`: thêm `vehicles.default_driver_id`.
-- `OperationalResourceController`: `GET /vehicles` (payload có `default_driver` + `user`), `GET /drivers`, `GET /transport-providers`, `POST /drivers/from-user`, `PATCH /vehicles/{vehicle}`.
+- `OperationalResourceController`: `GET /vehicles`, `POST /vehicles`, `GET /drivers`, `GET /transport-providers`, `POST /drivers/from-user`, `PATCH /vehicles/{vehicle}`.
 - `UserSearchForDriverAssignmentController`: `GET /users/for-driver-assignment?q=`.
 - Frontend `ResourcesListView.vue` + `resources/js/src/api/operational.js` gọi các endpoint trên; chạy `php artisan migrate` (cần MySQL) trước khi dùng.

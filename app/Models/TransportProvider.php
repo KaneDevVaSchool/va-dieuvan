@@ -15,12 +15,20 @@ class TransportProvider extends Model
         'type',
         'contact_name',
         'contact_phone',
+        'contact_email',
         'notes',
         'is_active',
+        'contract_number',
+        'contract_signed_at',
+        'contract_expires_at',
+        'services',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'contract_signed_at' => 'date',
+        'contract_expires_at' => 'date',
+        'services' => 'array',
     ];
 
     public function trips(): HasMany

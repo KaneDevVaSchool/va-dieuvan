@@ -15,6 +15,21 @@ export async function listTransportProviders(params = {}) {
   return data.data
 }
 
+/** @param {Record<string, unknown>} payload */
+export async function createTransportProvider(payload) {
+  const { data } = await http.post('/transport-providers', payload)
+  return data.data
+}
+
+/**
+ * @param {number} id
+ * @param {Record<string, unknown>} payload
+ */
+export async function updateTransportProvider(id, payload) {
+  const { data } = await http.patch(`/transport-providers/${id}`, payload)
+  return data.data
+}
+
 /** @param {string} q */
 export async function searchUsersForDriverAssignment(q) {
   const { data } = await http.get('/users/for-driver-assignment', { params: { q } })
@@ -28,8 +43,16 @@ export async function createDriverFromUser(userId) {
 }
 
 /**
+ * @param {Record<string, unknown>} payload
+ */
+export async function createVehicle(payload) {
+  const { data } = await http.post('/vehicles', payload)
+  return data.data
+}
+
+/**
  * @param {number} vehicleId
- * @param {{ default_driver_id?: number | null }} payload
+ * @param {Record<string, unknown>} payload
  */
 export async function updateVehicle(vehicleId, payload) {
   const { data } = await http.patch(`/vehicles/${vehicleId}`, payload)
