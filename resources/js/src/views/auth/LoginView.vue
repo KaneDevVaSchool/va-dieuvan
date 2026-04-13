@@ -23,11 +23,18 @@
           class="google-login-btn"
           :class="{ 'is-busy': bootstrapping }"
           :href="googleAuthHref"
+          aria-label="Đăng nhập bằng Google"
           :aria-busy="bootstrapping ? 'true' : undefined"
           @click="onGoogleClick"
         >
-          <span class="google-icon" aria-hidden="true" />
-          <span>Tiếp tục với Google</span>
+          <img
+            :src="GOOGLE_LOGO_URL"
+            alt=""
+            width="48"
+            height="48"
+            class="google-login-img"
+            decoding="async"
+          />
         </a>
       </div>
     </div>
@@ -42,8 +49,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../store'
 import { formatApiError } from '../../api/http'
 
-/** Public asset — `public/images/logo/logo-2.png` */
+/** Public assets — `public/images/logo/...` */
 const LOGO_2_URL = '/images/logo/logo-2.png'
+const GOOGLE_LOGO_URL = '/images/logo/google.png'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -190,24 +198,30 @@ onMounted(async () => {
 }
 
 .google-login-btn {
-  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
   min-height: 48px;
-  padding: 12px 16px;
+  padding: 10px;
   border: 2px solid #ddd;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff;
-  color: #333;
-  font-size: clamp(0.875rem, 1.2vw + 0.5rem, 1rem);
   cursor: pointer;
   transition:
     border-color 0.3s ease,
     box-shadow 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   text-decoration: none;
   box-sizing: border-box;
+  vertical-align: middle;
+}
+
+.google-login-img {
+  display: block;
+  width: clamp(40px, 12vw, 52px);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -224,15 +238,6 @@ onMounted(async () => {
 .google-login-btn.is-busy {
   pointer-events: none;
   opacity: 0.65;
-}
-
-.google-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0xNy42NCA5LjIwNDhjMC0uNjM5LS4wNTctMS4yNTItLjE2NC0xLjg0MUg5djMuNDgxaDQuODQ0Yy0uMjA5IDEuMTI1LS44NDQgMi4wNzgtMS43OTYgMi43MTR2Mi4yNTloMi45MDhjMS43MzQtMS41OTggMi43MzgtMy45NTMgMi43MzgtNi43MTN6IiBmaWxsPSIjNDA5MkZGIi8+PHBhdGggZD0iTTkgMThjMi40MyAwIDQuNDY3LS44MDYgNS45NTYtMi4xOGwtMi45MDgtMi4yNTljLS44MDYuNTQtMS44MzcuODYtMy4wNDguODYtMi4zNDQgMC00LjMyOC0xLjU4NC00LjYzNi0zLjcxMUguOTU3djIuMzMyQzIuNDM4IDE0LjcyIDUuNDgyIDE4IDkgMTh6IiBmaWxsPSIjMzRBODUzIi8+PHBhdGggZD0iTTQuMzY0IDEwLjcxQzQuMTc2IDEwLjE3IDQuMDY4IDkuNTkzIDQuMDY4IDljMC0uNTkzLjEwOC0xLjE3LjI5Ni0xLjcxVjQuOTU3SC45NTdDLjM0NyA2LjE3MyAwIDcuNTQ4IDAgOXMuMzQ3IDIuODI3Ljk1NyA0LjA0M2wzLjQwNy0yLjMzMnoiIGZpbGw9IiNGQkJDMDUiLz48cGF0aCBkPSJNOSAzLjU4Yy0xLjMyMSAwLTIuNTA4LjQ1NC0zLjQ0IDEuMzQ1bDIuNTgyIDIuNTgyQzguODg3IDYuODkxIDguOTI5IDYuNTUgOS4wOSA2LjU1aDMuNDRWMy4xOEgxNi41MTRDMTQuNzI1IDEuMzQgMTIuMDgyIDAgOSAweiIgZmlsbD0iI0VBNDMzNSIvPjwvZz48L3N2Zz4=')
-    no-repeat center;
-  background-size: contain;
 }
 
 .wave-footer {
