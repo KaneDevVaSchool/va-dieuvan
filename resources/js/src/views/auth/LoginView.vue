@@ -204,7 +204,6 @@ onMounted(async () => {
   min-width: 48px;
   min-height: 48px;
   padding: 10px;
-  border: 2px solid #ddd;
   border-radius: 12px;
   background: #fff;
   cursor: pointer;
@@ -228,11 +227,6 @@ onMounted(async () => {
   .google-login-btn {
     transition: none;
   }
-}
-
-.google-login-btn:hover:not(.is-busy) {
-  border-color: #9a0036;
-  box-shadow: 0 2px 8px rgba(154, 0, 54, 0.2);
 }
 
 .google-login-btn.is-busy {
