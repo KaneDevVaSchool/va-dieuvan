@@ -6,6 +6,7 @@
     @click="$emit('navigate')"
   >
     <component
+      v-if="showIcon"
       :is="IconComp"
       :class="iconClass"
       aria-hidden="true"
@@ -54,6 +55,7 @@ const isActive = computed(() => {
 })
 
 const showLabel = computed(() => props.variant !== 'vertical-compact')
+const showIcon = computed(() => props.variant !== 'horizontal')
 const showTitle = computed(
   () =>
     props.variant === 'vertical-compact' ||
@@ -84,7 +86,7 @@ const labelClass = computed(() => {
     return 'line-clamp-2 min-w-0 max-w-full text-center text-[10px] font-medium leading-tight'
   }
   if (props.variant === 'horizontal') {
-    return 'min-w-0 max-w-[3.75rem] truncate whitespace-nowrap text-center text-[9px] font-medium leading-none sm:max-w-[4.25rem] sm:text-[10px]'
+    return 'min-w-0 truncate whitespace-nowrap text-center text-[10px] font-medium leading-tight sm:text-[11px]'
   }
   return 'min-w-0 flex-1 truncate'
 })
@@ -126,8 +128,8 @@ const linkClass = computed(() => {
   }
   if (v === 'horizontal') {
     const base = [
-      'relative flex shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-md border-b-2 px-1 py-1 transition-colors sm:px-1.5 sm:py-1.5',
-      'min-w-[2.5rem] max-w-[4.5rem] border-transparent text-slate-600 dark:text-slate-300',
+      'relative flex min-w-0 flex-1 snap-start items-center justify-center rounded-md border-b-2 px-1.5 py-1.5 text-center transition-colors sm:px-2 sm:py-2',
+      'border-transparent text-slate-600 dark:text-slate-300',
     ]
     if (isActive.value) {
       base.push(

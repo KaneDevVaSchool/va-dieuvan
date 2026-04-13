@@ -119,15 +119,10 @@
       </div>
 
       <nav
-        class="hidden min-h-9 min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
+        class="hidden min-h-9 min-w-0 flex-1 items-stretch divide-x divide-slate-200/90 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] dark:divide-slate-600 md:flex [&::-webkit-scrollbar]:hidden"
         :aria-label="t('app.title')"
       >
         <template v-for="(section, si) in sections" :key="'h' + si">
-          <span
-            v-if="si > 0"
-            class="mx-0.5 h-5 w-px shrink-0 self-center bg-slate-200 dark:bg-slate-600"
-            aria-hidden="true"
-          />
           <!-- Cấp 1: không có heading section — mục phẳng hoặc nhóm con (dropdown) -->
           <template v-if="!section.headingKey">
             <template v-for="item in section.items" :key="item.to || item.labelKey">
@@ -138,7 +133,6 @@
                 :items="item.children"
                 :badge-count="badgeCount"
                 :t="t"
-                :icon-key="item.icon"
               />
               <SidebarNavItem
                 v-else
@@ -168,7 +162,6 @@
               :items="section.items[0].children"
               :badge-count="badgeCount"
               :t="t"
-              :icon-key="section.items[0].icon"
             />
             <SidebarNavItem
               v-else-if="section.items.length === 1"

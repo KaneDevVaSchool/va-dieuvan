@@ -1,8 +1,8 @@
 <template>
-  <div ref="rootRef" class="relative shrink-0">
+  <div ref="rootRef" class="relative flex min-w-0 flex-1 items-stretch justify-center">
     <button
       type="button"
-      class="inline-flex max-w-[5rem] items-center gap-0.5 rounded-md border-b-2 border-transparent px-1 py-1 text-left text-[9px] font-medium leading-none text-slate-600 transition sm:max-w-[5.5rem] sm:gap-0.5 sm:px-1.5 sm:py-1.5 sm:text-[10px] dark:text-slate-300"
+      class="inline-flex w-full min-w-0 items-center justify-center gap-1 rounded-md border-b-2 border-transparent px-2 py-2 text-center text-[10px] font-medium leading-tight text-slate-600 transition sm:gap-1.5 sm:px-2 sm:text-[11px] dark:text-slate-300"
       :title="fullLabel || label"
       :class="
         isGroupActive
@@ -14,13 +14,7 @@
       :aria-controls="panelId"
       @click="toggle"
     >
-      <component
-        v-if="IconTrigger"
-        :is="IconTrigger"
-        class="h-4 w-4 shrink-0 opacity-90 sm:h-[1.125rem] sm:w-[1.125rem]"
-        aria-hidden="true"
-      />
-      <span class="min-w-0 truncate whitespace-nowrap">{{ label }}</span>
+      <span class="min-w-0 truncate">{{ label }}</span>
       <ChevronDownIcon
         class="h-3.5 w-3.5 shrink-0 opacity-70 transition-transform sm:h-4 sm:w-4"
         :class="open ? 'rotate-180' : ''"
@@ -119,8 +113,6 @@ const props = defineProps({
   badgeCount: { type: Function, required: true },
   /** i18n t() */
   t: { type: Function, required: true },
-  /** Khóa icon trên nút (navbar cấp 1) */
-  iconKey: { type: String, default: null },
 })
 
 const route = useRoute()
@@ -153,10 +145,6 @@ function branchActive(item) {
 }
 
 const isGroupActive = computed(() => props.items.some(branchActive))
-
-const IconTrigger = computed(() =>
-  props.iconKey ? NAV_ICON_MAP[props.iconKey] ?? null : null,
-)
 
 function updatePanelPosition() {
   const el = rootRef.value
