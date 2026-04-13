@@ -72,15 +72,23 @@ export const NAV_SECTIONS = [
     ],
   },
   {
-    sectionKey: 'finance',
-    headingKey: 'nav.section_finance',
-    items: [{ to: '/payments', labelKey: 'nav.payments', icon: 'payments', featureKey: 'module.finance' }],
+    sectionKey: 'resources',
+    headingKey: 'nav.section_resources',
+    items: [
+      {
+        to: '/resources',
+        labelKey: 'nav.resources',
+        icon: 'resources',
+        featureKey: 'module.operations',
+      },
+    ],
   },
   {
     sectionKey: 'reports',
     headingKey: 'nav.section_reports',
     items: [
       { to: '/reports', labelKey: 'nav.reports', icon: 'reports', featureKey: 'module.reports' },
+      { to: '/payments', labelKey: 'nav.payments', icon: 'payments', featureKey: 'module.finance' },
       { to: '/pricing', labelKey: 'nav.pricing', icon: 'pricing', featureKey: 'module.reports' },
     ],
   },

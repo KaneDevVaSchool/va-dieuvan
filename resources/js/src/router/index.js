@@ -28,6 +28,7 @@ import SystemRolesView from "../views/system/SystemRolesView.vue";
 import SystemPermissionsView from "../views/system/SystemPermissionsView.vue";
 import SystemUserRolesView from "../views/system/SystemUserRolesView.vue";
 import SystemFeatureTogglesView from "../views/system/SystemFeatureTogglesView.vue";
+import ResourcesListView from "../views/resources/ResourcesListView.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -152,6 +153,16 @@ const router = createRouter({
             name: "students",
             component: StudentsListView,
             meta: { title: "Học sinh", subtitle: "Danh sách" },
+        },
+        {
+            path: "/resources",
+            name: "resources",
+            component: ResourcesListView,
+            meta: {
+                title: "Quản lý nguồn lực",
+                subtitle: "Xe, tài xế, nhà cung cấp",
+                featureKey: "module.operations",
+            },
         },
         {
             path: "/reports",
