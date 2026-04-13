@@ -56,37 +56,49 @@
           <template v-if="!section.headingKey">
             <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
               <template v-if="item.children?.length">
-                <div v-if="!ui.sidebarCollapsed" class="px-1">
-                  <button
-                    type="button"
-                    class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
-                    :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0.5'"
-                    :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
-                    @click="toggleGroup(subGroupKey(si, ii))"
+                <SidebarCollapsedNavGroup
+                  v-if="ui.sidebarCollapsed"
+                  :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0.5'"
+                  :label="t(item.labelKey)"
+                  :icon="item.icon"
+                  :children="item.children"
+                  :badge-count="badgeCount"
+                  :open="flyoutOpenKey === subGroupKey(si, ii)"
+                  @toggle="toggleFlyout(subGroupKey(si, ii))"
+                  @close="flyoutOpenKey = null"
+                />
+                <template v-else>
+                  <div class="px-1">
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                      :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0.5'"
+                      :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
+                      @click="toggleGroup(subGroupKey(si, ii))"
+                    >
+                      <span class="truncate">{{ t(item.labelKey) }}</span>
+                      <ChevronDownIcon
+                        class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                        :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                  <div
+                    v-show="isGroupOpen(subGroupKey(si, ii))"
+                    class="ml-2 space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
                   >
-                    <span class="truncate">{{ t(item.labelKey) }}</span>
-                    <ChevronDownIcon
-                      class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
-                      :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
-                      aria-hidden="true"
+                    <SidebarNavItem
+                      v-for="c in item.children"
+                      :key="'vc' + c.to"
+                      :to="c.to"
+                      :label="t(c.labelKey)"
+                      :icon="c.icon"
+                      :badge-count="badgeCount(c)"
+                      :variant="navVariant"
                     />
-                  </button>
-                </div>
-                <div
-                  v-show="ui.sidebarCollapsed || isGroupOpen(subGroupKey(si, ii))"
-                  class="space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
-                  :class="ui.sidebarCollapsed ? 'ml-0 border-l-0 pl-0' : 'ml-2'"
-                >
-                  <SidebarNavItem
-                    v-for="c in item.children"
-                    :key="'vc' + c.to"
-                    :to="c.to"
-                    :label="t(c.labelKey)"
-                    :icon="c.icon"
-                    :badge-count="badgeCount(c)"
-                    :variant="navVariant"
-                  />
-                </div>
+                  </div>
+                </template>
               </template>
               <SidebarNavItem
                 v-else
@@ -119,36 +131,48 @@
             <div v-show="ui.sidebarCollapsed || isGroupOpen(sectionGroupKey(si))" class="space-y-0.5">
               <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
                 <template v-if="item.children?.length">
-                  <div v-if="!ui.sidebarCollapsed" class="px-1">
-                    <button
-                      type="button"
-                      class="mt-2 flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
-                      :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
-                      @click="toggleGroup(subGroupKey(si, ii))"
+                  <SidebarCollapsedNavGroup
+                    v-if="ui.sidebarCollapsed"
+                    class="mt-2"
+                    :label="t(item.labelKey)"
+                    :icon="item.icon"
+                    :children="item.children"
+                    :badge-count="badgeCount"
+                    :open="flyoutOpenKey === subGroupKey(si, ii)"
+                    @toggle="toggleFlyout(subGroupKey(si, ii))"
+                    @close="flyoutOpenKey = null"
+                  />
+                  <template v-else>
+                    <div class="px-1">
+                      <button
+                        type="button"
+                        class="mt-2 flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                        :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
+                        @click="toggleGroup(subGroupKey(si, ii))"
+                      >
+                        <span class="truncate">{{ t(item.labelKey) }}</span>
+                        <ChevronDownIcon
+                          class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                          :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </div>
+                    <div
+                      v-show="isGroupOpen(subGroupKey(si, ii))"
+                      class="ml-2 space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
                     >
-                      <span class="truncate">{{ t(item.labelKey) }}</span>
-                      <ChevronDownIcon
-                        class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
-                        :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
-                        aria-hidden="true"
+                      <SidebarNavItem
+                        v-for="c in item.children"
+                        :key="'vc' + c.to"
+                        :to="c.to"
+                        :label="t(c.labelKey)"
+                        :icon="c.icon"
+                        :badge-count="badgeCount(c)"
+                        :variant="navVariant"
                       />
-                    </button>
-                  </div>
-                  <div
-                    v-show="ui.sidebarCollapsed || isGroupOpen(subGroupKey(si, ii))"
-                    class="space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
-                    :class="ui.sidebarCollapsed ? 'ml-0 border-l-0 pl-0' : 'ml-2'"
-                  >
-                    <SidebarNavItem
-                      v-for="c in item.children"
-                      :key="'vc' + c.to"
-                      :to="c.to"
-                      :label="t(c.labelKey)"
-                      :icon="c.icon"
-                      :badge-count="badgeCount(c)"
-                      :variant="navVariant"
-                    />
-                  </div>
+                    </div>
+                  </template>
                 </template>
                 <SidebarNavItem
                   v-else
@@ -257,12 +281,13 @@
 </template>
 
 <script setup>
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
 import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
+import SidebarCollapsedNavGroup from '../nav/SidebarCollapsedNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'
 import SidebarAccountBlock from './SidebarAccountBlock.vue'
 import { useNavSections } from '../../composables/useNavSections'
@@ -283,6 +308,13 @@ const navVariant = computed(() =>
 
 /** Mở/đóng nhóm menu — mặc định đóng; đồng bộ theo route để mở nhóm đang active */
 const openGroups = reactive({})
+
+/** Rail thu nhỏ: một flyout nhóm con mở tại một thời điểm */
+const flyoutOpenKey = ref(null)
+
+function toggleFlyout(key) {
+  flyoutOpenKey.value = flyoutOpenKey.value === key ? null : key
+}
 
 function sectionGroupKey(si) {
   return `sec-${si}`
@@ -329,6 +361,13 @@ function syncExpandGroupsForRoute() {
 }
 
 watch(() => route.path, syncExpandGroupsForRoute, { immediate: true })
+
+watch(
+  () => ui.sidebarCollapsed,
+  (collapsed) => {
+    if (!collapsed) flyoutOpenKey.value = null
+  },
+)
 
 function isGroupOpen(key) {
   return openGroups[key] === true
