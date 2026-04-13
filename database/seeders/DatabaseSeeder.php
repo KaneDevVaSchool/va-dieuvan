@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RbacSeeder::class,
+            FeatureToggleSeeder::class,
             ReferencePricingSeeder::class,
             DemoFlowSeeder::class,
         ]);

@@ -4,13 +4,17 @@ namespace Database\Seeders;
 
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class RbacSeeder extends Seeder
 {
     public function run(): void
     {
+        $guard = 'web';
+
         $roles = [
+            ['name' => 'superadmin', 'display_name' => 'Super Admin'],
             ['name' => 'admin', 'display_name' => 'Admin'],
             ['name' => 'dispatcher', 'display_name' => 'Dispatcher'],
             ['name' => 'driver', 'display_name' => 'Tài xế'],
@@ -19,7 +23,10 @@ class RbacSeeder extends Seeder
         ];
 
         foreach ($roles as $r) {
-            Role::firstOrCreate(['name' => $r['name']], $r);
+            Role::firstOrCreate(
+                ['name' => $r['name'], 'guard_name' => $guard],
+                ['display_name' => $r['display_name']]
+            );
         }
 
         $permissions = [
@@ -50,10 +57,17 @@ class RbacSeeder extends Seeder
             'user.manage',
             'audit_log.view',
             'data.override_confirmed',
+            'system.roles.manage',
+            'system.permissions.manage',
+            'system.user_roles.manage',
+            'system.feature_toggles.manage',
         ];
 
         foreach ($permissions as $p) {
-            Permission::firstOrCreate(['name' => $p], ['display_name' => $p]);
+            Permission::firstOrCreate(
+                ['name' => $p, 'guard_name' => $guard],
+                ['display_name' => $p]
+            );
         }
 
         $map = [
@@ -108,13 +122,21 @@ class RbacSeeder extends Seeder
         ];
 
         foreach ($map as $roleName => $perms) {
-            $role = Role::where('name', $roleName)->first();
-            if (!$role) {
+            $role = Role::where('name', $roleName)->where('guard_name', $guard)->first();
+            if (! $role) {
                 continue;
             }
-            $permIds = Permission::whereIn('name', $perms)->pluck('id');
-            $role->permissions()->syncWithoutDetaching($permIds);
+            $role->syncPermissions(
+                Permission::query()->whereIn('name', $perms)->where('guard_name', $guard)->get()
+            );
+        }
+
+        $superEmail = config('permission.superadmin_email');
+        if ($superEmail) {
+            $u = User::query()->where('email', $superEmail)->first();
+            if ($u) {
+                $u->assignRole('superadmin');
+            }
         }
     }
 }
-

@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\EnsureHasRole::class,
         'permission' => \App\Http\Middleware\EnsureHasPermission::class,
         'idempotency' => \App\Http\Middleware\IdempotencyKey::class,
+        'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
     ];
 }

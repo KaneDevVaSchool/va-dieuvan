@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\DispatchRequest;
-use App\Models\Permission;
-use App\Models\Role;
 use App\Models\Trip;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
@@ -21,8 +19,8 @@ class BusinessRulesTest extends TestCase
         $this->seed(RbacSeeder::class);
 
         $user = User::factory()->create();
-        $role = Role::where('name', $roleName)->firstOrFail();
-        $user->roles()->attach($role);
+        $user->assignRole($roleName);
+
         return $user->refresh();
     }
 
@@ -76,4 +74,3 @@ class BusinessRulesTest extends TestCase
         $res->assertStatus(409);
     }
 }
-

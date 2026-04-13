@@ -24,6 +24,10 @@ import HelpGuideView from "../views/help/HelpGuideView.vue";
 import RoadmapSuggestionsView from "../views/roadmap/RoadmapSuggestionsView.vue";
 import NotificationsHubView from "../views/notifications/NotificationsHubView.vue";
 import CalendarMonthView from "../views/calendar/CalendarMonthView.vue";
+import SystemRolesView from "../views/system/SystemRolesView.vue";
+import SystemPermissionsView from "../views/system/SystemPermissionsView.vue";
+import SystemUserRolesView from "../views/system/SystemUserRolesView.vue";
+import SystemFeatureTogglesView from "../views/system/SystemFeatureTogglesView.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -169,7 +173,56 @@ const router = createRouter({
             path: "/audit-logs",
             name: "auditLogs",
             component: AuditLogsView,
-            meta: { title: "Activity log", subtitle: "Truy vết" },
+            meta: {
+                title: "Activity log",
+                subtitle: "Truy vết",
+                permission: "audit_log.view",
+                featureKey: "module.system.audit",
+            },
+        },
+        {
+            path: "/system/roles",
+            name: "systemRoles",
+            component: SystemRolesView,
+            meta: {
+                title: "Quản lý Role",
+                subtitle: "Hệ thống",
+                permission: "system.roles.manage",
+                featureKey: "module.system.roles",
+            },
+        },
+        {
+            path: "/system/permissions",
+            name: "systemPermissions",
+            component: SystemPermissionsView,
+            meta: {
+                title: "Quản lý Permission",
+                subtitle: "Hệ thống",
+                permission: "system.permissions.manage",
+                featureKey: "module.system.permissions",
+            },
+        },
+        {
+            path: "/system/user-roles",
+            name: "systemUserRoles",
+            component: SystemUserRolesView,
+            meta: {
+                title: "Gán quyền người dùng",
+                subtitle: "Hệ thống",
+                permission: "system.user_roles.manage",
+                featureKey: "module.system.user_roles",
+            },
+        },
+        {
+            path: "/system/feature-toggles",
+            name: "systemFeatureToggles",
+            component: SystemFeatureTogglesView,
+            meta: {
+                title: "Feature toggle",
+                subtitle: "Hệ thống",
+                permission: "system.feature_toggles.manage",
+                featureKey: "module.system.feature_toggles",
+            },
         },
     ],
 });
@@ -189,6 +242,26 @@ router.beforeEach(async (to) => {
     } catch {
         auth.setToken(null);
         return { name: "login", query: { redirect: to.fullPath } };
+    }
+    if (to.meta.featureKey) {
+        const ft = auth.user?.feature_toggles;
+        const k = to.meta.featureKey;
+        if (
+            !auth.user?.is_superadmin &&
+            ft &&
+            typeof ft === "object" &&
+            Object.prototype.hasOwnProperty.call(ft, k) &&
+            ft[k] !== true
+        ) {
+            return { name: "dashboard" };
+        }
+    }
+    const need = to.meta.permission;
+    if (need) {
+        const list = Array.isArray(need) ? need : [need];
+        if (!auth.hasAnyPermission(list)) {
+            return { name: "dashboard" };
+        }
     }
     return true;
 });

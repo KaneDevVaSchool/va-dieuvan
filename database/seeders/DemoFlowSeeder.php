@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\CargoShipment;
 use App\Models\DispatchRequest;
 use App\Models\Driver;
-use App\Models\Role;
 use App\Models\TransportProvider;
 use App\Models\Trip;
 use App\Models\User;
@@ -56,19 +55,9 @@ class DemoFlowSeeder extends Seeder
             ]
         );
 
-        $roleDispatcher = Role::where('name', 'dispatcher')->first();
-        $roleInternal = Role::where('name', 'internal_user')->first();
-        $roleAdmin = Role::where('name', 'admin')->first();
-
-        if ($roleDispatcher) {
-            $dispatcher->roles()->syncWithoutDetaching([$roleDispatcher->id]);
-        }
-        if ($roleInternal) {
-            $internal->roles()->syncWithoutDetaching([$roleInternal->id]);
-        }
-        if ($roleAdmin) {
-            $admin->roles()->syncWithoutDetaching([$roleAdmin->id]);
-        }
+        $dispatcher->syncRoles(['dispatcher']);
+        $internal->syncRoles(['internal_user']);
+        $admin->syncRoles(['admin']);
 
         TransportProvider::firstOrCreate(
             ['name' => 'NCC Demo TP.HCM'],
@@ -90,10 +79,7 @@ class DemoFlowSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        $roleDriver = Role::where('name', 'driver')->first();
-        if ($roleDriver) {
-            $driverUser->roles()->syncWithoutDetaching([$roleDriver->id]);
-        }
+        $driverUser->syncRoles(['driver']);
 
         $driver = Driver::updateOrCreate(
             ['phone' => '0900000003'],

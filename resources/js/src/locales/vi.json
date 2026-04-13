@@ -24,6 +24,11 @@
         "help": "Hướng dẫn",
         "roadmap": "Đề xuất & lộ trình",
         "notifications": "Thông báo",
+        "group_system": "Hệ thống",
+        "system_roles": "Quản lý Role",
+        "system_permissions": "Quản lý Permission",
+        "system_user_roles": "Gán quyền người dùng",
+        "system_feature_toggles": "Feature toggle",
         "audit": "Activity log",
         "bottom_home": "Trang chủ",
         "bottom_hub": "Vận hành",
@@ -40,6 +45,11 @@
             "hub": "Vận hành",
             "group_overview": "Tổng quan",
             "group_schedule": "Lịch",
+            "group_system": "Hệ thống",
+            "system_roles": "Roles",
+            "system_permissions": "Perms",
+            "system_user_roles": "Users",
+            "system_feature_toggles": "Toggles",
             "audit": "Nhật ký"
         }
     },

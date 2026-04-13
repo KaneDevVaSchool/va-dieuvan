@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\DispatchRequest;
-use App\Models\Role;
 use App\Models\Trip;
 use App\Models\TripCost;
 use App\Models\User;
@@ -22,7 +21,7 @@ class FinancialLockTest extends TestCase
     {
         $this->seed(RbacSeeder::class);
         $user = User::factory()->create();
-        $user->roles()->attach(Role::where('name', $roleName)->firstOrFail());
+        $user->assignRole($roleName);
 
         return $user->refresh();
     }

@@ -22,6 +22,15 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+            if (! $user instanceof \App\Models\User) {
+                return null;
+            }
+            if ($user->isSuperAdmin()) {
+                return true;
+            }
+
+            return null;
+        });
     }
 }

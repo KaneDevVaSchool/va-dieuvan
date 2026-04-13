@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,7 +15,7 @@ class ReportSummaryTest extends TestCase
     {
         $this->seed(RbacSeeder::class);
         $user = User::factory()->create();
-        $user->roles()->attach(Role::where('name', 'dispatcher')->firstOrFail());
+        $user->assignRole('dispatcher');
 
         $this->actingAs($user);
 

@@ -69,10 +69,9 @@ class DispatchRequestController extends Controller
             after: $dispatchRequest->toArray(),
         );
 
-        $role = Role::query()->where('name', 'dispatcher')->first();
-        if ($role) {
+        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
             $recipients = User::query()
-                ->whereHas('roles', fn ($q) => $q->where('roles.id', $role->id))
+                ->role('dispatcher')
                 ->get();
             if ($recipients->isNotEmpty()) {
                 $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));

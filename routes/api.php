@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\FeatureToggleController;
+use App\Http\Controllers\Api\Admin\PermissionController;
+use App\Http\Controllers\Api\Admin\RoleController;
+use App\Http\Controllers\Api\Admin\UserRoleController;
+use App\Http\Controllers\Api\Admin\UserSearchController;
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Audit\AuditLogController;
 use App\Http\Controllers\Api\Auth\AuthController;
@@ -91,6 +96,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::controller(AuditLogController::class)->group(function () {
             Route::get('/audit-logs', 'index')->middleware('throttle:60,1');
+        });
+
+        Route::prefix('admin')->group(function () {
+            Route::get('users/search', UserSearchController::class)->middleware('throttle:60,1');
+            Route::get('users/{user}/roles', [UserRoleController::class, 'show']);
+            Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
+
+            Route::apiResource('roles', RoleController::class)->except(['create', 'edit']);
+            Route::apiResource('permissions', PermissionController::class)->except(['create', 'edit']);
+            Route::apiResource('feature-toggles', FeatureToggleController::class)->except(['create', 'edit']);
         });
     });
 

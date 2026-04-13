@@ -17,7 +17,7 @@ class EnsureHasPermission
     public function handle(Request $request, Closure $next, string $permission, string ...$more): Response
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(401);
         }
 
@@ -34,19 +34,22 @@ class EnsureHasPermission
             ->values()
             ->all();
 
-        if (!$perms) {
+        if (! $perms) {
             abort(403);
         }
 
-        $ok = $mode === 'all'
-            ? collect($perms)->every(fn ($p) => $user->hasPermission($p))
-            : collect($perms)->some(fn ($p) => $user->hasPermission($p));
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return $next($request);
+        }
 
-        if (!$ok) {
+        $ok = $mode === 'all'
+            ? collect($perms)->every(fn ($p) => $user->can($p))
+            : collect($perms)->some(fn ($p) => $user->can($p));
+
+        if (! $ok) {
             abort(403);
         }
 
         return $next($request);
     }
 }
-

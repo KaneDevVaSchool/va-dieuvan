@@ -10,14 +10,25 @@ export function useNavSections() {
   const auth = useAuthStore()
   const badges = ref({})
 
+  function itemVisible(item) {
+    if (!auth.isFeatureEnabled(item.featureKey)) return false
+    if (item.permissionKey && !auth.hasPermission(item.permissionKey)) return false
+    return true
+  }
+
   function filterItems(items) {
     if (!items?.length) return []
-    return items.map((i) => {
-      if (i.children?.length) {
-        return { ...i, children: filterItems(i.children) }
-      }
-      return i
-    })
+    return items
+      .filter((i) => itemVisible(i))
+      .map((i) => {
+        if (i.children?.length) {
+          const children = filterItems(i.children)
+          if (children.length === 0) return null
+          return { ...i, children }
+        }
+        return i
+      })
+      .filter(Boolean)
   }
 
   const sections = computed(() =>

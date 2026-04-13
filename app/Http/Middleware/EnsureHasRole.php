@@ -11,15 +11,18 @@ class EnsureHasRole
     public function handle(Request $request, Closure $next, string $role): Response
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(401);
         }
 
-        if (!$user->roles()->where('name', $role)->exists()) {
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        if (! $user->hasRole($role)) {
             abort(403);
         }
 
         return $next($request);
     }
 }
-

@@ -1,15 +1,18 @@
 import {
   AcademicCapIcon,
+  AdjustmentsHorizontalIcon,
   BanknotesIcon,
   BellIcon,
   CalendarDaysIcon,
   CalendarIcon,
   ChartBarIcon,
   ClipboardDocumentListIcon,
+  Cog6ToothIcon,
   CubeIcon,
   CurrencyDollarIcon,
   FlagIcon,
   HomeIcon,
+  KeyIcon,
   MapPinIcon,
   PlusCircleIcon,
   QuestionMarkCircleIcon,
@@ -17,6 +20,8 @@ import {
   Squares2X2Icon,
   TagIcon,
   TruckIcon,
+  UserGroupIcon,
+  UsersIcon,
 } from '@heroicons/vue/24/outline'
 
 /** Khóa dùng trong `nav.js` → component icon outline 24px, stroke 1.5 */
@@ -39,4 +44,9 @@ export const NAV_ICON_MAP = {
   roadmap: FlagIcon,
   notifications: BellIcon,
   audit: ShieldCheckIcon,
+  settings: Cog6ToothIcon,
+  roles: UserGroupIcon,
+  permissions: KeyIcon,
+  user_roles: UsersIcon,
+  feature_toggle: AdjustmentsHorizontalIcon,
 }

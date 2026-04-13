@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\DispatchRequest;
-use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,10 +17,10 @@ class IdempotencyTest extends TestCase
         $this->seed(RbacSeeder::class);
 
         $dispatcher = User::factory()->create();
-        $dispatcher->roles()->attach(Role::where('name', 'dispatcher')->firstOrFail());
+        $dispatcher->assignRole('dispatcher');
 
         $requester = User::factory()->create();
-        $requester->roles()->attach(Role::where('name', 'internal_user')->firstOrFail());
+        $requester->assignRole('internal_user');
 
         $dr = DispatchRequest::create([
             'requester_id' => $requester->id,
@@ -54,7 +53,7 @@ class IdempotencyTest extends TestCase
         $this->seed(RbacSeeder::class);
 
         $user = User::factory()->create();
-        $user->roles()->attach(Role::where('name', 'internal_user')->firstOrFail());
+        $user->assignRole('internal_user');
 
         $this->actingAs($user);
 

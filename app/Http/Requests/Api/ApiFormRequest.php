@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 abstract class ApiFormRequest extends FormRequest
@@ -16,17 +17,39 @@ abstract class ApiFormRequest extends FormRequest
         return (bool) $this->user();
     }
 
-    /**
-     * Phân quyền theo tên permission — tạm tắt; chỉ cần đăng nhập.
-     * Bật lại bằng cách khôi phục kiểm tra `hasPermission` trong các nhánh bên dưới.
-     */
     protected function allowAnyOf(array $permissions): bool
     {
-        return (bool) $this->user();
+        $user = $this->user();
+        if (! $user instanceof User) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        foreach ($permissions as $p) {
+            if ($user->can($p)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function allowAllOf(array $permissions): bool
     {
-        return (bool) $this->user();
+        $user = $this->user();
+        if (! $user instanceof User) {
+            return false;
+        }
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+        foreach ($permissions as $p) {
+            if (! $user->can($p)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

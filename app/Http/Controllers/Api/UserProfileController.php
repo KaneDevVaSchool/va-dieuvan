@@ -5,17 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\UpdateUserProfileRequest;
 use App\Services\CmsUserInfoService;
+use App\Services\FeatureToggleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Throwable;
 
 class UserProfileController extends Controller
 {
-    public function show(Request $request, CmsUserInfoService $cms): JsonResponse
+    public function show(Request $request, CmsUserInfoService $cms, FeatureToggleService $featureToggles): JsonResponse
     {
-        $user = $request->user()->load(['roles:id,name,display_name']);
-        $permissions = $user->permissions()->pluck('name')->unique()->values()->all();
-        $payload = array_merge($user->toArray(), ['permissions' => $permissions]);
+        $user = $request->user()->load(['roles:id,name,display_name,guard_name']);
+        $permissions = $user->getAllPermissions()->pluck('name')->unique()->values()->all();
+        $payload = array_merge($user->toArray(), [
+            'permissions' => $permissions,
+            'is_superadmin' => $user->isSuperAdmin(),
+            'feature_toggles' => $featureToggles->mapForUser($user),
+        ]);
 
         $cmsUserId = $cms->findCmsUserIdByEmail($user->email);
         $payload['cms_user_info'] = $cmsUserId !== null
@@ -25,7 +30,7 @@ class UserProfileController extends Controller
         return response()->json($payload);
     }
 
-    public function update(UpdateUserProfileRequest $request, CmsUserInfoService $cms): JsonResponse
+    public function update(UpdateUserProfileRequest $request, CmsUserInfoService $cms, FeatureToggleService $featureToggles): JsonResponse
     {
         $user = $request->user();
         $validated = $request->validated();
@@ -59,9 +64,13 @@ class UserProfileController extends Controller
             $user->save();
         }
 
-        $user->refresh()->load(['roles:id,name,display_name']);
-        $permissions = $user->permissions()->pluck('name')->unique()->values()->all();
-        $payload = array_merge($user->toArray(), ['permissions' => $permissions]);
+        $user->refresh()->load(['roles:id,name,display_name,guard_name']);
+        $permissions = $user->getAllPermissions()->pluck('name')->unique()->values()->all();
+        $payload = array_merge($user->toArray(), [
+            'permissions' => $permissions,
+            'is_superadmin' => $user->isSuperAdmin(),
+            'feature_toggles' => $featureToggles->mapForUser($user),
+        ]);
         $payload['cms_user_info'] = $cmsUserId !== null
             ? $cms->getLatestUserInfoRow($cmsUserId)
             : null;
