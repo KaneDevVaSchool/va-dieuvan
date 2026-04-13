@@ -2,7 +2,13 @@
   <div class="login-page">
     <div class="login-container">
       <div class="logo-container">
-        <img :src="LOGO_2_URL" alt="Vietnam America Schools" width="400" height="120" />
+        <img
+          :src="LOGO_2_URL"
+          alt="Vietnam America Schools"
+          width="400"
+          height="120"
+          decoding="async"
+        />
       </div>
 
       <div class="login-box">
@@ -91,18 +97,22 @@ onMounted(async () => {
 .login-page {
   margin: 0;
   min-height: 100dvh;
+  min-height: 100svh;
   width: 100%;
   background-color: #9a0036;
   background-image: url('/images/background/background-logo.png');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 100% 100%;
+  background-size: cover;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow-x: hidden;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  box-sizing: border-box;
   font-family:
     system-ui,
     -apple-system,
@@ -118,47 +128,55 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100dvh;
+  flex: 1;
   width: 100%;
+  max-width: min(440px, 100%);
   position: relative;
   z-index: 2;
-  bottom: 12vh;
+  padding: 0;
 }
 
 .logo-container {
-  margin-bottom: 40px;
+  margin-bottom: clamp(20px, 4vw, 40px);
   text-align: center;
+  width: 100%;
 }
 
 .logo-container img {
   height: auto;
-  max-width: 400px;
+  max-width: min(400px, 100%);
   width: 100%;
+  display: block;
+  margin-inline: auto;
 }
 
 .login-box {
   background: #fff;
-  border-radius: 15px;
-  padding: 40px 30px;
+  border-radius: clamp(12px, 2vw, 15px);
+  padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 30px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  width: 400px;
-  max-width: 90%;
+  width: 100%;
+  max-width: 400px;
   text-align: center;
   position: relative;
+  box-sizing: border-box;
 }
 
 .login-title {
-  font-size: 28px;
+  font-size: clamp(1.375rem, 4.2vw + 0.6rem, 1.75rem);
   color: #333;
   margin: 0 0 8px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .login-subtitle {
   color: #666;
-  font-size: 14px;
-  margin: 0 0 30px;
-  line-height: 1.4;
+  font-size: clamp(0.8125rem, 1.5vw + 0.35rem, 0.875rem);
+  margin: 0 0 clamp(20px, 4vw, 30px);
+  line-height: 1.5;
+  max-width: 32em;
+  margin-inline: auto;
 }
 
 .login-error {
@@ -173,12 +191,13 @@ onMounted(async () => {
 
 .google-login-btn {
   width: 100%;
-  padding: 12px 20px;
+  min-height: 48px;
+  padding: 12px 16px;
   border: 2px solid #ddd;
   border-radius: 8px;
   background: #fff;
   color: #333;
-  font-size: 16px;
+  font-size: clamp(0.875rem, 1.2vw + 0.5rem, 1rem);
   cursor: pointer;
   transition:
     border-color 0.3s ease,
@@ -189,6 +208,12 @@ onMounted(async () => {
   gap: 10px;
   text-decoration: none;
   box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .google-login-btn {
+    transition: none;
+  }
 }
 
 .google-login-btn:hover:not(.is-busy) {
@@ -223,43 +248,46 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
+/* Màn hình thấp / ngang (điện thoại xoay, laptop nhỏ): tránh cắt nội dung */
+@media (max-height: 520px) {
+  .login-page {
+    justify-content: flex-start;
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+
+  .login-container {
+    justify-content: flex-start;
+    padding-block: 8px 16px;
+  }
+
   .logo-container {
-    margin-bottom: 30px;
+    margin-bottom: 12px;
   }
 
   .logo-container img {
-    max-width: 350px;
+    max-width: min(240px, 55vw);
   }
 
   .login-box {
-    width: 350px;
-    padding: 30px 25px;
-    margin: 20px;
+    padding: 16px 18px;
   }
 
-  .login-title {
-    font-size: 24px;
+  .login-subtitle {
+    margin-bottom: 14px;
   }
 }
 
-@media (max-width: 480px) {
-  .logo-container img {
-    max-width: 290px;
+/* Màn hình rộng: nền không bị kéo méo quá mức, vẫn phủ full */
+@media (min-width: 1600px) {
+  .login-page {
+    background-size: cover;
+    background-position: center 40%;
   }
+}
 
-  .login-box {
-    width: 300px;
-    padding: 25px 20px;
-  }
-
-  .login-title {
-    font-size: 22px;
-  }
-
-  .google-login-btn {
-    font-size: 14px;
-    padding: 10px 15px;
+@media (max-width: 380px) {
+  .login-page {
+    padding-inline: max(12px, env(safe-area-inset-left));
   }
 }
 </style>
