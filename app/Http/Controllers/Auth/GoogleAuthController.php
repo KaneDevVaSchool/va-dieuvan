@@ -32,7 +32,28 @@ class GoogleAuthController extends Controller
             return $this->loginRedirect(['error' => 'Không lấy được email từ Google.']);
         }
 
-        $user = User::query()->where('email', $email)->first();
+        $rawGoogleId = $googleUser->getId();
+        $googleId = ($rawGoogleId !== null && (string) $rawGoogleId !== '')
+            ? (string) $rawGoogleId
+            : null;
+
+        // Prefer the row already linked to this Google account (avoids duplicate google_id when
+        // email lookup hits a different user than the one holding this google_id).
+        $user = $googleId
+            ? User::query()->where('google_id', $googleId)->first()
+            : null;
+        if (! $user) {
+            $user = User::query()->where('email', $email)->first();
+        }
+        if ($user && $googleId) {
+            $other = User::query()
+                ->where('google_id', $googleId)
+                ->whereKeyNot($user->getKey())
+                ->first();
+            if ($other) {
+                $user = $other;
+            }
+        }
 
         if (! $user) {
             $allowedDomains = $this->allowedDomains();
@@ -54,7 +75,7 @@ class GoogleAuthController extends Controller
                 'email' => $email,
                 'password' => Hash::make(Str::random(32)),
                 'email_verified_at' => now(),
-                'google_id' => $googleUser->getId(),
+                'google_id' => $googleId,
                 'avatar_url' => $googleUser->getAvatar(),
             ]);
         } else {
@@ -63,8 +84,8 @@ class GoogleAuthController extends Controller
             }
 
             $fill = [];
-            if ($googleUser->getId()) {
-                $fill['google_id'] = $googleUser->getId();
+            if ($googleId) {
+                $fill['google_id'] = $googleId;
             }
             $avatar = $googleUser->getAvatar();
             if (is_string($avatar) && $avatar !== '') {
