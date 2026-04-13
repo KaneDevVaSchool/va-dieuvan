@@ -1,5 +1,5 @@
 <template>
-  <!-- Dọc: chỉ tên tài khoản → dropdown -->
+  <!-- Dọc: avatar + tên + email → dropdown -->
   <div
     v-if="layout === 'vertical'"
     class="shrink-0 border-t border-slate-200/80 bg-white/95 p-2 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95 md:p-3"
@@ -8,17 +8,31 @@
     <div ref="accountMenuRootRef" class="relative">
       <button
         type="button"
-        class="flex w-full min-w-0 items-center gap-2 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-2 text-left text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50/90 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-800"
-        :class="compact ? 'px-1.5 py-1.5 text-xs' : 'md:px-2.5 md:py-2.5'"
+        class="flex w-full min-w-0 items-center gap-2 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-2 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50/90 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+        :class="compact ? 'px-1.5 py-1.5' : 'md:px-2.5 md:py-2.5'"
         :aria-expanded="accountMenuOpen"
         aria-haspopup="menu"
         :aria-controls="accountMenuPanelId"
         :title="auth.user?.name ?? t('app.account')"
-        @click="accountMenuOpen = !accountMenuOpen"
+        @click.stop="toggleAccountMenu"
       >
-        <span class="min-w-0 flex-1 truncate text-left">
-          {{ auth.user?.name ?? '—' }}
-        </span>
+        <UserAvatar
+          class="shrink-0"
+          :name="auth.user?.name"
+          :email="auth.user?.email"
+          :avatar-url="auth.user?.avatar_url"
+          :title="auth.user?.name ?? ''"
+          :size="compact ? 'sm' : 'md'"
+        />
+        <div v-if="!compact" class="min-w-0 flex-1">
+          <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {{ auth.user?.name ?? '—' }}
+          </div>
+          <div class="truncate text-[11px] text-slate-500 dark:text-slate-400">
+            {{ auth.user?.email ?? '' }}
+          </div>
+        </div>
+        <span v-else class="sr-only">{{ auth.user?.name ?? '—' }}</span>
         <ChevronDownIcon
           class="h-4 w-4 shrink-0 text-slate-500 opacity-80 transition-transform dark:text-slate-400"
           :class="accountMenuOpen ? 'rotate-180' : ''"
@@ -41,7 +55,7 @@
       aria-haspopup="menu"
       :aria-controls="accountMenuPanelId"
       :title="auth.user?.name ?? t('app.account')"
-      @click="accountMenuOpen = !accountMenuOpen"
+      @click.stop="toggleAccountMenu"
     >
       <UserAvatar
         :name="auth.user?.name"
@@ -60,7 +74,7 @@
       :id="accountMenuPanelId"
       ref="accountMenuPanelRef"
       role="presentation"
-      class="fixed z-[70] min-w-[14rem] max-w-[min(17.5rem,calc(100vw-0.75rem))] overflow-hidden rounded-lg border border-slate-200/90 bg-white py-0.5 text-slate-900 shadow-md ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10"
+      class="fixed z-[200] min-w-[14rem] max-w-[min(17.5rem,calc(100vw-0.75rem))] overflow-hidden rounded-lg border border-slate-200/90 bg-white py-0.5 text-slate-900 shadow-md ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10"
       :style="accountMenuPanelStyle"
     >
       <div
@@ -86,7 +100,7 @@
         <RouterLink
           role="menuitem"
           to="/profile"
-          class="flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-va-50 hover:text-va-900 dark:text-slate-200 dark:hover:bg-va-950/40 dark:hover:text-va-100"
+          class="flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/80 dark:hover:text-slate-50"
           @click="accountMenuOpen = false"
         >
           <UserCircleIcon class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
@@ -299,7 +313,7 @@ const router = useRouter()
 const ui = useUiStore()
 
 const segmentActive =
-  'bg-white text-va-900 shadow-sm dark:bg-slate-700 dark:text-va-100'
+  'bg-slate-800 text-white shadow-sm dark:bg-slate-600 dark:text-white'
 const segmentIdle =
   'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
 
@@ -314,9 +328,14 @@ const accountMenuRootRef = ref(null)
 const accountMenuPanelRef = ref(null)
 const accountMenuPanelStyle = ref({})
 const accountMenuPanelId = useId()
+let accountMenuOutsidePointerTimer = null
 
 const horizontalConfirmOpen = ref(false)
 const logoutConfirmOpen = ref(false)
+
+function toggleAccountMenu() {
+  accountMenuOpen.value = !accountMenuOpen.value
+}
 
 async function requestAxisPreference(v) {
   if (v === ui.sidebarAxisPreference) return
@@ -411,11 +430,19 @@ watch(accountMenuOpen, async (open) => {
   if (open) {
     await nextTick()
     updateAccountMenuPosition()
-    document.addEventListener('pointerdown', onAccountMenuPointerDown, true)
+    /** Hoãn gắn listener để cùng một cú bấm mở menu không bị coi là “click ngoài” và đóng ngay */
+    accountMenuOutsidePointerTimer = window.setTimeout(() => {
+      accountMenuOutsidePointerTimer = null
+      document.addEventListener('pointerdown', onAccountMenuPointerDown, true)
+    }, 0)
     document.addEventListener('keydown', onAccountMenuKeydown)
     window.addEventListener('scroll', onAccountMenuWinChange, true)
     window.addEventListener('resize', onAccountMenuWinChange)
   } else {
+    if (accountMenuOutsidePointerTimer != null) {
+      clearTimeout(accountMenuOutsidePointerTimer)
+      accountMenuOutsidePointerTimer = null
+    }
     document.removeEventListener('pointerdown', onAccountMenuPointerDown, true)
     document.removeEventListener('keydown', onAccountMenuKeydown)
     window.removeEventListener('scroll', onAccountMenuWinChange, true)
@@ -441,6 +468,9 @@ watch(
 )
 
 onUnmounted(() => {
+  if (accountMenuOutsidePointerTimer != null) {
+    clearTimeout(accountMenuOutsidePointerTimer)
+  }
   document.removeEventListener('pointerdown', onAccountMenuPointerDown, true)
   document.removeEventListener('keydown', onAccountMenuKeydown)
   window.removeEventListener('scroll', onAccountMenuWinChange, true)

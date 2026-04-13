@@ -26,34 +26,34 @@
         <template v-for="(section, si) in sections" :key="'v' + si">
           <div
             v-if="section.headingKey && !ui.sidebarCollapsed"
-            class="mb-1 mt-3 flex items-center gap-2 px-2 first:mt-0"
+            class="mb-1.5 px-2 text-xs font-medium text-slate-500 dark:text-slate-400"
+            :class="si >= 1 ? 'mt-5 border-t border-slate-200/80 pt-4 dark:border-slate-700/80' : 'mt-3'"
           >
-            <span class="h-1 w-1 shrink-0 rounded-full bg-va-700/70" aria-hidden="true" />
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 lg:text-[11px] dark:text-slate-400">
-              {{ t(section.headingKey) }}
-            </span>
+            {{ t(section.headingKey) }}
           </div>
           <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
             <template v-if="item.children?.length">
               <div
                 v-if="!ui.sidebarCollapsed"
-                class="mb-1 flex items-center gap-2 px-2"
-                :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0'"
+                class="mb-1.5 px-2 text-xs font-medium text-slate-500 dark:text-slate-400"
+                :class="ii > 0 || si > 0 ? 'mt-4' : 'mt-2'"
               >
-                <span class="h-1 w-1 shrink-0 rounded-full bg-va-700/70" aria-hidden="true" />
-                <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 lg:text-[11px] dark:text-slate-400">
-                  {{ t(item.labelKey) }}
-                </span>
+                {{ t(item.labelKey) }}
               </div>
-              <SidebarNavItem
-                v-for="c in item.children"
-                :key="'vc' + c.to"
-                :to="c.to"
-                :label="t(c.labelKey)"
-                :icon="c.icon"
-                :badge-count="badgeCount(c)"
-                :variant="navVariant"
-              />
+              <div
+                class="space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
+                :class="ui.sidebarCollapsed ? 'ml-0 border-l-0 pl-0' : 'ml-2'"
+              >
+                <SidebarNavItem
+                  v-for="c in item.children"
+                  :key="'vc' + c.to"
+                  :to="c.to"
+                  :label="t(c.labelKey)"
+                  :icon="c.icon"
+                  :badge-count="badgeCount(c)"
+                  :variant="navVariant"
+                />
+              </div>
             </template>
             <SidebarNavItem
               v-else

@@ -103,7 +103,11 @@ const badgeClass = computed(() => {
     base.push('absolute -right-0.5 top-0.5 h-4 min-w-[1rem] px-0.5 text-[9px]')
   }
   if (isActive.value) {
-    base.push('bg-va-800 text-white dark:bg-va-500')
+    if (props.variant === 'vertical-full' || props.variant === 'vertical-compact') {
+      base.push('bg-slate-700 text-white dark:bg-slate-500')
+    } else {
+      base.push('bg-va-800 text-white dark:bg-va-500')
+    }
   } else {
     base.push('bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-100')
   }
@@ -144,7 +148,7 @@ const linkClass = computed(() => {
   }
 
   const base = [
-    'relative flex items-center gap-3 rounded-lg border-l-[3px] text-sm transition-colors',
+    'relative flex items-center gap-3 rounded-lg text-sm transition-colors',
   ]
   if (v === 'vertical-compact') {
     base.push('justify-center px-2 py-2')
@@ -154,11 +158,11 @@ const linkClass = computed(() => {
 
   if (isActive.value) {
     base.push(
-      'border-va-800 bg-va-50 font-semibold text-va-900 shadow-sm shadow-va-900/5 dark:border-va-500 dark:bg-va-950/40 dark:text-va-100',
+      'bg-slate-100 font-semibold text-slate-900 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-slate-800 before:content-[\'\'] dark:bg-slate-800/70 dark:text-slate-100 dark:before:bg-slate-300',
     )
   } else {
     base.push(
-      'border-transparent text-slate-700 hover:border-slate-200 hover:bg-slate-50/90 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800/80',
+      'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800/80',
     )
   }
   return base.join(' ')
