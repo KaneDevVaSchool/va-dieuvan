@@ -39,6 +39,12 @@
     "close": "Đóng",
     "profile": "Hồ sơ",
     "account": "Tài khoản",
-    "lang": "Ngôn ngữ"
+    "lang": "Ngôn ngữ",
+    "sidebar_pref_auto": "Sidebar: tự động (rộng → dọc, hẹp → ngang)",
+    "sidebar_pref_vertical": "Sidebar: luôn dọc",
+    "sidebar_pref_horizontal": "Sidebar: luôn ngang",
+    "sidebar_cycle_layout": "Chuyển chế độ sidebar",
+    "sidebar_collapse": "Thu gọn menu",
+    "sidebar_expand": "Mở rộng menu"
   }
 }

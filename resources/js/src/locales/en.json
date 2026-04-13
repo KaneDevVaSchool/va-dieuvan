@@ -39,6 +39,12 @@
     "close": "Close",
     "profile": "Profile",
     "account": "Account",
-    "lang": "Language"
+    "lang": "Language",
+    "sidebar_pref_auto": "Sidebar: auto (wide → vertical, narrow → horizontal)",
+    "sidebar_pref_vertical": "Sidebar: always vertical",
+    "sidebar_pref_horizontal": "Sidebar: always horizontal",
+    "sidebar_cycle_layout": "Cycle sidebar mode",
+    "sidebar_collapse": "Collapse menu",
+    "sidebar_expand": "Expand menu"
   }
 }
