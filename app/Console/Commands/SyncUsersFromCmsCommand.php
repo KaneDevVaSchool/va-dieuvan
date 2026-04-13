@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Maps CMS `cms_db_staging.users` + `user_info` into this app's `users` table.
@@ -39,6 +40,18 @@ class SyncUsersFromCmsCommand extends Command
 
         $includeDeleted = (bool) $this->option('include-deleted');
         $dryRun = (bool) $this->option('dry-run');
+
+        $has = [
+            'google_id' => Schema::hasColumn('users', 'google_id'),
+            'phone' => Schema::hasColumn('users', 'phone'),
+            'employee_code' => Schema::hasColumn('users', 'employee_code'),
+            'is_active' => Schema::hasColumn('users', 'is_active'),
+        ];
+
+        $missing = array_keys(array_filter($has, fn (bool $ok) => ! $ok));
+        if ($missing !== []) {
+            $this->warn('Missing columns: users.'.implode(', users.', $missing).' — run `php artisan migrate`. Sync will omit missing fields.');
+        }
 
         $q = DB::connection('cms')
             ->table('users as u')
@@ -82,11 +95,19 @@ class SyncUsersFromCmsCommand extends Command
             $payload = [
                 'name' => $row->name,
                 'email_verified_at' => $row->email_verified_at,
-                'google_id' => $row->google_id,
-                'phone' => $row->phone,
-                'employee_code' => $row->employee_code,
-                'is_active' => $isActive,
             ];
+            if ($has['google_id']) {
+                $payload['google_id'] = $row->google_id;
+            }
+            if ($has['phone']) {
+                $payload['phone'] = $row->phone;
+            }
+            if ($has['employee_code']) {
+                $payload['employee_code'] = $row->employee_code;
+            }
+            if ($has['is_active']) {
+                $payload['is_active'] = $isActive;
+            }
 
             if ($dryRun) {
                 $this->line("[dry-run] {$email} ← cms #{$row->cms_user_id}");
