@@ -117,6 +117,17 @@
         </span>
       </div>
 
+      <!-- Mobile: layout ngang (auto) không có sidebar dọc — nút xoay bố cục đặt ở header -->
+      <button
+        type="button"
+        class="touch-manipulation md:hidden inline-flex h-10 min-w-[2.5rem] shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+        :title="t('app.sidebar_cycle_layout')"
+        @click="onCycleLayoutClick"
+      >
+        <ArrowsRightLeftIcon class="h-5 w-5" aria-hidden="true" />
+        <span class="sr-only">{{ t('app.sidebar_cycle_layout') }}</span>
+      </button>
+
       <nav
         class="hidden min-h-[2.5rem] min-w-0 flex-1 items-center gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
         :aria-label="t('app.title')"
@@ -222,4 +233,9 @@ const verticalAsideClass = computed(() => {
   }
   return base.join(' ')
 })
+
+/** Nút xoay bố cục (sidebar dọc + header mobile); trước đây thiếu handler nên bấm không có tác dụng */
+function onCycleLayoutClick() {
+  ui.cycleSidebarAxisPreference()
+}
 </script>
