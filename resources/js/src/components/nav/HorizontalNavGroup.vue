@@ -2,7 +2,8 @@
   <div ref="rootRef" class="relative shrink-0">
     <button
       type="button"
-      class="inline-flex max-w-[10rem] items-center gap-0.5 rounded-lg border-b-2 border-transparent px-2 py-2 text-left text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-600 transition sm:max-w-[12rem] sm:gap-1 sm:px-2.5 sm:text-[11px] dark:text-slate-300"
+      class="inline-flex max-w-[5rem] items-center gap-0.5 rounded-md border-b-2 border-transparent px-1 py-1 text-left text-[9px] font-medium leading-none text-slate-600 transition sm:max-w-[5.5rem] sm:gap-0.5 sm:px-1.5 sm:py-1.5 sm:text-[10px] dark:text-slate-300"
+      :title="fullLabel || label"
       :class="
         isGroupActive
           ? 'border-va-800 bg-va-50 text-va-900 shadow-sm dark:border-va-500 dark:bg-va-950/40 dark:text-va-100'
@@ -19,7 +20,7 @@
         class="h-4 w-4 shrink-0 opacity-90 sm:h-[1.125rem] sm:w-[1.125rem]"
         aria-hidden="true"
       />
-      <span class="line-clamp-2 min-w-0">{{ label }}</span>
+      <span class="min-w-0 truncate whitespace-nowrap">{{ label }}</span>
       <ChevronDownIcon
         class="h-3.5 w-3.5 shrink-0 opacity-70 transition-transform sm:h-4 sm:w-4"
         :class="open ? 'rotate-180' : ''"
@@ -112,6 +113,8 @@ const panelId = useId()
 
 const props = defineProps({
   label: { type: String, required: true },
+  /** Tooltip khi nhãn trên thanh đã rút gọn */
+  fullLabel: { type: String, default: null },
   items: { type: Array, required: true },
   badgeCount: { type: Function, required: true },
   /** i18n t() */

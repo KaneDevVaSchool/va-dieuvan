@@ -29,10 +29,23 @@
     "bottom_hub": "Hub",
     "bottom_requests": "Requests",
     "bottom_trips": "Trips",
-    "bottom_schedule": "Schedule"
+    "bottom_schedule": "Schedule",
+    "bar": {
+      "section_ops": "Dispatch",
+      "section_finance": "Finance",
+      "section_reports": "Reports",
+      "section_help": "Help",
+      "section_system": "System",
+      "dashboard": "Home",
+      "hub": "Hub",
+      "group_schedule": "Schedule",
+      "map": "Map",
+      "audit": "Log"
+    }
   },
   "app": {
     "title": "Dispatching",
+    "title_bar": "Dispatch",
     "subtitle": "Internal fleet ops",
     "create_request": "New request",
     "logout": "Log out",

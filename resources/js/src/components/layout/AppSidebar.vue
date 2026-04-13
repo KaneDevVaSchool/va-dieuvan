@@ -111,20 +111,21 @@
       >
         <AppLogo class="shrink-0" size="sm" />
         <span
-          class="min-w-0 truncate text-xs font-semibold leading-tight tracking-tight text-slate-800 dark:text-slate-100 sm:text-sm"
+          class="min-w-0 max-w-[min(12rem,28vw)] truncate text-xs font-semibold leading-tight tracking-tight text-slate-800 dark:text-slate-100 sm:max-w-[14rem] sm:text-sm"
+          :title="t('app.title')"
         >
-          {{ t('app.title') }}
+          {{ t('app.title_bar') }}
         </span>
       </div>
 
       <nav
-        class="hidden min-h-[2.5rem] min-w-0 flex-1 items-center gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
+        class="hidden min-h-9 min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
         :aria-label="t('app.title')"
       >
         <template v-for="(section, si) in sections" :key="'h' + si">
           <span
             v-if="si > 0"
-            class="mx-0.5 h-7 w-px shrink-0 self-center bg-slate-200 dark:bg-slate-600"
+            class="mx-0.5 h-5 w-px shrink-0 self-center bg-slate-200 dark:bg-slate-600"
             aria-hidden="true"
           />
           <!-- Cấp 1: không có heading section — mục phẳng hoặc nhóm con (dropdown) -->
@@ -132,7 +133,8 @@
             <template v-for="item in section.items" :key="item.to || item.labelKey">
               <HorizontalNavGroup
                 v-if="item.children?.length"
-                :label="t(item.labelKey)"
+                :label="navBarLabel(item.labelKey)"
+                :full-label="t(item.labelKey)"
                 :items="item.children"
                 :badge-count="badgeCount"
                 :t="t"
@@ -141,7 +143,8 @@
               <SidebarNavItem
                 v-else
                 :to="item.to"
-                :label="t(item.labelKey)"
+                :label="navBarLabel(item.labelKey)"
+                :full-label="t(item.labelKey)"
                 :icon="item.icon"
                 :badge-count="badgeCount(item)"
                 variant="horizontal"
@@ -152,14 +155,16 @@
           <template v-else>
             <HorizontalNavGroup
               v-if="section.items.length > 1"
-              :label="t(section.headingKey)"
+              :label="navBarLabel(section.headingKey)"
+              :full-label="t(section.headingKey)"
               :items="section.items"
               :badge-count="badgeCount"
               :t="t"
             />
             <HorizontalNavGroup
               v-else-if="section.items.length === 1 && section.items[0].children?.length"
-              :label="t(section.headingKey)"
+              :label="navBarLabel(section.headingKey)"
+              :full-label="t(section.headingKey)"
               :items="section.items[0].children"
               :badge-count="badgeCount"
               :t="t"
@@ -169,7 +174,8 @@
               v-else-if="section.items.length === 1"
               :key="'h1' + section.items[0].to"
               :to="section.items[0].to"
-              :label="t(section.items[0].labelKey)"
+              :label="navBarLabel(section.items[0].labelKey)"
+              :full-label="t(section.items[0].labelKey)"
               :icon="section.items[0].icon"
               :badge-count="badgeCount(section.items[0])"
               variant="horizontal"
@@ -198,10 +204,12 @@ import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'
 import SidebarAccountBlock from './SidebarAccountBlock.vue'
 import { useNavSections } from '../../composables/useNavSections'
+import { useNavBarLabel } from '../../composables/useNavBarLabel'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useUiStore } from '../../store/ui'
 
 const { t } = useI18n()
+const navBarLabel = useNavBarLabel()
 const { sections, badgeCount } = useNavSections()
 const { axis, preferenceLabelKey } = useSidebarLayout()
 const ui = useUiStore()

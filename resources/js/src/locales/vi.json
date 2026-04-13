@@ -29,10 +29,23 @@
     "bottom_hub": "Vận hành",
     "bottom_requests": "Yêu cầu",
     "bottom_trips": "Chuyến",
-    "bottom_schedule": "Lịch"
+    "bottom_schedule": "Lịch",
+    "bar": {
+      "section_ops": "Điều vận",
+      "section_finance": "Kế toán",
+      "section_reports": "Báo cáo",
+      "section_help": "Hỗ trợ",
+      "section_system": "Hệ thống",
+      "dashboard": "Tổng quan",
+      "hub": "Vận hành",
+      "group_schedule": "Lịch",
+      "map": "Bản đồ",
+      "audit": "Nhật ký"
+    }
   },
   "app": {
     "title": "Phần mềm điều vận",
+    "title_bar": "Điều vận",
     "subtitle": "Điều vận nội bộ",
     "create_request": "Tạo yêu cầu",
     "logout": "Đăng xuất",

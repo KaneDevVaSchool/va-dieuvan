@@ -2,7 +2,7 @@
   <RouterLink
     :to="to"
     :class="linkClass"
-    :title="showTitle ? label : undefined"
+    :title="linkTitle"
     @click="$emit('navigate')"
   >
     <component
@@ -28,6 +28,8 @@ import { NAV_ICON_MAP } from '../../config/navIconMap'
 const props = defineProps({
   to: { type: String, required: true },
   label: { type: String, required: true },
+  /** Tooltip (vd. nhãn đầy đủ khi `label` rút gọn trên thanh ngang) */
+  fullLabel: { type: String, default: null },
   icon: { type: String, default: 'home' },
   badgeCount: { type: Number, default: 0 },
   /** vertical-full | vertical-compact | horizontal | bottom */
@@ -59,6 +61,11 @@ const showTitle = computed(
     props.variant === 'bottom',
 )
 
+const linkTitle = computed(() => {
+  if (!showTitle.value) return undefined
+  return props.fullLabel || props.label
+})
+
 const iconClass = computed(() => {
   if (props.variant === 'bottom') {
     return 'h-6 w-6 shrink-0 text-current opacity-90'
@@ -77,7 +84,7 @@ const labelClass = computed(() => {
     return 'line-clamp-2 min-w-0 max-w-full text-center text-[10px] font-medium leading-tight'
   }
   if (props.variant === 'horizontal') {
-    return 'line-clamp-2 min-w-0 max-w-[5rem] text-center text-[9px] leading-tight sm:max-w-[5.5rem] sm:text-[10px]'
+    return 'min-w-0 max-w-[3.75rem] truncate whitespace-nowrap text-center text-[9px] font-medium leading-none sm:max-w-[4.25rem] sm:text-[10px]'
   }
   return 'min-w-0 flex-1 truncate'
 })
@@ -119,8 +126,8 @@ const linkClass = computed(() => {
   }
   if (v === 'horizontal') {
     const base = [
-      'relative flex shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border-b-2 px-1.5 py-1.5 transition-colors sm:px-2 sm:py-2',
-      'min-w-[2.75rem] max-w-[5.5rem] border-transparent text-slate-600 dark:text-slate-300',
+      'relative flex shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-md border-b-2 px-1 py-1 transition-colors sm:px-1.5 sm:py-1.5',
+      'min-w-[2.5rem] max-w-[4.5rem] border-transparent text-slate-600 dark:text-slate-300',
     ]
     if (isActive.value) {
       base.push(
