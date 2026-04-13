@@ -33,14 +33,107 @@ http.interceptors.response.use(
 
 export { TOKEN_KEY }
 
-/** @param {unknown} err Axios-like error */
-export function formatApiError(err, fallback = 'Có lỗi xảy ra.') {
-  const d = err?.response?.data
-  if (!d) return fallback
-  if (typeof d.message === 'string' && d.message) return d.message
-  if (d.errors && typeof d.errors === 'object') {
-    const first = Object.values(d.errors).flat()[0]
-    if (first != null) return Array.isArray(first) ? first[0] : String(first)
+/** Vietnamese sentence markers — use to keep friendly messages from backend */
+function looksLikeVietnamese(text) {
+  return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(
+    text || '',
+  )
+}
+
+function humanizeStatusOnly(status) {
+  if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.'
+  if (status === 404) return 'Không tìm thấy dữ liệu — có thể đã bị xóa hoặc bạn không có quyền xem.'
+  if (status === 409) return 'Dữ liệu bị trùng hoặc xung đột. Vui lòng làm mới trang và thử lại.'
+  if (status === 422) return 'Thông tin gửi lên chưa đúng. Vui lòng kiểm tra và nhập lại.'
+  if (status === 429) return 'Bạn thao tác quá nhanh. Vui lòng đợi vài giây rồi thử lại.'
+  if (status === 503) return 'Hệ thống đang bảo trì hoặc quá tải. Vui lòng thử lại sau.'
+  if (status >= 500) return 'Hệ thống đang gặp sự cố tạm thời. Vui lòng thử lại sau hoặc báo quản trị viên.'
+  return ''
+}
+
+/**
+ * Turn server / Laravel English messages into short Vietnamese for end users.
+ * @param {string} raw
+ * @param {number} [status]
+ */
+export function humanizeApiMessage(raw, status) {
+  const s = (typeof raw === 'string' ? raw : String(raw || '')).trim()
+  if (!s) return humanizeStatusOnly(status) || ''
+
+  const low = s.toLowerCase()
+
+  if (/already exists|already been taken|duplicate entry/i.test(s)) {
+    if (/email/i.test(s) && /already|taken|exists|duplicate/i.test(s)) {
+      return 'Email này đã được dùng. Vui lòng nhập email khác.'
+    }
+    if (/permission|`[^`]+`.*permission|permission.*guard/i.test(s)) {
+      return 'Quyền này đã có trong hệ thống. Không cần thêm lại; nếu cần, hãy đặt tên quyền khác.'
+    }
+    if (/role|`[^`]+`.*role|role.*guard/i.test(s)) {
+      return 'Vai trò này đã có trong hệ thống. Hãy dùng tên khác hoặc chỉnh sửa vai trò hiện có.'
+    }
+    if (/key|toggle|feature|unique/i.test(low)) {
+      return 'Mã định danh (key) này đã được dùng. Vui lòng chọn mã khác.'
+    }
+    return 'Thông tin này đã tồn tại, không thể tạo trùng.'
   }
-  return fallback
+
+  if (/foreign key|referenced|constraint fail|integrity constraint/i.test(low)) {
+    return 'Không thể xóa hoặc thay đổi vì dữ liệu đang được dùng ở chỗ khác.'
+  }
+
+  if (/no query results for model|not found\b/i.test(low)) {
+    return 'Không tìm thấy dữ liệu (có thể đã bị xóa).'
+  }
+
+  if (/unauthorized|unauthenticated|token.*invalid|session expired/i.test(low)) {
+    return 'Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
+  }
+
+  if (/this action is unauthorized|does not have the right permission/i.test(low)) {
+    return 'Tài khoản của bạn không có quyền thực hiện thao tác này.'
+  }
+
+  if (/the .* field is required|field is required/i.test(low)) {
+    return 'Vui lòng điền đầy đủ các ô bắt buộc còn thiếu.'
+  }
+
+  if (looksLikeVietnamese(s)) return s
+
+  if (status && humanizeStatusOnly(status)) {
+    return humanizeStatusOnly(status)
+  }
+
+  return 'Không thực hiện được. Vui lòng kiểm tra lại thông tin hoặc thử sau.'
+}
+
+/** @param {unknown} err Axios-like error */
+export function formatApiError(err, fallback = 'Đã xảy ra lỗi. Vui lòng thử lại.') {
+  const status = err?.response?.status
+
+  if (!err?.response) {
+    const code = err?.code
+    const msg = err?.message || ''
+    if (code === 'ERR_NETWORK' || code === 'ECONNABORTED' || /network/i.test(msg)) {
+      return 'Không kết nối được máy chủ. Kiểm tra internet và thử lại.'
+    }
+    return fallback
+  }
+
+  const d = err.response.data
+  let raw = ''
+
+  if (typeof d?.message === 'string' && d.message) {
+    raw = d.message
+  } else if (Array.isArray(d?.message) && d.message.length) {
+    raw = String(d.message[0])
+  } else if (d?.errors && typeof d.errors === 'object') {
+    const first = Object.values(d.errors).flat()[0]
+    if (first != null) raw = Array.isArray(first) ? first[0] : String(first)
+  }
+
+  const human = humanizeApiMessage(raw, status)
+  if (human) return human
+
+  return humanizeStatusOnly(status) || fallback
 }
