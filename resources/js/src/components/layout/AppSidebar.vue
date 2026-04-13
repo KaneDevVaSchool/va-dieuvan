@@ -178,17 +178,8 @@
         </template>
       </nav>
 
-      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
-        <button
-          type="button"
-          class="inline-flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white/80 text-slate-600 shadow-sm transition hover:border-va-200 hover:bg-va-50/80 hover:text-va-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-va-500/50 dark:hover:bg-va-950/40 dark:hover:text-va-100"
-          :title="`${t(preferenceLabelKey)} — ${t('app.sidebar_cycle_layout')}`"
-          @click="onCycleLayoutClick"
-        >
-          <ArrowsRightLeftIcon class="h-5 w-5" aria-hidden="true" />
-          <span class="sr-only">{{ t('app.sidebar_cycle_layout') }}</span>
-        </button>
-        <SidebarAccountBlock layout="horizontal" />
+      <div class="flex shrink-0 items-center">
+        <SidebarAccountBlock layout="horizontal" @cycle-layout="onCycleLayoutClick" />
       </div>
     </div>
   </header>

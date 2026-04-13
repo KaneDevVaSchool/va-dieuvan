@@ -145,6 +145,27 @@
             {{ t('app.profile') }}
           </RouterLink>
 
+          <button
+            type="button"
+            role="menuitem"
+            class="flex w-full items-center gap-3 border-t border-slate-100 px-3 py-2.5 text-left transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/80"
+            @click="onCycleLayoutFromMenu"
+          >
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-va-50 to-slate-50 text-va-800 ring-1 ring-va-800/10 dark:from-va-950/60 dark:to-slate-900 dark:text-va-200 dark:ring-va-500/25"
+            >
+              <ArrowsRightLeftIcon class="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-slate-800 dark:text-slate-100">
+                {{ t('app.sidebar_cycle_layout') }}
+              </span>
+              <span class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                {{ t(preferenceLabelKey) }}
+              </span>
+            </span>
+          </button>
+
           <div class="border-t border-slate-100 px-3 py-2.5 dark:border-slate-700" role="presentation">
             <label class="text-[11px] font-medium text-slate-500 dark:text-slate-400" :for="accountLangSelectId">
               {{ t('app.lang') }}
@@ -179,8 +200,9 @@
 import { nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
+import { ArrowsRightLeftIcon, ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 import UserAvatar from '../branding/UserAvatar.vue'
+import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'
 import { setLocale } from '../../i18n'
 
@@ -189,9 +211,17 @@ defineProps({
   compact: { type: Boolean, default: false },
 })
 
+const emit = defineEmits(['cycleLayout'])
+
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
+const { preferenceLabelKey } = useSidebarLayout()
+
+function onCycleLayoutFromMenu() {
+  accountMenuOpen.value = false
+  emit('cycleLayout')
+}
 
 const accountMenuOpen = ref(false)
 const accountMenuRootRef = ref(null)
