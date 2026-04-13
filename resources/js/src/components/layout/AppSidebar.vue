@@ -4,12 +4,27 @@
     v-if="axis === 'vertical'"
     :class="verticalAsideClass"
   >
-    <div class="shrink-0 border-b border-slate-100 bg-white/90 px-2 py-2.5 backdrop-blur-sm md:px-4 md:py-3 dark:border-slate-700 dark:bg-slate-900/90">
+    <div
+      class="shrink-0 border-b border-slate-100 bg-white/90 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90"
+      :class="ui.sidebarCollapsed ? 'px-1 py-2 md:px-1.5 md:py-2.5' : 'px-2 py-2.5 md:px-4 md:py-3'"
+    >
       <div
-        class="flex w-full items-center gap-2.5"
-        :class="ui.sidebarCollapsed ? 'justify-center' : 'justify-start'"
+        class="flex w-full min-w-0 items-center"
+        :class="
+          ui.sidebarCollapsed
+            ? 'flex-col items-center gap-1.5'
+            : 'flex-row gap-2.5 justify-start'
+        "
       >
-        <AppLogo class="shrink-0" :class="ui.sidebarCollapsed ? 'scale-90' : 'scale-100'" size="sm" />
+        <AppLogo
+          class="shrink-0 [&_img]:object-contain"
+          :class="
+            ui.sidebarCollapsed
+              ? 'max-h-8 max-w-8 overflow-hidden [&_img]:max-h-8 [&_img]:max-w-8'
+              : 'scale-100 [&_img]:max-h-9'
+          "
+          size="sm"
+        />
         <div v-if="!ui.sidebarCollapsed" class="min-w-0 flex-1">
           <div class="truncate text-xs font-semibold tracking-tight text-va-900 dark:text-va-100">
             {{ t('app.title') }}
@@ -20,12 +35,13 @@
         </div>
         <button
           type="button"
-          class="inline-flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          class="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          :class="ui.sidebarCollapsed ? 'h-8 w-8 min-w-0 p-0' : 'h-9 min-w-[2.25rem] px-0'"
           :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
           @click="ui.toggleSidebarCollapsed()"
         >
           <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-5 w-5" aria-hidden="true" />
-          <ChevronDoubleRightIcon v-else class="h-5 w-5" aria-hidden="true" />
+          <ChevronDoubleRightIcon v-else class="h-4 w-4" aria-hidden="true" />
           <span class="sr-only">
             {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
           </span>
@@ -200,7 +216,8 @@ const verticalAsideClass = computed(() => {
     'border-r shadow-[inset_-1px_0_0_0_rgba(15,23,42,0.04)] dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950/90',
   ]
   if (ui.sidebarCollapsed) {
-    base.push('w-[4.25rem] sm:w-14')
+    /** Rail cố định ~4.25rem — tránh sm:w-14 quá hẹp làm vỡ logo + nút */
+    base.push('w-[4.25rem] min-w-[4.25rem] max-w-[4.25rem]')
   } else {
     base.push('w-[min(17.5rem,calc(100vw-3rem))] min-w-[13rem] sm:w-56 md:w-60 lg:w-64')
   }

@@ -2,14 +2,18 @@
   <!-- Dọc: avatar + tên + email → dropdown -->
   <div
     v-if="layout === 'vertical'"
-    class="shrink-0 border-t border-slate-200/80 bg-white/95 p-2 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95 md:p-3"
-    :class="compact ? 'min-w-0 overflow-hidden' : ''"
+    class="shrink-0 border-t border-slate-200/80 bg-white/95 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95"
+    :class="compact ? 'min-w-0 overflow-hidden p-1 md:p-1.5' : 'p-2 md:p-3'"
   >
-    <div ref="accountMenuRootRef" class="relative">
+    <div ref="accountMenuRootRef" class="relative flex min-w-0 justify-center">
       <button
         type="button"
-        class="flex w-full min-w-0 items-center gap-2 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-2 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50/90 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
-        :class="compact ? 'px-1.5 py-1.5' : 'md:px-2.5 md:py-2.5'"
+        class="flex min-w-0 items-center rounded-lg border border-slate-200/80 bg-white/90 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50/90 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+        :class="
+          compact
+            ? 'w-full max-w-[2.75rem] flex-col justify-center gap-0 border-0 bg-transparent p-0.5 shadow-none ring-0 hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
+            : 'w-full min-w-0 gap-2 px-2 py-2 md:px-2.5 md:py-2.5'
+        "
         :aria-expanded="accountMenuOpen"
         aria-haspopup="menu"
         :aria-controls="accountMenuPanelId"
@@ -34,6 +38,7 @@
         </div>
         <span v-else class="sr-only">{{ auth.user?.name ?? '—' }}</span>
         <ChevronDownIcon
+          v-if="!compact"
           class="h-4 w-4 shrink-0 text-slate-500 opacity-80 transition-transform dark:text-slate-400"
           :class="accountMenuOpen ? 'rotate-180' : ''"
           aria-hidden="true"
