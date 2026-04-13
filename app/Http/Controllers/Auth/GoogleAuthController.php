@@ -55,14 +55,23 @@ class GoogleAuthController extends Controller
                 'password' => Hash::make(Str::random(32)),
                 'email_verified_at' => now(),
                 'google_id' => $googleUser->getId(),
+                'avatar_url' => $googleUser->getAvatar(),
             ]);
         } else {
             if (isset($user->is_active) && ! $user->is_active) {
                 return $this->loginRedirect(['error' => 'Tài khoản đã bị khóa.']);
             }
 
+            $fill = [];
             if ($googleUser->getId()) {
-                $user->forceFill(['google_id' => $googleUser->getId()])->save();
+                $fill['google_id'] = $googleUser->getId();
+            }
+            $avatar = $googleUser->getAvatar();
+            if (is_string($avatar) && $avatar !== '') {
+                $fill['avatar_url'] = $avatar;
+            }
+            if ($fill !== []) {
+                $user->forceFill($fill)->save();
             }
         }
 

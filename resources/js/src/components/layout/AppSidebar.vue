@@ -101,15 +101,17 @@
   <!-- Thanh ngang (navbar) -->
   <header
     v-else
-    class="sticky top-0 z-30 flex shrink-0 flex-col border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95"
+    class="sticky top-0 z-30 flex w-full max-w-full shrink-0 flex-col border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95"
   >
     <div
-      class="flex min-h-[3.25rem] items-center gap-2 px-2 py-1.5 sm:min-h-14 sm:gap-3 sm:px-4 sm:py-2"
+      class="flex w-full min-w-0 items-center gap-2 px-3 py-2.5 sm:min-h-14 sm:gap-3 sm:px-4 sm:py-2"
     >
-      <div class="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
-        <AppLogo size="sm" />
+      <div
+        class="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 md:max-w-[min(18rem,36vw)] md:flex-none md:shrink-0"
+      >
+        <AppLogo class="shrink-0" size="sm" />
         <span
-          class="hidden max-w-[10rem] truncate text-xs font-semibold tracking-tight text-slate-800 md:inline dark:text-slate-100"
+          class="min-w-0 truncate text-xs font-semibold leading-tight tracking-tight text-slate-800 dark:text-slate-100 sm:text-sm"
         >
           {{ t('app.title') }}
         </span>

@@ -9,14 +9,15 @@
       {{ t('app.account') }}
     </div>
     <div :class="compact ? 'flex flex-col items-center gap-2' : 'mt-0 flex items-center gap-2 md:mt-2 md:gap-3'">
-      <div
-        class="flex shrink-0 items-center justify-center rounded-lg bg-va-50 text-[11px] font-bold text-va-800 ring-1 ring-va-800/10 dark:bg-va-950/50 dark:text-va-200 dark:ring-va-500/30"
-        :class="compact ? 'mx-auto h-9 w-9 text-[10px]' : 'h-9 w-9 md:h-10 md:w-10 md:rounded-xl md:text-xs'"
+      <UserAvatar
+        class="shrink-0"
+        :class="compact ? 'mx-auto' : ''"
+        :name="auth.user?.name"
+        :email="auth.user?.email"
+        :avatar-url="auth.user?.avatar_url"
         :title="auth.user?.name ?? ''"
-        aria-hidden="true"
-      >
-        {{ userInitials }}
-      </div>
+        :size="compact ? 'sm' : 'md'"
+      />
       <div v-if="!compact" class="hidden min-w-0 flex-1 md:block">
         <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
           {{ auth.user?.name ?? '—' }}
@@ -89,22 +90,32 @@
   <!-- Ngang -->
   <div
     v-else
-    class="flex shrink-0 flex-wrap items-center justify-end gap-1.5 border-l border-slate-200/90 pl-2 sm:gap-2 sm:pl-3 dark:border-slate-600/90"
+    class="flex min-w-0 max-w-full shrink-0 items-center gap-1.5 sm:gap-2 md:gap-2.5 md:border-l md:border-slate-200/90 md:pl-3 dark:md:border-slate-600/90"
   >
-    <div
-      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-va-50 text-[11px] font-bold text-va-800 ring-1 ring-va-800/10 dark:bg-va-950/50 dark:text-va-200"
-      :title="auth.user?.name ?? ''"
-      aria-hidden="true"
+    <RouterLink
+      to="/profile"
+      class="shrink-0 touch-manipulation rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-va-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+      :aria-label="t('app.profile')"
     >
-      {{ userInitials }}
-    </div>
-    <div class="hidden max-w-[10rem] min-w-0 sm:block">
-      <div class="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
+      <UserAvatar
+        :name="auth.user?.name"
+        :email="auth.user?.email"
+        :avatar-url="auth.user?.avatar_url"
+        :title="auth.user?.name ?? ''"
+        size="lg"
+        ring-prominent
+      />
+    </RouterLink>
+    <div class="hidden min-w-0 max-w-[9rem] md:block">
+      <div class="truncate text-xs font-semibold leading-tight text-slate-900 dark:text-slate-100">
         {{ auth.user?.name ?? '—' }}
+      </div>
+      <div class="truncate text-[10px] text-slate-500 dark:text-slate-400">
+        {{ auth.user?.email ?? '' }}
       </div>
     </div>
     <select
-      class="rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[10px] shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 sm:text-xs"
+      class="shrink-0 rounded-lg border border-slate-200/90 bg-white px-1.5 py-1.5 text-[10px] font-medium shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 sm:px-2 sm:text-xs"
       :value="locale"
       :aria-label="t('app.lang')"
       @change="onLocale($event.target.value)"
@@ -112,28 +123,23 @@
       <option value="vi">VI</option>
       <option value="en">EN</option>
     </select>
-    <RouterLink
-      class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white p-1.5 text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-      to="/profile"
-      :aria-label="t('app.profile')"
-    >
-      <UserCircleIcon class="h-5 w-5" aria-hidden="true" />
-    </RouterLink>
     <button
       type="button"
-      class="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 sm:text-xs"
+      class="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white p-2 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 md:px-2.5 md:py-1.5 md:text-xs md:font-medium"
+      :title="t('app.logout')"
       @click="logout"
     >
-      {{ t('app.logout') }}
+      <ArrowRightOnRectangleIcon class="h-5 w-5 md:hidden" aria-hidden="true" />
+      <span class="hidden md:inline">{{ t('app.logout') }}</span>
     </button>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
+import UserAvatar from '../branding/UserAvatar.vue'
 import { useAuthStore } from '../../store'
 import { setLocale } from '../../i18n'
 
@@ -155,16 +161,4 @@ async function logout() {
   await router.push({ name: 'login' })
 }
 
-const userInitials = computed(() => {
-  const name = (auth.user?.name || '').trim()
-  if (name) {
-    const parts = name.split(/\s+/).filter(Boolean)
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    }
-    return name.slice(0, 2).toUpperCase()
-  }
-  const local = (auth.user?.email || '').split('@')[0] || ''
-  return (local.slice(0, 2) || '?').toUpperCase()
-})
 </script>
