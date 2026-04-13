@@ -5,7 +5,6 @@ import { fetchNavBadges } from '../api/navBadges'
 
 /**
  * Section điều hướng + badge từ API (khi đăng nhập).
- * Lọc theo `perms` (trong nav.js) tạm tắt — bật lại sau khi gắn lại UI phân quyền.
  */
 export function useNavSections() {
   const auth = useAuthStore()

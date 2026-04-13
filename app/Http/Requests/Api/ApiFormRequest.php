@@ -17,37 +17,16 @@ abstract class ApiFormRequest extends FormRequest
     }
 
     /**
-     * Check if authenticated user has required permission(s).
-     * - anyOf: at least one permission must be granted
-     * - allOf: all permissions must be granted
+     * Phân quyền theo tên permission — tạm tắt; chỉ cần đăng nhập.
+     * Bật lại bằng cách khôi phục kiểm tra `hasPermission` trong các nhánh bên dưới.
      */
     protected function allowAnyOf(array $permissions): bool
     {
-        $user = $this->user();
-        if (! $user || ! $permissions) {
-            return false;
-        }
-        foreach ($permissions as $p) {
-            if ($user->hasPermission($p)) {
-                return true;
-            }
-        }
-
-        return false;
+        return (bool) $this->user();
     }
 
     protected function allowAllOf(array $permissions): bool
     {
-        $user = $this->user();
-        if (! $user || ! $permissions) {
-            return false;
-        }
-        foreach ($permissions as $p) {
-            if (! $user->hasPermission($p)) {
-                return false;
-            }
-        }
-
-        return true;
+        return (bool) $this->user();
     }
 }

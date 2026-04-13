@@ -119,7 +119,7 @@ onMounted(async () => {
   try {
     summary.value = await getSummary()
   } catch {
-    loadError.value = 'Không tải được tổng quan. Kiểm tra quyền report.view hoặc thử lại.'
+    loadError.value = 'Không tải được tổng quan. Thử lại sau.'
   } finally {
     loading.value = false
   }

@@ -3,14 +3,13 @@
 namespace App\Http\Requests\Api\Requests;
 
 use App\Http\Requests\Api\ApiFormRequest;
-use App\Models\DispatchRequest;
 use Illuminate\Validation\Rule;
 
 class ListRequestsRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('viewAny', DispatchRequest::class);
+        return (bool) $this->user();
     }
 
     public function rules(): array

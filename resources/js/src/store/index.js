@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isLoggedIn: (s) => !!s.token || !!localStorage.getItem(TOKEN_KEY),
     roleNames: (s) => (s.user?.roles ?? []).map((r) => r.name),
-    permissionNames: (s) => s.user?.permissions ?? [],
+    permissionNames: () => [],
   },
   actions: {
     initFromStorage() {
@@ -47,15 +47,11 @@ export const useAuthStore = defineStore('auth', {
       this.user = data
       return this.user
     },
-    hasPermission(name) {
-      const u = this.user
-      if (!u || !name) return false
-      if ((u.roles ?? []).some((r) => r.name === 'admin')) return true
-      return (u.permissions ?? []).includes(name)
+    hasPermission() {
+      return !!this.user
     },
-    hasAnyPermission(list) {
-      if (!list || !list.length) return true
-      return list.some((p) => this.hasPermission(p))
+    hasAnyPermission() {
+      return !!this.user
     },
   },
 })

@@ -102,14 +102,14 @@ async function loadResources() {
     if (vr.status === 'fulfilled') {
       vehicles.value = vr.value.items ?? []
     } else {
-      resourceHint.value = 'Không tải được danh sách xe (kiểm tra quyền resource.vehicle.manage hoặc trip.assign).'
+      resourceHint.value = 'Không tải được danh sách xe.'
     }
     if (dr.status === 'fulfilled') {
       drivers.value = dr.value.items ?? []
     } else {
       resourceHint.value =
         resourceHint.value ||
-        'Không tải được danh sách tài xế (kiểm tra quyển resource.driver.manage hoặc trip.assign).'
+        'Không tải được danh sách tài xế.'
     }
   } catch {
     resourceHint.value = 'Lỗi tải danh sách xe/tài xế.'
