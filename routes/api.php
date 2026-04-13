@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\FeatureToggleController;
 use App\Http\Controllers\Api\Admin\PermissionController;
 use App\Http\Controllers\Api\Admin\RoleController;
+use App\Http\Controllers\Api\Admin\UserListController;
 use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\Admin\UserSearchController;
 use App\Http\Controllers\Api\Attachments\AttachmentController;
@@ -99,6 +100,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         Route::prefix('admin')->group(function () {
+            Route::get('users', [UserListController::class, 'index'])->middleware('throttle:60,1');
             Route::get('users/search', UserSearchController::class)->middleware('throttle:60,1');
             Route::get('users/{user}/roles', [UserRoleController::class, 'show']);
             Route::put('users/{user}/roles', [UserRoleController::class, 'update']);

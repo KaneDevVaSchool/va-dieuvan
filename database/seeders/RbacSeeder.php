@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\PermissionPlainVi;
 use Illuminate\Database\Seeder;
 
 class RbacSeeder extends Seeder
@@ -64,9 +65,12 @@ class RbacSeeder extends Seeder
         ];
 
         foreach ($permissions as $p) {
-            Permission::firstOrCreate(
+            Permission::updateOrCreate(
                 ['name' => $p, 'guard_name' => $guard],
-                ['display_name' => $p]
+                [
+                    'display_name' => $p,
+                    'plain_description' => PermissionPlainVi::text($p),
+                ]
             );
         }
 

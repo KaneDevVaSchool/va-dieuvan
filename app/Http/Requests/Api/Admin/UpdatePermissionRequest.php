@@ -16,6 +16,7 @@ class UpdatePermissionRequest extends ApiFormRequest
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255', 'regex:/^[a-z0-9_.]+$/'],
             'display_name' => ['nullable', 'string', 'max:255'],
+            'plain_description' => ['nullable', 'string', 'max:4000'],
         ];
     }
 }

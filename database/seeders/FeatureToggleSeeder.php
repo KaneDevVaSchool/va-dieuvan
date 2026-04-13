@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\FeatureToggle;
+use App\Services\FeatureToggleService;
 use Illuminate\Database\Seeder;
 
 class FeatureToggleSeeder extends Seeder
@@ -32,5 +33,8 @@ class FeatureToggleSeeder extends Seeder
                 ]
             );
         }
+
+        // Seed không đi qua FeatureToggleService; vẫn xóa cache runtime (24h) để menu/flag khớp DB ngay.
+        app(FeatureToggleService::class)->clearCache();
     }
 }

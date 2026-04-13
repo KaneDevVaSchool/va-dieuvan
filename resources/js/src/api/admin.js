@@ -50,6 +50,12 @@ export async function searchUsers(q) {
   return data.data
 }
 
+/** @param {{ q?: string, assignment?: string, per_page?: string, page?: number }} [params] */
+export async function listUsers(params = {}) {
+  const { data } = await http.get('/admin/users', { params })
+  return data.data
+}
+
 export async function getUserRoles(userId) {
   const { data } = await http.get(`/admin/users/${userId}/roles`)
   return data.data

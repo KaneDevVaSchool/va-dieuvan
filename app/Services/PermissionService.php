@@ -23,6 +23,7 @@ class PermissionService
             'name' => $data['name'],
             'guard_name' => $data['guard_name'] ?? 'web',
             'display_name' => $data['display_name'] ?? null,
+            'plain_description' => array_key_exists('plain_description', $data) ? $data['plain_description'] : null,
         ]);
     }
 
@@ -31,6 +32,9 @@ class PermissionService
         $permission->fill([
             'name' => $data['name'] ?? $permission->name,
             'display_name' => array_key_exists('display_name', $data) ? $data['display_name'] : $permission->display_name,
+            'plain_description' => array_key_exists('plain_description', $data)
+                ? $data['plain_description']
+                : $permission->plain_description,
         ]);
         $permission->save();
 

@@ -21,7 +21,7 @@ class FeatureToggleController extends Controller
 
     public function index(FeatureToggleService $features): JsonResponse
     {
-        return $this->ok($features->allCached());
+        return $this->ok($features->allFresh());
     }
 
     public function show(FeatureToggle $feature_toggle): JsonResponse
