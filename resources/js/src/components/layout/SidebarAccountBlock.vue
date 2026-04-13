@@ -350,13 +350,16 @@ const accountMenuPanelId = useId()
 const horizontalConfirmOpen = ref(false)
 const logoutConfirmOpen = ref(false)
 
-function requestAxisPreference(v) {
+async function requestAxisPreference(v) {
   if (v === ui.sidebarAxisPreference) return
   if (v === 'horizontal') {
+    accountMenuOpen.value = false
+    await nextTick()
     horizontalConfirmOpen.value = true
     return
   }
   ui.setSidebarAxisPreference(v)
+  accountMenuOpen.value = false
 }
 
 function confirmHorizontalAxis() {
@@ -401,6 +404,8 @@ function updateAccountMenuPosition() {
 
 function onAccountMenuPointerDown(e) {
   if (!accountMenuOpen.value) return
+  /** Modal xác nhận nằm ngoài panel — không xử lý để tránh cắt sự kiện click */
+  if (horizontalConfirmOpen.value || logoutConfirmOpen.value) return
   const tgt = e.target
   if (accountMenuRootRef.value?.contains(tgt)) return
   if (accountMenuPanelRef.value?.contains(tgt)) return
