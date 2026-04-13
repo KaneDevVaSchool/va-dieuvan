@@ -302,7 +302,7 @@ import { useAuthStore } from '../../store'
 import { useUiStore } from '../../store/ui'
 import { setLocale } from '../../i18n'
 
-defineProps({
+const props = defineProps({
   layout: { type: String, required: true, validator: (v) => v === 'vertical' || v === 'horizontal' },
   compact: { type: Boolean, default: false },
 })
@@ -388,10 +388,38 @@ function updateAccountMenuPosition() {
   const w = Math.min(panelW, window.innerWidth - 16)
   let left = r.right - w
   left = Math.max(8, Math.min(left, window.innerWidth - w - 8))
-  accountMenuPanelStyle.value = {
-    top: `${r.bottom + 8}px`,
-    left: `${left}px`,
-    width: `${w}px`,
+  const margin = 8
+  const vh = window.innerHeight
+  const panelEl = accountMenuPanelRef.value
+  const measured = panelEl?.getBoundingClientRect().height
+  /** Chiều cao dùng để đặt vị trí: ưu tiên đo thật sau khi render */
+  const estH =
+    measured && measured > 48
+      ? measured
+      : Math.min(vh * 0.7, 26 * 16)
+
+  if (props.layout === 'vertical') {
+    /** Nút ở đáy sidebar: mở lên trên — tránh panel nằm dưới khung nhìn */
+    let top = r.top - estH - margin
+    if (top < margin) top = margin
+    const maxH = Math.min(estH, r.top - margin - top)
+    accountMenuPanelStyle.value = {
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${w}px`,
+      maxHeight: maxH > 120 ? `${maxH}px` : `${estH}px`,
+    }
+  } else {
+    let top = r.bottom + margin
+    if (top + estH > vh - margin) {
+      top = Math.max(margin, r.top - estH - margin)
+    }
+    accountMenuPanelStyle.value = {
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${w}px`,
+      maxHeight: `${Math.min(estH, vh - top - margin)}px`,
+    }
   }
 }
 
@@ -430,6 +458,10 @@ watch(accountMenuOpen, async (open) => {
   if (open) {
     await nextTick()
     updateAccountMenuPosition()
+    /** Đo lại sau khi panel đã render (chiều cao thật) */
+    requestAnimationFrame(() => {
+      updateAccountMenuPosition()
+    })
     /** Hoãn gắn listener để cùng một cú bấm mở menu không bị coi là “click ngoài” và đóng ngay */
     accountMenuOutsidePointerTimer = window.setTimeout(() => {
       accountMenuOutsidePointerTimer = null
