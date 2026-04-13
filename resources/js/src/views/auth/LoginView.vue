@@ -167,7 +167,7 @@ onMounted(async () => {
 .logo-container img {
   height: auto;
   max-width: min(400px, 100%);
-  width: 100%;
+  width: 65%;
   display: block;
   margin-inline: auto;
 }

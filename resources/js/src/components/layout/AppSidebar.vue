@@ -6,7 +6,7 @@
   >
     <div class="shrink-0 border-b border-slate-100 bg-white/90 px-2 py-2.5 backdrop-blur-sm md:px-4 md:py-3 dark:border-slate-700 dark:bg-slate-900/90">
       <div
-        class="flex items-center gap-2.5"
+        class="flex w-full items-center gap-2.5"
         :class="ui.sidebarCollapsed ? 'justify-center' : 'justify-start'"
       >
         <AppLogo class="shrink-0" :class="ui.sidebarCollapsed ? 'scale-90' : 'scale-100'" size="sm" />
@@ -18,6 +18,18 @@
             Vehicle Dispatching · VA Schools
           </div>
         </div>
+        <button
+          type="button"
+          class="inline-flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
+          @click="ui.toggleSidebarCollapsed()"
+        >
+          <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-5 w-5" aria-hidden="true" />
+          <ChevronDoubleRightIcon v-else class="h-5 w-5" aria-hidden="true" />
+          <span class="sr-only">
+            {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
+          </span>
+        </button>
       </div>
     </div>
 
@@ -162,6 +174,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
 import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'

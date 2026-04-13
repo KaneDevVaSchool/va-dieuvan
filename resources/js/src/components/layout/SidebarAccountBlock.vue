@@ -107,39 +107,6 @@
           {{ t('app.profile') }}
         </RouterLink>
 
-        <div
-          v-if="layout === 'vertical'"
-          class="border-t border-slate-100 px-2.5 py-2 dark:border-slate-700/80"
-          role="presentation"
-        >
-          <p class="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {{ t('app.sidebar_rail_actions') }}
-          </p>
-          <div class="flex gap-1.5">
-            <button
-              type="button"
-              class="inline-flex min-h-[2.75rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border border-slate-200/90 bg-white px-1 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700/80"
-              :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
-              @click="onToggleCollapseFromMenu"
-            >
-              <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-4 w-4 shrink-0" aria-hidden="true" />
-              <ChevronDoubleRightIcon v-else class="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span class="line-clamp-2 text-center leading-tight">
-                {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
-              </span>
-            </button>
-            <button
-              type="button"
-              class="inline-flex min-h-[2.75rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border border-slate-200/90 bg-white px-1 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700/80"
-              :title="t('app.sidebar_cycle_layout')"
-              @click="onCycleFromMenu"
-            >
-              <ArrowsRightLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span class="line-clamp-2 text-center leading-tight">{{ t('app.sidebar_cycle_short') }}</span>
-            </button>
-          </div>
-        </div>
-
         <div class="border-t border-slate-100 px-2.5 py-2 dark:border-slate-700/80" role="presentation">
           <div class="space-y-2">
             <div>
@@ -289,14 +256,7 @@
 import { nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowRightOnRectangleIcon,
-  ArrowsRightLeftIcon,
-  ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon,
-  ChevronDownIcon,
-  UserCircleIcon,
-} from '@heroicons/vue/24/outline'
+import { ArrowRightOnRectangleIcon, ChevronDownIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 import UserAvatar from '../branding/UserAvatar.vue'
 import { useAuthStore } from '../../store'
 import { useUiStore } from '../../store/ui'
@@ -352,16 +312,6 @@ async function requestAxisPreference(v) {
 function confirmHorizontalAxis() {
   ui.setSidebarAxisPreference('horizontal')
   horizontalConfirmOpen.value = false
-}
-
-function onToggleCollapseFromMenu() {
-  ui.toggleSidebarCollapsed()
-  accountMenuOpen.value = false
-}
-
-function onCycleFromMenu() {
-  ui.cycleSidebarAxisPreference()
-  accountMenuOpen.value = false
 }
 
 function openLogoutConfirmFromMenu() {
