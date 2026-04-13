@@ -116,7 +116,7 @@
       </div>
 
       <nav
-        class="flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        class="hidden min-h-[2.5rem] min-w-0 flex-1 items-center gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
         :aria-label="t('app.title')"
       >
         <template v-for="(section, si) in sections" :key="'h' + si">

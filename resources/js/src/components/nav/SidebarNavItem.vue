@@ -30,11 +30,11 @@ const props = defineProps({
   label: { type: String, required: true },
   icon: { type: String, default: 'home' },
   badgeCount: { type: Number, default: 0 },
-  /** vertical-full | vertical-compact | horizontal */
+  /** vertical-full | vertical-compact | horizontal | bottom */
   variant: {
     type: String,
     default: 'vertical-full',
-    validator: (v) => ['vertical-full', 'vertical-compact', 'horizontal'].includes(v),
+    validator: (v) => ['vertical-full', 'vertical-compact', 'horizontal', 'bottom'].includes(v),
   },
 })
 
@@ -53,10 +53,16 @@ const isActive = computed(() => {
 
 const showLabel = computed(() => props.variant !== 'vertical-compact')
 const showTitle = computed(
-  () => props.variant === 'vertical-compact' || props.variant === 'horizontal',
+  () =>
+    props.variant === 'vertical-compact' ||
+    props.variant === 'horizontal' ||
+    props.variant === 'bottom',
 )
 
 const iconClass = computed(() => {
+  if (props.variant === 'bottom') {
+    return 'h-6 w-6 shrink-0 text-current opacity-90'
+  }
   if (props.variant === 'horizontal') {
     return 'h-4 w-4 shrink-0 text-current opacity-90 sm:h-[1.125rem] sm:w-[1.125rem]'
   }
@@ -67,6 +73,9 @@ const iconClass = computed(() => {
 })
 
 const labelClass = computed(() => {
+  if (props.variant === 'bottom') {
+    return 'line-clamp-2 min-w-0 max-w-full text-center text-[10px] font-medium leading-tight'
+  }
   if (props.variant === 'horizontal') {
     return 'line-clamp-2 min-w-0 max-w-[5rem] text-center text-[9px] leading-tight sm:max-w-[5.5rem] sm:text-[10px]'
   }
@@ -81,6 +90,8 @@ const badgeClass = computed(() => {
     base.push('absolute -right-0.5 -top-0.5 h-4 min-w-[1rem] px-0.5')
   } else if (props.variant === 'horizontal') {
     base.push('absolute -right-1 -top-1 h-3.5 min-w-[0.875rem] px-0.5 text-[9px]')
+  } else if (props.variant === 'bottom') {
+    base.push('absolute -right-0.5 top-0.5 h-4 min-w-[1rem] px-0.5 text-[9px]')
   }
   if (isActive.value) {
     base.push('bg-va-800 text-white dark:bg-va-500')
@@ -92,6 +103,20 @@ const badgeClass = computed(() => {
 
 const linkClass = computed(() => {
   const v = props.variant
+  if (v === 'bottom') {
+    const base = [
+      'relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-0.5 py-1 transition-colors',
+      'text-slate-600 dark:text-slate-300',
+    ]
+    if (isActive.value) {
+      base.push(
+        'border-va-800 bg-va-50/95 font-semibold text-va-900 dark:border-va-500 dark:bg-va-950/50 dark:text-va-100',
+      )
+    } else {
+      base.push('active:bg-slate-100 dark:active:bg-slate-800/80')
+    }
+    return base.join(' ')
+  }
   if (v === 'horizontal') {
     const base = [
       'relative flex shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-lg border-b-2 px-1.5 py-1.5 transition-colors sm:px-2 sm:py-2',

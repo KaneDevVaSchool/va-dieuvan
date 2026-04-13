@@ -1,10 +1,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../store'
-import { NAV_SECTIONS } from '../config/nav'
+import { BOTTOM_NAV, NAV_SECTIONS } from '../config/nav'
 import { fetchNavBadges } from '../api/navBadges'
 
 /**
- * Section điều hướng đã lọc theo quyền + badge từ API (khi đăng nhập).
+ * Section điều hướng + badge từ API (khi đăng nhập).
+ * Lọc theo `perms` (trong nav.js) tạm tắt — bật lại sau khi gắn lại UI phân quyền.
  */
 export function useNavSections() {
   const auth = useAuthStore()
@@ -12,18 +13,12 @@ export function useNavSections() {
 
   function filterItems(items) {
     if (!items?.length) return []
-    return items
-      .map((i) => {
-        if (i.children?.length) {
-          const ch = filterItems(i.children)
-          if (!ch.length) return null
-          if (i.perms?.length && !auth.hasAnyPermission(i.perms)) return null
-          return { ...i, children: ch }
-        }
-        if (!auth.hasAnyPermission(i.perms)) return null
-        return i
-      })
-      .filter(Boolean)
+    return items.map((i) => {
+      if (i.children?.length) {
+        return { ...i, children: filterItems(i.children) }
+      }
+      return i
+    })
   }
 
   const sections = computed(() =>
@@ -32,6 +27,9 @@ export function useNavSections() {
       items: filterItems(sec.items),
     })).filter((sec) => sec.items.length > 0),
   )
+
+  /** Thanh điều hướng dưới (mobile, layout ngang) */
+  const bottomNavItems = computed(() => BOTTOM_NAV)
 
   onMounted(async () => {
     if (!auth.isLoggedIn) return
@@ -52,5 +50,5 @@ export function useNavSections() {
     return Number.isFinite(n) ? n : 0
   }
 
-  return { sections, badgeCount }
+  return { sections, badgeCount, bottomNavItems }
 }

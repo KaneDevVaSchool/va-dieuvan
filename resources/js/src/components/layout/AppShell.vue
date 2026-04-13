@@ -8,20 +8,39 @@
   >
     <AppSidebar />
     <main
-      class="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5"
+      :class="[
+        'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5',
+        isHorizontalMobilePad,
+      ]"
     >
       <slot />
     </main>
+    <!-- Menu dưới: chỉ layout ngang + viewport &lt; md -->
+    <div
+      v-if="isHorizontal"
+      class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden"
+    >
+      <div class="pointer-events-auto pb-[env(safe-area-inset-bottom)]">
+        <MobileBottomNav />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import AppSidebar from './AppSidebar.vue'
+import MobileBottomNav from '../nav/MobileBottomNav.vue'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'
 
-const { isVertical } = useSidebarLayout()
+const { isVertical, isHorizontal } = useSidebarLayout()
+
+const isHorizontalMobilePad = computed(() =>
+  isHorizontal.value
+    ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-5'
+    : '',
+)
 const auth = useAuthStore()
 
 onMounted(async () => {

@@ -12,7 +12,7 @@
       </div>
     </Card>
 
-    <Card v-if="canAssign" title="Gán tài nguyên (dispatcher)">
+    <Card title="Gán tài nguyên (dispatcher)">
       <p v-if="resourceHint" class="mb-2 text-xs text-amber-800">{{ resourceHint }}</p>
       <form class="grid gap-3 md:grid-cols-2" @submit.prevent="doAssign">
         <Input v-model.number="assign.lock_version" label="lock_version" type="number" />
@@ -36,10 +36,6 @@
           <span v-if="assignMsg" class="ml-3 text-sm text-slate-600">{{ assignMsg }}</span>
         </div>
       </form>
-    </Card>
-
-    <Card v-else title="Gán tài nguyên">
-      <p class="text-sm text-slate-600">Bạn không có quyền <code class="rounded bg-slate-100 px-1">trip.assign</code>.</p>
     </Card>
 
     <Card title="Cập nhật trạng thái">
@@ -68,7 +64,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
@@ -78,9 +74,6 @@ import { assignTrip, getTrip, updateTripStatus } from '../../api/trips'
 import { listVehicles, listDrivers } from '../../api/operational'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripStatus } from '../../util/labels'
-import { useAuthStore } from '../../store'
-
-const auth = useAuthStore()
 const route = useRoute()
 const trip = ref(null)
 const loading = ref(true)
@@ -93,8 +86,6 @@ const resourceHint = ref('')
 const vehicleChoice = ref('')
 const driverChoice = ref('')
 
-const canAssign = computed(() => auth.hasPermission('trip.assign'))
-
 const assign = ref({ lock_version: 0, vehicle_id: null, driver_id: null, transport_provider_id: null })
 
 function fmt(v) {
@@ -103,7 +94,6 @@ function fmt(v) {
 
 async function loadResources() {
   resourceHint.value = ''
-  if (!canAssign.value) return
   try {
     const [vr, dr] = await Promise.allSettled([
       listVehicles({ status: 'ready', per_page: 150 }),

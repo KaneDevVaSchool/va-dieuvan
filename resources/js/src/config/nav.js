@@ -1,6 +1,6 @@
 /**
- * Mục sidebar / drawer. `perms: []` = mọi user đã đăng nhập.
- * `perms: ['a','b']` = cần ít nhất một quyền (hoặc role admin).
+ * Mục sidebar / drawer.
+ * `perms`: metadata cho lọc theo quyền (hiện chưa áp dụng trong UI; sẽ dùng sau).
  * `icon`: khóa trong `navIconMap.js`
  * `badgeKey`: khóa trả về từ GET /api/nav/badges (frontend map số hiển thị)
  * `sectionKey`: nhóm accordion (null = luôn mở, không có tiêu đề section)
@@ -106,6 +106,7 @@ export const BOTTOM_NAV = [
     labelKey: 'nav.bottom_requests',
     perms: ['request.create', 'request.approve', 'request.paper.manage', 'trip.assign'],
     icon: 'requests',
+    badgeKey: 'pending_dispatch_requests',
   },
   { to: '/trips', labelKey: 'nav.bottom_trips', perms: ['trip.view_all', 'trip.view_own', 'trip.assign'], icon: 'trips' },
   { to: '/schedule', labelKey: 'nav.bottom_schedule', perms: ['trip.view_all', 'trip.view_own', 'trip.assign'], icon: 'schedule' },
