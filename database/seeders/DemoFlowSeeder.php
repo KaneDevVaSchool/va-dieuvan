@@ -10,6 +10,7 @@ use App\Models\TransportProvider;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleComplianceDocument;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -135,6 +136,18 @@ class DemoFlowSeeder extends Seeder
         $bus = Vehicle::where('license_plate', '51A-10015')->first();
         if ($bus && $driver) {
             $bus->update(['default_driver_id' => $driver->id]);
+        }
+
+        if ($bus) {
+            VehicleComplianceDocument::updateOrCreate(
+                ['vehicle_id' => $bus->id, 'doc_type' => 'registration'],
+                [
+                    'title' => 'Đăng ký — mẫu seed',
+                    'notes' => 'Bản ghi demo; upload PDF/ảnh từ panel chi tiết xe.',
+                    'issued_at' => now()->subYears(1)->toDateString(),
+                    'expires_at' => now()->addYears(4)->toDateString(),
+                ]
+            );
         }
 
         $depart = now()->addDay()->setHour(7)->setMinute(0)->setSecond(0);

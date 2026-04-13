@@ -2,7 +2,7 @@ import { http } from './http'
 
 /**
  * @param {object} opts
- * @param {'trip'|'cargo_shipment'|'trip_cost'|'dispatch_request'|'driver_compliance_document'} opts.attachable_type
+ * @param {'trip'|'cargo_shipment'|'trip_cost'|'dispatch_request'|'driver_compliance_document'|'vehicle_compliance_document'} opts.attachable_type
  * @param {number} opts.attachable_id
  * @param {string} [opts.kind]
  * @param {File} opts.file

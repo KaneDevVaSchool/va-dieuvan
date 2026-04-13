@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\D2D\StudentController;
 use App\Http\Controllers\Api\NavBadgesController;
 use App\Http\Controllers\Api\Notifications\InboxController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
+use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
 use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\Payments\ReconciliationController;
 use App\Http\Controllers\Api\ReferencePricingController;
@@ -49,6 +50,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/user', [UserProfileController::class, 'show']);
 
         Route::get('/vehicles', [OperationalResourceController::class, 'vehicles']);
+        Route::get('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocumentController::class, 'index']);
+        Route::get('/vehicles/{vehicle}/compliance-audit', [VehicleComplianceDocumentController::class, 'auditLogs']);
         Route::get('/drivers', [OperationalResourceController::class, 'drivers']);
         Route::get('/drivers/{driver}', [OperationalResourceController::class, 'showDriver']);
         Route::get('/drivers/{driver}/compliance-documents', [DriverComplianceDocumentController::class, 'index']);
@@ -209,6 +212,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/vehicles', [OperationalResourceController::class, 'storeVehicle'])
             ->middleware('throttle:30,1');
         Route::patch('/vehicles/{vehicle}', [OperationalResourceController::class, 'updateVehicle'])
+            ->middleware('throttle:30,1');
+        Route::post('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocumentController::class, 'store'])
+            ->middleware('throttle:30,1');
+        Route::patch('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'update'])
+            ->middleware('throttle:30,1');
+        Route::delete('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'destroy'])
             ->middleware('throttle:30,1');
         Route::post('/transport-providers', [OperationalResourceController::class, 'storeTransportProvider'])
             ->middleware('throttle:30,1');

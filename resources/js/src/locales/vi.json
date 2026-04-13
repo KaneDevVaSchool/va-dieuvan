@@ -169,6 +169,16 @@
         "assign_driver_assigning": "Đang xử lý…",
         "assignment_done": "Hoàn thành",
         "view_history": "Xem lịch sử đầy đủ",
+        "delete": "Xóa",
+        "vehicle_compliance_attachments": "Giấy tờ & tệp đính kèm (xe)",
+        "vehicle_compliance_attachments_hint": "Bổ sung đăng ký, BH, kiểm định bản scan… (các ngày hết hạn tổng hợp ở khối BH/ĐK phía trên).",
+        "vehicle_compliance_quick_add": "Thêm nhanh",
+        "vehicle_doc_modal_add": "Thêm giấy tờ xe",
+        "vehicle_doc_modal_edit": "Sửa giấy tờ xe",
+        "vehicle_doc_save": "Lưu",
+        "vehicle_doc_ph_title": "VD: Số đăng ký, số hợp đồng BH…",
+        "vehicle_doc_ph_notes": "Ghi chú nội bộ, nơi cấp…",
+        "vehicle_doc_confirm_delete": "Xóa giấy tờ và tệp đính kèm?",
         "demo_note": "Phân công chuyến chi tiết lấy từ module chuyến; màn hình này tập trung xe, gán tài xế mặc định và đối tác."
     },
     "driver_detail": {
@@ -216,6 +226,16 @@
         "audit_title": "Nhật ký thay đổi (giấy tờ tài xế)",
         "audit_hint": "Các sự kiện driver_compliance_document.* và upload tệp được ghi vào activity log.",
         "audit_full": "Mở activity log đầy đủ"
+    },
+    "vehicle_compliance_doc_type": {
+        "registration": "Đăng ký xe",
+        "insurance_certificate": "Giấy / hợp đồng bảo hiểm",
+        "inspection_certificate": "Giấy kiểm định (bản scan)",
+        "transport_permit": "Phù hiệu vận tải",
+        "ownership_proof": "Giấy tờ sở hữu / ủy quyền",
+        "lease_contract": "Hợp đồng thuê xe",
+        "maintenance_record": "Phiếu bảo dưỡng / sửa chữa",
+        "other": "Khác"
     },
     "driver_compliance_doc_type": {
         "id_card": "CCCD / CMND",

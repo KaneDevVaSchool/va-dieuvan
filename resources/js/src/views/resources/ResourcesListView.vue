@@ -1,22 +1,23 @@
 <template>
   <div
-    class="resources-shell rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+    class="resources-shell mx-auto max-w-[1600px] rounded-xl border border-slate-200 bg-white px-2 text-slate-900 shadow-sm sm:px-4 md:px-5 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
   >
     <!-- Header -->
-    <div class="border-b border-slate-200 px-4 py-4 sm:px-5 dark:border-slate-700">
+    <div class="border-b border-slate-200 py-4 dark:border-slate-700">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
           <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ t('resources.page_subtitle') }}</p>
         </div>
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
+        <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+          <div class="w-full min-w-0 overflow-x-auto overscroll-x-contain sm:w-auto sm:overflow-visible">
+            <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
             <button
               v-for="tab in tabs"
               :key="tab.id"
               type="button"
               :class="[
-                'rounded-md px-3 py-1.5 text-xs font-medium transition',
+                'shrink-0 snap-start rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
                 activeTab === tab.id
                   ? 'bg-teal-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
@@ -25,18 +26,19 @@
             >
               {{ t(tab.labelKey) }}
             </button>
+            </div>
           </div>
-          <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+          <div class="flex w-full min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
             <input
               v-model="search"
               type="search"
-              class="w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 sm:min-w-[200px] dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+              class="min-h-[44px] w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 sm:min-w-[200px] sm:py-2 sm:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
               :placeholder="searchPlaceholder"
             />
             <button
               v-if="activeTab === 'drivers'"
               type="button"
-              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:py-2"
               @click="openAssignModal(null)"
             >
               {{ t('resources.assign_driver') }}
@@ -44,7 +46,7 @@
             <button
               v-else-if="activeTab === 'vehicles' && canManageVehicles"
               type="button"
-              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:py-2"
               @click="openVehicleForm(null)"
             >
               {{ t('resources.add_vehicle') }}
@@ -52,7 +54,7 @@
             <button
               v-else-if="activeTab === 'suppliers' && canManageProviders"
               type="button"
-              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500"
+              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:py-2"
               @click="openProviderForm(null)"
             >
               {{ t('resources.add_supplier') }}
@@ -60,7 +62,7 @@
             <button
               v-else
               type="button"
-              class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:min-h-0 sm:py-2"
               disabled
             >
               {{ addButtonLabel }}
@@ -70,7 +72,7 @@
       </div>
 
       <!-- Filters -->
-      <div class="mt-4 grid gap-3 sm:grid-cols-3">
+      <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
           {{ t('resources.filter_status') }}
           <select
@@ -125,12 +127,36 @@
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">{{ t('resources.loading') }}</div>
     <div v-else-if="error" class="px-4 py-12 text-center text-sm text-rose-600">{{ error }}</div>
 
-    <div v-else class="relative flex min-h-[420px]">
+    <div v-else class="relative flex min-h-[280px] flex-col lg:min-h-[420px] lg:flex-row">
       <!-- Table -->
-      <div class="min-w-0 flex-1 overflow-x-auto p-3 sm:p-4">
+      <div class="min-w-0 flex-1 overflow-x-auto p-2 sm:p-4">
+        <!-- Xe: thẻ (mobile) -->
+        <div v-if="activeTab === 'vehicles'" class="space-y-2 md:hidden">
+          <button
+            v-for="v in filteredVehicles"
+            :key="v.id"
+            type="button"
+            class="flex w-full items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition active:bg-teal-50/60 dark:border-slate-700 dark:bg-slate-900/50 dark:active:bg-slate-800"
+            :class="selectedVehicle?.id === v.id ? 'ring-2 ring-teal-500/80' : ''"
+            @click="selectVehicle(v)"
+          >
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
+              <component :is="vehicleIconComponent(v.iconKind)" class="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
+              <div class="text-xs text-slate-500">{{ v.model }} · {{ v.typeLabel }}</div>
+              <div class="mt-1.5 flex flex-wrap gap-1">
+                <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
+                <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
+              </div>
+            </div>
+            <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+          </button>
+        </div>
         <div
           v-if="activeTab === 'vehicles'"
-          class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
+          class="hidden overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50 md:block"
         >
           <table class="w-full min-w-[780px] border-separate border-spacing-0 text-left text-sm">
             <thead>
@@ -293,11 +319,11 @@
       >
         <aside
           v-if="activeTab === 'vehicles' && selectedVehicle"
-          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-3 backdrop-blur-sm lg:static lg:z-auto lg:inset-auto lg:flex lg:w-[420px] lg:shrink-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-0"
+          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 lg:static lg:z-auto lg:inset-auto lg:flex lg:w-[min(100%,420px)] lg:max-w-none lg:shrink-0 lg:bg-transparent lg:p-0 lg:pt-0 lg:pb-0 lg:backdrop-blur-0"
           @click.self="closePanel"
         >
           <div
-            class="flex h-full w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-600 dark:bg-slate-900 lg:max-w-none lg:rounded-none lg:border-l lg:border-y-0 lg:border-r-0"
+            class="flex h-full max-h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-600 dark:bg-slate-900 lg:max-h-none lg:max-w-none lg:rounded-none lg:border-l lg:border-y-0 lg:border-r-0"
             @click.stop
           >
             <div class="border-b border-slate-200 p-4 dark:border-slate-700">
@@ -354,7 +380,7 @@
               </div>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-y-auto p-4">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4">
               <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_default_driver') }}</div>
               <div class="mt-2 rounded-lg border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-800/40">
                 <div v-if="selectedVehicle.defaultDriver" class="space-y-1 text-sm">
@@ -407,6 +433,60 @@
                   <div class="text-sm font-medium text-slate-900 dark:text-white">{{ t('resources.doc_inspection') }}</div>
                   <div class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ complianceDocLine(selectedVehicle.inspection) }}</div>
                 </div>
+              </div>
+
+              <div v-if="canManageVehicles" class="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.vehicle_compliance_attachments') }}
+                    </div>
+                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_compliance_attachments_hint') }}</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="shrink-0 rounded-lg bg-teal-600 px-3 py-2 text-xs font-medium text-white hover:bg-teal-500"
+                    @click="openVehicleDocModal(null)"
+                  >
+                    {{ t('resources.vehicle_compliance_quick_add') }}
+                  </button>
+                </div>
+                <ul class="mt-3 space-y-2">
+                  <li
+                    v-for="doc in vehicleComplianceDocs"
+                    :key="doc.id"
+                    class="rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/40"
+                  >
+                    <div class="flex flex-wrap items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <div class="font-medium text-slate-900 dark:text-white">{{ vehicleDocTypeLabel(doc.doc_type) }}</div>
+                        <div v-if="doc.title" class="mt-0.5 text-slate-600 dark:text-slate-400">{{ doc.title }}</div>
+                        <div class="mt-1 flex flex-wrap gap-1">
+                          <span :class="compliancePillClass(doc.expiry)">{{ vehicleDocExpiryLabel(doc.expiry) }}</span>
+                          <span v-if="doc.expires_at" class="text-slate-500">{{ doc.expires_at }}</span>
+                        </div>
+                        <div v-if="doc.notes" class="mt-1 text-slate-600 dark:text-slate-400">{{ doc.notes }}</div>
+                        <div v-if="doc.attachments?.length" class="mt-2 flex flex-wrap gap-2">
+                          <a
+                            v-for="a in doc.attachments"
+                            :key="a.id"
+                            :href="a.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-teal-700 underline dark:text-teal-400"
+                          >
+                            {{ a.original_name || 'file' }}
+                          </a>
+                        </div>
+                      </div>
+                      <div class="flex shrink-0 gap-2">
+                        <button type="button" class="text-teal-700 dark:text-teal-400" @click="openVehicleDocModal(doc)">{{ t('resources.action_edit') }}</button>
+                        <button type="button" class="text-rose-600" @click="confirmDeleteVehicleDoc(doc)">{{ t('resources.delete') }}</button>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+                <p v-if="!vehicleComplianceDocs.length" class="mt-2 text-xs text-slate-500">{{ t('resources.empty') }}</p>
               </div>
 
               <div class="mt-6 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_assignments') }}</div>
@@ -843,6 +923,90 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Modal: giấy tờ xe -->
+    <Teleport to="body">
+      <div
+        v-if="vehicleDocModalOpen"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        @click.self="vehicleDocModalOpen = false"
+      >
+        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
+          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+              {{ editingVehicleDocId ? t('resources.vehicle_doc_modal_edit') : t('resources.vehicle_doc_modal_add') }}
+            </h2>
+          </div>
+          <form class="max-h-[75vh] space-y-3 overflow-y-auto overscroll-y-contain p-4" @submit.prevent="submitVehicleDocForm">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('driver_detail.col_doc_type') }}
+              <select
+                v-model="vehicleDocForm.doc_type"
+                required
+                class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              >
+                <option v-for="opt in vehicleDocTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </select>
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('driver_detail.col_title') }}
+              <input
+                v-model="vehicleDocForm.title"
+                type="text"
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.vehicle_doc_ph_title')"
+              />
+            </label>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('driver_detail.notes') }}
+              <textarea
+                v-model="vehicleDocForm.notes"
+                rows="2"
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.vehicle_doc_ph_notes')"
+              />
+            </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('driver_detail.issued_at') }}
+                <input v-model="vehicleDocForm.issued_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('driver_detail.expires_at') }}
+                <input v-model="vehicleDocForm.expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              </label>
+            </div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('driver_detail.upload_file') }}
+              <input type="file" class="mt-1 w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-teal-50 file:px-3 file:py-1.5 file:text-teal-800 dark:file:bg-teal-950 dark:file:text-teal-300" @change="onVehicleDocFile" />
+            </label>
+            <label v-if="editingVehicleDocId" class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+              <input v-model="vehicleDocForm.replace_file" type="checkbox" class="rounded border-slate-300 text-teal-600" />
+              {{ t('driver_detail.replace_file') }}
+            </label>
+            <p v-if="vehicleDocFormError" class="text-xs text-rose-600">{{ vehicleDocFormError }}</p>
+            <div class="flex gap-2 pt-2">
+              <button
+                type="button"
+                class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                @click="vehicleDocModalOpen = false"
+              >
+                {{ t('app.cancel') }}
+              </button>
+              <button
+                type="submit"
+                class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                :disabled="vehicleDocSaving"
+              >
+                {{ vehicleDocSaving ? t('resources.loading') : t('resources.vehicle_doc_save') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -855,12 +1019,16 @@ import {
   createDriverFromUser,
   createTransportProvider,
   createVehicle,
+  createVehicleComplianceDocument,
+  deleteVehicleComplianceDocument,
   listDrivers,
   listTransportProviders,
+  listVehicleComplianceDocuments,
   listVehicles,
   searchUsersForDriverAssignment,
   updateTransportProvider,
   updateVehicle,
+  updateVehicleComplianceDocument,
 } from '../../api/operational'
 import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
@@ -950,6 +1118,39 @@ function emptyProviderForm() {
 }
 
 const providerForm = ref(emptyProviderForm())
+
+const VEHICLE_DOC_TYPES = [
+  'registration',
+  'insurance_certificate',
+  'inspection_certificate',
+  'transport_permit',
+  'ownership_proof',
+  'lease_contract',
+  'maintenance_record',
+  'other',
+]
+
+const vehicleComplianceDocs = ref([])
+const vehicleDocModalOpen = ref(false)
+const vehicleDocSaving = ref(false)
+const vehicleDocFormError = ref('')
+const editingVehicleDocId = ref(null)
+const vehicleDocFile = ref(null)
+const vehicleDocForm = ref({
+  doc_type: 'registration',
+  title: '',
+  notes: '',
+  issued_at: '',
+  expires_at: '',
+  replace_file: false,
+})
+
+const vehicleDocTypeOptions = computed(() =>
+  VEHICLE_DOC_TYPES.map((value) => ({
+    value,
+    label: t(`vehicle_compliance_doc_type.${value}`),
+  })),
+)
 
 const searchPlaceholder = computed(() => {
   if (activeTab.value === 'vehicles') return t('resources.search_vehicles')
@@ -1275,6 +1476,115 @@ watch(activeTab, () => {
   search.value = ''
   filters.value = { status: '', type: '', compliance: '', contract: '' }
 })
+
+watch(
+  () => [selectedVehicle.value?.id, canManageVehicles.value],
+  async ([id, can]) => {
+    vehicleComplianceDocs.value = []
+    if (!id || !can) return
+    try {
+      const res = await listVehicleComplianceDocuments(id)
+      vehicleComplianceDocs.value = res.items || []
+    } catch {
+      vehicleComplianceDocs.value = []
+    }
+  },
+  { immediate: true },
+)
+
+function vehicleDocTypeLabel(type) {
+  const k = `vehicle_compliance_doc_type.${type}`
+  return t(k) !== k ? t(k) : type
+}
+
+function vehicleDocExpiryLabel(exp) {
+  if (!exp || exp.state === 'none') return t('driver_detail.expiry_none')
+  if (exp.state === 'ok') return t('resources.compliance_ok')
+  if (exp.state === 'soon') return t('resources.exp_in_days', { n: exp.days })
+  return t('resources.compliance_exp')
+}
+
+function emptyVehicleDocForm() {
+  vehicleDocForm.value = {
+    doc_type: 'registration',
+    title: '',
+    notes: '',
+    issued_at: '',
+    expires_at: '',
+    replace_file: false,
+  }
+  vehicleDocFile.value = null
+}
+
+function openVehicleDocModal(doc) {
+  vehicleDocFormError.value = ''
+  if (doc) {
+    editingVehicleDocId.value = doc.id
+    vehicleDocForm.value = {
+      doc_type: doc.doc_type,
+      title: doc.title || '',
+      notes: doc.notes || '',
+      issued_at: doc.issued_at || '',
+      expires_at: doc.expires_at || '',
+      replace_file: false,
+    }
+    vehicleDocFile.value = null
+  } else {
+    editingVehicleDocId.value = null
+    emptyVehicleDocForm()
+  }
+  vehicleDocModalOpen.value = true
+}
+
+function onVehicleDocFile(e) {
+  vehicleDocFile.value = e.target.files?.[0] || null
+}
+
+async function submitVehicleDocForm() {
+  if (!selectedVehicle.value) return
+  vehicleDocSaving.value = true
+  vehicleDocFormError.value = ''
+  const vid = selectedVehicle.value.id
+  try {
+    const fd = new FormData()
+    fd.append('doc_type', vehicleDocForm.value.doc_type)
+    if (vehicleDocForm.value.title) fd.append('title', vehicleDocForm.value.title)
+    if (vehicleDocForm.value.notes) fd.append('notes', vehicleDocForm.value.notes)
+    if (vehicleDocForm.value.issued_at) fd.append('issued_at', vehicleDocForm.value.issued_at)
+    if (vehicleDocForm.value.expires_at) fd.append('expires_at', vehicleDocForm.value.expires_at)
+    if (vehicleDocFile.value) fd.append('file', vehicleDocFile.value)
+    if (editingVehicleDocId.value) {
+      fd.append('replace_file', vehicleDocForm.value.replace_file ? '1' : '0')
+      await updateVehicleComplianceDocument(vid, editingVehicleDocId.value, fd)
+    } else {
+      await createVehicleComplianceDocument(vid, fd)
+    }
+    vehicleDocModalOpen.value = false
+    const res = await listVehicleComplianceDocuments(vid)
+    vehicleComplianceDocs.value = res.items || []
+  } catch (e) {
+    const msg = e?.response?.data?.message
+    const errs = e?.response?.data?.errors
+    vehicleDocFormError.value =
+      (typeof msg === 'string' && msg) ||
+      (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+      t('resources.load_error')
+  } finally {
+    vehicleDocSaving.value = false
+  }
+}
+
+async function confirmDeleteVehicleDoc(doc) {
+  if (!selectedVehicle.value || !canManageVehicles.value) return
+  if (!window.confirm(t('resources.vehicle_doc_confirm_delete'))) return
+  try {
+    await deleteVehicleComplianceDocument(selectedVehicle.value.id, doc.id)
+    const res = await listVehicleComplianceDocuments(selectedVehicle.value.id)
+    vehicleComplianceDocs.value = res.items || []
+  } catch {
+    alert(t('resources.load_error'))
+  }
+}
 
 function labelProviderStatus(s) {
   if (s === 'active') return t('resources.provider_active')

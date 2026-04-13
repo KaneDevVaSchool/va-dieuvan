@@ -113,3 +113,43 @@ export async function updateVehicle(vehicleId, payload) {
   const { data } = await http.patch(`/vehicles/${vehicleId}`, payload)
   return data.data
 }
+
+/** @param {number} vehicleId */
+export async function listVehicleComplianceDocuments(vehicleId) {
+  const { data } = await http.get(`/vehicles/${vehicleId}/compliance-documents`)
+  return data.data
+}
+
+/** @param {number} vehicleId */
+export async function getVehicleComplianceAudit(vehicleId) {
+  const { data } = await http.get(`/vehicles/${vehicleId}/compliance-audit`)
+  return data.data
+}
+
+/**
+ * @param {number} vehicleId
+ * @param {FormData} formData
+ */
+export async function createVehicleComplianceDocument(vehicleId, formData) {
+  const { data } = await http.post(`/vehicles/${vehicleId}/compliance-documents`, formData)
+  return data.data
+}
+
+/**
+ * @param {number} vehicleId
+ * @param {number} docId
+ * @param {FormData} formData
+ */
+export async function updateVehicleComplianceDocument(vehicleId, docId, formData) {
+  const { data } = await http.patch(`/vehicles/${vehicleId}/compliance-documents/${docId}`, formData)
+  return data.data
+}
+
+/**
+ * @param {number} vehicleId
+ * @param {number} docId
+ */
+export async function deleteVehicleComplianceDocument(vehicleId, docId) {
+  const { data } = await http.delete(`/vehicles/${vehicleId}/compliance-documents/${docId}`)
+  return data.data
+}

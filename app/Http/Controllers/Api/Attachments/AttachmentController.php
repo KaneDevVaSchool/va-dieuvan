@@ -12,6 +12,7 @@ use App\Models\DispatchRequest;
 use App\Models\DriverComplianceDocument;
 use App\Models\Trip;
 use App\Models\TripCost;
+use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Support\FinancialDataLock;
@@ -34,10 +35,17 @@ class AttachmentController extends Controller
             'trip_cost' => [TripCost::findOrFail($data['attachable_id']), 'costs'],
             'dispatch_request' => [DispatchRequest::findOrFail($data['attachable_id']), 'dispatch_requests'],
             'driver_compliance_document' => [DriverComplianceDocument::findOrFail($data['attachable_id']), 'driver_compliance_documents'],
+            'vehicle_compliance_document' => [VehicleComplianceDocument::findOrFail($data['attachable_id']), 'vehicle_compliance_documents'],
         };
 
         if ($attachable instanceof DriverComplianceDocument) {
             if (! $request->user()?->can('resource.driver.manage')) {
+                abort(403);
+            }
+        }
+
+        if ($attachable instanceof VehicleComplianceDocument) {
+            if (! $request->user()?->can('resource.vehicle.manage')) {
                 abort(403);
             }
         }

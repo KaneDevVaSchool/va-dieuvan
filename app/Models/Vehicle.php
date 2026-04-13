@@ -37,4 +37,9 @@ class Vehicle extends Model
     {
         return $this->hasMany(Trip::class);
     }
+
+    public function complianceDocuments(): HasMany
+    {
+        return $this->hasMany(VehicleComplianceDocument::class);
+    }
 }
