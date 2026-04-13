@@ -464,30 +464,6 @@ const cmsFields = [
     section: 'Thông tin công tác',
     placeholder: 'Nếu có',
   },
-  {
-    key: 'department_id',
-    label: 'department_id',
-    type: 'number',
-    tab: 'work',
-    section: 'Hệ thống & ghi chú',
-    placeholder: 'Mã nội bộ CMS (nếu được cung cấp)',
-  },
-  {
-    key: 'company_id',
-    label: 'company_id',
-    type: 'number',
-    tab: 'work',
-    section: 'Hệ thống & ghi chú',
-    placeholder: 'Mã nội bộ CMS (nếu được cung cấp)',
-  },
-  {
-    key: 'note',
-    label: 'Ghi chú',
-    type: 'textarea',
-    tab: 'work',
-    section: 'Hệ thống & ghi chú',
-    placeholder: 'Thông tin bổ sung cho nhân sự (không bắt buộc)',
-  },
 ]
 
 const auth = useAuthStore()
