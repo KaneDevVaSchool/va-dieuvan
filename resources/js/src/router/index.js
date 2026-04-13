@@ -175,7 +175,7 @@ const router = createRouter({
             component: AuditLogsView,
             meta: {
                 title: "Activity log",
-                subtitle: "Truy vết",
+                subtitle: "Quyền hạn",
                 permission: "audit_log.view",
                 featureKey: "module.system.audit",
             },
@@ -186,7 +186,7 @@ const router = createRouter({
             component: SystemRolesView,
             meta: {
                 title: "Quản lý Role",
-                subtitle: "Hệ thống",
+                subtitle: "Quyền hạn",
                 permission: "system.roles.manage",
                 featureKey: "module.system.roles",
             },
@@ -197,7 +197,7 @@ const router = createRouter({
             component: SystemPermissionsView,
             meta: {
                 title: "Quản lý Permission",
-                subtitle: "Hệ thống",
+                subtitle: "Quyền hạn",
                 permission: "system.permissions.manage",
                 featureKey: "module.system.permissions",
             },
@@ -208,7 +208,7 @@ const router = createRouter({
             component: SystemUserRolesView,
             meta: {
                 title: "Gán quyền người dùng",
-                subtitle: "Hệ thống",
+                subtitle: "Quyền hạn",
                 permission: "system.user_roles.manage",
                 featureKey: "module.system.user_roles",
             },
@@ -219,7 +219,7 @@ const router = createRouter({
             component: SystemFeatureTogglesView,
             meta: {
                 title: "Feature toggle",
-                subtitle: "Hệ thống",
+                subtitle: "Quyền hạn",
                 permission: "system.feature_toggles.manage",
                 featureKey: "module.system.feature_toggles",
             },

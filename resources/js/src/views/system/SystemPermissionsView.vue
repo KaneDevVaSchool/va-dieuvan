@@ -2,11 +2,32 @@
   <div class="space-y-4">
     <Card title="Quản lý Permission">
       <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Đặt tên quyền theo module.hành_động (ví dụ <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">request.create</code>).
+        Đặt tên quyền theo <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">module.hành_động</code> (ví dụ
+        <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">request.create</code>). Danh sách dưới khớp
+        <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">RbacSeeder</code>.
       </p>
-      <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-3" @submit.prevent="create">
-        <Input v-model="form.name" label="Tên quyền" placeholder="module.action" required />
-        <Input v-model="form.display_name" label="Mô tả hiển thị" />
+      <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-2 lg:grid-cols-4" @submit.prevent="create">
+        <Select
+          v-model="permissionPreset"
+          label="Mẫu permission (seed)"
+          hint="Chọn để điền đúng chuỗi tên đã dùng trong code/điều kiện."
+          placeholder="— Không dùng mẫu —"
+        >
+          <option v-for="p in seedPermissions" :key="p.name" :value="p.name">{{ p.name }}</option>
+        </Select>
+        <Input
+          v-model="form.name"
+          label="Tên quyền"
+          placeholder="module.action"
+          hint="Không khoảng trắng; dùng dấu chấm phân tách (vd. trip.assign)."
+          required
+        />
+        <Input
+          v-model="form.display_name"
+          label="Mô tả hiển thị"
+          placeholder="Giống tên quyền hoặc mô tả ngắn"
+          hint="Hiển thị tại màn gán quyền; seed mặc định trùng tên kỹ thuật."
+        />
         <div class="flex items-end">
           <Button type="submit" :loading="saving">Thêm</Button>
         </div>
@@ -43,8 +64,12 @@
     >
       <Card class="w-full max-w-md" title="Sửa permission">
         <div class="space-y-3">
-          <Input v-model="editForm.name" label="Tên quyền" />
-          <Input v-model="editForm.display_name" label="Mô tả hiển thị" />
+          <Input
+            v-model="editForm.name"
+            label="Tên quyền"
+            hint="Đổi tên sẽ cần cập nhật mọi nơi đang kiểm tra permission bằng chuỗi cũ."
+          />
+          <Input v-model="editForm.display_name" label="Mô tả hiển thị" hint="Nhãn thân thiện cho admin khi xem danh sách." />
           <div class="flex justify-end gap-2">
             <Button variant="secondary" type="button" @click="editing = null">Hủy</Button>
             <Button :loading="saving" @click="saveEdit">Lưu</Button>
@@ -56,10 +81,12 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
+import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 
@@ -69,6 +96,17 @@ const items = ref([])
 const editing = ref(null)
 const form = reactive({ name: '', display_name: '' })
 const editForm = reactive({ name: '', display_name: '' })
+const seedPermissions = SEED_PERMISSION_PRESETS
+const permissionPreset = ref('')
+
+watch(permissionPreset, (v) => {
+  if (!v) return
+  const p = seedPermissions.find((x) => x.name === v)
+  if (p) {
+    form.name = p.name
+    form.display_name = p.display_name
+  }
+})
 
 async function load() {
   loading.value = true
@@ -88,6 +126,7 @@ async function create() {
     await admin.createPermission({ name: form.name.trim(), display_name: form.display_name || null })
     form.name = ''
     form.display_name = ''
+    permissionPreset.value = ''
     await load()
   } catch (e) {
     alert(formatApiError(e))

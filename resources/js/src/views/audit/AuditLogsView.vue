@@ -1,15 +1,28 @@
 <template>
   <div class="space-y-4">
-    <Card>
+    <Card title="Lọc activity log">
+      <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">
+        Giá trị <b>event</b> lặp lại trong code khi ghi audit. Chọn nhanh bên dưới hoặc để
+        <b>Tất cả</b> để tải mọi loại (có thể chậm hơn).
+      </p>
       <div class="grid gap-3 md:grid-cols-4">
-        <Input v-model="filters.event" label="Event" placeholder="api.request" />
-        <Input v-model="filters.actor_id" label="Actor ID" type="number" placeholder="1" />
-        <Input v-model="filters.from" label="From" type="date" />
-        <Input v-model="filters.to" label="To" type="date" />
+        <Select v-model="filters.event" label="Event" hint="api.request: log tự động theo middleware mỗi API." placeholder="">
+          <option value="">Tất cả sự kiện</option>
+          <option v-for="e in auditEventPresets" :key="e.value" :value="e.value">{{ e.label }}</option>
+        </Select>
+        <Input
+          v-model="filters.actor_id"
+          label="Actor ID"
+          type="number"
+          placeholder="Ví dụ 12"
+          hint="ID người dùng (bảng users) — người thực hiện tác vụ được ghi log."
+        />
+        <Input v-model="filters.from" label="Từ ngày" type="date" hint="Lọc theo created_at, giờ địa phương trình duyệt." />
+        <Input v-model="filters.to" label="Đến ngày" type="date" hint="Inclusive theo ngày; để trống nếu không giới hạn cuối." />
       </div>
       <div class="mt-3 flex items-center justify-between">
-        <div class="text-xs text-slate-500">
-          Tip: dùng filter <b>event=api.request</b> để xem activity log tự động từ middleware.
+        <div class="text-xs text-slate-500 dark:text-slate-400">
+          Mặc định chọn <b>api.request</b> giúp xem traffic API; đổi sang các event nghiệp vụ (request.create, …) khi cần.
         </div>
         <div class="flex gap-2">
           <Button variant="secondary" :loading="loading" @click="reload">Lọc</Button>
@@ -75,11 +88,14 @@ import { onMounted, reactive, ref } from 'vue'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
 import { listAuditLogs } from '../../api/audit'
+import { AUDIT_EVENT_PRESETS } from '../../config/systemSeedOptions'
 
 const loading = ref(false)
 const items = ref([])
 const meta = ref({})
+const auditEventPresets = AUDIT_EVENT_PRESETS
 
 const filters = reactive({
   event: 'api.request',

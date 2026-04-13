@@ -2,12 +2,40 @@
   <div class="space-y-4">
     <Card title="Feature toggle">
       <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Bật/tắt module hoặc màn hình. User thường không thấy menu khi tắt; Super Admin luôn truy cập được.
+        Bật/tắt module hoặc màn hình. User thường không thấy menu khi tắt; Super Admin luôn truy cập được. Chọn mẫu để khớp
+        <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">FeatureToggleSeeder</code> (key cố định trong code Vue router).
       </p>
-      <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-2 lg:grid-cols-4" @submit.prevent="create">
-        <Input v-model="form.key" label="Key (slug)" placeholder="module.ops.requests" required />
-        <Input v-model="form.name" label="Tên hiển thị" required />
-        <Input v-model="form.module" label="Module" placeholder="operations" />
+      <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-2 lg:grid-cols-5" @submit.prevent="create">
+        <Select
+          v-model="togglePresetIdx"
+          label="Mẫu toggle (seed)"
+          hint="Điền sẵn key / tên / module chuẩn. Thêm trùng key sẽ báo lỗi từ API."
+          placeholder="— Không dùng mẫu —"
+        >
+          <option v-for="(row, i) in seedToggles" :key="row.key" :value="String(i)">
+            {{ row.key }}
+          </option>
+        </Select>
+        <Input
+          v-model="form.key"
+          label="Key (slug)"
+          placeholder="module.operations"
+          hint="Dạng module...., khớp meta.featureKey trên route (vd. module.system.roles)."
+          required
+        />
+        <Input
+          v-model="form.name"
+          label="Tên hiển thị"
+          placeholder="Điều vận..."
+          hint="Nhãn trong cài đặt / tài liệu nội bộ."
+          required
+        />
+        <Input
+          v-model="form.module"
+          label="Module"
+          placeholder="operations"
+          hint="Nhóm logic (overview, operations, system…), có thể để trống."
+        />
         <div class="flex items-end gap-2">
           <label class="flex items-center gap-2 text-sm">
             <input v-model="form.is_enabled" type="checkbox" class="rounded border-slate-300" />
@@ -54,10 +82,12 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
+import { SEED_FEATURE_TOGGLE_PRESETS } from '../../config/systemSeedOptions'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 
@@ -65,6 +95,18 @@ const loading = ref(true)
 const saving = ref(false)
 const items = ref([])
 const form = reactive({ key: '', name: '', module: '', is_enabled: true })
+const seedToggles = SEED_FEATURE_TOGGLE_PRESETS
+const togglePresetIdx = ref('')
+
+watch(togglePresetIdx, (v) => {
+  if (v === '' || v == null) return
+  const row = seedToggles[Number(v)]
+  if (row) {
+    form.key = row.key
+    form.name = row.name
+    form.module = row.module
+  }
+})
 
 async function load() {
   loading.value = true
@@ -91,6 +133,7 @@ async function create() {
     form.name = ''
     form.module = ''
     form.is_enabled = true
+    togglePresetIdx.value = ''
     await load()
   } catch (e) {
     alert(formatApiError(e))

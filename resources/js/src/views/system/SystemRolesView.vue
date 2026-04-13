@@ -2,11 +2,31 @@
   <div class="space-y-4">
     <Card title="Quản lý Role">
       <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Tạo / sửa vai trò và gán quyền (permission). Super Admin luôn có toàn quyền.
+        Tạo / sửa vai trò và gán quyền (permission). Super Admin luôn có toàn quyền. Chọn mẫu bên dưới để khớp
+        <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">RbacSeeder</code> — tránh gõ sai tên.
       </p>
-      <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-3" @submit.prevent="create">
-        <Input v-model="form.name" label="Tên (slug)" placeholder="dispatcher" required />
-        <Input v-model="form.display_name" label="Tên hiển thị" placeholder="Dispatcher" />
+      <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-2 lg:grid-cols-4" @submit.prevent="create">
+        <Select
+          v-model="rolePreset"
+          label="Mẫu role (seed)"
+          hint="Chọn để điền sẵn slug và tên hiển thị. Vẫn có thể sửa trước khi lưu."
+          placeholder="— Không dùng mẫu —"
+        >
+          <option v-for="r in seedRoles" :key="r.name" :value="r.name">{{ r.name }} — {{ r.display_name }}</option>
+        </Select>
+        <Input
+          v-model="form.name"
+          label="Tên (slug)"
+          placeholder="dispatcher"
+          hint="Chữ thường, số, gạch dưới; ví dụ dispatcher, internal_user."
+          required
+        />
+        <Input
+          v-model="form.display_name"
+          label="Tên hiển thị"
+          placeholder="Dispatcher"
+          hint="Nhãn cho người dùng cuối (có dấu, có thể có khoảng trắng)."
+        />
         <div class="flex items-end">
           <Button type="submit" :loading="saving">Thêm role</Button>
         </div>
@@ -49,10 +69,15 @@
     >
       <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto" :title="`Sửa role: ${editing.name}`">
         <div class="space-y-3">
-          <Input v-model="editForm.name" label="Tên (slug)" />
-          <Input v-model="editForm.display_name" label="Tên hiển thị" />
+          <Input
+            v-model="editForm.name"
+            label="Tên (slug)"
+            hint="Đổi slug có thể ảnh hưởng code/policy tra cứu theo tên role."
+          />
+          <Input v-model="editForm.display_name" label="Tên hiển thị" hint="Hiển thị trên giao diện / báo cáo." />
           <div>
             <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Quyền</label>
+            <p class="mb-2 text-xs text-slate-500">Tick các permission áp cho role này (danh sách lấy từ bảng permissions).</p>
             <div class="max-h-48 overflow-y-auto rounded border border-slate-200 p-2 dark:border-slate-600">
               <label v-for="p in allPerms" :key="p.id" class="flex cursor-pointer items-center gap-2 py-1 text-sm">
                 <input v-model="editForm.permission_ids" type="checkbox" :value="p.id" class="rounded border-slate-300" />
@@ -71,10 +96,12 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
+import { SEED_ROLE_PRESETS } from '../../config/systemSeedOptions'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 
@@ -85,6 +112,17 @@ const allPerms = ref([])
 const editing = ref(null)
 const form = reactive({ name: '', display_name: '' })
 const editForm = reactive({ name: '', display_name: '', permission_ids: [] })
+const seedRoles = SEED_ROLE_PRESETS
+const rolePreset = ref('')
+
+watch(rolePreset, (v) => {
+  if (!v) return
+  const r = seedRoles.find((x) => x.name === v)
+  if (r) {
+    form.name = r.name
+    form.display_name = r.display_name
+  }
+})
 
 async function load() {
   loading.value = true
@@ -106,6 +144,7 @@ async function create() {
     await admin.createRole({ name: form.name.trim(), display_name: form.display_name || null, permission_ids: [] })
     form.name = ''
     form.display_name = ''
+    rolePreset.value = ''
     await load()
   } catch (e) {
     alert(formatApiError(e))
