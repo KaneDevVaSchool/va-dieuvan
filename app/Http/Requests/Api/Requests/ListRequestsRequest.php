@@ -15,10 +15,15 @@ class ListRequestsRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'status' => ['nullable', Rule::in(['pending', 'approved', 'rejected', 'cancelled'])],
+            'q' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(['draft', 'pending', 'approved', 'rejected', 'cancelled'])],
+            'trip_status' => ['nullable', Rule::in([
+                'pending', 'approved', 'assigned', 'driver_confirmed', 'in_progress', 'completed', 'cancelled', 'incident',
+            ])],
             'trip_type' => ['nullable', Rule::in(['door_to_door', 'point_to_point', 'business', 'cargo'])],
             'source_channel' => ['nullable', Rule::in(['portal', 'zalo', 'paper'])],
             'paper_status' => ['nullable', Rule::in(['pending', 'received', 'digitally_signed'])],
+            'sla_risk_only' => ['nullable', 'boolean'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],

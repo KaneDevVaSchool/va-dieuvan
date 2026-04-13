@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Requests\ListRequestsRequest;
 use App\Models\DispatchRequest;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -18,7 +19,9 @@ class RequestController extends Controller
         $data = $request->validated();
         $user = $request->user();
 
-        $q = DispatchRequest::query()
+        $stats = $this->buildStats($user);
+
+        $q = $this->scopedDispatchRequestsQuery($user)
             ->with([
                 'requester:id,name,email,employee_code',
                 'approver:id,name,email,employee_code',
@@ -27,14 +30,35 @@ class RequestController extends Controller
             ->orderByDesc('depart_at')
             ->orderByDesc('id');
 
-        if (! $user->hasPermission('trip.view_all')) {
-            $q->where('requester_id', $user->id);
-        }
+        $q->when(isset($data['q']) && $data['q'] !== '', function (Builder $b) use ($data) {
+            $term = trim($data['q']);
+            $like = '%'.addcslashes($term, '%_\\').'%';
+            $b->where(function (Builder $inner) use ($like, $term) {
+                $inner->where('origin', 'like', $like)
+                    ->orWhere('destination', 'like', $like)
+                    ->orWhere('notes', 'like', $like);
+                if (ctype_digit($term)) {
+                    $inner->orWhere('id', (int) $term);
+                }
+            });
+        });
 
         $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
         $q->when(isset($data['trip_type']), fn (Builder $b) => $b->where('trip_type', $data['trip_type']));
         $q->when(isset($data['source_channel']), fn (Builder $b) => $b->where('source_channel', $data['source_channel']));
         $q->when(isset($data['paper_status']), fn (Builder $b) => $b->where('paper_status', $data['paper_status']));
+
+        $q->when(isset($data['trip_status']), function (Builder $b) use ($data) {
+            $b->whereHas('trip', fn (Builder $t) => $t->where('status', $data['trip_status']));
+        });
+
+        $q->when(! empty($data['sla_risk_only']), function (Builder $b) {
+            $b->where('status', 'pending')
+                ->where(function (Builder $inner) {
+                    $inner->where('is_urgent', true)
+                        ->orWhere('depart_at', '<=', now()->addHours(48));
+                });
+        });
 
         $q->when(isset($data['from']), function (Builder $b) use ($data) {
             $from = Carbon::parse($data['from'])->startOfDay();
@@ -56,6 +80,80 @@ class RequestController extends Controller
                 'total' => $results->total(),
                 'last_page' => $results->lastPage(),
             ],
+            'stats' => $stats,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildStats(User $user): array
+    {
+        $base = $this->scopedDispatchRequestsQuery($user);
+
+        $statusCounts = (clone $base)
+            ->selectRaw('status, count(*) as c')
+            ->groupBy('status')
+            ->pluck('c', 'status')
+            ->all();
+
+        $total = (int) (clone $base)->count();
+
+        $tripsInProgress = (clone $base)
+            ->whereHas('trip', fn (Builder $t) => $t->where('status', 'in_progress'))
+            ->count();
+
+        $tripsCompleted = (clone $base)
+            ->whereHas('trip', fn (Builder $t) => $t->where('status', 'completed'))
+            ->count();
+
+        $slaRisk = (clone $base)
+            ->where('status', 'pending')
+            ->where(function (Builder $inner) {
+                $inner->where('is_urgent', true)
+                    ->orWhere('depart_at', '<=', now()->addHours(48));
+            })
+            ->count();
+
+        $startPrev = now()->subMonth()->startOfMonth();
+        $endPrev = now()->subMonth()->endOfMonth();
+        $startCur = now()->startOfMonth();
+        $endCur = now()->endOfMonth();
+
+        $countPrev = (clone $base)->whereBetween('created_at', [$startPrev, $endPrev])->count();
+        $countCur = (clone $base)->whereBetween('created_at', [$startCur, $endCur])->count();
+        $trendPct = null;
+        if ($countPrev > 0) {
+            $trendPct = round((($countCur - $countPrev) / $countPrev) * 100, 1);
+        }
+
+        $volumeTrend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = now()->subDays($i)->startOfDay();
+            $volumeTrend[] = (int) (clone $base)
+                ->whereBetween('created_at', [$day, $day->copy()->endOfDay()])
+                ->count();
+        }
+
+        return [
+            'total' => $total,
+            'by_status' => $statusCounts,
+            'trips_in_progress' => (int) $tripsInProgress,
+            'trips_completed' => (int) $tripsCompleted,
+            'sla_risk' => (int) $slaRisk,
+            'month_trend_pct' => $trendPct,
+            'volume_trend' => $volumeTrend,
+        ];
+    }
+
+    private function scopedDispatchRequestsQuery(User $user): Builder
+    {
+        $q = DispatchRequest::query();
+
+        if (! $user->hasPermission('trip.view_all')) {
+            $q->where('requester_id', $user->id);
+        }
+
+        return $q;
     }
 }

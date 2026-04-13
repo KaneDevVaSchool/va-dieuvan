@@ -97,7 +97,7 @@ const router = createRouter({
             path: "/requests",
             name: "requests",
             component: RequestsListView,
-            meta: { title: "Yêu cầu điều xe", subtitle: "Danh sách" },
+            meta: { title: "Yêu cầu điều xe", subtitle: "Danh sách & trạng thái" },
         },
         {
             path: "/requests/:id",
