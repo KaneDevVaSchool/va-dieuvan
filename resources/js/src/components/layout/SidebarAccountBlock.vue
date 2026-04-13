@@ -87,15 +87,20 @@
     </button>
   </div>
 
-  <!-- Ngang -->
+  <!-- Ngang: chỉ avatar → dropdown tài khoản -->
   <div
     v-else
-    class="flex min-w-0 max-w-full shrink-0 items-center gap-1.5 sm:gap-2 md:gap-2.5 md:border-l md:border-slate-200/90 md:pl-3 dark:md:border-slate-600/90"
+    ref="accountMenuRootRef"
+    class="relative shrink-0 md:border-l md:border-slate-200/90 md:pl-3 dark:md:border-slate-600/90"
   >
-    <RouterLink
-      to="/profile"
-      class="shrink-0 touch-manipulation rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-va-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
-      :aria-label="t('app.profile')"
+    <button
+      type="button"
+      class="flex shrink-0 touch-manipulation items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-va-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+      :aria-expanded="accountMenuOpen"
+      aria-haspopup="menu"
+      :aria-controls="accountMenuPanelId"
+      :title="auth.user?.name ?? t('app.account')"
+      @click="accountMenuOpen = !accountMenuOpen"
     >
       <UserAvatar
         :name="auth.user?.name"
@@ -105,37 +110,73 @@
         size="lg"
         ring-prominent
       />
-    </RouterLink>
-    <div class="hidden min-w-0 max-w-[9rem] md:block">
-      <div class="truncate text-xs font-semibold leading-tight text-slate-900 dark:text-slate-100">
-        {{ auth.user?.name ?? '—' }}
-      </div>
-      <div class="truncate text-[10px] text-slate-500 dark:text-slate-400">
-        {{ auth.user?.email ?? '' }}
-      </div>
-    </div>
-    <select
-      class="shrink-0 rounded-lg border border-slate-200/90 bg-white px-1.5 py-1.5 text-[10px] font-medium shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 sm:px-2 sm:text-xs"
-      :value="locale"
-      :aria-label="t('app.lang')"
-      @change="onLocale($event.target.value)"
-    >
-      <option value="vi">VI</option>
-      <option value="en">EN</option>
-    </select>
-    <button
-      type="button"
-      class="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white p-2 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 md:px-2.5 md:py-1.5 md:text-xs md:font-medium"
-      :title="t('app.logout')"
-      @click="logout"
-    >
-      <ArrowRightOnRectangleIcon class="h-5 w-5 md:hidden" aria-hidden="true" />
-      <span class="hidden md:inline">{{ t('app.logout') }}</span>
     </button>
+
+    <Teleport to="body">
+      <div
+        v-show="accountMenuOpen"
+        :id="accountMenuPanelId"
+        ref="accountMenuPanelRef"
+        role="presentation"
+        class="fixed z-[70] min-w-[15rem] max-w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-white/10"
+        :style="accountMenuPanelStyle"
+      >
+        <div
+          role="menu"
+          :aria-label="t('app.account')"
+          class="max-h-[min(70vh,24rem)] overflow-y-auto"
+        >
+          <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700">
+            <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+              {{ auth.user?.name ?? '—' }}
+            </p>
+            <p class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+              {{ auth.user?.email ?? '' }}
+            </p>
+          </div>
+
+          <RouterLink
+            role="menuitem"
+            to="/profile"
+            class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-slate-700 transition hover:bg-va-50 hover:text-va-900 dark:text-slate-200 dark:hover:bg-va-950/40 dark:hover:text-va-100"
+            @click="accountMenuOpen = false"
+          >
+            <UserCircleIcon class="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+            {{ t('app.profile') }}
+          </RouterLink>
+
+          <div class="border-t border-slate-100 px-3 py-2.5 dark:border-slate-700" role="presentation">
+            <label class="text-[11px] font-medium text-slate-500 dark:text-slate-400" :for="accountLangSelectId">
+              {{ t('app.lang') }}
+            </label>
+            <select
+              :id="accountLangSelectId"
+              class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm text-slate-800 shadow-sm focus:border-va-300 focus:outline-none focus:ring-2 focus:ring-va-800/15 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              :value="locale"
+              @change="onLocale($event.target.value)"
+            >
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            role="menuitem"
+            class="flex w-full items-center gap-2.5 border-t border-slate-100 px-3 py-2.5 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-50 dark:border-slate-700 dark:text-rose-300 dark:hover:bg-rose-950/40"
+            @click="logoutFromMenu"
+          >
+            <ArrowRightOnRectangleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+            {{ t('app.logout') }}
+          </button>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
+import { nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
@@ -152,6 +193,13 @@ const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 
+const accountMenuOpen = ref(false)
+const accountMenuRootRef = ref(null)
+const accountMenuPanelRef = ref(null)
+const accountMenuPanelStyle = ref({})
+const accountMenuPanelId = useId()
+const accountLangSelectId = useId()
+
 function onLocale(v) {
   setLocale(v)
 }
@@ -160,5 +208,73 @@ async function logout() {
   await auth.logout()
   await router.push({ name: 'login' })
 }
+
+async function logoutFromMenu() {
+  accountMenuOpen.value = false
+  await logout()
+}
+
+function updateAccountMenuPosition() {
+  const el = accountMenuRootRef.value
+  if (!el || !accountMenuOpen.value) return
+  const r = el.getBoundingClientRect()
+  const panelW = 280
+  const w = Math.min(panelW, window.innerWidth - 16)
+  let left = r.right - w
+  left = Math.max(8, Math.min(left, window.innerWidth - w - 8))
+  accountMenuPanelStyle.value = {
+    top: `${r.bottom + 8}px`,
+    left: `${left}px`,
+    width: `${w}px`,
+  }
+}
+
+function onAccountMenuPointerDown(e) {
+  if (!accountMenuOpen.value) return
+  const t = e.target
+  if (accountMenuRootRef.value?.contains(t)) return
+  if (accountMenuPanelRef.value?.contains(t)) return
+  accountMenuOpen.value = false
+}
+
+function onAccountMenuKeydown(e) {
+  if (e.key === 'Escape' && accountMenuOpen.value) {
+    accountMenuOpen.value = false
+  }
+}
+
+function onAccountMenuWinChange() {
+  if (accountMenuOpen.value) updateAccountMenuPosition()
+}
+
+watch(accountMenuOpen, async (open) => {
+  if (open) {
+    await nextTick()
+    updateAccountMenuPosition()
+    document.addEventListener('pointerdown', onAccountMenuPointerDown, true)
+    document.addEventListener('keydown', onAccountMenuKeydown)
+    window.addEventListener('scroll', onAccountMenuWinChange, true)
+    window.addEventListener('resize', onAccountMenuWinChange)
+  } else {
+    document.removeEventListener('pointerdown', onAccountMenuPointerDown, true)
+    document.removeEventListener('keydown', onAccountMenuKeydown)
+    window.removeEventListener('scroll', onAccountMenuWinChange, true)
+    window.removeEventListener('resize', onAccountMenuWinChange)
+  }
+})
+
+watch(
+  () => router.currentRoute.value.path,
+  () => {
+    accountMenuOpen.value = false
+  },
+)
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', onAccountMenuPointerDown, true)
+  document.removeEventListener('keydown', onAccountMenuKeydown)
+  window.removeEventListener('scroll', onAccountMenuWinChange, true)
+  window.removeEventListener('resize', onAccountMenuWinChange)
+})
 
 </script>
