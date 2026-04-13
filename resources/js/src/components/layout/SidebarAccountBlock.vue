@@ -85,7 +85,7 @@
       <div
         role="menu"
         :aria-label="t('app.account')"
-        class="max-h-[min(70vh,26rem)] overflow-y-auto"
+        class="max-h-[min(70vh,26rem)] overflow-y-auto scrollbar-hidden"
       >
         <div class="border-b border-slate-100 px-2.5 py-2 dark:border-slate-700/80">
           <p class="truncate text-xs font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-50">

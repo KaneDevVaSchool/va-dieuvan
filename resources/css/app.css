@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/** Ẩn thanh scrollbar nhưng vẫn cuộn (wheel / trackpad / touch) */
+@layer utilities {
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   :root {
     --va-brand: #8b1538;

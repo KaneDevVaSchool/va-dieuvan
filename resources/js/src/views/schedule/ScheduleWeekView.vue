@@ -41,7 +41,7 @@
             <div class="border-b border-slate-200 pb-2 text-center text-xs font-semibold text-slate-800">
               {{ dayLabel(day.key) }}
             </div>
-            <div class="mt-2 flex flex-1 flex-col gap-2 overflow-y-auto">
+            <div class="mt-2 flex flex-1 flex-col gap-2 overflow-y-auto scrollbar-hidden">
               <RouterLink
                 v-for="t in day.trips"
                 :key="t.id"

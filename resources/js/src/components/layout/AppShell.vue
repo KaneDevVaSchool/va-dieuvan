@@ -9,7 +9,7 @@
     <AppSidebar />
     <main
       :class="[
-        'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5',
+        'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5',
         isHorizontalMobilePad,
       ]"
     >

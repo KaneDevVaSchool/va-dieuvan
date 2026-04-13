@@ -49,7 +49,7 @@
       </div>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-1 py-2 md:px-2 md:py-2.5">
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scrollbar-hidden px-1 py-2 md:px-2 md:py-2.5">
       <nav class="space-y-0.5" :aria-label="t('app.title')">
         <template v-for="(section, si) in sections" :key="'v' + si">
           <div
