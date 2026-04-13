@@ -114,7 +114,7 @@ Hệ thống đã hỗ trợ upload file để lưu online, ví dụ:
 | Yêu cầu `/requests`, chi tiết `/requests/:id` | Lọc (trạng thái, loại, kênh, **trạng thái phiếu giấy**); tạo mới qua `/dispatch-requests/new`; duyệt/từ chối; upload scan; đánh dấu đã nhận phiếu |
 | Chuyến `/trips`, `/trips/:id` | Lọc danh sách; xem chi tiết; **gán** xe/tài xế/NCC (nhập ID); đổi trạng thái chuyến |
 | Chi phí `/costs` | Danh sách chi phí; form nhập chi phí nhanh (cần **Trip ID**) |
-| Đối soát & thanh toán `/payments` | Tạo kỳ, khóa kỳ, tạo payment theo Trip ID, thực hiện thanh toán (form cơ bản) |
+| Đối Soát `/payments` | Tạo kỳ, khóa kỳ, tạo payment theo Trip ID, thực hiện thanh toán (form cơ bản) |
 | Hàng hóa `/cargo` | Tạo shipment; lọc; **xem POD đã có + upload POD mới** |
 | Tuyến D2D `/routes`, Học sinh `/students` | **Xem danh sách** (dạng tối giản); chưa có đủ wizard nghiệp vụ trên UI |
 | Báo cáo `/reports` | Chọn từ–đến, tải cùng loại số liệu như tổng quan |
