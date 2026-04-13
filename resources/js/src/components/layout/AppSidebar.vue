@@ -179,56 +179,14 @@
       </nav>
 
       <div class="flex shrink-0 items-center">
-        <SidebarAccountBlock layout="horizontal" @cycle-layout="onCycleLayoutClick" />
+        <SidebarAccountBlock layout="horizontal" />
       </div>
     </div>
   </header>
-
-  <Teleport to="body">
-    <div
-      v-if="horizontalConfirmOpen"
-      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-[2px] sm:items-center"
-      role="presentation"
-      @click.self="horizontalConfirmOpen = false"
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="sidebar-horizontal-confirm-title"
-        class="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
-      >
-        <h2
-          id="sidebar-horizontal-confirm-title"
-          class="text-base font-semibold text-slate-900 dark:text-slate-50"
-        >
-          {{ t('app.sidebar_confirm_horizontal_title') }}
-        </h2>
-        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          {{ t('app.sidebar_confirm_horizontal_body') }}
-        </p>
-        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
-          <button
-            type="button"
-            class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 sm:w-auto"
-            @click="horizontalConfirmOpen = false"
-          >
-            {{ t('app.cancel') }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex w-full items-center justify-center rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 dark:bg-va-600 dark:hover:bg-va-500 sm:w-auto"
-            @click="confirmSwitchToHorizontal"
-          >
-            {{ t('app.sidebar_confirm_horizontal_action') }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </Teleport>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowsRightLeftIcon,
@@ -247,40 +205,6 @@ const { t } = useI18n()
 const { sections, badgeCount } = useNavSections()
 const { axis, preferenceLabelKey } = useSidebarLayout()
 const ui = useUiStore()
-
-const horizontalConfirmOpen = ref(false)
-
-function onCycleLayoutClick() {
-  if (ui.peekNextSidebarAxisPreference() === 'horizontal') {
-    horizontalConfirmOpen.value = true
-    return
-  }
-  ui.cycleSidebarAxisPreference()
-}
-
-function confirmSwitchToHorizontal() {
-  ui.cycleSidebarAxisPreference()
-  horizontalConfirmOpen.value = false
-}
-
-function onHorizontalConfirmKeydown(e) {
-  if (e.key === 'Escape' && horizontalConfirmOpen.value) {
-    horizontalConfirmOpen.value = false
-  }
-}
-
-watch(horizontalConfirmOpen, (open) => {
-  if (typeof document === 'undefined') return
-  document.body.style.overflow = open ? 'hidden' : ''
-})
-
-onMounted(() => {
-  window.addEventListener('keydown', onHorizontalConfirmKeydown)
-})
-onUnmounted(() => {
-  window.removeEventListener('keydown', onHorizontalConfirmKeydown)
-  if (typeof document !== 'undefined') document.body.style.overflow = ''
-})
 
 const navVariant = computed(() =>
   ui.sidebarCollapsed ? 'vertical-compact' : 'vertical-full',

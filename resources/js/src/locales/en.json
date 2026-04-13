@@ -50,6 +50,13 @@
     "cancel": "Cancel",
     "sidebar_confirm_horizontal_title": "Switch to horizontal navigation?",
     "sidebar_confirm_horizontal_body": "The navigation bar will appear above the content (navbar style). You can change this anytime.",
-    "sidebar_confirm_horizontal_action": "Switch to horizontal"
+    "sidebar_confirm_horizontal_action": "Switch to horizontal",
+    "sidebar_layout": "Sidebar layout",
+    "axis_auto": "Auto",
+    "axis_vertical": "Side",
+    "axis_horizontal": "Top",
+    "logout_confirm_title": "Sign out?",
+    "logout_confirm_body": "You will need to sign in again to continue.",
+    "logout_confirm_action": "Sign out"
   }
 }

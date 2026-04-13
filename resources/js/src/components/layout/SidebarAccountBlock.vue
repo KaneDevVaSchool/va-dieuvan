@@ -37,25 +37,47 @@
     <label v-if="!compact" class="mt-2 hidden text-[11px] font-medium text-slate-500 md:block dark:text-slate-400">
       {{ t('app.lang') }}
     </label>
-    <select
-      v-if="!compact"
-      class="mt-1.5 hidden w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs shadow-sm focus:border-va-300 focus:outline-none focus:ring-2 focus:ring-va-800/15 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 md:block"
-      :value="locale"
-      @change="onLocale($event.target.value)"
-    >
-      <option value="vi">Tiếng Việt</option>
-      <option value="en">English</option>
-    </select>
-    <div v-if="compact" class="w-full min-w-0 max-w-full">
-      <select
-        class="w-full min-w-0 max-w-full rounded-md border border-slate-200 bg-white px-1 py-1.5 text-center text-[10px] shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-        :value="locale"
-        :aria-label="t('app.lang')"
-        @change="onLocale($event.target.value)"
-      >
-        <option value="vi">VI</option>
-        <option value="en">EN</option>
-      </select>
+    <div v-if="!compact" class="mt-1.5 hidden md:block">
+      <div class="flex rounded-lg bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
+        <button
+          type="button"
+          class="flex-1 rounded-md px-2 py-1.5 text-center text-xs font-semibold transition"
+          :class="locale === 'vi' ? segmentActive : segmentIdle"
+          @click="onLocale('vi')"
+        >
+          VI
+        </button>
+        <button
+          type="button"
+          class="flex-1 rounded-md px-2 py-1.5 text-center text-xs font-semibold transition"
+          :class="locale === 'en' ? segmentActive : segmentIdle"
+          @click="onLocale('en')"
+        >
+          EN
+        </button>
+      </div>
+    </div>
+    <div v-if="compact" class="mt-1 w-full min-w-0 max-w-full">
+      <div class="flex rounded-lg bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
+        <button
+          type="button"
+          class="flex-1 rounded-md px-2 py-1.5 text-center text-[10px] font-semibold transition"
+          :class="locale === 'vi' ? segmentActive : segmentIdle"
+          :aria-pressed="locale === 'vi'"
+          @click="onLocale('vi')"
+        >
+          VI
+        </button>
+        <button
+          type="button"
+          class="flex-1 rounded-md px-2 py-1.5 text-center text-[10px] font-semibold transition"
+          :class="locale === 'en' ? segmentActive : segmentIdle"
+          :aria-pressed="locale === 'en'"
+          @click="onLocale('en')"
+        >
+          EN
+        </button>
+      </div>
     </div>
 
     <RouterLink
@@ -79,7 +101,7 @@
       type="button"
       class="mt-1.5 flex w-full items-center justify-center rounded-lg border border-slate-200 text-[11px] font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 md:mt-2 md:text-sm"
       :class="compact ? 'aspect-square max-w-full px-0 py-2' : 'px-2 py-2 md:py-2.5'"
-      @click="logout"
+      @click="openLogoutConfirm"
     >
       <ArrowRightOnRectangleIcon v-if="compact" class="h-5 w-5 shrink-0" aria-hidden="true" />
       <span v-if="compact" class="sr-only">{{ t('app.logout') }}</span>
@@ -118,13 +140,13 @@
         :id="accountMenuPanelId"
         ref="accountMenuPanelRef"
         role="presentation"
-        class="fixed z-[70] min-w-[15rem] max-w-[min(18rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-white/10"
+        class="fixed z-[70] min-w-[16.5rem] max-w-[min(19rem,calc(100vw-1rem))] overflow-hidden rounded-xl border border-slate-200/90 bg-white py-1 shadow-xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-white/10"
         :style="accountMenuPanelStyle"
       >
         <div
           role="menu"
           :aria-label="t('app.account')"
-          class="max-h-[min(70vh,24rem)] overflow-y-auto"
+          class="max-h-[min(70vh,28rem)] overflow-y-auto"
         >
           <div class="border-b border-slate-100 px-3 py-2.5 dark:border-slate-700">
             <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
@@ -145,47 +167,56 @@
             {{ t('app.profile') }}
           </RouterLink>
 
-          <button
-            type="button"
-            role="menuitem"
-            class="flex w-full items-center gap-3 border-t border-slate-100 px-3 py-2.5 text-left transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/80"
-            @click="onCycleLayoutFromMenu"
-          >
-            <span
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-va-50 to-slate-50 text-va-800 ring-1 ring-va-800/10 dark:from-va-950/60 dark:to-slate-900 dark:text-va-200 dark:ring-va-500/25"
-            >
-              <ArrowsRightLeftIcon class="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="block text-sm font-medium text-slate-800 dark:text-slate-100">
-                {{ t('app.sidebar_cycle_layout') }}
-              </span>
-              <span class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                {{ t(preferenceLabelKey) }}
-              </span>
-            </span>
-          </button>
+          <div class="border-t border-slate-100 px-3 py-2.5 dark:border-slate-700" role="presentation">
+            <p class="mb-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              {{ t('app.sidebar_layout') }}
+            </p>
+            <div class="flex rounded-lg bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
+              <button
+                v-for="opt in axisOptions"
+                :key="opt.value"
+                type="button"
+                class="min-w-0 flex-1 rounded-md px-1 py-1.5 text-center text-[10px] font-semibold leading-tight transition sm:px-1.5 sm:text-xs"
+                :class="ui.sidebarAxisPreference === opt.value ? segmentActive : segmentIdle"
+                :aria-pressed="ui.sidebarAxisPreference === opt.value"
+                @click="requestAxisPreference(opt.value)"
+              >
+                {{ t(opt.labelKey) }}
+              </button>
+            </div>
+          </div>
 
           <div class="border-t border-slate-100 px-3 py-2.5 dark:border-slate-700" role="presentation">
-            <label class="text-[11px] font-medium text-slate-500 dark:text-slate-400" :for="accountLangSelectId">
+            <p class="mb-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
               {{ t('app.lang') }}
-            </label>
-            <select
-              :id="accountLangSelectId"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm text-slate-800 shadow-sm focus:border-va-300 focus:outline-none focus:ring-2 focus:ring-va-800/15 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              :value="locale"
-              @change="onLocale($event.target.value)"
-            >
-              <option value="vi">Tiếng Việt</option>
-              <option value="en">English</option>
-            </select>
+            </p>
+            <div class="flex rounded-lg bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
+              <button
+                type="button"
+                class="flex-1 rounded-md px-2 py-1.5 text-center text-xs font-semibold transition"
+                :class="locale === 'vi' ? segmentActive : segmentIdle"
+                :aria-pressed="locale === 'vi'"
+                @click="onLocale('vi')"
+              >
+                VI
+              </button>
+              <button
+                type="button"
+                class="flex-1 rounded-md px-2 py-1.5 text-center text-xs font-semibold transition"
+                :class="locale === 'en' ? segmentActive : segmentIdle"
+                :aria-pressed="locale === 'en'"
+                @click="onLocale('en')"
+              >
+                EN
+              </button>
+            </div>
           </div>
 
           <button
             type="button"
             role="menuitem"
             class="flex w-full items-center gap-2.5 border-t border-slate-100 px-3 py-2.5 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-50 dark:border-slate-700 dark:text-rose-300 dark:hover:bg-rose-950/40"
-            @click="logoutFromMenu"
+            @click="openLogoutConfirmFromMenu"
           >
             <ArrowRightOnRectangleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
             {{ t('app.logout') }}
@@ -194,16 +225,99 @@
       </div>
     </Teleport>
   </div>
+
+  <!-- Xác nhận chuyển menu ngang -->
+  <Teleport to="body">
+    <div
+      v-if="horizontalConfirmOpen"
+      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-[2px] sm:items-center"
+      role="presentation"
+      @click.self="horizontalConfirmOpen = false"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sidebar-horizontal-confirm-title"
+        class="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+      >
+        <h2
+          id="sidebar-horizontal-confirm-title"
+          class="text-base font-semibold text-slate-900 dark:text-slate-50"
+        >
+          {{ t('app.sidebar_confirm_horizontal_title') }}
+        </h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          {{ t('app.sidebar_confirm_horizontal_body') }}
+        </p>
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <button
+            type="button"
+            class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 sm:w-auto"
+            @click="horizontalConfirmOpen = false"
+          >
+            {{ t('app.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex w-full items-center justify-center rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 dark:bg-va-600 dark:hover:bg-va-500 sm:w-auto"
+            @click="confirmHorizontalAxis"
+          >
+            {{ t('app.sidebar_confirm_horizontal_action') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Xác nhận đăng xuất -->
+  <Teleport to="body">
+    <div
+      v-if="logoutConfirmOpen"
+      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-[2px] sm:items-center"
+      role="presentation"
+      @click.self="logoutConfirmOpen = false"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="logout-confirm-title"
+        class="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+      >
+        <h2 id="logout-confirm-title" class="text-base font-semibold text-slate-900 dark:text-slate-50">
+          {{ t('app.logout_confirm_title') }}
+        </h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          {{ t('app.logout_confirm_body') }}
+        </p>
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <button
+            type="button"
+            class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 sm:w-auto"
+            @click="logoutConfirmOpen = false"
+          >
+            {{ t('app.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex w-full items-center justify-center rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-600 sm:w-auto"
+            @click="confirmLogout"
+          >
+            {{ t('app.logout_confirm_action') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
 import { nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowsRightLeftIcon, ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
+import { ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 import UserAvatar from '../branding/UserAvatar.vue'
-import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'
+import { useUiStore } from '../../store/ui'
 import { setLocale } from '../../i18n'
 
 defineProps({
@@ -211,44 +325,70 @@ defineProps({
   compact: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['cycleLayout'])
-
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
-const { preferenceLabelKey } = useSidebarLayout()
+const ui = useUiStore()
 
-function onCycleLayoutFromMenu() {
-  accountMenuOpen.value = false
-  emit('cycleLayout')
-}
+const segmentActive =
+  'bg-white text-va-900 shadow-sm dark:bg-slate-700 dark:text-va-100'
+const segmentIdle =
+  'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+
+const axisOptions = [
+  { value: 'auto', labelKey: 'app.axis_auto' },
+  { value: 'vertical', labelKey: 'app.axis_vertical' },
+  { value: 'horizontal', labelKey: 'app.axis_horizontal' },
+]
 
 const accountMenuOpen = ref(false)
 const accountMenuRootRef = ref(null)
 const accountMenuPanelRef = ref(null)
 const accountMenuPanelStyle = ref({})
 const accountMenuPanelId = useId()
-const accountLangSelectId = useId()
 
-function onLocale(v) {
-  setLocale(v)
+const horizontalConfirmOpen = ref(false)
+const logoutConfirmOpen = ref(false)
+
+function requestAxisPreference(v) {
+  if (v === ui.sidebarAxisPreference) return
+  if (v === 'horizontal') {
+    horizontalConfirmOpen.value = true
+    return
+  }
+  ui.setSidebarAxisPreference(v)
 }
 
-async function logout() {
+function confirmHorizontalAxis() {
+  ui.setSidebarAxisPreference('horizontal')
+  horizontalConfirmOpen.value = false
+}
+
+function openLogoutConfirm() {
+  logoutConfirmOpen.value = true
+}
+
+function openLogoutConfirmFromMenu() {
+  accountMenuOpen.value = false
+  logoutConfirmOpen.value = true
+}
+
+async function confirmLogout() {
+  logoutConfirmOpen.value = false
+  accountMenuOpen.value = false
   await auth.logout()
   await router.push({ name: 'login' })
 }
 
-async function logoutFromMenu() {
-  accountMenuOpen.value = false
-  await logout()
+function onLocale(v) {
+  setLocale(v)
 }
 
 function updateAccountMenuPosition() {
   const el = accountMenuRootRef.value
   if (!el || !accountMenuOpen.value) return
   const r = el.getBoundingClientRect()
-  const panelW = 280
+  const panelW = 304
   const w = Math.min(panelW, window.innerWidth - 16)
   let left = r.right - w
   left = Math.max(8, Math.min(left, window.innerWidth - w - 8))
@@ -261,9 +401,9 @@ function updateAccountMenuPosition() {
 
 function onAccountMenuPointerDown(e) {
   if (!accountMenuOpen.value) return
-  const t = e.target
-  if (accountMenuRootRef.value?.contains(t)) return
-  if (accountMenuPanelRef.value?.contains(t)) return
+  const tgt = e.target
+  if (accountMenuRootRef.value?.contains(tgt)) return
+  if (accountMenuPanelRef.value?.contains(tgt)) return
   accountMenuOpen.value = false
 }
 
@@ -275,6 +415,17 @@ function onAccountMenuKeydown(e) {
 
 function onAccountMenuWinChange() {
   if (accountMenuOpen.value) updateAccountMenuPosition()
+}
+
+function onModalEscape(e) {
+  if (e.key !== 'Escape') return
+  if (logoutConfirmOpen.value) {
+    logoutConfirmOpen.value = false
+    return
+  }
+  if (horizontalConfirmOpen.value) {
+    horizontalConfirmOpen.value = false
+  }
 }
 
 watch(accountMenuOpen, async (open) => {
@@ -293,6 +444,16 @@ watch(accountMenuOpen, async (open) => {
   }
 })
 
+watch([horizontalConfirmOpen, logoutConfirmOpen], ([h, l]) => {
+  if (typeof document === 'undefined') return
+  document.body.style.overflow = h || l ? 'hidden' : ''
+  if (h || l) {
+    document.addEventListener('keydown', onModalEscape)
+  } else {
+    document.removeEventListener('keydown', onModalEscape)
+  }
+})
+
 watch(
   () => router.currentRoute.value.path,
   () => {
@@ -305,6 +466,8 @@ onUnmounted(() => {
   document.removeEventListener('keydown', onAccountMenuKeydown)
   window.removeEventListener('scroll', onAccountMenuWinChange, true)
   window.removeEventListener('resize', onAccountMenuWinChange)
+  document.removeEventListener('keydown', onModalEscape)
+  if (typeof document !== 'undefined') document.body.style.overflow = ''
 })
 
 </script>

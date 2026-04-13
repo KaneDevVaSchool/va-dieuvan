@@ -50,6 +50,13 @@
     "cancel": "Hủy",
     "sidebar_confirm_horizontal_title": "Chuyển sang menu ngang?",
     "sidebar_confirm_horizontal_body": "Thanh điều hướng sẽ nằm phía trên nội dung (kiểu navbar). Bạn có thể đổi lại bất cứ lúc nào.",
-    "sidebar_confirm_horizontal_action": "Chuyển sang ngang"
+    "sidebar_confirm_horizontal_action": "Chuyển sang ngang",
+    "sidebar_layout": "Bố cục sidebar",
+    "axis_auto": "Tự động",
+    "axis_vertical": "Dọc",
+    "axis_horizontal": "Ngang",
+    "logout_confirm_title": "Đăng xuất?",
+    "logout_confirm_body": "Bạn sẽ cần đăng nhập lại để tiếp tục.",
+    "logout_confirm_action": "Đăng xuất"
   }
 }
