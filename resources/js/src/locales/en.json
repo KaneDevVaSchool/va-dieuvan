@@ -9,6 +9,7 @@
     "hub": "Operations hub",
     "schedule7": "7-day schedule",
     "calendar": "Month calendar",
+    "group_overview": "Overview",
     "group_schedule": "Schedule",
     "requests": "Dispatch requests",
     "new_request": "New request",
@@ -37,6 +38,7 @@
       "section_system": "System",
       "dashboard": "Home",
       "hub": "Hub",
+      "group_overview": "Overview",
       "group_schedule": "Schedule",
       "audit": "Log"
     }

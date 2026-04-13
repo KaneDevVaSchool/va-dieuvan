@@ -9,6 +9,7 @@
         "hub": "Trung tâm vận hành",
         "schedule7": "Lịch 7 ngày",
         "calendar": "Lịch tháng",
+        "group_overview": "Tổng quan",
         "group_schedule": "Lịch",
         "requests": "Yêu cầu điều xe",
         "new_request": "Tạo yêu cầu",
@@ -37,6 +38,7 @@
             "section_system": "Hệ thống",
             "dashboard": "Tổng quan",
             "hub": "Vận hành",
+            "group_overview": "Tổng quan",
             "group_schedule": "Lịch",
             "audit": "Nhật ký"
         }

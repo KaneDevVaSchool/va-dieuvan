@@ -10,8 +10,14 @@ export const NAV_SECTIONS = [
     sectionKey: null,
     headingKey: null,
     items: [
-      { to: '/', labelKey: 'nav.dashboard', icon: 'home' },
-      { to: '/hub', labelKey: 'nav.hub', icon: 'hub' },
+      {
+        labelKey: 'nav.group_overview',
+        icon: 'home',
+        children: [
+          { to: '/', labelKey: 'nav.dashboard', icon: 'home' },
+          { to: '/hub', labelKey: 'nav.hub', icon: 'hub' },
+        ],
+      },
       {
         labelKey: 'nav.group_schedule',
         icon: 'schedule',
