@@ -38,7 +38,7 @@ const wrapperClass = computed(() => {
 
 const imgClass = computed(() => {
   const map = {
-    sm: 'max-h-8 max-w-[120px]',
+    sm: 'max-h-9 max-w-[136px]',
     md: 'max-h-11 max-w-[160px]',
     lg: 'max-h-14 max-w-[200px]',
     xl: 'max-h-32 max-w-[min(100%,280px)]',
