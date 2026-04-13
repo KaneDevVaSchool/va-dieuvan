@@ -23,6 +23,7 @@ class ListRequestsRequest extends ApiFormRequest
             'trip_type' => ['nullable', Rule::in(['door_to_door', 'point_to_point', 'business', 'cargo'])],
             'source_channel' => ['nullable', Rule::in(['portal', 'zalo', 'paper'])],
             'paper_status' => ['nullable', Rule::in(['pending', 'received', 'digitally_signed'])],
+            'is_urgent' => ['nullable', 'boolean'],
             'sla_risk_only' => ['nullable', 'boolean'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],

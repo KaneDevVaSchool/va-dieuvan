@@ -139,50 +139,382 @@
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 lg:flex-row lg:items-end lg:justify-between">
-      <div class="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <Select v-model="filters.trip_type" :label="t('requests_page.filter_trip_type')" placeholder="—">
-          <option value="">{{ t('requests_page.all') }}</option>
-          <option value="door_to_door">{{ labelTripType('door_to_door') }}</option>
-          <option value="point_to_point">{{ labelTripType('point_to_point') }}</option>
-          <option value="business">{{ labelTripType('business') }}</option>
-          <option value="cargo">{{ labelTripType('cargo') }}</option>
-        </Select>
+    <!-- Yêu cầu mới -->
+    <section class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
+      <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <label class="mb-1 block text-xs font-medium text-slate-600">{{ t('requests_page.filter_date_range') }}</label>
-          <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-base font-semibold text-slate-900">{{ t('requests_page.section_new_requests') }}</h2>
+          <p class="text-xs text-slate-500">{{ t('requests_page.section_new_requests_hint') }}</p>
+        </div>
+      </div>
+      <div v-if="insightsLoading" class="py-6 text-center text-sm text-slate-400">{{ t('requests_page.loading') }}</div>
+      <div v-else-if="!pendingSpotlight.length" class="py-6 text-center text-sm text-slate-500">
+        {{ t('requests_page.new_requests_empty') }}
+      </div>
+      <ul v-else class="space-y-3">
+        <li
+          v-for="r in pendingSpotlight"
+          :key="r.id"
+          class="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div class="flex min-w-0 flex-1 gap-3">
+            <span class="w-1 shrink-0 rounded-full" :class="requestCardAccentClass(r)" aria-hidden="true" />
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <span
+                  v-if="r.is_urgent"
+                  class="inline-flex rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800"
+                >
+                  {{ t('requests_page.filter_priority_urgent') }}
+                </span>
+                <span
+                  v-else
+                  class="inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium"
+                  :class="tripTypeTagClass(r.trip_type)"
+                >
+                  {{ labelTripType(r.trip_type) }}
+                </span>
+              </div>
+              <p class="mt-1 font-medium leading-snug text-slate-900">
+                {{ requestCardTitle(r) }}
+              </p>
+              <p class="mt-0.5 text-xs text-slate-500">
+                {{ requestCardSub(r) }}
+              </p>
+            </div>
+          </div>
+          <RouterLink
+            :to="`/requests/${r.id}`"
+            class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-900 transition hover:bg-teal-100"
+          >
+            {{ canApproveRequests ? t('requests_page.cta_review') : t('requests_page.cta_detail') }}
+            <ArrowTopRightOnSquareIcon class="h-4 w-4" />
+          </RouterLink>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Phân công tài nguyên -->
+    <section
+      v-if="canShowAssignPanel"
+      class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm"
+    >
+      <h2 class="text-base font-semibold text-slate-900">
+        {{ t('requests_page.section_assign') }}
+        <span v-if="assignTripRef" class="font-mono text-sm font-normal text-slate-500">
+          — Trip #{{ assignTripRef.id }}
+        </span>
+      </h2>
+      <div v-if="insightsLoading" class="py-8 text-center text-sm text-slate-400">{{ t('requests_page.loading') }}</div>
+      <div v-else-if="!assignTripRef" class="py-6 text-center text-sm text-slate-500">
+        {{ t('requests_page.assign_no_trip') }}
+      </div>
+      <div v-else class="mt-4 grid gap-4 lg:grid-cols-2">
+        <div class="space-y-3 rounded-xl border border-slate-100 bg-slate-50/40 p-4">
+          <p class="text-sm text-slate-700">
+            <span class="font-medium text-slate-900">{{ labelTripType(assignTripRef.dispatch_request?.trip_type) }}</span>
+            <span v-if="assignTripRef.depart_at" class="text-slate-600">
+              · {{ formatTripWhen(assignTripRef.depart_at) }}
+            </span>
+          </p>
+          <p class="text-sm text-slate-800">
+            {{ (assignTripRef.dispatch_request?.origin ?? '—') + ' → ' + (assignTripRef.dispatch_request?.destination ?? '—') }}
+          </p>
+          <p v-if="assignTripRef.dispatch_request?.passenger_count" class="text-xs text-slate-500">
+            {{ t('requests_page.passengers', { n: assignTripRef.dispatch_request.passenger_count }) }}
+          </p>
+          <div class="border-t border-slate-200/80 pt-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {{ t('requests_page.assign_plan_title') }}
+            </p>
+            <ol class="mt-2 space-y-2">
+              <li>
+                <span
+                  class="block rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900"
+                >
+                  1. {{ t('requests_page.assign_plan_1') }}
+                </span>
+              </li>
+              <li>
+                <span class="block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                  2. {{ t('requests_page.assign_plan_2') }}
+                </span>
+              </li>
+              <li>
+                <span class="block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                  3. {{ t('requests_page.assign_plan_3') }}
+                </span>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="flex flex-col rounded-xl border border-slate-100 bg-slate-50/40 p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {{ t('requests_page.assign_resources_title') }}
+          </p>
+          <div class="mt-3 flex-1 space-y-4 text-sm">
+            <div>
+              <p class="text-xs text-slate-500">{{ t('requests_page.assign_internal_vehicles') }}</p>
+              <p v-if="assignTripRef.vehicle?.license_plate" class="mt-1 font-mono text-slate-900">
+                {{ assignTripRef.vehicle.license_plate }}
+                <span v-if="assignTripRef.vehicle.status" class="text-xs font-sans text-slate-500">
+                  · {{ assignTripRef.vehicle.status }}
+                </span>
+              </p>
+              <p v-else class="mt-1 text-slate-400">—</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">{{ t('requests_page.assign_drivers_free') }}</p>
+              <div v-if="assignTripRef.driver?.full_name" class="mt-1 flex flex-wrap gap-2">
+                <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-900">
+                  {{ assignTripRef.driver.full_name }}
+                </span>
+              </div>
+              <p v-else class="mt-1 text-slate-400">—</p>
+            </div>
+          </div>
+          <RouterLink
+            :to="`/trips/${assignTripRef.id}`"
+            class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+          >
+            {{ t('requests_page.cta_confirm_assign') }}
+            <ArrowTopRightOnSquareIcon class="h-5 w-5" />
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- Theo dõi trip đang chạy -->
+    <section class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
+      <h2 class="text-base font-semibold text-slate-900">{{ t('requests_page.section_track') }}</h2>
+      <div v-if="insightsLoading" class="py-8 text-center text-sm text-slate-400">{{ t('requests_page.loading') }}</div>
+      <div v-else-if="!activeTripsTrack.length" class="py-6 text-center text-sm text-slate-500">
+        {{ t('requests_page.track_empty') }}
+      </div>
+      <div v-else class="mt-4 grid gap-3 md:grid-cols-3">
+        <RouterLink
+          v-for="(tr, idx) in activeTripsTrack"
+          :key="tr.id"
+          :to="`/trips/${tr.id}`"
+          class="block rounded-xl border p-4 transition hover:shadow-md"
+          :class="tripTrackCardClass(idx)"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <span class="font-mono text-xs font-semibold text-slate-500">#{{ tr.id }}</span>
+            <span class="text-[11px] font-medium" :class="tripTrackStatusClass(tr)">
+              {{ tripTrackStatusLabel(tr) }}
+            </span>
+          </div>
+          <p class="mt-2 text-sm font-medium text-slate-900">
+            {{ labelTripType(tr.dispatch_request?.trip_type) }}
+          </p>
+          <p class="mt-1 line-clamp-2 text-xs text-slate-600">
+            {{ (tr.dispatch_request?.origin ?? '—') + ' → ' + (tr.dispatch_request?.destination ?? '—') }}
+          </p>
+          <p class="mt-2 text-xs text-slate-500">
+            <span v-if="tr.driver?.full_name">TX: {{ tr.driver.full_name }}</span>
+            <span v-if="tr.vehicle?.license_plate"> · {{ tr.vehicle.license_plate }}</span>
+            <span v-if="tr.transport_provider?.name"> · {{ tr.transport_provider.name }}</span>
+          </p>
+        </RouterLink>
+      </div>
+    </section>
+
+    <!-- Filters: horizontal bar -->
+    <div
+      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5"
+    >
+      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <!-- Main filter menu -->
+        <details ref="filterMenuRef" class="group relative">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5 text-slate-600" aria-hidden="true" />
+              <span
+                v-if="activeFilterCount > 0"
+                class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
+              >
+                {{ activeFilterCount > 9 ? '9+' : activeFilterCount }}
+              </span>
+            </span>
+            <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5"
+          >
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {{ t('requests_page.filter_menu_title') }}
+            </p>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li v-if="filters.trip_type" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('requests_page.filter_trip_type') }}</span>
+                <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
+              </li>
+              <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('requests_page.filter_depart_range') }}</span>
+                <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
+              </li>
+              <li v-if="filters.source_channel" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('requests_page.filter_channel') }}</span>
+                <span class="font-medium">{{ labelSourceChannel(filters.source_channel) }}</span>
+              </li>
+              <li v-if="filters.paper_status" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('requests_page.filter_paper') }}</span>
+                <span class="font-medium">{{ labelPaperStatus(filters.paper_status) }}</span>
+              </li>
+              <li v-if="filters.priority === 'urgent'" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('requests_page.filter_priority') }}</span>
+                <span class="font-medium">{{ t('requests_page.filter_priority_urgent') }}</span>
+              </li>
+              <li v-if="filters.sla_risk_only" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('requests_page.sla_toggle') }}</span>
+                <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
+              </li>
+              <li v-if="filters.per_page !== 10" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('requests_page.filter_per_page') }}</span>
+                <span class="font-medium">{{ filters.per_page }}</span>
+              </li>
+              <li v-if="activeFilterCount === 0" class="text-slate-400">{{ t('requests_page.filter_menu_empty') }}</li>
+            </ul>
+            <button
+              type="button"
+              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              @click="resetFilters(); closeFilterMenu()"
+            >
+              {{ t('requests_page.filter_clear_all') }}
+            </button>
+          </div>
+        </details>
+
+        <!-- Inline dropdowns -->
+        <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
+
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+          <label class="inline-flex min-w-0 items-center gap-1.5 rounded-lg px-1 py-0.5 hover:bg-white/60">
+            <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_trip_type') }}</span>
+            <div class="relative">
+              <select
+                v-model="filters.trip_type"
+                class="h-9 max-w-[11rem] cursor-pointer appearance-none rounded-md border-0 bg-white/80 py-1.5 pl-2 pr-7 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                @change="onFilterChange"
+              >
+                <option value="">{{ t('requests_page.all') }}</option>
+                <option value="door_to_door">{{ labelTripType('door_to_door') }}</option>
+                <option value="point_to_point">{{ labelTripType('point_to_point') }}</option>
+                <option value="business">{{ labelTripType('business') }}</option>
+                <option value="cargo">{{ labelTripType('cargo') }}</option>
+              </select>
+              <ChevronDownIcon class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </label>
+
+          <label class="inline-flex min-w-0 flex-wrap items-center gap-1.5 rounded-lg px-1 py-0.5 hover:bg-white/60">
+            <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_depart_range') }}</span>
             <input
               v-model="filters.from"
               type="date"
-              class="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+              @change="onFilterChange"
             />
-            <span class="text-slate-400">—</span>
+            <span class="text-slate-300">—</span>
             <input
               v-model="filters.to"
               type="date"
-              class="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+              @change="onFilterChange"
             />
-          </div>
+          </label>
+
+          <label class="inline-flex min-w-0 items-center gap-1.5 rounded-lg px-1 py-0.5 hover:bg-white/60">
+            <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_channel') }}</span>
+            <div class="relative">
+              <select
+                v-model="filters.source_channel"
+                class="h-9 max-w-[9rem] cursor-pointer appearance-none rounded-md border-0 bg-white/80 py-1.5 pl-2 pr-7 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                @change="onFilterChange"
+              >
+                <option value="">{{ t('requests_page.all') }}</option>
+                <option value="portal">{{ labelSourceChannel('portal') }}</option>
+                <option value="zalo">{{ labelSourceChannel('zalo') }}</option>
+                <option value="paper">{{ labelSourceChannel('paper') }}</option>
+              </select>
+              <ChevronDownIcon class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </label>
+
+          <label class="inline-flex min-w-0 items-center gap-1.5 rounded-lg px-1 py-0.5 hover:bg-white/60">
+            <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_paper') }}</span>
+            <div class="relative">
+              <select
+                v-model="filters.paper_status"
+                class="h-9 max-w-[10rem] cursor-pointer appearance-none rounded-md border-0 bg-white/80 py-1.5 pl-2 pr-7 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                @change="onFilterChange"
+              >
+                <option value="">{{ t('requests_page.all') }}</option>
+                <option value="pending">{{ labelPaperStatus('pending') }}</option>
+                <option value="received">{{ labelPaperStatus('received') }}</option>
+                <option value="digitally_signed">{{ labelPaperStatus('digitally_signed') }}</option>
+              </select>
+              <ChevronDownIcon class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </label>
+
+          <label class="inline-flex min-w-0 items-center gap-1.5 rounded-lg px-1 py-0.5 hover:bg-white/60">
+            <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_priority') }}</span>
+            <div class="relative">
+              <select
+                v-model="filters.priority"
+                class="h-9 max-w-[10rem] cursor-pointer appearance-none rounded-md border-0 bg-white/80 py-1.5 pl-2 pr-7 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                @change="onFilterChange"
+              >
+                <option value="">{{ t('requests_page.filter_priority_all') }}</option>
+                <option value="urgent">{{ t('requests_page.filter_priority_urgent') }}</option>
+              </select>
+              <ChevronDownIcon class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            </div>
+          </label>
         </div>
-        <Select v-model="filters.source_channel" :label="t('requests_page.filter_channel')" placeholder="—">
-          <option value="">{{ t('requests_page.all') }}</option>
-          <option value="portal">{{ labelSourceChannel('portal') }}</option>
-          <option value="zalo">{{ labelSourceChannel('zalo') }}</option>
-          <option value="paper">{{ labelSourceChannel('paper') }}</option>
-        </Select>
-        <Select v-model="filters.paper_status" :label="t('requests_page.filter_paper')" placeholder="—">
-          <option value="">{{ t('requests_page.all') }}</option>
-          <option value="pending">{{ labelPaperStatus('pending') }}</option>
-          <option value="received">{{ labelPaperStatus('received') }}</option>
-          <option value="digitally_signed">{{ labelPaperStatus('digitally_signed') }}</option>
-        </Select>
-        <label class="flex cursor-pointer items-center gap-3 pt-6 xl:col-span-1 xl:pt-0">
+
+        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
+            :title="t('requests_page.filter_clear')"
+            @click="resetFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" />
+              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" />
+            </span>
+          </button>
+
+          <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
+
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900"
+            :aria-expanded="extraFiltersOpen"
+            @click="extraFiltersOpen = !extraFiltersOpen"
+          >
+            {{ t('requests_page.filter_extra') }}
+            <PlusCircleIcon class="h-5 w-5 text-teal-600" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Extra attributes -->
+      <div
+        v-show="extraFiltersOpen"
+        class="mt-3 flex flex-wrap items-center gap-4 border-t border-violet-100/80 pt-3"
+      >
+        <label class="inline-flex cursor-pointer items-center gap-2">
           <button
             type="button"
             role="switch"
             :aria-checked="filters.sla_risk_only"
-            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30"
             :class="filters.sla_risk_only ? 'bg-teal-600' : 'bg-slate-200'"
             @click="toggleSla"
           >
@@ -193,10 +525,19 @@
           </button>
           <span class="text-sm text-slate-700">{{ t('requests_page.sla_toggle') }}</span>
         </label>
-      </div>
-      <div class="flex shrink-0 gap-2">
-        <Button variant="secondary" :loading="loading" @click="reload">{{ t('requests_page.apply_filters') }}</Button>
-        <Button variant="secondary" :disabled="loading" @click="resetFilters">{{ t('requests_page.reset') }}</Button>
+        <label class="inline-flex items-center gap-2">
+          <span class="text-sm text-slate-600">{{ t('requests_page.filter_per_page') }}</span>
+          <select
+            v-model.number="filters.per_page"
+            class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+            @change="onFilterChange"
+          >
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+        </label>
       </div>
     </div>
 
@@ -354,6 +695,44 @@
         </div>
       </div>
     </div>
+
+    <!-- Timeline trip (theo chuyến đang chạy đầu tiên) -->
+    <section v-if="timelineSteps.length" class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
+      <h2 class="text-base font-semibold text-slate-900">
+        {{ t('requests_page.section_timeline') }}
+        <span v-if="timelineTripId" class="font-mono text-sm font-normal text-slate-500">#{{ timelineTripId }}</span>
+      </h2>
+      <div class="mt-6 overflow-x-auto pb-2">
+        <div class="flex min-w-[640px] items-start justify-between gap-2">
+          <div
+            v-for="(step, i) in timelineSteps"
+            :key="step.id"
+            class="flex min-w-[72px] flex-1 flex-col items-center text-center"
+          >
+            <div
+              class="flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-bold"
+              :class="
+                step.current
+                  ? 'border-teal-600 bg-teal-50 text-teal-900'
+                  : step.done
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                    : 'border-slate-200 bg-white text-slate-300'
+              "
+            >
+              <CheckCircleIcon v-if="step.done && !step.current" class="h-5 w-5 text-emerald-600" />
+              <PlayCircleIcon v-else-if="step.current" class="h-5 w-5 text-teal-600" />
+              <span v-else class="tabular-nums">{{ i + 1 }}</span>
+            </div>
+            <p class="mt-2 text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-600">
+              {{ step.label }}
+            </p>
+            <p class="mt-0.5 text-[11px] text-slate-500">
+              {{ step.time ? formatShortDate(step.time) : t('requests_page.tl_pending') }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -362,22 +741,29 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  ArrowTopRightOnSquareIcon,
   BellIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
   ExclamationTriangleIcon,
   EyeIcon,
+  FunnelIcon,
   MagnifyingGlassIcon,
   MapPinIcon,
   PencilSquareIcon,
+  PlayCircleIcon,
+  PlusCircleIcon,
   PlusIcon,
   RectangleStackIcon,
   TruckIcon,
+  XMarkIcon,
   AcademicCapIcon,
   CubeIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
-import Select from '../../components/ui/Select.vue'
 import { listRequests } from '../../api/requests'
+import { getTrip, listTrips } from '../../api/trips'
+import { useAuthStore } from '../../store'
 import {
   labelPaperStatus,
   labelRequestStatus,
@@ -389,6 +775,7 @@ import {
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 const loading = ref(false)
 const items = ref([])
@@ -406,6 +793,19 @@ const stats = ref({
 const activeTab = ref('all')
 const searchInput = ref('')
 let searchDebounce = null
+const filterMenuRef = ref(null)
+const extraFiltersOpen = ref(false)
+
+const insightsLoading = ref(true)
+const pendingSpotlight = ref([])
+const assignTripRef = ref(null)
+const activeTripsTrack = ref([])
+const timelineDetail = ref(null)
+
+const canApproveRequests = computed(() => auth.hasPermission('request.approve'))
+const canShowAssignPanel = computed(() => auth.hasPermission('trip.assign'))
+
+const timelineTripId = computed(() => timelineDetail.value?.id ?? null)
 
 const filters = reactive({
   q: '',
@@ -414,9 +814,22 @@ const filters = reactive({
   paper_status: '',
   from: '',
   to: '',
+  priority: '',
   sla_risk_only: false,
   per_page: 10,
   page: 1,
+})
+
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (filters.trip_type) n++
+  if (filters.from || filters.to) n++
+  if (filters.source_channel) n++
+  if (filters.paper_status) n++
+  if (filters.priority === 'urgent') n++
+  if (filters.sla_risk_only) n++
+  if (filters.per_page !== 10) n++
+  return n
 })
 
 const tabDefs = computed(() => [
@@ -566,9 +979,180 @@ function tabCount(tabId) {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null} trip
+ */
+function buildTimelineSteps(trip, tr) {
+  if (!trip) return []
+  const dr = trip.dispatch_request
+  if (!dr) return []
+  const hasAssign = !!(trip.vehicle_id || trip.driver_id || trip.transport_provider_id)
+  const st = trip.status
+  const isRunning = st === 'in_progress' || st === 'driver_confirmed'
+
+  return [
+    {
+      id: 'req',
+      label: tr('requests_page.tl_request'),
+      time: dr.created_at,
+      done: true,
+      current: false,
+    },
+    {
+      id: 'appr',
+      label: tr('requests_page.tl_approve'),
+      time: dr.status === 'approved' ? trip.created_at : null,
+      done: dr.status === 'approved',
+      current: false,
+    },
+    {
+      id: 'trip',
+      label: tr('requests_page.tl_trip'),
+      time: trip.created_at,
+      done: !!trip.created_at,
+      current: false,
+    },
+    {
+      id: 'as',
+      label: tr('requests_page.tl_assigned'),
+      time: hasAssign ? trip.updated_at : null,
+      done: hasAssign,
+      current: false,
+    },
+    {
+      id: 'run',
+      label: tr('requests_page.tl_in_progress'),
+      time: trip.started_at,
+      done: !!trip.started_at && !isRunning,
+      current: isRunning,
+    },
+    {
+      id: 'done',
+      label: tr('requests_page.tl_completed'),
+      time: trip.completed_at,
+      done: !!trip.completed_at,
+      current: false,
+    },
+    {
+      id: 'paid',
+      label: tr('requests_page.tl_paid'),
+      time: trip.paid_at,
+      done: trip.payment_status === 'paid' && !!trip.paid_at,
+      current: false,
+    },
+  ]
+}
+
+const timelineSteps = computed(() => buildTimelineSteps(timelineDetail.value, t))
+
+function requestCardAccentClass(r) {
+  if (r.is_urgent) return 'bg-rose-500'
+  if (r.trip_type === 'cargo') return 'bg-emerald-500'
+  if (r.trip_type === 'business') return 'bg-slate-400'
+  return 'bg-teal-500'
+}
+
+function tripTypeTagClass(tripType) {
+  if (tripType === 'cargo') return 'bg-emerald-100 text-emerald-800'
+  if (tripType === 'business') return 'bg-slate-100 text-slate-700'
+  return 'bg-teal-100 text-teal-800'
+}
+
+function requestCardTitle(r) {
+  const route = `${r.origin ?? '—'} → ${r.destination ?? '—'}`
+  if (!r.depart_at) return route
+  try {
+    const d = new Date(r.depart_at)
+    return `${route} · ${d.toLocaleDateString('vi-VN')}`
+  } catch {
+    return route
+  }
+}
+
+function requestCardSub(r) {
+  const parts = []
+  if (r.passenger_count) parts.push(`${r.passenger_count} khách`)
+  if (r.notes) parts.push(String(r.notes).slice(0, 96))
+  return parts.join(' · ') || '—'
+}
+
+function formatTripWhen(v) {
+  if (!v) return ''
+  try {
+    return new Date(v).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return String(v)
+  }
+}
+
+function tripTrackCardClass(idx) {
+  const rings = [
+    'border-teal-200 ring-1 ring-teal-100',
+    'border-amber-200 ring-1 ring-amber-100',
+    'border-sky-200 ring-1 ring-sky-100',
+  ]
+  return rings[idx % 3]
+}
+
+function tripTrackStatusLabel(tr) {
+  if (tr.status === 'assigned' && tr.depart_at && new Date(tr.depart_at) < new Date()) {
+    return t('requests_page.status_delay')
+  }
+  return labelTripStatus(tr.status)
+}
+
+function tripTrackStatusClass(tr) {
+  if (tr.status === 'assigned' && tr.depart_at && new Date(tr.depart_at) < new Date()) {
+    return 'text-amber-700'
+  }
+  if (tr.status === 'in_progress') return 'text-teal-700'
+  return 'text-slate-600'
+}
+
+async function loadInsights() {
+  insightsLoading.value = true
+  try {
+    const [pendingRes, inProgRes, approvedRes] = await Promise.all([
+      listRequests({ status: 'pending', per_page: 5, page: 1 }),
+      listTrips({ status: 'in_progress', per_page: 3, page: 1 }),
+      listTrips({ status: 'approved', per_page: 1, page: 1 }),
+    ])
+    pendingSpotlight.value = pendingRes.items ?? []
+    activeTripsTrack.value = inProgRes.items ?? []
+    let assign = approvedRes.items?.[0] ?? null
+    if (!assign) {
+      const pendT = await listTrips({ status: 'pending', per_page: 1, page: 1 })
+      assign = pendT.items?.[0] ?? null
+    }
+    assignTripRef.value = assign
+
+    const tid = activeTripsTrack.value[0]?.id
+    if (tid) {
+      try {
+        timelineDetail.value = await getTrip(tid)
+      } catch {
+        timelineDetail.value = null
+      }
+    } else {
+      timelineDetail.value = null
+    }
+  } catch {
+    pendingSpotlight.value = []
+    activeTripsTrack.value = []
+    assignTripRef.value = null
+    timelineDetail.value = null
+  } finally {
+    insightsLoading.value = false
+  }
+}
+
 function buildListParams() {
   const params = { ...filters }
+  delete params.priority
   params.q = searchInput.value.trim() || undefined
+  if (filters.priority === 'urgent') {
+    params.is_urgent = true
+  }
 
   if (activeTab.value === 'trip_in_progress') {
     params.trip_status = 'in_progress'
@@ -592,6 +1176,18 @@ function buildListParams() {
   return params
 }
 
+function onFilterChange() {
+  filters.page = 1
+  reload()
+}
+
+function closeFilterMenu() {
+  const el = filterMenuRef.value
+  if (el && 'open' in el) {
+    el.open = false
+  }
+}
+
 async function reload() {
   loading.value = true
   try {
@@ -605,6 +1201,7 @@ async function reload() {
   } finally {
     loading.value = false
   }
+  void loadInsights()
 }
 
 function goPage(p) {
@@ -637,6 +1234,7 @@ function resetFilters() {
   filters.paper_status = ''
   filters.from = ''
   filters.to = ''
+  filters.priority = ''
   filters.sla_risk_only = false
   filters.per_page = 10
   filters.page = 1

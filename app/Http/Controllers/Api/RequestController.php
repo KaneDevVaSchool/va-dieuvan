@@ -48,6 +48,8 @@ class RequestController extends Controller
         $q->when(isset($data['source_channel']), fn (Builder $b) => $b->where('source_channel', $data['source_channel']));
         $q->when(isset($data['paper_status']), fn (Builder $b) => $b->where('paper_status', $data['paper_status']));
 
+        $q->when(! empty($data['is_urgent']), fn (Builder $b) => $b->where('is_urgent', true));
+
         $q->when(isset($data['trip_status']), function (Builder $b) use ($data) {
             $b->whereHas('trip', fn (Builder $t) => $t->where('status', $data['trip_status']));
         });
