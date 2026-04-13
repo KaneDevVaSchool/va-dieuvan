@@ -45,6 +45,10 @@
     "sidebar_pref_horizontal": "Sidebar: always horizontal",
     "sidebar_cycle_layout": "Cycle sidebar mode",
     "sidebar_collapse": "Collapse menu",
-    "sidebar_expand": "Expand menu"
+    "sidebar_expand": "Expand menu",
+    "cancel": "Cancel",
+    "sidebar_confirm_horizontal_title": "Switch to horizontal navigation?",
+    "sidebar_confirm_horizontal_body": "The navigation bar will appear above the content (navbar style). You can change this anytime.",
+    "sidebar_confirm_horizontal_action": "Switch to horizontal"
   }
 }

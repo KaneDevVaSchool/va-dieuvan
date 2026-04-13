@@ -45,6 +45,10 @@
     "sidebar_pref_horizontal": "Sidebar: luôn ngang",
     "sidebar_cycle_layout": "Chuyển chế độ sidebar",
     "sidebar_collapse": "Thu gọn menu",
-    "sidebar_expand": "Mở rộng menu"
+    "sidebar_expand": "Mở rộng menu",
+    "cancel": "Hủy",
+    "sidebar_confirm_horizontal_title": "Chuyển sang menu ngang?",
+    "sidebar_confirm_horizontal_body": "Thanh điều hướng sẽ nằm phía trên nội dung (kiểu navbar). Bạn có thể đổi lại bất cứ lúc nào.",
+    "sidebar_confirm_horizontal_action": "Chuyển sang ngang"
   }
 }

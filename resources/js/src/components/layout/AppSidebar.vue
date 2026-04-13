@@ -55,7 +55,7 @@
         type="button"
         class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
         :title="t('app.sidebar_cycle_layout')"
-        @click="cyclePreference"
+        @click="onCycleLayoutClick"
       >
         <ArrowsRightLeftIcon class="h-5 w-5" aria-hidden="true" />
         <span class="sr-only">{{ t('app.sidebar_cycle_layout') }}</span>
@@ -76,18 +76,25 @@
     <p class="sr-only" aria-live="polite">{{ t(preferenceLabelKey) }}</p>
   </aside>
 
-  <!-- Thanh ngang -->
+  <!-- Thanh ngang (navbar) -->
   <header
     v-else
-    class="flex shrink-0 flex-col border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95"
+    class="sticky top-0 z-30 flex shrink-0 flex-col border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95"
   >
-    <div class="flex min-h-[3.5rem] flex-wrap items-stretch gap-x-2 gap-y-2 px-2 py-2 sm:min-h-[4rem] sm:gap-3 sm:px-4">
-      <div class="flex shrink-0 items-center">
+    <div
+      class="flex min-h-[3.25rem] items-center gap-2 px-2 py-1.5 sm:min-h-14 sm:gap-3 sm:px-4 sm:py-2"
+    >
+      <div class="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
         <AppLogo size="sm" />
+        <span
+          class="hidden max-w-[10rem] truncate text-xs font-semibold tracking-tight text-slate-800 md:inline dark:text-slate-100"
+        >
+          {{ t('app.title') }}
+        </span>
       </div>
 
       <nav
-        class="order-last flex min-h-[2.75rem] w-full min-w-0 flex-[1_1_100%] items-center gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain sm:order-none sm:flex-[1_1_auto] sm:px-0"
+        class="flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         :aria-label="t('app.title')"
       >
         <template v-for="(section, si) in sections" :key="'h' + si">
@@ -114,29 +121,66 @@
         </template>
       </nav>
 
-      <SidebarAccountBlock layout="horizontal" class="ml-auto shrink-0" />
-    </div>
-
-    <div
-      class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-2 py-1.5 sm:px-4 dark:border-slate-700"
-    >
-      <span class="max-w-[70%] truncate text-[10px] text-slate-500 dark:text-slate-400">
-        {{ t(preferenceLabelKey) }}
-      </span>
-      <button
-        type="button"
-        class="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-        @click="cyclePreference"
-      >
-        <ArrowsRightLeftIcon class="h-4 w-4" aria-hidden="true" />
-        {{ t('app.sidebar_cycle_layout') }}
-      </button>
+      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+        <button
+          type="button"
+          class="inline-flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white/80 text-slate-600 shadow-sm transition hover:border-va-200 hover:bg-va-50/80 hover:text-va-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-va-500/50 dark:hover:bg-va-950/40 dark:hover:text-va-100"
+          :title="`${t(preferenceLabelKey)} — ${t('app.sidebar_cycle_layout')}`"
+          @click="onCycleLayoutClick"
+        >
+          <ArrowsRightLeftIcon class="h-5 w-5" aria-hidden="true" />
+          <span class="sr-only">{{ t('app.sidebar_cycle_layout') }}</span>
+        </button>
+        <SidebarAccountBlock layout="horizontal" />
+      </div>
     </div>
   </header>
+
+  <Teleport to="body">
+    <div
+      v-if="horizontalConfirmOpen"
+      class="fixed inset-0 z-[100] flex items-end justify-center bg-slate-900/50 p-4 backdrop-blur-[2px] sm:items-center"
+      role="presentation"
+      @click.self="horizontalConfirmOpen = false"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sidebar-horizontal-confirm-title"
+        class="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+      >
+        <h2
+          id="sidebar-horizontal-confirm-title"
+          class="text-base font-semibold text-slate-900 dark:text-slate-50"
+        >
+          {{ t('app.sidebar_confirm_horizontal_title') }}
+        </h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          {{ t('app.sidebar_confirm_horizontal_body') }}
+        </p>
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <button
+            type="button"
+            class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 sm:w-auto"
+            @click="horizontalConfirmOpen = false"
+          >
+            {{ t('app.cancel') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex w-full items-center justify-center rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 dark:bg-va-600 dark:hover:bg-va-500 sm:w-auto"
+            @click="confirmSwitchToHorizontal"
+          >
+            {{ t('app.sidebar_confirm_horizontal_action') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowsRightLeftIcon,
@@ -152,8 +196,42 @@ import { useUiStore } from '../../store/ui'
 
 const { t } = useI18n()
 const { sections, badgeCount } = useNavSections()
-const { axis, preferenceLabelKey, cyclePreference } = useSidebarLayout()
+const { axis, preferenceLabelKey } = useSidebarLayout()
 const ui = useUiStore()
+
+const horizontalConfirmOpen = ref(false)
+
+function onCycleLayoutClick() {
+  if (ui.peekNextSidebarAxisPreference() === 'horizontal') {
+    horizontalConfirmOpen.value = true
+    return
+  }
+  ui.cycleSidebarAxisPreference()
+}
+
+function confirmSwitchToHorizontal() {
+  ui.cycleSidebarAxisPreference()
+  horizontalConfirmOpen.value = false
+}
+
+function onHorizontalConfirmKeydown(e) {
+  if (e.key === 'Escape' && horizontalConfirmOpen.value) {
+    horizontalConfirmOpen.value = false
+  }
+}
+
+watch(horizontalConfirmOpen, (open) => {
+  if (typeof document === 'undefined') return
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+
+onMounted(() => {
+  window.addEventListener('keydown', onHorizontalConfirmKeydown)
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', onHorizontalConfirmKeydown)
+  if (typeof document !== 'undefined') document.body.style.overflow = ''
+})
 
 const navVariant = computed(() =>
   ui.sidebarCollapsed ? 'vertical-compact' : 'vertical-full',

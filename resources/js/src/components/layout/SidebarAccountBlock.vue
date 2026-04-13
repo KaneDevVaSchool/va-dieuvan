@@ -3,6 +3,7 @@
   <div
     v-if="layout === 'vertical'"
     class="shrink-0 border-t border-slate-200/80 bg-white/95 p-2 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95 md:p-3"
+    :class="compact ? 'min-w-0 overflow-hidden' : ''"
   >
     <div v-if="!compact" class="hidden text-[10px] font-medium uppercase tracking-wide text-slate-400 md:block">
       {{ t('app.account') }}
@@ -44,9 +45,9 @@
       <option value="vi">Tiếng Việt</option>
       <option value="en">English</option>
     </select>
-    <div v-if="compact" class="w-full">
+    <div v-if="compact" class="w-full min-w-0 max-w-full">
       <select
-        class="w-full rounded-md border border-slate-200 bg-white px-1 py-1.5 text-[10px] shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        class="w-full min-w-0 max-w-full rounded-md border border-slate-200 bg-white px-1 py-1.5 text-center text-[10px] shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         :value="locale"
         :aria-label="t('app.lang')"
         @change="onLocale($event.target.value)"
@@ -57,26 +58,38 @@
     </div>
 
     <RouterLink
-      class="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 text-[11px] font-medium text-slate-800 shadow-sm transition hover:border-va-200 hover:bg-va-50/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-va-500/40 dark:hover:bg-va-950/30 md:py-2.5 md:text-sm"
+      class="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white text-[11px] font-medium text-slate-800 shadow-sm transition hover:border-va-200 hover:bg-va-50/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-va-500/40 dark:hover:bg-va-950/30 md:text-sm"
+      :class="
+        compact
+          ? 'aspect-square min-h-0 w-full max-w-full shrink-0 px-0 py-2'
+          : 'px-2 py-2 md:py-2.5'
+      "
       to="/profile"
       :aria-label="t('app.profile')"
     >
-      <UserCircleIcon class="h-5 w-5 shrink-0 md:hidden" aria-hidden="true" />
-      <span class="sr-only md:not-sr-only md:inline">{{ t('app.profile') }}</span>
+      <UserCircleIcon
+        class="h-5 w-5 shrink-0"
+        :class="compact ? '' : 'md:hidden'"
+        aria-hidden="true"
+      />
+      <span :class="compact ? 'sr-only' : 'sr-only md:not-sr-only md:inline'">{{ t('app.profile') }}</span>
     </RouterLink>
     <button
       type="button"
-      class="mt-1.5 w-full rounded-lg border border-slate-200 px-2 py-2 text-[11px] font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 md:mt-2 md:py-2.5 md:text-sm"
+      class="mt-1.5 flex w-full items-center justify-center rounded-lg border border-slate-200 text-[11px] font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 md:mt-2 md:text-sm"
+      :class="compact ? 'aspect-square max-w-full px-0 py-2' : 'px-2 py-2 md:py-2.5'"
       @click="logout"
     >
-      {{ t('app.logout') }}
+      <ArrowRightOnRectangleIcon v-if="compact" class="h-5 w-5 shrink-0" aria-hidden="true" />
+      <span v-if="compact" class="sr-only">{{ t('app.logout') }}</span>
+      <template v-else>{{ t('app.logout') }}</template>
     </button>
   </div>
 
   <!-- Ngang -->
   <div
     v-else
-    class="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2"
+    class="flex shrink-0 flex-wrap items-center justify-end gap-1.5 border-l border-slate-200/90 pl-2 sm:gap-2 sm:pl-3 dark:border-slate-600/90"
   >
     <div
       class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-va-50 text-[11px] font-bold text-va-800 ring-1 ring-va-800/10 dark:bg-va-950/50 dark:text-va-200"
@@ -120,7 +133,7 @@
 import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { UserCircleIcon } from '@heroicons/vue/24/outline'
+import { ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
 import { setLocale } from '../../i18n'
 

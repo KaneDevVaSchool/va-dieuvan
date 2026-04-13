@@ -80,10 +80,14 @@ export const useUiStore = defineStore('ui', {
         localStorage.setItem(SIDEBAR_AXIS_KEY, v)
       }
     },
-    cycleSidebarAxisPreference() {
+    peekNextSidebarAxisPreference() {
       const order = ['auto', 'vertical', 'horizontal']
       const i = order.indexOf(this.sidebarAxisPreference)
-      this.setSidebarAxisPreference(order[(i + 1) % order.length])
+      return order[(i + 1) % order.length]
+    },
+    cycleSidebarAxisPreference() {
+      const next = this.peekNextSidebarAxisPreference()
+      this.setSidebarAxisPreference(next)
     },
     setTheme(mode) {
       this.theme = mode === 'dark' ? 'dark' : 'light'
