@@ -109,6 +109,18 @@ class SyncUsersFromCmsCommand extends Command
                 $payload['is_active'] = $isActive;
             }
 
+            if ($has['google_id'] && $row->google_id !== null && $row->google_id !== '') {
+                $gid = (string) $row->google_id;
+                $googleIdTakenByOther = DB::table('users')
+                    ->where('google_id', $gid)
+                    ->where('email', '<>', $email)
+                    ->exists();
+                if ($googleIdTakenByOther) {
+                    $this->warn("google_id {$gid} already used by another row; clearing for {$email} (cms #{$row->cms_user_id})");
+                    $payload['google_id'] = null;
+                }
+            }
+
             if ($dryRun) {
                 $this->line("[dry-run] {$email} ← cms #{$row->cms_user_id}");
                 $synced++;
