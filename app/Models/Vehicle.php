@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
@@ -17,6 +18,7 @@ class Vehicle extends Model
         'payload_kg',
         'status',
         'odometer_km',
+        'default_driver_id',
         'inspection_expires_at',
         'insurance_expires_at',
     ];
@@ -26,9 +28,13 @@ class Vehicle extends Model
         'insurance_expires_at' => 'date',
     ];
 
+    public function defaultDriver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'default_driver_id');
+    }
+
     public function trips(): HasMany
     {
         return $this->hasMany(Trip::class);
     }
 }
-

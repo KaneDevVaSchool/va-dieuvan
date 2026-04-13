@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\Trips\TripController;
 use App\Http\Controllers\Api\Trips\TripOpsController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\UserSearchForDriverAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +49,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::get('/vehicles', [OperationalResourceController::class, 'vehicles']);
         Route::get('/drivers', [OperationalResourceController::class, 'drivers']);
+        Route::get('/transport-providers', [OperationalResourceController::class, 'transportProviders']);
+        Route::get('/users/for-driver-assignment', UserSearchForDriverAssignmentController::class);
 
         Route::get('/notifications/inbox', [InboxController::class, 'index']);
         Route::post('/notifications/read-all', [InboxController::class, 'markAllRead']);
@@ -187,6 +190,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::prefix('students')->controller(StudentController::class)->group(function () {
             Route::post('/', 'store')->middleware('throttle:20,1');
         });
+
+        // Operational resources (mutating)
+        Route::post('/drivers/from-user', [OperationalResourceController::class, 'storeDriverFromUser'])
+            ->middleware('throttle:30,1');
+        Route::patch('/vehicles/{vehicle}', [OperationalResourceController::class, 'updateVehicle'])
+            ->middleware('throttle:30,1');
 
         // Attachments can be heavier; keep separate throttle
         Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {

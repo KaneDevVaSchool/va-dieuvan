@@ -113,6 +113,9 @@ class DemoFlowSeeder extends Seeder
         }
 
         $bus = Vehicle::where('license_plate', '51A-10015')->first();
+        if ($bus && $driver) {
+            $bus->update(['default_driver_id' => $driver->id]);
+        }
 
         $depart = now()->addDay()->setHour(7)->setMinute(0)->setSecond(0);
 
