@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Operational\ListDriversRequest;
 use App\Http\Requests\Api\Operational\ListTransportProvidersRequest;
 use App\Http\Requests\Api\Operational\ListVehiclesRequest;
+use App\Http\Requests\Api\Operational\ShowDriverRequest;
 use App\Http\Requests\Api\Operational\StoreDriverFromUserRequest;
 use App\Http\Requests\Api\Operational\StoreTransportProviderRequest;
 use App\Http\Requests\Api\Operational\StoreVehicleRequest;
+use App\Http\Requests\Api\Operational\UpdateDriverRequest;
 use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
 use App\Models\Driver;
@@ -153,6 +155,22 @@ class OperationalResourceController extends Controller
         return $this->created($this->serializeDriver($driver));
     }
 
+    public function showDriver(ShowDriverRequest $request, Driver $driver)
+    {
+        $driver->load(['user:id,name,email,phone,employee_code,avatar_url']);
+
+        return $this->ok($this->serializeDriver($driver, true));
+    }
+
+    public function updateDriver(UpdateDriverRequest $request, Driver $driver)
+    {
+        $driver->fill($request->validated());
+        $driver->save();
+        $driver->load(['user:id,name,email,phone,employee_code,avatar_url']);
+
+        return $this->ok($this->serializeDriver($driver, true));
+    }
+
     public function updateVehicle(UpdateVehicleRequest $request, Vehicle $vehicle)
     {
         $vehicle->fill($request->validated());
@@ -197,9 +215,9 @@ class OperationalResourceController extends Controller
         ];
     }
 
-    private function serializeDriver(Driver $d): array
+    private function serializeDriver(Driver $d, bool $detailed = false): array
     {
-        return [
+        $base = [
             'id' => $d->id,
             'full_name' => $d->full_name,
             'phone' => $d->phone,
@@ -216,5 +234,11 @@ class OperationalResourceController extends Controller
                 'avatar_url' => $d->user->avatar_url,
             ] : null,
         ];
+        if ($detailed) {
+            $base['national_id'] = $d->national_id;
+            $base['odometer_km'] = (int) $d->odometer_km;
+        }
+
+        return $base;
     }
 }

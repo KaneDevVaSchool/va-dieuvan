@@ -201,7 +201,14 @@
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
               <tr v-for="d in filteredDrivers" :key="d.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ d.name }}</td>
+                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                  <RouterLink
+                    :to="{ name: 'driverDetail', params: { id: d.id } }"
+                    class="text-teal-700 hover:underline dark:text-teal-400"
+                  >
+                    {{ d.name }}
+                  </RouterLink>
+                </td>
                 <td class="max-w-[200px] truncate px-4 py-3 text-slate-600 dark:text-slate-400">{{ d.email || '—' }}</td>
                 <td class="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || '—' }}</td>
                 <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ d.license }}</td>
@@ -841,6 +848,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { BuildingOffice2Icon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import {

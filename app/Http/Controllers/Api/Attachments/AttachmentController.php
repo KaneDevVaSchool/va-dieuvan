@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Attachments\UploadAttachmentRequest;
 use App\Models\Attachment;
 use App\Models\CargoShipment;
 use App\Models\DispatchRequest;
+use App\Models\DriverComplianceDocument;
 use App\Models\Trip;
 use App\Models\TripCost;
 use App\Services\Auditing\AuditLogger;
@@ -32,7 +33,14 @@ class AttachmentController extends Controller
             'cargo_shipment' => [CargoShipment::findOrFail($data['attachable_id']), 'cargo'],
             'trip_cost' => [TripCost::findOrFail($data['attachable_id']), 'costs'],
             'dispatch_request' => [DispatchRequest::findOrFail($data['attachable_id']), 'dispatch_requests'],
+            'driver_compliance_document' => [DriverComplianceDocument::findOrFail($data['attachable_id']), 'driver_compliance_documents'],
         };
+
+        if ($attachable instanceof DriverComplianceDocument) {
+            if (! $request->user()?->can('resource.driver.manage')) {
+                abort(403);
+            }
+        }
 
         if ($attachable instanceof TripCost) {
             FinancialDataLock::assertTripCostAllowsNewAttachment($attachable);

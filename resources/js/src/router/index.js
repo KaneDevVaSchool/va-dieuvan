@@ -29,6 +29,7 @@ import SystemPermissionsView from "../views/system/SystemPermissionsView.vue";
 import SystemUserRolesView from "../views/system/SystemUserRolesView.vue";
 import SystemFeatureTogglesView from "../views/system/SystemFeatureTogglesView.vue";
 import ResourcesListView from "../views/resources/ResourcesListView.vue";
+import DriverDetailView from "../views/resources/DriverDetailView.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -161,6 +162,16 @@ const router = createRouter({
             meta: {
                 title: "Quản lý nguồn lực",
                 subtitle: "Xe, tài xế, nhà cung cấp",
+                featureKey: "module.operations",
+            },
+        },
+        {
+            path: "/resources/drivers/:id",
+            name: "driverDetail",
+            component: DriverDetailView,
+            meta: {
+                title: "Chi tiết tài xế",
+                subtitle: "Hồ sơ & giấy tờ",
                 featureKey: "module.operations",
             },
         },

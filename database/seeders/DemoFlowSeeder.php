@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\CargoShipment;
 use App\Models\DispatchRequest;
 use App\Models\Driver;
+use App\Models\DriverComplianceDocument;
 use App\Models\TransportProvider;
 use App\Models\Trip;
 use App\Models\User;
@@ -97,6 +98,16 @@ class DemoFlowSeeder extends Seeder
                 'full_name' => 'Tài xế Demo',
                 'employment_status' => 'active',
                 'availability_status' => 'available',
+            ]
+        );
+
+        DriverComplianceDocument::updateOrCreate(
+            ['driver_id' => $driver->id, 'doc_type' => 'license'],
+            [
+                'title' => 'GPLX — mẫu seed',
+                'notes' => 'Bản ghi demo; đính kèm PDF/ảnh từ màn chi tiết tài xế.',
+                'issued_at' => now()->subYears(2)->toDateString(),
+                'expires_at' => now()->addYear()->toDateString(),
             ]
         );
 
