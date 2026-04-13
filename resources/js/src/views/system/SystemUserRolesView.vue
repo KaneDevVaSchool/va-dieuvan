@@ -54,6 +54,7 @@ import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
+import { showAppError, showAppSuccess } from '../../composables/appMessage'
 
 const query = ref('')
 const suggestions = ref([])
@@ -90,7 +91,7 @@ async function selectUser(u) {
     roles.value = allRoles ?? []
     selectedRoleIds.value = (detail.roles ?? []).map((r) => r.id)
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   } finally {
     loadingDetail.value = false
   }
@@ -101,9 +102,9 @@ async function save() {
   saving.value = true
   try {
     await admin.syncUserRoles(selected.value.id, selectedRoleIds.value)
-    alert('Đã cập nhật vai trò.')
+    showAppSuccess('Đã cập nhật vai trò.')
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   } finally {
     saving.value = false
   }

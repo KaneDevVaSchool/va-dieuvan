@@ -89,6 +89,7 @@ import Select from '../../components/ui/Select.vue'
 import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
+import { showAppError } from '../../composables/appMessage'
 
 const loading = ref(true)
 const saving = ref(false)
@@ -113,7 +114,7 @@ async function load() {
   try {
     items.value = (await admin.listPermissions()) ?? []
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   } finally {
     loading.value = false
   }
@@ -129,7 +130,7 @@ async function create() {
     permissionPreset.value = ''
     await load()
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   } finally {
     saving.value = false
   }
@@ -152,7 +153,7 @@ async function saveEdit() {
     editing.value = null
     await load()
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   } finally {
     saving.value = false
   }
@@ -164,7 +165,7 @@ async function remove(p) {
     await admin.deletePermission(p.id)
     await load()
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   }
 }
 

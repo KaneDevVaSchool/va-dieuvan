@@ -90,6 +90,7 @@ import Select from '../../components/ui/Select.vue'
 import { SEED_FEATURE_TOGGLE_PRESETS } from '../../config/systemSeedOptions'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
+import { showAppError } from '../../composables/appMessage'
 
 const loading = ref(true)
 const saving = ref(false)
@@ -113,7 +114,7 @@ async function load() {
   try {
     items.value = (await admin.listFeatureToggles()) ?? []
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   } finally {
     loading.value = false
   }
@@ -136,7 +137,7 @@ async function create() {
     togglePresetIdx.value = ''
     await load()
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   } finally {
     saving.value = false
   }
@@ -147,7 +148,7 @@ async function toggle(row, enabled) {
     await admin.updateFeatureToggle(row.id, { is_enabled: enabled })
     row.is_enabled = enabled
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
     await load()
   }
 }
@@ -158,7 +159,7 @@ async function remove(row) {
     await admin.deleteFeatureToggle(row.id)
     await load()
   } catch (e) {
-    alert(formatApiError(e))
+    showAppError(formatApiError(e))
   }
 }
 
