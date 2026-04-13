@@ -33,7 +33,7 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
-      meta: { public: true, title: 'Đăng nhập', subtitle: 'Sanctum token' },
+      meta: { public: true, title: 'Đăng nhập', subtitle: 'Đăng nhập Google' },
     },
     { path: '/', name: 'dashboard', component: DashboardView, meta: { title: 'Tổng quan', subtitle: 'Tình trạng vận hành' } },
     { path: '/hub', name: 'hub', component: OperationsHubView, meta: { title: 'Trung tâm vận hành', subtitle: 'Điểm vào nhanh' } },
