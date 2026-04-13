@@ -17,7 +17,7 @@ use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\Trips\TripController;
 use App\Http\Controllers\Api\Trips\TripOpsController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,15 +38,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Lightweight endpoints (no activity logging middleware to reduce latency)
     Route::middleware(['throttle:120,1'])->group(function () {
-        Route::get('/user', function (Request $request) {
-            $user = $request->user()->load(['roles:id,name,display_name']);
-            $permissions = $user->permissions()->pluck('name')->unique()->values()->all();
-
-            return response()->json(array_merge(
-                $user->toArray(),
-                ['permissions' => $permissions],
-            ));
-        });
+        Route::get('/user', [UserProfileController::class, 'show']);
 
         Route::get('/vehicles', [OperationalResourceController::class, 'vehicles']);
         Route::get('/drivers', [OperationalResourceController::class, 'drivers']);
@@ -104,6 +96,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Mutating endpoints: add activity logging + tighter throttles to reduce double-submit races.
     Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:60,1'])->group(function () {
+        Route::patch('/user', [UserProfileController::class, 'update']);
+
         // Requests / approvals
         Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)->group(function () {
             Route::post('/', 'store')

@@ -47,6 +47,11 @@ export const useAuthStore = defineStore('auth', {
       this.user = data
       return this.user
     },
+    async patchProfile(payload) {
+      const data = await authApi.patchProfile(payload)
+      this.user = data
+      return this.user
+    },
     hasPermission() {
       return !!this.user
     },

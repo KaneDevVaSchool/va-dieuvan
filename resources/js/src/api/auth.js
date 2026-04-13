@@ -9,3 +9,8 @@ export async function logout() {
   const { data } = await http.post('/logout')
   return data.data
 }
+
+export async function patchProfile(payload) {
+  const { data } = await http.patch('/user', payload)
+  return data
+}
