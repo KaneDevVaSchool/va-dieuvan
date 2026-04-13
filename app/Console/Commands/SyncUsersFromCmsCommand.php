@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
  * Maps CMS `cms_db_staging.users` + `user_info` into this app's `users` table.
@@ -116,15 +116,25 @@ class SyncUsersFromCmsCommand extends Command
                 continue;
             }
 
-            $user = User::query()->updateOrCreate(
-                ['email' => $email],
-                $payload,
-            );
+            $password = is_string($row->password) && $row->password !== ''
+                ? $row->password
+                : bcrypt(Str::random(32));
 
-            DB::table('users')->where('id', $user->id)->update([
-                'password' => $row->password,
-                'updated_at' => now(),
+            $now = now();
+            $data = array_merge($payload, [
+                'email' => $email,
+                'password' => $password,
+                'updated_at' => $now,
             ]);
+
+            $existingId = DB::table('users')->where('email', $email)->value('id');
+
+            if ($existingId) {
+                DB::table('users')->where('id', $existingId)->update($data);
+            } else {
+                $data['created_at'] = $now;
+                DB::table('users')->insert($data);
+            }
 
             $synced++;
         }
