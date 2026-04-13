@@ -4,6 +4,7 @@
  * `icon`: khóa trong `navIconMap.js`
  * `badgeKey`: khóa trả về từ GET /api/nav/badges (frontend map số hiển thị)
  * `sectionKey`: nhóm accordion (null = luôn mở, không có tiêu đề section)
+ * `children`: mảng mục con (không có `to` ở mục cha); sidebar ngang: dropdown / nhóm trong panel.
  */
 export const NAV_SECTIONS = [
   {
@@ -12,8 +13,25 @@ export const NAV_SECTIONS = [
     items: [
       { to: '/', labelKey: 'nav.dashboard', perms: [], icon: 'home' },
       { to: '/hub', labelKey: 'nav.hub', perms: [], icon: 'hub' },
-      { to: '/schedule', labelKey: 'nav.schedule7', perms: ['trip.view_all', 'trip.view_own', 'trip.assign'], icon: 'schedule' },
-      { to: '/calendar', labelKey: 'nav.calendar', perms: ['trip.view_all', 'trip.view_own', 'trip.assign'], icon: 'calendar' },
+      {
+        labelKey: 'nav.group_schedule',
+        perms: [],
+        icon: 'schedule',
+        children: [
+          {
+            to: '/schedule',
+            labelKey: 'nav.schedule7',
+            perms: ['trip.view_all', 'trip.view_own', 'trip.assign'],
+            icon: 'schedule',
+          },
+          {
+            to: '/calendar',
+            labelKey: 'nav.calendar',
+            perms: ['trip.view_all', 'trip.view_own', 'trip.assign'],
+            icon: 'calendar',
+          },
+        ],
+      },
       { to: '/map', labelKey: 'nav.map', perms: [], icon: 'map' },
     ],
   },

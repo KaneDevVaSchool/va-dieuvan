@@ -33,15 +33,37 @@
               {{ t(section.headingKey) }}
             </span>
           </div>
-          <SidebarNavItem
-            v-for="item in section.items"
-            :key="'v' + item.to"
-            :to="item.to"
-            :label="t(item.labelKey)"
-            :icon="item.icon"
-            :badge-count="badgeCount(item)"
-            :variant="navVariant"
-          />
+          <template v-for="(item, ii) in section.items" :key="'v' + (item.to || item.labelKey)">
+            <template v-if="item.children?.length">
+              <div
+                v-if="!ui.sidebarCollapsed"
+                class="mb-1 flex items-center gap-2 px-2"
+                :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0'"
+              >
+                <span class="h-1 w-1 shrink-0 rounded-full bg-va-700/70" aria-hidden="true" />
+                <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 lg:text-[11px] dark:text-slate-400">
+                  {{ t(item.labelKey) }}
+                </span>
+              </div>
+              <SidebarNavItem
+                v-for="c in item.children"
+                :key="'vc' + c.to"
+                :to="c.to"
+                :label="t(c.labelKey)"
+                :icon="c.icon"
+                :badge-count="badgeCount(c)"
+                :variant="navVariant"
+              />
+            </template>
+            <SidebarNavItem
+              v-else
+              :to="item.to"
+              :label="t(item.labelKey)"
+              :icon="item.icon"
+              :badge-count="badgeCount(item)"
+              :variant="navVariant"
+            />
+          </template>
         </template>
       </nav>
     </div>
@@ -103,21 +125,54 @@
             class="mx-0.5 h-7 w-px shrink-0 self-center bg-slate-200 dark:bg-slate-600"
             aria-hidden="true"
           />
-          <span
-            v-if="section.headingKey"
-            class="hidden shrink-0 self-center px-1 text-[9px] font-bold uppercase leading-none tracking-wide text-slate-400 sm:inline md:text-[10px] dark:text-slate-500"
-          >
-            {{ t(section.headingKey) }}
-          </span>
-          <SidebarNavItem
-            v-for="item in section.items"
-            :key="'h' + item.to"
-            :to="item.to"
-            :label="t(item.labelKey)"
-            :icon="item.icon"
-            :badge-count="badgeCount(item)"
-            variant="horizontal"
-          />
+          <!-- Cấp 1: không có heading section — mục phẳng hoặc nhóm con (dropdown) -->
+          <template v-if="!section.headingKey">
+            <template v-for="item in section.items" :key="item.to || item.labelKey">
+              <HorizontalNavGroup
+                v-if="item.children?.length"
+                :label="t(item.labelKey)"
+                :items="item.children"
+                :badge-count="badgeCount"
+                :t="t"
+                :icon-key="item.icon"
+              />
+              <SidebarNavItem
+                v-else
+                :to="item.to"
+                :label="t(item.labelKey)"
+                :icon="item.icon"
+                :badge-count="badgeCount(item)"
+                variant="horizontal"
+              />
+            </template>
+          </template>
+          <!-- Cấp 2+: nhóm theo section — dropdown -->
+          <template v-else>
+            <HorizontalNavGroup
+              v-if="section.items.length > 1"
+              :label="t(section.headingKey)"
+              :items="section.items"
+              :badge-count="badgeCount"
+              :t="t"
+            />
+            <HorizontalNavGroup
+              v-else-if="section.items.length === 1 && section.items[0].children?.length"
+              :label="t(section.headingKey)"
+              :items="section.items[0].children"
+              :badge-count="badgeCount"
+              :t="t"
+              :icon-key="section.items[0].icon"
+            />
+            <SidebarNavItem
+              v-else-if="section.items.length === 1"
+              :key="'h1' + section.items[0].to"
+              :to="section.items[0].to"
+              :label="t(section.items[0].labelKey)"
+              :icon="section.items[0].icon"
+              :badge-count="badgeCount(section.items[0])"
+              variant="horizontal"
+            />
+          </template>
         </template>
       </nav>
 
@@ -188,6 +243,7 @@ import {
   ChevronDoubleRightIcon,
 } from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
+import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'
 import SidebarAccountBlock from './SidebarAccountBlock.vue'
 import { useNavSections } from '../../composables/useNavSections'

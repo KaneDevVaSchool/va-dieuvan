@@ -11,7 +11,19 @@ export function useNavSections() {
   const badges = ref({})
 
   function filterItems(items) {
-    return items.filter((i) => auth.hasAnyPermission(i.perms))
+    if (!items?.length) return []
+    return items
+      .map((i) => {
+        if (i.children?.length) {
+          const ch = filterItems(i.children)
+          if (!ch.length) return null
+          if (i.perms?.length && !auth.hasAnyPermission(i.perms)) return null
+          return { ...i, children: ch }
+        }
+        if (!auth.hasAnyPermission(i.perms)) return null
+        return i
+      })
+      .filter(Boolean)
   }
 
   const sections = computed(() =>
