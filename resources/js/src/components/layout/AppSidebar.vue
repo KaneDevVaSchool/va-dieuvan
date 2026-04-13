@@ -70,31 +70,6 @@
 
     <SidebarAccountBlock layout="vertical" :compact="ui.sidebarCollapsed" />
 
-    <div
-      class="flex shrink-0 items-center justify-center gap-1 border-t border-slate-200/80 bg-white/90 px-1 py-2 dark:border-slate-700 dark:bg-slate-900/90"
-    >
-      <button
-        type="button"
-        class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-        :title="t('app.sidebar_cycle_layout')"
-        @click="onCycleLayoutClick"
-      >
-        <ArrowsRightLeftIcon class="h-5 w-5" aria-hidden="true" />
-        <span class="sr-only">{{ t('app.sidebar_cycle_layout') }}</span>
-      </button>
-      <button
-        type="button"
-        class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-        :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
-        @click="ui.toggleSidebarCollapsed()"
-      >
-        <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-5 w-5" aria-hidden="true" />
-        <ChevronDoubleRightIcon v-else class="h-5 w-5" aria-hidden="true" />
-        <span class="sr-only">
-          {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
-        </span>
-      </button>
-    </div>
     <p class="sr-only" aria-live="polite">{{ t(preferenceLabelKey) }}</p>
   </aside>
 
@@ -187,11 +162,6 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowsRightLeftIcon,
-  ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon,
-} from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
 import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'
@@ -224,8 +194,4 @@ const verticalAsideClass = computed(() => {
   return base.join(' ')
 })
 
-/** Nút xoay bố cục (sidebar dọc + header mobile); trước đây thiếu handler nên bấm không có tác dụng */
-function onCycleLayoutClick() {
-  ui.cycleSidebarAxisPreference()
-}
 </script>

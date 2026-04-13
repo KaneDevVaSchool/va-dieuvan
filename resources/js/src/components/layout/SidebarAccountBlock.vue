@@ -1,115 +1,34 @@
 <template>
-  <!-- Dọc -->
+  <!-- Dọc: chỉ tên tài khoản → dropdown -->
   <div
     v-if="layout === 'vertical'"
     class="shrink-0 border-t border-slate-200/80 bg-white/95 p-2 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/95 md:p-3"
     :class="compact ? 'min-w-0 overflow-hidden' : ''"
   >
-    <div v-if="!compact" class="hidden text-[10px] font-medium uppercase tracking-wide text-slate-400 md:block">
-      {{ t('app.account') }}
-    </div>
-    <div :class="compact ? 'flex flex-col items-center gap-2' : 'mt-0 flex items-center gap-2 md:mt-2 md:gap-3'">
-      <UserAvatar
-        class="shrink-0"
-        :class="compact ? 'mx-auto' : ''"
-        :name="auth.user?.name"
-        :email="auth.user?.email"
-        :avatar-url="auth.user?.avatar_url"
-        :title="auth.user?.name ?? ''"
-        :size="compact ? 'sm' : 'md'"
-      />
-      <div v-if="!compact" class="hidden min-w-0 flex-1 md:block">
-        <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+    <div ref="accountMenuRootRef" class="relative">
+      <button
+        type="button"
+        class="flex w-full min-w-0 items-center gap-2 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-2 text-left text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50/90 dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+        :class="compact ? 'px-1.5 py-1.5 text-xs' : 'md:px-2.5 md:py-2.5'"
+        :aria-expanded="accountMenuOpen"
+        aria-haspopup="menu"
+        :aria-controls="accountMenuPanelId"
+        :title="auth.user?.name ?? t('app.account')"
+        @click="accountMenuOpen = !accountMenuOpen"
+      >
+        <span class="min-w-0 flex-1 truncate text-left">
           {{ auth.user?.name ?? '—' }}
-        </div>
-        <div class="truncate text-xs text-slate-500 dark:text-slate-400">
-          {{ auth.user?.email ?? '' }}
-        </div>
-        <div
-          v-if="auth.roleNames?.length"
-          class="mt-0.5 line-clamp-2 text-[10px] text-slate-400 dark:text-slate-500 lg:text-[11px]"
-        >
-          {{ auth.roleNames.join(', ') }}
-        </div>
-      </div>
+        </span>
+        <ChevronDownIcon
+          class="h-4 w-4 shrink-0 text-slate-500 opacity-80 transition-transform dark:text-slate-400"
+          :class="accountMenuOpen ? 'rotate-180' : ''"
+          aria-hidden="true"
+        />
+      </button>
     </div>
-
-    <label v-if="!compact" class="mt-2 hidden text-[11px] font-medium text-slate-500 md:block dark:text-slate-400">
-      {{ t('app.lang') }}
-    </label>
-    <div v-if="!compact" class="mt-1.5 hidden md:block">
-      <div class="flex rounded-lg bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
-        <button
-          type="button"
-          class="flex-1 rounded-md px-2 py-1.5 text-center text-xs font-semibold transition"
-          :class="locale === 'vi' ? segmentActive : segmentIdle"
-          @click="onLocale('vi')"
-        >
-          VI
-        </button>
-        <button
-          type="button"
-          class="flex-1 rounded-md px-2 py-1.5 text-center text-xs font-semibold transition"
-          :class="locale === 'en' ? segmentActive : segmentIdle"
-          @click="onLocale('en')"
-        >
-          EN
-        </button>
-      </div>
-    </div>
-    <div v-if="compact" class="mt-1 w-full min-w-0 max-w-full">
-      <div class="flex rounded-lg bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
-        <button
-          type="button"
-          class="flex-1 rounded-md px-2 py-1.5 text-center text-[10px] font-semibold transition"
-          :class="locale === 'vi' ? segmentActive : segmentIdle"
-          :aria-pressed="locale === 'vi'"
-          @click="onLocale('vi')"
-        >
-          VI
-        </button>
-        <button
-          type="button"
-          class="flex-1 rounded-md px-2 py-1.5 text-center text-[10px] font-semibold transition"
-          :class="locale === 'en' ? segmentActive : segmentIdle"
-          :aria-pressed="locale === 'en'"
-          @click="onLocale('en')"
-        >
-          EN
-        </button>
-      </div>
-    </div>
-
-    <RouterLink
-      class="mt-2 flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white text-[11px] font-medium text-slate-800 shadow-sm transition hover:border-va-200 hover:bg-va-50/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-va-500/40 dark:hover:bg-va-950/30 md:text-sm"
-      :class="
-        compact
-          ? 'aspect-square min-h-0 w-full max-w-full shrink-0 px-0 py-2'
-          : 'px-2 py-2 md:py-2.5'
-      "
-      to="/profile"
-      :aria-label="t('app.profile')"
-    >
-      <UserCircleIcon
-        class="h-5 w-5 shrink-0"
-        :class="compact ? '' : 'md:hidden'"
-        aria-hidden="true"
-      />
-      <span :class="compact ? 'sr-only' : 'sr-only md:not-sr-only md:inline'">{{ t('app.profile') }}</span>
-    </RouterLink>
-    <button
-      type="button"
-      class="mt-1.5 flex w-full items-center justify-center rounded-lg border border-slate-200 text-[11px] font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 md:mt-2 md:text-sm"
-      :class="compact ? 'aspect-square max-w-full px-0 py-2' : 'px-2 py-2 md:py-2.5'"
-      @click="openLogoutConfirm"
-    >
-      <ArrowRightOnRectangleIcon v-if="compact" class="h-5 w-5 shrink-0" aria-hidden="true" />
-      <span v-if="compact" class="sr-only">{{ t('app.logout') }}</span>
-      <template v-else>{{ t('app.logout') }}</template>
-    </button>
   </div>
 
-  <!-- Ngang: chỉ avatar → dropdown tài khoản -->
+  <!-- Ngang: avatar → cùng dropdown -->
   <div
     v-else
     ref="accountMenuRootRef"
@@ -133,101 +52,140 @@
         ring-prominent
       />
     </button>
+  </div>
 
-    <Teleport to="body">
+  <Teleport to="body">
+    <div
+      v-show="accountMenuOpen"
+      :id="accountMenuPanelId"
+      ref="accountMenuPanelRef"
+      role="presentation"
+      class="fixed z-[70] min-w-[14rem] max-w-[min(17.5rem,calc(100vw-0.75rem))] overflow-hidden rounded-lg border border-slate-200/90 bg-white py-0.5 text-slate-900 shadow-md ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10"
+      :style="accountMenuPanelStyle"
+    >
       <div
-        v-show="accountMenuOpen"
-        :id="accountMenuPanelId"
-        ref="accountMenuPanelRef"
-        role="presentation"
-        class="fixed z-[70] min-w-[14rem] max-w-[min(17.5rem,calc(100vw-0.75rem))] overflow-hidden rounded-lg border border-slate-200/90 bg-white py-0.5 text-slate-900 shadow-md ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:ring-white/10"
-        :style="accountMenuPanelStyle"
+        role="menu"
+        :aria-label="t('app.account')"
+        class="max-h-[min(70vh,26rem)] overflow-y-auto"
       >
-        <div
-          role="menu"
-          :aria-label="t('app.account')"
-          class="max-h-[min(70vh,22rem)] overflow-y-auto"
-        >
-          <div class="border-b border-slate-100 px-2.5 py-2 dark:border-slate-700/80">
-            <p class="truncate text-xs font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-50">
-              {{ auth.user?.name ?? '—' }}
-            </p>
-            <p class="mt-0.5 truncate text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-              {{ auth.user?.email ?? '' }}
-            </p>
-          </div>
-
-          <RouterLink
-            role="menuitem"
-            to="/profile"
-            class="flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-va-50 hover:text-va-900 dark:text-slate-200 dark:hover:bg-va-950/40 dark:hover:text-va-100"
-            @click="accountMenuOpen = false"
+        <div class="border-b border-slate-100 px-2.5 py-2 dark:border-slate-700/80">
+          <p class="truncate text-xs font-semibold leading-tight tracking-tight text-slate-900 dark:text-slate-50">
+            {{ auth.user?.name ?? '—' }}
+          </p>
+          <p class="mt-0.5 truncate text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+            {{ auth.user?.email ?? '' }}
+          </p>
+          <p
+            v-if="auth.roleNames?.length"
+            class="mt-1 line-clamp-2 text-[10px] text-slate-400 dark:text-slate-500"
           >
-            <UserCircleIcon class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-            {{ t('app.profile') }}
-          </RouterLink>
+            {{ auth.roleNames.join(', ') }}
+          </p>
+        </div>
 
-          <div class="border-t border-slate-100 px-2.5 py-2 dark:border-slate-700/80" role="presentation">
-            <div class="space-y-2">
-              <div>
-                <p class="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                  {{ t('app.sidebar_layout') }}
-                </p>
-                <div class="flex rounded-md bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
-                  <button
-                    v-for="opt in axisOptions"
-                    :key="opt.value"
-                    type="button"
-                    class="min-w-0 flex-1 rounded px-1 py-1 text-center text-[10px] font-semibold leading-none transition sm:py-1.5 sm:text-[11px]"
-                    :class="ui.sidebarAxisPreference === opt.value ? segmentActive : segmentIdle"
-                    :aria-pressed="ui.sidebarAxisPreference === opt.value"
-                    @click="requestAxisPreference(opt.value)"
-                  >
-                    {{ t(opt.labelKey) }}
-                  </button>
-                </div>
+        <RouterLink
+          role="menuitem"
+          to="/profile"
+          class="flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-va-50 hover:text-va-900 dark:text-slate-200 dark:hover:bg-va-950/40 dark:hover:text-va-100"
+          @click="accountMenuOpen = false"
+        >
+          <UserCircleIcon class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+          {{ t('app.profile') }}
+        </RouterLink>
+
+        <div
+          v-if="layout === 'vertical'"
+          class="border-t border-slate-100 px-2.5 py-2 dark:border-slate-700/80"
+          role="presentation"
+        >
+          <p class="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            {{ t('app.sidebar_rail_actions') }}
+          </p>
+          <div class="flex gap-1.5">
+            <button
+              type="button"
+              class="inline-flex min-h-[2.75rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border border-slate-200/90 bg-white px-1 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700/80"
+              :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
+              @click="onToggleCollapseFromMenu"
+            >
+              <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-4 w-4 shrink-0" aria-hidden="true" />
+              <ChevronDoubleRightIcon v-else class="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span class="line-clamp-2 text-center leading-tight">
+                {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
+              </span>
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[2.75rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border border-slate-200/90 bg-white px-1 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700/80"
+              :title="t('app.sidebar_cycle_layout')"
+              @click="onCycleFromMenu"
+            >
+              <ArrowsRightLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span class="line-clamp-2 text-center leading-tight">{{ t('app.sidebar_cycle_short') }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 px-2.5 py-2 dark:border-slate-700/80" role="presentation">
+          <div class="space-y-2">
+            <div>
+              <p class="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                {{ t('app.sidebar_layout') }}
+              </p>
+              <div class="flex rounded-md bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
+                <button
+                  v-for="opt in axisOptions"
+                  :key="opt.value"
+                  type="button"
+                  class="min-w-0 flex-1 rounded px-1 py-1 text-center text-[10px] font-semibold leading-none transition sm:py-1.5 sm:text-[11px]"
+                  :class="ui.sidebarAxisPreference === opt.value ? segmentActive : segmentIdle"
+                  :aria-pressed="ui.sidebarAxisPreference === opt.value"
+                  @click="requestAxisPreference(opt.value)"
+                >
+                  {{ t(opt.labelKey) }}
+                </button>
               </div>
-              <div>
-                <p class="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                  {{ t('app.lang') }}
-                </p>
-                <div class="flex rounded-md bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
-                  <button
-                    type="button"
-                    class="flex-1 rounded px-1.5 py-1 text-center text-[11px] font-semibold transition sm:py-1.5"
-                    :class="locale === 'vi' ? segmentActive : segmentIdle"
-                    :aria-pressed="locale === 'vi'"
-                    @click="onLocale('vi')"
-                  >
-                    VI
-                  </button>
-                  <button
-                    type="button"
-                    class="flex-1 rounded px-1.5 py-1 text-center text-[11px] font-semibold transition sm:py-1.5"
-                    :class="locale === 'en' ? segmentActive : segmentIdle"
-                    :aria-pressed="locale === 'en'"
-                    @click="onLocale('en')"
-                  >
-                    EN
-                  </button>
-                </div>
+            </div>
+            <div>
+              <p class="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                {{ t('app.lang') }}
+              </p>
+              <div class="flex rounded-md bg-slate-100/90 p-0.5 dark:bg-slate-800/90">
+                <button
+                  type="button"
+                  class="flex-1 rounded px-1.5 py-1 text-center text-[11px] font-semibold transition sm:py-1.5"
+                  :class="locale === 'vi' ? segmentActive : segmentIdle"
+                  :aria-pressed="locale === 'vi'"
+                  @click="onLocale('vi')"
+                >
+                  VI
+                </button>
+                <button
+                  type="button"
+                  class="flex-1 rounded px-1.5 py-1 text-center text-[11px] font-semibold transition sm:py-1.5"
+                  :class="locale === 'en' ? segmentActive : segmentIdle"
+                  :aria-pressed="locale === 'en'"
+                  @click="onLocale('en')"
+                >
+                  EN
+                </button>
               </div>
             </div>
           </div>
-
-          <button
-            type="button"
-            role="menuitem"
-            class="flex w-full items-center gap-2 border-t border-slate-100 px-2.5 py-2 text-left text-xs font-medium text-rose-700 transition hover:bg-rose-50 dark:border-slate-700/80 dark:text-rose-300 dark:hover:bg-rose-950/40"
-            @click="openLogoutConfirmFromMenu"
-          >
-            <ArrowRightOnRectangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ t('app.logout') }}
-          </button>
         </div>
+
+        <button
+          type="button"
+          role="menuitem"
+          class="flex w-full items-center gap-2 border-t border-slate-100 px-2.5 py-2 text-left text-xs font-medium text-rose-700 transition hover:bg-rose-50 dark:border-slate-700/80 dark:text-rose-300 dark:hover:bg-rose-950/40"
+          @click="openLogoutConfirmFromMenu"
+        >
+          <ArrowRightOnRectangleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          {{ t('app.logout') }}
+        </button>
       </div>
-    </Teleport>
-  </div>
+    </div>
+  </Teleport>
 
   <!-- Xác nhận chuyển menu ngang -->
   <Teleport to="body">
@@ -317,7 +275,14 @@
 import { nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRightOnRectangleIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowRightOnRectangleIcon,
+  ArrowsRightLeftIcon,
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon,
+  ChevronDownIcon,
+  UserCircleIcon,
+} from '@heroicons/vue/24/outline'
 import UserAvatar from '../branding/UserAvatar.vue'
 import { useAuthStore } from '../../store'
 import { useUiStore } from '../../store/ui'
@@ -370,8 +335,14 @@ function confirmHorizontalAxis() {
   horizontalConfirmOpen.value = false
 }
 
-function openLogoutConfirm() {
-  logoutConfirmOpen.value = true
+function onToggleCollapseFromMenu() {
+  ui.toggleSidebarCollapsed()
+  accountMenuOpen.value = false
+}
+
+function onCycleFromMenu() {
+  ui.cycleSidebarAxisPreference()
+  accountMenuOpen.value = false
 }
 
 function openLogoutConfirmFromMenu() {

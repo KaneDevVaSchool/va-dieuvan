@@ -58,6 +58,8 @@
         "sidebar_pref_vertical": "Sidebar: luôn dọc",
         "sidebar_pref_horizontal": "Sidebar: luôn ngang",
         "sidebar_cycle_layout": "Chuyển chế độ sidebar",
+    "sidebar_rail_actions": "Thanh bên",
+    "sidebar_cycle_short": "Chuyển chế độ",
         "sidebar_collapse": "Thu gọn menu",
         "sidebar_expand": "Mở rộng menu",
         "cancel": "Hủy",

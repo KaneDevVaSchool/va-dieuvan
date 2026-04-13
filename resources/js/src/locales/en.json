@@ -58,6 +58,8 @@
     "sidebar_pref_vertical": "Sidebar: always vertical",
     "sidebar_pref_horizontal": "Sidebar: always horizontal",
     "sidebar_cycle_layout": "Cycle sidebar mode",
+    "sidebar_rail_actions": "Sidebar",
+    "sidebar_cycle_short": "Cycle layout",
     "sidebar_collapse": "Collapse menu",
     "sidebar_expand": "Expand menu",
     "cancel": "Cancel",
