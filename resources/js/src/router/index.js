@@ -24,7 +24,6 @@ import HelpGuideView from "../views/help/HelpGuideView.vue";
 import RoadmapSuggestionsView from "../views/roadmap/RoadmapSuggestionsView.vue";
 import NotificationsHubView from "../views/notifications/NotificationsHubView.vue";
 import CalendarMonthView from "../views/calendar/CalendarMonthView.vue";
-import MapEtaView from "../views/map/MapEtaView.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -62,12 +61,6 @@ const router = createRouter({
             name: "calendar",
             component: CalendarMonthView,
             meta: { title: "Lịch tháng", subtitle: "Chuyến theo tháng" },
-        },
-        {
-            path: "/map",
-            name: "map",
-            component: MapEtaView,
-            meta: { title: "Bản đồ & ETA", subtitle: "Maps & PWA" },
         },
         {
             path: "/profile",

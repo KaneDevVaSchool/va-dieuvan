@@ -9,7 +9,6 @@
         "hub": "Trung tâm vận hành",
         "schedule7": "Lịch 7 ngày",
         "calendar": "Lịch tháng",
-        "map": "Bản đồ & ETA",
         "group_schedule": "Lịch",
         "requests": "Yêu cầu điều xe",
         "new_request": "Tạo yêu cầu",
@@ -39,7 +38,6 @@
             "dashboard": "Tổng quan",
             "hub": "Vận hành",
             "group_schedule": "Lịch",
-            "map": "Bản đồ",
             "audit": "Nhật ký"
         }
     },

@@ -28,7 +28,6 @@ export const NAV_SECTIONS = [
           },
         ],
       },
-      { to: '/map', labelKey: 'nav.map', icon: 'map' },
     ],
   },
   {

@@ -257,8 +257,9 @@
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
 import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
@@ -270,6 +271,7 @@ import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useUiStore } from '../../store/ui'
 
 const { t } = useI18n()
+const route = useRoute()
 const navBarLabel = useNavBarLabel()
 const { sections, badgeCount } = useNavSections()
 const { axis, preferenceLabelKey } = useSidebarLayout()
@@ -279,7 +281,7 @@ const navVariant = computed(() =>
   ui.sidebarCollapsed ? 'vertical-compact' : 'vertical-full',
 )
 
-/** Mở/đóng nhóm menu (mặc định mở) */
+/** Mở/đóng nhóm menu — mặc định đóng; đồng bộ theo route để mở nhóm đang active */
 const openGroups = reactive({})
 
 function sectionGroupKey(si) {
@@ -290,8 +292,46 @@ function subGroupKey(si, ii) {
   return `sub-${si}-${ii}`
 }
 
+function pathMatches(to, path) {
+  if (!to) return false
+  if (to === '/') return path === '/' || path === ''
+  return path === to || path.startsWith(`${to}/`)
+}
+
+function syncExpandGroupsForRoute() {
+  const path = route.path
+  sections.value.forEach((section, si) => {
+    if (section.headingKey) {
+      const hasActive = section.items.some((item) => {
+        if (item.children?.length) {
+          return item.children.some((c) => pathMatches(c.to, path))
+        }
+        return pathMatches(item.to, path)
+      })
+      openGroups[sectionGroupKey(si)] = hasActive
+      section.items.forEach((item, ii) => {
+        if (item.children?.length) {
+          openGroups[subGroupKey(si, ii)] = item.children.some((c) =>
+            pathMatches(c.to, path),
+          )
+        }
+      })
+    } else {
+      section.items.forEach((item, ii) => {
+        if (item.children?.length) {
+          openGroups[subGroupKey(si, ii)] = item.children.some((c) =>
+            pathMatches(c.to, path),
+          )
+        }
+      })
+    }
+  })
+}
+
+watch(() => route.path, syncExpandGroupsForRoute, { immediate: true })
+
 function isGroupOpen(key) {
-  return openGroups[key] !== false
+  return openGroups[key] === true
 }
 
 function toggleGroup(key) {

@@ -9,7 +9,6 @@
     "hub": "Operations hub",
     "schedule7": "7-day schedule",
     "calendar": "Month calendar",
-    "map": "Map & ETA",
     "group_schedule": "Schedule",
     "requests": "Dispatch requests",
     "new_request": "New request",
@@ -39,7 +38,6 @@
       "dashboard": "Home",
       "hub": "Hub",
       "group_schedule": "Schedule",
-      "map": "Map",
       "audit": "Log"
     }
   },
