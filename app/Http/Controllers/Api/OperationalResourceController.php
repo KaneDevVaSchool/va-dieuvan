@@ -14,8 +14,13 @@ use App\Http\Requests\Api\Operational\StoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateDriverRequest;
 use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
 use App\Http\Requests\Api\Operational\DeleteDriverRequest;
+use App\Http\Requests\Api\Operational\DeleteTransportProviderRequest;
 use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
+use App\Http\Requests\Api\Operational\ForceDeleteDriverRequest;
+use App\Http\Requests\Api\Operational\ForceDeleteTransportProviderRequest;
+use App\Http\Requests\Api\Operational\ForceDeleteVehicleRequest;
 use App\Http\Requests\Api\Operational\RestoreDriverRequest;
+use App\Http\Requests\Api\Operational\RestoreTransportProviderRequest;
 use App\Http\Requests\Api\Operational\RestoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
 use App\Models\Driver;
@@ -103,7 +108,13 @@ class OperationalResourceController extends Controller
     {
         $data = $request->validated();
 
-        $q = TransportProvider::query()->orderBy('name');
+        $onlyTrashed = $request->boolean('only_trashed');
+
+        $q = $onlyTrashed
+            ? TransportProvider::onlyTrashed()
+            : TransportProvider::query();
+
+        $q->orderBy('name');
         if (array_key_exists('is_active', $data)) {
             $q->where('is_active', (bool) $data['is_active']);
         }
@@ -139,6 +150,29 @@ class OperationalResourceController extends Controller
         $transportProvider->save();
 
         return $this->ok($this->serializeTransportProvider($transportProvider->fresh()));
+    }
+
+    public function destroyTransportProvider(DeleteTransportProviderRequest $request, TransportProvider $transportProvider)
+    {
+        $transportProvider->delete();
+
+        return $this->ok(['deleted' => true, 'trashed' => true]);
+    }
+
+    public function restoreTransportProvider(RestoreTransportProviderRequest $request, int $id)
+    {
+        $provider = TransportProvider::onlyTrashed()->findOrFail($id);
+        $provider->restore();
+
+        return $this->ok($this->serializeTransportProvider($provider->fresh()));
+    }
+
+    public function forceDeleteTransportProvider(ForceDeleteTransportProviderRequest $request, int $id)
+    {
+        $provider = TransportProvider::onlyTrashed()->findOrFail($id);
+        $provider->forceDelete();
+
+        return $this->ok(['deleted' => true, 'permanent' => true]);
     }
 
     public function storeVehicle(StoreVehicleRequest $request)
@@ -201,6 +235,14 @@ class OperationalResourceController extends Controller
         return $this->ok($this->serializeDriver($driver));
     }
 
+    public function forceDeleteDriver(ForceDeleteDriverRequest $request, int $id)
+    {
+        $driver = Driver::onlyTrashed()->findOrFail($id);
+        $driver->forceDelete();
+
+        return $this->ok(['deleted' => true, 'permanent' => true]);
+    }
+
     public function updateVehicle(UpdateVehicleRequest $request, Vehicle $vehicle)
     {
         $vehicle->fill($request->validated());
@@ -225,6 +267,14 @@ class OperationalResourceController extends Controller
         $vehicle->load(['defaultDriver.user:id,name,email,phone,employee_code,avatar_url']);
 
         return $this->ok($this->serializeVehicle($vehicle));
+    }
+
+    public function forceDeleteVehicle(ForceDeleteVehicleRequest $request, int $id)
+    {
+        $vehicle = Vehicle::onlyTrashed()->findOrFail($id);
+        $vehicle->forceDelete();
+
+        return $this->ok(['deleted' => true, 'permanent' => true]);
     }
 
     private function serializeVehicle(Vehicle $v): array
@@ -273,6 +323,7 @@ class OperationalResourceController extends Controller
             'contract_signed_at' => $p->contract_signed_at?->format('Y-m-d'),
             'contract_expires_at' => $p->contract_expires_at?->format('Y-m-d'),
             'services' => $p->services ?? [],
+            'deleted_at' => $p->deleted_at?->toIso8601String(),
         ];
     }
 

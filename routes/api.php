@@ -208,6 +208,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/drivers/{id}/restore', [OperationalResourceController::class, 'restoreDriver'])
             ->whereNumber('id')
             ->middleware('throttle:30,1');
+        Route::delete('/drivers/{id}/force', [OperationalResourceController::class, 'forceDeleteDriver'])
+            ->whereNumber('id')
+            ->middleware('throttle:30,1');
         Route::post('/drivers/{driver}/compliance-documents', [DriverComplianceDocumentController::class, 'store'])
             ->middleware('throttle:30,1');
         Route::patch('/drivers/{driver}/compliance-documents/{complianceDocument}', [DriverComplianceDocumentController::class, 'update'])
@@ -223,6 +226,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/vehicles/{id}/restore', [OperationalResourceController::class, 'restoreVehicle'])
             ->whereNumber('id')
             ->middleware('throttle:30,1');
+        Route::delete('/vehicles/{id}/force', [OperationalResourceController::class, 'forceDeleteVehicle'])
+            ->whereNumber('id')
+            ->middleware('throttle:30,1');
         Route::post('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocumentController::class, 'store'])
             ->middleware('throttle:30,1');
         Route::patch('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'update'])
@@ -232,6 +238,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/transport-providers', [OperationalResourceController::class, 'storeTransportProvider'])
             ->middleware('throttle:30,1');
         Route::patch('/transport-providers/{transportProvider}', [OperationalResourceController::class, 'updateTransportProvider'])
+            ->middleware('throttle:30,1');
+        Route::delete('/transport-providers/{transportProvider}', [OperationalResourceController::class, 'destroyTransportProvider'])
+            ->middleware('throttle:30,1');
+        Route::post('/transport-providers/{id}/restore', [OperationalResourceController::class, 'restoreTransportProvider'])
+            ->whereNumber('id')
+            ->middleware('throttle:30,1');
+        Route::delete('/transport-providers/{id}/force', [OperationalResourceController::class, 'forceDeleteTransportProvider'])
+            ->whereNumber('id')
             ->middleware('throttle:30,1');
 
         // Attachments can be heavier; keep separate throttle

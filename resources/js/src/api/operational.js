@@ -11,6 +11,12 @@ export async function restoreVehicle(vehicleId) {
   return data.data
 }
 
+/** @param {number} vehicleId */
+export async function forceDeleteVehicle(vehicleId) {
+  const { data } = await http.delete(`/vehicles/${vehicleId}/force`)
+  return data.data
+}
+
 export async function listDrivers(params = {}) {
   const { data } = await http.get('/drivers', { params })
   return data.data
@@ -25,6 +31,12 @@ export async function deleteDriver(driverId) {
 /** @param {number} driverId */
 export async function restoreDriver(driverId) {
   const { data } = await http.post(`/drivers/${driverId}/restore`)
+  return data.data
+}
+
+/** @param {number} driverId */
+export async function forceDeleteDriver(driverId) {
+  const { data } = await http.delete(`/drivers/${driverId}/force`)
   return data.data
 }
 
@@ -100,6 +112,24 @@ export async function createTransportProvider(payload) {
  */
 export async function updateTransportProvider(id, payload) {
   const { data } = await http.patch(`/transport-providers/${id}`, payload)
+  return data.data
+}
+
+/** @param {number} id */
+export async function deleteTransportProvider(id) {
+  const { data } = await http.delete(`/transport-providers/${id}`)
+  return data.data
+}
+
+/** @param {number} id */
+export async function restoreTransportProvider(id) {
+  const { data } = await http.post(`/transport-providers/${id}/restore`)
+  return data.data
+}
+
+/** @param {number} id */
+export async function forceDeleteTransportProvider(id) {
+  const { data } = await http.delete(`/transport-providers/${id}/force`)
   return data.data
 }
 

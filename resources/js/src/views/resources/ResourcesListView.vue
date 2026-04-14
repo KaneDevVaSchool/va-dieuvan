@@ -94,6 +94,37 @@
           </button>
         </div>
 
+        <div
+          v-if="activeTab === 'suppliers'"
+          class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800"
+        >
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              suppliersViewMode === 'active'
+                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setSuppliersViewMode('active')"
+          >
+            {{ t('resources.suppliers_view_active') }}
+          </button>
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              suppliersViewMode === 'trash'
+                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setSuppliersViewMode('trash')"
+          >
+            <TrashIcon class="h-4 w-4" aria-hidden="true" />
+            {{ t('resources.vehicles_view_trash') }}
+          </button>
+        </div>
+
         <div class="min-w-0 flex-1 overflow-x-auto overscroll-x-contain sm:flex-initial">
           <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
             <button
@@ -131,7 +162,7 @@
             {{ t('resources.add_vehicle') }}
           </button>
           <button
-            v-else-if="activeTab === 'suppliers' && canManageProviders"
+            v-else-if="activeTab === 'suppliers' && canManageProviders && suppliersViewMode === 'active'"
             type="button"
             class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
             @click="openProviderForm(null)"
@@ -139,7 +170,7 @@
             {{ t('resources.add_supplier') }}
           </button>
           <button
-            v-else-if="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash')"
+            v-else-if="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash') && !(activeTab === 'suppliers' && suppliersViewMode === 'trash')"
             type="button"
             class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:min-h-0 sm:w-auto sm:py-2"
             disabled
@@ -152,7 +183,7 @@
 
     <!-- Filters: horizontal bar (same pattern as Requests) -->
     <div
-      v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash')"
+      v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash') && !(activeTab === 'suppliers' && suppliersViewMode === 'trash')"
       class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
     >
       <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
@@ -546,7 +577,7 @@
                 </div>
                 <div
                   v-if="vehiclesViewMode === 'trash' && canManageVehicles"
-                  class="mt-3 flex justify-end border-t border-slate-100 pt-3 dark:border-slate-700"
+                  class="mt-3 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-700"
                   @click.stop
                 >
                   <button
@@ -556,6 +587,14 @@
                     @click="submitRestoreVehicleById(v.id)"
                   >
                     {{ t('resources.action_restore_vehicle') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300"
+                    :disabled="forcePermDeleting"
+                    @click="openForceDeleteModal('vehicle', v.id, v.code)"
+                  >
+                    {{ t('resources.action_force_delete') }}
                   </button>
                 </div>
               </div>
@@ -611,7 +650,7 @@
         </div>
         <div
           v-if="activeTab === 'vehicles'"
-          class="hidden overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50 lg:block"
+          class="hidden overflow-visible rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50 lg:block"
         >
           <div
             v-if="vehicleTotalFiltered"
@@ -630,7 +669,7 @@
                   <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                 </summary>
                 <div
-                  class="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
+                  class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
                   @click.stop
                 >
                   <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
@@ -754,15 +793,24 @@
                     {{ v.notes || '—' }}
                   </td>
                   <td class="px-3 py-3 align-middle text-right text-slate-400" @click.stop>
-                    <button
-                      v-if="vehiclesViewMode === 'trash' && canManageVehicles"
-                      type="button"
-                      class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-                      :disabled="vehicleRestoring"
-                      @click="submitRestoreVehicleById(v.id)"
-                    >
-                      {{ t('resources.action_restore_vehicle') }}
-                    </button>
+                    <div v-if="vehiclesViewMode === 'trash' && canManageVehicles" class="flex flex-wrap justify-end gap-1.5">
+                      <button
+                        type="button"
+                        class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                        :disabled="vehicleRestoring"
+                        @click="submitRestoreVehicleById(v.id)"
+                      >
+                        {{ t('resources.action_restore_vehicle') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                        :disabled="forcePermDeleting"
+                        @click="openForceDeleteModal('vehicle', v.id, v.code)"
+                      >
+                        {{ t('resources.action_force_delete') }}
+                      </button>
+                    </div>
                     <ChevronRightIcon v-else class="ml-auto inline h-5 w-5" aria-hidden="true" />
                   </td>
                 </tr>
@@ -799,7 +847,7 @@
 
         <div
           v-else-if="activeTab === 'drivers'"
-          class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
+          class="overflow-visible rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
         >
           <div
             v-if="driverTotalFiltered"
@@ -818,7 +866,7 @@
                   <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                 </summary>
                 <div
-                  class="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
+                  class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
                   @click.stop
                 >
                   <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
@@ -847,7 +895,7 @@
               </label>
             </div>
           </div>
-          <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+          <div class="overflow-x-auto overscroll-x-contain rounded-b-xl [-webkit-overflow-scrolling:touch]">
             <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
               <thead>
                 <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
@@ -863,16 +911,33 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr v-for="d in paginatedDrivers" :key="d.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                <tr
+                  v-for="d in paginatedDrivers"
+                  :key="d.id"
+                  :class="
+                    driversViewMode === 'active'
+                      ? 'cursor-pointer transition hover:bg-teal-50/50 dark:hover:bg-slate-800/60'
+                      : 'transition hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                  "
+                  @click="goDriverDetail(d)"
+                >
                   <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-900 dark:text-white">
-                    <RouterLink
-                      v-if="driversViewMode === 'active'"
-                      :to="{ name: 'driverDetail', params: { id: d.id } }"
-                      class="text-teal-700 hover:underline dark:text-teal-400"
-                    >
-                      {{ d.name }}
-                    </RouterLink>
-                    <span v-else>{{ d.name }}</span>
+                    <div class="flex items-center gap-2">
+                      <img
+                        v-if="d.avatarUrl"
+                        :src="d.avatarUrl"
+                        :alt="d.name"
+                        class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                      />
+                      <div
+                        v-else
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[11px] font-semibold text-teal-800 dark:bg-teal-950/60 dark:text-teal-300"
+                        aria-hidden="true"
+                      >
+                        {{ driverRowInitials(d.name) }}
+                      </div>
+                      <span>{{ d.name }}</span>
+                    </div>
                   </td>
                   <td v-if="driverColOn('email')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.email || '—' }}</td>
                   <td v-if="driverColOn('employee_code')" class="whitespace-nowrap px-3 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || '—' }}</td>
@@ -889,15 +954,24 @@
                     {{ labelDriverAvailability(d.availability_status) }}
                   </td>
                   <td class="whitespace-nowrap px-3 py-3 text-right text-slate-400" @click.stop>
-                    <button
-                      v-if="driversViewMode === 'trash' && canManageDrivers"
-                      type="button"
-                      class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-                      :disabled="driverRestoring"
-                      @click="submitRestoreDriverById(d.id)"
-                    >
-                      {{ t('resources.action_restore_driver') }}
-                    </button>
+                    <div v-if="driversViewMode === 'trash' && canManageDrivers" class="flex flex-wrap justify-end gap-1.5">
+                      <button
+                        type="button"
+                        class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                        :disabled="driverRestoring"
+                        @click="submitRestoreDriverById(d.id)"
+                      >
+                        {{ t('resources.action_restore_driver') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                        :disabled="forcePermDeleting"
+                        @click="openForceDeleteModal('driver', d.id, d.name)"
+                      >
+                        {{ t('resources.action_force_delete') }}
+                      </button>
+                    </div>
                     <button
                       v-else-if="driversViewMode === 'active' && canManageDrivers"
                       type="button"
@@ -941,30 +1015,80 @@
         </div>
 
         <div
-          v-else
-          class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
+          v-else-if="activeTab === 'suppliers'"
+          class="overflow-visible rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
         >
-          <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+          <div
+            v-if="supplierTotalFiltered"
+            class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/60 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50"
+          >
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+              {{ t('resources.pagination_showing', { from: supplierRangeFrom, to: supplierRangeTo, total: supplierTotalFiltered }) }}
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <details ref="supplierColumnPickerRef" class="relative">
+                <summary
+                  class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                >
+                  <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
+                  {{ t('resources.table_columns') }}
+                  <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                </summary>
+                <div
+                  class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
+                  @click.stop
+                >
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
+                  <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
+                    <li v-for="opt in supplierColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+                      <input
+                        :id="`scol-${opt.id}`"
+                        type="checkbox"
+                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                        :checked="supplierColumnVisible[opt.id]"
+                        @change="setSupplierColumn(opt.id, $event.target.checked)"
+                      />
+                      <label :for="`scol-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
+                    </li>
+                  </ul>
+                </div>
+              </details>
+              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                {{ t('resources.pagination_per_page') }}
+                <select
+                  v-model.number="supplierPerPage"
+                  class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  <option v-for="n in supplierPerPageOptions" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="overflow-x-auto overscroll-x-contain rounded-b-xl [-webkit-overflow-scrolling:touch]">
             <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
               <thead>
                 <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_supplier') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_solutions_services') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_contract') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_supplier') }}</th>
+                  <th v-if="supplierColOn('services')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_solutions_services') }}</th>
+                  <th v-if="supplierColOn('contract')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_contract') }}</th>
+                  <th v-if="supplierColOn('status')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                  <th v-if="supplierColOn('contact')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_contact') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                 <tr
-                  v-for="s in filteredSuppliers"
+                  v-for="s in paginatedSuppliers"
                   :key="s.id"
-                  class="cursor-pointer transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
-                  :class="selectedSupplier?.id === s.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
+                  class="transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
+                  :class="[
+                    'cursor-pointer',
+                    selectedSupplier?.id === s.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : '',
+                  ]"
                   @click="selectSupplier(s)"
                 >
-                  <td class="px-4 py-3 align-middle">
-                    <div class="flex items-center gap-3">
+                  <td class="px-3 py-3 align-middle">
+                    <div class="flex items-center gap-2">
                       <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
                         <BuildingOffice2Icon class="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -974,21 +1098,78 @@
                       </div>
                     </div>
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    {{ s.serviceSummary }}
+                  <td v-if="supplierColOn('services')" class="max-w-[14rem] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
+                    <span class="line-clamp-2">{{ s.serviceSummary }}</span>
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 align-middle">
+                  <td v-if="supplierColOn('contract')" class="whitespace-nowrap px-3 py-3 align-middle">
                     <span :class="compliancePillClass(s.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(s.contract) }}</span>
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 align-middle">
+                  <td v-if="supplierColOn('status')" class="whitespace-nowrap px-3 py-3 align-middle">
                     <span :class="statusBadgeClass(s.uiStatus)">{{ labelProviderStatus(s.uiStatus) }}</span>
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 align-middle text-right text-slate-400">
-                    <ChevronRightIcon class="ml-auto inline h-5 w-5" aria-hidden="true" />
+                  <td v-if="supplierColOn('contact')" class="max-w-[12rem] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
+                    <span class="line-clamp-2">{{ s.contact || '—' }}</span>
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-3 align-middle text-right text-slate-400" @click.stop>
+                    <div v-if="suppliersViewMode === 'trash' && canManageProviders" class="flex flex-wrap justify-end gap-1.5">
+                      <button
+                        type="button"
+                        class="rounded-lg bg-teal-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                        :disabled="supplierRestoring"
+                        @click="submitRestoreSupplierById(s.id)"
+                      >
+                        {{ t('resources.action_restore_supplier') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                        :disabled="forcePermDeleting"
+                        @click="openForceDeleteModal('supplier', s.id, s.name)"
+                      >
+                        {{ t('resources.action_force_delete') }}
+                      </button>
+                    </div>
+                    <template v-else-if="suppliersViewMode === 'active' && canManageProviders">
+                      <button
+                        type="button"
+                        class="inline-flex rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
+                        :title="t('resources.provider_delete_action')"
+                        @click="openProviderDeleteModal(s)"
+                      >
+                        <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </template>
+                    <ChevronRightIcon v-else class="ml-auto inline h-5 w-5" aria-hidden="true" />
                   </td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div
+            v-if="supplierTotalFiltered"
+            class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 bg-slate-50/40 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
+          >
+            <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: supplierListPage, total: supplierTotalPages }) }}</span>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="supplierListPage <= 1"
+                :aria-label="t('resources.pagination_prev')"
+                @click="supplierListPage = Math.max(1, supplierListPage - 1)"
+              >
+                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="supplierListPage >= supplierTotalPages"
+                :aria-label="t('resources.pagination_next')"
+                @click="supplierListPage = Math.min(supplierTotalPages, supplierListPage + 1)"
+              >
+                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -999,7 +1180,7 @@
           {{ driversViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
         </p>
         <p v-if="activeTab === 'suppliers' && !filteredSuppliers.length" class="py-8 text-center text-sm text-slate-500">
-          {{ t('resources.empty') }}
+          {{ suppliersViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
         </p>
       </div>
 
@@ -1341,28 +1522,63 @@
                 </button>
               </div>
               <div class="mt-3 flex flex-wrap gap-2">
+                <span
+                  v-if="suppliersViewMode === 'trash' || selectedSupplier.deleted_at"
+                  class="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                >
+                  {{ t('resources.badge_in_trash') }}
+                </span>
                 <span :class="['rounded-full border px-2.5 py-0.5 text-xs font-medium', statusOutlineClass(selectedSupplier.uiStatus)]">
                   {{ labelProviderStatus(selectedSupplier.uiStatus) }}
                 </span>
                 <span :class="compliancePillClass(selectedSupplier.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(selectedSupplier.contract) }}</span>
               </div>
               <div class="mt-4">
-                <button
-                  v-if="canManageProviders"
-                  type="button"
-                  class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500"
-                  @click="openProviderForm(selectedSupplier)"
-                >
-                  {{ t('resources.action_edit') }}
-                </button>
-                <button
-                  v-else
-                  type="button"
-                  class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white opacity-50"
-                  disabled
-                >
-                  {{ t('resources.action_edit') }}
-                </button>
+                <div v-if="canManageProviders && suppliersViewMode === 'trash'" class="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    class="flex-1 rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                    :disabled="supplierRestoring"
+                    @click="submitRestoreSupplierById(selectedSupplier.id)"
+                  >
+                    {{ t('resources.action_restore_supplier') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="flex-1 rounded-lg border border-rose-200 bg-rose-50 py-2.5 text-sm font-medium text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                    :disabled="forcePermDeleting"
+                    @click="openForceDeleteModal('supplier', selectedSupplier.id, selectedSupplier.name)"
+                  >
+                    {{ t('resources.action_force_delete') }}
+                  </button>
+                </div>
+                <template v-else-if="suppliersViewMode === 'active'">
+                  <button
+                    v-if="canManageProviders"
+                    type="button"
+                    class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500"
+                    @click="openProviderForm(selectedSupplier)"
+                  >
+                    {{ t('resources.action_edit') }}
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white opacity-50"
+                    disabled
+                  >
+                    {{ t('resources.action_edit') }}
+                  </button>
+                  <div v-if="canManageProviders" class="mt-2">
+                    <button
+                      type="button"
+                      class="w-full rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
+                      @click="openProviderDeleteModal(selectedSupplier)"
+                    >
+                      {{ t('resources.provider_delete_action') }}
+                    </button>
+                  </div>
+                </template>
               </div>
             </div>
 
@@ -1720,12 +1936,12 @@
         aria-modal="true"
         @click.self="closeAssignModal"
       >
-        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
-          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('resources.assign_driver_modal_title') }}</h2>
-            <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('resources.assign_driver_modal_hint') }}</p>
+        <div class="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40" @click.stop>
+          <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.assign_driver_modal_title') }}</h2>
+            <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">{{ t('resources.assign_driver_modal_hint') }}</p>
           </div>
-          <div class="max-h-[55vh] overflow-y-auto p-4">
+          <div class="max-h-[55vh] overflow-y-auto px-5 py-4 sm:px-6">
             <input
               v-model="userSearchQuery"
               type="search"
@@ -1756,17 +1972,17 @@
             <p v-else-if="userSearchQuery.trim().length >= 2 && !userSearchLoading" class="mt-3 text-xs text-slate-500">{{ t('resources.empty') }}</p>
             <p v-if="assignError" class="mt-2 text-xs text-rose-600">{{ assignError }}</p>
           </div>
-          <div class="flex gap-2 border-t border-slate-200 px-4 py-3 dark:border-slate-700">
+          <div class="flex flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
             <button
               type="button"
-              class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
               @click="closeAssignModal"
             >
               {{ t('app.cancel') }}
             </button>
             <button
               type="button"
-              class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+              class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
               :disabled="!pickedUser || assignSubmitting"
               @click="submitAssignDriver"
             >
@@ -1781,30 +1997,51 @@
     <Teleport to="body">
       <div
         v-if="providerModalOpen"
-        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center sm:p-6"
         role="dialog"
         aria-modal="true"
         @click.self="providerModalOpen = false"
       >
-        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
-          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-              {{ providerForm.id ? t('resources.provider_form_title_edit') : t('resources.provider_form_title_add') }}
-            </h2>
+        <div
+          class="max-h-[min(92vh,880px)] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div
+            class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20"
+          >
+            <div class="min-w-0">
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                {{ providerForm.id ? t('resources.provider_form_title_edit') : t('resources.provider_form_title_add') }}
+              </h2>
+              <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                {{ t('resources.provider_form_subtitle') }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:hover:text-white"
+              :aria-label="t('resources.close_panel')"
+              @click="providerModalOpen = false"
+            >
+              <XMarkIcon class="h-5 w-5" aria-hidden="true" />
+            </button>
           </div>
-          <form class="max-h-[70vh] space-y-3 overflow-y-auto p-4" @submit.prevent="submitProviderForm">
+          <form class="flex min-h-0 max-h-[min(78vh,720px)] flex-col" @submit.prevent="submitProviderForm">
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ t('resources.provider_form_name') }}
+              <span>{{ t('resources.provider_form_name') }} <span class="text-rose-600" aria-hidden="true">*</span></span>
               <input
                 v-model="providerForm.name"
                 type="text"
                 required
-                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                autocomplete="organization"
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.provider_form_ph_name')"
               />
             </label>
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('resources.provider_form_type') }}
-              <select v-model="providerForm.type" class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+              <select v-model="providerForm.type" class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
                 <option value="vendor">{{ t('resources.provider_form_type_vendor') }}</option>
                 <option value="taxi">{{ t('resources.provider_form_type_taxi') }}</option>
               </select>
@@ -1812,16 +2049,34 @@
             <div class="grid gap-3 sm:grid-cols-2">
               <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {{ t('resources.provider_form_contact_name') }}
-                <input v-model="providerForm.contact_name" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                <input
+                  v-model="providerForm.contact_name"
+                  type="text"
+                  autocomplete="name"
+                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  :placeholder="t('resources.provider_form_ph_contact_name')"
+                />
               </label>
               <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {{ t('resources.provider_form_contact_phone') }}
-                <input v-model="providerForm.contact_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                <input
+                  v-model="providerForm.contact_phone"
+                  type="tel"
+                  autocomplete="tel"
+                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  :placeholder="t('resources.provider_form_ph_contact_phone')"
+                />
               </label>
             </div>
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('resources.provider_form_contact_email') }}
-              <input v-model="providerForm.contact_email" type="email" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              <input
+                v-model="providerForm.contact_email"
+                type="email"
+                autocomplete="email"
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.provider_form_ph_contact_email')"
+              />
             </label>
             <label class="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
               <input v-model="providerForm.is_active" type="checkbox" class="rounded border-slate-300 text-teal-600" />
@@ -1829,21 +2084,31 @@
             </label>
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('resources.provider_form_notes') }}
-              <textarea v-model="providerForm.notes" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              <textarea
+                v-model="providerForm.notes"
+                rows="2"
+                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.provider_form_ph_notes')"
+              />
             </label>
             <div class="grid gap-3 sm:grid-cols-2">
               <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {{ t('resources.provider_form_contract_number') }}
-                <input v-model="providerForm.contract_number" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                <input
+                  v-model="providerForm.contract_number"
+                  type="text"
+                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  :placeholder="t('resources.provider_form_ph_contract')"
+                />
               </label>
               <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {{ t('resources.provider_form_contract_signed') }}
-                <input v-model="providerForm.contract_signed_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                <input v-model="providerForm.contract_signed_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
               </label>
             </div>
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('resources.provider_form_contract_expires') }}
-              <input v-model="providerForm.contract_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+              <input v-model="providerForm.contract_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
             </label>
 
             <div class="border-t border-slate-200 pt-3 dark:border-slate-700">
@@ -1882,19 +2147,24 @@
                 />
               </div>
             </div>
+            </div>
 
-            <p v-if="providerFormError" class="text-xs text-rose-600">{{ providerFormError }}</p>
-            <div class="flex gap-2 pt-2">
+            <p v-if="providerFormError" class="shrink-0 border-t border-slate-200/90 bg-white px-5 pb-2 pt-3 text-xs text-rose-600 dark:border-slate-700 dark:bg-slate-900 sm:px-6">
+              {{ providerFormError }}
+            </p>
+            <div
+              class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6"
+            >
               <button
                 type="button"
-                class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
                 @click="providerModalOpen = false"
               >
                 {{ t('app.cancel') }}
               </button>
               <button
                 type="submit"
-                class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
                 :disabled="providerSaving"
               >
                 {{ providerSaving ? t('resources.loading') : t('resources.provider_form_save') }}
@@ -1914,15 +2184,17 @@
         aria-modal="true"
         @click.self="vehicleDocModalOpen = false"
       >
-        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
-          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
+        <div class="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40" @click.stop>
+          <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
               {{ editingVehicleDocId ? t('resources.vehicle_doc_modal_edit') : t('resources.vehicle_doc_modal_add') }}
             </h2>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_doc_modal_hint') }}</p>
           </div>
-          <form class="max-h-[75vh] space-y-3 overflow-y-auto overscroll-y-contain p-4" @submit.prevent="submitVehicleDocForm">
+          <form class="flex max-h-[min(85vh,720px)] flex-col" @submit.prevent="submitVehicleDocForm">
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ t('driver_detail.col_doc_type') }}
+              <span>{{ t('driver_detail.col_doc_type') }} <span class="text-rose-600" aria-hidden="true">*</span></span>
               <select
                 v-model="vehicleDocForm.doc_type"
                 required
@@ -1967,18 +2239,21 @@
               <input v-model="vehicleDocForm.replace_file" type="checkbox" class="rounded border-slate-300 text-teal-600" />
               {{ t('driver_detail.replace_file') }}
             </label>
-            <p v-if="vehicleDocFormError" class="text-xs text-rose-600">{{ vehicleDocFormError }}</p>
-            <div class="flex gap-2 pt-2">
+            </div>
+            <p v-if="vehicleDocFormError" class="shrink-0 border-t border-slate-200/90 bg-white px-5 pb-2 pt-3 text-xs text-rose-600 dark:border-slate-700 dark:bg-slate-900 sm:px-6">
+              {{ vehicleDocFormError }}
+            </p>
+            <div class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
               <button
                 type="button"
-                class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
                 @click="vehicleDocModalOpen = false"
               >
                 {{ t('app.cancel') }}
               </button>
               <button
                 type="submit"
-                class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
                 :disabled="vehicleDocSaving"
               >
                 {{ vehicleDocSaving ? t('resources.loading') : t('resources.vehicle_doc_save') }}
@@ -2000,7 +2275,7 @@
         @click.self="vehicleDeleteModalOpen = false"
       >
         <div
-          class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
@@ -2047,7 +2322,7 @@
         aria-modal="true"
         @click.self="driverDeleteModalOpen = false"
       >
-        <div class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900">
+        <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40">
           <div class="flex gap-3 border-b border-slate-100 px-4 py-4 dark:border-slate-700">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
               <TrashIcon class="h-5 w-5" aria-hidden="true" />
@@ -2081,12 +2356,114 @@
         </div>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="providerDeleteModalOpen"
+        class="fixed inset-0 z-[110] flex items-end justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="provider-delete-title"
+        @click.self="providerDeleteModalOpen = false"
+      >
+        <div
+          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
+                <TrashIcon class="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 id="provider-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                  {{ t('resources.provider_delete_modal_title') }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  {{ t('resources.provider_delete_modal_body', { name: providerDeleteTarget?.name ?? '' }) }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 px-4 pb-4 pt-2">
+            <button
+              type="button"
+              class="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              @click="providerDeleteModalOpen = false"
+            >
+              {{ t('app.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-50"
+              :disabled="providerDeleting"
+              @click="confirmMoveProviderToTrash"
+            >
+              {{ providerDeleting ? t('resources.loading') : t('resources.provider_delete_modal_confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="forceDeleteModalOpen"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="force-delete-title"
+        @click.self="forceDeleteModalOpen = false"
+      >
+        <div
+          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div class="border-b border-rose-200/60 bg-rose-50/50 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/30">
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                <TrashIcon class="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 id="force-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                  {{ t('resources.force_delete_modal_title') }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  {{ t('resources.force_delete_modal_body', { name: forceDeleteContext.name }) }}
+                </p>
+                <p class="mt-2 text-xs text-rose-700 dark:text-rose-300">
+                  {{ t('resources.force_delete_modal_hint') }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 px-4 pb-4 pt-2">
+            <button
+              type="button"
+              class="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              :disabled="forcePermDeleting"
+              @click="forceDeleteModalOpen = false"
+            >
+              {{ t('app.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded-lg bg-rose-700 py-2.5 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-50"
+              :disabled="forcePermDeleting"
+              @click="confirmForceDeletePerm"
+            >
+              {{ forcePermDeleting ? t('resources.loading') : t('resources.force_delete_modal_confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   BuildingOffice2Icon,
@@ -2106,13 +2483,18 @@ import {
   createVehicle,
   createVehicleComplianceDocument,
   deleteDriver,
+  deleteTransportProvider,
   deleteVehicle,
   deleteVehicleComplianceDocument,
+  forceDeleteDriver as forceDeleteDriverRequest,
+  forceDeleteTransportProvider as forceDeleteTransportProviderRequest,
+  forceDeleteVehicle as forceDeleteVehicleRequest,
   listDrivers,
   listTransportProviders,
   listVehicleComplianceDocuments,
   listVehicles,
   restoreDriver as restoreDriverRequest,
+  restoreTransportProvider as restoreTransportProviderRequest,
   restoreVehicle as restoreVehicleRequest,
   searchUsersForDriverAssignment,
   updateTransportProvider,
@@ -2123,6 +2505,7 @@ import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
 const { t } = useI18n()
+const router = useRouter()
 const auth = useAuthStore()
 const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
 const canManageDrivers = computed(() => auth.hasPermission('resource.driver.manage'))
@@ -2137,6 +2520,7 @@ const tabs = [
 const activeTab = ref('vehicles')
 const vehiclesViewMode = ref('active')
 const driversViewMode = ref('active')
+const suppliersViewMode = ref('active')
 const search = ref('')
 const selectedVehicle = ref(null)
 const selectedSupplier = ref(null)
@@ -2268,6 +2652,13 @@ const driverDeleteModalOpen = ref(false)
 const driverDeleteTarget = ref(null)
 const driverDeleting = ref(false)
 const driverRestoring = ref(false)
+const supplierRestoring = ref(false)
+const providerDeleteModalOpen = ref(false)
+const providerDeleteTarget = ref(null)
+const providerDeleting = ref(false)
+const forceDeleteModalOpen = ref(false)
+const forceDeleteContext = ref({ kind: '', id: null, name: '' })
+const forcePermDeleting = ref(false)
 const resourceFilterMenuRef = ref(null)
 const resourceFiltersExtraOpen = ref(false)
 
@@ -2452,6 +2843,58 @@ const driverColumnToggleOptions = computed(() => [
 ])
 
 const driverColumnPickerRef = ref(null)
+
+const SUPPLIER_COL_STORAGE_KEY = 'va-resources-supplier-cols-v1'
+const SUPPLIER_COL_DEFAULTS = {
+  services: true,
+  contract: true,
+  status: true,
+  contact: false,
+}
+
+function loadSupplierColumnPrefs() {
+  try {
+    const raw = localStorage.getItem(SUPPLIER_COL_STORAGE_KEY)
+    if (!raw) return { ...SUPPLIER_COL_DEFAULTS }
+    return { ...SUPPLIER_COL_DEFAULTS, ...JSON.parse(raw) }
+  } catch {
+    return { ...SUPPLIER_COL_DEFAULTS }
+  }
+}
+
+const supplierColumnVisible = ref(loadSupplierColumnPrefs())
+watch(
+  supplierColumnVisible,
+  (v) => {
+    try {
+      localStorage.setItem(SUPPLIER_COL_STORAGE_KEY, JSON.stringify(v))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+function supplierColOn(id) {
+  if (id === 'supplier' || id === 'actions') return true
+  return supplierColumnVisible.value[id] !== false
+}
+
+function setSupplierColumn(id, checked) {
+  supplierColumnVisible.value = { ...supplierColumnVisible.value, [id]: checked }
+}
+
+const supplierColumnToggleOptions = computed(() => [
+  { id: 'services', labelKey: 'resources.col_solutions_services' },
+  { id: 'contract', labelKey: 'resources.col_contract' },
+  { id: 'status', labelKey: 'resources.col_status' },
+  { id: 'contact', labelKey: 'resources.col_contact' },
+])
+
+const supplierColumnPickerRef = ref(null)
+const supplierListPage = ref(1)
+const supplierPerPage = ref(10)
+const supplierPerPageOptions = [5, 10, 15, 20]
 
 const vehicleListPage = ref(1)
 const vehiclePerPage = ref(10)
@@ -2686,6 +3129,7 @@ function enrichDriver(raw) {
     availability_status: raw.availability_status ?? '',
     uiStatus: driverUiStatus(raw.employment_status),
     deleted_at: raw.deleted_at ?? null,
+    avatarUrl: raw.user?.avatar_url ?? null,
   }
 }
 
@@ -2714,6 +3158,7 @@ function enrichProvider(raw) {
     contact,
     service: serviceSummary,
     uiStatus: raw.is_active ? 'active' : 'inactive',
+    deleted_at: raw.deleted_at ?? null,
   }
 }
 
@@ -2724,7 +3169,7 @@ async function loadAll() {
     const [vRes, dRes, pRes] = await Promise.all([
       listVehicles({ per_page: 200, only_trashed: vehiclesViewMode.value === 'trash' }),
       listDrivers({ per_page: 200, only_trashed: driversViewMode.value === 'trash' }),
-      listTransportProviders({ per_page: 200 }),
+      listTransportProviders({ per_page: 200, only_trashed: suppliersViewMode.value === 'trash' }),
     ])
     vehicles.value = (vRes.items || []).map(enrichVehicle)
     drivers.value = (dRes.items || []).map(enrichDriver)
@@ -2753,6 +3198,14 @@ function setTab(id) {
   selectedSupplier.value = null
   if (id !== 'vehicles') vehiclesViewMode.value = 'active'
   if (id !== 'drivers') driversViewMode.value = 'active'
+  if (id !== 'suppliers') suppliersViewMode.value = 'active'
+}
+
+function setSuppliersViewMode(mode) {
+  suppliersViewMode.value = mode
+  supplierListPage.value = 1
+  selectedSupplier.value = null
+  loadAll()
 }
 
 function setDriversViewMode(mode) {
@@ -2898,6 +3351,21 @@ function labelDriverAvailability(s) {
   return '—'
 }
 
+function driverRowInitials(name) {
+  const n = String(name || '').trim()
+  if (!n) return '?'
+  const parts = n.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+  return n.slice(0, 2).toUpperCase()
+}
+
+function goDriverDetail(d) {
+  if (!d || driversViewMode.value !== 'active') return
+  router.push({ name: 'driverDetail', params: { id: d.id } })
+}
+
 const filteredVehicles = computed(() => {
   const q = search.value.trim().toLowerCase()
   return vehicles.value.filter((v) => {
@@ -3004,6 +3472,40 @@ const filteredSuppliers = computed(() => {
     return hay.includes(q)
   })
 })
+
+const supplierTotalFiltered = computed(() => filteredSuppliers.value.length)
+const supplierTotalPages = computed(() => Math.max(1, Math.ceil(supplierTotalFiltered.value / supplierPerPage.value)))
+
+const paginatedSuppliers = computed(() => {
+  const list = filteredSuppliers.value
+  const per = supplierPerPage.value
+  const tp = supplierTotalPages.value
+  const page = Math.min(Math.max(1, supplierListPage.value), tp)
+  const start = (page - 1) * per
+  return list.slice(start, start + per)
+})
+
+const supplierRangeFrom = computed(() => {
+  if (!supplierTotalFiltered.value) return 0
+  return (supplierListPage.value - 1) * supplierPerPage.value + 1
+})
+const supplierRangeTo = computed(() => Math.min(supplierTotalFiltered.value, supplierListPage.value * supplierPerPage.value))
+
+watch(supplierTotalPages, (tp) => {
+  if (supplierListPage.value > tp) supplierListPage.value = tp
+})
+
+watch(supplierPerPage, () => {
+  supplierListPage.value = 1
+})
+
+watch(
+  () => [search.value, filters.value, suppliersViewMode.value],
+  () => {
+    supplierListPage.value = 1
+  },
+  { deep: true },
+)
 
 watch(filteredVehicles, (list) => {
   if (!selectedVehicle.value) return
@@ -3455,6 +3957,70 @@ async function submitRestoreDriverById(id) {
     alert(t('resources.load_error'))
   } finally {
     driverRestoring.value = false
+  }
+}
+
+function openForceDeleteModal(kind, id, name) {
+  forceDeleteContext.value = { kind, id, name: name || String(id) }
+  forceDeleteModalOpen.value = true
+}
+
+async function confirmForceDeletePerm() {
+  const ctx = forceDeleteContext.value
+  if (!ctx?.id || !ctx.kind) return
+  forcePermDeleting.value = true
+  try {
+    if (ctx.kind === 'vehicle' && canManageVehicles.value) {
+      await forceDeleteVehicleRequest(ctx.id)
+      if (selectedVehicle.value?.id === ctx.id) selectedVehicle.value = null
+    } else if (ctx.kind === 'driver' && canManageDrivers.value) {
+      await forceDeleteDriverRequest(ctx.id)
+    } else if (ctx.kind === 'supplier' && canManageProviders.value) {
+      await forceDeleteTransportProviderRequest(ctx.id)
+      if (selectedSupplier.value?.id === ctx.id) selectedSupplier.value = null
+    }
+    forceDeleteModalOpen.value = false
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    forcePermDeleting.value = false
+  }
+}
+
+function openProviderDeleteModal(s) {
+  if (!s || !canManageProviders.value) return
+  providerDeleteTarget.value = s
+  providerDeleteModalOpen.value = true
+}
+
+async function confirmMoveProviderToTrash() {
+  if (!providerDeleteTarget.value || !canManageProviders.value) return
+  const sid = providerDeleteTarget.value.id
+  providerDeleting.value = true
+  try {
+    await deleteTransportProvider(sid)
+    providerDeleteModalOpen.value = false
+    providerDeleteTarget.value = null
+    if (selectedSupplier.value?.id === sid) selectedSupplier.value = null
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    providerDeleting.value = false
+  }
+}
+
+async function submitRestoreSupplierById(id) {
+  if (!canManageProviders.value) return
+  supplierRestoring.value = true
+  try {
+    await restoreTransportProviderRequest(id)
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    supplierRestoring.value = false
   }
 }
 

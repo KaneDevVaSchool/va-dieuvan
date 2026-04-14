@@ -17,19 +17,38 @@
     <template v-else>
       <!-- Hồ sơ -->
       <section class="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50 sm:p-5">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('driver_detail.profile') }}</h2>
-            <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('driver_detail.profile_hint') }}</p>
+        <div class="flex flex-wrap items-start gap-4">
+          <div class="shrink-0">
+            <img
+              v-if="driver.user?.avatar_url"
+              :src="driver.user.avatar_url"
+              :alt="driver.full_name || ''"
+              class="h-20 w-20 rounded-full object-cover ring-2 ring-slate-200/90 dark:ring-slate-600"
+            />
+            <div
+              v-else
+              class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-teal-200 text-lg font-semibold text-teal-900 dark:from-teal-950/80 dark:to-teal-900/60 dark:text-teal-200"
+              aria-hidden="true"
+            >
+              {{ profileInitials }}
+            </div>
           </div>
-          <button
-            v-if="canManage"
-            type="button"
-            class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-            @click="toggleEdit"
-          >
-            {{ profileEdit ? t('driver_detail.cancel_edit') : t('driver_detail.edit') }}
-          </button>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('driver_detail.profile') }}</h2>
+                <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('driver_detail.profile_hint') }}</p>
+              </div>
+              <button
+                v-if="canManage"
+                type="button"
+                class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                @click="toggleEdit"
+              >
+                {{ profileEdit ? t('driver_detail.cancel_edit') : t('driver_detail.edit') }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div v-if="!profileEdit" class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
@@ -178,7 +197,12 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="doc in documents" :key="doc.id">
+              <tr
+                v-for="doc in documents"
+                :key="doc.id"
+                class="cursor-pointer transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                @click="openDocModal(doc)"
+              >
                 <td class="px-3 py-2 align-top">{{ docTypeLabel(doc.doc_type) }}</td>
                 <td class="max-w-[200px] px-3 py-2 align-top text-xs text-slate-600 dark:text-slate-400">
                   <span class="line-clamp-2">{{ doc.title || '—' }}</span>
@@ -187,7 +211,7 @@
                 <td class="px-3 py-2 align-top">
                   <span :class="expiryPillClass(doc.expiry)">{{ expiryLabel(doc.expiry) }}</span>
                 </td>
-                <td class="px-3 py-2 align-top text-xs">
+                <td class="px-3 py-2 align-top text-xs" @click.stop>
                   <a
                     v-for="a in doc.attachments"
                     :key="a.id"
@@ -200,7 +224,7 @@
                   </a>
                   <span v-if="!doc.attachments?.length" class="text-slate-400">—</span>
                 </td>
-                <td v-if="canManage" class="whitespace-nowrap px-3 py-2 align-top text-right text-xs">
+                <td v-if="canManage" class="whitespace-nowrap px-3 py-2 align-top text-right text-xs" @click.stop>
                   <button type="button" class="text-teal-700 hover:underline dark:text-teal-400" @click="openDocModal(doc)">
                     {{ t('resources.action_edit') }}
                   </button>
@@ -229,13 +253,6 @@
           </li>
         </ul>
         <p v-if="!auditLogs.length" class="mt-2 text-sm text-slate-500">{{ t('resources.empty') }}</p>
-        <RouterLink
-          v-if="canViewAudit"
-          to="/audit-logs"
-          class="mt-3 inline-block text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
-        >
-          {{ t('driver_detail.audit_full') }}
-        </RouterLink>
       </section>
     </template>
 
@@ -251,7 +268,13 @@
         <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
           <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
             <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-              {{ editingDocId ? t('driver_detail.doc_modal_edit') : t('driver_detail.doc_modal_add') }}
+              {{
+                !canManage
+                  ? t('driver_detail.doc_modal_view')
+                  : editingDocId
+                    ? t('driver_detail.doc_modal_edit')
+                    : t('driver_detail.doc_modal_add')
+              }}
             </h2>
           </div>
           <form class="max-h-[75vh] space-y-3 overflow-y-auto p-4" @submit.prevent="submitDocForm">
@@ -260,7 +283,8 @@
               <select
                 v-model="docForm.doc_type"
                 required
-                class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :disabled="!canManage"
+                class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option v-for="opt in docTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
@@ -270,7 +294,9 @@
               <input
                 v-model="docForm.title"
                 type="text"
+                :readonly="!canManage"
                 class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
                 :placeholder="t('driver_detail.ph_doc_title')"
               />
             </label>
@@ -279,25 +305,39 @@
               <textarea
                 v-model="docForm.notes"
                 rows="3"
+                :readonly="!canManage"
                 class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
                 :placeholder="t('driver_detail.ph_doc_notes')"
               />
             </label>
             <div class="grid gap-3 sm:grid-cols-2">
               <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {{ t('driver_detail.issued_at') }}
-                <input v-model="docForm.issued_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                <input
+                  v-model="docForm.issued_at"
+                  type="date"
+                  :readonly="!canManage"
+                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
+                />
               </label>
               <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {{ t('driver_detail.expires_at') }}
-                <input v-model="docForm.expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                <input
+                  v-model="docForm.expires_at"
+                  type="date"
+                  :readonly="!canManage"
+                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  :class="!canManage ? 'bg-slate-50 dark:bg-slate-800/80' : ''"
+                />
               </label>
             </div>
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+            <label v-if="canManage" class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('driver_detail.upload_file') }}
               <input type="file" class="mt-1 w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-teal-50 file:px-3 file:py-1.5 file:text-teal-800 dark:file:bg-teal-950 dark:file:text-teal-300" @change="onDocFile" />
             </label>
-            <label v-if="editingDocId" class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <label v-if="canManage && editingDocId" class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
               <input v-model="docForm.replace_file" type="checkbox" class="rounded border-slate-300 text-teal-600" />
               {{ t('driver_detail.replace_file') }}
             </label>
@@ -308,9 +348,10 @@
                 class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
                 @click="docModalOpen = false"
               >
-                {{ t('app.cancel') }}
+                {{ canManage ? t('app.cancel') : t('resources.close_panel') }}
               </button>
               <button
+                v-if="canManage"
                 type="submit"
                 class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
                 :disabled="docSaving"
@@ -345,7 +386,16 @@ const route = useRoute()
 const auth = useAuthStore()
 
 const canManage = computed(() => auth.hasPermission('resource.driver.manage'))
-const canViewAudit = computed(() => auth.hasPermission('audit_log.view'))
+
+const profileInitials = computed(() => {
+  const n = String(driver.value?.full_name || '').trim()
+  if (!n) return '?'
+  const parts = n.split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+  return n.slice(0, 2).toUpperCase()
+})
 
 const loading = ref(true)
 const loadError = ref('')
@@ -572,6 +622,7 @@ function onDocFile(e) {
 }
 
 async function submitDocForm() {
+  if (!canManage.value) return
   docSaving.value = true
   docFormError.value = ''
   const id = Number(route.params.id)
