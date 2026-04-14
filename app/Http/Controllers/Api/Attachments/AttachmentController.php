@@ -140,15 +140,17 @@ class AttachmentController extends Controller
 
         foreach ($this->candidateDisks($disk) as $tryDisk) {
             foreach ($this->candidateStoragePaths($rawPath) as $rel) {
-                $normalized = $this->normalizeRelativeToPublicDisk($rel);
-                $abs = Storage::disk($tryDisk)->path($normalized);
+                $useRel = $tryDisk === 'public'
+                    ? $this->normalizeRelativeToPublicDisk($rel)
+                    : ltrim(str_replace('\\', '/', $rel), '/');
+                $abs = Storage::disk($tryDisk)->path($useRel);
                 if (is_file($abs) && is_readable($abs)) {
-                    return ['kind' => 'relative', 'disk' => $tryDisk, 'path' => $normalized];
+                    return ['kind' => 'relative', 'disk' => $tryDisk, 'path' => $useRel];
                 }
             }
         }
 
-        // File có thể chỉ trùng qua public/storage (symlink / deploy) — khác với path Flysystem.
+        // File có thể chỉ khớp qua public/storage (symlink / hosting).
         foreach ($this->candidateStoragePaths($rawPath) as $rel) {
             $normalized = $this->normalizeRelativeToPublicDisk($rel);
             $underPublic = public_path('storage/'.$normalized);
