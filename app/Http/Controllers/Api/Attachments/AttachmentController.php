@@ -140,14 +140,38 @@ class AttachmentController extends Controller
 
         foreach ($this->candidateDisks($disk) as $tryDisk) {
             foreach ($this->candidateStoragePaths($rawPath) as $rel) {
-                $abs = Storage::disk($tryDisk)->path($rel);
-                if (is_file($abs)) {
-                    return ['kind' => 'relative', 'disk' => $tryDisk, 'path' => $rel];
+                $normalized = $this->normalizeRelativeToPublicDisk($rel);
+                $abs = Storage::disk($tryDisk)->path($normalized);
+                if (is_file($abs) && is_readable($abs)) {
+                    return ['kind' => 'relative', 'disk' => $tryDisk, 'path' => $normalized];
                 }
             }
         }
 
+        // File có thể chỉ trùng qua public/storage (symlink / deploy) — khác với path Flysystem.
+        foreach ($this->candidateStoragePaths($rawPath) as $rel) {
+            $normalized = $this->normalizeRelativeToPublicDisk($rel);
+            $underPublic = public_path('storage/'.$normalized);
+            if (is_file($underPublic) && is_readable($underPublic)) {
+                return ['kind' => 'absolute', 'path' => $underPublic];
+            }
+        }
+
         return null;
+    }
+
+    /**
+     * Trên disk `public`, path đúng là `attachments/...` dưới `storage/app/public/`.
+     * Nếu DB lưu nhầm `storage/attachments/...` thì Flysystem thành `.../public/storage/attachments/...` (sai).
+     */
+    private function normalizeRelativeToPublicDisk(string $rel): string
+    {
+        $rel = ltrim(str_replace('\\', '/', $rel), '/');
+        if (str_starts_with($rel, 'storage/') && ! str_starts_with($rel, 'storage/app/')) {
+            return substr($rel, strlen('storage/'));
+        }
+
+        return $rel;
     }
 
     /**
@@ -216,6 +240,10 @@ class AttachmentController extends Controller
 
         if (str_starts_with($p, 'public/storage/')) {
             $out[] = substr($p, strlen('public/storage/'));
+        }
+
+        if (preg_match('#storage/app/public/(.+)$#', $p, $m)) {
+            $out[] = $m[1];
         }
 
         return array_values(array_unique(array_filter($out)));
