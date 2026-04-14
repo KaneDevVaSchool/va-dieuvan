@@ -105,7 +105,7 @@
                       <button
                         type="button"
                         class="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 shadow-sm hover:bg-slate-50"
-                        @click="openHistory('passenger_fare_rate', row.id, row.package_label)"
+                        @click="openHistory('passenger_fare_rate', row.id, row.package_label, row)"
                       >
                         Lịch sử
                       </button>
@@ -140,7 +140,7 @@
                 <button
                   type="button"
                   class="rounded border border-sky-300/80 bg-white px-2 py-0.5 text-[11px] font-medium text-sky-800 hover:bg-sky-50"
-                  @click="openHistory('pricing_note', block.id, block.title)"
+                  @click="openHistory('pricing_note', block.id, block.title, block)"
                 >
                   Lịch sử
                 </button>
@@ -312,7 +312,7 @@
                       <button
                         type="button"
                         class="rounded border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-600 shadow-sm hover:bg-slate-50"
-                        @click="openHistory('cargo_fare_rate', row.id, row.route_label)"
+                        @click="openHistory('cargo_fare_rate', row.id, row.route_label, row)"
                       >
                         Lịch sử
                       </button>
@@ -342,7 +342,7 @@
               <button
                 type="button"
                 class="rounded border border-indigo-300/80 bg-white px-2 py-0.5 text-[11px] font-medium text-indigo-900 hover:bg-indigo-50"
-                @click="openHistory('pricing_note', cargoNoteBlocks[0].id, 'Ghi chú hàng hóa')"
+                @click="openHistory('pricing_note', cargoNoteBlocks[0].id, 'Ghi chú hàng hóa', cargoNoteBlocks[0])"
               >
                 Lịch sử
               </button>
@@ -587,7 +587,7 @@
       :open="historyOpen"
       wide
       :title="historyTitle"
-      description="Mỗi phiên bản là bản dữ liệu đã lưu trước một lần chỉnh sửa (để đối chiếu và kiểm tra). Chọn tab để xem chi tiết."
+      description="So sánh theo chiều ngang: mỗi cột là một mốc (phiên bản đã lưu + cột Hiện tại). Ô nền vàng = giá trị khác cột liền trước."
       @close="historyOpen = false"
     >
       <div v-if="historyLoading" class="flex flex-col items-center justify-center gap-2 py-12 text-sm text-slate-500">
@@ -597,55 +597,82 @@
         />
         Đang tải lịch sử…
       </div>
-      <div v-else-if="!sortedHistory.length" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-600">
+      <div v-else-if="!historyItems.length" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-600">
         Chưa có phiên bản lưu trữ nào. Sau lần chỉnh sửa đầu tiên, bạn sẽ thấy lịch sử tại đây.
       </div>
-      <div v-else class="flex flex-col gap-4">
-        <div class="-mx-1 flex gap-1 overflow-x-auto pb-1">
-          <button
-            v-for="(rev, idx) in sortedHistory"
-            :key="rev.id"
-            type="button"
-            class="shrink-0 rounded-lg border px-3 py-2 text-xs font-medium transition md:text-sm"
-            :class="
-              historyTabIndex === idx
-                ? 'border-va-700 bg-va-800 text-white shadow-sm'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-            "
-            @click="historyTabIndex = idx"
-          >
-            Phiên bản {{ idx + 1 }}
-            <span v-if="idx === sortedHistory.length - 1" class="ml-1 opacity-90">· gần nhất</span>
-          </button>
-        </div>
-        <div v-if="selectedHistoryRevision" class="rounded-xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/80 p-4 shadow-sm">
-          <div class="mb-3 flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
-            <div>
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Thời điểm lưu bản này</p>
-              <p class="text-sm font-semibold text-slate-900">{{ formatHistoryDate(selectedHistoryRevision.created_at) }}</p>
-            </div>
-            <div class="text-right text-sm text-slate-600">
-              <span class="block text-xs text-slate-500">Người Đã Lưu</span>
-              <span class="font-medium text-slate-800">{{ selectedHistoryRevision.user?.name ?? '—' }}</span>
-              <span v-if="selectedHistoryRevision.user?.email" class="block text-xs text-slate-500">{{
-                selectedHistoryRevision.user.email
-              }}</span>
-            </div>
-          </div>
-          <p class="mb-4 text-xs leading-relaxed text-slate-500">
-            Nội dung dưới đây là toàn bộ giá trị tại thời điểm trước khi có thay đổi tiếp theo (dùng để đối chiếu).
-          </p>
-          <dl class="space-y-3">
-            <div v-for="(row, rIdx) in auditRowsForSnapshot(selectedHistoryRevision.snapshot)" :key="rIdx">
-              <dt class="text-xs font-medium text-slate-500">{{ row.label }}</dt>
-              <dd
-                class="mt-0.5 text-sm text-slate-900"
-                :class="row.multiline ? 'whitespace-pre-wrap leading-relaxed' : ''"
+      <div v-else class="space-y-3">
+        <p class="border-l-4 border-amber-400 bg-amber-50/60 px-3 py-2 text-xs leading-relaxed text-slate-700">
+          <strong>Đọc nhanh:</strong> mỗi cột là một “ảnh” dữ liệu tại thời điểm đó. Cột
+          <strong>Hiện tại</strong> là giá trị đang dùng trên bảng giá. Dưới badge có
+          <strong>tóm tắt từng trường đổi</strong> (dạng giá trị cũ → giá trị mới); bảng bên dưới là đầy đủ từng ô.
+        </p>
+        <div class="-mx-1 overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+          <table class="w-full min-w-[800px] border-collapse text-left text-xs md:text-sm">
+            <thead>
+              <tr class="bg-gradient-to-b from-slate-100 to-slate-50">
+                <th
+                  class="sticky left-0 z-[2] min-w-[132px] border-b border-r border-slate-200 px-2 py-2 text-left font-semibold text-slate-800 shadow-[6px_0_12px_-6px_rgba(15,23,42,0.15)]"
+                >
+                  Trường dữ liệu
+                </th>
+                <th
+                  v-for="(col, colIdx) in historyColumns"
+                  :key="col.id"
+                  class="min-w-[168px] max-w-[220px] border-b border-slate-200 px-2 py-2 text-center align-top"
+                >
+                  <div class="font-semibold text-slate-900">{{ col.label }}</div>
+                  <div class="mt-0.5 text-[11px] font-normal leading-snug text-slate-500">{{ col.dateLabel }}</div>
+                  <div v-if="col.kind === 'revision'" class="mt-1 text-[11px] text-slate-600">
+                    <span class="block">Người lưu:</span>
+                    <span class="font-medium text-slate-800">{{ col.editorName }}</span>
+                    <span v-if="col.editorEmail" class="mt-0.5 block truncate text-[10px] text-slate-500">{{
+                      col.editorEmail
+                    }}</span>
+                  </div>
+                  <div
+                    v-if="colIdx > 0 && columnChangeCounts[colIdx] != null"
+                    class="mt-2 rounded-md bg-amber-100/90 px-1.5 py-1 text-[10px] font-semibold leading-tight text-amber-950"
+                  >
+                    {{ columnChangeCounts[colIdx] }} trường đổi so với cột trước
+                  </div>
+                  <ul
+                    v-if="colIdx > 0 && columnChangeSummaries[colIdx]?.length"
+                    class="mt-1.5 max-h-32 overflow-y-auto space-y-1 border-t border-amber-200/60 pt-1.5 text-left text-[10px] leading-snug text-slate-700"
+                  >
+                    <li v-for="(line, li) in columnChangeSummaries[colIdx]" :key="li" class="break-words">
+                      {{ line }}
+                    </li>
+                  </ul>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in historyComparisonRows"
+                :key="row.key"
+                class="border-b border-slate-100 transition-colors hover:bg-slate-50/80"
               >
-                {{ row.value }}
-              </dd>
-            </div>
-          </dl>
+                <td
+                  class="sticky left-0 z-[1] border-r border-slate-100 bg-white/95 px-2 py-2 font-medium text-slate-700 shadow-[6px_0_12px_-6px_rgba(15,23,42,0.08)]"
+                >
+                  {{ row.label }}
+                </td>
+                <td
+                  v-for="(cell, colIdx) in row.cells"
+                  :key="colIdx"
+                  class="max-w-[240px] px-2 py-2 align-top text-slate-800"
+                  :class="[
+                    colIdx > 0 && row.changed[colIdx]
+                      ? 'bg-amber-50 ring-1 ring-inset ring-amber-200/70'
+                      : 'bg-white',
+                    row.multiline ? 'whitespace-pre-wrap break-words leading-relaxed' : 'tabular-nums',
+                  ]"
+                >
+                  {{ cell }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </Modal>
@@ -741,14 +768,230 @@ const historyLoading = ref(false)
 const historyTitle = ref('Lịch sử thay đổi')
 const historyItems = ref([])
 const historyEntityType = ref('passenger_fare_rate')
-const historyTabIndex = ref(0)
+/** id bản ghi đang xem lịch sử (để gắn cột Hiện tại từ dữ liệu trang). */
+const historyContextId = ref(null)
+/** Bản ghi truyền từ nút Lịch sử (ưu tiên hơn tra cứu trong `data`). */
+const historyCurrentRecord = ref(null)
 
-const sortedHistory = computed(() => {
-  const items = [...(historyItems.value ?? [])]
-  return items.sort((a, b) => a.id - b.id)
+function resolveHistoryCurrentRecord() {
+  if (historyCurrentRecord.value) return historyCurrentRecord.value
+  const id = historyContextId.value
+  const t = historyEntityType.value
+  if (!id) return null
+  if (t === 'passenger_fare_rate') return data.value.passenger_fares?.find((r) => r.id === id) ?? null
+  if (t === 'cargo_fare_rate') return data.value.cargo_fares?.find((r) => r.id === id) ?? null
+  if (t === 'pricing_note') return data.value.notes?.find((n) => n.id === id) ?? null
+  return null
+}
+
+function snapshotFromCurrentRecord(entityType, row) {
+  if (!row) return {}
+  if (entityType === 'passenger_fare_rate') {
+    const o = {
+      package_label: row.package_label,
+      package_code: row.package_code,
+      sort_order: row.sort_order,
+    }
+    for (const f of passengerMoneyFields) o[f.key] = row[f.key]
+    return o
+  }
+  if (entityType === 'cargo_fare_rate') {
+    const o = {
+      route_label: row.route_label,
+      route_code: row.route_code,
+      distance_km: row.distance_km,
+      sort_order: row.sort_order,
+    }
+    for (const f of cargoMoneyFields) o[f.key] = row[f.key]
+    return o
+  }
+  if (entityType === 'pricing_note') {
+    return {
+      category: row.category,
+      title: row.title,
+      body: row.body,
+      sort_order: row.sort_order,
+    }
+  }
+  return {}
+}
+
+function getHistoryFieldDefs(entityType) {
+  if (entityType === 'passenger_fare_rate') {
+    return [
+      { key: 'package_label', label: 'Gói / tuyến' },
+      { key: 'package_code', label: 'Mã gói (hệ thống)' },
+      { key: 'sort_order', label: 'Thứ tự hiển thị' },
+      ...passengerMoneyFields.map((f) => ({ key: f.key, label: `${f.label} (VNĐ)` })),
+    ]
+  }
+  if (entityType === 'cargo_fare_rate') {
+    return [
+      { key: 'route_label', label: 'Lộ trình' },
+      { key: 'route_code', label: 'Mã tuyến (hệ thống)' },
+      { key: 'distance_km', label: 'Khoảng cách' },
+      { key: 'sort_order', label: 'Thứ tự hiển thị' },
+      ...cargoMoneyFields.map((f) => ({ key: f.key, label: `${f.label} (VNĐ)` })),
+    ]
+  }
+  if (entityType === 'pricing_note') {
+    return [
+      { key: 'category', label: 'Loại ghi chú' },
+      { key: 'title', label: 'Tiêu đề' },
+      { key: 'sort_order', label: 'Thứ tự hiển thị' },
+      { key: 'body', label: 'Nội dung', multiline: true },
+    ]
+  }
+  return []
+}
+
+function fmtAuditMoney(v) {
+  if (v == null || v === '') return '— (không áp dụng)'
+  return formatVnd(v)
+}
+
+function displayFieldValue(entityType, fieldKey, snapshot) {
+  if (!snapshot) return '—'
+  if (entityType === 'passenger_fare_rate') {
+    if (fieldKey === 'package_label') return snapshot.package_label ?? '—'
+    if (fieldKey === 'package_code') return snapshot.package_code ?? '—'
+    if (fieldKey === 'sort_order') return snapshot.sort_order != null ? String(snapshot.sort_order) : '—'
+    if (passengerMoneyFields.some((f) => f.key === fieldKey)) return fmtAuditMoney(snapshot[fieldKey])
+  }
+  if (entityType === 'cargo_fare_rate') {
+    if (fieldKey === 'route_label') return snapshot.route_label ?? '—'
+    if (fieldKey === 'route_code') return snapshot.route_code ?? '—'
+    if (fieldKey === 'distance_km') {
+      const dk = snapshot.distance_km
+      if (dk == null || dk === '') return '— (không gắn km cố định)'
+      return `${formatDistance(Number(dk))} km`
+    }
+    if (fieldKey === 'sort_order') return snapshot.sort_order != null ? String(snapshot.sort_order) : '—'
+    if (cargoMoneyFields.some((f) => f.key === fieldKey)) return fmtAuditMoney(snapshot[fieldKey])
+  }
+  if (entityType === 'pricing_note') {
+    if (fieldKey === 'category') return labelPricingNoteCategory(snapshot.category) ?? '—'
+    if (fieldKey === 'title') return snapshot.title?.trim() ? snapshot.title : '—'
+    if (fieldKey === 'sort_order') return snapshot.sort_order != null ? String(snapshot.sort_order) : '—'
+    if (fieldKey === 'body') return snapshot.body ?? '—'
+  }
+  return '—'
+}
+
+function normalizeFieldValueForCompare(entityType, fieldKey, snapshot) {
+  if (!snapshot) return '__empty__'
+  const v = snapshot[fieldKey]
+  if (entityType === 'passenger_fare_rate' && passengerMoneyFields.some((f) => f.key === fieldKey)) {
+    if (v == null || v === '') return ''
+    const n = Number(v)
+    return Number.isFinite(n) ? String(n) : String(v)
+  }
+  if (entityType === 'cargo_fare_rate' && cargoMoneyFields.some((f) => f.key === fieldKey)) {
+    if (v == null || v === '') return ''
+    const n = Number(v)
+    return Number.isFinite(n) ? String(n) : String(v)
+  }
+  if (fieldKey === 'distance_km') {
+    if (v == null || v === '') return ''
+    const n = Number(v)
+    return Number.isFinite(n) ? String(n) : String(v)
+  }
+  if (fieldKey === 'sort_order') {
+    if (v == null || v === '') return ''
+    return String(Number(v))
+  }
+  if (fieldKey === 'body') return String(v ?? '').trim()
+  if (fieldKey === 'title') return String(v ?? '').trim()
+  if (fieldKey === 'category') return String(v ?? '').trim()
+  return String(v ?? '').trim()
+}
+
+const historyColumns = computed(() => {
+  const revs = [...(historyItems.value ?? [])].sort((a, b) => a.id - b.id)
+  const current = resolveHistoryCurrentRecord()
+  const cols = revs.map((rev, i) => ({
+    id: `rev-${rev.id}`,
+    kind: 'revision',
+    snapshot: rev.snapshot || {},
+    label: `Phiên bản ${i + 1}`,
+    dateLabel: formatHistoryDate(rev.created_at),
+    editorName: rev.user?.name ?? '—',
+    editorEmail: rev.user?.email ?? '',
+  }))
+  if (current) {
+    cols.push({
+      id: 'current',
+      kind: 'current',
+      snapshot: snapshotFromCurrentRecord(historyEntityType.value, current),
+      label: 'Hiện tại',
+      dateLabel: 'Đang áp dụng trên bảng',
+      editorName: '—',
+      editorEmail: '',
+    })
+  }
+  return cols
 })
 
-const selectedHistoryRevision = computed(() => sortedHistory.value[historyTabIndex.value] ?? null)
+const historyComparisonRows = computed(() => {
+  const cols = historyColumns.value
+  const entityType = historyEntityType.value
+  const defs = getHistoryFieldDefs(entityType)
+  if (!cols.length || !defs.length) return []
+  return defs.map((def) => {
+    const cells = cols.map((col) => displayFieldValue(entityType, def.key, col.snapshot))
+    const changed = cols.map((_, idx) => {
+      if (idx === 0) return false
+      const a = normalizeFieldValueForCompare(entityType, def.key, cols[idx - 1].snapshot)
+      const b = normalizeFieldValueForCompare(entityType, def.key, cols[idx].snapshot)
+      return a !== b
+    })
+    return { key: def.key, label: def.label, multiline: def.multiline, cells, changed }
+  })
+})
+
+const columnChangeCounts = computed(() => {
+  const rows = historyComparisonRows.value
+  const n = historyColumns.value.length
+  if (!n || !rows.length) return []
+  const counts = Array.from({ length: n }, () => null)
+  for (let c = 1; c < n; c++) {
+    counts[c] = rows.filter((r) => r.changed[c]).length
+  }
+  return counts
+})
+
+/** Rút gọn giá trị để một dòng “cũ → mới” trong header (không cần đủ như ô bảng). */
+function summarizeForChangeLine(text, multiline) {
+  if (text == null || text === '') return '—'
+  const t = String(text).replace(/\s+/g, ' ').trim()
+  const max = multiline ? 56 : 44
+  if (t.length <= max) return t
+  return `${t.slice(0, max)}…`
+}
+
+/** Mỗi cột (index > 0): danh sách dòng “Tên trường: giá trị trước → giá trị sau”. */
+const columnChangeSummaries = computed(() => {
+  const cols = historyColumns.value
+  const entityType = historyEntityType.value
+  const defs = getHistoryFieldDefs(entityType)
+  const n = cols.length
+  const out = Array.from({ length: n }, () => [])
+  for (let c = 1; c < n; c++) {
+    const lines = []
+    for (const def of defs) {
+      const a = normalizeFieldValueForCompare(entityType, def.key, cols[c - 1].snapshot)
+      const b = normalizeFieldValueForCompare(entityType, def.key, cols[c].snapshot)
+      if (a === b) continue
+      const prevDisp = displayFieldValue(entityType, def.key, cols[c - 1].snapshot)
+      const currDisp = displayFieldValue(entityType, def.key, cols[c].snapshot)
+      const left = summarizeForChangeLine(prevDisp, def.multiline)
+      const right = summarizeForChangeLine(currDisp, def.multiline)
+      lines.push(`${def.label}: ${left} → ${right}`)
+    }
+    out[c] = lines
+  }
+  return out
+})
 
 /** Bảng huỷ xe — nội dung chuẩn theo quy định nội bộ (đồng bộ với ReferencePricingSeeder). */
 const cancellationRows = [
@@ -796,6 +1039,7 @@ const passengerNoteBlocks = computed(() => {
       return {
         key: cat,
         id: n.id,
+        category: n.category,
         title: n.title || (cat === 'passenger_general' ? 'Ghi chú chung' : 'Tài xế'),
         body: n.body,
         sort_order: n.sort_order,
@@ -837,61 +1081,6 @@ function formatHistoryDate(iso) {
   } catch {
     return String(iso)
   }
-}
-
-function fmtAuditMoney(v) {
-  if (v == null || v === '') return '— (không áp dụng)'
-  return formatVnd(v)
-}
-
-function buildPassengerAuditRows(snap) {
-  const rows = [
-    { label: 'Gói / tuyến', value: snap.package_label ?? '—' },
-    { label: 'Mã gói (hệ thống)', value: snap.package_code ?? '—' },
-    { label: 'Thứ tự hiển thị', value: snap.sort_order != null ? String(snap.sort_order) : '—' },
-  ]
-  for (const f of passengerMoneyFields) {
-    rows.push({ label: `${f.label} (VNĐ)`, value: fmtAuditMoney(snap[f.key]) })
-  }
-  return rows
-}
-
-function buildCargoAuditRows(snap) {
-  const dk = snap.distance_km
-  const rows = [
-    { label: 'Lộ trình', value: snap.route_label ?? '—' },
-    { label: 'Mã tuyến (hệ thống)', value: snap.route_code ?? '—' },
-    {
-      label: 'Khoảng cách',
-      value:
-        dk == null || dk === ''
-          ? '— (không gắn km cố định)'
-          : `${formatDistance(Number(dk))} km`,
-    },
-    { label: 'Thứ tự hiển thị', value: snap.sort_order != null ? String(snap.sort_order) : '—' },
-  ]
-  for (const f of cargoMoneyFields) {
-    rows.push({ label: `${f.label} (VNĐ)`, value: fmtAuditMoney(snap[f.key]) })
-  }
-  return rows
-}
-
-function buildNoteAuditRows(snap) {
-  return [
-    { label: 'Loại ghi chú', value: labelPricingNoteCategory(snap.category) ?? '—' },
-    { label: 'Tiêu đề', value: snap.title?.trim() ? snap.title : '—' },
-    { label: 'Thứ tự hiển thị', value: snap.sort_order != null ? String(snap.sort_order) : '—' },
-    { label: 'Nội dung', value: snap.body ?? '—', multiline: true },
-  ]
-}
-
-function auditRowsForSnapshot(snapshot) {
-  const t = historyEntityType.value
-  if (!snapshot) return []
-  if (t === 'passenger_fare_rate') return buildPassengerAuditRows(snapshot)
-  if (t === 'cargo_fare_rate') return buildCargoAuditRows(snapshot)
-  if (t === 'pricing_note') return buildNoteAuditRows(snapshot)
-  return []
 }
 
 function openPassengerEdit(row) {
@@ -1009,18 +1198,16 @@ async function saveNoteEdit() {
   }
 }
 
-async function openHistory(type, id, label) {
+async function openHistory(type, id, label, currentRecord = null) {
   historyEntityType.value = type
+  historyContextId.value = id
+  historyCurrentRecord.value = currentRecord
   historyTitle.value = label ? `Lịch sử — ${label}` : 'Lịch sử thay đổi'
   historyItems.value = []
-  historyTabIndex.value = 0
   historyOpen.value = true
   historyLoading.value = true
   try {
-    const items = await getReferencePricingRevisions(type, id)
-    historyItems.value = items
-    const sorted = [...items].sort((a, b) => a.id - b.id)
-    historyTabIndex.value = sorted.length ? sorted.length - 1 : 0
+    historyItems.value = await getReferencePricingRevisions(type, id)
   } catch (e) {
     showAppErrorFromApi(e)
     historyOpen.value = false
