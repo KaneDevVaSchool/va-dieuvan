@@ -1,17 +1,38 @@
 <template>
   <div
-    class="resources-shell mx-auto max-w-[1600px] rounded-xl border border-slate-200 bg-white px-2 text-slate-900 shadow-sm sm:px-4 md:px-5 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+    class="resources-shell mx-auto max-w-[1600px] space-y-4 rounded-xl border border-slate-200 bg-white px-3 py-4 text-slate-900 shadow-sm sm:px-4 md:px-6 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
   >
     <!-- Header -->
-    <div class="border-b border-slate-200 py-4 dark:border-slate-700">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
-          <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ t('resources.page_subtitle') }}</p>
+    <div class="border-b border-slate-200/80 pb-4 dark:border-slate-700">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.page_title') }}</h1>
+            <span
+              class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 ring-1 ring-inset ring-teal-600/20 dark:bg-teal-950/50 dark:text-teal-300 dark:ring-teal-600/40"
+            >
+              {{ t('resources.workspace_badge') }}
+            </span>
+          </div>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('resources.page_subtitle') }}</p>
         </div>
-        <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
-          <div class="w-full min-w-0 overflow-x-auto overscroll-x-contain sm:w-auto sm:overflow-visible">
-            <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
+        <div class="relative w-full min-w-0 flex-1 sm:max-w-xs lg:max-w-sm">
+          <MagnifyingGlassIcon
+            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+            aria-hidden="true"
+          />
+          <input
+            v-model="search"
+            type="search"
+            class="min-h-[44px] w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-base text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 sm:min-h-0 sm:py-2 sm:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+            :placeholder="searchPlaceholder"
+          />
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div class="w-full min-w-0 overflow-x-auto overscroll-x-contain sm:w-auto sm:overflow-visible">
+          <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
             <button
               v-for="tab in tabs"
               :key="tab.id"
@@ -26,137 +47,235 @@
             >
               {{ t(tab.labelKey) }}
             </button>
-            </div>
-          </div>
-          <div class="flex w-full min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-            <input
-              v-model="search"
-              type="search"
-              class="min-h-[44px] w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 sm:min-w-[200px] sm:py-2 sm:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-              :placeholder="searchPlaceholder"
-            />
-            <button
-              v-if="activeTab === 'drivers'"
-              type="button"
-              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:py-2"
-              @click="openAssignModal(null)"
-            >
-              {{ t('resources.assign_driver') }}
-            </button>
-            <button
-              v-else-if="activeTab === 'vehicles' && canManageVehicles"
-              type="button"
-              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:py-2"
-              @click="openVehicleForm(null)"
-            >
-              {{ t('resources.add_vehicle') }}
-            </button>
-            <button
-              v-else-if="activeTab === 'suppliers' && canManageProviders"
-              type="button"
-              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:py-2"
-              @click="openProviderForm(null)"
-            >
-              {{ t('resources.add_supplier') }}
-            </button>
-            <button
-              v-else
-              type="button"
-              class="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:min-h-0 sm:py-2"
-              disabled
-            >
-              {{ addButtonLabel }}
-            </button>
           </div>
         </div>
+        <div class="flex w-full min-w-0 flex-1 flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+          <button
+            v-if="activeTab === 'drivers'"
+            type="button"
+            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
+            @click="openAssignModal(null)"
+          >
+            {{ t('resources.assign_driver') }}
+          </button>
+          <button
+            v-else-if="activeTab === 'vehicles' && canManageVehicles"
+            type="button"
+            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
+            @click="openVehicleForm(null)"
+          >
+            {{ t('resources.add_vehicle') }}
+          </button>
+          <button
+            v-else-if="activeTab === 'suppliers' && canManageProviders"
+            type="button"
+            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
+            @click="openProviderForm(null)"
+          >
+            {{ t('resources.add_supplier') }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:min-h-0 sm:w-auto sm:py-2"
+            disabled
+          >
+            {{ addButtonLabel }}
+          </button>
+        </div>
       </div>
+    </div>
 
-      <!-- Filters -->
-      <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-          {{ t('resources.filter_status') }}
-          <select
-            v-model="filters.status"
-            class="mt-1 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+    <!-- Filters (aligned with requests list style) -->
+    <div
+      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
+    >
+      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <details ref="resourceFilterMenuRef" class="group relative">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
           >
-            <option value="">{{ t('resources.filter_all') }}</option>
-            <option value="active">{{ t('resources.status_active') }}</option>
-            <option value="maintenance">{{ t('resources.status_maintenance') }}</option>
-            <option value="inactive">{{ t('resources.status_inactive') }}</option>
-          </select>
-        </label>
-        <label v-if="activeTab === 'vehicles'" class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-          {{ t('resources.filter_type') }}
-          <select
-            v-model="filters.type"
-            class="mt-1 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+              <span
+                v-if="activeResourceFilterCount > 0"
+                class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
+              >
+                {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
+              </span>
+            </span>
+            <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
           >
-            <option value="">{{ t('resources.filter_all') }}</option>
-            <option value="van">{{ t('resources.type_van') }}</option>
-            <option value="truck">{{ t('resources.type_truck') }}</option>
-            <option value="bus">{{ t('resources.type_bus') }}</option>
-          </select>
-        </label>
-        <label v-if="activeTab === 'vehicles'" class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-          {{ t('resources.filter_compliance') }}
-          <select
-            v-model="filters.compliance"
-            class="mt-1 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.filter_menu_title') }}</p>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+              <li v-if="filters.status" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_status') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterStatusLabel }}</span>
+              </li>
+              <li v-if="activeTab === 'vehicles' && filters.type" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_type') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterTypeLabel }}</span>
+              </li>
+              <li v-if="activeTab === 'vehicles' && filters.compliance" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_compliance') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterComplianceLabel }}</span>
+              </li>
+              <li v-if="activeTab === 'suppliers' && filters.contract" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_contract') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterContractLabel }}</span>
+              </li>
+              <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
+            </ul>
+            <button
+              type="button"
+              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              @click="resetResourceFilters(); closeResourceFilterMenu()"
+            >
+              {{ t('resources.filter_clear_all') }}
+            </button>
+          </div>
+        </details>
+
+        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
+
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3">
+          <div class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
+            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('resources.filter_status') }}
+            </span>
+            <select
+              v-model="filters.status"
+              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+            >
+              <option value="">{{ t('resources.filter_all') }}</option>
+              <option value="active">{{ t('resources.status_active') }}</option>
+              <option value="maintenance">{{ t('resources.status_maintenance') }}</option>
+              <option value="inactive">{{ t('resources.status_inactive') }}</option>
+            </select>
+          </div>
+          <div v-if="activeTab === 'vehicles'" class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
+            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('resources.filter_type') }}
+            </span>
+            <select
+              v-model="filters.type"
+              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+            >
+              <option value="">{{ t('resources.filter_all') }}</option>
+              <option value="van">{{ t('resources.type_van') }}</option>
+              <option value="truck">{{ t('resources.type_truck') }}</option>
+              <option value="bus">{{ t('resources.type_bus') }}</option>
+            </select>
+          </div>
+          <div v-if="activeTab === 'vehicles'" class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
+            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('resources.filter_compliance') }}
+            </span>
+            <select
+              v-model="filters.compliance"
+              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+            >
+              <option value="">{{ t('resources.filter_all') }}</option>
+              <option value="ok">{{ t('resources.compliance_ok') }}</option>
+              <option value="soon">{{ t('resources.compliance_soon') }}</option>
+              <option value="exp">{{ t('resources.compliance_exp') }}</option>
+            </select>
+          </div>
+          <div v-if="activeTab === 'suppliers'" class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
+            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('resources.filter_contract') }}
+            </span>
+            <select
+              v-model="filters.contract"
+              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+            >
+              <option value="">{{ t('resources.filter_all') }}</option>
+              <option value="ok">{{ t('resources.compliance_ok') }}</option>
+              <option value="soon">{{ t('resources.compliance_soon') }}</option>
+              <option value="exp">{{ t('resources.compliance_exp') }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            :title="t('resources.filter_clear')"
+            @click="resetResourceFilters"
           >
-            <option value="">{{ t('resources.filter_all') }}</option>
-            <option value="ok">{{ t('resources.compliance_ok') }}</option>
-            <option value="soon">{{ t('resources.compliance_soon') }}</option>
-            <option value="exp">{{ t('resources.compliance_exp') }}</option>
-          </select>
-        </label>
-        <label v-if="activeTab === 'suppliers'" class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-          {{ t('resources.filter_contract') }}
-          <select
-            v-model="filters.contract"
-            class="mt-1 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-          >
-            <option value="">{{ t('resources.filter_all') }}</option>
-            <option value="ok">{{ t('resources.compliance_ok') }}</option>
-            <option value="soon">{{ t('resources.compliance_soon') }}</option>
-            <option value="exp">{{ t('resources.compliance_exp') }}</option>
-          </select>
-        </label>
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
+            </span>
+          </button>
+        </div>
       </div>
     </div>
 
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">{{ t('resources.loading') }}</div>
     <div v-else-if="error" class="px-4 py-12 text-center text-sm text-rose-600">{{ error }}</div>
 
-    <div v-else class="relative flex min-h-[280px] flex-col lg:min-h-[420px] lg:flex-row">
+    <div v-else class="relative flex min-h-[280px] flex-col xl:min-h-[420px] xl:flex-row">
       <!-- Table -->
-      <div class="min-w-0 flex-1 overflow-x-auto p-2 sm:p-4">
-        <!-- Xe: thẻ (mobile) -->
-        <div v-if="activeTab === 'vehicles'" class="space-y-2 md:hidden">
+      <div class="min-w-0 flex-1 overflow-x-auto p-2 sm:p-4 md:p-5">
+        <!-- Xe: thẻ (mobile / tablet) -->
+        <div v-if="activeTab === 'vehicles'" class="space-y-3 lg:hidden">
           <button
             v-for="v in filteredVehicles"
             :key="v.id"
             type="button"
-            class="flex w-full items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition active:bg-teal-50/60 dark:border-slate-700 dark:bg-slate-900/50 dark:active:bg-slate-800"
-            :class="selectedVehicle?.id === v.id ? 'ring-2 ring-teal-500/80' : ''"
+            class="group relative flex w-full items-stretch gap-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-sm ring-1 ring-slate-900/5 transition active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/40 dark:ring-slate-900/40"
+            :class="
+              selectedVehicle?.id === v.id
+                ? 'border-teal-300 ring-2 ring-teal-500/40 dark:border-teal-700'
+                : 'hover:border-slate-300 hover:shadow-md dark:hover:border-slate-600'
+            "
             @click="selectVehicle(v)"
           >
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
-              <component :is="vehicleIconComponent(v.iconKind)" class="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
-              <div class="text-xs text-slate-500">{{ v.model }} · {{ v.typeLabel }}</div>
-              <div class="mt-1.5 flex flex-wrap gap-1">
-                <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
-                <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
+            <span
+              class="w-1 shrink-0 rounded-l-2xl bg-gradient-to-b from-teal-500 to-teal-600"
+              :class="selectedVehicle?.id === v.id ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'"
+              aria-hidden="true"
+            />
+            <div class="flex min-w-0 flex-1 items-start gap-3 p-3.5 pl-3 sm:p-4">
+              <div
+                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-50 to-teal-100/80 text-teal-700 shadow-inner dark:from-teal-950/60 dark:to-teal-900/40 dark:text-teal-400"
+              >
+                <component :is="vehicleIconComponent(v.iconKind)" class="h-6 w-6" aria-hidden="true" />
               </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <div class="font-semibold tracking-tight text-slate-900 dark:text-white">{{ v.code }}</div>
+                    <div class="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500 dark:text-slate-400">
+                      {{ v.model }} · {{ v.typeLabel }}
+                    </div>
+                  </div>
+                  <span :class="statusBadgeClass(v.status)">{{ labelVehicleStatus(v.status) }}</span>
+                </div>
+                <div class="mt-2.5 flex flex-wrap gap-1.5">
+                  <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
+                  <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
+                </div>
+                <div v-if="v.driverName" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span class="font-medium text-slate-600 dark:text-slate-300">{{ t('resources.col_driver') }}:</span>
+                  {{ v.driverName }}
+                </div>
+              </div>
+              <ChevronRightIcon
+                class="h-5 w-5 shrink-0 self-center text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-teal-600 dark:text-slate-600 dark:group-hover:text-teal-400"
+                aria-hidden="true"
+              />
             </div>
-            <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
           </button>
         </div>
         <div
           v-if="activeTab === 'vehicles'"
-          class="hidden overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50 md:block"
+          class="hidden overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50 lg:block"
         >
           <table class="w-full min-w-[780px] border-separate border-spacing-0 text-left text-sm">
             <thead>
@@ -319,31 +438,31 @@
       >
         <aside
           v-if="activeTab === 'vehicles' && selectedVehicle"
-          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 lg:static lg:z-auto lg:inset-auto lg:flex lg:w-[min(100%,420px)] lg:max-w-none lg:shrink-0 lg:bg-transparent lg:p-0 lg:pt-0 lg:pb-0 lg:backdrop-blur-0"
+          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:max-w-none xl:shrink-0 xl:bg-transparent xl:p-0 xl:pt-0 xl:pb-0 xl:backdrop-blur-0"
           @click.self="closePanel"
         >
           <div
-            class="flex h-full max-h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-600 dark:bg-slate-900 lg:max-h-none lg:max-w-none lg:rounded-none lg:border-l lg:border-y-0 lg:border-r-0"
+            class="flex h-full max-h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40 xl:max-h-none xl:max-w-none xl:rounded-none xl:border-l xl:border-y-0 xl:border-r-0 xl:shadow-none xl:ring-0"
             @click.stop
           >
-            <div class="border-b border-slate-200 p-4 dark:border-slate-700">
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-center gap-3">
+            <div class="sticky top-0 z-10 border-b border-slate-200 bg-white/95 p-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-3">
                   <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
                     <component :is="vehicleIconComponent(selectedVehicle.iconKind)" class="h-7 w-7" aria-hidden="true" />
                   </div>
-                  <div>
-                    <div class="text-lg font-semibold text-slate-900 dark:text-white">{{ selectedVehicle.code }}</div>
-                    <div class="text-sm text-slate-600 dark:text-slate-400">{{ selectedVehicle.model }}</div>
+                  <div class="min-w-0">
+                    <div class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">{{ selectedVehicle.code }}</div>
+                    <div class="line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{{ selectedVehicle.model }}</div>
                   </div>
                 </div>
                 <button
                   type="button"
-                  class="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:hidden dark:hover:bg-slate-800 dark:hover:text-white"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:hover:text-white"
                   :aria-label="t('resources.close_panel')"
                   @click="closePanel"
                 >
-                  <span class="text-xl leading-none">×</span>
+                  <XMarkIcon class="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
               <div class="mt-3 flex flex-wrap gap-2">
@@ -352,7 +471,7 @@
                 </span>
                 <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-700 dark:bg-slate-700 dark:text-slate-300">{{ selectedVehicle.capacityLabel }}</span>
               </div>
-              <div class="mt-4 grid grid-cols-2 gap-2">
+              <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <button
                   v-if="canManageVehicles"
                   type="button"
@@ -370,12 +489,22 @@
                   {{ t('resources.action_edit') }}
                 </button>
                 <button
+                  v-if="canManageVehicles"
                   type="button"
-                  class="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                  disabled
+                  class="rounded-lg border border-amber-200 bg-amber-50 py-2.5 text-sm font-medium text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-800/80 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-950/60"
+                  :disabled="vehicleDeactivating || selectedVehicle.apiStatus === 'broken'"
+                  @click="confirmDeactivateVehicle"
                 >
-                  <span class="text-rose-600 dark:text-rose-400">⏻</span>
-                  {{ t('resources.action_deactivate') }}
+                  {{ vehicleDeactivating ? t('resources.loading') : t('resources.action_deactivate') }}
+                </button>
+                <button
+                  v-if="canManageVehicles"
+                  type="button"
+                  class="rounded-lg border border-rose-200 bg-white py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900/60 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                  :disabled="vehicleDeleting"
+                  @click="confirmDeleteVehicle"
+                >
+                  {{ vehicleDeleting ? t('resources.loading') : t('resources.action_delete_vehicle') }}
                 </button>
               </div>
             </div>
@@ -402,6 +531,83 @@
                 >
                   {{ selectedVehicle.defaultDriver ? t('resources.assign_driver_change') : t('resources.assign_driver') }}
                 </button>
+              </div>
+
+              <div v-if="vehicleSheetDetailVisible(selectedVehicle)" class="mt-6">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('resources.section_vehicle_sheet') }}
+                </div>
+                <dl class="mt-2 space-y-2 rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-800/40">
+                  <template v-if="selectedVehicle.owner_name">
+                    <div>
+                      <dt class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_owner') }}</dt>
+                      <dd class="text-slate-900 dark:text-slate-100">{{ selectedVehicle.owner_name }}</dd>
+                    </div>
+                  </template>
+                  <template v-if="selectedVehicle.frame_engine_number">
+                    <div>
+                      <dt class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_frame_engine') }}</dt>
+                      <dd class="whitespace-pre-wrap text-slate-800 dark:text-slate-200">{{ selectedVehicle.frame_engine_number }}</dd>
+                    </div>
+                  </template>
+                  <div v-if="selectedVehicle.year_manufactured || selectedVehicle.purchased_at || selectedVehicle.usage_expires_year" class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                    <span v-if="selectedVehicle.year_manufactured" class="text-slate-700 dark:text-slate-300">
+                      {{ t('resources.vehicle_form_year_mfg') }}: {{ selectedVehicle.year_manufactured }}
+                    </span>
+                    <span v-if="selectedVehicle.purchased_at" class="text-slate-700 dark:text-slate-300">
+                      {{ t('resources.vehicle_form_purchased') }}: {{ selectedVehicle.purchased_at }}
+                    </span>
+                    <span v-if="selectedVehicle.usage_expires_year" class="text-slate-700 dark:text-slate-300">
+                      {{ t('resources.vehicle_form_usage_until_year') }}: {{ selectedVehicle.usage_expires_year }}
+                    </span>
+                  </div>
+                  <template v-if="selectedVehicle.insurance_provider">
+                    <div>
+                      <dt class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_insurance_provider') }}</dt>
+                      <dd class="text-slate-900 dark:text-slate-100">{{ selectedVehicle.insurance_provider }}</dd>
+                    </div>
+                  </template>
+                  <template v-if="selectedVehicle.insurance_policy_note">
+                    <div>
+                      <dt class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_insurance_policy_note') }}</dt>
+                      <dd class="whitespace-pre-wrap text-xs text-slate-700 dark:text-slate-300">{{ selectedVehicle.insurance_policy_note }}</dd>
+                    </div>
+                  </template>
+                  <template v-if="selectedVehicle.road_fee_expires_at">
+                    <div>
+                      <dt class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_road_fee') }}</dt>
+                      <dd class="flex flex-wrap items-center gap-2">
+                        <span class="text-slate-900 dark:text-slate-100">{{ selectedVehicle.road_fee_expires_at }}</span>
+                        <span :class="compliancePillClass(selectedVehicle.road_fee)">{{ insuranceHint(selectedVehicle.road_fee) }}</span>
+                      </dd>
+                    </div>
+                  </template>
+                  <template v-if="selectedVehicle.registration_cycle_note">
+                    <div>
+                      <dt class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_reg_cycle') }}</dt>
+                      <dd class="text-slate-800 dark:text-slate-200">{{ selectedVehicle.registration_cycle_note }}</dd>
+                    </div>
+                  </template>
+                  <div v-if="selectedVehicle.last_maintenance_at || selectedVehicle.maintenance_schedule_note" class="space-y-1">
+                    <div v-if="selectedVehicle.last_maintenance_at" class="text-xs text-slate-700 dark:text-slate-300">
+                      {{ t('resources.vehicle_form_last_maint') }}: {{ selectedVehicle.last_maintenance_at }}
+                    </div>
+                    <div v-if="selectedVehicle.maintenance_schedule_note" class="text-xs text-slate-600 dark:text-slate-400">
+                      {{ selectedVehicle.maintenance_schedule_note }}
+                    </div>
+                  </div>
+                  <div v-if="selectedVehicle.caretaker_name || selectedVehicle.caretaker_phone" class="text-sm">
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_caretaker') }}: </span>
+                    <span class="font-medium text-slate-900 dark:text-slate-100">{{ selectedVehicle.caretaker_name || '—' }}</span>
+                    <span v-if="selectedVehicle.caretaker_phone" class="text-slate-600 dark:text-slate-400"> · {{ selectedVehicle.caretaker_phone }}</span>
+                  </div>
+                  <template v-if="selectedVehicle.notes">
+                    <div>
+                      <dt class="text-[11px] text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_form_notes') }}</dt>
+                      <dd class="whitespace-pre-wrap text-xs text-slate-700 dark:text-slate-300">{{ selectedVehicle.notes }}</dd>
+                    </div>
+                  </template>
+                </dl>
               </div>
 
               <div class="mt-6 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_compliance') }}</div>
@@ -527,31 +733,31 @@
       >
         <aside
           v-if="activeTab === 'suppliers' && selectedSupplier"
-          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-3 backdrop-blur-sm lg:static lg:z-auto lg:inset-auto lg:flex lg:w-[420px] lg:shrink-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-0"
+          class="fixed inset-0 z-50 flex justify-end bg-black/40 p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:p-3 xl:static xl:z-auto xl:inset-auto xl:flex xl:w-[min(100%,440px)] xl:shrink-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-0"
           @click.self="closePanel"
         >
           <div
-            class="flex h-full w-full max-w-md flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-600 dark:bg-slate-900 lg:max-w-none lg:rounded-none lg:border-l lg:border-y-0 lg:border-r-0"
+            class="flex h-full max-h-[100dvh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40 xl:max-h-none xl:max-w-none xl:rounded-none xl:border-l xl:border-y-0 xl:border-r-0 xl:shadow-none xl:ring-0"
             @click.stop
           >
-            <div class="border-b border-slate-200 p-4 dark:border-slate-700">
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-center gap-3">
+            <div class="sticky top-0 z-10 border-b border-slate-200 bg-white/95 p-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-3">
                   <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
                     <BuildingOffice2Icon class="h-7 w-7" aria-hidden="true" />
                   </div>
-                  <div>
-                    <div class="text-lg font-semibold text-slate-900 dark:text-white">{{ selectedSupplier.name }}</div>
+                  <div class="min-w-0">
+                    <div class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">{{ selectedSupplier.name }}</div>
                     <div class="text-sm text-slate-600 dark:text-slate-400">{{ selectedSupplier.typeLabel }}</div>
                   </div>
                 </div>
                 <button
                   type="button"
-                  class="rounded-lg p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:hidden dark:hover:bg-slate-800 dark:hover:text-white"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:hover:text-white"
                   :aria-label="t('resources.close_panel')"
                   @click="closePanel"
                 >
-                  <span class="text-xl leading-none">×</span>
+                  <XMarkIcon class="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
               <div class="mt-3 flex flex-wrap gap-2">
@@ -708,6 +914,73 @@
                 <input v-model="vehicleForm.insurance_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
               </label>
             </div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+              {{ t('resources.vehicle_form_road_fee') }}
+              <input v-model="vehicleForm.road_fee_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            </label>
+            <details class="rounded-lg border border-slate-200 dark:border-slate-600">
+              <summary class="cursor-pointer px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+                {{ t('resources.vehicle_form_details_toggle') }}
+              </summary>
+              <div class="space-y-3 border-t border-slate-200 p-3 dark:border-slate-600">
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_owner') }}
+                  <input v-model="vehicleForm.owner_name" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_frame_engine') }}
+                  <textarea v-model="vehicleForm.frame_engine_number" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+                <div class="grid gap-3 sm:grid-cols-3">
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    {{ t('resources.vehicle_form_year_mfg') }}
+                    <input v-model="vehicleForm.year_manufactured" type="number" min="1900" max="2100" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    {{ t('resources.vehicle_form_purchased') }}
+                    <input v-model="vehicleForm.purchased_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    {{ t('resources.vehicle_form_usage_until_year') }}
+                    <input v-model="vehicleForm.usage_expires_year" type="number" min="1900" max="2100" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                  </label>
+                </div>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_insurance_provider') }}
+                  <input v-model="vehicleForm.insurance_provider" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_insurance_policy_note') }}
+                  <textarea v-model="vehicleForm.insurance_policy_note" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_reg_cycle') }}
+                  <input v-model="vehicleForm.registration_cycle_note" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_last_maint') }}
+                  <input v-model="vehicleForm.last_maintenance_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_maint_note') }}
+                  <textarea v-model="vehicleForm.maintenance_schedule_note" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    {{ t('resources.vehicle_form_caretaker') }}
+                    <input v-model="vehicleForm.caretaker_name" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                  </label>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    {{ t('resources.vehicle_form_caretaker_phone') }}
+                    <input v-model="vehicleForm.caretaker_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                  </label>
+                </div>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_form_notes') }}
+                  <textarea v-model="vehicleForm.notes" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+                </label>
+              </div>
+            </details>
             <p v-if="vehicleFormError" class="text-xs text-rose-600">{{ vehicleFormError }}</p>
             <div class="flex gap-2 pt-2">
               <button
@@ -1014,12 +1287,20 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { BuildingOffice2Icon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+import {
+  BuildingOffice2Icon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+} from '@heroicons/vue/24/outline'
 import {
   createDriverFromUser,
   createTransportProvider,
   createVehicle,
   createVehicleComplianceDocument,
+  deleteVehicle,
   deleteVehicleComplianceDocument,
   listDrivers,
   listTransportProviders,
@@ -1062,6 +1343,70 @@ const filters = ref({
   contract: '',
 })
 
+const activeResourceFilterCount = computed(() => {
+  let n = 0
+  if (filters.value.status) n++
+  if (activeTab.value === 'vehicles') {
+    if (filters.value.type) n++
+    if (filters.value.compliance) n++
+  }
+  if (activeTab.value === 'suppliers' && filters.value.contract) n++
+  return n
+})
+
+const resourceFilterStatusLabel = computed(() => {
+  const f = filters.value.status
+  if (!f) return t('resources.filter_all')
+  const map = {
+    active: t('resources.status_active'),
+    maintenance: t('resources.status_maintenance'),
+    inactive: t('resources.status_inactive'),
+  }
+  return map[f] ?? f
+})
+
+const resourceFilterTypeLabel = computed(() => {
+  const f = filters.value.type
+  if (!f) return t('resources.filter_all')
+  const map = {
+    van: t('resources.type_van'),
+    truck: t('resources.type_truck'),
+    bus: t('resources.type_bus'),
+  }
+  return map[f] ?? f
+})
+
+const resourceFilterComplianceLabel = computed(() => {
+  const f = filters.value.compliance
+  if (!f) return t('resources.filter_all')
+  const map = {
+    ok: t('resources.compliance_ok'),
+    soon: t('resources.compliance_soon'),
+    exp: t('resources.compliance_exp'),
+  }
+  return map[f] ?? f
+})
+
+const resourceFilterContractLabel = computed(() => {
+  const f = filters.value.contract
+  if (!f) return t('resources.filter_all')
+  const map = {
+    ok: t('resources.compliance_ok'),
+    soon: t('resources.compliance_soon'),
+    exp: t('resources.compliance_exp'),
+  }
+  return map[f] ?? f
+})
+
+function resetResourceFilters() {
+  filters.value = { status: '', type: '', compliance: '', contract: '' }
+}
+
+function closeResourceFilterMenu() {
+  const el = resourceFilterMenuRef.value
+  if (el && 'open' in el) el.open = false
+}
+
 const assignModalOpen = ref(false)
 const assignVehicleId = ref(null)
 const userSearchQuery = ref('')
@@ -1074,19 +1419,36 @@ let userSearchTimer = null
 
 const vehicleModalOpen = ref(false)
 const vehicleSaving = ref(false)
+const vehicleDeleting = ref(false)
+const vehicleDeactivating = ref(false)
 const vehicleFormError = ref('')
+const resourceFilterMenuRef = ref(null)
 
 function emptyVehicleForm() {
   return {
     id: null,
     license_plate: '',
+    owner_name: '',
+    frame_engine_number: '',
     type: '',
+    year_manufactured: '',
+    purchased_at: '',
+    usage_expires_year: '',
     seat_count: '',
     payload_kg: '',
+    insurance_provider: '',
+    insurance_policy_note: '',
     status: 'ready',
     odometer_km: 0,
     inspection_expires_at: '',
     insurance_expires_at: '',
+    road_fee_expires_at: '',
+    registration_cycle_note: '',
+    last_maintenance_at: '',
+    maintenance_schedule_note: '',
+    caretaker_name: '',
+    caretaker_phone: '',
+    notes: '',
   }
 }
 
@@ -1218,8 +1580,15 @@ function enrichVehicle(raw) {
     id: raw.id,
     code: raw.license_plate,
     license_plate: raw.license_plate,
+    owner_name: raw.owner_name ?? '',
+    frame_engine_number: raw.frame_engine_number ?? '',
     model: raw.type || '—',
     type: raw.type ?? '',
+    year_manufactured: raw.year_manufactured ?? null,
+    purchased_at: raw.purchased_at ?? '',
+    usage_expires_year: raw.usage_expires_year ?? null,
+    insurance_provider: raw.insurance_provider ?? '',
+    insurance_policy_note: raw.insurance_policy_note ?? '',
     typeLabel,
     capacityLabel,
     iconKind: vehicleIconKind(raw),
@@ -1230,8 +1599,16 @@ function enrichVehicle(raw) {
     status: vehicleUiStatus(raw.status),
     insurance: docStateFromDate(raw.insurance_expires_at),
     inspection: docStateFromDate(raw.inspection_expires_at),
+    road_fee: docStateFromDate(raw.road_fee_expires_at),
     inspection_expires_at: raw.inspection_expires_at,
     insurance_expires_at: raw.insurance_expires_at,
+    road_fee_expires_at: raw.road_fee_expires_at,
+    registration_cycle_note: raw.registration_cycle_note ?? '',
+    last_maintenance_at: raw.last_maintenance_at ?? '',
+    maintenance_schedule_note: raw.maintenance_schedule_note ?? '',
+    caretaker_name: raw.caretaker_name ?? '',
+    caretaker_phone: raw.caretaker_phone ?? '',
+    notes: raw.notes ?? '',
     defaultDriver: dd,
     driverName,
     assignments: [],
@@ -1436,7 +1813,8 @@ const filteredVehicles = computed(() => {
     if (filters.value.type && v.iconKind !== filters.value.type) return false
     if (!matchesCompliance(v)) return false
     if (!q) return true
-    const hay = `${v.code} ${v.model} ${v.driverName ?? ''}`.toLowerCase()
+    const hay = `${v.code} ${v.model} ${v.driverName ?? ''} ${v.owner_name ?? ''} ${v.caretaker_name ?? ''} ${v.notes ?? ''} ${v.caretaker_phone ?? ''}`
+      .toLowerCase()
     return hay.includes(q)
   })
 })
@@ -1748,13 +2126,27 @@ function openVehicleForm(v) {
     vehicleForm.value = {
       id: v.id,
       license_plate: v.license_plate,
+      owner_name: v.owner_name || '',
+      frame_engine_number: v.frame_engine_number || '',
       type: v.type || '',
+      year_manufactured: v.year_manufactured ?? '',
+      purchased_at: v.purchased_at || '',
+      usage_expires_year: v.usage_expires_year ?? '',
       seat_count: v.seat_count ?? '',
       payload_kg: v.payload_kg ?? '',
+      insurance_provider: v.insurance_provider || '',
+      insurance_policy_note: v.insurance_policy_note || '',
       status: v.apiStatus,
       odometer_km: v.odometer_km ?? 0,
       inspection_expires_at: v.inspection_expires_at || '',
       insurance_expires_at: v.insurance_expires_at || '',
+      road_fee_expires_at: v.road_fee_expires_at || '',
+      registration_cycle_note: v.registration_cycle_note || '',
+      last_maintenance_at: v.last_maintenance_at || '',
+      maintenance_schedule_note: v.maintenance_schedule_note || '',
+      caretaker_name: v.caretaker_name || '',
+      caretaker_phone: v.caretaker_phone || '',
+      notes: v.notes || '',
     }
   } else {
     vehicleForm.value = emptyVehicleForm()
@@ -1768,6 +2160,70 @@ function numOrNull(v) {
   return Number.isFinite(n) ? n : null
 }
 
+function intOrNull(v) {
+  if (v === '' || v === null || v === undefined) return null
+  const n = parseInt(String(v), 10)
+  return Number.isFinite(n) ? n : null
+}
+
+function strOrNull(v) {
+  const s = String(v ?? '').trim()
+  return s ? s : null
+}
+
+function vehicleSheetDetailVisible(v) {
+  if (!v) return false
+  return Boolean(
+    v.owner_name ||
+      v.frame_engine_number ||
+      v.year_manufactured ||
+      v.purchased_at ||
+      v.usage_expires_year ||
+      v.insurance_provider ||
+      v.insurance_policy_note ||
+      v.road_fee_expires_at ||
+      v.registration_cycle_note ||
+      v.last_maintenance_at ||
+      v.maintenance_schedule_note ||
+      v.caretaker_name ||
+      v.caretaker_phone ||
+      v.notes,
+  )
+}
+
+async function confirmDeactivateVehicle() {
+  if (!selectedVehicle.value || !canManageVehicles.value) return
+  if (selectedVehicle.value.apiStatus === 'broken') return
+  const plate = selectedVehicle.value.code
+  if (!window.confirm(t('resources.vehicle_deactivate_confirm', { plate }))) return
+  vehicleDeactivating.value = true
+  try {
+    await updateVehicle(selectedVehicle.value.id, { status: 'broken' })
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    vehicleDeactivating.value = false
+  }
+}
+
+async function confirmDeleteVehicle() {
+  if (!selectedVehicle.value || !canManageVehicles.value) return
+  const plate = selectedVehicle.value.code
+  if (!window.confirm(t('resources.vehicle_delete_confirm', { plate }))) return
+  vehicleDeleting.value = true
+  try {
+    const id = selectedVehicle.value.id
+    await deleteVehicle(id)
+    selectedVehicle.value = null
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    vehicleDeleting.value = false
+  }
+}
+
 async function submitVehicleForm() {
   vehicleSaving.value = true
   vehicleFormError.value = ''
@@ -1775,13 +2231,27 @@ async function submitVehicleForm() {
     const f = vehicleForm.value
     const payload = {
       license_plate: f.license_plate.trim(),
+      owner_name: strOrNull(f.owner_name),
+      frame_engine_number: strOrNull(f.frame_engine_number),
       type: f.type || null,
+      year_manufactured: intOrNull(f.year_manufactured),
+      purchased_at: f.purchased_at || null,
+      usage_expires_year: intOrNull(f.usage_expires_year),
       seat_count: numOrNull(f.seat_count),
       payload_kg: numOrNull(f.payload_kg),
+      insurance_provider: strOrNull(f.insurance_provider),
+      insurance_policy_note: strOrNull(f.insurance_policy_note),
       status: f.status,
       odometer_km: Number(f.odometer_km) || 0,
       inspection_expires_at: f.inspection_expires_at || null,
       insurance_expires_at: f.insurance_expires_at || null,
+      road_fee_expires_at: f.road_fee_expires_at || null,
+      registration_cycle_note: strOrNull(f.registration_cycle_note),
+      last_maintenance_at: f.last_maintenance_at || null,
+      maintenance_schedule_note: strOrNull(f.maintenance_schedule_note),
+      caretaker_name: strOrNull(f.caretaker_name),
+      caretaker_phone: strOrNull(f.caretaker_phone),
+      notes: strOrNull(f.notes),
     }
     if (f.id) {
       await updateVehicle(f.id, payload)

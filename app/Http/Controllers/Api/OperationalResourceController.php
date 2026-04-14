@@ -13,6 +13,7 @@ use App\Http\Requests\Api\Operational\StoreTransportProviderRequest;
 use App\Http\Requests\Api\Operational\StoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateDriverRequest;
 use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
+use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
 use App\Models\Driver;
 use App\Models\TransportProvider;
@@ -181,18 +182,39 @@ class OperationalResourceController extends Controller
         return $this->ok($this->serializeVehicle($vehicle));
     }
 
+    public function destroyVehicle(DeleteVehicleRequest $request, Vehicle $vehicle)
+    {
+        $vehicle->delete();
+
+        return $this->ok(['deleted' => true]);
+    }
+
     private function serializeVehicle(Vehicle $v): array
     {
         return [
             'id' => $v->id,
             'license_plate' => $v->license_plate,
+            'owner_name' => $v->owner_name,
+            'frame_engine_number' => $v->frame_engine_number,
             'type' => $v->type,
+            'year_manufactured' => $v->year_manufactured,
+            'purchased_at' => $v->purchased_at?->format('Y-m-d'),
+            'usage_expires_year' => $v->usage_expires_year,
             'seat_count' => $v->seat_count,
             'payload_kg' => $v->payload_kg,
+            'insurance_provider' => $v->insurance_provider,
+            'insurance_policy_note' => $v->insurance_policy_note,
             'status' => $v->status,
             'odometer_km' => $v->odometer_km,
             'inspection_expires_at' => $v->inspection_expires_at?->format('Y-m-d'),
             'insurance_expires_at' => $v->insurance_expires_at?->format('Y-m-d'),
+            'road_fee_expires_at' => $v->road_fee_expires_at?->format('Y-m-d'),
+            'registration_cycle_note' => $v->registration_cycle_note,
+            'last_maintenance_at' => $v->last_maintenance_at?->format('Y-m-d'),
+            'maintenance_schedule_note' => $v->maintenance_schedule_note,
+            'caretaker_name' => $v->caretaker_name,
+            'caretaker_phone' => $v->caretaker_phone,
+            'notes' => $v->notes,
             'default_driver' => $v->defaultDriver ? $this->serializeDriver($v->defaultDriver) : null,
         ];
     }

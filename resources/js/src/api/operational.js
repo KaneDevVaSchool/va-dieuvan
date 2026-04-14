@@ -115,6 +115,12 @@ export async function updateVehicle(vehicleId, payload) {
 }
 
 /** @param {number} vehicleId */
+export async function deleteVehicle(vehicleId) {
+  const { data } = await http.delete(`/vehicles/${vehicleId}`)
+  return data.data
+}
+
+/** @param {number} vehicleId */
 export async function listVehicleComplianceDocuments(vehicleId) {
   const { data } = await http.get(`/vehicles/${vehicleId}/compliance-documents`)
   return data.data
