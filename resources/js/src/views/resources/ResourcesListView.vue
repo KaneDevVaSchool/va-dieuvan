@@ -1567,7 +1567,7 @@
                 </div>
               </div>
 
-              <div v-if="canManageVehicles && vehiclesViewMode === 'active'" class="mt-4 border-t border-slate-200 pt-3 dark:border-slate-700">
+              <div v-if="canViewVehicleComplianceDocs && vehiclesViewMode === 'active'" class="mt-4 border-t border-slate-200 pt-3 dark:border-slate-700">
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="min-w-0 flex-1">
                     <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -1576,6 +1576,7 @@
                     <p class="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-400 sm:text-xs">{{ t('resources.vehicle_compliance_attachments_hint') }}</p>
                   </div>
                   <button
+                    v-if="canManageVehicles"
                     type="button"
                     class="shrink-0 rounded-lg bg-teal-600 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-teal-500 sm:px-3 sm:py-2 sm:text-xs"
                     @click="openVehicleDocModal(null)"
@@ -1616,14 +1617,14 @@
                               v-if="isPdfAttachment(a)"
                               type="button"
                               class="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                              @click="openPdfPreview(a)"
+                              @click.stop="openPdfPreview(a)"
                             >
                               {{ t('resources.attachment_pdf_preview') }}
                             </button>
                           </div>
                         </div>
                       </div>
-                      <div class="flex shrink-0 gap-2">
+                      <div v-if="canManageVehicles" class="flex shrink-0 gap-2">
                         <button type="button" class="text-teal-700 dark:text-teal-400" @click="openVehicleDocModal(doc)">{{ t('resources.action_edit') }}</button>
                         <button type="button" class="text-rose-600" @click="confirmDeleteVehicleDoc(doc)">{{ t('resources.delete') }}</button>
                       </div>
@@ -2617,11 +2618,11 @@
       </div>
     </Teleport>
 
-    <!-- Modal: xem trước PDF đính kèm giấy tờ xe -->
+    <!-- Modal: xem trước PDF đính kèm giấy tờ xe (blob URL tránh X-Frame-Options chặn nhúng) -->
     <Teleport to="body">
       <div
         v-if="pdfPreviewOpen"
-        class="fixed inset-0 z-[115] flex items-end justify-center bg-black/60 p-0 sm:p-4 sm:items-center"
+        class="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 p-0 sm:p-4 sm:items-center"
         role="dialog"
         aria-modal="true"
         aria-labelledby="pdf-preview-title"
@@ -2631,23 +2632,43 @@
           class="flex h-[100dvh] max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-[min(92vh,900px)] sm:max-h-[min(92vh,900px)] sm:rounded-2xl sm:ring-1 sm:ring-slate-700"
           @click.stop
         >
-          <div class="flex shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3 py-3 sm:px-4">
-            <h2 id="pdf-preview-title" class="min-w-0 truncate text-sm font-semibold text-white sm:text-base">{{ pdfPreviewTitle }}</h2>
-            <button
-              type="button"
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-600 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-              :aria-label="t('resources.close_panel')"
-              @click="closePdfPreview"
-            >
-              <XMarkIcon class="h-5 w-5" aria-hidden="true" />
-            </button>
+          <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-700 bg-slate-900 px-3 py-3 sm:gap-3 sm:px-4">
+            <h2 id="pdf-preview-title" class="min-w-0 flex-1 truncate text-sm font-semibold text-white sm:text-base">{{ pdfPreviewTitle }}</h2>
+            <div class="flex shrink-0 items-center gap-2">
+              <a
+                v-if="pdfPreviewDirectUrl"
+                :href="pdfPreviewDirectUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="rounded-lg border border-slate-600 px-2.5 py-1.5 text-xs font-medium text-teal-300 hover:bg-slate-800"
+              >
+                {{ t('resources.attachment_pdf_open_new_tab') }}
+              </a>
+              <button
+                type="button"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-600 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                :aria-label="t('resources.close_panel')"
+                @click="closePdfPreview"
+              >
+                <XMarkIcon class="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
           </div>
-          <iframe
-            v-if="pdfPreviewUrl"
-            :src="pdfPreviewUrl"
-            class="min-h-0 w-full flex-1 border-0 bg-slate-900"
-            :title="pdfPreviewTitle"
-          />
+            <p v-if="!pdfPreviewLoading && pdfPreviewUrl" class="shrink-0 border-b border-slate-800 bg-slate-900 px-3 py-1.5 text-[11px] text-slate-500 sm:px-4">
+              {{ t('resources.attachment_pdf_embed_hint') }}
+            </p>
+            <div class="relative min-h-0 flex-1 bg-slate-900">
+              <div v-if="pdfPreviewLoading" class="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/90 text-sm text-slate-300">
+                {{ t('resources.attachment_pdf_loading') }}
+              </div>
+              <iframe
+                v-if="!pdfPreviewLoading && pdfPreviewUrl"
+                :key="pdfPreviewUrl"
+                :src="pdfPreviewUrl"
+                class="h-full min-h-[50vh] w-full border-0 bg-slate-900"
+                :title="pdfPreviewTitle"
+              />
+            </div>
         </div>
       </div>
     </Teleport>
@@ -3010,6 +3031,10 @@ const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
+/** Xem danh sách giấy tờ / đính kèm (cùng quyền gần với xem danh sách xe) */
+const canViewVehicleComplianceDocs = computed(
+  () => auth.hasPermission('resource.vehicle.manage') || auth.hasPermission('trip.assign'),
+)
 const canManageDrivers = computed(() => auth.hasPermission('resource.driver.manage'))
 const canManageProviders = computed(() => auth.hasPermission('resource.provider.manage'))
 
@@ -3548,6 +3573,9 @@ const VEHICLE_DOC_TYPES = [
 const vehicleComplianceDocs = ref([])
 const pdfPreviewOpen = ref(false)
 const pdfPreviewUrl = ref('')
+const pdfPreviewDirectUrl = ref('')
+const pdfPreviewBlobUrl = ref(null)
+const pdfPreviewLoading = ref(false)
 const pdfPreviewTitle = ref('')
 const vehicleDocModalOpen = ref(false)
 const vehicleDocSaving = ref(false)
@@ -4126,10 +4154,10 @@ watch(activeTab, () => {
 })
 
 watch(
-  () => [selectedVehicle.value?.id, canManageVehicles.value],
-  async ([id, can]) => {
+  () => [selectedVehicle.value?.id, canViewVehicleComplianceDocs.value, vehiclesViewMode.value],
+  async ([id, can, mode]) => {
     vehicleComplianceDocs.value = []
-    if (!id || !can) return
+    if (!id || !can || mode !== 'active') return
     try {
       const res = await listVehicleComplianceDocuments(id)
       vehicleComplianceDocs.value = res.items || []
@@ -4143,6 +4171,11 @@ watch(
 function isPdfAttachment(a) {
   const mime = String(a?.mime_type || '').toLowerCase()
   if (mime.includes('pdf')) return true
+  if (mime === 'application/octet-stream' || mime === 'binary/octet-stream') {
+    const name = String(a?.original_name || '').toLowerCase()
+    const path = String(a?.url || '').split('?')[0].toLowerCase()
+    if (name.endsWith('.pdf') || path.endsWith('.pdf')) return true
+  }
   const name = String(a?.original_name || '').toLowerCase()
   if (name.endsWith('.pdf')) return true
   try {
@@ -4153,17 +4186,50 @@ function isPdfAttachment(a) {
   }
 }
 
-function openPdfPreview(a) {
+function resolveAttachmentAbsoluteUrl(a) {
+  const u = a?.url
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+  const path = u.startsWith('/') ? u : `/${u}`
+  return `${window.location.origin}${path}`
+}
+
+async function openPdfPreview(a) {
   if (!a?.url) return
-  pdfPreviewUrl.value = a.url
   pdfPreviewTitle.value = a.original_name || 'PDF'
   pdfPreviewOpen.value = true
+  pdfPreviewLoading.value = true
+  pdfPreviewUrl.value = ''
+  pdfPreviewDirectUrl.value = resolveAttachmentAbsoluteUrl(a)
+  if (pdfPreviewBlobUrl.value) {
+    URL.revokeObjectURL(pdfPreviewBlobUrl.value)
+    pdfPreviewBlobUrl.value = null
+  }
+  const resolved = pdfPreviewDirectUrl.value
+  try {
+    const res = await fetch(resolved, { credentials: 'same-origin', mode: 'same-origin' })
+    if (!res.ok) throw new Error('fetch failed')
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    pdfPreviewBlobUrl.value = blobUrl
+    pdfPreviewUrl.value = blobUrl
+  } catch {
+    pdfPreviewUrl.value = resolved
+  } finally {
+    pdfPreviewLoading.value = false
+  }
 }
 
 function closePdfPreview() {
   pdfPreviewOpen.value = false
   pdfPreviewUrl.value = ''
+  pdfPreviewDirectUrl.value = ''
   pdfPreviewTitle.value = ''
+  pdfPreviewLoading.value = false
+  if (pdfPreviewBlobUrl.value) {
+    URL.revokeObjectURL(pdfPreviewBlobUrl.value)
+    pdfPreviewBlobUrl.value = null
+  }
 }
 
 function vehicleDocTypeLabel(type) {

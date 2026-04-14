@@ -22,7 +22,7 @@ class VehicleComplianceDocumentController extends Controller
 
     public function index(Vehicle $vehicle)
     {
-        $this->authorizeVehicleManage();
+        $this->authorizeVehicleComplianceRead();
 
         $items = $vehicle->complianceDocuments()
             ->with(['attachments' => fn ($q) => $q->orderBy('id')])
@@ -159,6 +159,18 @@ class VehicleComplianceDocumentController extends Controller
         );
 
         return $this->ok(['deleted' => true]);
+    }
+
+    private function authorizeVehicleComplianceRead(): void
+    {
+        $user = request()->user();
+        if (! $user) {
+            abort(403);
+        }
+        if ($user->can('resource.vehicle.manage') || $user->can('trip.assign')) {
+            return;
+        }
+        abort(403);
     }
 
     private function authorizeVehicleManage(): void
