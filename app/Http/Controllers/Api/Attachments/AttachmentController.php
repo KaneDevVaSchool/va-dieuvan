@@ -105,17 +105,64 @@ class AttachmentController extends Controller
         $this->authorizeAttachmentDownload($request, $attachment);
 
         $disk = $attachment->disk ?: 'public';
-        $path = $attachment->path;
-        if (! $path) {
+        $rawPath = $attachment->path;
+        if ($rawPath === null || trim((string) $rawPath) === '') {
             abort(404, 'Bản ghi đính kèm không có đường dẫn tệp (path).');
         }
-        if (! Storage::disk($disk)->exists($path)) {
+
+        $resolved = $this->resolveStoragePathForDownload($disk, (string) $rawPath);
+        if (! $resolved) {
             abort(404, 'Không tìm thấy tệp trên máy chủ (storage). Kiểm tra `php artisan storage:link`, quyền thư mục, hoặc tải lại chứng từ.');
         }
+
+        [$path] = $resolved;
 
         $name = $attachment->original_name ?: basename($path);
 
         return Storage::disk($disk)->download($path, $name);
+    }
+
+    /**
+     * Chuẩn hóa path trong DB (đôi khi có tiền tố public/, storage/) và kiểm tra file thật trên disk.
+     *
+     * @return array{0: string, 1: string}|null [relativePath, absolutePath]
+     */
+    private function resolveStoragePathForDownload(string $disk, string $rawPath): ?array
+    {
+        foreach ($this->candidateStoragePaths($rawPath) as $rel) {
+            $abs = Storage::disk($disk)->path($rel);
+            if (is_file($abs)) {
+                return [$rel, $abs];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function candidateStoragePaths(string $rawPath): array
+    {
+        $p = trim($rawPath);
+        if ($p === '') {
+            return [];
+        }
+
+        $p = ltrim($p, '/\\');
+        $p = str_replace('\\', '/', $p);
+
+        $out = [$p];
+
+        if (str_starts_with($p, 'public/')) {
+            $out[] = substr($p, 7);
+        }
+
+        if (str_starts_with($p, 'storage/')) {
+            $out[] = substr($p, 8);
+        }
+
+        return array_values(array_unique(array_filter($out)));
     }
 
     /**

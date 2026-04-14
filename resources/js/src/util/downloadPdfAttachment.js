@@ -47,8 +47,10 @@ export async function normalizeAxiosBlobError(err) {
 export async function downloadPdfAttachmentFromApi(attachmentId, filename) {
   let res
   try {
+    // Mặc định axios dùng Accept: application/json — có thể gây lệch thương lượng nội dung; tải file cần */*
     res = await http.get(`/attachments/${attachmentId}/download`, {
       responseType: 'blob',
+      headers: { Accept: '*/*' },
     })
   } catch (e) {
     await normalizeAxiosBlobError(e)
@@ -68,9 +70,8 @@ export async function downloadPdfAttachmentFromApi(attachmentId, filename) {
     return { ok: false, reason: 'bad_json' }
   }
 
-  const byMagic = await blobLooksLikePdf(blob)
-  const isPdf = contentTypeLooksPdf(ct) || byMagic
-  if (!isPdf) {
+  // Endpoint đã xác thực Sanctum — tin tưởng binary (PDF thường là application/octet-stream).
+  if (blob.size === 0) {
     return { ok: false, reason: 'not_pdf' }
   }
 
