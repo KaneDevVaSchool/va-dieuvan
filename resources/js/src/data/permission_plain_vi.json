@@ -20,6 +20,7 @@
   "attachment.upload": "Được tải file đính kèm (ảnh, chứng từ…).",
   "report.view": "Xem các báo cáo tổng hợp.",
   "report.export": "Xuất báo cáo ra file (Excel/PDF tùy chức năng).",
+  "reference_pricing.manage": "Được chỉnh sửa bảng giá tham chiếu và xem lịch sử thay đổi từng bản ghi.",
   "resource.driver.manage": "Quản lý danh sách tài xế.",
   "resource.vehicle.manage": "Quản lý danh sách xe/phương tiện.",
   "resource.provider.manage": "Quản lý nhà xe/đối tác vận chuyển.",

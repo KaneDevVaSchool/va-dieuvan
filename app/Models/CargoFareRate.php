@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class CargoFareRate extends Model
 {
@@ -30,4 +31,10 @@ class CargoFareRate extends Model
         'loading_assist_per_point' => 'decimal:2',
         'waiting_fee_per_hour' => 'decimal:2',
     ];
+
+    /** @return MorphMany<ReferencePricingRevision, $this> */
+    public function referencePricingRevisions(): MorphMany
+    {
+        return $this->morphMany(ReferencePricingRevision::class, 'revisionable');
+    }
 }

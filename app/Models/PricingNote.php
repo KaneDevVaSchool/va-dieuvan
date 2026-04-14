@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PricingNote extends Model
 {
@@ -12,4 +13,10 @@ class PricingNote extends Model
         'title',
         'body',
     ];
+
+    /** @return MorphMany<ReferencePricingRevision, $this> */
+    public function referencePricingRevisions(): MorphMany
+    {
+        return $this->morphMany(ReferencePricingRevision::class, 'revisionable');
+    }
 }

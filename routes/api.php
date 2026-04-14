@@ -102,6 +102,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         Route::get('/reference-pricing', [ReferencePricingController::class, 'index'])->middleware('throttle:60,1');
+        Route::get('/reference-pricing/revisions', [ReferencePricingController::class, 'revisions'])
+            ->middleware(['permission:reference_pricing.manage', 'throttle:60,1']);
 
         Route::get('/nav/badges', NavBadgesController::class)->middleware('throttle:60,1');
 
@@ -124,6 +126,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Mutating endpoints: add activity logging + throttle (per user). Raised from 60→180/min so bulk ops on resources (vehicles/drivers) are less likely to hit 429.
     Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {
         Route::patch('/user', [UserProfileController::class, 'update']);
+
+        Route::patch('/reference-pricing/passenger-fares/{passengerFareRate}', [ReferencePricingController::class, 'updatePassengerFare'])
+            ->middleware('permission:reference_pricing.manage');
+        Route::patch('/reference-pricing/cargo-fares/{cargoFareRate}', [ReferencePricingController::class, 'updateCargoFare'])
+            ->middleware('permission:reference_pricing.manage');
+        Route::patch('/reference-pricing/notes/{pricingNote}', [ReferencePricingController::class, 'updatePricingNote'])
+            ->middleware('permission:reference_pricing.manage');
 
         // Requests / approvals
         Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)->group(function () {
