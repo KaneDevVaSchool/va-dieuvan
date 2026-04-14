@@ -11,6 +11,31 @@ class ListVehiclesRequest extends ApiFormRequest
         return $this->allowAnyOf(['resource.vehicle.manage', 'trip.assign']);
     }
 
+    /**
+     * Query strings send booleans as "true"/"false" strings; Laravel's boolean rule
+     * only accepts true/false/0/1/'0'/'1', so we normalize before validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('only_trashed')) {
+            return;
+        }
+
+        $raw = $this->input('only_trashed');
+        if ($raw === null || $raw === '') {
+            return;
+        }
+
+        if (is_bool($raw)) {
+            return;
+        }
+
+        $parsed = filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($parsed !== null) {
+            $this->merge(['only_trashed' => $parsed]);
+        }
+    }
+
     public function rules(): array
     {
         return [

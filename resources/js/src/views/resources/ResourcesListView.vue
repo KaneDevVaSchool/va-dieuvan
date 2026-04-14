@@ -15,210 +15,6 @@
             </span>
           </div>
           <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('resources.page_subtitle') }}</p>
-
-          <!-- Bộ lọc: thu gọn trong khu vực tiêu đề -->
-          <details
-            v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash')"
-            class="resources-filter-details mt-3 rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/40"
-          >
-            <summary
-              class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
-            >
-              <FunnelIcon class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-              <span>{{ t('resources.filter_panel_title') }}</span>
-              <span
-                v-if="activeResourceFilterCount > 0"
-                class="inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-teal-600 px-1.5 text-[10px] font-semibold leading-none text-white"
-              >
-                {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
-              </span>
-              <ChevronDownIcon
-                class="resources-filter-chevron ml-auto h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200"
-                aria-hidden="true"
-              />
-            </summary>
-            <div
-              class="mt-3 rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
-            >
-              <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-                <details ref="resourceFilterMenuRef" class="group relative">
-                  <summary
-                    class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
-                  >
-                    <span class="relative inline-flex">
-                      <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                      <span
-                        v-if="activeResourceFilterCount > 0"
-                        class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
-                      >
-                        {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
-                      </span>
-                    </span>
-                    <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
-                  </summary>
-                  <div
-                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-                  >
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.filter_menu_title') }}</p>
-                    <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                      <li v-if="filters.status" class="flex justify-between gap-2">
-                        <span class="text-slate-500">{{ t('resources.filter_status') }}</span>
-                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterStatusLabel }}</span>
-                      </li>
-                      <li v-if="activeTab === 'vehicles' && filters.type" class="flex justify-between gap-2">
-                        <span class="text-slate-500">{{ t('resources.filter_type') }}</span>
-                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterTypeLabel }}</span>
-                      </li>
-                      <li v-if="activeTab === 'vehicles' && filters.driver_default" class="flex justify-between gap-2">
-                        <span class="text-slate-500">{{ t('resources.filter_driver_default') }}</span>
-                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDriverDefaultLabel }}</span>
-                      </li>
-                      <li v-if="activeTab === 'vehicles' && filters.insurance" class="flex justify-between gap-2">
-                        <span class="text-slate-500">{{ t('resources.filter_insurance') }}</span>
-                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.insurance) }}</span>
-                      </li>
-                      <li v-if="activeTab === 'vehicles' && filters.inspection" class="flex justify-between gap-2">
-                        <span class="text-slate-500">{{ t('resources.filter_inspection') }}</span>
-                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.inspection) }}</span>
-                      </li>
-                      <li v-if="activeTab === 'vehicles' && filters.road_fee" class="flex justify-between gap-2">
-                        <span class="text-slate-500">{{ t('resources.filter_road_fee') }}</span>
-                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.road_fee) }}</span>
-                      </li>
-                      <li v-if="activeTab === 'suppliers' && filters.contract" class="flex justify-between gap-2">
-                        <span class="text-slate-500">{{ t('resources.filter_contract') }}</span>
-                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterContractLabel }}</span>
-                      </li>
-                      <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
-                    </ul>
-                    <button
-                      type="button"
-                      class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-                      @click="resetResourceFilters(); closeResourceFilterMenu()"
-                    >
-                      {{ t('resources.filter_clear_all') }}
-                    </button>
-                  </div>
-                </details>
-
-                <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
-
-                <div class="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  <div class="flex min-w-0 flex-col gap-0.5">
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {{ t('resources.filter_status') }}
-                    </span>
-                    <select
-                      v-model="filters.status"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-                    >
-                      <option value="">{{ t('resources.filter_all') }}</option>
-                      <option value="active">{{ t('resources.status_active') }}</option>
-                      <option value="maintenance">{{ t('resources.status_maintenance') }}</option>
-                      <option value="inactive">{{ t('resources.status_inactive') }}</option>
-                    </select>
-                  </div>
-                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {{ t('resources.filter_type') }}
-                    </span>
-                    <select
-                      v-model="filters.type"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-                    >
-                      <option value="">{{ t('resources.filter_all') }}</option>
-                      <option value="van">{{ t('resources.type_van') }}</option>
-                      <option value="truck">{{ t('resources.type_truck') }}</option>
-                      <option value="bus">{{ t('resources.type_bus') }}</option>
-                    </select>
-                  </div>
-                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {{ t('resources.filter_driver_default') }}
-                    </span>
-                    <select
-                      v-model="filters.driver_default"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-                    >
-                      <option value="">{{ t('resources.filter_all') }}</option>
-                      <option value="assigned">{{ t('resources.filter_driver_assigned') }}</option>
-                      <option value="unassigned">{{ t('resources.filter_driver_unassigned') }}</option>
-                    </select>
-                  </div>
-                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {{ t('resources.filter_insurance') }}
-                    </span>
-                    <select
-                      v-model="filters.insurance"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-                    >
-                      <option value="">{{ t('resources.filter_all') }}</option>
-                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
-                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
-                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
-                    </select>
-                  </div>
-                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {{ t('resources.filter_inspection') }}
-                    </span>
-                    <select
-                      v-model="filters.inspection"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-                    >
-                      <option value="">{{ t('resources.filter_all') }}</option>
-                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
-                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
-                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
-                    </select>
-                  </div>
-                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {{ t('resources.filter_road_fee') }}
-                    </span>
-                    <select
-                      v-model="filters.road_fee"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-                    >
-                      <option value="">{{ t('resources.filter_all') }}</option>
-                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
-                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
-                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
-                    </select>
-                  </div>
-                  <div v-if="activeTab === 'suppliers'" class="flex min-w-0 flex-col gap-0.5">
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {{ t('resources.filter_contract') }}
-                    </span>
-                    <select
-                      v-model="filters.contract"
-                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-                    >
-                      <option value="">{{ t('resources.filter_all') }}</option>
-                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
-                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
-                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="flex w-full shrink-0 items-center justify-end gap-1 sm:ml-auto sm:w-auto sm:justify-start">
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                    :title="t('resources.filter_clear')"
-                    @click="resetResourceFilters"
-                  >
-                    <span class="relative inline-flex">
-                      <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-                      <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </details>
         </div>
         <div class="relative w-full min-w-0 flex-1 sm:max-w-xs lg:max-w-sm">
           <MagnifyingGlassIcon
@@ -318,6 +114,277 @@
             {{ t('resources.vehicles_view_trash') }}
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Filters: horizontal bar (same pattern as Requests) -->
+    <div
+      v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash')"
+      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
+    >
+      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <details ref="resourceFilterMenuRef" class="group relative">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+              <span
+                v-if="activeResourceFilterCount > 0"
+                class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
+              >
+                {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
+              </span>
+            </span>
+            <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+          >
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.filter_menu_title') }}</p>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+              <li v-if="filters.status" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_status') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterStatusLabel }}</span>
+              </li>
+              <li v-if="activeTab === 'vehicles' && filters.type" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_type') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterTypeLabel }}</span>
+              </li>
+              <li v-if="activeTab === 'vehicles' && filters.driver_default" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_driver_default') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDriverDefaultLabel }}</span>
+              </li>
+              <li v-if="activeTab === 'vehicles' && filters.insurance" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_insurance') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.insurance) }}</span>
+              </li>
+              <li v-if="activeTab === 'vehicles' && filters.inspection" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_inspection') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.inspection) }}</span>
+              </li>
+              <li v-if="activeTab === 'vehicles' && filters.road_fee" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_road_fee') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.road_fee) }}</span>
+              </li>
+              <li v-if="activeTab === 'suppliers' && filters.contract" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_contract') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterContractLabel }}</span>
+              </li>
+              <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
+            </ul>
+            <button
+              type="button"
+              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              @click="resetResourceFilters(); closeResourceFilterMenu()"
+            >
+              {{ t('resources.filter_clear_all') }}
+            </button>
+          </div>
+        </details>
+
+        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
+
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+          <!-- Trạng thái -->
+          <details class="group relative min-w-0">
+            <summary
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+            >
+              <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_status') }}</span>
+              <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
+                filters.status ? resourceFilterStatusLabel : t('resources.filter_all')
+              }}</span>
+              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </summary>
+            <div
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+            >
+              <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+                <li v-for="opt in resourceStatusFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      filters.status === opt.value
+                        ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
+                        : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                    "
+                    @click="applyResourceFilterPatch($event, { status: opt.value })"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- Xe: loại, tài xế mặc định -->
+          <template v-if="activeTab === 'vehicles'">
+            <details class="group relative min-w-0">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_type') }}</span>
+                <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
+                  filters.type ? resourceFilterTypeLabel : t('resources.filter_all')
+                }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+                  <li v-for="opt in resourceVehicleTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                      :class="
+                        filters.type === opt.value
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="applyResourceFilterPatch($event, { type: opt.value })"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </details>
+
+            <details class="group relative min-w-0">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_driver_default') }}</span>
+                <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
+                  filters.driver_default ? resourceFilterDriverDefaultLabel : t('resources.filter_all')
+                }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <ul class="space-y-0.5 px-1 py-1">
+                  <li v-for="opt in resourceDriverDefaultFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                      :class="
+                        filters.driver_default === opt.value
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="applyResourceFilterPatch($event, { driver_default: opt.value })"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </details>
+          </template>
+
+          <!-- NCC: hợp đồng -->
+          <details v-if="activeTab === 'suppliers'" class="group relative min-w-0">
+            <summary
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+            >
+              <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_contract') }}</span>
+              <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
+                filters.contract ? resourceFilterContractLabel : t('resources.filter_all')
+              }}</span>
+              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </summary>
+            <div
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+            >
+              <ul class="space-y-0.5 px-1 py-1">
+                <li v-for="opt in resourceDocStateFilterOptions" :key="'contract-' + (opt.value === '' ? '_all' : opt.value)">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      filters.contract === opt.value
+                        ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
+                        : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                    "
+                    @click="applyResourceFilterPatch($event, { contract: opt.value })"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </details>
+
+        </div>
+
+        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            :title="t('resources.filter_clear')"
+            @click="resetResourceFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
+            </span>
+          </button>
+
+          <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
+
+          <button
+            v-if="activeTab === 'vehicles' && vehiclesViewMode === 'active'"
+            type="button"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            :aria-expanded="resourceFiltersExtraOpen"
+            @click="resourceFiltersExtraOpen = !resourceFiltersExtraOpen"
+          >
+            {{ t('requests_page.filter_extra') }}
+            <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Thuộc tính khác: BH / ĐK / phí (xe) -->
+      <div
+        v-show="resourceFiltersExtraOpen && activeTab === 'vehicles' && vehiclesViewMode === 'active'"
+        class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-3 dark:border-slate-700"
+      >
+        <details v-for="spec in resourceVehicleDocFiltersExtra" :key="'extra-' + spec.key" class="group relative min-w-0">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+          >
+            <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ spec.label }}</span>
+            <span class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
+              filters[spec.key] ? resourceFilterDocStateLabel(filters[spec.key]) : t('resources.filter_all')
+            }}</span>
+            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+          >
+            <ul class="space-y-0.5 px-1 py-1">
+              <li v-for="opt in resourceDocStateFilterOptions" :key="'ex-' + spec.key + '-' + (opt.value === '' ? '_all' : opt.value)">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters[spec.key] === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyResourceFilterPatch($event, { [spec.key]: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </details>
       </div>
     </div>
 
@@ -1770,6 +1837,7 @@ import {
   ChevronRightIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
+  PlusCircleIcon,
   TrashIcon,
   ViewColumnsIcon,
   XMarkIcon,
@@ -1927,6 +1995,52 @@ const vehicleDeleteTarget = ref(null)
 const vehicleRestoring = ref(false)
 const vehicleFormError = ref('')
 const resourceFilterMenuRef = ref(null)
+const resourceFiltersExtraOpen = ref(false)
+
+const resourceStatusFilterOptions = computed(() => [
+  { value: '', label: t('resources.filter_all') },
+  { value: 'active', label: t('resources.status_active') },
+  { value: 'maintenance', label: t('resources.status_maintenance') },
+  { value: 'inactive', label: t('resources.status_inactive') },
+])
+
+const resourceVehicleTypeFilterOptions = computed(() => [
+  { value: '', label: t('resources.filter_all') },
+  { value: 'van', label: t('resources.type_van') },
+  { value: 'truck', label: t('resources.type_truck') },
+  { value: 'bus', label: t('resources.type_bus') },
+])
+
+const resourceDriverDefaultFilterOptions = computed(() => [
+  { value: '', label: t('resources.filter_all') },
+  { value: 'assigned', label: t('resources.filter_driver_assigned') },
+  { value: 'unassigned', label: t('resources.filter_driver_unassigned') },
+])
+
+const resourceDocStateFilterOptions = computed(() => [
+  { value: '', label: t('resources.filter_all') },
+  { value: 'ok', label: t('resources.compliance_ok') },
+  { value: 'soon', label: t('resources.compliance_soon') },
+  { value: 'exp', label: t('resources.compliance_exp') },
+])
+
+const resourceVehicleDocFiltersExtra = computed(() => [
+  { key: 'insurance', label: t('resources.filter_insurance') },
+  { key: 'inspection', label: t('resources.filter_inspection') },
+  { key: 'road_fee', label: t('resources.filter_road_fee') },
+])
+
+function closeParentDetails(ev) {
+  const el = ev?.target
+  if (!el || typeof el.closest !== 'function') return
+  const d = el.closest('details')
+  if (d) d.open = false
+}
+
+function applyResourceFilterPatch(ev, patch) {
+  filters.value = { ...filters.value, ...patch }
+  closeParentDetails(ev)
+}
 
 const VEHICLE_COL_STORAGE_KEY = 'va-resources-vehicle-cols-v1'
 const VEHICLE_COL_DEFAULTS = {
@@ -2290,6 +2404,7 @@ function setTab(id) {
 function setVehiclesViewMode(mode) {
   vehiclesViewMode.value = mode
   selectedVehicle.value = null
+  resourceFiltersExtraOpen.value = false
   loadAll()
 }
 
@@ -2487,6 +2602,7 @@ watch(filteredSuppliers, (list) => {
 
 watch(activeTab, () => {
   search.value = ''
+  resourceFiltersExtraOpen.value = false
   filters.value = {
     status: '',
     type: '',
@@ -2939,9 +3055,3 @@ async function submitVehicleForm() {
   }
 }
 </script>
-
-<style scoped>
-.resources-filter-details[open] .resources-filter-chevron {
-  transform: rotate(180deg);
-}
-</style>
