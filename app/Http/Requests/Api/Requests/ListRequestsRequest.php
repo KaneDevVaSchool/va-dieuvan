@@ -12,6 +12,36 @@ class ListRequestsRequest extends ApiFormRequest
         return (bool) $this->user();
     }
 
+    /**
+     * Query strings send "true"/"false" as strings; Laravel's boolean rule only accepts true/false/0/1/'0'/'1'.
+     */
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+
+        foreach (['is_urgent', 'sla_risk_only', 'only_trashed'] as $key) {
+            if (! $this->has($key)) {
+                continue;
+            }
+            $v = $this->input($key);
+            if ($v === 'true' || $v === '1' || $v === 1 || $v === true) {
+                $merge[$key] = true;
+            } elseif ($v === 'false' || $v === '0' || $v === 0 || $v === false) {
+                $merge[$key] = false;
+            }
+        }
+
+        foreach (['q', 'status', 'trip_type', 'source_channel', 'paper_status', 'from', 'to', 'trip_status'] as $key) {
+            if ($this->has($key) && $this->input($key) === '') {
+                $merge[$key] = null;
+            }
+        }
+
+        if ($merge !== []) {
+            $this->merge($merge);
+        }
+    }
+
     public function rules(): array
     {
         return [
