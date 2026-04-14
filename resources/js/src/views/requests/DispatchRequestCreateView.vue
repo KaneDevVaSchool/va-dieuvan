@@ -226,18 +226,16 @@
               <div class="dw-fieldset">
                 <h3 class="dw-section-title">C. Thời gian</h3>
                 <label class="block">
-                  <span class="mb-1 flex flex-nowrap items-center gap-1.5">
-                    <span class="text-xs font-medium text-slate-700">Ngày đề xuất <span class="dw-req" aria-hidden="true">*</span></span>
-                    <span
-                      class="inline-flex shrink-0 cursor-help text-slate-400 hover:text-slate-600"
-                      title="Ngày lập đề xuất thực tế. Click bất kỳ đâu trong ô để mở lịch."
-                    >
-                      <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
-                    </span>
+                  <span class="dw-label-text" title="Ngày lập đề xuất thực tế. Bấm vào ô để mở lịch.">
+                    Ngày đề xuất <span class="dw-req" aria-hidden="true">*</span>
                   </span>
-                  <div class="dw-date-hit" @click="openDatePicker($event)">
-                    <input v-model="form.proposed_date" type="date" class="dw-input dw-date-input" />
-                  </div>
+                  <input
+                    v-model="form.proposed_date"
+                    type="date"
+                    lang="vi"
+                    class="dw-input dw-date-input mt-1"
+                    @click="openDatePickerFromInput($event)"
+                  />
                 </label>
                 <p class="dw-callout mt-3">
                   Lưu ý: từ khi bộ phận Điều vận nhận đề nghị, tối thiểu
@@ -247,18 +245,16 @@
                   ). Nhu cầu ngắn hơn được xem là gấp — bật mục Gấp bên dưới.
                 </p>
                 <label class="mt-4 block">
-                  <span class="mb-1 flex flex-nowrap items-center gap-1.5">
-                    <span class="text-xs font-medium text-slate-700">Ngày cần sử dụng xe <span class="dw-req" aria-hidden="true">*</span></span>
-                    <span
-                      class="inline-flex shrink-0 cursor-help text-slate-400 hover:text-slate-600"
-                      title="Tự điền theo ngày đề xuất; có thể chỉnh lại nếu khác."
-                    >
-                      <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
-                    </span>
+                  <span class="dw-label-text" title="Tự điền theo ngày đề xuất; có thể chỉnh lại nếu khác.">
+                    Ngày cần sử dụng xe <span class="dw-req" aria-hidden="true">*</span>
                   </span>
-                  <div class="dw-date-hit" @click="openDatePicker($event)">
-                    <input v-model="form.date_needed" type="date" class="dw-input dw-date-input" />
-                  </div>
+                  <input
+                    v-model="form.date_needed"
+                    type="date"
+                    lang="vi"
+                    class="dw-input dw-date-input mt-1"
+                    @click="openDatePickerFromInput($event)"
+                  />
                 </label>
                 <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
                   <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -496,9 +492,9 @@
             <!-- e.1 -->
             <section class="dw-e-block dw-e-block--e1 space-y-4" aria-labelledby="dw-e1-heading">
               <header class="dw-e-block__intro">
-                <span class="dw-e-block__badge" aria-hidden="true">e.1</span>
                 <div>
                   <h3 id="dw-e1-heading" class="dw-e-block__title">
+                    <span class="dw-e-kicker">e.1</span>
                     Nội dung đề xuất cho chương trình / sự kiện ngoại khóa (kèm bảng kê danh sách)
                   </h3>
                   <p class="dw-e-block__meta">Chuyến đi — chuyến về; đơn giá &amp; phí phát sinh gồm VAT (ước tính).</p>
@@ -576,9 +572,11 @@
             <!-- e.1.1 -->
             <section class="dw-e-panel dw-e-panel--e11" aria-labelledby="dw-e11-heading">
               <header class="dw-e-panel__head">
-                <span class="dw-e-panel__badge" aria-hidden="true">e.1.1</span>
-                <div class="dw-e-panel__head-text">
-                  <h3 id="dw-e11-heading" class="dw-e-panel__title">Các ghi chú khác đề xuất (nếu có)</h3>
+                <div>
+                  <h3 id="dw-e11-heading" class="dw-e-panel__title">
+                    <span class="dw-e-kicker">e.1.1</span>
+                    Các ghi chú khác đề xuất (nếu có)
+                  </h3>
                   <p class="dw-e-panel__lede">
                     Dùng khi ngoại khóa kéo dài từ 3 ngày trở lên: khoảng thời gian, tổng ngày phát sinh, chi phí ước tính và các thứ áp dụng trong tuần.
                   </p>
@@ -595,12 +593,24 @@
               <div class="dw-e11-fields">
                 <div class="dw-e11-field">
                   <span class="dw-e11-field__label">Từ ngày</span>
-                  <input v-model="form.e1_from_date" type="date" lang="vi" class="dw-input dw-input--e11" />
+                  <input
+                    v-model="form.e1_from_date"
+                    type="date"
+                    lang="vi"
+                    class="dw-input dw-input--e11"
+                    @click="openDatePickerFromInput($event)"
+                  />
                   <span class="dw-e11-field__hint">dd/mm/yyyy</span>
                 </div>
                 <div class="dw-e11-field">
                   <span class="dw-e11-field__label">Đến ngày</span>
-                  <input v-model="form.e1_to_date" type="date" lang="vi" class="dw-input dw-input--e11" />
+                  <input
+                    v-model="form.e1_to_date"
+                    type="date"
+                    lang="vi"
+                    class="dw-input dw-input--e11"
+                    @click="openDatePickerFromInput($event)"
+                  />
                   <span class="dw-e11-field__hint">dd/mm/yyyy</span>
                 </div>
                 <div class="dw-e11-field">
@@ -625,15 +635,18 @@
               <div class="dw-e11-weekwrap">
                 <p id="dw-e11-weekdays-label" class="dw-e11-weekwrap__title">Bao gồm các thứ trong tuần từ</p>
                 <div class="dw-weekday-strip" role="group" aria-labelledby="dw-e11-weekdays-label">
-                  <label
+                  <button
                     v-for="w in e1WeekdayOptions"
                     :key="w.k"
+                    type="button"
                     class="dw-weekday-chip"
                     :class="{ 'dw-weekday-chip--on': form.e1_weekdays[w.k] }"
+                    role="checkbox"
+                    :aria-checked="!!form.e1_weekdays[w.k]"
+                    @click="toggleE1Weekday(w.k)"
                   >
-                    <input v-model="form.e1_weekdays[w.k]" type="checkbox" class="sr-only" />
-                    <span class="dw-weekday-chip__text">{{ w.label }}</span>
-                  </label>
+                    {{ w.label }}
+                  </button>
                 </div>
               </div>
             </section>
@@ -641,9 +654,9 @@
             <!-- e.2 -->
             <section class="dw-e-block dw-e-block--e2 space-y-4" aria-labelledby="dw-e2-heading">
               <header class="dw-e-block__intro">
-                <span class="dw-e-block__badge" aria-hidden="true">e.2</span>
                 <div>
                   <h3 id="dw-e2-heading" class="dw-e-block__title">
+                    <span class="dw-e-kicker">e.2</span>
                     Nội dung đề xuất cho nhân sự đi công tác (kèm bảng kê danh sách)
                   </h3>
                   <p class="dw-e-block__meta">
@@ -723,9 +736,11 @@
             <!-- e.2.1 -->
             <section class="dw-e-panel dw-e-panel--e21" aria-labelledby="dw-e21-heading">
               <header class="dw-e-panel__head">
-                <span class="dw-e-panel__badge" aria-hidden="true">e.2.1</span>
-                <div class="dw-e-panel__head-text">
-                  <h3 id="dw-e21-heading" class="dw-e-panel__title">Các ghi chú khác đề xuất (nếu có)</h3>
+                <div>
+                  <h3 id="dw-e21-heading" class="dw-e-panel__title">
+                    <span class="dw-e-kicker">e.2.1</span>
+                    Các ghi chú khác đề xuất (nếu có)
+                  </h3>
                   <p class="dw-e-panel__lede">Phát sinh ngoài lịch chạy chính: đưa đón tận nhà, tự túc tài xế, hoặc sử dụng xe sau 21h.</p>
                 </div>
               </header>
@@ -1413,10 +1428,10 @@ const tripTypeLabel = computed(() => {
   return o?.label ?? form.value.trip_type
 })
 
-function openDatePicker(evt) {
-  const wrap = evt?.currentTarget
-  const inp = wrap?.querySelector?.('input[type="date"]')
-  if (!inp) return
+/** Mở lịch khi bấm vào ô (không cần bấm icon); tránh focus gây cuộn trang không mong muốn */
+function openDatePickerFromInput(evt) {
+  const inp = evt?.currentTarget
+  if (!inp || inp.type !== 'date') return
   if (typeof inp.showPicker === 'function') {
     try {
       inp.showPicker()
@@ -1425,7 +1440,17 @@ function openDatePicker(evt) {
       /* fallback */
     }
   }
-  inp.focus()
+  try {
+    inp.focus({ preventScroll: true })
+  } catch {
+    inp.focus()
+  }
+}
+
+function toggleE1Weekday(k) {
+  const w = form.value.e1_weekdays
+  if (!w || typeof w[k] !== 'boolean') return
+  w[k] = !w[k]
 }
 
 function onRequesterPhoneInput(e) {
@@ -2142,12 +2167,16 @@ watch(
   @apply min-h-[2.5rem] px-3 py-2 text-sm;
 }
 
-/* —— Mục E: khối tiêu đề e.1 / e.2 —— */
-.dw-e-block__intro {
-  @apply flex gap-3 rounded-xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/40 to-emerald-50/30 p-4 shadow-sm ring-1 ring-slate-900/[0.04] sm:gap-4 sm:p-5;
+/* —— Mục E: khối tiêu đề e.1 / e.2 (tiền tố chữ, không dùng badge) —— */
+.dw-e-kicker {
+  @apply mr-1 inline font-semibold text-slate-500;
 }
-.dw-e-block__badge {
-  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-va-800 text-xs font-bold text-white shadow-sm ring-1 ring-black/5 sm:h-11 sm:w-11 sm:text-sm;
+.dw-e-kicker::after {
+  content: '·';
+  @apply ml-1.5 text-slate-300;
+}
+.dw-e-block__intro {
+  @apply rounded-xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/40 to-emerald-50/30 p-4 shadow-sm ring-1 ring-slate-900/[0.04] sm:p-5;
 }
 .dw-e-block__title {
   @apply text-sm font-semibold leading-snug text-slate-900 sm:text-base;
@@ -2167,16 +2196,7 @@ watch(
   @apply border-slate-200/90;
 }
 .dw-e-panel__head {
-  @apply flex gap-3 border-b border-slate-100 bg-white/90 px-4 py-4 sm:gap-4 sm:px-5 sm:py-5;
-}
-.dw-e-panel__badge {
-  @apply mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-lg bg-slate-800 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm sm:h-10 sm:w-10 sm:text-[11px];
-}
-.dw-e-panel--e11 .dw-e-panel__badge {
-  @apply bg-emerald-700;
-}
-.dw-e-panel--e21 .dw-e-panel__badge {
-  @apply bg-va-800;
+  @apply border-b border-slate-100 bg-white/90 px-4 py-4 sm:px-5 sm:py-5;
 }
 .dw-e-panel__title {
   @apply text-sm font-semibold text-slate-900 sm:text-base;
@@ -2227,13 +2247,13 @@ watch(
   @apply flex flex-wrap gap-2;
 }
 .dw-weekday-chip {
-  @apply cursor-pointer select-none rounded-full border border-slate-200 bg-white px-3 py-2 text-center text-xs font-medium text-slate-700 shadow-sm transition hover:border-va-800/35 hover:bg-slate-50 sm:text-sm;
+  @apply m-0 inline-flex cursor-pointer appearance-none items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-2 text-center text-xs font-medium text-slate-700 shadow-sm transition hover:border-va-800/35 hover:bg-slate-50 sm:text-sm;
 }
 .dw-weekday-chip--on {
   @apply border-va-800 bg-va-800 text-white shadow-md shadow-va-900/15 hover:bg-va-800;
 }
-.dw-weekday-chip__text {
-  @apply pointer-events-none;
+.dw-weekday-chip:focus-visible {
+  @apply outline outline-2 outline-offset-2 outline-va-800/40;
 }
 
 /* e.2.1: hàng chi phí */
@@ -2313,9 +2333,6 @@ watch(
 }
 .dw-callout {
   @apply rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950;
-}
-.dw-date-hit {
-  @apply mt-1 cursor-pointer rounded-lg ring-offset-2 transition hover:ring-2 hover:ring-va-800/15;
 }
 .dw-date-input {
   @apply cursor-pointer;
