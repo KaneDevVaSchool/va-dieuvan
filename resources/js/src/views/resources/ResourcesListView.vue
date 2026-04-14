@@ -1601,20 +1601,20 @@
                         <div v-if="doc.notes" class="mt-1 text-slate-600 dark:text-slate-400">{{ doc.notes }}</div>
                         <div v-if="doc.attachments?.length" class="mt-2 flex flex-col gap-2">
                           <div
-                            v-for="a in doc.attachments"
-                            :key="a.id"
+                            v-for="(a, aIdx) in doc.attachments"
+                            :key="a.id ?? `att-${aIdx}`"
                             class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200/90 bg-white/70 px-2 py-1.5 dark:border-slate-600/80 dark:bg-slate-900/40"
                           >
-                            <a
+                            <button
                               v-if="isPdfAttachment(a)"
-                              :href="resolveAttachmentAbsoluteUrl(a)"
-                              :download="attachmentDownloadName(a)"
-                              class="min-w-0 flex-1 truncate text-teal-700 underline dark:text-teal-400"
+                              type="button"
+                              class="min-w-0 flex-1 truncate text-left text-teal-700 underline decoration-teal-700/40 underline-offset-2 hover:text-teal-600 disabled:cursor-wait disabled:opacity-60 dark:text-teal-400 dark:decoration-teal-400/40 dark:hover:text-teal-300"
                               :title="t('resources.attachment_download_pdf_title')"
-                              @click.stop
+                              :disabled="pdfAttachmentDownloadBusyKey === vehiclePdfAttachmentBusyKey(doc, a, aIdx)"
+                              @click.stop="downloadVehiclePdfAttachment(doc, a, aIdx)"
                             >
                               {{ a.original_name || 'file' }}
-                            </a>
+                            </button>
                             <a
                               v-else
                               :href="a.url"
@@ -1629,7 +1629,7 @@
                       </div>
                       <div v-if="canManageVehicles" class="flex shrink-0 gap-2">
                         <button type="button" class="text-teal-700 dark:text-teal-400" @click="openVehicleDocModal(doc)">{{ t('resources.action_edit') }}</button>
-                        <button type="button" class="text-rose-600" @click="confirmDeleteVehicleDoc(doc)">{{ t('resources.delete') }}</button>
+                        <button type="button" class="text-rose-600" @click="openVehicleDocDeleteModal(doc)">{{ t('resources.delete') }}</button>
                       </div>
                     </div>
                   </li>
@@ -2621,6 +2621,64 @@
       </div>
     </Teleport>
 
+    <!-- Modal: xóa giấy tờ xe -->
+    <Teleport to="body">
+      <div
+        v-if="vehicleDocDeleteModalOpen"
+        class="fixed inset-0 z-[110] flex items-end justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="vehicle-doc-delete-title"
+        @click.self="closeVehicleDocDeleteModal"
+      >
+        <div
+          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
+                <TrashIcon class="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 id="vehicle-doc-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                  {{ t('resources.vehicle_doc_delete_modal_title') }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_doc_delete_modal_body') }}
+                </p>
+                <div
+                  v-if="vehicleDocDeleteTarget"
+                  class="mt-3 rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-800/80"
+                >
+                  <div class="font-medium text-slate-900 dark:text-white">{{ vehicleDocTypeLabel(vehicleDocDeleteTarget.doc_type) }}</div>
+                  <div v-if="vehicleDocDeleteTarget.title" class="mt-0.5 text-slate-600 dark:text-slate-400">{{ vehicleDocDeleteTarget.title }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 px-4 pb-4 pt-2">
+            <button
+              type="button"
+              class="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              :disabled="vehicleDocDeleting"
+              @click="closeVehicleDocDeleteModal"
+            >
+              {{ t('app.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-50"
+              :disabled="vehicleDocDeleting"
+              @click="submitDeleteVehicleDoc"
+            >
+              {{ vehicleDocDeleting ? t('resources.loading') : t('resources.vehicle_doc_delete_modal_confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Modal: chuyển xe vào thùng rác -->
     <Teleport to="body">
       <div
@@ -3522,6 +3580,10 @@ const vehicleComplianceDocs = ref([])
 const vehicleDocModalOpen = ref(false)
 const vehicleDocSaving = ref(false)
 const vehicleDocFormError = ref('')
+const pdfAttachmentDownloadBusyKey = ref(null)
+const vehicleDocDeleteModalOpen = ref(false)
+const vehicleDocDeleteTarget = ref(null)
+const vehicleDocDeleting = ref(false)
 const editingVehicleDocId = ref(null)
 const vehicleDocFile = ref(null)
 const vehicleDocForm = ref({
@@ -4136,7 +4198,7 @@ function resolveAttachmentAbsoluteUrl(a) {
   return `${window.location.origin}${path}`
 }
 
-/** Tên file khi tải PDF (thuộc tính `download` — cùng origin). */
+/** Tên file khi lưu PDF (blob download). */
 function attachmentDownloadName(a) {
   const n = String(a?.original_name || '').trim()
   if (n) return n
@@ -4146,6 +4208,47 @@ function attachmentDownloadName(a) {
     return seg || 'document.pdf'
   } catch {
     return 'document.pdf'
+  }
+}
+
+function vehiclePdfAttachmentBusyKey(doc, a, aIdx) {
+  return `${doc?.id ?? 'doc'}-${a?.id ?? aIdx}`
+}
+
+/** Tải PDF dạng nhị phân (fetch → blob) để tránh file hỏng so với `<a download>`. */
+async function downloadVehiclePdfAttachment(doc, a, aIdx) {
+  const busyKey = vehiclePdfAttachmentBusyKey(doc, a, aIdx)
+  const url = resolveAttachmentAbsoluteUrl(a)
+  if (!url || pdfAttachmentDownloadBusyKey.value === busyKey) return
+  pdfAttachmentDownloadBusyKey.value = busyKey
+  try {
+    let sameOrigin = false
+    try {
+      const u = new URL(url, window.location.origin)
+      sameOrigin = u.origin === window.location.origin
+    } catch {
+      sameOrigin = false
+    }
+    if (sameOrigin) {
+      const res = await fetch(url, { credentials: 'same-origin' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = attachmentDownloadName(a)
+      link.rel = 'noopener'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(blobUrl)
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+  } finally {
+    pdfAttachmentDownloadBusyKey.value = null
   }
 }
 
@@ -4236,15 +4339,32 @@ async function submitVehicleDocForm() {
   }
 }
 
-async function confirmDeleteVehicleDoc(doc) {
-  if (!selectedVehicle.value || !canManageVehicles.value) return
-  if (!window.confirm(t('resources.vehicle_doc_confirm_delete'))) return
+function openVehicleDocDeleteModal(doc) {
+  if (!canManageVehicles.value) return
+  vehicleDocDeleteTarget.value = doc
+  vehicleDocDeleteModalOpen.value = true
+}
+
+function closeVehicleDocDeleteModal() {
+  if (vehicleDocDeleting.value) return
+  vehicleDocDeleteModalOpen.value = false
+  vehicleDocDeleteTarget.value = null
+}
+
+async function submitDeleteVehicleDoc() {
+  const doc = vehicleDocDeleteTarget.value
+  if (!selectedVehicle.value || !doc || !canManageVehicles.value) return
+  vehicleDocDeleting.value = true
   try {
     await deleteVehicleComplianceDocument(selectedVehicle.value.id, doc.id)
+    vehicleDocDeleteModalOpen.value = false
+    vehicleDocDeleteTarget.value = null
     const res = await listVehicleComplianceDocuments(selectedVehicle.value.id)
     vehicleComplianceDocs.value = res.items || []
   } catch (e) {
     showAppErrorFromApi(e, t('resources.load_error'))
+  } finally {
+    vehicleDocDeleting.value = false
   }
 }
 
