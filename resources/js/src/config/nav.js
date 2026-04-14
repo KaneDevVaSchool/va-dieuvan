@@ -69,12 +69,6 @@ export const NAV_SECTIONS = [
       },
       { to: '/routes', labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.operations' },
       { to: '/students', labelKey: 'nav.students', icon: 'students', featureKey: 'module.operations' },
-    ],
-  },
-  {
-    sectionKey: 'resources',
-    headingKey: 'nav.section_resources',
-    items: [
       {
         to: '/resources',
         labelKey: 'nav.resources',

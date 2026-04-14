@@ -111,29 +111,6 @@
             </template>
           </template>
 
-          <!-- Section có tiêu đề + đúng 1 mục phẳng: gôm thành một thẻ (vd. Nguồn lực) -->
-          <div
-            v-else-if="isSingleSectionFlatLink(section)"
-            :class="si >= 1 ? 'mt-4 border-t border-slate-200/80 pt-3 dark:border-slate-700/80' : 'mt-2'"
-          >
-            <div
-              class="rounded-xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/90 p-1.5 shadow-sm ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:from-slate-900 dark:to-slate-900/95 dark:ring-slate-900/40"
-            >
-              <div v-if="!ui.sidebarCollapsed" class="mb-1 px-1.5 pt-0.5">
-                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {{ t(section.headingKey) }}
-                </span>
-              </div>
-              <SidebarNavItem
-                :to="section.items[0].to"
-                :label="t(section.items[0].labelKey)"
-                :icon="section.items[0].icon"
-                :badge-count="badgeCount(section.items[0])"
-                :variant="navVariant"
-              />
-            </div>
-          </div>
-
           <!-- Section có tiêu đề: collapse cả khối -->
           <div v-else :class="si >= 1 ? 'mt-4 border-t border-slate-200/80 pt-3 dark:border-slate-700/80' : 'mt-2'">
             <div v-if="!ui.sidebarCollapsed" class="mb-1.5 px-1">
@@ -341,11 +318,6 @@ function toggleFlyout(key) {
 
 function sectionGroupKey(si) {
   return `sec-${si}`
-}
-
-/** Section có tiêu đề nhưng chỉ một mục phẳng (không nhóm con) — hiển thị một thẻ gộp */
-function isSingleSectionFlatLink(section) {
-  return !!(section.headingKey && section.items?.length === 1 && !section.items[0].children?.length)
 }
 
 function subGroupKey(si, ii) {
