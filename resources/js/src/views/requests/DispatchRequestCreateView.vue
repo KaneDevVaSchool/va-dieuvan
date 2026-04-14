@@ -34,7 +34,7 @@
           type="button"
           class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
           title="Xóa bản nháp lưu trên trình duyệt (theo tài khoản hiện tại)"
-          @click="clearStoredDraft"
+          @click="openClearDraftModal"
         >
           Xóa nháp
         </button>
@@ -85,9 +85,9 @@
       </template>
     </nav>
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_minmax(260px,320px)]">
+    <div class="mx-auto max-w-6xl">
       <!-- Main card -->
-      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
         <!-- Step 1 -->
         <div v-show="step === 0">
           <h2 class="text-lg font-semibold text-slate-900">1. Chọn loại dịch vụ</h2>
@@ -125,119 +125,315 @@
             <p class="mt-1 text-sm text-slate-600">Khớp mục A–D trên mẫu BM.03.</p>
           </div>
 
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="space-y-4">
-              <h3 class="text-xs font-semibold uppercase tracking-wider text-va-800">A. Người đề nghị</h3>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Họ và tên</span>
-                <input
-                  v-model="form.requester_name"
-                  type="text"
-                  placeholder="Nguyễn Văn A"
-                  class="dw-input"
-                />
-              </label>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Email VA</span>
-                <input v-model="form.requester_email" type="email" placeholder="ten@va.edu.vn" class="dw-input" />
-              </label>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Số điện thoại</span>
-                <input v-model="form.requester_phone" type="text" placeholder="0900…" class="dw-input" />
-              </label>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Đơn vị</span>
-                <input v-model="form.requester_unit" type="text" placeholder="Phòng / khối…" class="dw-input" />
-              </label>
-
-              <h3 class="pt-2 text-xs font-semibold uppercase tracking-wider text-va-800">C. Thời gian</h3>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Ngày đề xuất</span>
-                <input v-model="form.proposed_date" type="date" class="dw-input" />
-              </label>
-              <p class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950">
-                Lưu ý: từ khi bộ phận Điều vận nhận đề nghị, tối thiểu
-                <strong class="text-amber-900">03 ngày làm việc</strong>
-                (trừ đề xuất xe từ 2000kg: báo trước ít nhất
-                <strong class="text-amber-900">05 ngày làm việc</strong>
-                ). Nhu cầu ngắn hơn được xem là gấp — tick mục Gấp bên dưới.
-              </p>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Ngày cần sử dụng xe</span>
-                <input v-model="form.date_needed" type="date" class="dw-input" />
-              </label>
-              <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <input v-model="form.is_urgent" type="checkbox" class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-va-800" />
-                <div class="min-w-0 flex-1">
-                  <span class="text-sm font-medium text-slate-900">Gấp</span>
-                  <label class="mt-2 block">
-                    <span class="mb-1 block text-xs font-medium text-slate-600">Lý do</span>
-                    <input
-                      v-model="form.urgent_reason"
-                      type="text"
-                      placeholder="Bắt buộc khi chọn Gấp"
-                      :disabled="!form.is_urgent"
-                      class="dw-input disabled:opacity-50"
-                    />
+          <div class="grid gap-8 xl:grid-cols-12">
+            <!-- A + C -->
+            <div class="space-y-6 xl:col-span-5">
+              <div class="dw-fieldset">
+                <h3 class="dw-section-title">A. Người đề nghị</h3>
+                <p class="dw-hint mb-3">Gõ họ tên để tìm trong hệ thống — hệ thống tự điền các trường bên dưới.</p>
+                <div class="relative">
+                  <label class="dw-label">
+                    <span>Tìm theo tên <span class="dw-req" aria-hidden="true">*</span></span>
+                    <span
+                      class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                      title="Tối thiểu 2 ký tự. Chọn một kết quả để điền email, SĐT, đơn vị / phòng ban."
+                    >
+                      <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                    </span>
                   </label>
+                  <input
+                    v-model="requesterSearchQ"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="Ví dụ: Nguyễn Văn…"
+                    class="dw-input"
+                    @input="scheduleRequesterSearch"
+                    @focus="onRequesterSearchFocus"
+                    @blur="onRequesterSearchBlur"
+                  />
+                  <div
+                    v-if="requesterSearchLoading"
+                    class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                  />
+                  <ul
+                    v-if="requesterDropdownOpen && requesterSearchResults.length"
+                    class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                    role="listbox"
+                  >
+                    <li v-for="u in requesterSearchResults" :key="u.id">
+                      <button
+                        type="button"
+                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                        @mousedown.prevent="pickRequester(u)"
+                      >
+                        <span class="font-medium text-slate-900">{{ u.name }}</span>
+                        <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                      </button>
+                    </li>
+                  </ul>
                 </div>
-              </label>
-            </div>
-
-            <div class="space-y-4">
-              <h3 class="text-xs font-semibold uppercase tracking-wider text-va-800">B. Mục đích sử dụng</h3>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Mục đích sử dụng</span>
-                <textarea
-                  v-model="form.purpose"
-                  rows="3"
-                  placeholder="Mô tả ngắn gọn…"
-                  class="dw-input min-h-[5rem] resize-y"
-                />
-              </label>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Căn cứ đề xuất</span>
-                <input
-                  v-model="form.basis_reference"
-                  type="text"
-                  placeholder="Tờ trình số …/ ngày … & nội dung"
-                  class="dw-input"
-                />
-              </label>
-
-              <h3 class="pt-2 text-xs font-semibold uppercase tracking-wider text-va-800">D. Đối tượng được phân bổ</h3>
-              <p class="text-xs text-slate-500">Chọn một hoặc nhiều đơn vị / đối tượng (cuộn để xem hết).</p>
-              <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-2">
-                <label
-                  v-for="t in targetOptions"
-                  :key="t"
-                  class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-white"
-                >
-                  <input v-model="form.targets" type="checkbox" :value="t" class="h-3.5 w-3.5 rounded border-slate-300 text-va-800" />
-                  <span class="text-slate-800">{{ t }}</span>
+                <label class="mt-4 block">
+                  <span class="dw-label-text">Họ và tên <span class="dw-req" aria-hidden="true">*</span></span>
+                  <input v-model="form.requester_name" type="text" class="dw-input" placeholder="Điền hoặc chọn từ tìm kiếm" />
+                </label>
+                <label class="mt-3 block">
+                  <span class="dw-label-text">Email VA <span class="dw-req" aria-hidden="true">*</span></span>
+                  <input v-model="form.requester_email" type="email" placeholder="ten@va.edu.vn" class="dw-input" />
+                </label>
+                <label class="mt-3 block">
+                  <span class="dw-label-text">Số điện thoại</span>
+                  <input
+                    v-model="form.requester_phone"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    placeholder="Ví dụ: 0901234567"
+                    class="dw-input"
+                    maxlength="11"
+                    @input="onRequesterPhoneInput"
+                  />
+                </label>
+                <label class="mt-3 block">
+                  <span class="dw-label-text">Đơn vị / phòng ban</span>
+                  <input v-model="form.requester_unit" type="text" placeholder="Tự điền khi chọn nhân sự" class="dw-input" />
                 </label>
               </div>
-              <p v-if="form.targets.length" class="text-xs text-slate-500">Đã chọn {{ form.targets.length }} mục.</p>
 
-              <h3 class="pt-2 text-xs font-semibold uppercase tracking-wider text-va-800">d.2 Nhân sự phụ trách điều phối</h3>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Họ tên</span>
-                <input v-model="form.coordinator_name" type="text" class="dw-input" />
-              </label>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">Email nhân viên</span>
-                <input v-model="form.coordinator_email" type="email" class="dw-input" />
-              </label>
-              <label class="block">
-                <span class="mb-1 block text-xs font-medium text-slate-600">SĐT</span>
-                <input v-model="form.coordinator_phone" type="text" class="dw-input" />
-              </label>
+              <div class="dw-fieldset">
+                <h3 class="dw-section-title">C. Thời gian</h3>
+                <label class="block">
+                  <span class="dw-label-text">Ngày đề xuất <span class="dw-req" aria-hidden="true">*</span></span>
+                  <span
+                    class="ml-1 inline-flex cursor-help align-middle text-slate-400 hover:text-slate-600"
+                    title="Ngày lập đề xuất thực tế. Click bất kỳ đâu trong ô để mở lịch."
+                  >
+                    <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <div class="dw-date-hit" @click="openDatePicker($event)">
+                    <input v-model="form.proposed_date" type="date" class="dw-input dw-date-input" />
+                  </div>
+                </label>
+                <p class="dw-callout mt-3">
+                  Lưu ý: từ khi bộ phận Điều vận nhận đề nghị, tối thiểu
+                  <strong class="text-amber-900">03 ngày làm việc</strong>
+                  (trừ đề xuất xe từ 2000kg: báo trước ít nhất
+                  <strong class="text-amber-900">05 ngày làm việc</strong>
+                  ). Nhu cầu ngắn hơn được xem là gấp — bật mục Gấp bên dưới.
+                </p>
+                <label class="mt-4 block">
+                  <span class="dw-label-text">Ngày cần sử dụng xe <span class="dw-req" aria-hidden="true">*</span></span>
+                  <span
+                    class="ml-1 inline-flex cursor-help align-middle text-slate-400 hover:text-slate-600"
+                    title="Tự điền theo ngày đề xuất; có thể chỉnh lại nếu khác."
+                  >
+                    <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <div class="dw-date-hit" @click="openDatePicker($event)">
+                    <input v-model="form.date_needed" type="date" class="dw-input dw-date-input" />
+                  </div>
+                </label>
+                <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="flex min-w-[8rem] items-center justify-between gap-3 sm:flex-col sm:items-stretch">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-slate-900">Gấp</span>
+                        <span
+                          class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                          title="Bật khi cần xử lý nhanh hơn quy định; ghi rõ lý do."
+                        >
+                          <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        :aria-checked="form.is_urgent"
+                        class="inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-va-800/30"
+                        :class="form.is_urgent ? 'justify-end bg-va-800' : 'justify-start bg-slate-300'"
+                        @click="form.is_urgent = !form.is_urgent"
+                      >
+                        <span class="pointer-events-none h-6 w-6 rounded-full bg-white shadow-sm ring-1 ring-black/5" />
+                      </button>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <label class="block">
+                        <span class="dw-label-text">Lý do <span v-if="form.is_urgent" class="dw-req" aria-hidden="true">*</span></span>
+                        <input
+                          v-model="form.urgent_reason"
+                          type="text"
+                          placeholder="Bắt buộc khi bật Gấp"
+                          :disabled="!form.is_urgent"
+                          class="dw-input disabled:cursor-not-allowed disabled:opacity-45"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              <div class="pt-2">
+            <!-- B + D -->
+            <div class="space-y-6 xl:col-span-7">
+              <div class="dw-fieldset">
+                <h3 class="dw-section-title">B. Mục đích sử dụng</h3>
+                <label class="block">
+                  <span class="dw-label-text">Mục đích sử dụng <span class="dw-req" aria-hidden="true">*</span></span>
+                  <textarea
+                    v-model="form.purpose"
+                    rows="4"
+                    placeholder="Mô tả ngắn gọn mục đích sử dụng xe / chuyến…"
+                    class="dw-input min-h-[6rem] resize-y"
+                  />
+                </label>
+                <div class="mt-4">
+                  <span class="dw-label-text">Căn cứ đề xuất — đính kèm</span>
+                  <span
+                    class="ml-1 inline-flex cursor-help align-middle text-slate-400 hover:text-slate-600"
+                    title="Tải tờ trình, văn bản căn cứ (PDF, ảnh). Tối đa 10MB."
+                  >
+                    <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <div
+                    class="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-8 transition"
+                    :class="
+                      basisDragOver
+                        ? 'border-va-600 bg-va-800/5'
+                        : 'border-slate-200 bg-slate-50/80 hover:border-slate-300 hover:bg-slate-50'
+                    "
+                    @dragover.prevent="basisDragOver = true"
+                    @dragleave.prevent="basisDragOver = false"
+                    @drop.prevent="onBasisDrop"
+                    @click="basisFileInput?.click()"
+                  >
+                    <CloudArrowUpIcon class="h-10 w-10 text-slate-400" aria-hidden="true" />
+                    <p class="mt-2 text-center text-sm font-medium text-slate-800">Kéo thả tệp vào đây hoặc bấm để chọn</p>
+                    <p class="mt-1 text-center text-xs text-slate-500">PDF, ảnh (JPG, PNG) — tối đa 10MB</p>
+                    <input
+                      ref="basisFileInput"
+                      type="file"
+                      class="sr-only"
+                      accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf"
+                      @change="onBasisFileChange"
+                    />
+                  </div>
+                  <p v-if="basisFileError" class="mt-2 text-xs font-medium text-rose-600">{{ basisFileError }}</p>
+                  <div
+                    v-if="basisFile"
+                    class="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm"
+                  >
+                    <PaperClipIcon class="h-5 w-5 shrink-0 text-va-800" aria-hidden="true" />
+                    <div class="min-w-0 flex-1">
+                      <div class="truncate font-medium text-slate-900">{{ basisFile.name }}</div>
+                      <div class="text-xs text-slate-500">{{ formatFileSize(basisFile.size) }}</div>
+                    </div>
+                    <button
+                      type="button"
+                      class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
+                      @click.stop="clearBasisFile"
+                    >
+                      Gỡ
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dw-fieldset">
+                <h3 class="dw-section-title">D. Đối tượng được phân bổ</h3>
+                <p class="dw-hint mb-2">Chọn một hoặc nhiều đơn vị / đối tượng (cuộn để xem hết).</p>
+                <div class="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2">
+                  <label
+                    v-for="t in targetOptions"
+                    :key="t"
+                    class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white"
+                  >
+                    <input v-model="form.targets" type="checkbox" :value="t" class="h-3.5 w-3.5 rounded border-slate-300 text-va-800" />
+                    <span class="text-slate-800">{{ t }}</span>
+                  </label>
+                </div>
+                <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">Đã chọn {{ form.targets.length }} mục.</p>
+              </div>
+
+              <div class="dw-fieldset">
+                <h3 class="dw-section-title">d.2 Nhân sự phụ trách điều phối</h3>
+                <p class="dw-hint mb-3">Tìm theo tên để điền nhanh (không bắt buộc).</p>
+                <div class="relative">
+                  <label class="dw-label">
+                    <span>Tìm theo tên</span>
+                    <span
+                      class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                      title="Giống mục A: chọn nhân sự để điền họ tên, email, SĐT."
+                    >
+                      <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                    </span>
+                  </label>
+                  <input
+                    v-model="coordinatorSearchQ"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="Gõ họ tên nhân sự điều phối…"
+                    class="dw-input"
+                    @input="scheduleCoordinatorSearch"
+                    @focus="onCoordinatorSearchFocus"
+                    @blur="onCoordinatorSearchBlur"
+                  />
+                  <div
+                    v-if="coordinatorSearchLoading"
+                    class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                  />
+                  <ul
+                    v-if="coordinatorDropdownOpen && coordinatorSearchResults.length"
+                    class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                  >
+                    <li v-for="u in coordinatorSearchResults" :key="u.id">
+                      <button
+                        type="button"
+                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                        @mousedown.prevent="pickCoordinator(u)"
+                      >
+                        <span class="font-medium text-slate-900">{{ u.name }}</span>
+                        <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+                <label class="mt-4 block">
+                  <span class="dw-label-text">Họ tên</span>
+                  <input
+                    v-model="form.coordinator_name"
+                    type="text"
+                    class="dw-input"
+                    placeholder="Họ và tên người phụ trách"
+                  />
+                </label>
+                <label class="mt-3 block">
+                  <span class="dw-label-text">Email nhân viên</span>
+                  <input
+                    v-model="form.coordinator_email"
+                    type="email"
+                    class="dw-input"
+                    placeholder="email@va.edu.vn"
+                  />
+                </label>
+                <label class="mt-3 block">
+                  <span class="dw-label-text">SĐT</span>
+                  <input
+                    v-model="form.coordinator_phone"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    placeholder="Chỉ số, ví dụ 090…"
+                    class="dw-input"
+                    maxlength="11"
+                    @input="onCoordinatorPhoneInput"
+                  />
+                </label>
+              </div>
+
+              <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                 <label class="mb-1 block text-xs font-medium text-slate-600">Kênh gửi</label>
                 <select
                   v-model="form.source_channel"
-                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-va-800 focus:outline-none focus:ring-1 focus:ring-va-800/30"
+                  class="dw-input bg-white"
                 >
                   <option value="portal">Portal</option>
                   <option value="zalo">Zalo</option>
@@ -523,30 +719,83 @@
         </div>
       </section>
 
-      <!-- Side panel -->
-      <aside class="space-y-4">
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h3 class="font-semibold text-slate-900">Trợ giúp nhanh</h3>
-          <ul class="mt-3 space-y-2 text-xs text-slate-600">
-            <li>• BR-001: tạo trước giờ xuất phát ít nhất 2 giờ (trừ gấp đã ghi lý do).</li>
-            <li>• Hàng hóa: điền đủ điểm tập kết / giao để điều phối xe phù hợp.</li>
-            <li>• Một bản nháp / tài khoản (trình duyệt). Dòng bảng trống được gom khi lưu.</li>
-          </ul>
-        </div>
-        <div v-if="created" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm">
+      <aside v-if="created" class="mt-6">
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm shadow-sm">
           <div class="font-semibold text-emerald-900">Đã tạo yêu cầu #{{ created.id }}</div>
           <div class="mt-1 text-emerald-800">Trạng thái: {{ created.status }}</div>
-          <RouterLink class="mt-3 inline-flex rounded-lg border border-emerald-300 bg-white px-3 py-2 text-emerald-900 shadow-sm hover:bg-emerald-100/80" to="/requests">
+          <RouterLink
+            class="mt-3 inline-flex rounded-lg border border-emerald-300 bg-white px-3 py-2 text-emerald-900 shadow-sm hover:bg-emerald-100/80"
+            to="/requests"
+          >
             Về danh sách
           </RouterLink>
         </div>
       </aside>
     </div>
   </div>
+
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="clearDraftModalOpen"
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="clear-draft-modal-title"
+        @click.self="closeClearDraftModal"
+      >
+        <div
+          class="w-full max-w-[420px] overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          @click.stop
+        >
+          <div class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 px-5 pb-4 pt-5">
+            <div class="flex gap-4">
+              <div
+                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 text-amber-700 shadow-inner shadow-amber-900/5"
+              >
+                <ExclamationTriangleIcon class="h-6 w-6" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 pt-0.5">
+                <h3 id="clear-draft-modal-title" class="text-base font-semibold leading-snug text-slate-900">
+                  Xóa bản nháp?
+                </h3>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                  Xóa bản nháp đã lưu trên trình duyệt và làm mới form. Thao tác này không thể hoàn tác.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col-reverse gap-2 bg-slate-50/90 px-4 py-4 sm:flex-row sm:justify-end sm:gap-3">
+            <button
+              type="button"
+              class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
+              @click="closeClearDraftModal"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              class="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-b from-rose-600 to-rose-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-900/20 transition hover:from-rose-500 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 sm:w-auto"
+              @click="confirmClearDraft"
+            >
+              Xóa nháp
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import {
   AcademicCapIcon,
@@ -555,13 +804,19 @@ import {
   BuildingOffice2Icon,
   ChevronDownIcon,
   ChevronRightIcon,
+  CloudArrowUpIcon,
   CubeIcon,
   DocumentArrowDownIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  PaperClipIcon,
   PlusIcon,
   TrashIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
+import { uploadAttachment } from '../../api/attachments'
 import { createDispatchRequest } from '../../api/requests'
+import { searchUsersForDispatchForm } from '../../api/operational'
 import { formatApiError } from '../../api/http'
 import { newIdempotencyKey } from '../../util/idempotency'
 import {
@@ -599,6 +854,7 @@ const created = ref(null)
 const draftSavedAt = ref(null)
 /** Đã từng có nháp trong phiên (để hiện nút Xóa nháp). */
 const hasDraftSnapshot = ref(false)
+const clearDraftModalOpen = ref(false)
 
 const targetOptions = [
   'TiH Tân Bình',
@@ -663,7 +919,39 @@ function emptyCargoRow() {
   }
 }
 
+function todayISODate() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/** Chỉ giữ chữ số, tối đa 11 ký tự; hỗ trợ +84 → 0… */
+function sanitizeVnPhoneDigits(raw) {
+  if (raw == null) return ''
+  let d = String(raw).replace(/\D/g, '')
+  if (d.startsWith('84') && d.length >= 10) d = `0${d.slice(2)}`
+  if (d.length > 11) d = d.slice(0, 11)
+  return d
+}
+
+function formatOrgUnitFromUser(u) {
+  const parts = [u.unit_name, u.department_name].filter(Boolean)
+  if (parts.length) return parts.join(' — ')
+  if (u.employee_code) return `Mã NV: ${u.employee_code}`
+  return ''
+}
+
+function formatFileSize(n) {
+  if (n == null || Number.isNaN(n)) return ''
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
+
 function createInitialForm() {
+  const today = todayISODate()
   return {
     trip_type: 'point_to_point',
     source_channel: 'portal',
@@ -672,9 +960,8 @@ function createInitialForm() {
     requester_phone: '',
     requester_unit: '',
     purpose: '',
-    basis_reference: '',
-    proposed_date: '',
-    date_needed: '',
+    proposed_date: today,
+    date_needed: today,
     is_urgent: false,
     urgent_reason: '',
     targets: [],
@@ -729,6 +1016,25 @@ function trimCargoRowsInPlace() {
 
 const form = ref(createInitialForm())
 
+const basisFile = ref(null)
+const basisFileInput = ref(null)
+const basisDragOver = ref(false)
+const basisFileError = ref('')
+
+let requesterSearchTimer = null
+const requesterSearchQ = ref('')
+const requesterSearchResults = ref([])
+const requesterSearchLoading = ref(false)
+const requesterDropdownOpen = ref(false)
+let requesterBlurTimer = null
+
+let coordinatorSearchTimer = null
+const coordinatorSearchQ = ref('')
+const coordinatorSearchResults = ref([])
+const coordinatorSearchLoading = ref(false)
+const coordinatorDropdownOpen = ref(false)
+let coordinatorBlurTimer = null
+
 const passengerRows = ref([emptyPassengerRow()])
 const cargoRows = ref([emptyCargoRow()])
 
@@ -774,6 +1080,149 @@ const tripTypeLabel = computed(() => {
   const o = tripTypeOptions.find((x) => x.value === form.value.trip_type)
   return o?.label ?? form.value.trip_type
 })
+
+function openDatePicker(evt) {
+  const wrap = evt?.currentTarget
+  const inp = wrap?.querySelector?.('input[type="date"]')
+  if (!inp) return
+  if (typeof inp.showPicker === 'function') {
+    try {
+      inp.showPicker()
+      return
+    } catch {
+      /* fallback */
+    }
+  }
+  inp.focus()
+}
+
+function onRequesterPhoneInput(e) {
+  form.value.requester_phone = sanitizeVnPhoneDigits(e?.target?.value)
+}
+
+function onCoordinatorPhoneInput(e) {
+  form.value.coordinator_phone = sanitizeVnPhoneDigits(e?.target?.value)
+}
+
+function scheduleRequesterSearch() {
+  clearTimeout(requesterSearchTimer)
+  requesterSearchTimer = setTimeout(runRequesterSearch, 350)
+}
+
+async function runRequesterSearch() {
+  const q = requesterSearchQ.value.trim()
+  if (q.length < 2) {
+    requesterSearchResults.value = []
+    requesterDropdownOpen.value = false
+    return
+  }
+  requesterSearchLoading.value = true
+  try {
+    requesterSearchResults.value = await searchUsersForDispatchForm(q)
+    requesterDropdownOpen.value = requesterSearchResults.value.length > 0
+  } catch {
+    requesterSearchResults.value = []
+    requesterDropdownOpen.value = false
+  } finally {
+    requesterSearchLoading.value = false
+  }
+}
+
+function onRequesterSearchFocus() {
+  clearTimeout(requesterBlurTimer)
+  if (requesterSearchResults.value.length) requesterDropdownOpen.value = true
+}
+
+function onRequesterSearchBlur() {
+  requesterBlurTimer = setTimeout(() => {
+    requesterDropdownOpen.value = false
+  }, 200)
+}
+
+function pickRequester(u) {
+  form.value.requester_name = u.name || ''
+  form.value.requester_email = u.email || ''
+  form.value.requester_phone = sanitizeVnPhoneDigits(u.phone || '')
+  form.value.requester_unit = formatOrgUnitFromUser(u)
+  requesterSearchQ.value = u.name || ''
+  requesterSearchResults.value = []
+  requesterDropdownOpen.value = false
+}
+
+function scheduleCoordinatorSearch() {
+  clearTimeout(coordinatorSearchTimer)
+  coordinatorSearchTimer = setTimeout(runCoordinatorSearch, 350)
+}
+
+async function runCoordinatorSearch() {
+  const q = coordinatorSearchQ.value.trim()
+  if (q.length < 2) {
+    coordinatorSearchResults.value = []
+    coordinatorDropdownOpen.value = false
+    return
+  }
+  coordinatorSearchLoading.value = true
+  try {
+    coordinatorSearchResults.value = await searchUsersForDispatchForm(q)
+    coordinatorDropdownOpen.value = coordinatorSearchResults.value.length > 0
+  } catch {
+    coordinatorSearchResults.value = []
+    coordinatorDropdownOpen.value = false
+  } finally {
+    coordinatorSearchLoading.value = false
+  }
+}
+
+function onCoordinatorSearchFocus() {
+  clearTimeout(coordinatorBlurTimer)
+  if (coordinatorSearchResults.value.length) coordinatorDropdownOpen.value = true
+}
+
+function onCoordinatorSearchBlur() {
+  coordinatorBlurTimer = setTimeout(() => {
+    coordinatorDropdownOpen.value = false
+  }, 200)
+}
+
+function pickCoordinator(u) {
+  form.value.coordinator_name = u.name || ''
+  form.value.coordinator_email = u.email || ''
+  form.value.coordinator_phone = sanitizeVnPhoneDigits(u.phone || '')
+  coordinatorSearchQ.value = u.name || ''
+  coordinatorSearchResults.value = []
+  coordinatorDropdownOpen.value = false
+}
+
+function onBasisFileChange(e) {
+  basisFileError.value = ''
+  const f = e?.target?.files?.[0]
+  if (!f) return
+  if (f.size > 10 * 1024 * 1024) {
+    basisFile.value = null
+    basisFileError.value = 'Tệp vượt quá 10MB.'
+    if (basisFileInput.value) basisFileInput.value.value = ''
+    return
+  }
+  basisFile.value = f
+}
+
+function onBasisDrop(e) {
+  basisDragOver.value = false
+  basisFileError.value = ''
+  const f = e?.dataTransfer?.files?.[0]
+  if (!f) return
+  if (f.size > 10 * 1024 * 1024) {
+    basisFileError.value = 'Tệp vượt quá 10MB.'
+    return
+  }
+  basisFile.value = f
+}
+
+function clearBasisFile() {
+  basisFile.value = null
+  basisFileError.value = ''
+  if (basisFileInput.value) basisFileInput.value.value = ''
+}
 
 const draftLabel = computed(() => {
   if (created.value) return 'Đã gửi'
@@ -948,7 +1397,11 @@ function buildNotesBody() {
   lines.push('')
   lines.push('B. Mục đích sử dụng')
   lines.push(`- Mục đích: ${f.purpose || '—'}`)
-  lines.push(`- Căn cứ: ${f.basis_reference || '—'}`)
+  if (basisFile.value) {
+    lines.push(`- Căn cứ đề xuất: đính kèm tệp «${basisFile.value.name}»`)
+  } else {
+    lines.push('- Căn cứ đề xuất: (chưa đính kèm tệp)')
+  }
   lines.push('')
   lines.push('C. Thời gian')
   lines.push(`- Ngày đề xuất: ${f.proposed_date || '—'}`)
@@ -1107,6 +1560,21 @@ async function doSubmit() {
     }
     Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
     created.value = await createDispatchRequest(payload, { idempotencyKey })
+    if (basisFile.value && created.value?.id) {
+      try {
+        await uploadAttachment({
+          attachable_type: 'dispatch_request',
+          attachable_id: created.value.id,
+          kind: 'proposal_basis',
+          file: basisFile.value,
+        })
+      } catch (attachErr) {
+        error.value = formatApiError(
+          attachErr,
+          'Đã tạo yêu cầu nhưng không tải được file căn cứ. Bạn có thể thử lại từ chi tiết yêu cầu (nếu được phép).',
+        )
+      }
+    }
     try {
       localStorage.removeItem(currentDraftStorageKey())
       localStorage.removeItem(LEGACY_DRAFT_KEY)
@@ -1185,10 +1653,22 @@ function resetWizardForm() {
   created.value = null
   draftSavedAt.value = null
   hasDraftSnapshot.value = false
+  basisFile.value = null
+  basisFileError.value = ''
+  requesterSearchQ.value = ''
+  coordinatorSearchQ.value = ''
 }
 
-function clearStoredDraft() {
-  if (!confirm('Xóa bản nháp đã lưu trên trình duyệt và làm mới form?')) return
+function openClearDraftModal() {
+  clearDraftModalOpen.value = true
+}
+
+function closeClearDraftModal() {
+  clearDraftModalOpen.value = false
+}
+
+function confirmClearDraft() {
+  closeClearDraftModal()
   try {
     localStorage.removeItem(currentDraftStorageKey())
     localStorage.removeItem(LEGACY_DRAFT_KEY)
@@ -1197,6 +1677,24 @@ function clearStoredDraft() {
   }
   resetWizardForm()
 }
+
+watchEffect((onCleanup) => {
+  if (typeof document === 'undefined') return
+  if (!clearDraftModalOpen.value) {
+    document.body.style.overflow = ''
+    return
+  }
+  document.body.style.overflow = 'hidden'
+  if (typeof window === 'undefined') return
+  const onKey = (e) => {
+    if (e.key === 'Escape') closeClearDraftModal()
+  }
+  window.addEventListener('keydown', onKey)
+  onCleanup(() => {
+    document.body.style.overflow = ''
+    window.removeEventListener('keydown', onKey)
+  })
+})
 
 function onCancel() {
   if (created.value) {
@@ -1218,6 +1716,10 @@ onMounted(async () => {
     if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
     if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
   }
+  if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
+  if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
+  form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
+  form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
   if (!hasDraftSnapshot.value && typeof localStorage !== 'undefined') {
     hasDraftSnapshot.value = !!localStorage.getItem(currentDraftStorageKey())
   }
@@ -1236,6 +1738,13 @@ watch(
     }
   },
 )
+
+watch(
+  () => form.value.proposed_date,
+  (v) => {
+    if (v) form.value.date_needed = v
+  },
+)
 </script>
 
 <style scoped>
@@ -1244,5 +1753,32 @@ watch(
 }
 .dw-cell {
   @apply w-full min-w-0 rounded border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-900 placeholder:text-slate-400 focus:border-va-800 focus:outline-none focus:ring-1 focus:ring-va-800/20 sm:text-sm;
+}
+.dw-fieldset {
+  @apply rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5;
+}
+.dw-section-title {
+  @apply mb-3 border-b border-slate-100 pb-2 text-xs font-semibold uppercase tracking-wider text-va-800;
+}
+.dw-label {
+  @apply mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-700;
+}
+.dw-label-text {
+  @apply mb-1 block text-xs font-medium text-slate-700;
+}
+.dw-req {
+  @apply font-semibold text-rose-600;
+}
+.dw-hint {
+  @apply text-xs leading-relaxed text-slate-500;
+}
+.dw-callout {
+  @apply rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950;
+}
+.dw-date-hit {
+  @apply mt-1 cursor-pointer rounded-lg ring-offset-2 transition hover:ring-2 hover:ring-va-800/15;
+}
+.dw-date-input {
+  @apply cursor-pointer;
 }
 </style>

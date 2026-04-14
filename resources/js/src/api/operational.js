@@ -157,6 +157,12 @@ export async function searchUsersForDriverAssignment(q) {
   return data.data
 }
 
+/** Tìm nhân sự theo tên/email (form tạo yêu cầu điều vận — mọi user đã đăng nhập). @param {string} q */
+export async function searchUsersForDispatchForm(q) {
+  const { data } = await http.get('/users/for-dispatch-form', { params: { q } })
+  return data.data
+}
+
 /** @param {number} userId */
 export async function createDriverFromUser(userId) {
   const { data } = await http.post('/drivers/from-user', { user_id: userId })

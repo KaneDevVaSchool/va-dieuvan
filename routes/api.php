@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\Trips\TripController;
 use App\Http\Controllers\Api\Trips\TripOpsController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\UserSearchForDispatchFormController;
 use App\Http\Controllers\Api\UserSearchForDriverAssignmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,6 +59,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/drivers/{driver}/compliance-audit', [DriverComplianceDocumentController::class, 'auditLogs']);
         Route::get('/transport-providers', [OperationalResourceController::class, 'transportProviders']);
         Route::get('/users/for-driver-assignment', UserSearchForDriverAssignmentController::class);
+        Route::get('/users/for-dispatch-form', UserSearchForDispatchFormController::class);
 
         Route::get('/notifications/inbox', [InboxController::class, 'index']);
         Route::post('/notifications/read-all', [InboxController::class, 'markAllRead']);
