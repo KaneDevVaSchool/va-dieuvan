@@ -208,6 +208,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         // Operational resources (mutating)
+        Route::post('/drivers', [OperationalResourceController::class, 'storeDriver'])
+            ->middleware('throttle:30,1');
         Route::post('/drivers/from-user', [OperationalResourceController::class, 'storeDriverFromUser'])
             ->middleware('throttle:30,1');
         Route::post('/drivers/bulk-delete', [OperationalResourceController::class, 'bulkDestroyDrivers'])

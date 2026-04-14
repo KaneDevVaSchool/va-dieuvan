@@ -2122,44 +2122,160 @@
         <div class="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40" @click.stop>
           <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
             <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
-              {{ assignVehicleId != null ? t('resources.assign_driver_modal_title') : t('resources.assign_driver_modal_title_add') }}
+              <template v-if="assignVehicleId != null">{{ t('resources.assign_driver_modal_title') }}</template>
+              <template v-else-if="addDriverMode === 'external'">{{ t('resources.add_driver_modal_title_external') }}</template>
+              <template v-else>{{ t('resources.assign_driver_modal_title_add') }}</template>
             </h2>
             <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-              {{ assignVehicleId != null ? t('resources.assign_driver_modal_hint_vehicle') : t('resources.assign_driver_modal_hint_add') }}
+              <template v-if="assignVehicleId != null">{{ t('resources.assign_driver_modal_hint_vehicle') }}</template>
+              <template v-else-if="addDriverMode === 'external'">{{ t('resources.add_driver_hint_external') }}</template>
+              <template v-else>{{ t('resources.assign_driver_modal_hint_add') }}</template>
             </p>
           </div>
 
-          <!-- Thêm tài xế từ người dùng (tab Tài xế) -->
-          <div v-if="assignVehicleId == null" class="max-h-[55vh] overflow-y-auto px-5 py-4 sm:px-6">
-            <input
-              v-model="userSearchQuery"
-              type="search"
-              class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              :placeholder="t('resources.assign_driver_search_placeholder')"
-              @input="scheduleUserSearch"
-            />
-            <div v-if="userSearchLoading" class="mt-3 text-xs text-slate-500">{{ t('resources.loading') }}</div>
-            <ul v-else-if="userSearchResults.length" class="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
-              <li v-for="u in userSearchResults" :key="u.id">
-                <button
-                  type="button"
-                  class="flex w-full items-start gap-3 px-3 py-2.5 text-left text-sm transition hover:bg-teal-50 dark:hover:bg-slate-800"
-                  :class="pickedUser?.id === u.id ? 'bg-teal-50 dark:bg-slate-800' : ''"
-                  @click="pickedUser = u"
-                >
-                  <div class="min-w-0 flex-1">
-                    <div class="font-medium text-slate-900 dark:text-white">{{ u.name }}</div>
-                    <div class="truncate text-xs text-slate-500">{{ u.email }}</div>
-                    <div class="mt-0.5 flex flex-wrap gap-2 text-[11px] text-slate-500">
-                      <span v-if="u.employee_code" class="font-mono">{{ u.employee_code }}</span>
-                      <span v-if="u.phone">{{ u.phone }}</span>
+          <!-- Thêm tài xế: từ user HOẶC ngoài hệ thống (tab Tài xế) -->
+          <div v-if="assignVehicleId == null" class="max-h-[min(70vh,560px)] overflow-y-auto px-5 py-4 sm:px-6">
+            <div class="mb-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/50">
+              <button
+                type="button"
+                class="min-h-[40px] flex-1 rounded-lg px-3 py-2 text-xs font-medium transition sm:text-sm"
+                :class="
+                  addDriverMode === 'user'
+                    ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-900 dark:text-teal-300'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                "
+                @click="setAddDriverMode('user')"
+              >
+                {{ t('resources.add_driver_mode_user') }}
+              </button>
+              <button
+                type="button"
+                class="min-h-[40px] flex-1 rounded-lg px-3 py-2 text-xs font-medium transition sm:text-sm"
+                :class="
+                  addDriverMode === 'external'
+                    ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-900 dark:text-teal-300'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                "
+                @click="setAddDriverMode('external')"
+              >
+                {{ t('resources.add_driver_mode_external') }}
+              </button>
+            </div>
+
+            <template v-if="addDriverMode === 'user'">
+              <input
+                v-model="userSearchQuery"
+                type="search"
+                class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('resources.assign_driver_search_placeholder')"
+                @input="scheduleUserSearch"
+              />
+              <div v-if="userSearchLoading" class="mt-3 text-xs text-slate-500">{{ t('resources.loading') }}</div>
+              <ul v-else-if="userSearchResults.length" class="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+                <li v-for="u in userSearchResults" :key="u.id">
+                  <button
+                    type="button"
+                    class="flex w-full items-start gap-3 px-3 py-2.5 text-left text-sm transition hover:bg-teal-50 dark:hover:bg-slate-800"
+                    :class="pickedUser?.id === u.id ? 'bg-teal-50 dark:bg-slate-800' : ''"
+                    @click="pickedUser = u"
+                  >
+                    <div class="min-w-0 flex-1">
+                      <div class="font-medium text-slate-900 dark:text-white">{{ u.name }}</div>
+                      <div class="truncate text-xs text-slate-500">{{ u.email }}</div>
+                      <div class="mt-0.5 flex flex-wrap gap-2 text-[11px] text-slate-500">
+                        <span v-if="u.employee_code" class="font-mono">{{ u.employee_code }}</span>
+                        <span v-if="u.phone">{{ u.phone }}</span>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              </li>
-            </ul>
-            <p v-else-if="userSearchQuery.trim().length >= 2 && !userSearchLoading" class="mt-3 text-xs text-slate-500">{{ t('resources.empty') }}</p>
-            <p v-if="assignError" class="mt-2 text-xs text-rose-600">{{ assignError }}</p>
+                  </button>
+                </li>
+              </ul>
+              <p v-else-if="userSearchQuery.trim().length >= 2 && !userSearchLoading" class="mt-3 text-xs text-slate-500">{{ t('resources.empty') }}</p>
+            </template>
+
+            <form v-else class="space-y-3" @submit.prevent>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-name"
+                  >{{ t('resources.add_driver_full_name_label') }} <span class="text-rose-600" aria-hidden="true">*</span></label
+                >
+                <input
+                  id="ext-driver-name"
+                  v-model="externalDriverForm.full_name"
+                  type="text"
+                  autocomplete="name"
+                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  :placeholder="t('driver_detail.ph_full_name')"
+                />
+              </div>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-phone">{{ t('resources.col_phone') }}</label>
+                  <input
+                    id="ext-driver-phone"
+                    v-model="externalDriverForm.phone"
+                    type="tel"
+                    autocomplete="tel"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    :placeholder="t('driver_detail.ph_phone')"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-nid">{{ t('driver_detail.national_id') }}</label>
+                  <input
+                    id="ext-driver-nid"
+                    v-model="externalDriverForm.national_id"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    :placeholder="t('driver_detail.ph_national_id')"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-lic">{{ t('driver_detail.license_class') }}</label>
+                  <input
+                    id="ext-driver-lic"
+                    v-model="externalDriverForm.license_class"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    :placeholder="t('driver_detail.ph_license_class')"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-licexp">{{ t('driver_detail.license_expires') }}</label>
+                  <input
+                    id="ext-driver-licexp"
+                    v-model="externalDriverForm.license_expires_at"
+                    type="date"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-emp">{{ t('driver_detail.employment') }}</label>
+                  <select
+                    id="ext-driver-emp"
+                    v-model="externalDriverForm.employment_status"
+                    class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  >
+                    <option value="active">{{ t('driver_detail.emp_active') }}</option>
+                    <option value="on_leave">{{ t('driver_detail.emp_on_leave') }}</option>
+                    <option value="terminated">{{ t('driver_detail.emp_terminated') }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-avail">{{ t('driver_detail.availability') }}</label>
+                  <select
+                    id="ext-driver-avail"
+                    v-model="externalDriverForm.availability_status"
+                    class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  >
+                    <option value="available">{{ t('driver_detail.avail_available') }}</option>
+                    <option value="busy">{{ t('driver_detail.avail_busy') }}</option>
+                    <option value="offline">{{ t('driver_detail.avail_offline') }}</option>
+                  </select>
+                </div>
+              </div>
+            </form>
+
+            <p v-if="assignError" class="mt-3 text-xs text-rose-600">{{ assignError }}</p>
           </div>
 
           <!-- Gán tài xế mặc định cho xe (chi tiết xe) -->
@@ -2814,6 +2930,7 @@ import {
   bulkForceDeleteDrivers,
   bulkForceDeleteTransportProviders,
   bulkForceDeleteVehicles,
+  createDriver,
   createDriverFromUser,
   createTransportProvider,
   createVehicle,
@@ -2968,11 +3085,25 @@ function closeResourceFilterMenu() {
   if (el && 'open' in el) el.open = false
 }
 
+function emptyExternalDriverForm() {
+  return {
+    full_name: '',
+    phone: '',
+    national_id: '',
+    license_class: '',
+    license_expires_at: '',
+    employment_status: 'active',
+    availability_status: 'available',
+  }
+}
+
 const assignModalOpen = ref(false)
 const assignVehicleId = ref(null)
 const pickedDriverId = ref(null)
 const assignSubmitting = ref(false)
 const assignError = ref('')
+const addDriverMode = ref('user')
+const externalDriverForm = ref(emptyExternalDriverForm())
 const userSearchQuery = ref('')
 const userSearchResults = ref([])
 const userSearchLoading = ref(false)
@@ -2995,6 +3126,9 @@ const assignSubmitDisabled = computed(() => {
   if (assignSubmitting.value) return true
   if (assignVehicleId.value != null) {
     return pickedDriverId.value == null
+  }
+  if (addDriverMode.value === 'external') {
+    return !String(externalDriverForm.value.full_name || '').trim()
   }
   return !pickedUser.value
 })
@@ -4157,9 +4291,16 @@ function driverAssignOptionLabel(d) {
   return sub ? `${d.name} — ${sub}` : d.name
 }
 
+function setAddDriverMode(mode) {
+  addDriverMode.value = mode
+  assignError.value = ''
+}
+
 function openAssignModal(vehicleId) {
   assignVehicleId.value = vehicleId
   assignError.value = ''
+  addDriverMode.value = 'user'
+  externalDriverForm.value = emptyExternalDriverForm()
   userSearchQuery.value = ''
   userSearchResults.value = []
   pickedUser.value = null
@@ -4177,6 +4318,8 @@ function closeAssignModal() {
   assignVehicleId.value = null
   pickedDriverId.value = null
   assignSubmitting.value = false
+  addDriverMode.value = 'user'
+  externalDriverForm.value = emptyExternalDriverForm()
 }
 
 function scheduleUserSearch() {
@@ -4202,6 +4345,23 @@ async function runUserSearch() {
   }
 }
 
+function buildExternalDriverPayload() {
+  const f = externalDriverForm.value
+  const trim = (v) => {
+    const s = String(v ?? '').trim()
+    return s || null
+  }
+  return {
+    full_name: String(f.full_name || '').trim(),
+    phone: trim(f.phone),
+    national_id: trim(f.national_id),
+    license_class: trim(f.license_class),
+    license_expires_at: trim(f.license_expires_at),
+    employment_status: f.employment_status || 'active',
+    availability_status: f.availability_status || 'available',
+  }
+}
+
 async function submitAssignDriver() {
   if (assignVehicleId.value != null) {
     const vid = assignVehicleId.value
@@ -4215,6 +4375,32 @@ async function submitAssignDriver() {
       closeAssignModal()
     } catch (e) {
       showAppErrorFromApi(e, t('resources.load_error'))
+    } finally {
+      assignSubmitting.value = false
+    }
+    return
+  }
+  if (addDriverMode.value === 'external') {
+    const payload = buildExternalDriverPayload()
+    if (!payload.full_name) return
+    assignSubmitting.value = true
+    assignError.value = ''
+    try {
+      await createDriver(payload)
+      await loadAll()
+      closeAssignModal()
+    } catch (e) {
+      const st = e?.response?.status
+      if (st === 422) {
+        const msg = e?.response?.data?.message
+        const errs = e?.response?.data?.errors
+        assignError.value =
+          (typeof msg === 'string' && msg) ||
+          (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+          t('resources.load_error')
+      } else {
+        showAppErrorFromApi(e, t('resources.load_error'))
+      }
     } finally {
       assignSubmitting.value = false
     }
@@ -4240,6 +4426,8 @@ watch(assignModalOpen, (open) => {
     userSearchResults.value = []
     pickedUser.value = null
     pickedDriverId.value = null
+    addDriverMode.value = 'user'
+    externalDriverForm.value = emptyExternalDriverForm()
   }
 })
 

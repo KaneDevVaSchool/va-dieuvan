@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Operational\ListTransportProvidersRequest;
 use App\Http\Requests\Api\Operational\ListVehiclesRequest;
 use App\Http\Requests\Api\Operational\ShowDriverRequest;
 use App\Http\Requests\Api\Operational\StoreDriverFromUserRequest;
+use App\Http\Requests\Api\Operational\StoreDriverRequest;
 use App\Http\Requests\Api\Operational\StoreTransportProviderRequest;
 use App\Http\Requests\Api\Operational\StoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateDriverRequest;
@@ -187,6 +188,17 @@ class OperationalResourceController extends Controller
         $vehicle->load(['defaultDriver.user:id,name,email,phone,employee_code,avatar_url']);
 
         return $this->created($this->serializeVehicle($vehicle));
+    }
+
+    public function storeDriver(StoreDriverRequest $request)
+    {
+        $data = $request->validated();
+        $data['user_id'] = null;
+
+        $driver = Driver::create($data);
+        $driver->load(['user:id,name,email,phone,employee_code,avatar_url']);
+
+        return $this->created($this->serializeDriver($driver));
     }
 
     public function storeDriverFromUser(StoreDriverFromUserRequest $request)

@@ -34,6 +34,15 @@ export async function listDrivers(params = {}) {
   return data.data
 }
 
+/**
+ * Tài xế không gắn user (ngoài hệ thống). Chỉ cần full_name; các trường khác tùy chọn.
+ * @param {Record<string, unknown>} payload
+ */
+export async function createDriver(payload) {
+  const { data } = await http.post('/drivers', payload)
+  return data.data
+}
+
 /** @param {number} driverId */
 export async function deleteDriver(driverId) {
   const { data } = await http.delete(`/drivers/${driverId}`)
