@@ -14,7 +14,6 @@ import CostsListView from "../views/costs/CostsListView.vue";
 import PaymentsHubView from "../views/payments/PaymentsHubView.vue";
 import CargoListView from "../views/cargo/CargoListView.vue";
 import RoutesListView from "../views/d2d/RoutesListView.vue";
-import StudentsListView from "../views/d2d/StudentsListView.vue";
 import ReportsView from "../views/reports/ReportsView.vue";
 import PricingReferenceView from "../views/pricing/PricingReferenceView.vue";
 import OperationsHubView from "../views/hub/OperationsHubView.vue";
@@ -148,12 +147,6 @@ const router = createRouter({
             name: "routes",
             component: RoutesListView,
             meta: { title: "Tuyến D2D", subtitle: "Door-to-door" },
-        },
-        {
-            path: "/students",
-            name: "students",
-            component: StudentsListView,
-            meta: { title: "Học sinh", subtitle: "Danh sách" },
         },
         {
             path: "/resources",

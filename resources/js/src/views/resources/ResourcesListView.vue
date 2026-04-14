@@ -553,7 +553,7 @@
             />
             <div class="flex min-w-0 flex-1 items-start gap-3 p-3.5 pl-3 sm:p-4">
               <input
-                v-if="vehiclesViewMode === 'active' && canManageVehicles"
+                v-if="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash')"
                 type="checkbox"
                 class="mt-1.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
                 :checked="bulkVehicleIds.includes(v.id)"
@@ -630,6 +630,14 @@
             >
               {{ t('resources.bulk_move_to_trash', { n: bulkVehicleIds.length }) }}
             </button>
+            <button
+              v-else-if="vehiclesViewMode === 'trash' && canManageVehicles && bulkVehicleIds.length"
+              type="button"
+              class="rounded-lg border border-rose-300 bg-rose-50 px-2 py-1 text-[11px] font-medium text-rose-900 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200"
+              @click="openBulkForceModal('vehicle')"
+            >
+              {{ t('resources.bulk_permanent_delete_n', { n: bulkVehicleIds.length }) }}
+            </button>
             <label class="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400">
               {{ t('resources.pagination_per_page') }}
               <select
@@ -684,6 +692,14 @@
               >
                 {{ t('resources.bulk_move_to_trash', { n: bulkVehicleIds.length }) }}
               </button>
+              <button
+                v-else-if="vehiclesViewMode === 'trash' && canManageVehicles && bulkVehicleIds.length"
+                type="button"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
+                @click="openBulkForceModal('vehicle')"
+              >
+                {{ t('resources.bulk_permanent_delete_n', { n: bulkVehicleIds.length }) }}
+              </button>
               <details ref="vehicleColumnPickerRef" class="relative">
                 <summary
                   class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
@@ -727,7 +743,7 @@
               <thead>
                 <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
                   <th
-                    v-if="vehiclesViewMode === 'active' && canManageVehicles"
+                    v-if="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash')"
                     class="w-10 border-b border-slate-200 px-2 py-3 first:rounded-tl-xl dark:border-slate-700"
                     :aria-label="t('resources.col_select')"
                   >
@@ -740,7 +756,7 @@
                   </th>
                   <th
                     class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700"
-                    :class="vehiclesViewMode === 'active' && canManageVehicles ? '' : 'first:rounded-tl-xl'"
+                    :class="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash') ? '' : 'first:rounded-tl-xl'"
                   >
                     {{ t('resources.col_vehicle') }}
                   </th>
@@ -778,7 +794,11 @@
                   :class="selectedVehicle?.id === v.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
                   @click="selectVehicle(v)"
                 >
-                  <td v-if="vehiclesViewMode === 'active' && canManageVehicles" class="w-10 px-2 py-3 align-middle" @click.stop>
+                  <td
+                    v-if="canManageVehicles && (vehiclesViewMode === 'active' || vehiclesViewMode === 'trash')"
+                    class="w-10 px-2 py-3 align-middle"
+                    @click.stop
+                  >
                     <input
                       type="checkbox"
                       class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
@@ -914,6 +934,14 @@
               >
                 {{ t('resources.bulk_move_to_trash', { n: bulkDriverIds.length }) }}
               </button>
+              <button
+                v-else-if="driversViewMode === 'trash' && canManageDrivers && bulkDriverIds.length"
+                type="button"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
+                @click="openBulkForceModal('driver')"
+              >
+                {{ t('resources.bulk_permanent_delete_n', { n: bulkDriverIds.length }) }}
+              </button>
               <details ref="driverColumnPickerRef" class="relative">
                 <summary
                   class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
@@ -957,7 +985,7 @@
               <thead>
                 <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
                   <th
-                    v-if="driversViewMode === 'active' && canManageDrivers"
+                    v-if="canManageDrivers && (driversViewMode === 'active' || driversViewMode === 'trash')"
                     class="w-10 border-b border-slate-200 px-2 py-3 first:rounded-tl-xl dark:border-slate-700"
                     :aria-label="t('resources.col_select')"
                   >
@@ -970,7 +998,7 @@
                   </th>
                   <th
                     class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700"
-                    :class="driversViewMode === 'active' && canManageDrivers ? '' : 'first:rounded-tl-xl'"
+                    :class="canManageDrivers && (driversViewMode === 'active' || driversViewMode === 'trash') ? '' : 'first:rounded-tl-xl'"
                   >
                     {{ t('resources.col_driver_name') }}
                   </th>
@@ -995,7 +1023,11 @@
                   "
                   @click="goDriverDetail(d)"
                 >
-                  <td v-if="driversViewMode === 'active' && canManageDrivers" class="w-10 px-2 py-3 align-middle" @click.stop>
+                  <td
+                    v-if="canManageDrivers && (driversViewMode === 'active' || driversViewMode === 'trash')"
+                    class="w-10 px-2 py-3 align-middle"
+                    @click.stop
+                  >
                     <input
                       type="checkbox"
                       class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
@@ -1116,6 +1148,14 @@
               >
                 {{ t('resources.bulk_move_to_trash', { n: bulkSupplierIds.length }) }}
               </button>
+              <button
+                v-else-if="suppliersViewMode === 'trash' && canManageProviders && bulkSupplierIds.length"
+                type="button"
+                class="rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-900 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/70"
+                @click="openBulkForceModal('supplier')"
+              >
+                {{ t('resources.bulk_permanent_delete_n', { n: bulkSupplierIds.length }) }}
+              </button>
               <details ref="supplierColumnPickerRef" class="relative">
                 <summary
                   class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
@@ -1159,7 +1199,7 @@
               <thead>
                 <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
                   <th
-                    v-if="suppliersViewMode === 'active' && canManageProviders"
+                    v-if="canManageProviders && (suppliersViewMode === 'active' || suppliersViewMode === 'trash')"
                     class="w-10 border-b border-slate-200 px-2 py-3 first:rounded-tl-xl dark:border-slate-700"
                     :aria-label="t('resources.col_select')"
                   >
@@ -1172,7 +1212,7 @@
                   </th>
                   <th
                     class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700"
-                    :class="suppliersViewMode === 'active' && canManageProviders ? '' : 'first:rounded-tl-xl'"
+                    :class="canManageProviders && (suppliersViewMode === 'active' || suppliersViewMode === 'trash') ? '' : 'first:rounded-tl-xl'"
                   >
                     {{ t('resources.col_supplier') }}
                   </th>
@@ -1194,7 +1234,11 @@
                   ]"
                   @click="selectSupplier(s)"
                 >
-                  <td v-if="suppliersViewMode === 'active' && canManageProviders" class="w-10 px-2 py-3 align-middle" @click.stop>
+                  <td
+                    v-if="canManageProviders && (suppliersViewMode === 'active' || suppliersViewMode === 'trash')"
+                    class="w-10 px-2 py-3 align-middle"
+                    @click.stop
+                  >
                     <input
                       type="checkbox"
                       class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
@@ -2577,6 +2621,57 @@
 
     <Teleport to="body">
       <div
+        v-if="bulkForceModalOpen"
+        class="fixed inset-0 z-[115] flex items-end justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="bulk-force-title"
+        @click.self="!bulkForceSubmitting && (bulkForceModalOpen = false)"
+      >
+        <div
+          class="w-full max-w-lg overflow-hidden rounded-2xl border border-rose-200/80 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div class="border-b border-rose-100 bg-rose-50/80 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/40">
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                <TrashIcon class="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 id="bulk-force-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                  {{ t('resources.bulk_force_resources_title') }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  {{ t('resources.bulk_force_resources_confirm', { n: bulkForcePendingIds.length }) }}
+                </p>
+                <p class="mt-2 text-xs text-rose-800 dark:text-rose-300/90">{{ t('resources.force_delete_modal_hint') }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 px-4 pb-4 pt-2">
+            <button
+              type="button"
+              class="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              :disabled="bulkForceSubmitting"
+              @click="bulkForceModalOpen = false"
+            >
+              {{ t('app.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-50"
+              :disabled="bulkForceSubmitting"
+              @click="confirmBulkForceDelete"
+            >
+              {{ bulkForceSubmitting ? t('resources.loading') : t('resources.force_delete_modal_confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
         v-if="forceDeleteModalOpen"
         class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
         role="alertdialog"
@@ -2650,6 +2745,9 @@ import {
   bulkDeleteDrivers,
   bulkDeleteTransportProviders,
   bulkDeleteVehicles,
+  bulkForceDeleteDrivers,
+  bulkForceDeleteTransportProviders,
+  bulkForceDeleteVehicles,
   createDriverFromUser,
   createTransportProvider,
   createVehicle,
@@ -2840,6 +2938,10 @@ const bulkTrashModalOpen = ref(false)
 const bulkTrashKind = ref('')
 const bulkTrashPendingIds = ref([])
 const bulkTrashSubmitting = ref(false)
+const bulkForceModalOpen = ref(false)
+const bulkForceKind = ref('')
+const bulkForcePendingIds = ref([])
+const bulkForceSubmitting = ref(false)
 const resourceFilterMenuRef = ref(null)
 const resourceFiltersExtraOpen = ref(false)
 
@@ -4271,6 +4373,48 @@ async function confirmBulkTrash() {
     showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     bulkTrashSubmitting.value = false
+  }
+}
+
+function openBulkForceModal(kind) {
+  bulkForceKind.value = kind
+  if (kind === 'vehicle') bulkForcePendingIds.value = [...bulkVehicleIds.value]
+  else if (kind === 'driver') bulkForcePendingIds.value = [...bulkDriverIds.value]
+  else if (kind === 'supplier') bulkForcePendingIds.value = [...bulkSupplierIds.value]
+  else bulkForcePendingIds.value = []
+  if (!bulkForcePendingIds.value.length) return
+  bulkForceModalOpen.value = true
+}
+
+async function confirmBulkForceDelete() {
+  const ids = [...bulkForcePendingIds.value]
+  const kind = bulkForceKind.value
+  if (!ids.length || !kind) return
+  bulkForceSubmitting.value = true
+  try {
+    let n = 0
+    if (kind === 'vehicle') {
+      const r = await bulkForceDeleteVehicles(ids)
+      n = r?.deleted_count ?? ids.length
+      bulkVehicleIds.value = []
+    } else if (kind === 'driver') {
+      const r = await bulkForceDeleteDrivers(ids)
+      n = r?.deleted_count ?? ids.length
+      bulkDriverIds.value = []
+    } else if (kind === 'supplier') {
+      const r = await bulkForceDeleteTransportProviders(ids)
+      n = r?.deleted_count ?? ids.length
+      bulkSupplierIds.value = []
+    }
+    bulkForceModalOpen.value = false
+    showAppSuccess(t('resources.bulk_force_resources_done', { n: String(n) }))
+    selectedVehicle.value = null
+    selectedSupplier.value = null
+    await loadAll()
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
+  } finally {
+    bulkForceSubmitting.value = false
   }
 }
 

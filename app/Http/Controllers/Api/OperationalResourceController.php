@@ -18,6 +18,9 @@ use App\Http\Requests\Api\Operational\DeleteTransportProviderRequest;
 use App\Http\Requests\Api\Operational\BulkDeleteDriversRequest;
 use App\Http\Requests\Api\Operational\BulkDeleteTransportProvidersRequest;
 use App\Http\Requests\Api\Operational\BulkDeleteVehiclesRequest;
+use App\Http\Requests\Api\Operational\BulkForceDeleteDriversRequest;
+use App\Http\Requests\Api\Operational\BulkForceDeleteTransportProvidersRequest;
+use App\Http\Requests\Api\Operational\BulkForceDeleteVehiclesRequest;
 use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
 use App\Http\Requests\Api\Operational\ForceDeleteDriverRequest;
 use App\Http\Requests\Api\Operational\ForceDeleteTransportProviderRequest;
@@ -302,6 +305,48 @@ class OperationalResourceController extends Controller
         return $this->ok([
             'deleted_count' => $providers->count(),
             'trashed' => true,
+        ]);
+    }
+
+    public function bulkForceDeleteVehicles(BulkForceDeleteVehiclesRequest $request)
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $vehicles = Vehicle::onlyTrashed()->whereIn('id', $ids)->get();
+        foreach ($vehicles as $vehicle) {
+            $vehicle->forceDelete();
+        }
+
+        return $this->ok([
+            'deleted_count' => $vehicles->count(),
+            'permanent' => true,
+        ]);
+    }
+
+    public function bulkForceDeleteDrivers(BulkForceDeleteDriversRequest $request)
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $drivers = Driver::onlyTrashed()->whereIn('id', $ids)->get();
+        foreach ($drivers as $driver) {
+            $driver->forceDelete();
+        }
+
+        return $this->ok([
+            'deleted_count' => $drivers->count(),
+            'permanent' => true,
+        ]);
+    }
+
+    public function bulkForceDeleteTransportProviders(BulkForceDeleteTransportProvidersRequest $request)
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $providers = TransportProvider::onlyTrashed()->whereIn('id', $ids)->get();
+        foreach ($providers as $provider) {
+            $provider->forceDelete();
+        }
+
+        return $this->ok([
+            'deleted_count' => $providers->count(),
+            'permanent' => true,
         ]);
     }
 

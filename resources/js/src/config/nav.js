@@ -62,7 +62,6 @@ export const NAV_SECTIONS = [
         featureKey: 'module.operations',
       },
       { to: '/routes', labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.operations' },
-      { to: '/students', labelKey: 'nav.students', icon: 'students', featureKey: 'module.operations' },
       {
         to: '/resources',
         labelKey: 'nav.resources',

@@ -23,6 +23,12 @@ export async function bulkDeleteVehicles(ids) {
   return data.data
 }
 
+/** @param {number[]} ids — chỉ bản ghi đang ở thùng rác */
+export async function bulkForceDeleteVehicles(ids) {
+  const { data } = await http.post('/vehicles/bulk-force-delete', { ids })
+  return data.data
+}
+
 export async function listDrivers(params = {}) {
   const { data } = await http.get('/drivers', { params })
   return data.data
@@ -49,6 +55,12 @@ export async function forceDeleteDriver(driverId) {
 /** @param {number[]} ids */
 export async function bulkDeleteDrivers(ids) {
   const { data } = await http.post('/drivers/bulk-delete', { ids })
+  return data.data
+}
+
+/** @param {number[]} ids — chỉ bản ghi đang ở thùng rác */
+export async function bulkForceDeleteDrivers(ids) {
+  const { data } = await http.post('/drivers/bulk-force-delete', { ids })
   return data.data
 }
 
@@ -148,6 +160,12 @@ export async function forceDeleteTransportProvider(id) {
 /** @param {number[]} ids */
 export async function bulkDeleteTransportProviders(ids) {
   const { data } = await http.post('/transport-providers/bulk-delete', { ids })
+  return data.data
+}
+
+/** @param {number[]} ids — chỉ bản ghi đang ở thùng rác */
+export async function bulkForceDeleteTransportProviders(ids) {
+  const { data } = await http.post('/transport-providers/bulk-force-delete', { ids })
   return data.data
 }
 

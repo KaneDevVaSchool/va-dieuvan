@@ -1,5 +1,4 @@
 import {
-  AcademicCapIcon,
   AdjustmentsHorizontalIcon,
   BanknotesIcon,
   BellIcon,
@@ -37,7 +36,6 @@ export const NAV_ICON_MAP = {
   costs: CurrencyDollarIcon,
   cargo: CubeIcon,
   routes: MapPinIcon,
-  students: AcademicCapIcon,
   resources: RectangleStackIcon,
   payments: BanknotesIcon,
   reports: ChartBarIcon,

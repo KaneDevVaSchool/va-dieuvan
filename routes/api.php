@@ -12,7 +12,6 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Cargo\CargoController;
 use App\Http\Controllers\Api\Costs\TripCostController;
 use App\Http\Controllers\Api\D2D\RouteController;
-use App\Http\Controllers\Api\D2D\StudentController;
 use App\Http\Controllers\Api\NavBadgesController;
 use App\Http\Controllers\Api\Notifications\InboxController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
@@ -96,8 +95,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/routes', 'index');
             Route::get('/routes/{route}', 'show');
         });
-
-        Route::get('/students', [StudentController::class, 'index']);
 
         Route::controller(ReportController::class)->group(function () {
             Route::get('/reports/summary', 'summary')->middleware('throttle:30,1');
@@ -210,15 +207,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{routeVersion}/generate-trip', 'generateTrip')->middleware('throttle:10,1');
         });
 
-        // Students
-        Route::prefix('students')->controller(StudentController::class)->group(function () {
-            Route::post('/', 'store')->middleware('throttle:20,1');
-        });
-
         // Operational resources (mutating)
         Route::post('/drivers/from-user', [OperationalResourceController::class, 'storeDriverFromUser'])
             ->middleware('throttle:30,1');
         Route::post('/drivers/bulk-delete', [OperationalResourceController::class, 'bulkDestroyDrivers'])
+            ->middleware('throttle:30,1');
+        Route::post('/drivers/bulk-force-delete', [OperationalResourceController::class, 'bulkForceDeleteDrivers'])
             ->middleware('throttle:30,1');
         Route::patch('/drivers/{driver}', [OperationalResourceController::class, 'updateDriver'])
             ->middleware('throttle:30,1');
@@ -240,6 +234,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware('throttle:30,1');
         Route::post('/vehicles/bulk-delete', [OperationalResourceController::class, 'bulkDestroyVehicles'])
             ->middleware('throttle:30,1');
+        Route::post('/vehicles/bulk-force-delete', [OperationalResourceController::class, 'bulkForceDeleteVehicles'])
+            ->middleware('throttle:30,1');
         Route::patch('/vehicles/{vehicle}', [OperationalResourceController::class, 'updateVehicle'])
             ->middleware('throttle:30,1');
         Route::delete('/vehicles/{vehicle}', [OperationalResourceController::class, 'destroyVehicle'])
@@ -259,6 +255,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/transport-providers', [OperationalResourceController::class, 'storeTransportProvider'])
             ->middleware('throttle:30,1');
         Route::post('/transport-providers/bulk-delete', [OperationalResourceController::class, 'bulkDestroyTransportProviders'])
+            ->middleware('throttle:30,1');
+        Route::post('/transport-providers/bulk-force-delete', [OperationalResourceController::class, 'bulkForceDeleteTransportProviders'])
             ->middleware('throttle:30,1');
         Route::patch('/transport-providers/{transportProvider}', [OperationalResourceController::class, 'updateTransportProvider'])
             ->middleware('throttle:30,1');
