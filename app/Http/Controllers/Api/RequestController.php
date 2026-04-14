@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Requests\BulkForceDeleteDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\BulkRestoreDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\BulkSoftDeleteDispatchRequestsRequest;
 use App\Http\Requests\Api\Requests\ListRequestsRequest;
@@ -135,6 +136,27 @@ class RequestController extends Controller
         }
 
         return $this->ok(['restored' => $restored]);
+    }
+
+    public function bulkForceDestroy(BulkForceDeleteDispatchRequestsRequest $request)
+    {
+        $user = $request->user();
+        $ids = $request->validated()['ids'];
+        $deleted = 0;
+
+        foreach ($ids as $id) {
+            $dr = DispatchRequest::onlyTrashed()->find($id);
+            if (! $dr) {
+                continue;
+            }
+            if (! $user->can('forceDelete', $dr)) {
+                continue;
+            }
+            $dr->forceDelete();
+            $deleted++;
+        }
+
+        return $this->ok(['deleted' => $deleted]);
     }
 
     /**

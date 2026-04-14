@@ -139,6 +139,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::controller(RequestController::class)->group(function () {
             Route::post('/requests/bulk-delete', 'bulkDestroy');
             Route::post('/requests/bulk-restore', 'bulkRestore');
+            Route::post('/requests/bulk-force-delete', 'bulkForceDestroy');
         });
 
         // Trips

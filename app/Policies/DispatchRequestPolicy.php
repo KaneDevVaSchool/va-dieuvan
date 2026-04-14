@@ -73,6 +73,18 @@ class DispatchRequestPolicy
         return $this->canManageTrashed($user, $dispatchRequest);
     }
 
+    /**
+     * Permanently remove a soft-deleted request (cannot be undone).
+     */
+    public function forceDelete(User $user, DispatchRequest $dispatchRequest): bool
+    {
+        if (! $dispatchRequest->trashed()) {
+            return false;
+        }
+
+        return $this->canManageTrashed($user, $dispatchRequest);
+    }
+
     private function canManageTrashed(User $user, DispatchRequest $dispatchRequest): bool
     {
         if ($user->hasPermission('trip.view_all') || $user->hasPermission('request.approve')) {

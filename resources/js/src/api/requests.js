@@ -21,6 +21,15 @@ export async function bulkRestoreRequests(payload) {
   return data.data
 }
 
+/**
+ * Permanently delete soft-deleted requests (trash).
+ * @param {{ ids: number[] }} payload
+ */
+export async function bulkForceDeleteRequests(payload) {
+  const { data } = await http.post('/requests/bulk-force-delete', payload)
+  return data.data
+}
+
 export async function getDispatchRequest(id) {
   const { data } = await http.get(`/dispatch-requests/${id}`)
   return data.data
