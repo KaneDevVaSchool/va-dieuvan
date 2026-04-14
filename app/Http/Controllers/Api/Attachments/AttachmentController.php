@@ -16,6 +16,7 @@ use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Support\FinancialDataLock;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -105,13 +106,54 @@ class AttachmentController extends Controller
 
         $disk = $attachment->disk ?: 'public';
         $path = $attachment->path;
-        if (! $path || ! Storage::disk($disk)->exists($path)) {
-            abort(404);
+        if (! $path) {
+            abort(404, 'Bản ghi đính kèm không có đường dẫn tệp (path).');
+        }
+        if (! Storage::disk($disk)->exists($path)) {
+            abort(404, 'Không tìm thấy tệp trên máy chủ (storage). Kiểm tra `php artisan storage:link`, quyền thư mục, hoặc tải lại chứng từ.');
         }
 
         $name = $attachment->original_name ?: basename($path);
 
         return Storage::disk($disk)->download($path, $name);
+    }
+
+    /**
+     * morphTo đôi khi không resolve (attachable_type cũ / khác class). Thử map thủ công.
+     */
+    private function resolveAttachableParent(Attachment $attachment): ?Model
+    {
+        $attachment->loadMissing('attachable');
+        if ($attachment->attachable instanceof Model) {
+            return $attachment->attachable;
+        }
+
+        $type = $attachment->attachable_type;
+        $id = $attachment->attachable_id;
+        if (! $type || ! $id) {
+            return null;
+        }
+
+        $type = (string) $type;
+
+        $aliases = [
+            'vehicle_compliance_document' => VehicleComplianceDocument::class,
+            'driver_compliance_document' => DriverComplianceDocument::class,
+            'trip' => Trip::class,
+            'dispatch_request' => DispatchRequest::class,
+            'cargo_shipment' => CargoShipment::class,
+            'trip_cost' => TripCost::class,
+        ];
+
+        if (isset($aliases[$type])) {
+            return $aliases[$type]::query()->find($id);
+        }
+
+        if (class_exists($type)) {
+            return $type::query()->find($id);
+        }
+
+        return null;
     }
 
     private function authorizeAttachmentDownload(Request $request, Attachment $attachment): void
@@ -121,10 +163,9 @@ class AttachmentController extends Controller
             abort(403);
         }
 
-        $attachment->loadMissing('attachable');
-        $parent = $attachment->attachable;
+        $parent = $this->resolveAttachableParent($attachment);
         if (! $parent) {
-            abort(404);
+            abort(404, 'Không tìm thấy chứng từ gắn với tệp (orphan hoặc attachable_type/attachable_id không hợp lệ).');
         }
 
         if ($parent instanceof VehicleComplianceDocument) {
