@@ -10,7 +10,7 @@ export const appMessageState = reactive({
   /** @type {AppMessageVariant} */
   variant: 'error',
   /** Chi tiết kỹ thuật (HTTP, endpoint) — chỉ dùng khi variant === 'error' */
-  /** @type {null | { status: number|null, method: string, path: string, retryAfter: string|null, serverRaw: string, networkHint: string }} */
+  /** @type {null | { status: number|null, method: string, path: string, retryAfter: string|null, serverRaw: string, networkHint: string, axiosCode?: string|null, axiosMessage?: string|null, configMissing?: boolean }} */
   apiDetails: null,
 })
 

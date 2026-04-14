@@ -33,6 +33,67 @@ http.interceptors.response.use(
 
 export { TOKEN_KEY }
 
+/** Matches `http` client default — used when error config omits baseURL (some Axios/network failures). */
+const DEFAULT_API_BASE = '/api'
+
+/**
+ * Build a readable request URL for error modals. Axios may omit `config` on some failures, or leave `url` empty after merge.
+ * @param {import('axios').AxiosRequestConfig | undefined | null} cfg
+ * @param {unknown} err
+ */
+function buildRequestUrlForErrorDetails(cfg, err) {
+  const xhr = err && typeof err === 'object' ? err.request : null
+  if (xhr && typeof xhr.responseURL === 'string' && xhr.responseURL) {
+    return xhr.responseURL
+  }
+
+  if (!cfg || typeof cfg !== 'object') {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}${DEFAULT_API_BASE}`
+    }
+    return DEFAULT_API_BASE
+  }
+
+  const baseRaw =
+    cfg.baseURL != null && String(cfg.baseURL).length > 0 ? String(cfg.baseURL) : DEFAULT_API_BASE
+  const base = baseRaw.replace(/\/+$/, '') || DEFAULT_API_BASE.replace(/\/+$/, '')
+  let u = cfg.url != null ? String(cfg.url) : ''
+  if (u.startsWith('http')) {
+    return u
+  }
+  const segment = u.startsWith('/') ? u : u ? `/${u}` : ''
+  let path = `${base}${segment}`.replace(/([^:])\/{2,}/g, '$1/')
+  if (!path || path === '//') {
+    path = base || DEFAULT_API_BASE
+  }
+
+  const prm = cfg.params
+  if (prm && typeof prm === 'object' && !Array.isArray(prm) && Object.keys(prm).length) {
+    try {
+      const qs = new URLSearchParams()
+      for (const [k, v] of Object.entries(prm)) {
+        if (v === undefined || v === null || v === '') continue
+        qs.append(k, String(v))
+      }
+      const q = qs.toString()
+      if (q) {
+        path = `${path}${path.includes('?') ? '&' : '?'}${q}`
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (typeof window !== 'undefined' && path.startsWith('/')) {
+    try {
+      return new URL(path, window.location.origin).href
+    } catch {
+      return `${window.location.origin}${path}`
+    }
+  }
+  return path
+}
+
 /** Vietnamese sentence markers — use to keep friendly messages from backend */
 function looksLikeVietnamese(text) {
   return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(
@@ -150,31 +211,15 @@ export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.'
   const headers = err?.response?.headers || {}
 
   let method = 'GET'
-  let path = '—'
-  if (cfg) {
-    method = (cfg.method || 'get').toUpperCase()
-    const base = (cfg.baseURL || '').replace(/\/$/, '')
-    const u = cfg.url || ''
-    if (u.startsWith('http')) {
-      path = u
-    } else {
-      path = `${base}${u.startsWith('/') ? u : `/${u}`}` || '—'
-    }
-    const prm = cfg.params
-    if (prm && typeof prm === 'object' && !Array.isArray(prm) && Object.keys(prm).length) {
-      try {
-        const qs = new URLSearchParams()
-        for (const [k, v] of Object.entries(prm)) {
-          if (v === undefined || v === null || v === '') continue
-          qs.append(k, String(v))
-        }
-        const q = qs.toString()
-        if (q) path = `${path}${path.includes('?') ? '&' : '?'}${q}`
-      } catch {
-        /* ignore */
-      }
-    }
+  if (cfg && typeof cfg === 'object') {
+    method = String(cfg.method || 'get').toUpperCase()
   }
+
+  const path = buildRequestUrlForErrorDetails(cfg, err)
+
+  const axiosCode = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
+  const axiosMessage =
+    err && typeof err === 'object' && typeof err.message === 'string' ? err.message.slice(0, 800) : ''
 
   const retryRaw = headers['retry-after'] ?? headers['Retry-After']
   const retryAfter = retryRaw != null && retryRaw !== '' ? String(retryRaw) : null
@@ -201,7 +246,10 @@ export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.'
     if (code === 'ECONNABORTED' || /timeout/i.test(msg)) {
       networkHint = 'Hết thời gian chờ phản hồi. Thử lại sau vài giây.'
     } else if (code === 'ERR_NETWORK' || /network/i.test(msg)) {
-      networkHint = 'Không kết nối được máy chủ. Kiểm tra mạng hoặc VPN.'
+      networkHint =
+        'Không nhận được phản hồi từ máy chủ (ERR_NETWORK). Kiểm tra mạng/VPN, HTTPS, hoặc cấu hình reverse proxy /api. Nếu trang chạy HTTPS mà API là HTTP, trình duyệt sẽ chặn (mixed content).'
+    } else if (!code && !msg) {
+      networkHint = 'Không có chi tiết từ trình duyệt. Thử làm mới trang hoặc đăng nhập lại.'
     }
   } else if (status === 429) {
     title = 'Quá nhiều yêu cầu (429 Too Many Requests)'
@@ -224,6 +272,9 @@ export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.'
     retryAfter,
     serverRaw: serverExtra,
     networkHint,
+    axiosCode: axiosCode || null,
+    axiosMessage: axiosMessage || null,
+    configMissing: !cfg,
   }
 
   return { title, friendly, details }

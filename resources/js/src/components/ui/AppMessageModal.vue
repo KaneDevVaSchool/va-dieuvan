@@ -39,6 +39,19 @@
                 <dt class="shrink-0 text-slate-500 dark:text-slate-500">Yêu cầu</dt>
                 <dd>{{ state.apiDetails.method }} {{ state.apiDetails.path }}</dd>
               </div>
+              <div v-if="state.apiDetails.configMissing" class="text-slate-600 dark:text-slate-400">
+                Không đọc được cấu hình request (axios). URL phía trên là mặc định /api — dùng để kiểm tra domain có đúng không.
+              </div>
+              <div v-if="state.apiDetails.axiosCode" class="flex flex-wrap gap-x-2 gap-y-0.5">
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">Mã lỗi</dt>
+                <dd>{{ state.apiDetails.axiosCode }}</dd>
+              </div>
+              <div v-if="state.apiDetails.axiosMessage" class="pt-1">
+                <dt class="text-slate-500 dark:text-slate-500">Thông báo trình duyệt / Axios</dt>
+                <dd class="mt-0.5 whitespace-pre-wrap break-words text-slate-800 dark:text-slate-200">
+                  {{ state.apiDetails.axiosMessage }}
+                </dd>
+              </div>
               <div v-if="state.apiDetails.retryAfter" class="flex flex-wrap gap-x-2 gap-y-0.5">
                 <dt class="shrink-0 text-slate-500 dark:text-slate-500">Retry-After</dt>
                 <dd>{{ state.apiDetails.retryAfter }} (giây hoặc ngày theo máy chủ)</dd>
