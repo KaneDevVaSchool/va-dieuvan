@@ -1617,6 +1617,7 @@
                               v-if="isPdfAttachment(a)"
                               type="button"
                               class="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                              :title="t('resources.attachment_pdf_preview_title')"
                               @click.stop="openPdfPreview(a)"
                             >
                               {{ t('resources.attachment_pdf_preview') }}
@@ -2618,59 +2619,6 @@
       </div>
     </Teleport>
 
-    <!-- Modal: xem trước PDF — chỉ URL https trực tiếp (tránh blob: gây lỗi Vue Router / History) -->
-    <Teleport to="body">
-      <div
-        v-if="pdfPreviewOpen"
-        class="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 p-0 sm:p-4 sm:items-center"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="pdf-preview-title"
-        @click.self="closePdfPreview"
-      >
-        <div
-          class="flex h-[100dvh] max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-[min(92vh,900px)] sm:max-h-[min(92vh,900px)] sm:rounded-2xl sm:ring-1 sm:ring-slate-700"
-          @click.stop
-        >
-          <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-700 bg-slate-900 px-3 py-3 sm:gap-3 sm:px-4">
-            <h2 id="pdf-preview-title" class="min-w-0 flex-1 truncate text-sm font-semibold text-white sm:text-base">{{ pdfPreviewTitle }}</h2>
-            <div class="flex shrink-0 items-center gap-2">
-              <a
-                v-if="pdfPreviewDirectUrl"
-                :href="pdfPreviewDirectUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="rounded-lg border border-slate-600 px-2.5 py-1.5 text-xs font-medium text-teal-300 hover:bg-slate-800"
-              >
-                {{ t('resources.attachment_pdf_open_new_tab') }}
-              </a>
-              <button
-                type="button"
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-600 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                :aria-label="t('resources.close_panel')"
-                @click="closePdfPreview"
-              >
-                <XMarkIcon class="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-            <p v-if="pdfPreviewUrl" class="shrink-0 border-b border-slate-800 bg-slate-900 px-3 py-1.5 text-[11px] text-slate-500 sm:px-4">
-              {{ t('resources.attachment_pdf_embed_hint') }}
-            </p>
-            <div class="relative min-h-0 flex-1 bg-slate-900">
-              <iframe
-                v-if="pdfPreviewUrl"
-                :key="pdfPreviewDirectUrl"
-                :src="pdfPreviewUrl"
-                class="h-full min-h-[50vh] w-full border-0 bg-slate-900"
-                :title="pdfPreviewTitle"
-                referrerpolicy="no-referrer"
-              />
-            </div>
-        </div>
-      </div>
-    </Teleport>
-
     <!-- Modal: chuyển xe vào thùng rác -->
     <Teleport to="body">
       <div
@@ -3569,10 +3517,6 @@ const VEHICLE_DOC_TYPES = [
 ]
 
 const vehicleComplianceDocs = ref([])
-const pdfPreviewOpen = ref(false)
-const pdfPreviewUrl = ref('')
-const pdfPreviewDirectUrl = ref('')
-const pdfPreviewTitle = ref('')
 const vehicleDocModalOpen = ref(false)
 const vehicleDocSaving = ref(false)
 const vehicleDocFormError = ref('')
@@ -4190,21 +4134,12 @@ function resolveAttachmentAbsoluteUrl(a) {
   return `${window.location.origin}${path}`
 }
 
+/** Mở PDF bằng trình xem mặc định của trình duyệt (tab mới) — không iframe/blob, tránh Vue Router. */
 function openPdfPreview(a) {
-  if (!a?.url) return
   const resolved = resolveAttachmentAbsoluteUrl(a)
   if (!resolved) return
-  pdfPreviewTitle.value = a.original_name || 'PDF'
-  pdfPreviewDirectUrl.value = resolved
-  pdfPreviewUrl.value = resolved
-  pdfPreviewOpen.value = true
-}
-
-function closePdfPreview() {
-  pdfPreviewOpen.value = false
-  pdfPreviewUrl.value = ''
-  pdfPreviewDirectUrl.value = ''
-  pdfPreviewTitle.value = ''
+  const w = window.open(resolved, '_blank', 'noopener,noreferrer')
+  if (!w) window.location.assign(resolved)
 }
 
 function vehicleDocTypeLabel(type) {
