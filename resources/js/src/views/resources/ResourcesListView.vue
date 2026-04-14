@@ -3029,8 +3029,12 @@ import {
   updateVehicleComplianceDocument,
 } from '../../api/operational'
 import { formatApiError, TOKEN_KEY } from '../../api/http'
-import { showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
-import { downloadPdfAttachmentFromUrl } from '../../util/downloadPdfAttachment'
+import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
+import {
+  downloadPdfAttachmentFromApi,
+  downloadPdfAttachmentFromUrl,
+  normalizeAxiosBlobError,
+} from '../../util/downloadPdfAttachment'
 import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
@@ -4237,39 +4241,62 @@ function vehiclePdfAttachmentBusyKey(doc, a, aIdx) {
   return `${doc?.id ?? 'doc'}-${a?.id ?? aIdx}`
 }
 
-/** Tải PDF: axios + `file-type` + FileSaver — tránh lưu nhầm HTML/SPA thành “.pdf”. */
+/** Tải PDF: ưu tiên GET /api/attachments/{id}/download (Sanctum); fallback URL /storage. */
 async function downloadVehiclePdfAttachment(doc, a, aIdx) {
   const busyKey = vehiclePdfAttachmentBusyKey(doc, a, aIdx)
+  if (pdfAttachmentDownloadBusyKey.value === busyKey) return
   const url = resolveAttachmentAbsoluteUrl(a)
-  if (!url || pdfAttachmentDownloadBusyKey.value === busyKey) return
+  if (a?.id == null && !url) return
+
   pdfAttachmentDownloadBusyKey.value = busyKey
   let bearerToken = null
   try {
-    const u = new URL(url, window.location.origin)
-    if (u.origin === window.location.origin) {
-      bearerToken = localStorage.getItem(TOKEN_KEY)
+    if (url) {
+      const u = new URL(url, window.location.origin)
+      if (u.origin === window.location.origin) {
+        bearerToken = localStorage.getItem(TOKEN_KEY)
+      }
     }
   } catch {
     /* ignore */
   }
+
+  const showSoftFail = (result) => {
+    if (result.reason === 'html') {
+      showAppInfo(t('resources.attachment_download_html_hint'), t('resources.attachment_download_html_title'))
+    } else if (result.reason === 'bad_json') {
+      showAppError(t('resources.attachment_download_failed'))
+    } else {
+      showAppInfo(t('resources.attachment_download_not_pdf_hint'), t('resources.attachment_download_not_pdf_title'))
+    }
+  }
+
   try {
-    const result = await downloadPdfAttachmentFromUrl(url, {
-      filename: attachmentDownloadName(a),
-      bearerToken,
-    })
+    let result
+    if (a?.id != null) {
+      result = await downloadPdfAttachmentFromApi(a.id, attachmentDownloadName(a))
+    } else {
+      result = await downloadPdfAttachmentFromUrl(url, {
+        filename: attachmentDownloadName(a),
+        bearerToken,
+      })
+    }
     if (result.ok) return
 
-    const w = window.open(url, '_blank', 'noopener,noreferrer')
-    if (!w) {
-      if (result.reason === 'html') {
-        showAppInfo(t('resources.attachment_download_html_hint'), t('resources.attachment_download_html_title'))
-      } else {
-        showAppInfo(t('resources.attachment_download_not_pdf_hint'), t('resources.attachment_download_not_pdf_title'))
-      }
+    if (url) {
+      const w = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!w) showSoftFail(result)
+    } else {
+      showSoftFail(result)
     }
   } catch (e) {
-    const w = window.open(url, '_blank', 'noopener,noreferrer')
-    if (!w) showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+    await normalizeAxiosBlobError(e)
+    if (url) {
+      const w = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!w) showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+    } else {
+      showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+    }
   } finally {
     pdfAttachmentDownloadBusyKey.value = null
   }

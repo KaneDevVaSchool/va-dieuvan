@@ -16,6 +16,7 @@ use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Support\FinancialDataLock;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -93,6 +94,82 @@ class AttachmentController extends Controller
             ...$attachment->toArray(),
             'url' => Storage::url($path),
         ]);
+    }
+
+    /**
+     * Tải file gốc qua API (Sanctum) — tránh phụ thuộc URL /storage công khai hoặc SPA/nginx trả HTML.
+     */
+    public function download(Request $request, Attachment $attachment)
+    {
+        $this->authorizeAttachmentDownload($request, $attachment);
+
+        $disk = $attachment->disk ?: 'public';
+        $path = $attachment->path;
+        if (! $path || ! Storage::disk($disk)->exists($path)) {
+            abort(404);
+        }
+
+        $name = $attachment->original_name ?: basename($path);
+
+        return Storage::disk($disk)->download($path, $name);
+    }
+
+    private function authorizeAttachmentDownload(Request $request, Attachment $attachment): void
+    {
+        $user = $request->user();
+        if (! $user) {
+            abort(403);
+        }
+
+        $attachment->loadMissing('attachable');
+        $parent = $attachment->attachable;
+        if (! $parent) {
+            abort(404);
+        }
+
+        if ($parent instanceof VehicleComplianceDocument) {
+            if ($user->can('resource.vehicle.manage') || $user->can('trip.assign')) {
+                return;
+            }
+            abort(403);
+        }
+
+        if ($parent instanceof DriverComplianceDocument) {
+            if ($user->can('resource.driver.manage')) {
+                return;
+            }
+            abort(403);
+        }
+
+        if ($parent instanceof Trip) {
+            if ($user->can('trip.view_all') || $user->can('trip.assign')) {
+                return;
+            }
+            abort(403);
+        }
+
+        if ($parent instanceof DispatchRequest) {
+            if ($user->can('request.paper.manage') || $user->can('request.approve') || $user->can('request.create')) {
+                return;
+            }
+            abort(403);
+        }
+
+        if ($parent instanceof CargoShipment) {
+            if ($user->can('cargo.manage')) {
+                return;
+            }
+            abort(403);
+        }
+
+        if ($parent instanceof TripCost) {
+            if ($user->can('trip.cost.view') || $user->can('trip.cost.reconcile')) {
+                return;
+            }
+            abort(403);
+        }
+
+        abort(403);
     }
 
     public function runOcr(RunAttachmentOcrRequest $request, Attachment $attachment, PaperOcrStubService $ocr)

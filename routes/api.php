@@ -274,6 +274,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Attachments can be heavier; keep separate throttle
         Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {
             Route::post('/', 'upload')->middleware('throttle:30,1');
+            Route::get('/{attachment}/download', 'download')
+                ->whereNumber('attachment')
+                ->middleware('throttle:120,1');
             Route::post('/{attachment}/ocr', 'runOcr')->middleware('throttle:15,1');
         });
     });
