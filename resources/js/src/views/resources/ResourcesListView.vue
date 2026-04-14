@@ -146,7 +146,7 @@
 
         <div class="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:ml-auto sm:shrink-0">
           <button
-            v-if="activeTab === 'drivers' && driversViewMode === 'active' && canManageVehicles"
+            v-if="activeTab === 'drivers' && driversViewMode === 'active' && canManageDrivers"
             type="button"
             class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
             @click="openAssignModal(null)"
@@ -2110,7 +2110,7 @@
       </div>
     </Teleport>
 
-    <!-- Modal: gán tài xế mặc định (chọn từ danh sách tài xế) -->
+    <!-- Modal: tab Tài xế = thêm tài xế từ user; chi tiết xe = gán TX mặc định (select) -->
     <Teleport to="body">
       <div
         v-if="assignModalOpen"
@@ -2121,33 +2121,50 @@
       >
         <div class="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40" @click.stop>
           <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">{{ t('resources.assign_driver_modal_title') }}</h2>
+            <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+              {{ assignVehicleId != null ? t('resources.assign_driver_modal_title') : t('resources.assign_driver_modal_title_add') }}
+            </h2>
             <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-              {{
-                assignVehicleId != null
-                  ? t('resources.assign_driver_modal_hint_vehicle')
-                  : t('resources.assign_driver_modal_hint_pick_both')
-              }}
+              {{ assignVehicleId != null ? t('resources.assign_driver_modal_hint_vehicle') : t('resources.assign_driver_modal_hint_add') }}
             </p>
           </div>
-          <div class="max-h-[55vh] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-            <div v-if="assignVehicleId == null" class="space-y-1.5">
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="assign-vehicle-select">{{
-                t('resources.assign_driver_modal_label_vehicle')
-              }}</label>
-              <select
-                id="assign-vehicle-select"
-                v-model.number="assignVehiclePickId"
-                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              >
-                <option :value="null">{{ t('resources.assign_driver_modal_placeholder_vehicle') }}</option>
-                <option v-for="v in vehiclesForAssignSelect" :key="v.id" :value="v.id">{{ v.code }} — {{ v.model }}</option>
-              </select>
-              <p v-if="!vehiclesForAssignSelect.length" class="text-xs text-amber-700 dark:text-amber-400">
-                {{ t('resources.assign_driver_modal_no_vehicles') }}
-              </p>
-            </div>
-            <div v-else class="rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
+
+          <!-- Thêm tài xế từ người dùng (tab Tài xế) -->
+          <div v-if="assignVehicleId == null" class="max-h-[55vh] overflow-y-auto px-5 py-4 sm:px-6">
+            <input
+              v-model="userSearchQuery"
+              type="search"
+              class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              :placeholder="t('resources.assign_driver_search_placeholder')"
+              @input="scheduleUserSearch"
+            />
+            <div v-if="userSearchLoading" class="mt-3 text-xs text-slate-500">{{ t('resources.loading') }}</div>
+            <ul v-else-if="userSearchResults.length" class="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+              <li v-for="u in userSearchResults" :key="u.id">
+                <button
+                  type="button"
+                  class="flex w-full items-start gap-3 px-3 py-2.5 text-left text-sm transition hover:bg-teal-50 dark:hover:bg-slate-800"
+                  :class="pickedUser?.id === u.id ? 'bg-teal-50 dark:bg-slate-800' : ''"
+                  @click="pickedUser = u"
+                >
+                  <div class="min-w-0 flex-1">
+                    <div class="font-medium text-slate-900 dark:text-white">{{ u.name }}</div>
+                    <div class="truncate text-xs text-slate-500">{{ u.email }}</div>
+                    <div class="mt-0.5 flex flex-wrap gap-2 text-[11px] text-slate-500">
+                      <span v-if="u.employee_code" class="font-mono">{{ u.employee_code }}</span>
+                      <span v-if="u.phone">{{ u.phone }}</span>
+                    </div>
+                  </div>
+                </button>
+              </li>
+            </ul>
+            <p v-else-if="userSearchQuery.trim().length >= 2 && !userSearchLoading" class="mt-3 text-xs text-slate-500">{{ t('resources.empty') }}</p>
+            <p v-if="assignError" class="mt-2 text-xs text-rose-600">{{ assignError }}</p>
+          </div>
+
+          <!-- Gán tài xế mặc định cho xe (chi tiết xe) -->
+          <div v-else class="max-h-[55vh] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+            <div class="rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-800/60">
               <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.col_vehicle') }}</div>
               <div v-if="assignVehicleDisplay" class="mt-0.5 font-semibold text-slate-900 dark:text-white">
                 {{ assignVehicleDisplay.code }} <span class="font-normal text-slate-600 dark:text-slate-400">· {{ assignVehicleDisplay.model }}</span>
@@ -2172,6 +2189,7 @@
             </div>
             <p v-if="assignError" class="text-xs text-rose-600">{{ assignError }}</p>
           </div>
+
           <div class="flex flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
             <button
               type="button"
@@ -2186,7 +2204,13 @@
               :disabled="assignSubmitDisabled"
               @click="submitAssignDriver"
             >
-              {{ assignSubmitting ? t('resources.assign_driver_assigning') : t('resources.assign_driver_confirm') }}
+              {{
+                assignSubmitting
+                  ? t('resources.assign_driver_assigning')
+                  : assignVehicleId != null
+                    ? t('resources.assign_driver_confirm')
+                    : t('resources.assign_driver_confirm_add')
+              }}
             </button>
           </div>
         </div>
@@ -2790,6 +2814,7 @@ import {
   bulkForceDeleteDrivers,
   bulkForceDeleteTransportProviders,
   bulkForceDeleteVehicles,
+  createDriverFromUser,
   createTransportProvider,
   createVehicle,
   createVehicleComplianceDocument,
@@ -2807,6 +2832,7 @@ import {
   restoreDriver as restoreDriverRequest,
   restoreTransportProvider as restoreTransportProviderRequest,
   restoreVehicle as restoreVehicleRequest,
+  searchUsersForDriverAssignment,
   updateTransportProvider,
   updateVehicle,
   updateVehicleComplianceDocument,
@@ -2944,16 +2970,14 @@ function closeResourceFilterMenu() {
 
 const assignModalOpen = ref(false)
 const assignVehicleId = ref(null)
-const assignVehiclePickId = ref(null)
 const pickedDriverId = ref(null)
 const assignSubmitting = ref(false)
 const assignError = ref('')
-
-const vehiclesForAssignSelect = computed(() =>
-  [...vehicles.value]
-    .filter((v) => !v.deleted_at)
-    .sort((a, b) => String(a.code).localeCompare(String(b.code), undefined, { sensitivity: 'base' })),
-)
+const userSearchQuery = ref('')
+const userSearchResults = ref([])
+const userSearchLoading = ref(false)
+const pickedUser = ref(null)
+let userSearchTimer = null
 
 const driversForAssignSelect = computed(() =>
   [...drivers.value]
@@ -2969,9 +2993,10 @@ const assignVehicleDisplay = computed(() => {
 
 const assignSubmitDisabled = computed(() => {
   if (assignSubmitting.value) return true
-  if (pickedDriverId.value == null) return true
-  const vid = assignVehicleId.value ?? assignVehiclePickId.value
-  return vid == null
+  if (assignVehicleId.value != null) {
+    return pickedDriverId.value == null
+  }
+  return !pickedUser.value
 })
 
 const vehicleModalOpen = ref(false)
@@ -4134,8 +4159,10 @@ function driverAssignOptionLabel(d) {
 
 function openAssignModal(vehicleId) {
   assignVehicleId.value = vehicleId
-  assignVehiclePickId.value = null
   assignError.value = ''
+  userSearchQuery.value = ''
+  userSearchResults.value = []
+  pickedUser.value = null
   if (vehicleId != null) {
     const v = vehicles.value.find((x) => x.id === vehicleId) ?? selectedVehicle.value
     pickedDriverId.value = v?.defaultDriver?.id ?? null
@@ -4148,19 +4175,56 @@ function openAssignModal(vehicleId) {
 function closeAssignModal() {
   assignModalOpen.value = false
   assignVehicleId.value = null
-  assignVehiclePickId.value = null
   pickedDriverId.value = null
   assignSubmitting.value = false
 }
 
+function scheduleUserSearch() {
+  clearTimeout(userSearchTimer)
+  userSearchTimer = setTimeout(runUserSearch, 350)
+}
+
+async function runUserSearch() {
+  const q = userSearchQuery.value.trim()
+  if (q.length < 2) {
+    userSearchResults.value = []
+    return
+  }
+  userSearchLoading.value = true
+  assignError.value = ''
+  try {
+    userSearchResults.value = await searchUsersForDriverAssignment(q)
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
+    userSearchResults.value = []
+  } finally {
+    userSearchLoading.value = false
+  }
+}
+
 async function submitAssignDriver() {
-  const vid = assignVehicleId.value ?? assignVehiclePickId.value
-  const did = pickedDriverId.value
-  if (vid == null || did == null) return
+  if (assignVehicleId.value != null) {
+    const vid = assignVehicleId.value
+    const did = pickedDriverId.value
+    if (did == null) return
+    assignSubmitting.value = true
+    assignError.value = ''
+    try {
+      await updateVehicle(vid, { default_driver_id: did })
+      await loadAll()
+      closeAssignModal()
+    } catch (e) {
+      showAppErrorFromApi(e, t('resources.load_error'))
+    } finally {
+      assignSubmitting.value = false
+    }
+    return
+  }
+  if (!pickedUser.value) return
   assignSubmitting.value = true
   assignError.value = ''
   try {
-    await updateVehicle(vid, { default_driver_id: did })
+    await createDriverFromUser(pickedUser.value.id)
     await loadAll()
     closeAssignModal()
   } catch (e) {
@@ -4172,7 +4236,9 @@ async function submitAssignDriver() {
 
 watch(assignModalOpen, (open) => {
   if (!open) {
-    assignVehiclePickId.value = null
+    userSearchQuery.value = ''
+    userSearchResults.value = []
+    pickedUser.value = null
     pickedDriverId.value = null
   }
 })
