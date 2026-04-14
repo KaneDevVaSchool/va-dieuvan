@@ -160,6 +160,20 @@ export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.'
     } else {
       path = `${base}${u.startsWith('/') ? u : `/${u}`}` || '—'
     }
+    const prm = cfg.params
+    if (prm && typeof prm === 'object' && !Array.isArray(prm) && Object.keys(prm).length) {
+      try {
+        const qs = new URLSearchParams()
+        for (const [k, v] of Object.entries(prm)) {
+          if (v === undefined || v === null || v === '') continue
+          qs.append(k, String(v))
+        }
+        const q = qs.toString()
+        if (q) path = `${path}${path.includes('?') ? '&' : '?'}${q}`
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   const retryRaw = headers['retry-after'] ?? headers['Retry-After']

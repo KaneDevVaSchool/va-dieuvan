@@ -1658,7 +1658,7 @@ function buildListParams() {
   }
 
   if (activeTab.value === 'trash') {
-    params.only_trashed = true
+    params.only_trashed = 1
     params.status = undefined
     params.trip_status = undefined
   } else if (activeTab.value === 'trip_in_progress') {

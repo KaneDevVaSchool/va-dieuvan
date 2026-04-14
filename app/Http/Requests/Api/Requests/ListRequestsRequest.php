@@ -44,6 +44,11 @@ class ListRequestsRequest extends ApiFormRequest
 
     public function rules(): array
     {
+        $toRules = ['nullable', 'date'];
+        if ($this->filled('from')) {
+            $toRules[] = 'after_or_equal:from';
+        }
+
         return [
             'q' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', Rule::in(['draft', 'pending', 'approved', 'rejected', 'cancelled'])],
@@ -56,7 +61,7 @@ class ListRequestsRequest extends ApiFormRequest
             'is_urgent' => ['nullable', 'boolean'],
             'sla_risk_only' => ['nullable', 'boolean'],
             'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'to' => $toRules,
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
             'only_trashed' => ['nullable', 'boolean'],
