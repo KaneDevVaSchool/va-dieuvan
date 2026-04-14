@@ -379,6 +379,8 @@ import {
   updateDriver,
   updateDriverComplianceDocument,
 } from '../../api/operational'
+import { formatApiError } from '../../api/http'
+import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
@@ -496,8 +498,9 @@ async function load() {
     driver.value = d
     documents.value = docs.items || []
     auditLogs.value = audit.items || []
-  } catch {
-    loadError.value = t('resources.load_error')
+  } catch (e) {
+    loadError.value = formatApiError(e, t('resources.load_error'))
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     loading.value = false
   }
@@ -526,7 +529,7 @@ async function saveProfile() {
     })
     profileEdit.value = false
   } catch (e) {
-    profileError.value = e?.response?.data?.message || t('resources.load_error')
+    profileError.value = formatApiError(e, t('resources.load_error'))
   } finally {
     savingProfile.value = false
   }
@@ -643,12 +646,17 @@ async function submitDocForm() {
     docModalOpen.value = false
     await load()
   } catch (e) {
-    const msg = e?.response?.data?.message
-    const errs = e?.response?.data?.errors
-    docFormError.value =
-      (typeof msg === 'string' && msg) ||
-      (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
-      t('resources.load_error')
+    const st = e?.response?.status
+    if (st === 422) {
+      const msg = e?.response?.data?.message
+      const errs = e?.response?.data?.errors
+      docFormError.value =
+        (typeof msg === 'string' && msg) ||
+        (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+        t('resources.load_error')
+    } else {
+      showAppErrorFromApi(e, t('resources.load_error'))
+    }
   } finally {
     docSaving.value = false
   }
@@ -661,8 +669,8 @@ async function confirmDelete(doc) {
   try {
     await deleteDriverComplianceDocument(id, doc.id)
     await load()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   }
 }
 </script>

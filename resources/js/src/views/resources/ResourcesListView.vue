@@ -2501,6 +2501,8 @@ import {
   updateVehicle,
   updateVehicleComplianceDocument,
 } from '../../api/operational'
+import { formatApiError } from '../../api/http'
+import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
@@ -3183,8 +3185,9 @@ async function loadAll() {
       const sid = selectedSupplier.value.id
       selectedSupplier.value = suppliers.value.find((x) => x.id === sid) ?? null
     }
-  } catch {
-    error.value = t('resources.load_error')
+  } catch (e) {
+    error.value = ''
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     loading.value = false
   }
@@ -3619,12 +3622,17 @@ async function submitVehicleDocForm() {
     const res = await listVehicleComplianceDocuments(vid)
     vehicleComplianceDocs.value = res.items || []
   } catch (e) {
-    const msg = e?.response?.data?.message
-    const errs = e?.response?.data?.errors
-    vehicleDocFormError.value =
-      (typeof msg === 'string' && msg) ||
-      (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
-      t('resources.load_error')
+    const st = e?.response?.status
+    if (st === 422) {
+      const msg = e?.response?.data?.message
+      const errs = e?.response?.data?.errors
+      vehicleDocFormError.value =
+        (typeof msg === 'string' && msg) ||
+        (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+        t('resources.load_error')
+    } else {
+      showAppErrorFromApi(e, t('resources.load_error'))
+    }
   } finally {
     vehicleDocSaving.value = false
   }
@@ -3637,8 +3645,8 @@ async function confirmDeleteVehicleDoc(doc) {
     await deleteVehicleComplianceDocument(selectedVehicle.value.id, doc.id)
     const res = await listVehicleComplianceDocuments(selectedVehicle.value.id)
     vehicleComplianceDocs.value = res.items || []
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   }
 }
 
@@ -3722,12 +3730,17 @@ async function submitProviderForm() {
     providerModalOpen.value = false
     await loadAll()
   } catch (e) {
-    const msg = e?.response?.data?.message
-    const errs = e?.response?.data?.errors
-    providerFormError.value =
-      (typeof msg === 'string' && msg) ||
-      (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
-      t('resources.load_error')
+    const st = e?.response?.status
+    if (st === 422) {
+      const msg = e?.response?.data?.message
+      const errs = e?.response?.data?.errors
+      providerFormError.value =
+        (typeof msg === 'string' && msg) ||
+        (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+        t('resources.load_error')
+    } else {
+      showAppErrorFromApi(e, t('resources.load_error'))
+    }
   } finally {
     providerSaving.value = false
   }
@@ -3763,8 +3776,8 @@ async function runUserSearch() {
   assignError.value = ''
   try {
     userSearchResults.value = await searchUsersForDriverAssignment(q)
-  } catch {
-    assignError.value = t('resources.load_error')
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
     userSearchResults.value = []
   } finally {
     userSearchLoading.value = false
@@ -3784,7 +3797,7 @@ async function submitAssignDriver() {
     await loadAll()
     closeAssignModal()
   } catch (e) {
-    assignError.value = e?.response?.data?.message || t('resources.load_error')
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     assignSubmitting.value = false
   }
@@ -3878,8 +3891,8 @@ async function confirmDeactivateVehicle() {
   try {
     await updateVehicle(selectedVehicle.value.id, { status: 'broken' })
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     vehicleDeactivating.value = false
   }
@@ -3900,8 +3913,8 @@ async function confirmMoveVehicleToTrash() {
     vehicleDeleteTarget.value = null
     selectedVehicle.value = null
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     vehicleDeleting.value = false
   }
@@ -3919,8 +3932,8 @@ async function submitRestoreVehicleById(id) {
     await restoreVehicleRequest(id)
     if (selectedVehicle.value?.id === id) selectedVehicle.value = null
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     vehicleRestoring.value = false
   }
@@ -3940,8 +3953,8 @@ async function confirmMoveDriverToTrash() {
     driverDeleteModalOpen.value = false
     driverDeleteTarget.value = null
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     driverDeleting.value = false
   }
@@ -3953,8 +3966,8 @@ async function submitRestoreDriverById(id) {
   try {
     await restoreDriverRequest(id)
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     driverRestoring.value = false
   }
@@ -3981,8 +3994,8 @@ async function confirmForceDeletePerm() {
     }
     forceDeleteModalOpen.value = false
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     forcePermDeleting.value = false
   }
@@ -4004,8 +4017,8 @@ async function confirmMoveProviderToTrash() {
     providerDeleteTarget.value = null
     if (selectedSupplier.value?.id === sid) selectedSupplier.value = null
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     providerDeleting.value = false
   }
@@ -4017,8 +4030,8 @@ async function submitRestoreSupplierById(id) {
   try {
     await restoreTransportProviderRequest(id)
     await loadAll()
-  } catch {
-    alert(t('resources.load_error'))
+  } catch (e) {
+    showAppErrorFromApi(e, t('resources.load_error'))
   } finally {
     supplierRestoring.value = false
   }
@@ -4061,12 +4074,17 @@ async function submitVehicleForm() {
     vehicleModalOpen.value = false
     await loadAll()
   } catch (e) {
-    const msg = e?.response?.data?.message
-    const errs = e?.response?.data?.errors
-    vehicleFormError.value =
-      (typeof msg === 'string' && msg) ||
-      (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
-      t('resources.load_error')
+    const st = e?.response?.status
+    if (st === 422) {
+      const msg = e?.response?.data?.message
+      const errs = e?.response?.data?.errors
+      vehicleFormError.value =
+        (typeof msg === 'string' && msg) ||
+        (errs && typeof errs === 'object' ? Object.values(errs).flat().join(' ') : '') ||
+        t('resources.load_error')
+    } else {
+      showAppErrorFromApi(e, t('resources.load_error'))
+    }
   } finally {
     vehicleSaving.value = false
   }

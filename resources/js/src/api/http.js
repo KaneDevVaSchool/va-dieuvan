@@ -137,3 +137,80 @@ export function formatApiError(err, fallback = 'Đã xảy ra lỗi. Vui lòng t
 
   return humanizeStatusOnly(status) || fallback
 }
+
+/**
+ * Title, friendly text, and technical details for global error modals (e.g. 429).
+ * @param {unknown} err
+ * @param {string} fallback
+ */
+export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.') {
+  const friendly = formatApiError(err, fallback)
+  const cfg = err?.response?.config || err?.config
+  const status = err?.response?.status ?? null
+  const headers = err?.response?.headers || {}
+
+  let method = 'GET'
+  let path = '—'
+  if (cfg) {
+    method = (cfg.method || 'get').toUpperCase()
+    const base = (cfg.baseURL || '').replace(/\/$/, '')
+    const u = cfg.url || ''
+    if (u.startsWith('http')) {
+      path = u
+    } else {
+      path = `${base}${u.startsWith('/') ? u : `/${u}`}` || '—'
+    }
+  }
+
+  const retryRaw = headers['retry-after'] ?? headers['Retry-After']
+  const retryAfter = retryRaw != null && retryRaw !== '' ? String(retryRaw) : null
+
+  const d = err?.response?.data
+  let serverRaw = ''
+  if (typeof d?.message === 'string' && d.message) {
+    serverRaw = d.message
+  } else if (Array.isArray(d?.message) && d.message.length) {
+    serverRaw = d.message.map(String).join(', ')
+  }
+
+  const friendlyTrim = String(friendly || '').trim()
+  const serverTrim = String(serverRaw || '').trim()
+  const serverExtra = serverTrim && serverTrim !== friendlyTrim ? serverTrim : ''
+
+  let title = 'Có lỗi'
+  let networkHint = ''
+
+  if (!err?.response) {
+    const code = err?.code
+    const msg = err?.message || ''
+    title = 'Lỗi kết nối'
+    if (code === 'ECONNABORTED' || /timeout/i.test(msg)) {
+      networkHint = 'Hết thời gian chờ phản hồi. Thử lại sau vài giây.'
+    } else if (code === 'ERR_NETWORK' || /network/i.test(msg)) {
+      networkHint = 'Không kết nối được máy chủ. Kiểm tra mạng hoặc VPN.'
+    }
+  } else if (status === 429) {
+    title = 'Quá nhiều yêu cầu (429 Too Many Requests)'
+  } else if (status === 403) {
+    title = 'Không có quyền (403)'
+  } else if (status === 404) {
+    title = 'Không tìm thấy (404)'
+  } else if (status === 422) {
+    title = 'Dữ liệu không hợp lệ (422)'
+  } else if (status != null && status >= 500) {
+    title = `Lỗi máy chủ (${status})`
+  } else if (status != null) {
+    title = `Lỗi HTTP ${status}`
+  }
+
+  const details = {
+    status,
+    method,
+    path,
+    retryAfter,
+    serverRaw: serverExtra,
+    networkHint,
+  }
+
+  return { title, friendly, details }
+}

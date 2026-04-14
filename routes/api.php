@@ -121,8 +121,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
     });
 
-    // Mutating endpoints: add activity logging + tighter throttles to reduce double-submit races.
-    Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:60,1'])->group(function () {
+    // Mutating endpoints: add activity logging + throttle (per user). Raised from 60→180/min so bulk ops on resources (vehicles/drivers) are less likely to hit 429.
+    Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {
         Route::patch('/user', [UserProfileController::class, 'update']);
 
         // Requests / approvals

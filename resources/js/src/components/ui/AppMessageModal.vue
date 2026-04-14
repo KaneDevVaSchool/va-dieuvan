@@ -9,11 +9,11 @@
       @click.self="closeAppMessage"
     >
       <div
-        class="max-h-[min(24rem,85vh)] w-full max-w-lg overflow-hidden rounded-lg border shadow-lg"
-        :class="panelClass"
+        class="max-h-[min(32rem,90vh)] w-full overflow-hidden rounded-xl border shadow-xl"
+        :class="[panelClass, state.apiDetails ? 'max-w-2xl' : 'max-w-lg']"
       >
-        <div class="flex items-start justify-between gap-3 border-b px-4 py-3" :class="headerBorderClass">
-          <div :id="titleId" class="text-sm font-semibold" :class="titleClass">{{ state.title }}</div>
+        <div class="flex items-start justify-between gap-3 border-b px-4 py-3 sm:px-5" :class="headerBorderClass">
+          <div :id="titleId" class="pr-2 text-sm font-semibold leading-snug" :class="titleClass">{{ state.title }}</div>
           <button
             type="button"
             class="shrink-0 rounded px-2 py-1 text-xs transition"
@@ -23,10 +23,43 @@
             Đóng
           </button>
         </div>
-        <div class="max-h-[min(18rem,70vh)] overflow-y-auto px-4 py-3">
+        <div class="max-h-[min(22rem,75vh)] overflow-y-auto px-4 py-3 sm:px-5">
           <p class="whitespace-pre-wrap break-words text-sm leading-relaxed" :class="bodyClass">{{ state.body }}</p>
+          <div
+            v-if="state.variant === 'error' && state.apiDetails"
+            class="mt-4 rounded-lg border border-slate-200/90 bg-slate-50 p-3 text-left dark:border-slate-600 dark:bg-slate-800/80"
+          >
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Chi tiết kỹ thuật</p>
+            <dl class="mt-2 space-y-1.5 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+              <div v-if="state.apiDetails.status != null" class="flex flex-wrap gap-x-2 gap-y-0.5">
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">HTTP</dt>
+                <dd>{{ state.apiDetails.status }}</dd>
+              </div>
+              <div class="flex flex-wrap gap-x-2 gap-y-0.5 break-all">
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">Yêu cầu</dt>
+                <dd>{{ state.apiDetails.method }} {{ state.apiDetails.path }}</dd>
+              </div>
+              <div v-if="state.apiDetails.retryAfter" class="flex flex-wrap gap-x-2 gap-y-0.5">
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">Retry-After</dt>
+                <dd>{{ state.apiDetails.retryAfter }} (giây hoặc ngày theo máy chủ)</dd>
+              </div>
+              <div v-if="state.apiDetails.serverRaw" class="pt-1">
+                <dt class="text-slate-500 dark:text-slate-500">Phản hồi máy chủ</dt>
+                <dd class="mt-0.5 whitespace-pre-wrap break-words text-slate-800 dark:text-slate-200">{{ state.apiDetails.serverRaw }}</dd>
+              </div>
+              <div v-if="state.apiDetails.networkHint" class="text-slate-600 dark:text-slate-400">
+                {{ state.apiDetails.networkHint }}
+              </div>
+            </dl>
+            <p
+              v-if="state.apiDetails?.status === 429"
+              class="mt-2 text-[10px] leading-relaxed text-slate-500 dark:text-slate-500"
+            >
+              Mã 429: máy chủ giới hạn số yêu cầu trong một phút. Đợi vài giây rồi thử lại; tránh bấm lặp liên tục.
+            </p>
+          </div>
         </div>
-        <div class="flex justify-end border-t px-4 py-3" :class="footerBorderClass">
+        <div class="flex justify-end border-t px-4 py-3 sm:px-5" :class="footerBorderClass">
           <button
             type="button"
             class="rounded-md px-4 py-2 text-sm font-medium text-white transition focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-900"
