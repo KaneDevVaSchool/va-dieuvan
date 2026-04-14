@@ -30,7 +30,8 @@ class TripCostController extends Controller
 
         $q = TripCost::query()
             ->with([
-                'trip:id,status,depart_at,dispatcher_id,driver_id',
+                'trip:id,status,depart_at,dispatcher_id,driver_id,transport_provider_id',
+                'trip.transportProvider:id,name',
                 'creator:id,name,email',
                 'confirmer:id,name,email',
             ])
