@@ -15,6 +15,9 @@ use App\Http\Requests\Api\Operational\UpdateDriverRequest;
 use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
 use App\Http\Requests\Api\Operational\DeleteDriverRequest;
 use App\Http\Requests\Api\Operational\DeleteTransportProviderRequest;
+use App\Http\Requests\Api\Operational\BulkDeleteDriversRequest;
+use App\Http\Requests\Api\Operational\BulkDeleteTransportProvidersRequest;
+use App\Http\Requests\Api\Operational\BulkDeleteVehiclesRequest;
 use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
 use App\Http\Requests\Api\Operational\ForceDeleteDriverRequest;
 use App\Http\Requests\Api\Operational\ForceDeleteTransportProviderRequest;
@@ -258,6 +261,48 @@ class OperationalResourceController extends Controller
         $vehicle->delete();
 
         return $this->ok(['deleted' => true, 'trashed' => true]);
+    }
+
+    public function bulkDestroyVehicles(BulkDeleteVehiclesRequest $request)
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $vehicles = Vehicle::query()->whereIn('id', $ids)->get();
+        foreach ($vehicles as $vehicle) {
+            $vehicle->delete();
+        }
+
+        return $this->ok([
+            'deleted_count' => $vehicles->count(),
+            'trashed' => true,
+        ]);
+    }
+
+    public function bulkDestroyDrivers(BulkDeleteDriversRequest $request)
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $drivers = Driver::query()->whereIn('id', $ids)->get();
+        foreach ($drivers as $driver) {
+            $driver->delete();
+        }
+
+        return $this->ok([
+            'deleted_count' => $drivers->count(),
+            'trashed' => true,
+        ]);
+    }
+
+    public function bulkDestroyTransportProviders(BulkDeleteTransportProvidersRequest $request)
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $providers = TransportProvider::query()->whereIn('id', $ids)->get();
+        foreach ($providers as $provider) {
+            $provider->delete();
+        }
+
+        return $this->ok([
+            'deleted_count' => $providers->count(),
+            'trashed' => true,
+        ]);
     }
 
     public function restoreVehicle(RestoreVehicleRequest $request, int $id)

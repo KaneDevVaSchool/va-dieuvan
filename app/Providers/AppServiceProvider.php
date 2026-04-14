@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\DispatchRequest;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Route::bind('dispatchRequest', function (string $value) {
+            return DispatchRequest::withTrashed()->findOrFail((int) $value);
+        });
     }
 }

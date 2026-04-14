@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Support\Messages;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -22,9 +23,12 @@ use Illuminate\Support\Facades\Notification;
 class DispatchRequestController extends Controller
 {
     use ApiResponses;
+    use AuthorizesRequests;
 
     public function show(ShowDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
     {
+        $this->authorize('view', $dispatchRequest);
+
         $dispatchRequest->load([
             'requester:id,name,email,employee_code',
             'approver:id,name,email,employee_code',
@@ -87,6 +91,10 @@ class DispatchRequestController extends Controller
 
     public function markPaperReceived(MarkDispatchRequestPaperReceivedRequest $request, DispatchRequest $dispatchRequest)
     {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
         $data = $request->validated();
 
         $user = $request->user();
@@ -111,6 +119,10 @@ class DispatchRequestController extends Controller
 
     public function approve(DecideDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
     {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
         $data = $request->validated();
 
         $user = $request->user();

@@ -52,12 +52,6 @@ export const NAV_SECTIONS = [
         badgeKey: 'pending_dispatch_requests',
         featureKey: 'module.operations',
       },
-      {
-        to: '/dispatch-requests/new',
-        labelKey: 'nav.new_request',
-        icon: 'new_request',
-        featureKey: 'module.operations',
-      },
       { to: '/trips', labelKey: 'nav.trips', icon: 'trips', featureKey: 'module.operations' },
       { to: '/costs', labelKey: 'nav.costs', icon: 'costs', featureKey: 'module.operations' },
       {

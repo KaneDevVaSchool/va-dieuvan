@@ -112,8 +112,8 @@
           </template>
 
           <!-- Section có tiêu đề: collapse cả khối -->
-          <div v-else :class="si >= 1 ? 'mt-4 border-t border-slate-200/80 pt-3 dark:border-slate-700/80' : 'mt-2'">
-            <div v-if="!ui.sidebarCollapsed" class="mb-1.5 px-1">
+          <div v-else :class="si >= 1 ? 'mt-3 border-t border-slate-200/70 pt-2 dark:border-slate-700/70' : 'mt-2'">
+            <div v-if="!ui.sidebarCollapsed" class="mb-1 px-1">
               <button
                 type="button"
                 class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
@@ -142,6 +142,21 @@
                     @toggle="toggleFlyout(subGroupKey(si, ii))"
                     @close="flyoutOpenKey = null"
                   />
+                  <!-- Một section = một nhóm con (vd. Hệ thống): bỏ accordion cấp 2, liệt kê link phẳng -->
+                  <div
+                    v-else-if="isSingleChildGroupSection(section)"
+                    class="space-y-px"
+                  >
+                    <SidebarNavItem
+                      v-for="c in item.children"
+                      :key="'vc' + c.to"
+                      :to="c.to"
+                      :label="t(c.labelKey)"
+                      :icon="c.icon"
+                      :badge-count="badgeCount(c)"
+                      :variant="navVariant"
+                    />
+                  </div>
                   <template v-else>
                     <div class="px-1">
                       <button
@@ -318,6 +333,13 @@ function toggleFlyout(key) {
 
 function sectionGroupKey(si) {
   return `sec-${si}`
+}
+
+/** Section có tiêu đề và chỉ một nhóm con (không `to` ở mục cha) — sidebar mở: bỏ accordion cấp 2 */
+function isSingleChildGroupSection(section) {
+  if (!section.headingKey) return false
+  const first = section.items?.[0]
+  return first && section.items.length === 1 && first.children?.length && !first.to
 }
 
 function subGroupKey(si, ii) {

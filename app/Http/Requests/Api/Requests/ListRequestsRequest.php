@@ -29,6 +29,7 @@ class ListRequestsRequest extends ApiFormRequest
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
+            'only_trashed' => ['nullable', 'boolean'],
         ];
     }
 }

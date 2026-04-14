@@ -17,6 +17,12 @@ export async function forceDeleteVehicle(vehicleId) {
   return data.data
 }
 
+/** @param {number[]} ids */
+export async function bulkDeleteVehicles(ids) {
+  const { data } = await http.post('/vehicles/bulk-delete', { ids })
+  return data.data
+}
+
 export async function listDrivers(params = {}) {
   const { data } = await http.get('/drivers', { params })
   return data.data
@@ -37,6 +43,12 @@ export async function restoreDriver(driverId) {
 /** @param {number} driverId */
 export async function forceDeleteDriver(driverId) {
   const { data } = await http.delete(`/drivers/${driverId}/force`)
+  return data.data
+}
+
+/** @param {number[]} ids */
+export async function bulkDeleteDrivers(ids) {
+  const { data } = await http.post('/drivers/bulk-delete', { ids })
   return data.data
 }
 
@@ -130,6 +142,12 @@ export async function restoreTransportProvider(id) {
 /** @param {number} id */
 export async function forceDeleteTransportProvider(id) {
   const { data } = await http.delete(`/transport-providers/${id}/force`)
+  return data.data
+}
+
+/** @param {number[]} ids */
+export async function bulkDeleteTransportProviders(ids) {
+  const { data } = await http.post('/transport-providers/bulk-delete', { ids })
   return data.data
 }
 

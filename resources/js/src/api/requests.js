@@ -5,6 +5,22 @@ export async function listRequests(params = {}) {
   return data.data
 }
 
+/**
+ * @param {{ ids: number[] }} payload
+ */
+export async function bulkSoftDeleteRequests(payload) {
+  const { data } = await http.post('/requests/bulk-delete', payload)
+  return data.data
+}
+
+/**
+ * @param {{ ids: number[] }} payload
+ */
+export async function bulkRestoreRequests(payload) {
+  const { data } = await http.post('/requests/bulk-restore', payload)
+  return data.data
+}
+
 export async function getDispatchRequest(id) {
   const { data } = await http.get(`/dispatch-requests/${id}`)
   return data.data

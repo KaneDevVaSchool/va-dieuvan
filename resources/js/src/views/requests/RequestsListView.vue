@@ -692,29 +692,125 @@
 
     <!-- Table -->
     <div class="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+      <div
+        class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/50 px-3 py-2"
+      >
+        <div v-if="canBulkTrash" class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <span v-if="selectedIds.length" class="text-sm text-slate-600">
+            {{ t('requests_page.selected_count', { n: selectedIds.length }) }}
+          </span>
+          <button
+            v-if="!isTrashTab"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!selectedIds.length || bulkSubmitting"
+            @click="bulkSoftDeleteSelected"
+          >
+            <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            {{ t('requests_page.bulk_move_trash') }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-900 shadow-sm transition hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!selectedIds.length || bulkSubmitting"
+            @click="bulkRestoreSelected"
+          >
+            <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+            {{ t('requests_page.bulk_restore') }}
+          </button>
+        </div>
+        <details ref="columnPickerRef" class="relative ml-auto shrink-0">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 [&::-webkit-details-marker]:hidden"
+          >
+            <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
+            {{ t('requests_page.table_columns') }}
+            <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute right-0 top-[calc(100%+6px)] z-40 min-w-[240px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5"
+            @click.stop
+          >
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              {{ t('requests_page.table_columns_hint') }}
+            </p>
+            <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700">
+              <li v-for="opt in requestColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+                <input
+                  :id="`req-col-${opt.id}`"
+                  type="checkbox"
+                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="requestColumnVisible[opt.id] !== false"
+                  @change="setRequestColumn(opt.id, $event.target.checked)"
+                />
+                <label :for="`req-col-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
+              </li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
       <div v-if="loading" class="p-8 text-center text-sm text-slate-500">{{ t('requests_page.loading') }}</div>
       <div v-else-if="!items.length" class="p-8 text-center text-sm text-slate-500">
-        {{ t('requests_page.empty') }}
+        {{ isTrashTab ? t('requests_page.empty_trash') : t('requests_page.empty') }}
       </div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead class="bg-slate-50/80">
             <tr>
-              <th class="w-10 px-3 py-3">
-                <span class="sr-only">{{ t('requests_page.col_select') }}</span>
+              <th v-if="canBulkTrash" class="w-10 px-3 py-3">
+                <input
+                  type="checkbox"
+                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                  :checked="allSelectableOnPageChecked"
+                  :disabled="!selectableIdsOnPage.length"
+                  :aria-label="t('requests_page.col_select')"
+                  @change="onToggleHeaderCheckbox"
+                />
               </th>
               <th class="px-3 py-3 font-semibold text-slate-700">{{ t('requests_page.col_id') }}</th>
               <th class="px-3 py-3 font-semibold text-slate-700">{{ t('requests_page.col_trip') }}</th>
-              <th class="px-3 py-3 font-semibold text-slate-700">{{ t('requests_page.col_type_channel') }}</th>
-              <th class="px-3 py-3 font-semibold text-slate-700">{{ t('requests_page.col_timeline') }}</th>
-              <th class="px-3 py-3 font-semibold text-slate-700">{{ t('requests_page.col_sla') }}</th>
+              <th v-if="requestColOn('type_channel')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_type_channel') }}
+              </th>
+              <th v-if="requestColOn('timeline')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_timeline') }}
+              </th>
+              <th v-if="requestColOn('sla')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_sla') }}
+              </th>
+              <th v-if="requestColOn('depart_at')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_depart_at') }}
+              </th>
+              <th v-if="requestColOn('arrive_by')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_arrive_by') }}
+              </th>
+              <th v-if="requestColOn('paper')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_paper') }}
+              </th>
+              <th v-if="requestColOn('requester')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_requester') }}
+              </th>
+              <th v-if="requestColOn('urgent')" class="px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_urgent') }}
+              </th>
+              <th v-if="requestColOn('notes')" class="min-w-[8rem] px-3 py-3 font-semibold text-slate-700">
+                {{ t('requests_page.col_notes') }}
+              </th>
               <th class="w-28 px-3 py-3 text-right font-semibold text-slate-700">{{ t('requests_page.col_actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr v-for="r in items" :key="r.id" class="transition hover:bg-slate-50/80">
-              <td class="px-3 py-3 align-top">
-                <input type="checkbox" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500" disabled />
+              <td v-if="canBulkTrash" class="px-3 py-3 align-top">
+                <input
+                  v-if="isTrashTab || canDeleteRow(r)"
+                  type="checkbox"
+                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                  :checked="selectedIds.includes(r.id)"
+                  @change="toggleRowSelected(r.id, $event.target.checked)"
+                />
               </td>
               <td class="px-3 py-3 align-top">
                 <div class="font-semibold text-slate-900">REQ-{{ r.id }}</div>
@@ -735,11 +831,11 @@
                   </div>
                 </div>
               </td>
-              <td class="px-3 py-3 align-top">
+              <td v-if="requestColOn('type_channel')" class="px-3 py-3 align-top">
                 <div>{{ labelTripType(r.trip_type) }}</div>
                 <div class="text-xs text-slate-500">{{ labelSourceChannel(r.source_channel) }}</div>
               </td>
-              <td class="px-3 py-3 align-top">
+              <td v-if="requestColOn('timeline')" class="px-3 py-3 align-top">
                 <span
                   class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
                   :class="badgeClass(r.status)"
@@ -748,7 +844,7 @@
                 </span>
                 <div class="mt-1 text-xs text-slate-500">{{ tripTimelineHint(r) }}</div>
               </td>
-              <td class="px-3 py-3 align-top text-xs">
+              <td v-if="requestColOn('sla')" class="px-3 py-3 align-top text-xs">
                 <span v-if="slaCell(r).kind === 'ok'" class="inline-flex items-center gap-1 text-emerald-700">
                   <CheckCircleIcon class="h-4 w-4" />
                   {{ t('requests_page.sla_on_track') }}
@@ -758,6 +854,33 @@
                   {{ slaCell(r).text }}
                 </span>
                 <span v-else class="text-slate-400">—</span>
+              </td>
+              <td v-if="requestColOn('depart_at')" class="whitespace-nowrap px-3 py-3 align-top text-xs text-slate-700">
+                {{ formatDepartDate(r.depart_at) }}
+              </td>
+              <td v-if="requestColOn('arrive_by')" class="whitespace-nowrap px-3 py-3 align-top text-xs text-slate-700">
+                {{ formatDepartDate(r.arrive_by) }}
+              </td>
+              <td v-if="requestColOn('paper')" class="max-w-[10rem] px-3 py-3 align-top text-xs">
+                <div>{{ labelPaperStatus(r.paper_status) }}</div>
+                <div v-if="r.paper_reference" class="mt-0.5 truncate text-slate-500" :title="r.paper_reference">
+                  {{ r.paper_reference }}
+                </div>
+              </td>
+              <td v-if="requestColOn('requester')" class="max-w-[10rem] px-3 py-3 align-top text-xs text-slate-700">
+                <span class="truncate">{{ r.requester?.name ?? '—' }}</span>
+              </td>
+              <td v-if="requestColOn('urgent')" class="px-3 py-3 align-top">
+                <span
+                  v-if="r.is_urgent"
+                  class="inline-flex rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800"
+                >
+                  {{ t('requests_page.filter_priority_urgent') }}
+                </span>
+                <span v-else class="text-xs text-slate-400">—</span>
+              </td>
+              <td v-if="requestColOn('notes')" class="max-w-xs px-3 py-3 align-top text-xs text-slate-600">
+                <p class="line-clamp-2">{{ r.notes || '—' }}</p>
               </td>
               <td class="px-3 py-3 align-top">
                 <div class="flex items-center justify-end gap-1">
@@ -832,7 +955,9 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
+  TrashIcon,
   BellIcon,
   CheckCircleIcon,
   ChevronDownIcon,
@@ -847,12 +972,14 @@ import {
   PlusIcon,
   RectangleStackIcon,
   TruckIcon,
+  ViewColumnsIcon,
   XMarkIcon,
   AcademicCapIcon,
   CubeIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
-import { listRequests } from '../../api/requests'
+import { bulkRestoreRequests, bulkSoftDeleteRequests, listRequests } from '../../api/requests'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { listTrips } from '../../api/trips'
 import { useAuthStore } from '../../store'
 import {
@@ -879,6 +1006,7 @@ const stats = ref({
   sla_risk: 0,
   month_trend_pct: null,
   volume_trend: [],
+  trashed_total: 0,
 })
 
 const activeTab = ref('all')
@@ -894,6 +1022,123 @@ const activeTripsTrack = ref([])
 
 const canApproveRequests = computed(() => auth.hasPermission('request.approve'))
 const canShowAssignPanel = computed(() => auth.hasPermission('trip.assign'))
+
+const canBulkTrash = computed(
+  () =>
+    auth.hasPermission('trip.view_all') ||
+    auth.hasPermission('request.approve') ||
+    auth.hasPermission('request.cancel_own') ||
+    auth.hasPermission('request.update_own') ||
+    auth.hasPermission('request.create'),
+)
+
+const selectedIds = ref([])
+const bulkSubmitting = ref(false)
+const columnPickerRef = ref(null)
+
+const REQUEST_COL_STORAGE_KEY = 'va-requests-cols-v1'
+const REQUEST_COL_DEFAULTS = {
+  type_channel: true,
+  timeline: true,
+  sla: true,
+  depart_at: false,
+  paper: false,
+  requester: false,
+  notes: false,
+  urgent: false,
+  arrive_by: false,
+}
+
+function loadRequestColumnPrefs() {
+  try {
+    const raw = localStorage.getItem(REQUEST_COL_STORAGE_KEY)
+    if (!raw) return { ...REQUEST_COL_DEFAULTS }
+    return { ...REQUEST_COL_DEFAULTS, ...JSON.parse(raw) }
+  } catch {
+    return { ...REQUEST_COL_DEFAULTS }
+  }
+}
+
+const requestColumnVisible = ref(loadRequestColumnPrefs())
+watch(
+  requestColumnVisible,
+  (v) => {
+    try {
+      localStorage.setItem(REQUEST_COL_STORAGE_KEY, JSON.stringify(v))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+function requestColOn(id) {
+  if (id === 'id' || id === 'trip' || id === 'actions') return true
+  return requestColumnVisible.value[id] !== false
+}
+
+function setRequestColumn(id, checked) {
+  requestColumnVisible.value = { ...requestColumnVisible.value, [id]: checked }
+}
+
+const requestColumnToggleOptions = computed(() => [
+  { id: 'type_channel', labelKey: 'requests_page.col_type_channel' },
+  { id: 'timeline', labelKey: 'requests_page.col_timeline' },
+  { id: 'sla', labelKey: 'requests_page.col_sla' },
+  { id: 'depart_at', labelKey: 'requests_page.col_depart_at' },
+  { id: 'arrive_by', labelKey: 'requests_page.col_arrive_by' },
+  { id: 'paper', labelKey: 'requests_page.col_paper' },
+  { id: 'requester', labelKey: 'requests_page.col_requester' },
+  { id: 'urgent', labelKey: 'requests_page.col_urgent' },
+  { id: 'notes', labelKey: 'requests_page.col_notes' },
+])
+
+function canDeleteRow(r) {
+  const u = auth.user
+  if (!u) return false
+  if (auth.hasPermission('trip.view_all') || auth.hasPermission('request.approve')) return true
+  if (Number(r.requester_id) !== Number(u.id)) return false
+  if (auth.hasPermission('request.cancel_own') || auth.hasPermission('request.update_own')) {
+    return ['draft', 'cancelled'].includes(r.status)
+  }
+  if (auth.hasPermission('request.create')) return r.status === 'draft'
+  return false
+}
+
+const isTrashTab = computed(() => activeTab.value === 'trash')
+
+const selectableIdsOnPage = computed(() => {
+  if (!canBulkTrash.value) return []
+  if (isTrashTab.value) return items.value.map((r) => r.id)
+  return items.value.filter((r) => canDeleteRow(r)).map((r) => r.id)
+})
+
+const allSelectableOnPageChecked = computed(
+  () =>
+    selectableIdsOnPage.value.length > 0 &&
+    selectableIdsOnPage.value.every((id) => selectedIds.value.includes(id)),
+)
+
+function toggleRowSelected(id, checked) {
+  if (checked) {
+    if (!selectedIds.value.includes(id)) selectedIds.value = [...selectedIds.value, id]
+  } else {
+    selectedIds.value = selectedIds.value.filter((x) => x !== id)
+  }
+}
+
+function onToggleHeaderCheckbox(ev) {
+  const on = ev.target.checked
+  selectedIds.value = on ? [...selectableIdsOnPage.value] : []
+}
+
+watch(activeTab, () => {
+  selectedIds.value = []
+})
+
+watch(items, () => {
+  selectedIds.value = selectedIds.value.filter((id) => items.value.some((r) => r.id === id))
+})
 
 const filters = reactive({
   q: '',
@@ -961,6 +1206,7 @@ const tabDefs = computed(() => [
   { id: 'cancelled', label: t('requests_page.tab_cancelled') },
   { id: 'trip_in_progress', label: t('requests_page.tab_trip_running') },
   { id: 'trip_completed', label: t('requests_page.tab_trip_done') },
+  { id: 'trash', label: t('requests_page.tab_trash') },
 ])
 
 const progressBarPct = computed(() => {
@@ -1030,6 +1276,15 @@ function formatShortDate(v) {
   }
 }
 
+function formatDepartDate(v) {
+  if (!v) return '—'
+  try {
+    return new Date(v).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return String(v)
+  }
+}
+
 function badgeClass(status) {
   if (status === 'approved') return 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200'
   if (status === 'pending') return 'bg-amber-50 text-amber-800 ring-1 ring-amber-200'
@@ -1094,6 +1349,8 @@ function tabCount(tabId) {
       return stats.value.trips_in_progress ?? 0
     case 'trip_completed':
       return stats.value.trips_completed ?? 0
+    case 'trash':
+      return stats.value.trashed_total ?? 0
     default:
       return 0
   }
@@ -1285,6 +1542,7 @@ function buildListParams() {
     if (params[k] === '' || params[k] === null || params[k] === undefined) delete params[k]
   })
   if (params.sla_risk_only === false) delete params.sla_risk_only
+  if (params.only_trashed === false) delete params.only_trashed
 
   return params
 }
@@ -1335,6 +1593,38 @@ async function reload() {
   void loadInsights()
 }
 
+async function bulkSoftDeleteSelected() {
+  if (!selectedIds.value.length) return
+  if (!confirm(t('requests_page.bulk_delete_confirm'))) return
+  bulkSubmitting.value = true
+  try {
+    const res = await bulkSoftDeleteRequests({ ids: [...selectedIds.value] })
+    showAppSuccess(t('requests_page.bulk_deleted', { n: res.deleted ?? 0 }))
+    selectedIds.value = []
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
+
+async function bulkRestoreSelected() {
+  if (!selectedIds.value.length) return
+  if (!confirm(t('requests_page.bulk_restore_confirm'))) return
+  bulkSubmitting.value = true
+  try {
+    const res = await bulkRestoreRequests({ ids: [...selectedIds.value] })
+    showAppSuccess(t('requests_page.bulk_restored', { n: res.restored ?? 0 }))
+    selectedIds.value = []
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e)
+  } finally {
+    bulkSubmitting.value = false
+  }
+}
+
 function goPage(p) {
   filters.page = p
   reload()
@@ -1346,7 +1636,10 @@ function setTab(id) {
   const q = { ...route.query }
   delete q.status
   delete q.trip_status
-  if (id === 'trip_in_progress') q.trip_status = 'in_progress'
+  delete q.trash
+  if (id === 'trash') {
+    q.trash = '1'
+  } else if (id === 'trip_in_progress') q.trip_status = 'in_progress'
   else if (id === 'trip_completed') q.trip_status = 'completed'
   else if (id !== 'all') q.status = id
   router.replace({ query: q })
@@ -1385,7 +1678,9 @@ function applySearchNow() {
 
 function applyRouteQuery() {
   const q = route.query
-  if (typeof q.trip_status === 'string') {
+  if (q.trash === '1' || q.trash === 'true') {
+    activeTab.value = 'trash'
+  } else if (typeof q.trip_status === 'string') {
     if (q.trip_status === 'in_progress') activeTab.value = 'trip_in_progress'
     else if (q.trip_status === 'completed') activeTab.value = 'trip_completed'
   } else if (typeof q.status === 'string' && ['draft', 'pending', 'approved', 'rejected', 'cancelled'].includes(q.status)) {
