@@ -2618,7 +2618,7 @@
       </div>
     </Teleport>
 
-    <!-- Modal: xem trước PDF đính kèm giấy tờ xe (blob URL tránh X-Frame-Options chặn nhúng) -->
+    <!-- Modal: xem trước PDF — chỉ URL https trực tiếp (tránh blob: gây lỗi Vue Router / History) -->
     <Teleport to="body">
       <div
         v-if="pdfPreviewOpen"
@@ -2654,19 +2654,17 @@
               </button>
             </div>
           </div>
-            <p v-if="!pdfPreviewLoading && pdfPreviewUrl" class="shrink-0 border-b border-slate-800 bg-slate-900 px-3 py-1.5 text-[11px] text-slate-500 sm:px-4">
+            <p v-if="pdfPreviewUrl" class="shrink-0 border-b border-slate-800 bg-slate-900 px-3 py-1.5 text-[11px] text-slate-500 sm:px-4">
               {{ t('resources.attachment_pdf_embed_hint') }}
             </p>
             <div class="relative min-h-0 flex-1 bg-slate-900">
-              <div v-if="pdfPreviewLoading" class="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/90 text-sm text-slate-300">
-                {{ t('resources.attachment_pdf_loading') }}
-              </div>
               <iframe
-                v-if="!pdfPreviewLoading && pdfPreviewUrl"
-                :key="pdfPreviewUrl"
+                v-if="pdfPreviewUrl"
+                :key="pdfPreviewDirectUrl"
                 :src="pdfPreviewUrl"
                 class="h-full min-h-[50vh] w-full border-0 bg-slate-900"
                 :title="pdfPreviewTitle"
+                referrerpolicy="no-referrer"
               />
             </div>
         </div>
@@ -3574,8 +3572,6 @@ const vehicleComplianceDocs = ref([])
 const pdfPreviewOpen = ref(false)
 const pdfPreviewUrl = ref('')
 const pdfPreviewDirectUrl = ref('')
-const pdfPreviewBlobUrl = ref(null)
-const pdfPreviewLoading = ref(false)
 const pdfPreviewTitle = ref('')
 const vehicleDocModalOpen = ref(false)
 const vehicleDocSaving = ref(false)
@@ -4194,30 +4190,14 @@ function resolveAttachmentAbsoluteUrl(a) {
   return `${window.location.origin}${path}`
 }
 
-async function openPdfPreview(a) {
+function openPdfPreview(a) {
   if (!a?.url) return
+  const resolved = resolveAttachmentAbsoluteUrl(a)
+  if (!resolved) return
   pdfPreviewTitle.value = a.original_name || 'PDF'
+  pdfPreviewDirectUrl.value = resolved
+  pdfPreviewUrl.value = resolved
   pdfPreviewOpen.value = true
-  pdfPreviewLoading.value = true
-  pdfPreviewUrl.value = ''
-  pdfPreviewDirectUrl.value = resolveAttachmentAbsoluteUrl(a)
-  if (pdfPreviewBlobUrl.value) {
-    URL.revokeObjectURL(pdfPreviewBlobUrl.value)
-    pdfPreviewBlobUrl.value = null
-  }
-  const resolved = pdfPreviewDirectUrl.value
-  try {
-    const res = await fetch(resolved, { credentials: 'same-origin', mode: 'same-origin' })
-    if (!res.ok) throw new Error('fetch failed')
-    const blob = await res.blob()
-    const blobUrl = URL.createObjectURL(blob)
-    pdfPreviewBlobUrl.value = blobUrl
-    pdfPreviewUrl.value = blobUrl
-  } catch {
-    pdfPreviewUrl.value = resolved
-  } finally {
-    pdfPreviewLoading.value = false
-  }
 }
 
 function closePdfPreview() {
@@ -4225,11 +4205,6 @@ function closePdfPreview() {
   pdfPreviewUrl.value = ''
   pdfPreviewDirectUrl.value = ''
   pdfPreviewTitle.value = ''
-  pdfPreviewLoading.value = false
-  if (pdfPreviewBlobUrl.value) {
-    URL.revokeObjectURL(pdfPreviewBlobUrl.value)
-    pdfPreviewBlobUrl.value = null
-  }
 }
 
 function vehicleDocTypeLabel(type) {
