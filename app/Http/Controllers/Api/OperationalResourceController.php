@@ -14,6 +14,7 @@ use App\Http\Requests\Api\Operational\StoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateDriverRequest;
 use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
 use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
+use App\Http\Requests\Api\Operational\RestoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
 use App\Models\Driver;
 use App\Models\TransportProvider;
@@ -29,10 +30,15 @@ class OperationalResourceController extends Controller
     {
         $data = $request->validated();
 
-        $q = Vehicle::query()
-            ->with([
-                'defaultDriver.user:id,name,email,phone,employee_code,avatar_url',
-            ])
+        $onlyTrashed = $request->boolean('only_trashed');
+
+        $q = $onlyTrashed
+            ? Vehicle::onlyTrashed()
+            : Vehicle::query();
+
+        $q->with([
+            'defaultDriver.user:id,name,email,phone,employee_code,avatar_url',
+        ])
             ->orderBy('license_plate');
 
         $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
@@ -186,7 +192,16 @@ class OperationalResourceController extends Controller
     {
         $vehicle->delete();
 
-        return $this->ok(['deleted' => true]);
+        return $this->ok(['deleted' => true, 'trashed' => true]);
+    }
+
+    public function restoreVehicle(RestoreVehicleRequest $request, int $id)
+    {
+        $vehicle = Vehicle::onlyTrashed()->findOrFail($id);
+        $vehicle->restore();
+        $vehicle->load(['defaultDriver.user:id,name,email,phone,employee_code,avatar_url']);
+
+        return $this->ok($this->serializeVehicle($vehicle));
     }
 
     private function serializeVehicle(Vehicle $v): array
@@ -215,6 +230,7 @@ class OperationalResourceController extends Controller
             'caretaker_name' => $v->caretaker_name,
             'caretaker_phone' => $v->caretaker_phone,
             'notes' => $v->notes,
+            'deleted_at' => $v->deleted_at?->toIso8601String(),
             'default_driver' => $v->defaultDriver ? $this->serializeDriver($v->defaultDriver) : null,
         ];
     }

@@ -16,6 +16,7 @@ class ListVehiclesRequest extends ApiFormRequest
         return [
             'status' => ['nullable', 'string', 'in:ready,in_use,maintenance,broken'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'only_trashed' => ['nullable', 'boolean'],
         ];
     }
 }

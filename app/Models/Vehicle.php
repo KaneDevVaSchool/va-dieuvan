@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Vehicle extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'license_plate',
@@ -58,5 +60,15 @@ class Vehicle extends Model
     public function complianceDocuments(): HasMany
     {
         return $this->hasMany(VehicleComplianceDocument::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Vehicle $vehicle) {
+            if ($vehicle->isForceDeleting()) {
+                return;
+            }
+            Trip::where('vehicle_id', $vehicle->id)->update(['vehicle_id' => null]);
+        });
     }
 }

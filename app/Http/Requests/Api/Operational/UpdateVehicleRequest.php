@@ -24,7 +24,7 @@ class UpdateVehicleRequest extends ApiFormRequest
                     'sometimes',
                     'string',
                     'max:64',
-                    Rule::unique('vehicles', 'license_plate')->ignore($vehicle?->id),
+                    Rule::unique('vehicles', 'license_plate')->ignore($vehicle?->id)->whereNull('deleted_at'),
                 ],
                 'owner_name' => ['nullable', 'string', 'max:255'],
                 'frame_engine_number' => ['nullable', 'string', 'max:20000'],

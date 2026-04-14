@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Operational;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreVehicleRequest extends ApiFormRequest
 {
@@ -14,7 +15,12 @@ class StoreVehicleRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'license_plate' => ['required', 'string', 'max:64', 'unique:vehicles,license_plate'],
+            'license_plate' => [
+                'required',
+                'string',
+                'max:64',
+                Rule::unique('vehicles', 'license_plate')->whereNull('deleted_at'),
+            ],
             'owner_name' => ['nullable', 'string', 'max:255'],
             'frame_engine_number' => ['nullable', 'string', 'max:20000'],
             'type' => ['nullable', 'string', 'max:255'],

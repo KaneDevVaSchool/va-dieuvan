@@ -215,6 +215,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware('throttle:30,1');
         Route::delete('/vehicles/{vehicle}', [OperationalResourceController::class, 'destroyVehicle'])
             ->middleware('throttle:30,1');
+        Route::post('/vehicles/{id}/restore', [OperationalResourceController::class, 'restoreVehicle'])
+            ->whereNumber('id')
+            ->middleware('throttle:30,1');
         Route::post('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocumentController::class, 'store'])
             ->middleware('throttle:30,1');
         Route::patch('/vehicles/{vehicle}/compliance-documents/{complianceDocument}', [VehicleComplianceDocumentController::class, 'update'])

@@ -15,6 +15,210 @@
             </span>
           </div>
           <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('resources.page_subtitle') }}</p>
+
+          <!-- Bộ lọc: thu gọn trong khu vực tiêu đề -->
+          <details
+            v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash')"
+            class="resources-filter-details mt-3 rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/40"
+          >
+            <summary
+              class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
+            >
+              <FunnelIcon class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+              <span>{{ t('resources.filter_panel_title') }}</span>
+              <span
+                v-if="activeResourceFilterCount > 0"
+                class="inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full bg-teal-600 px-1.5 text-[10px] font-semibold leading-none text-white"
+              >
+                {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
+              </span>
+              <ChevronDownIcon
+                class="resources-filter-chevron ml-auto h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200"
+                aria-hidden="true"
+              />
+            </summary>
+            <div
+              class="mt-3 rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
+            >
+              <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+                <details ref="resourceFilterMenuRef" class="group relative">
+                  <summary
+                    class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                  >
+                    <span class="relative inline-flex">
+                      <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                      <span
+                        v-if="activeResourceFilterCount > 0"
+                        class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
+                      >
+                        {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
+                      </span>
+                    </span>
+                    <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
+                  </summary>
+                  <div
+                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.filter_menu_title') }}</p>
+                    <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                      <li v-if="filters.status" class="flex justify-between gap-2">
+                        <span class="text-slate-500">{{ t('resources.filter_status') }}</span>
+                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterStatusLabel }}</span>
+                      </li>
+                      <li v-if="activeTab === 'vehicles' && filters.type" class="flex justify-between gap-2">
+                        <span class="text-slate-500">{{ t('resources.filter_type') }}</span>
+                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterTypeLabel }}</span>
+                      </li>
+                      <li v-if="activeTab === 'vehicles' && filters.driver_default" class="flex justify-between gap-2">
+                        <span class="text-slate-500">{{ t('resources.filter_driver_default') }}</span>
+                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDriverDefaultLabel }}</span>
+                      </li>
+                      <li v-if="activeTab === 'vehicles' && filters.insurance" class="flex justify-between gap-2">
+                        <span class="text-slate-500">{{ t('resources.filter_insurance') }}</span>
+                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.insurance) }}</span>
+                      </li>
+                      <li v-if="activeTab === 'vehicles' && filters.inspection" class="flex justify-between gap-2">
+                        <span class="text-slate-500">{{ t('resources.filter_inspection') }}</span>
+                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.inspection) }}</span>
+                      </li>
+                      <li v-if="activeTab === 'vehicles' && filters.road_fee" class="flex justify-between gap-2">
+                        <span class="text-slate-500">{{ t('resources.filter_road_fee') }}</span>
+                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.road_fee) }}</span>
+                      </li>
+                      <li v-if="activeTab === 'suppliers' && filters.contract" class="flex justify-between gap-2">
+                        <span class="text-slate-500">{{ t('resources.filter_contract') }}</span>
+                        <span class="max-w-[60%] text-right font-medium">{{ resourceFilterContractLabel }}</span>
+                      </li>
+                      <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
+                    </ul>
+                    <button
+                      type="button"
+                      class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                      @click="resetResourceFilters(); closeResourceFilterMenu()"
+                    >
+                      {{ t('resources.filter_clear_all') }}
+                    </button>
+                  </div>
+                </details>
+
+                <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
+
+                <div class="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div class="flex min-w-0 flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.filter_status') }}
+                    </span>
+                    <select
+                      v-model="filters.status"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+                    >
+                      <option value="">{{ t('resources.filter_all') }}</option>
+                      <option value="active">{{ t('resources.status_active') }}</option>
+                      <option value="maintenance">{{ t('resources.status_maintenance') }}</option>
+                      <option value="inactive">{{ t('resources.status_inactive') }}</option>
+                    </select>
+                  </div>
+                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.filter_type') }}
+                    </span>
+                    <select
+                      v-model="filters.type"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+                    >
+                      <option value="">{{ t('resources.filter_all') }}</option>
+                      <option value="van">{{ t('resources.type_van') }}</option>
+                      <option value="truck">{{ t('resources.type_truck') }}</option>
+                      <option value="bus">{{ t('resources.type_bus') }}</option>
+                    </select>
+                  </div>
+                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.filter_driver_default') }}
+                    </span>
+                    <select
+                      v-model="filters.driver_default"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+                    >
+                      <option value="">{{ t('resources.filter_all') }}</option>
+                      <option value="assigned">{{ t('resources.filter_driver_assigned') }}</option>
+                      <option value="unassigned">{{ t('resources.filter_driver_unassigned') }}</option>
+                    </select>
+                  </div>
+                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.filter_insurance') }}
+                    </span>
+                    <select
+                      v-model="filters.insurance"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+                    >
+                      <option value="">{{ t('resources.filter_all') }}</option>
+                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
+                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
+                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
+                    </select>
+                  </div>
+                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.filter_inspection') }}
+                    </span>
+                    <select
+                      v-model="filters.inspection"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+                    >
+                      <option value="">{{ t('resources.filter_all') }}</option>
+                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
+                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
+                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
+                    </select>
+                  </div>
+                  <div v-if="activeTab === 'vehicles'" class="flex min-w-0 flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.filter_road_fee') }}
+                    </span>
+                    <select
+                      v-model="filters.road_fee"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+                    >
+                      <option value="">{{ t('resources.filter_all') }}</option>
+                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
+                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
+                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
+                    </select>
+                  </div>
+                  <div v-if="activeTab === 'suppliers'" class="flex min-w-0 flex-col gap-0.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {{ t('resources.filter_contract') }}
+                    </span>
+                    <select
+                      v-model="filters.contract"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
+                    >
+                      <option value="">{{ t('resources.filter_all') }}</option>
+                      <option value="ok">{{ t('resources.compliance_ok') }}</option>
+                      <option value="soon">{{ t('resources.compliance_soon') }}</option>
+                      <option value="exp">{{ t('resources.compliance_exp') }}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex w-full shrink-0 items-center justify-end gap-1 sm:ml-auto sm:w-auto sm:justify-start">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    :title="t('resources.filter_clear')"
+                    @click="resetResourceFilters"
+                  >
+                    <span class="relative inline-flex">
+                      <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+                      <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
         <div class="relative w-full min-w-0 flex-1 sm:max-w-xs lg:max-w-sm">
           <MagnifyingGlassIcon
@@ -59,7 +263,7 @@
             {{ t('resources.assign_driver') }}
           </button>
           <button
-            v-else-if="activeTab === 'vehicles' && canManageVehicles"
+            v-else-if="activeTab === 'vehicles' && canManageVehicles && vehiclesViewMode === 'active'"
             type="button"
             class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
             @click="openVehicleForm(null)"
@@ -75,7 +279,7 @@
             {{ t('resources.add_supplier') }}
           </button>
           <button
-            v-else
+            v-else-if="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash')"
             type="button"
             class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:min-h-0 sm:w-auto sm:py-2"
             disabled
@@ -84,133 +288,34 @@
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Filters (aligned with requests list style) -->
-    <div
-      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
-    >
-      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <details ref="resourceFilterMenuRef" class="group relative">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-              <span
-                v-if="activeResourceFilterCount > 0"
-                class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
-              >
-                {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
-              </span>
-            </span>
-            <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-          >
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.filter_menu_title') }}</p>
-            <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-              <li v-if="filters.status" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_status') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterStatusLabel }}</span>
-              </li>
-              <li v-if="activeTab === 'vehicles' && filters.type" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_type') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterTypeLabel }}</span>
-              </li>
-              <li v-if="activeTab === 'vehicles' && filters.compliance" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_compliance') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterComplianceLabel }}</span>
-              </li>
-              <li v-if="activeTab === 'suppliers' && filters.contract" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('resources.filter_contract') }}</span>
-                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterContractLabel }}</span>
-              </li>
-              <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
-            </ul>
-            <button
-              type="button"
-              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-              @click="resetResourceFilters(); closeResourceFilterMenu()"
-            >
-              {{ t('resources.filter_clear_all') }}
-            </button>
-          </div>
-        </details>
-
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
-
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3">
-          <div class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('resources.filter_status') }}
-            </span>
-            <select
-              v-model="filters.status"
-              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-            >
-              <option value="">{{ t('resources.filter_all') }}</option>
-              <option value="active">{{ t('resources.status_active') }}</option>
-              <option value="maintenance">{{ t('resources.status_maintenance') }}</option>
-              <option value="inactive">{{ t('resources.status_inactive') }}</option>
-            </select>
-          </div>
-          <div v-if="activeTab === 'vehicles'" class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('resources.filter_type') }}
-            </span>
-            <select
-              v-model="filters.type"
-              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-            >
-              <option value="">{{ t('resources.filter_all') }}</option>
-              <option value="van">{{ t('resources.type_van') }}</option>
-              <option value="truck">{{ t('resources.type_truck') }}</option>
-              <option value="bus">{{ t('resources.type_bus') }}</option>
-            </select>
-          </div>
-          <div v-if="activeTab === 'vehicles'" class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('resources.filter_compliance') }}
-            </span>
-            <select
-              v-model="filters.compliance"
-              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-            >
-              <option value="">{{ t('resources.filter_all') }}</option>
-              <option value="ok">{{ t('resources.compliance_ok') }}</option>
-              <option value="soon">{{ t('resources.compliance_soon') }}</option>
-              <option value="exp">{{ t('resources.compliance_exp') }}</option>
-            </select>
-          </div>
-          <div v-if="activeTab === 'suppliers'" class="flex min-w-[140px] flex-1 flex-col gap-0.5 sm:min-w-[130px] sm:flex-initial">
-            <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('resources.filter_contract') }}
-            </span>
-            <select
-              v-model="filters.contract"
-              class="h-9 w-full rounded-lg border-0 bg-white/90 px-3 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600"
-            >
-              <option value="">{{ t('resources.filter_all') }}</option>
-              <option value="ok">{{ t('resources.compliance_ok') }}</option>
-              <option value="soon">{{ t('resources.compliance_soon') }}</option>
-              <option value="exp">{{ t('resources.compliance_exp') }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+      <!-- Xe: danh sách / thùng rác -->
+      <div v-if="activeTab === 'vehicles'" class="mt-3 flex flex-wrap items-center gap-2">
+        <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-            :title="t('resources.filter_clear')"
-            @click="resetResourceFilters"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              vehiclesViewMode === 'active'
+                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setVehiclesViewMode('active')"
           >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
-            </span>
+            {{ t('resources.vehicles_view_active') }}
+          </button>
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              vehiclesViewMode === 'trash'
+                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setVehiclesViewMode('trash')"
+          >
+            <TrashIcon class="h-4 w-4" aria-hidden="true" />
+            {{ t('resources.vehicles_view_trash') }}
           </button>
         </div>
       </div>
@@ -225,7 +330,7 @@
         <!-- Xe: thẻ (mobile / tablet) -->
         <div v-if="activeTab === 'vehicles'" class="space-y-3 lg:hidden">
           <button
-            v-for="v in filteredVehicles"
+            v-for="v in paginatedVehicles"
             :key="v.id"
             type="button"
             class="group relative flex w-full items-stretch gap-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-sm ring-1 ring-slate-900/5 transition active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900/40 dark:ring-slate-900/40"
@@ -265,8 +370,23 @@
                   <span class="font-medium text-slate-600 dark:text-slate-300">{{ t('resources.col_driver') }}:</span>
                   {{ v.driverName }}
                 </div>
+                <div
+                  v-if="vehiclesViewMode === 'trash' && canManageVehicles"
+                  class="mt-3 flex justify-end border-t border-slate-100 pt-3 dark:border-slate-700"
+                  @click.stop
+                >
+                  <button
+                    type="button"
+                    class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                    :disabled="vehicleRestoring"
+                    @click="submitRestoreVehicleById(v.id)"
+                  >
+                    {{ t('resources.action_restore_vehicle') }}
+                  </button>
+                </div>
               </div>
               <ChevronRightIcon
+                v-if="vehiclesViewMode === 'active'"
                 class="h-5 w-5 shrink-0 self-center text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-teal-600 dark:text-slate-600 dark:group-hover:text-teal-400"
                 aria-hidden="true"
               />
@@ -274,59 +394,233 @@
           </button>
         </div>
         <div
+          v-if="activeTab === 'vehicles' && vehicleTotalFiltered"
+          class="flex flex-wrap items-center justify-between gap-2 px-1 lg:hidden"
+        >
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">
+            {{ t('resources.pagination_showing', { from: vehicleRangeFrom, to: vehicleRangeTo, total: vehicleTotalFiltered }) }}
+          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400">
+              {{ t('resources.pagination_per_page') }}
+              <select
+                v-model.number="vehiclePerPage"
+                class="rounded-lg border border-slate-200 bg-white py-1 pl-2 pr-7 text-xs dark:border-slate-600 dark:bg-slate-800"
+              >
+                <option v-for="n in vehiclePerPageOptions" :key="n" :value="n">{{ n }}</option>
+              </select>
+            </label>
+            <div class="flex items-center gap-0.5">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-1.5 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="vehicleListPage <= 1"
+                :aria-label="t('resources.pagination_prev')"
+                @click="vehicleListPage = Math.max(1, vehicleListPage - 1)"
+              >
+                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+              <span class="min-w-[3.5rem] text-center text-[11px] tabular-nums text-slate-600 dark:text-slate-400">
+                {{ vehicleListPage }} / {{ vehicleTotalPages }}
+              </span>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-1.5 text-slate-600 enabled:hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="vehicleListPage >= vehicleTotalPages"
+                :aria-label="t('resources.pagination_next')"
+                @click="vehicleListPage = Math.min(vehicleTotalPages, vehicleListPage + 1)"
+              >
+                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
           v-if="activeTab === 'vehicles'"
           class="hidden overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50 lg:block"
         >
-          <table class="w-full min-w-[780px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                <th class="border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_vehicle') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_type_capacity') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_compliance') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_driver') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr
-                v-for="v in filteredVehicles"
-                :key="v.id"
-                class="cursor-pointer transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
-                :class="selectedVehicle?.id === v.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
-                @click="selectVehicle(v)"
+          <div
+            v-if="vehicleTotalFiltered"
+            class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/60 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50"
+          >
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+              {{ t('resources.pagination_showing', { from: vehicleRangeFrom, to: vehicleRangeTo, total: vehicleTotalFiltered }) }}
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <details ref="vehicleColumnPickerRef" class="relative">
+                <summary
+                  class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                >
+                  <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
+                  {{ t('resources.table_columns') }}
+                  <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                </summary>
+                <div
+                  class="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
+                  @click.stop
+                >
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
+                  <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
+                    <li v-for="opt in vehicleColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+                      <input
+                        :id="`vcol-${opt.id}`"
+                        type="checkbox"
+                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                        :checked="vehicleColumnVisible[opt.id]"
+                        @change="setVehicleColumn(opt.id, $event.target.checked)"
+                      />
+                      <label :for="`vcol-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
+                    </li>
+                  </ul>
+                </div>
+              </details>
+              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                {{ t('resources.pagination_per_page') }}
+                <select
+                  v-model.number="vehiclePerPage"
+                  class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  <option v-for="n in vehiclePerPageOptions" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[900px] border-separate border-spacing-0 text-left text-sm">
+              <thead>
+                <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
+                  <th class="border-b border-slate-200 px-3 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_vehicle') }}</th>
+                  <th v-if="vehicleColOn('type_capacity')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                    {{ t('resources.col_type_capacity') }}
+                  </th>
+                  <th v-if="vehicleColOn('status')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                  <th v-if="vehicleColOn('compliance')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_compliance') }}</th>
+                  <th v-if="vehicleColOn('insurance_exp')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                    {{ t('resources.col_insurance_exp') }}
+                  </th>
+                  <th v-if="vehicleColOn('inspection_exp')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                    {{ t('resources.col_inspection_exp') }}
+                  </th>
+                  <th v-if="vehicleColOn('road_fee')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_road_fee_exp') }}</th>
+                  <th v-if="vehicleColOn('owner')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_owner') }}</th>
+                  <th v-if="vehicleColOn('year')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_year_mfg') }}</th>
+                  <th v-if="vehicleColOn('purchase')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_purchase') }}</th>
+                  <th v-if="vehicleColOn('driver')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_driver') }}</th>
+                  <th v-if="vehicleColOn('caretaker')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                    {{ t('resources.col_caretaker') }}
+                  </th>
+                  <th v-if="vehicleColOn('maintenance')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                    {{ t('resources.col_maintenance') }}
+                  </th>
+                  <th v-if="vehicleColOn('notes')" class="max-w-[200px] border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.vehicle_form_notes') }}</th>
+                  <th class="border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr
+                  v-for="v in paginatedVehicles"
+                  :key="v.id"
+                  class="cursor-pointer transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
+                  :class="selectedVehicle?.id === v.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
+                  @click="selectVehicle(v)"
+                >
+                  <td class="px-3 py-3 align-middle">
+                    <div class="flex items-center gap-2">
+                      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
+                        <component :is="vehicleIconComponent(v.iconKind)" class="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div class="min-w-0">
+                        <div class="font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
+                        <div class="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{{ v.model }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td v-if="vehicleColOn('type_capacity')" class="max-w-[180px] px-3 py-3 align-middle text-slate-700 dark:text-slate-300">
+                    <span class="line-clamp-2">{{ v.typeLabel }}</span>
+                  </td>
+                  <td v-if="vehicleColOn('status')" class="px-3 py-3 align-middle whitespace-nowrap">
+                    <span :class="statusBadgeClass(v.status)">{{ labelVehicleStatus(v.status) }}</span>
+                  </td>
+                  <td v-if="vehicleColOn('compliance')" class="px-3 py-3 align-middle">
+                    <div class="flex flex-wrap gap-1">
+                      <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
+                      <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
+                    </div>
+                  </td>
+                  <td v-if="vehicleColOn('insurance_exp')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    {{ fmtVehicleTableDate(v.insurance_expires_at) }}
+                  </td>
+                  <td v-if="vehicleColOn('inspection_exp')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    {{ fmtVehicleTableDate(v.inspection_expires_at) }}
+                  </td>
+                  <td v-if="vehicleColOn('road_fee')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    {{ fmtVehicleTableDate(v.road_fee_expires_at) }}
+                  </td>
+                  <td v-if="vehicleColOn('owner')" class="max-w-[160px] px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    <span class="line-clamp-2">{{ v.owner_name || '—' }}</span>
+                  </td>
+                  <td v-if="vehicleColOn('year')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    {{ v.year_manufactured ?? '—' }}
+                  </td>
+                  <td v-if="vehicleColOn('purchase')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    {{ fmtVehicleTableDate(v.purchased_at) }}
+                  </td>
+                  <td v-if="vehicleColOn('driver')" class="max-w-[140px] px-3 py-3 align-middle">
+                    <span v-if="v.driverName" class="text-slate-800 dark:text-slate-200">{{ v.driverName }}</span>
+                    <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
+                  </td>
+                  <td v-if="vehicleColOn('caretaker')" class="max-w-[140px] px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    <span v-if="v.caretaker_name" class="line-clamp-2">{{ v.caretaker_name }}</span>
+                    <span v-else class="text-slate-400">—</span>
+                  </td>
+                  <td v-if="vehicleColOn('maintenance')" class="max-w-[200px] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
+                    <span class="line-clamp-2">{{ vehicleMaintenanceLine(v) }}</span>
+                  </td>
+                  <td v-if="vehicleColOn('notes')" class="max-w-[200px] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
+                    <span class="line-clamp-2">{{ v.notes || '—' }}</span>
+                  </td>
+                  <td class="px-3 py-3 align-middle text-right text-slate-400" @click.stop>
+                    <button
+                      v-if="vehiclesViewMode === 'trash' && canManageVehicles"
+                      type="button"
+                      class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                      :disabled="vehicleRestoring"
+                      @click="submitRestoreVehicleById(v.id)"
+                    >
+                      {{ t('resources.action_restore_vehicle') }}
+                    </button>
+                    <ChevronRightIcon v-else class="ml-auto inline h-5 w-5" aria-hidden="true" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div
+            v-if="vehicleTotalFiltered"
+            class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 bg-slate-50/40 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
+          >
+            <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: vehicleListPage, total: vehicleTotalPages }) }}</span>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="vehicleListPage <= 1"
+                :aria-label="t('resources.pagination_prev')"
+                @click="vehicleListPage = Math.max(1, vehicleListPage - 1)"
               >
-                <td class="px-4 py-3 align-middle">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
-                      <component :is="vehicleIconComponent(v.iconKind)" class="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <div>
-                      <div class="font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
-                      <div class="text-xs text-slate-500 dark:text-slate-400">{{ v.model }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-4 py-3 align-middle text-slate-700 dark:text-slate-300">{{ v.typeLabel }}</td>
-                <td class="px-4 py-3 align-middle">
-                  <span :class="statusBadgeClass(v.status)">{{ labelVehicleStatus(v.status) }}</span>
-                </td>
-                <td class="px-4 py-3 align-middle">
-                  <div class="flex flex-wrap gap-1">
-                    <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
-                    <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
-                  </div>
-                </td>
-                <td class="px-4 py-3 align-middle">
-                  <span v-if="v.driverName" class="text-slate-800 dark:text-slate-200">{{ v.driverName }}</span>
-                  <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
-                </td>
-                <td class="px-4 py-3 align-middle text-right text-slate-400">
-                  <ChevronRightIcon class="ml-auto inline h-5 w-5" aria-hidden="true" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="vehicleListPage >= vehicleTotalPages"
+                :aria-label="t('resources.pagination_next')"
+                @click="vehicleListPage = Math.min(vehicleTotalPages, vehicleListPage + 1)"
+              >
+                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
         </div>
 
         <div
@@ -417,7 +711,7 @@
         </div>
 
         <p v-if="activeTab === 'vehicles' && !filteredVehicles.length" class="py-8 text-center text-sm text-slate-500">
-          {{ t('resources.empty') }}
+          {{ vehiclesViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
         </p>
         <p v-if="activeTab === 'drivers' && !filteredDrivers.length" class="py-8 text-center text-sm text-slate-500">
           {{ t('resources.empty') }}
@@ -466,12 +760,18 @@
                 </button>
               </div>
               <div class="mt-3 flex flex-wrap gap-2">
+                <span
+                  v-if="vehiclesViewMode === 'trash'"
+                  class="rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                >
+                  {{ t('resources.vehicles_view_trash') }}
+                </span>
                 <span :class="['rounded-full border px-2.5 py-0.5 text-xs font-medium', statusOutlineClass(selectedVehicle.status)]">
                   {{ labelVehicleStatus(selectedVehicle.status) }}
                 </span>
                 <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-700 dark:bg-slate-700 dark:text-slate-300">{{ selectedVehicle.capacityLabel }}</span>
               </div>
-              <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div v-if="vehiclesViewMode === 'active'" class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <button
                   v-if="canManageVehicles"
                   type="button"
@@ -502,9 +802,19 @@
                   type="button"
                   class="rounded-lg border border-rose-200 bg-white py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900/60 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-rose-950/30"
                   :disabled="vehicleDeleting"
-                  @click="confirmDeleteVehicle"
+                  @click="openDeleteVehicleModal"
                 >
-                  {{ vehicleDeleting ? t('resources.loading') : t('resources.action_delete_vehicle') }}
+                  {{ t('resources.action_delete_vehicle') }}
+                </button>
+              </div>
+              <div v-else-if="canManageVehicles" class="mt-4">
+                <button
+                  type="button"
+                  class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                  :disabled="vehicleRestoring"
+                  @click="submitRestoreVehicle"
+                >
+                  {{ vehicleRestoring ? t('resources.loading') : t('resources.action_restore_vehicle') }}
                 </button>
               </div>
             </div>
@@ -525,6 +835,7 @@
                 </div>
                 <div v-else class="text-sm text-slate-500">{{ t('resources.unassigned') }}</div>
                 <button
+                  v-if="vehiclesViewMode === 'active'"
                   type="button"
                   class="mt-3 w-full rounded-lg border border-teal-200 bg-white py-2 text-sm font-medium text-teal-800 hover:bg-teal-50 dark:border-teal-800 dark:bg-slate-800 dark:text-teal-300 dark:hover:bg-slate-700"
                   @click="openAssignModal(selectedVehicle.id)"
@@ -641,7 +952,7 @@
                 </div>
               </div>
 
-              <div v-if="canManageVehicles" class="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+              <div v-if="canManageVehicles && vehiclesViewMode === 'active'" class="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="min-w-0 flex-1">
                     <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -695,19 +1006,6 @@
                 <p v-if="!vehicleComplianceDocs.length" class="mt-2 text-xs text-slate-500">{{ t('resources.empty') }}</p>
               </div>
 
-              <div class="mt-6 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_assignments') }}</div>
-              <p v-if="!selectedVehicle.assignments?.length" class="mt-2 text-xs text-slate-500">{{ t('resources.no_assignments') }}</p>
-              <ul v-else class="relative mt-3 space-y-4 border-l border-slate-200 pl-4 dark:border-slate-700">
-                <li v-for="(a, i) in selectedVehicle.assignments" :key="i" class="relative">
-                  <span class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-teal-600 dark:border-slate-900" />
-                  <div class="text-xs text-slate-500">{{ a.when }}</div>
-                  <div class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ a.title }}</div>
-                  <div class="mt-1 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <span>{{ a.driver }}</span>
-                    <span class="text-emerald-700 dark:text-emerald-400">{{ t('resources.assignment_done') }}</span>
-                  </div>
-                </li>
-              </ul>
             </div>
 
             <div class="border-t border-slate-200 p-3 dark:border-slate-700">
@@ -850,149 +1148,277 @@
       </Transition>
     </div>
 
-    <p class="border-t border-slate-200 px-4 py-3 text-center text-[11px] text-slate-500 dark:border-slate-700">{{ t('resources.demo_note') }}</p>
-
     <!-- Modal: thêm / sửa xe -->
     <Teleport to="body">
       <div
         v-if="vehicleModalOpen"
-        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center sm:p-6"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="vehicle-modal-title"
         @click.self="vehicleModalOpen = false"
       >
-        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
-          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-            <h2 class="text-base font-semibold text-slate-900 dark:text-white">
-              {{ vehicleForm.id ? t('resources.vehicle_form_title_edit') : t('resources.vehicle_form_title_add') }}
-            </h2>
+        <div
+          class="flex max-h-[min(92vh,960px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div
+            class="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-teal-50/40 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20"
+          >
+            <div class="min-w-0">
+              <h2 id="vehicle-modal-title" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+                {{ vehicleForm.id ? t('resources.vehicle_form_title_edit') : t('resources.vehicle_form_title_add') }}
+              </h2>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_modal_subtitle') }}</p>
+            </div>
+            <button
+              type="button"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:hover:text-white"
+              :aria-label="t('resources.close_panel')"
+              @click="vehicleModalOpen = false"
+            >
+              <XMarkIcon class="h-5 w-5" aria-hidden="true" />
+            </button>
           </div>
-          <form class="max-h-[70vh] space-y-3 overflow-y-auto p-4" @submit.prevent="submitVehicleForm">
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ t('resources.vehicle_form_plate') }}
-              <input
-                v-model="vehicleForm.license_plate"
-                type="text"
-                required
-                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              />
-            </label>
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ t('resources.vehicle_form_type') }}
-              <input v-model="vehicleForm.type" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-            </label>
-            <div class="grid gap-3 sm:grid-cols-2">
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                {{ t('resources.vehicle_form_seats') }}
-                <input v-model="vehicleForm.seat_count" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-              </label>
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                {{ t('resources.vehicle_form_payload') }}
-                <input v-model="vehicleForm.payload_kg" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-              </label>
-            </div>
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ t('resources.filter_status') }} (API)
-              <select v-model="vehicleForm.status" class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
-                <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
-                <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
-                <option value="maintenance">{{ t('resources.vehicle_status_maintenance') }}</option>
-                <option value="broken">{{ t('resources.vehicle_status_broken') }}</option>
-              </select>
-            </label>
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ t('resources.vehicle_form_odometer') }}
-              <input v-model="vehicleForm.odometer_km" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-            </label>
-            <div class="grid gap-3 sm:grid-cols-2">
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                {{ t('resources.vehicle_form_inspection') }}
-                <input v-model="vehicleForm.inspection_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-              </label>
-              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                {{ t('resources.vehicle_form_insurance') }}
-                <input v-model="vehicleForm.insurance_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-              </label>
-            </div>
-            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-              {{ t('resources.vehicle_form_road_fee') }}
-              <input v-model="vehicleForm.road_fee_expires_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-            </label>
-            <details class="rounded-lg border border-slate-200 dark:border-slate-600">
-              <summary class="cursor-pointer px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-                {{ t('resources.vehicle_form_details_toggle') }}
-              </summary>
-              <div class="space-y-3 border-t border-slate-200 p-3 dark:border-slate-600">
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_owner') }}
-                  <input v-model="vehicleForm.owner_name" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_frame_engine') }}
-                  <textarea v-model="vehicleForm.frame_engine_number" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
-                <div class="grid gap-3 sm:grid-cols-3">
-                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {{ t('resources.vehicle_form_year_mfg') }}
-                    <input v-model="vehicleForm.year_manufactured" type="number" min="1900" max="2100" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                  </label>
-                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {{ t('resources.vehicle_form_purchased') }}
-                    <input v-model="vehicleForm.purchased_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                  </label>
-                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {{ t('resources.vehicle_form_usage_until_year') }}
-                    <input v-model="vehicleForm.usage_expires_year" type="number" min="1900" max="2100" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                  </label>
-                </div>
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_insurance_provider') }}
-                  <input v-model="vehicleForm.insurance_provider" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_insurance_policy_note') }}
-                  <textarea v-model="vehicleForm.insurance_policy_note" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_reg_cycle') }}
-                  <input v-model="vehicleForm.registration_cycle_note" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_last_maint') }}
-                  <input v-model="vehicleForm.last_maintenance_at" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_maint_note') }}
-                  <textarea v-model="vehicleForm.maintenance_schedule_note" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
-                <div class="grid gap-3 sm:grid-cols-2">
-                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {{ t('resources.vehicle_form_caretaker') }}
-                    <input v-model="vehicleForm.caretaker_name" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                  </label>
-                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    {{ t('resources.vehicle_form_caretaker_phone') }}
-                    <input v-model="vehicleForm.caretaker_phone" type="text" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                  </label>
-                </div>
-                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ t('resources.vehicle_form_notes') }}
-                  <textarea v-model="vehicleForm.notes" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-                </label>
+          <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitVehicleForm">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-5 sm:px-6 sm:py-6">
+              <div class="grid gap-6 lg:grid-cols-2">
+                <section class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+                  <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {{ t('resources.vehicle_modal_section_identity') }}
+                  </h3>
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <label class="block sm:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_plate') }}</span>
+                      <input
+                        v-model="vehicleForm.license_plate"
+                        type="text"
+                        required
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block sm:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_type') }}</span>
+                      <input
+                        v-model="vehicleForm.type"
+                        type="text"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_seats') }}</span>
+                      <input
+                        v-model="vehicleForm.seat_count"
+                        type="number"
+                        min="0"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_payload') }}</span>
+                      <input
+                        v-model="vehicleForm.payload_kg"
+                        type="number"
+                        min="0"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block sm:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.filter_status') }} (API)</span>
+                      <select
+                        v-model="vehicleForm.status"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-3 pr-8 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
+                        <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
+                        <option value="maintenance">{{ t('resources.vehicle_status_maintenance') }}</option>
+                        <option value="broken">{{ t('resources.vehicle_status_broken') }}</option>
+                      </select>
+                    </label>
+                    <label class="block sm:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_odometer') }}</span>
+                      <input
+                        v-model="vehicleForm.odometer_km"
+                        type="number"
+                        min="0"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                  </div>
+                </section>
+                <section class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+                  <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {{ t('resources.vehicle_modal_section_dates') }}
+                  </h3>
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_inspection') }}</span>
+                      <input
+                        v-model="vehicleForm.inspection_expires_at"
+                        type="date"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_insurance') }}</span>
+                      <input
+                        v-model="vehicleForm.insurance_expires_at"
+                        type="date"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block sm:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_road_fee') }}</span>
+                      <input
+                        v-model="vehicleForm.road_fee_expires_at"
+                        type="date"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                  </div>
+                </section>
+                <section class="rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60 lg:col-span-2">
+                  <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {{ t('resources.vehicle_modal_section_registry') }}
+                  </h3>
+                  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_owner') }}</span>
+                      <input
+                        v-model="vehicleForm.owner_name"
+                        type="text"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <div class="grid gap-4 sm:grid-cols-3 lg:col-span-2">
+                      <label class="block">
+                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_year_mfg') }}</span>
+                        <input
+                          v-model="vehicleForm.year_manufactured"
+                          type="number"
+                          min="1900"
+                          max="2100"
+                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                      <label class="block">
+                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_purchased') }}</span>
+                        <input
+                          v-model="vehicleForm.purchased_at"
+                          type="date"
+                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                      <label class="block">
+                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_usage_until_year') }}</span>
+                        <input
+                          v-model="vehicleForm.usage_expires_year"
+                          type="number"
+                          min="1900"
+                          max="2100"
+                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                    </div>
+                    <label class="block lg:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_frame_engine') }}</span>
+                      <textarea
+                        v-model="vehicleForm.frame_engine_number"
+                        rows="3"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_insurance_provider') }}</span>
+                      <input
+                        v-model="vehicleForm.insurance_provider"
+                        type="text"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_reg_cycle') }}</span>
+                      <input
+                        v-model="vehicleForm.registration_cycle_note"
+                        type="text"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block lg:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_insurance_policy_note') }}</span>
+                      <textarea
+                        v-model="vehicleForm.insurance_policy_note"
+                        rows="2"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                  </div>
+                </section>
+                <section class="rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60 lg:col-span-2">
+                  <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {{ t('resources.vehicle_modal_section_ops') }}
+                  </h3>
+                  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_last_maint') }}</span>
+                      <input
+                        v-model="vehicleForm.last_maintenance_at"
+                        type="date"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <div class="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+                      <label class="block">
+                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_caretaker') }}</span>
+                        <input
+                          v-model="vehicleForm.caretaker_name"
+                          type="text"
+                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                      <label class="block">
+                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_caretaker_phone') }}</span>
+                        <input
+                          v-model="vehicleForm.caretaker_phone"
+                          type="text"
+                          class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                      </label>
+                    </div>
+                    <label class="block lg:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_maint_note') }}</span>
+                      <textarea
+                        v-model="vehicleForm.maintenance_schedule_note"
+                        rows="2"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                    <label class="block lg:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('resources.vehicle_form_notes') }}</span>
+                      <textarea
+                        v-model="vehicleForm.notes"
+                        rows="3"
+                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </label>
+                  </div>
+                </section>
               </div>
-            </details>
-            <p v-if="vehicleFormError" class="text-xs text-rose-600">{{ vehicleFormError }}</p>
-            <div class="flex gap-2 pt-2">
+              <p v-if="vehicleFormError" class="mt-4 text-xs text-rose-600">{{ vehicleFormError }}</p>
+            </div>
+            <div
+              class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6"
+            >
               <button
                 type="button"
-                class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
                 @click="vehicleModalOpen = false"
               >
                 {{ t('app.cancel') }}
               </button>
               <button
                 type="submit"
-                class="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                class="min-h-[44px] flex-[2] rounded-xl bg-teal-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-500 disabled:opacity-50 sm:min-h-0 sm:flex-initial sm:px-10"
                 :disabled="vehicleSaving"
               >
                 {{ vehicleSaving ? t('resources.loading') : t('resources.vehicle_form_save') }}
@@ -1280,6 +1706,56 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Modal: chuyển xe vào thùng rác -->
+    <Teleport to="body">
+      <div
+        v-if="vehicleDeleteModalOpen"
+        class="fixed inset-0 z-[110] flex items-end justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="vehicle-delete-title"
+        @click.self="vehicleDeleteModalOpen = false"
+      >
+        <div
+          class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+          @click.stop
+        >
+          <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
+                <TrashIcon class="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 id="vehicle-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                  {{ t('resources.vehicle_delete_modal_title') }}
+                </h2>
+                <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  {{ t('resources.vehicle_delete_modal_body', { plate: vehicleDeleteTarget?.code ?? '' }) }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 px-4 pb-4 pt-2">
+            <button
+              type="button"
+              class="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              @click="vehicleDeleteModalOpen = false"
+            >
+              {{ t('app.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-50"
+              :disabled="vehicleDeleting"
+              @click="confirmMoveVehicleToTrash"
+            >
+              {{ vehicleDeleting ? t('resources.loading') : t('resources.vehicle_delete_modal_confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -1290,9 +1766,12 @@ import { useI18n } from 'vue-i18n'
 import {
   BuildingOffice2Icon,
   ChevronDownIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
+  TrashIcon,
+  ViewColumnsIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import {
@@ -1306,6 +1785,7 @@ import {
   listTransportProviders,
   listVehicleComplianceDocuments,
   listVehicles,
+  restoreVehicle as restoreVehicleRequest,
   searchUsersForDriverAssignment,
   updateTransportProvider,
   updateVehicle,
@@ -1326,6 +1806,7 @@ const tabs = [
 ]
 
 const activeTab = ref('vehicles')
+const vehiclesViewMode = ref('active')
 const search = ref('')
 const selectedVehicle = ref(null)
 const selectedSupplier = ref(null)
@@ -1339,7 +1820,10 @@ const suppliers = ref([])
 const filters = ref({
   status: '',
   type: '',
-  compliance: '',
+  driver_default: '',
+  insurance: '',
+  inspection: '',
+  road_fee: '',
   contract: '',
 })
 
@@ -1348,7 +1832,10 @@ const activeResourceFilterCount = computed(() => {
   if (filters.value.status) n++
   if (activeTab.value === 'vehicles') {
     if (filters.value.type) n++
-    if (filters.value.compliance) n++
+    if (filters.value.driver_default) n++
+    if (filters.value.insurance) n++
+    if (filters.value.inspection) n++
+    if (filters.value.road_fee) n++
   }
   if (activeTab.value === 'suppliers' && filters.value.contract) n++
   return n
@@ -1376,16 +1863,22 @@ const resourceFilterTypeLabel = computed(() => {
   return map[f] ?? f
 })
 
-const resourceFilterComplianceLabel = computed(() => {
-  const f = filters.value.compliance
-  if (!f) return t('resources.filter_all')
+const resourceFilterDriverDefaultLabel = computed(() => {
+  const f = filters.value.driver_default
+  if (f === 'assigned') return t('resources.filter_driver_assigned')
+  if (f === 'unassigned') return t('resources.filter_driver_unassigned')
+  return t('resources.filter_all')
+})
+
+function resourceFilterDocStateLabel(state) {
+  if (!state) return t('resources.filter_all')
   const map = {
     ok: t('resources.compliance_ok'),
     soon: t('resources.compliance_soon'),
     exp: t('resources.compliance_exp'),
   }
-  return map[f] ?? f
-})
+  return map[state] ?? state
+}
 
 const resourceFilterContractLabel = computed(() => {
   const f = filters.value.contract
@@ -1399,7 +1892,15 @@ const resourceFilterContractLabel = computed(() => {
 })
 
 function resetResourceFilters() {
-  filters.value = { status: '', type: '', compliance: '', contract: '' }
+  filters.value = {
+    status: '',
+    type: '',
+    driver_default: '',
+    insurance: '',
+    inspection: '',
+    road_fee: '',
+    contract: '',
+  }
 }
 
 function closeResourceFilterMenu() {
@@ -1421,8 +1922,94 @@ const vehicleModalOpen = ref(false)
 const vehicleSaving = ref(false)
 const vehicleDeleting = ref(false)
 const vehicleDeactivating = ref(false)
+const vehicleDeleteModalOpen = ref(false)
+const vehicleDeleteTarget = ref(null)
+const vehicleRestoring = ref(false)
 const vehicleFormError = ref('')
 const resourceFilterMenuRef = ref(null)
+
+const VEHICLE_COL_STORAGE_KEY = 'va-resources-vehicle-cols-v1'
+const VEHICLE_COL_DEFAULTS = {
+  type_capacity: true,
+  status: true,
+  compliance: true,
+  driver: true,
+  owner: false,
+  insurance_exp: false,
+  inspection_exp: false,
+  road_fee: false,
+  year: false,
+  purchase: false,
+  caretaker: false,
+  maintenance: false,
+  notes: false,
+}
+
+function loadVehicleColumnPrefs() {
+  try {
+    const raw = localStorage.getItem(VEHICLE_COL_STORAGE_KEY)
+    if (!raw) return { ...VEHICLE_COL_DEFAULTS }
+    return { ...VEHICLE_COL_DEFAULTS, ...JSON.parse(raw) }
+  } catch {
+    return { ...VEHICLE_COL_DEFAULTS }
+  }
+}
+
+const vehicleColumnVisible = ref(loadVehicleColumnPrefs())
+watch(
+  vehicleColumnVisible,
+  (v) => {
+    try {
+      localStorage.setItem(VEHICLE_COL_STORAGE_KEY, JSON.stringify(v))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+function vehicleColOn(id) {
+  if (id === 'vehicle' || id === 'actions') return true
+  return vehicleColumnVisible.value[id] !== false
+}
+
+function setVehicleColumn(id, checked) {
+  vehicleColumnVisible.value = { ...vehicleColumnVisible.value, [id]: checked }
+}
+
+const vehicleColumnToggleOptions = computed(() => [
+  { id: 'type_capacity', labelKey: 'resources.col_type_capacity' },
+  { id: 'status', labelKey: 'resources.col_status' },
+  { id: 'compliance', labelKey: 'resources.col_compliance' },
+  { id: 'insurance_exp', labelKey: 'resources.col_insurance_exp' },
+  { id: 'inspection_exp', labelKey: 'resources.col_inspection_exp' },
+  { id: 'road_fee', labelKey: 'resources.col_road_fee_exp' },
+  { id: 'owner', labelKey: 'resources.col_owner' },
+  { id: 'year', labelKey: 'resources.col_year_mfg' },
+  { id: 'purchase', labelKey: 'resources.col_purchase' },
+  { id: 'driver', labelKey: 'resources.col_driver' },
+  { id: 'caretaker', labelKey: 'resources.col_caretaker' },
+  { id: 'maintenance', labelKey: 'resources.col_maintenance' },
+  { id: 'notes', labelKey: 'resources.col_notes_short' },
+])
+
+const vehicleColumnPickerRef = ref(null)
+
+const vehicleListPage = ref(1)
+const vehiclePerPage = ref(10)
+const vehiclePerPageOptions = [5, 10, 15, 20]
+
+function fmtVehicleTableDate(iso) {
+  if (!iso) return '—'
+  return String(iso)
+}
+
+function vehicleMaintenanceLine(v) {
+  const parts = []
+  if (v.last_maintenance_at) parts.push(fmtVehicleTableDate(v.last_maintenance_at))
+  if (v.maintenance_schedule_note) parts.push(String(v.maintenance_schedule_note).trim())
+  return parts.length ? parts.join(' · ') : '—'
+}
 
 function emptyVehicleForm() {
   return {
@@ -1611,7 +2198,7 @@ function enrichVehicle(raw) {
     notes: raw.notes ?? '',
     defaultDriver: dd,
     driverName,
-    assignments: [],
+    deleted_at: raw.deleted_at ?? null,
   }
 }
 
@@ -1668,7 +2255,7 @@ async function loadAll() {
   error.value = ''
   try {
     const [vRes, dRes, pRes] = await Promise.all([
-      listVehicles({ per_page: 200 }),
+      listVehicles({ per_page: 200, only_trashed: vehiclesViewMode.value === 'trash' }),
       listDrivers({ per_page: 200 }),
       listTransportProviders({ per_page: 200 }),
     ])
@@ -1697,6 +2284,13 @@ function setTab(id) {
   activeTab.value = id
   selectedVehicle.value = null
   selectedSupplier.value = null
+  if (id !== 'vehicles') vehiclesViewMode.value = 'active'
+}
+
+function setVehiclesViewMode(mode) {
+  vehiclesViewMode.value = mode
+  selectedVehicle.value = null
+  loadAll()
 }
 
 function closePanel() {
@@ -1796,14 +2390,18 @@ function matchesSupplierContract(s) {
   return s.contract.state === f
 }
 
-function matchesCompliance(v) {
-  const c = filters.value.compliance
-  if (!c) return true
-  const states = [v.insurance.state, v.inspection.state]
-  if (c === 'ok') return states.every((s) => s === 'ok')
-  if (c === 'soon') return states.some((s) => s === 'soon')
-  if (c === 'exp') return states.some((s) => s === 'exp')
+function matchesVehicleDriverDefault(v) {
+  const f = filters.value.driver_default
+  if (!f) return true
+  const has = Boolean(v.driverName)
+  if (f === 'assigned') return has
+  if (f === 'unassigned') return !has
   return true
+}
+
+function matchesVehicleDocField(doc, f) {
+  if (!f) return true
+  return doc?.state === f
 }
 
 const filteredVehicles = computed(() => {
@@ -1811,13 +2409,50 @@ const filteredVehicles = computed(() => {
   return vehicles.value.filter((v) => {
     if (!matchesVehicleStatus(v)) return false
     if (filters.value.type && v.iconKind !== filters.value.type) return false
-    if (!matchesCompliance(v)) return false
+    if (!matchesVehicleDriverDefault(v)) return false
+    if (!matchesVehicleDocField(v.insurance, filters.value.insurance)) return false
+    if (!matchesVehicleDocField(v.inspection, filters.value.inspection)) return false
+    if (!matchesVehicleDocField(v.road_fee, filters.value.road_fee)) return false
     if (!q) return true
-    const hay = `${v.code} ${v.model} ${v.driverName ?? ''} ${v.owner_name ?? ''} ${v.caretaker_name ?? ''} ${v.notes ?? ''} ${v.caretaker_phone ?? ''}`
+    const hay = `${v.code} ${v.model} ${v.driverName ?? ''} ${v.owner_name ?? ''} ${v.caretaker_name ?? ''} ${v.notes ?? ''} ${v.caretaker_phone ?? ''} ${v.insurance_provider ?? ''} ${v.year_manufactured ?? ''} ${v.frame_engine_number ?? ''}`
       .toLowerCase()
     return hay.includes(q)
   })
 })
+
+const vehicleTotalFiltered = computed(() => filteredVehicles.value.length)
+const vehicleTotalPages = computed(() => Math.max(1, Math.ceil(vehicleTotalFiltered.value / vehiclePerPage.value)))
+
+const paginatedVehicles = computed(() => {
+  const list = filteredVehicles.value
+  const per = vehiclePerPage.value
+  const tp = vehicleTotalPages.value
+  const page = Math.min(Math.max(1, vehicleListPage.value), tp)
+  const start = (page - 1) * per
+  return list.slice(start, start + per)
+})
+
+const vehicleRangeFrom = computed(() => {
+  if (!vehicleTotalFiltered.value) return 0
+  return (vehicleListPage.value - 1) * vehiclePerPage.value + 1
+})
+const vehicleRangeTo = computed(() => Math.min(vehicleTotalFiltered.value, vehicleListPage.value * vehiclePerPage.value))
+
+watch(vehicleTotalPages, (tp) => {
+  if (vehicleListPage.value > tp) vehicleListPage.value = tp
+})
+
+watch(vehiclePerPage, () => {
+  vehicleListPage.value = 1
+})
+
+watch(
+  () => [search.value, filters.value, vehiclesViewMode.value],
+  () => {
+    vehicleListPage.value = 1
+  },
+  { deep: true },
+)
 
 const filteredDrivers = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -1852,7 +2487,15 @@ watch(filteredSuppliers, (list) => {
 
 watch(activeTab, () => {
   search.value = ''
-  filters.value = { status: '', type: '', compliance: '', contract: '' }
+  filters.value = {
+    status: '',
+    type: '',
+    driver_default: '',
+    insurance: '',
+    inspection: '',
+    road_fee: '',
+    contract: '',
+  }
 })
 
 watch(
@@ -2207,20 +2850,44 @@ async function confirmDeactivateVehicle() {
   }
 }
 
-async function confirmDeleteVehicle() {
+function openDeleteVehicleModal() {
   if (!selectedVehicle.value || !canManageVehicles.value) return
-  const plate = selectedVehicle.value.code
-  if (!window.confirm(t('resources.vehicle_delete_confirm', { plate }))) return
+  vehicleDeleteTarget.value = selectedVehicle.value
+  vehicleDeleteModalOpen.value = true
+}
+
+async function confirmMoveVehicleToTrash() {
+  if (!vehicleDeleteTarget.value || !canManageVehicles.value) return
   vehicleDeleting.value = true
   try {
-    const id = selectedVehicle.value.id
-    await deleteVehicle(id)
+    await deleteVehicle(vehicleDeleteTarget.value.id)
+    vehicleDeleteModalOpen.value = false
+    vehicleDeleteTarget.value = null
     selectedVehicle.value = null
     await loadAll()
   } catch {
     alert(t('resources.load_error'))
   } finally {
     vehicleDeleting.value = false
+  }
+}
+
+async function submitRestoreVehicle() {
+  if (!selectedVehicle.value || !canManageVehicles.value) return
+  await submitRestoreVehicleById(selectedVehicle.value.id)
+}
+
+async function submitRestoreVehicleById(id) {
+  if (!canManageVehicles.value) return
+  vehicleRestoring.value = true
+  try {
+    await restoreVehicleRequest(id)
+    if (selectedVehicle.value?.id === id) selectedVehicle.value = null
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    vehicleRestoring.value = false
   }
 }
 
@@ -2272,3 +2939,9 @@ async function submitVehicleForm() {
   }
 }
 </script>
+
+<style scoped>
+.resources-filter-details[open] .resources-filter-chevron {
+  transform: rotate(180deg);
+}
+</style>
