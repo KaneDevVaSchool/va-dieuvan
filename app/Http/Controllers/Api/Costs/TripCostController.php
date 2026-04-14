@@ -49,6 +49,7 @@ class TripCostController extends Controller
         }
 
         $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
+        $q->when(isset($data['type']), fn (Builder $b) => $b->where('type', $data['type']));
         $q->when(isset($data['trip_id']), fn (Builder $b) => $b->where('trip_id', $data['trip_id']));
         $q->when(isset($data['from']), fn (Builder $b) => $b->where('created_at', '>=', Carbon::parse($data['from'])->startOfDay()));
         $q->when(isset($data['to']), fn (Builder $b) => $b->where('created_at', '<=', Carbon::parse($data['to'])->endOfDay()));
