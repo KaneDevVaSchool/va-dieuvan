@@ -67,7 +67,7 @@
                   i > maxReachedStep
                     ? 'cursor-not-allowed opacity-45'
                     : step === i
-                      ? 'bg-white text-slate-900 shadow-md ring-1 ring-va-800/20'
+                      ? 'bg-slate-50/90 text-slate-900 ring-1 ring-inset ring-va-800/15'
                       : i < step
                         ? 'text-slate-800 hover:bg-emerald-50/80'
                         : 'text-slate-500 hover:bg-slate-50'
@@ -80,7 +80,7 @@
                   class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm transition sm:h-10 sm:w-10"
                   :class="
                     step === i
-                      ? 'bg-va-800 text-white ring-2 ring-va-800/25 ring-offset-2 ring-offset-white'
+                      ? 'bg-va-800 text-white ring-1 ring-va-900/20'
                       : i < step
                         ? 'bg-emerald-500 text-white'
                         : i <= maxReachedStep
@@ -494,46 +494,51 @@
             </div>
 
             <!-- e.1 -->
-            <div class="space-y-3">
-              <div>
-                <h4 class="text-xs font-semibold uppercase text-slate-800 sm:text-sm">e.1. Nội dung đề xuất cho chương trình / sự kiện ngoại khóa (kèm bảng kê danh sách)</h4>
-                <p class="mt-1 text-[11px] text-slate-500">Chuyến đi — chuyến về; đơn giá &amp; phí phát sinh gồm VAT (ước tính).</p>
-              </div>
-              <div class="-mx-1 overflow-x-auto rounded-xl border border-slate-200 sm:mx-0">
-                <table class="min-w-[980px] w-full border-collapse text-left text-[11px] sm:text-sm">
+            <section class="dw-e-block dw-e-block--e1 space-y-4" aria-labelledby="dw-e1-heading">
+              <header class="dw-e-block__intro">
+                <span class="dw-e-block__badge" aria-hidden="true">e.1</span>
+                <div>
+                  <h3 id="dw-e1-heading" class="dw-e-block__title">
+                    Nội dung đề xuất cho chương trình / sự kiện ngoại khóa (kèm bảng kê danh sách)
+                  </h3>
+                  <p class="dw-e-block__meta">Chuyến đi — chuyến về; đơn giá &amp; phí phát sinh gồm VAT (ước tính).</p>
+                </div>
+              </header>
+              <div class="dw-table-wrap -mx-1 rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-900/[0.04] sm:mx-0">
+                <table class="min-w-[1280px] w-full border-collapse text-left text-[11px] sm:text-sm">
                   <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-semibold uppercase text-slate-600 sm:text-xs">
-                      <th class="px-1 py-2" rowspan="2">STT</th>
-                      <th class="px-1 py-2 text-center" colspan="2">Chuyến đi</th>
-                      <th class="px-1 py-2 text-center" colspan="2">Chuyến về</th>
-                      <th class="px-1 py-2" rowspan="2">Số khách</th>
-                      <th class="px-1 py-2" rowspan="2">Người phụ trách</th>
-                      <th class="px-1 py-2" rowspan="2">Đơn giá</th>
-                      <th class="px-1 py-2" rowspan="2">Phí phát sinh</th>
-                      <th class="px-1 py-2" rowspan="2">Tổng dòng</th>
-                      <th class="px-1 py-2" rowspan="2">Ghi chú</th>
+                      <th class="min-w-[2.5rem] whitespace-normal px-1 py-2" rowspan="2">STT</th>
+                      <th class="min-w-[13rem] px-1 py-2 text-center" colspan="2">Chuyến đi</th>
+                      <th class="min-w-[13rem] px-1 py-2 text-center" colspan="2">Chuyến về</th>
+                      <th class="min-w-[5rem] whitespace-normal px-1 py-2" rowspan="2">Số khách</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-2" rowspan="2">Người phụ trách</th>
+                      <th class="min-w-[7rem] whitespace-normal px-1 py-2" rowspan="2">Đơn giá</th>
+                      <th class="min-w-[7rem] whitespace-normal px-1 py-2" rowspan="2">Phí phát sinh</th>
+                      <th class="min-w-[6rem] whitespace-normal px-1 py-2" rowspan="2">Tổng dòng</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-2" rowspan="2">Ghi chú</th>
                       <th class="w-8"></th>
                     </tr>
                     <tr class="border-b border-slate-200 bg-slate-50/90 text-[10px] normal-case text-slate-600">
-                      <th class="px-1 py-1">Thời gian</th>
-                      <th class="px-1 py-1">Địa điểm</th>
-                      <th class="px-1 py-1">Thời gian</th>
-                      <th class="px-1 py-1">Địa điểm</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Thời gian</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Địa điểm</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Thời gian</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Địa điểm</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="(row, idx) in passengerRows" :key="'e1-' + idx" class="border-b border-slate-100 align-top">
                       <td class="px-1 py-1 text-slate-500">{{ idx + 1 }}</td>
-                      <td class="p-0.5"><input v-model="row.depart_at" type="datetime-local" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.pickup" type="text" placeholder="Điểm đón" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.return_at" type="datetime-local" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.dropoff" type="text" placeholder="Điểm trả" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.guests" type="number" min="1" class="dw-cell w-16" /></td>
-                      <td class="p-0.5"><input v-model="row.person_in_charge" type="text" placeholder="Họ tên + SĐT" class="dw-cell min-w-[7rem]" /></td>
-                      <td class="p-0.5"><input v-model="row.unit_price" type="number" min="0" step="1000" placeholder="0" class="dw-cell w-24" /></td>
-                      <td class="p-0.5"><input v-model="row.extra_fee" type="number" min="0" step="1000" placeholder="0" class="dw-cell w-24" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.depart_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.pickup" type="text" placeholder="Điểm đón" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.return_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.dropoff" type="text" placeholder="Điểm trả" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[5rem] p-0.5"><input v-model="row.guests" type="number" min="1" placeholder="—" class="dw-cell dw-cell--table min-w-[4.5rem]" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.person_in_charge" type="text" placeholder="Họ tên + SĐT" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[7.5rem] p-0.5"><input v-model="row.unit_price" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[7.5rem] p-0.5"><input v-model="row.extra_fee" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
                       <td class="px-1 py-1 text-xs font-medium text-va-800">{{ formatCurrency(rowLineTotal(row)) }}</td>
-                      <td class="p-0.5"><input v-model="row.notes" type="text" class="dw-cell w-28" /></td>
+                      <td class="min-w-[11rem] p-0.5"><input v-model="row.notes" type="text" placeholder="Ghi chú dòng…" class="dw-cell dw-cell--table" /></td>
                       <td class="px-0.5">
                         <button
                           v-if="passengerRows.length > 1"
@@ -556,99 +561,131 @@
                   </tfoot>
                 </table>
               </div>
-              <div class="flex flex-wrap items-center gap-2 border-t border-slate-200 bg-white px-3 py-2 sm:px-0">
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-va-800 shadow-sm hover:bg-slate-50"
-                  @click="addPassengerRow"
-                >
+              <div class="dw-table-toolbar">
+                <button type="button" class="dw-btn-row-add" @click="addPassengerRow">
                   <PlusIcon class="h-4 w-4" />
                   Thêm dòng
                 </button>
-                <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-                  <input v-model="form.multi_day" type="checkbox" class="rounded border-slate-300 text-va-800" />
-                  Dùng cho 3+ ngày (ghi chú trong tóm tắt)
+                <label class="dw-table-toolbar__extra">
+                  <input v-model="form.multi_day" type="checkbox" class="dw-table-toolbar__extra-check" />
+                  <span>Dùng cho 3+ ngày (ghi chú trong tóm tắt)</span>
                 </label>
               </div>
-            </div>
+            </section>
 
             <!-- e.1.1 -->
-            <div class="space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
-              <div class="text-xs font-semibold uppercase text-slate-600">e.1.1. Các ghi chú khác đề xuất (nếu có)</div>
-              <label class="flex flex-wrap items-center gap-3 text-sm text-slate-800">
-                <input v-model="form.e1_use_3plus_days" type="checkbox" class="rounded border-slate-300 text-va-800" />
-                Thời gian sử dụng xe từ 03 ngày trở lên
-              </label>
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label class="block text-xs">
-                  <span class="dw-label-text mb-0">Từ ngày</span>
-                  <input v-model="form.e1_from_date" type="date" class="dw-input" />
-                </label>
-                <label class="block text-xs">
-                  <span class="dw-label-text mb-0">Đến ngày</span>
-                  <input v-model="form.e1_to_date" type="date" class="dw-input" />
-                </label>
-                <label class="block text-xs">
-                  <span class="dw-label-text mb-0">Tổng số ngày phát sinh</span>
-                  <input v-model="form.e1_days_total" type="text" class="dw-input" placeholder="—" />
-                </label>
-                <label class="block text-xs">
-                  <span class="dw-label-text mb-0">Chi phí phát sinh</span>
-                  <input v-model="form.e1_extra_cost" type="number" min="0" step="1000" class="dw-input" placeholder="0" />
+            <section class="dw-e-panel dw-e-panel--e11" aria-labelledby="dw-e11-heading">
+              <header class="dw-e-panel__head">
+                <span class="dw-e-panel__badge" aria-hidden="true">e.1.1</span>
+                <div class="dw-e-panel__head-text">
+                  <h3 id="dw-e11-heading" class="dw-e-panel__title">Các ghi chú khác đề xuất (nếu có)</h3>
+                  <p class="dw-e-panel__lede">
+                    Dùng khi ngoại khóa kéo dài từ 3 ngày trở lên: khoảng thời gian, tổng ngày phát sinh, chi phí ước tính và các thứ áp dụng trong tuần.
+                  </p>
+                </div>
+              </header>
+
+              <div class="dw-e11-flag">
+                <label class="dw-e11-flag__row">
+                  <input v-model="form.e1_use_3plus_days" type="checkbox" class="dw-e11-flag__check" />
+                  <span class="dw-e11-flag__label">Thời gian sử dụng xe từ 03 ngày trở lên</span>
                 </label>
               </div>
-              <div>
-                <span class="mb-2 block text-[11px] font-medium text-slate-600">Bao gồm các thứ trong tuần từ</span>
-                <div class="flex flex-wrap gap-x-3 gap-y-2 text-xs sm:text-sm">
-                  <label v-for="w in e1WeekdayOptions" :key="w.k" class="flex items-center gap-1.5 text-slate-700">
-                    <input v-model="form.e1_weekdays[w.k]" type="checkbox" class="rounded border-slate-300 text-va-800" />
-                    {{ w.label }}
+
+              <div class="dw-e11-fields">
+                <div class="dw-e11-field">
+                  <span class="dw-e11-field__label">Từ ngày</span>
+                  <input v-model="form.e1_from_date" type="date" lang="vi" class="dw-input dw-input--e11" />
+                  <span class="dw-e11-field__hint">dd/mm/yyyy</span>
+                </div>
+                <div class="dw-e11-field">
+                  <span class="dw-e11-field__label">Đến ngày</span>
+                  <input v-model="form.e1_to_date" type="date" lang="vi" class="dw-input dw-input--e11" />
+                  <span class="dw-e11-field__hint">dd/mm/yyyy</span>
+                </div>
+                <div class="dw-e11-field">
+                  <span class="dw-e11-field__label">Tổng số ngày phát sinh</span>
+                  <input v-model="form.e1_days_total" type="text" class="dw-input dw-input--e11" placeholder="—" />
+                  <span class="dw-e11-field__hint">Ghi số ngày hoặc để trống</span>
+                </div>
+                <div class="dw-e11-field">
+                  <span class="dw-e11-field__label">Chi phí phát sinh</span>
+                  <input
+                    v-model="form.e1_extra_cost"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    class="dw-input dw-input--e11"
+                    placeholder="0"
+                  />
+                  <span class="dw-e11-field__hint">VNĐ (ước tính, gồm VAT nếu có)</span>
+                </div>
+              </div>
+
+              <div class="dw-e11-weekwrap">
+                <p id="dw-e11-weekdays-label" class="dw-e11-weekwrap__title">Bao gồm các thứ trong tuần từ</p>
+                <div class="dw-weekday-strip" role="group" aria-labelledby="dw-e11-weekdays-label">
+                  <label
+                    v-for="w in e1WeekdayOptions"
+                    :key="w.k"
+                    class="dw-weekday-chip"
+                    :class="{ 'dw-weekday-chip--on': form.e1_weekdays[w.k] }"
+                  >
+                    <input v-model="form.e1_weekdays[w.k]" type="checkbox" class="sr-only" />
+                    <span class="dw-weekday-chip__text">{{ w.label }}</span>
                   </label>
                 </div>
               </div>
-            </div>
+            </section>
 
             <!-- e.2 -->
-            <div class="space-y-3">
-              <div>
-                <h4 class="text-xs font-semibold uppercase text-slate-800 sm:text-sm">e.2. Nội dung đề xuất cho nhân sự đi công tác (kèm bảng kê danh sách)</h4>
-                <p class="mt-1 text-[11px] text-slate-500">Điểm dừng giữa lịch trình, chuyến về; đơn giá &amp; phí phát sinh gồm VAT (ước tính).</p>
-              </div>
-              <div class="-mx-1 overflow-x-auto rounded-xl border border-slate-200 sm:mx-0">
-                <table class="min-w-[980px] w-full border-collapse text-left text-[11px] sm:text-sm">
+            <section class="dw-e-block dw-e-block--e2 space-y-4" aria-labelledby="dw-e2-heading">
+              <header class="dw-e-block__intro">
+                <span class="dw-e-block__badge" aria-hidden="true">e.2</span>
+                <div>
+                  <h3 id="dw-e2-heading" class="dw-e-block__title">
+                    Nội dung đề xuất cho nhân sự đi công tác (kèm bảng kê danh sách)
+                  </h3>
+                  <p class="dw-e-block__meta">
+                    Điểm dừng giữa lịch trình, chuyến về; đơn giá &amp; phí phát sinh gồm VAT (ước tính).
+                  </p>
+                </div>
+              </header>
+              <div class="dw-table-wrap -mx-1 rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-900/[0.04] sm:mx-0">
+                <table class="min-w-[1360px] w-full border-collapse text-left text-[11px] sm:text-sm">
                   <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-semibold uppercase text-slate-600 sm:text-xs">
-                      <th class="px-1 py-2" rowspan="2">STT</th>
-                      <th class="px-1 py-2 text-center" colspan="2">Chuyến đi</th>
-                      <th class="px-1 py-2" rowspan="2">Điểm dừng giữa lịch trình</th>
-                      <th class="px-1 py-2 text-center" colspan="2">Chuyến về</th>
-                      <th class="px-1 py-2" rowspan="2">Số khách</th>
-                      <th class="px-1 py-2" rowspan="2">Đơn giá</th>
-                      <th class="px-1 py-2" rowspan="2">Phí phát sinh</th>
-                      <th class="px-1 py-2" rowspan="2">Tổng dòng</th>
-                      <th class="px-1 py-2" rowspan="2">Ghi chú</th>
+                      <th class="min-w-[2.5rem] whitespace-normal px-1 py-2" rowspan="2">STT</th>
+                      <th class="min-w-[13rem] px-1 py-2 text-center" colspan="2">Chuyến đi</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-2" rowspan="2">Điểm dừng giữa lịch trình</th>
+                      <th class="min-w-[13rem] px-1 py-2 text-center" colspan="2">Chuyến về</th>
+                      <th class="min-w-[5rem] whitespace-normal px-1 py-2" rowspan="2">Số khách</th>
+                      <th class="min-w-[7rem] whitespace-normal px-1 py-2" rowspan="2">Đơn giá</th>
+                      <th class="min-w-[7rem] whitespace-normal px-1 py-2" rowspan="2">Phí phát sinh</th>
+                      <th class="min-w-[6rem] whitespace-normal px-1 py-2" rowspan="2">Tổng dòng</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-2" rowspan="2">Ghi chú</th>
                       <th class="w-8"></th>
                     </tr>
                     <tr class="border-b border-slate-200 bg-slate-50/90 text-[10px] normal-case text-slate-600">
-                      <th class="px-1 py-1">Thời gian</th>
-                      <th class="px-1 py-1">Địa điểm</th>
-                      <th class="px-1 py-1">Thời gian</th>
-                      <th class="px-1 py-1">Địa điểm</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Thời gian</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Địa điểm</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Thời gian</th>
+                      <th class="min-w-[10rem] whitespace-normal px-1 py-1">Địa điểm</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="(row, idx) in businessRows" :key="'e2-' + idx" class="border-b border-slate-100 align-top">
                       <td class="px-1 py-1 text-slate-500">{{ idx + 1 }}</td>
-                      <td class="p-0.5"><input v-model="row.depart_at" type="datetime-local" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.pickup" type="text" placeholder="Điểm đón" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.waypoint" type="text" placeholder="Điểm dừng" class="dw-cell min-w-[6rem]" /></td>
-                      <td class="p-0.5"><input v-model="row.return_at" type="datetime-local" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.dropoff" type="text" placeholder="Điểm trả" class="dw-cell" /></td>
-                      <td class="p-0.5"><input v-model="row.guests" type="number" min="1" class="dw-cell w-16" /></td>
-                      <td class="p-0.5"><input v-model="row.unit_price" type="number" min="0" step="1000" placeholder="0" class="dw-cell w-24" /></td>
-                      <td class="p-0.5"><input v-model="row.extra_fee" type="number" min="0" step="1000" placeholder="0" class="dw-cell w-24" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.depart_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.pickup" type="text" placeholder="Điểm đón" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.waypoint" type="text" placeholder="Điểm dừng" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.return_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[10rem] p-0.5"><input v-model="row.dropoff" type="text" placeholder="Điểm trả" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[5rem] p-0.5"><input v-model="row.guests" type="number" min="1" placeholder="—" class="dw-cell dw-cell--table min-w-[4.5rem]" /></td>
+                      <td class="min-w-[7.5rem] p-0.5"><input v-model="row.unit_price" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
+                      <td class="min-w-[7.5rem] p-0.5"><input v-model="row.extra_fee" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
                       <td class="px-1 py-1 text-xs font-medium text-va-800">{{ formatCurrency(rowLineTotal(row)) }}</td>
-                      <td class="p-0.5"><input v-model="row.notes" type="text" class="dw-cell w-28" /></td>
+                      <td class="min-w-[11rem] p-0.5"><input v-model="row.notes" type="text" placeholder="Ghi chú dòng…" class="dw-cell dw-cell--table" /></td>
                       <td class="px-0.5">
                         <button
                           v-if="businessRows.length > 1"
@@ -671,43 +708,89 @@
                   </tfoot>
                 </table>
               </div>
-              <div class="flex flex-wrap items-center gap-2 border-t border-slate-200 bg-white px-3 py-2 sm:px-0">
+              <div class="dw-table-toolbar">
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-va-800 shadow-sm hover:bg-slate-50"
+                  class="dw-btn-row-add"
                   @click="addBusinessRow"
                 >
                   <PlusIcon class="h-4 w-4" />
                   Thêm dòng
                 </button>
               </div>
-            </div>
+            </section>
 
             <!-- e.2.1 -->
-            <div class="space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
-              <div class="text-xs font-semibold uppercase text-slate-600">e.2.1. Các ghi chú khác đề xuất (nếu có)</div>
-              <label class="flex flex-wrap items-center gap-3 text-sm text-slate-800">
-                <input v-model="form.e2_door_pickup" type="checkbox" class="rounded border-slate-300 text-va-800" />
-                Xe đưa đón tận nhà
-                <span class="text-slate-500">Chi phí phát sinh</span>
-                <input v-model="form.e2_door_cost" type="number" min="0" step="1000" class="dw-cell w-32" />
-              </label>
-              <label class="flex flex-wrap items-center gap-3 text-sm text-slate-800">
-                <input v-model="form.e2_driver_self" type="checkbox" class="rounded border-slate-300 text-va-800" />
-                Tài xế tự túc (ăn uống, khách sạn…)
-                <span class="text-slate-500">Chi phí phát sinh</span>
-                <input v-model="form.e2_driver_self_cost" type="number" min="0" step="1000" class="dw-cell w-32" />
-              </label>
-              <label class="flex flex-wrap items-center gap-3 text-sm text-slate-800">
-                <input v-model="form.e2_after_21h" type="checkbox" class="rounded border-slate-300 text-va-800" />
-                Có nhu cầu sử dụng xe sau 21h trong ngày
-                <span class="text-slate-500">Chi phí phát sinh</span>
-                <input v-model="form.e2_after_21h_cost" type="number" min="0" step="1000" class="dw-cell w-32" />
-              </label>
-            </div>
+            <section class="dw-e-panel dw-e-panel--e21" aria-labelledby="dw-e21-heading">
+              <header class="dw-e-panel__head">
+                <span class="dw-e-panel__badge" aria-hidden="true">e.2.1</span>
+                <div class="dw-e-panel__head-text">
+                  <h3 id="dw-e21-heading" class="dw-e-panel__title">Các ghi chú khác đề xuất (nếu có)</h3>
+                  <p class="dw-e-panel__lede">Phát sinh ngoài lịch chạy chính: đưa đón tận nhà, tự túc tài xế, hoặc sử dụng xe sau 21h.</p>
+                </div>
+              </header>
+              <div class="dw-e21-rows">
+                <div class="dw-e21-row">
+                  <label class="dw-e21-row__opt">
+                    <input v-model="form.e2_door_pickup" type="checkbox" class="dw-e21-row__check" />
+                    <span class="dw-e21-row__label">Xe đưa đón tận nhà</span>
+                  </label>
+                  <div class="dw-e21-row__cost">
+                    <span class="dw-e21-row__cost-label">Chi phí phát sinh</span>
+                    <input
+                      v-model="form.e2_door_cost"
+                      type="number"
+                      min="0"
+                      step="1000"
+                      placeholder="0"
+                      class="dw-e21-row__input"
+                    />
+                    <span class="dw-e21-row__unit">VNĐ</span>
+                  </div>
+                </div>
+                <div class="dw-e21-row">
+                  <label class="dw-e21-row__opt">
+                    <input v-model="form.e2_driver_self" type="checkbox" class="dw-e21-row__check" />
+                    <span class="dw-e21-row__label">Tài xế tự túc (ăn uống, khách sạn…)</span>
+                  </label>
+                  <div class="dw-e21-row__cost">
+                    <span class="dw-e21-row__cost-label">Chi phí phát sinh</span>
+                    <input
+                      v-model="form.e2_driver_self_cost"
+                      type="number"
+                      min="0"
+                      step="1000"
+                      placeholder="0"
+                      class="dw-e21-row__input"
+                    />
+                    <span class="dw-e21-row__unit">VNĐ</span>
+                  </div>
+                </div>
+                <div class="dw-e21-row">
+                  <label class="dw-e21-row__opt">
+                    <input v-model="form.e2_after_21h" type="checkbox" class="dw-e21-row__check" />
+                    <span class="dw-e21-row__label">Có nhu cầu sử dụng xe sau 21h trong ngày</span>
+                  </label>
+                  <div class="dw-e21-row__cost">
+                    <span class="dw-e21-row__cost-label">Chi phí phát sinh</span>
+                    <input
+                      v-model="form.e2_after_21h_cost"
+                      type="number"
+                      min="0"
+                      step="1000"
+                      placeholder="0"
+                      class="dw-e21-row__input"
+                    />
+                    <span class="dw-e21-row__unit">VNĐ</span>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-            <div class="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-2 text-center text-sm font-semibold text-va-800">
-              Tổng E (e.1 + e.2): {{ formatCurrency(passengerTotal) }}
+            <div class="dw-e-total" role="status">
+              <span class="dw-e-total__label">Tổng E (e.1 + e.2)</span>
+              <span class="dw-e-total__value">{{ formatCurrency(passengerTotal) }}</span>
+              <span class="dw-e-total__hint">Cộng từ các dòng e.1, e.2 và phí ghi trong bảng (ước tính).</span>
             </div>
           </div>
 
@@ -717,49 +800,49 @@
               <h3 class="text-sm font-bold uppercase tracking-wide text-va-800">E. Nội dung đề nghị vận chuyển</h3>
               <p class="mt-1 text-xs text-slate-600">e.1. Nội dung chi tiết</p>
             </div>
-            <div class="overflow-x-auto rounded-xl border border-slate-200">
-            <table class="min-w-[1100px] w-full border-collapse text-left text-xs sm:text-sm">
+            <div class="dw-table-wrap rounded-xl border border-slate-200">
+            <table class="min-w-[1420px] w-full border-collapse text-left text-xs sm:text-sm">
               <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-[10px] uppercase leading-tight text-slate-600 sm:text-xs">
-                  <th class="px-1 py-2">STT</th>
-                  <th class="px-1 py-2">Tên HH</th>
-                  <th class="px-1 py-2">SL</th>
-                  <th class="px-1 py-2">Kích thước (1 kiện)</th>
-                  <th class="px-1 py-2">KL (1 kiện)</th>
-                  <th class="px-1 py-2">Ghi chú HH</th>
-                  <th class="border-l border-slate-200 px-1 py-2" colspan="3">Điểm tập kết</th>
-                  <th class="border-l border-slate-200 px-1 py-2" colspan="3">Điểm giao</th>
-                  <th class="px-1 py-2">VC / ghi chú NV</th>
-                  <th class="px-1 py-2">Chi phí</th>
+                  <th class="min-w-[2.5rem] whitespace-normal px-1 py-2">STT</th>
+                  <th class="min-w-[9rem] whitespace-normal px-1 py-2">Tên HH</th>
+                  <th class="min-w-[3.5rem] whitespace-normal px-1 py-2">SL</th>
+                  <th class="min-w-[8rem] whitespace-normal px-1 py-2">Kích thước (1 kiện)</th>
+                  <th class="min-w-[7rem] whitespace-normal px-1 py-2">KL (1 kiện)</th>
+                  <th class="min-w-[9rem] whitespace-normal px-1 py-2">Ghi chú HH</th>
+                  <th class="min-w-[20rem] border-l border-slate-200 px-1 py-2" colspan="3">Điểm tập kết</th>
+                  <th class="min-w-[20rem] border-l border-slate-200 px-1 py-2" colspan="3">Điểm giao</th>
+                  <th class="min-w-[10rem] whitespace-normal px-1 py-2">VC / ghi chú NV</th>
+                  <th class="min-w-[7rem] whitespace-normal px-1 py-2">Chi phí</th>
                   <th class="w-8"></th>
                 </tr>
                 <tr class="border-b border-slate-200 bg-slate-50/80 text-[10px] normal-case text-slate-600">
                   <th colspan="6"></th>
-                  <th class="border-l border-slate-200 px-1 py-1">Thời gian</th>
-                  <th class="px-1 py-1">Địa điểm</th>
-                  <th class="px-1 py-1">Người giao</th>
-                  <th class="border-l border-slate-200 px-1 py-1">Thời gian</th>
-                  <th class="px-1 py-1">Địa điểm</th>
-                  <th class="px-1 py-1">Người nhận</th>
+                  <th class="min-w-[10rem] border-l border-slate-200 whitespace-normal px-1 py-1">Thời gian</th>
+                  <th class="min-w-[10rem] whitespace-normal px-1 py-1">Địa điểm</th>
+                  <th class="min-w-[9rem] whitespace-normal px-1 py-1">Người giao</th>
+                  <th class="min-w-[10rem] border-l border-slate-200 whitespace-normal px-1 py-1">Thời gian</th>
+                  <th class="min-w-[10rem] whitespace-normal px-1 py-1">Địa điểm</th>
+                  <th class="min-w-[9rem] whitespace-normal px-1 py-1">Người nhận</th>
                   <th colspan="2"></th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(row, idx) in cargoRows" :key="idx" class="border-b border-slate-100 align-top">
                   <td class="px-1 py-1 text-slate-500">{{ idx + 1 }}</td>
-                  <td class="p-0.5"><input v-model="row.name" type="text" placeholder="Tên" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.qty" type="text" class="dw-cell w-14" /></td>
-                  <td class="p-0.5"><input v-model="row.dimensions" type="text" placeholder="cm" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.weight" type="text" placeholder="kg" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.item_notes" type="text" class="dw-cell" /></td>
-                  <td class="border-l border-slate-200 p-0.5"><input v-model="row.pickup_at" type="datetime-local" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.pickup_place" type="text" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.pickup_contact" type="text" class="dw-cell" /></td>
-                  <td class="border-l border-slate-200 p-0.5"><input v-model="row.delivery_at" type="datetime-local" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.delivery_place" type="text" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.delivery_contact" type="text" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.transport_note" type="text" placeholder="Xe VA / NCC…" class="dw-cell" /></td>
-                  <td class="p-0.5"><input v-model="row.cost" type="number" min="0" step="1000" class="dw-cell w-24" /></td>
+                  <td class="min-w-[9rem] p-0.5"><input v-model="row.name" type="text" placeholder="Tên hàng hóa" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[3.5rem] p-0.5"><input v-model="row.qty" type="text" placeholder="SL" class="dw-cell dw-cell--table min-w-[3.25rem]" /></td>
+                  <td class="min-w-[8rem] p-0.5"><input v-model="row.dimensions" type="text" placeholder="Dài × rộng × cao (cm)" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[7rem] p-0.5"><input v-model="row.weight" type="text" placeholder="kg / kiện" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[9rem] p-0.5"><input v-model="row.item_notes" type="text" placeholder="Mô tả thêm…" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[10rem] border-l border-slate-200 p-0.5"><input v-model="row.pickup_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[10rem] p-0.5"><input v-model="row.pickup_place" type="text" placeholder="Địa chỉ tập kết" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[9rem] p-0.5"><input v-model="row.pickup_contact" type="text" placeholder="Họ tên + SĐT" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[10rem] border-l border-slate-200 p-0.5"><input v-model="row.delivery_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[10rem] p-0.5"><input v-model="row.delivery_place" type="text" placeholder="Địa chỉ giao" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[9rem] p-0.5"><input v-model="row.delivery_contact" type="text" placeholder="Họ tên + SĐT" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[10rem] p-0.5"><input v-model="row.transport_note" type="text" placeholder="Xe VA / NCC…" class="dw-cell dw-cell--table" /></td>
+                  <td class="min-w-[7.5rem] p-0.5"><input v-model="row.cost" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
                   <td class="px-0.5">
                     <button
                       v-if="cargoRows.length > 1"
@@ -798,19 +881,44 @@
               <span class="mb-1 block text-xs font-medium text-slate-600">Ghi chú khác (nếu có)</span>
               <textarea v-model="form.cargo_extra_notes" rows="2" class="dw-input min-h-[3.5rem] resize-y" />
             </label>
-            <label class="flex flex-wrap items-center gap-3 text-sm text-slate-800">
-              <input v-model="form.need_porters" type="checkbox" class="rounded border-slate-300 text-va-800" />
-              Yêu cầu bốc xếp / nhân công hỗ trợ
-              <input v-model="form.porter_qty" type="text" placeholder="SL" class="dw-cell w-20" />
-              <span class="text-slate-500">Chi phí phát sinh</span>
-              <input v-model="form.porter_cost" type="number" min="0" step="1000" class="dw-cell w-32" />
-            </label>
-            <label class="flex flex-wrap items-center gap-3 text-sm text-slate-800">
-              <input v-model="form.interprovincial" type="checkbox" class="rounded border-slate-300 text-va-800" />
-              Gửi chành xe đi tỉnh
-              <span class="text-slate-500">Chi phí phát sinh</span>
-              <input v-model="form.interprovincial_cost" type="number" min="0" step="1000" class="dw-cell w-32" />
-            </label>
+            <div class="divide-y divide-slate-200/80 rounded-lg border border-slate-200/80 bg-white/60">
+              <div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-2.5">
+                <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 sm:items-center">
+                  <input v-model="form.need_porters" type="checkbox" class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0" />
+                  <span class="text-sm leading-snug text-slate-800">Yêu cầu bốc xếp / nhân công hỗ trợ</span>
+                </label>
+                <div class="flex min-w-0 flex-wrap items-center gap-2 sm:max-w-[28rem] sm:justify-end">
+                  <span class="shrink-0 text-xs font-medium text-slate-600">Số lượng</span>
+                  <input v-model="form.porter_qty" type="text" placeholder="VD: 2 người" class="dw-cell dw-cell--e21 min-w-[6rem] max-w-[10rem]" />
+                  <span class="shrink-0 text-xs font-medium text-slate-600">Chi phí (VNĐ)</span>
+                  <input
+                    v-model="form.porter_cost"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    placeholder="0 — ước tính"
+                    class="dw-cell dw-cell--e21 min-w-[10rem] flex-1 sm:max-w-[14rem]"
+                  />
+                </div>
+              </div>
+              <div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-2.5">
+                <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 sm:items-center">
+                  <input v-model="form.interprovincial" type="checkbox" class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0" />
+                  <span class="text-sm leading-snug text-slate-800">Gửi chành xe đi tỉnh</span>
+                </label>
+                <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-[min(100%,20rem)] sm:justify-end">
+                  <span class="shrink-0 text-xs font-medium text-slate-600">Chi phí phát sinh (VNĐ)</span>
+                  <input
+                    v-model="form.interprovincial_cost"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    placeholder="0 — ước tính"
+                    class="dw-cell dw-cell--e21 min-w-[10rem] flex-1 sm:max-w-[14rem]"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           </div>
         </div>
@@ -2015,6 +2123,176 @@ watch(
 .dw-cell {
   @apply w-full min-w-0 rounded border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-900 placeholder:text-slate-400 focus:border-va-800 focus:outline-none focus:ring-1 focus:ring-va-800/20 sm:text-sm;
 }
+/* Bảng chi tiết: cột rộng hơn, cuộn ngang khi cần; không ép co ô quá nhỏ */
+.dw-table-wrap {
+  @apply -mx-1 max-w-full overflow-x-auto sm:mx-0;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225) rgb(248 250 252);
+}
+.dw-table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+.dw-table-wrap::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-300;
+}
+.dw-table-wrap::-webkit-scrollbar-track {
+  @apply rounded-full bg-slate-100;
+}
+.dw-cell.dw-cell--e21 {
+  @apply min-h-[2.5rem] px-3 py-2 text-sm;
+}
+
+/* —— Mục E: khối tiêu đề e.1 / e.2 —— */
+.dw-e-block__intro {
+  @apply flex gap-3 rounded-xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/40 to-emerald-50/30 p-4 shadow-sm ring-1 ring-slate-900/[0.04] sm:gap-4 sm:p-5;
+}
+.dw-e-block__badge {
+  @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-va-800 text-xs font-bold text-white shadow-sm ring-1 ring-black/5 sm:h-11 sm:w-11 sm:text-sm;
+}
+.dw-e-block__title {
+  @apply text-sm font-semibold leading-snug text-slate-900 sm:text-base;
+}
+.dw-e-block__meta {
+  @apply mt-1.5 text-xs leading-relaxed text-slate-600 sm:text-[13px];
+}
+
+/* —— Panel e.1.1 / e.2.1 —— */
+.dw-e-panel {
+  @apply overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/80 shadow-sm ring-1 ring-slate-900/[0.05];
+}
+.dw-e-panel--e11 {
+  @apply border-emerald-200/50;
+}
+.dw-e-panel--e21 {
+  @apply border-slate-200/90;
+}
+.dw-e-panel__head {
+  @apply flex gap-3 border-b border-slate-100 bg-white/90 px-4 py-4 sm:gap-4 sm:px-5 sm:py-5;
+}
+.dw-e-panel__badge {
+  @apply mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-lg bg-slate-800 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm sm:h-10 sm:w-10 sm:text-[11px];
+}
+.dw-e-panel--e11 .dw-e-panel__badge {
+  @apply bg-emerald-700;
+}
+.dw-e-panel--e21 .dw-e-panel__badge {
+  @apply bg-va-800;
+}
+.dw-e-panel__title {
+  @apply text-sm font-semibold text-slate-900 sm:text-base;
+}
+.dw-e-panel__lede {
+  @apply mt-1 text-xs leading-relaxed text-slate-600 sm:text-[13px];
+}
+
+/* e.1.1: cờ 3+ ngày */
+.dw-e11-flag {
+  @apply border-b border-slate-100 bg-emerald-50/40 px-4 py-3 sm:px-5;
+}
+.dw-e11-flag__row {
+  @apply flex cursor-pointer items-start gap-3 sm:items-center;
+}
+.dw-e11-flag__check {
+  @apply mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-emerald-700 focus:ring-2 focus:ring-emerald-600/25 sm:mt-0;
+}
+.dw-e11-flag__label {
+  @apply text-sm font-medium leading-snug text-slate-800;
+}
+
+/* e.1.1: lưới ô */
+.dw-e11-fields {
+  @apply grid gap-4 border-b border-slate-100 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-4 lg:py-5;
+}
+.dw-e11-field {
+  @apply flex min-w-0 flex-col gap-1;
+}
+.dw-e11-field__label {
+  @apply text-sm font-medium text-slate-800;
+}
+.dw-e11-field__hint {
+  @apply text-[11px] leading-tight text-slate-500;
+}
+.dw-input.dw-input--e11 {
+  @apply min-h-[2.75rem] border-slate-200 shadow-inner shadow-slate-900/5;
+}
+
+/* e.1.1: thứ trong tuần */
+.dw-e11-weekwrap {
+  @apply px-4 py-4 sm:px-5 sm:py-5;
+}
+.dw-e11-weekwrap__title {
+  @apply mb-3 text-sm font-semibold text-slate-800;
+}
+.dw-weekday-strip {
+  @apply flex flex-wrap gap-2;
+}
+.dw-weekday-chip {
+  @apply cursor-pointer select-none rounded-full border border-slate-200 bg-white px-3 py-2 text-center text-xs font-medium text-slate-700 shadow-sm transition hover:border-va-800/35 hover:bg-slate-50 sm:text-sm;
+}
+.dw-weekday-chip--on {
+  @apply border-va-800 bg-va-800 text-white shadow-md shadow-va-900/15 hover:bg-va-800;
+}
+.dw-weekday-chip__text {
+  @apply pointer-events-none;
+}
+
+/* e.2.1: hàng chi phí */
+.dw-e21-rows {
+  @apply divide-y divide-slate-100 bg-white/70;
+}
+.dw-e21-row {
+  @apply flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5 sm:py-3.5;
+}
+.dw-e21-row__opt {
+  @apply flex min-w-0 flex-1 cursor-pointer items-start gap-3 sm:items-center;
+}
+.dw-e21-row__check {
+  @apply mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-va-800 focus:ring-2 focus:ring-va-800/25 sm:mt-0;
+}
+.dw-e21-row__label {
+  @apply text-sm font-medium leading-snug text-slate-800;
+}
+.dw-e21-row__cost {
+  @apply flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:max-w-md sm:justify-end;
+}
+.dw-e21-row__cost-label {
+  @apply shrink-0 text-xs font-medium text-slate-600;
+}
+.dw-e21-row__input {
+  @apply min-h-[2.5rem] min-w-[10rem] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-sm font-medium text-slate-900 tabular-nums placeholder:text-slate-400 focus:border-va-800 focus:outline-none focus:ring-2 focus:ring-va-800/20 sm:max-w-[12rem];
+}
+.dw-e21-row__unit {
+  @apply shrink-0 text-xs font-medium text-slate-500;
+}
+
+/* Tổng E */
+.dw-e-total {
+  @apply flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-va-800/25 bg-gradient-to-b from-va-800/[0.06] to-white px-4 py-4 text-center shadow-sm sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-4 sm:gap-y-1 sm:py-5;
+}
+.dw-e-total__label {
+  @apply text-sm font-semibold uppercase tracking-wide text-slate-600;
+}
+.dw-e-total__value {
+  @apply text-xl font-bold tabular-nums text-va-800 sm:text-2xl;
+}
+.dw-e-total__hint {
+  @apply w-full text-[11px] text-slate-500 sm:text-xs;
+}
+
+/* Thanh công cụ dưới bảng */
+.dw-table-toolbar {
+  @apply flex flex-wrap items-center gap-3 border-t border-slate-200 bg-gradient-to-r from-slate-50/90 to-white px-3 py-3 sm:px-5;
+}
+.dw-btn-row-add {
+  @apply inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-va-800 shadow-sm transition hover:border-va-800/30 hover:bg-emerald-50/80 focus:outline-none focus:ring-2 focus:ring-va-800/25;
+}
+.dw-table-toolbar__extra {
+  @apply flex cursor-pointer items-center gap-2 text-sm text-slate-600;
+}
+.dw-table-toolbar__extra-check {
+  @apply h-4 w-4 rounded border-slate-300 text-va-800 focus:ring-va-800/25;
+}
+
 .dw-fieldset {
   @apply rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5;
 }
