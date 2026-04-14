@@ -58,8 +58,10 @@
                 <span class="font-medium">{{ typeLabel(filters.type) }}</span>
               </li>
               <li v-if="filters.trip_id" class="flex justify-between gap-2">
-                <span class="text-slate-500">Trip</span>
-                <span class="font-medium">#{{ filters.trip_id }}</span>
+                <span class="text-slate-500">Chuyến</span>
+                <span class="max-w-[12rem] truncate text-right font-medium" :title="tripFilterSummaryFull">{{
+                  tripFilterSummaryFull
+                }}</span>
               </li>
               <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
                 <span class="text-slate-500">Ngày ghi nhận</span>
@@ -87,7 +89,7 @@
 
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
 
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+        <div class="flex min-w-0 flex-1 flex-wrap items-end gap-x-2 gap-y-2 sm:gap-x-3">
           <details class="group relative min-w-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
@@ -180,6 +182,95 @@
               </div>
             </div>
           </details>
+
+          <details class="group relative min-w-0">
+            <summary
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+            >
+              <span class="whitespace-nowrap text-sm text-slate-600">Chuyến</span>
+              <span class="min-w-0 max-w-[11rem] truncate text-sm font-medium text-slate-900" :title="tripFilterSummaryFull">{{
+                tripFilterSummaryShort
+              }}</span>
+              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </summary>
+            <div
+              class="absolute left-0 top-[calc(100%+6px)] z-40 w-[min(100vw-1.5rem,320px)] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 sm:w-max sm:min-w-[280px]"
+            >
+              <input
+                v-model="filterTripSearch"
+                type="search"
+                class="costs-input mb-2 h-9 w-full text-sm"
+                placeholder="Tìm mã trip, điểm đi hoặc điểm đến…"
+                autocomplete="off"
+                @click.stop
+              />
+              <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-0.5 py-0.5">
+                <li>
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      !filters.trip_id
+                        ? 'bg-teal-50 font-medium text-teal-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    "
+                    @click="applyFilterPatch($event, { trip_id: '' })"
+                  >
+                    Tất cả chuyến
+                  </button>
+                </li>
+                <li v-for="t in filteredTripsForFilter" :key="t.id">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      String(filters.trip_id) === String(t.id)
+                        ? 'bg-teal-50 font-medium text-teal-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    "
+                    @click="applyFilterPatch($event, { trip_id: String(t.id) })"
+                  >
+                    {{ formatTripPickerLabel(t) }}
+                  </button>
+                </li>
+              </ul>
+              <p
+                v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForFilter.length"
+                class="mt-2 text-[11px] text-amber-800"
+              >
+                Không có chuyến khớp — xóa ô tìm hoặc chọn “Tất cả chuyến”.
+              </p>
+              <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500">Đang tải danh sách chuyến…</p>
+              <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500">
+                Không có chuyến trong phạm vi quyền.
+              </p>
+            </div>
+          </details>
+
+          <label class="inline-flex min-w-0 max-w-[min(100%,20rem)] flex-1 flex-col gap-0.5 sm:min-w-[12rem]">
+            <span class="text-xs text-slate-500">Tìm trong trang</span>
+            <input
+              v-model="searchQ"
+              type="search"
+              placeholder="Bãi xe, người gửi, mã trip…"
+              class="costs-input h-9 w-full text-sm"
+            />
+          </label>
+
+          <label class="inline-flex items-center gap-1.5">
+            <span class="text-xs text-slate-500 whitespace-nowrap">Số dòng/trang</span>
+            <select
+              v-model.number="filters.per_page"
+              class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+              @change="onPerPageChange"
+            >
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+              <option :value="25">25</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+          </label>
         </div>
 
         <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
@@ -205,43 +296,6 @@
             <PlusIcon class="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-      </div>
-
-      <div class="mt-3 flex flex-wrap items-center gap-4 border-t border-violet-100/80 pt-3">
-        <label class="inline-flex min-w-[12rem] flex-1 flex-col gap-1 sm:max-w-md">
-          <span class="text-sm text-slate-600">Tìm trong trang hiện tại</span>
-          <input
-            v-model="searchQ"
-            type="search"
-            placeholder="Ví dụ: bãi xe, tên người gửi, mã trip…"
-            class="costs-input w-full"
-          />
-        </label>
-        <label class="inline-flex flex-col gap-1">
-          <span class="text-sm text-slate-600">Lọc theo Trip ID</span>
-          <input
-            v-model.number="filters.trip_id"
-            type="number"
-            min="1"
-            placeholder="Ví dụ: 1024"
-            class="costs-input h-9 w-36"
-            @change="onTripIdChange"
-          />
-        </label>
-        <label class="inline-flex items-center gap-2">
-          <span class="text-sm text-slate-600">Số dòng/trang</span>
-          <select
-            v-model.number="filters.per_page"
-            class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-            @change="onPerPageChange"
-          >
-            <option :value="10">10</option>
-            <option :value="20">20</option>
-            <option :value="25">25</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
-        </label>
       </div>
     </div>
 
@@ -524,6 +578,7 @@ const filterMenuRef = ref(null)
 
 const addCostModalOpen = ref(false)
 const tripPickerSearch = ref('')
+const filterTripSearch = ref('')
 const tripOptionsRaw = ref([])
 const tripsForModalLoading = ref(false)
 const costMsgIsError = ref(false)
@@ -574,17 +629,53 @@ const filterDateSummary = computed(() => {
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
+function tripMatchesSearch(t, qRaw) {
+  const q = qRaw.trim().toLowerCase()
+  if (!q) return true
+  const dr = t.dispatch_request ?? t.dispatchRequest
+  const id = String(t.id)
+  const o = String(dr?.origin ?? '').toLowerCase()
+  const d = String(dr?.destination ?? '').toLowerCase()
+  return id.includes(q) || o.includes(q) || d.includes(q)
+}
+
 const filteredTripsForPicker = computed(() => {
-  const q = tripPickerSearch.value.trim().toLowerCase()
+  const q = tripPickerSearch.value
   const list = tripOptionsRaw.value
-  if (!q) return list
-  return list.filter((t) => {
+  if (!q.trim()) return list
+  return list.filter((t) => tripMatchesSearch(t, q))
+})
+
+const filteredTripsForFilter = computed(() => {
+  const q = filterTripSearch.value
+  const list = tripOptionsRaw.value
+  if (!q.trim()) return list
+  return list.filter((t) => tripMatchesSearch(t, q))
+})
+
+const selectedFilterTrip = computed(() => {
+  if (!filters.trip_id) return null
+  const id = Number(filters.trip_id)
+  if (!Number.isFinite(id)) return null
+  return tripOptionsRaw.value.find((t) => Number(t.id) === id) ?? null
+})
+
+const tripFilterSummaryFull = computed(() => {
+  if (!filters.trip_id) return 'Tất cả chuyến'
+  const t = selectedFilterTrip.value
+  return t ? formatTripPickerLabel(t) : `Chuyến #${filters.trip_id}`
+})
+
+const tripFilterSummaryShort = computed(() => {
+  if (!filters.trip_id) return 'Tất cả'
+  const t = selectedFilterTrip.value
+  if (t) {
     const dr = t.dispatch_request ?? t.dispatchRequest
-    const id = String(t.id)
-    const o = String(dr?.origin ?? '').toLowerCase()
-    const d = String(dr?.destination ?? '').toLowerCase()
-    return id.includes(q) || o.includes(q) || d.includes(q)
-  })
+    const o = (dr?.origin ?? '—').trim().slice(0, 22)
+    const d = (dr?.destination ?? '—').trim().slice(0, 22)
+    return `#${t.id} · ${o} → ${d}`
+  }
+  return `#${filters.trip_id}`
 })
 
 const displayedItems = computed(() => {
@@ -638,7 +729,7 @@ function formatTripPickerLabel(t) {
   return `#${t.id} · ${o} → ${d} · ${dep}`
 }
 
-async function loadTripsForModal() {
+async function loadTripPickerOptions() {
   tripsForModalLoading.value = true
   try {
     const res = await listTrips({ per_page: 100, page: 1 })
@@ -656,7 +747,7 @@ async function openAddCostModal() {
   tripPickerSearch.value = ''
   costForm.value = { trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' }
   addCostModalOpen.value = true
-  await loadTripsForModal()
+  await loadTripPickerOptions()
 }
 
 function closeAddCostModal() {
@@ -714,11 +805,6 @@ function onFilterDropdownChange(ev) {
   reload()
 }
 
-function onTripIdChange() {
-  filters.page = 1
-  reload()
-}
-
 function onPerPageChange() {
   filters.page = 1
   reload()
@@ -733,6 +819,7 @@ function resetFilters() {
   filters.page = 1
   filters.per_page = DEFAULT_PER_PAGE
   searchQ.value = ''
+  filterTripSearch.value = ''
   reload()
 }
 
@@ -784,7 +871,10 @@ async function submitCost() {
   }
 }
 
-onMounted(reload)
+onMounted(async () => {
+  await loadTripPickerOptions()
+  await reload()
+})
 </script>
 
 <style scoped>
