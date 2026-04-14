@@ -776,9 +776,6 @@
                   <th v-if="vehicleColOn('year')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_year_mfg') }}</th>
                   <th v-if="vehicleColOn('purchase')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_purchase') }}</th>
                   <th v-if="vehicleColOn('driver')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_driver') }}</th>
-                  <th v-if="vehicleColOn('caretaker')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
-                    {{ t('resources.col_caretaker') }}
-                  </th>
                   <th v-if="vehicleColOn('maintenance')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
                     {{ t('resources.col_maintenance') }}
                   </th>
@@ -850,10 +847,6 @@
                   <td v-if="vehicleColOn('driver')" class="whitespace-nowrap px-3 py-3 align-middle">
                     <span v-if="v.driverName" class="text-slate-800 dark:text-slate-200">{{ v.driverName }}</span>
                     <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
-                  </td>
-                  <td v-if="vehicleColOn('caretaker')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    <span v-if="v.caretaker_name">{{ v.caretaker_name }}</span>
-                    <span v-else class="text-slate-400">—</span>
                   </td>
                   <td v-if="vehicleColOn('maintenance')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
                     {{ vehicleMaintenanceLine(v) }}
@@ -3049,7 +3042,6 @@ const VEHICLE_COL_DEFAULTS = {
   road_fee: false,
   year: false,
   purchase: false,
-  caretaker: false,
   maintenance: false,
   notes: false,
 }
@@ -3097,7 +3089,6 @@ const vehicleColumnToggleOptions = computed(() => [
   { id: 'year', labelKey: 'resources.col_year_mfg' },
   { id: 'purchase', labelKey: 'resources.col_purchase' },
   { id: 'driver', labelKey: 'resources.col_driver' },
-  { id: 'caretaker', labelKey: 'resources.col_caretaker' },
   { id: 'maintenance', labelKey: 'resources.col_maintenance' },
   { id: 'notes', labelKey: 'resources.col_notes_short' },
 ])
