@@ -300,6 +300,7 @@
         "delete": "Xóa",
         "vehicle_compliance_attachments": "Giấy tờ & tệp đính kèm (xe)",
         "vehicle_compliance_attachments_hint": "Bổ sung đăng ký, BH, kiểm định bản scan… (các ngày hết hạn tổng hợp ở khối BH/ĐK phía trên).",
+        "attachment_pdf_preview": "Xem trước PDF",
         "vehicle_compliance_quick_add": "Thêm nhanh",
         "vehicle_doc_modal_add": "Thêm giấy tờ xe",
         "vehicle_doc_modal_edit": "Sửa giấy tờ xe",

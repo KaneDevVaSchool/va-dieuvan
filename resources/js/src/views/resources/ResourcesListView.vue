@@ -1598,17 +1598,29 @@
                           <span v-if="doc.expires_at" class="text-slate-500">{{ doc.expires_at }}</span>
                         </div>
                         <div v-if="doc.notes" class="mt-1 text-slate-600 dark:text-slate-400">{{ doc.notes }}</div>
-                        <div v-if="doc.attachments?.length" class="mt-2 flex flex-wrap gap-2">
-                          <a
+                        <div v-if="doc.attachments?.length" class="mt-2 flex flex-col gap-2">
+                          <div
                             v-for="a in doc.attachments"
                             :key="a.id"
-                            :href="a.url"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="text-teal-700 underline dark:text-teal-400"
+                            class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200/90 bg-white/70 px-2 py-1.5 dark:border-slate-600/80 dark:bg-slate-900/40"
                           >
-                            {{ a.original_name || 'file' }}
-                          </a>
+                            <a
+                              :href="a.url"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="min-w-0 flex-1 truncate text-teal-700 underline dark:text-teal-400"
+                            >
+                              {{ a.original_name || 'file' }}
+                            </a>
+                            <button
+                              v-if="isPdfAttachment(a)"
+                              type="button"
+                              class="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                              @click="openPdfPreview(a)"
+                            >
+                              {{ t('resources.attachment_pdf_preview') }}
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div class="flex shrink-0 gap-2">
@@ -2605,6 +2617,41 @@
       </div>
     </Teleport>
 
+    <!-- Modal: xem trước PDF đính kèm giấy tờ xe -->
+    <Teleport to="body">
+      <div
+        v-if="pdfPreviewOpen"
+        class="fixed inset-0 z-[115] flex items-end justify-center bg-black/60 p-0 sm:p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pdf-preview-title"
+        @click.self="closePdfPreview"
+      >
+        <div
+          class="flex h-[100dvh] max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-[min(92vh,900px)] sm:max-h-[min(92vh,900px)] sm:rounded-2xl sm:ring-1 sm:ring-slate-700"
+          @click.stop
+        >
+          <div class="flex shrink-0 items-center justify-between gap-3 border-b border-slate-700 bg-slate-900 px-3 py-3 sm:px-4">
+            <h2 id="pdf-preview-title" class="min-w-0 truncate text-sm font-semibold text-white sm:text-base">{{ pdfPreviewTitle }}</h2>
+            <button
+              type="button"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-600 text-slate-300 transition hover:bg-slate-800 hover:text-white"
+              :aria-label="t('resources.close_panel')"
+              @click="closePdfPreview"
+            >
+              <XMarkIcon class="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+          <iframe
+            v-if="pdfPreviewUrl"
+            :src="pdfPreviewUrl"
+            class="min-h-0 w-full flex-1 border-0 bg-slate-900"
+            :title="pdfPreviewTitle"
+          />
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Modal: chuyển xe vào thùng rác -->
     <Teleport to="body">
       <div
@@ -3499,6 +3546,9 @@ const VEHICLE_DOC_TYPES = [
 ]
 
 const vehicleComplianceDocs = ref([])
+const pdfPreviewOpen = ref(false)
+const pdfPreviewUrl = ref('')
+const pdfPreviewTitle = ref('')
 const vehicleDocModalOpen = ref(false)
 const vehicleDocSaving = ref(false)
 const vehicleDocFormError = ref('')
@@ -4089,6 +4139,32 @@ watch(
   },
   { immediate: true },
 )
+
+function isPdfAttachment(a) {
+  const mime = String(a?.mime_type || '').toLowerCase()
+  if (mime.includes('pdf')) return true
+  const name = String(a?.original_name || '').toLowerCase()
+  if (name.endsWith('.pdf')) return true
+  try {
+    const path = String(a?.url || '').split('?')[0].toLowerCase()
+    return path.endsWith('.pdf')
+  } catch {
+    return false
+  }
+}
+
+function openPdfPreview(a) {
+  if (!a?.url) return
+  pdfPreviewUrl.value = a.url
+  pdfPreviewTitle.value = a.original_name || 'PDF'
+  pdfPreviewOpen.value = true
+}
+
+function closePdfPreview() {
+  pdfPreviewOpen.value = false
+  pdfPreviewUrl.value = ''
+  pdfPreviewTitle.value = ''
+}
 
 function vehicleDocTypeLabel(type) {
   const k = `vehicle_compliance_doc_type.${type}`
