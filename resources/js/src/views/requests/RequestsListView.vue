@@ -455,24 +455,24 @@
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white p-2 shadow-lg ring-1 ring-slate-900/5"
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
             >
-              <div class="relative">
-                <select
-                  v-model="filters.trip_type"
-                  class="h-9 w-full min-w-[12rem] cursor-pointer appearance-none rounded-md border-0 bg-white py-1.5 pl-2 pr-8 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-                  @change="onFilterDropdownChange"
-                >
-                  <option value="">{{ t('requests_page.all') }}</option>
-                  <option value="door_to_door">{{ labelTripType('door_to_door') }}</option>
-                  <option value="point_to_point">{{ labelTripType('point_to_point') }}</option>
-                  <option value="business">{{ labelTripType('business') }}</option>
-                  <option value="cargo">{{ labelTripType('cargo') }}</option>
-                </select>
-                <ChevronDownIcon
-                  class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                />
-              </div>
+              <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+                <li v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      filters.trip_type === opt.value
+                        ? 'bg-teal-50 font-medium text-teal-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    "
+                    @click="applyFilterPatch($event, { trip_type: opt.value })"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </li>
+              </ul>
             </div>
           </details>
 
@@ -517,23 +517,24 @@
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white p-2 shadow-lg ring-1 ring-slate-900/5"
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
             >
-              <div class="relative">
-                <select
-                  v-model="filters.source_channel"
-                  class="h-9 w-full cursor-pointer appearance-none rounded-md border-0 bg-white py-1.5 pl-2 pr-8 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-                  @change="onFilterDropdownChange"
-                >
-                  <option value="">{{ t('requests_page.all') }}</option>
-                  <option value="portal">{{ labelSourceChannel('portal') }}</option>
-                  <option value="zalo">{{ labelSourceChannel('zalo') }}</option>
-                  <option value="paper">{{ labelSourceChannel('paper') }}</option>
-                </select>
-                <ChevronDownIcon
-                  class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                />
-              </div>
+              <ul class="space-y-0.5 px-1 py-1">
+                <li v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      filters.source_channel === opt.value
+                        ? 'bg-teal-50 font-medium text-teal-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    "
+                    @click="applyFilterPatch($event, { source_channel: opt.value })"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </li>
+              </ul>
             </div>
           </details>
 
@@ -548,23 +549,24 @@
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white p-2 shadow-lg ring-1 ring-slate-900/5"
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
             >
-              <div class="relative">
-                <select
-                  v-model="filters.paper_status"
-                  class="h-9 w-full cursor-pointer appearance-none rounded-md border-0 bg-white py-1.5 pl-2 pr-8 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-                  @change="onFilterDropdownChange"
-                >
-                  <option value="">{{ t('requests_page.all') }}</option>
-                  <option value="pending">{{ labelPaperStatus('pending') }}</option>
-                  <option value="received">{{ labelPaperStatus('received') }}</option>
-                  <option value="digitally_signed">{{ labelPaperStatus('digitally_signed') }}</option>
-                </select>
-                <ChevronDownIcon
-                  class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                />
-              </div>
+              <ul class="space-y-0.5 px-1 py-1">
+                <li v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      filters.paper_status === opt.value
+                        ? 'bg-teal-50 font-medium text-teal-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    "
+                    @click="applyFilterPatch($event, { paper_status: opt.value })"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </li>
+              </ul>
             </div>
           </details>
 
@@ -581,21 +583,24 @@
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white p-2 shadow-lg ring-1 ring-slate-900/5"
+              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
             >
-              <div class="relative">
-                <select
-                  v-model="filters.priority"
-                  class="h-9 w-full cursor-pointer appearance-none rounded-md border-0 bg-white py-1.5 pl-2 pr-8 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-                  @change="onFilterDropdownChange"
-                >
-                  <option value="">{{ t('requests_page.filter_priority_all') }}</option>
-                  <option value="urgent">{{ t('requests_page.filter_priority_urgent') }}</option>
-                </select>
-                <ChevronDownIcon
-                  class="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                />
-              </div>
+              <ul class="space-y-0.5 px-1 py-1">
+                <li v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                  <button
+                    type="button"
+                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                    :class="
+                      filters.priority === opt.value
+                        ? 'bg-teal-50 font-medium text-teal-900'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    "
+                    @click="applyFilterPatch($event, { priority: opt.value })"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </li>
+              </ul>
             </div>
           </details>
         </div>
@@ -919,6 +924,33 @@ const filterDepartSummary = computed(() => {
   if (!filters.from && !filters.to) return t('requests_page.all')
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
+
+const tripTypeFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.all') },
+  { value: 'door_to_door', label: labelTripType('door_to_door') },
+  { value: 'point_to_point', label: labelTripType('point_to_point') },
+  { value: 'business', label: labelTripType('business') },
+  { value: 'cargo', label: labelTripType('cargo') },
+])
+
+const channelFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.all') },
+  { value: 'portal', label: labelSourceChannel('portal') },
+  { value: 'zalo', label: labelSourceChannel('zalo') },
+  { value: 'paper', label: labelSourceChannel('paper') },
+])
+
+const paperFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.all') },
+  { value: 'pending', label: labelPaperStatus('pending') },
+  { value: 'received', label: labelPaperStatus('received') },
+  { value: 'digitally_signed', label: labelPaperStatus('digitally_signed') },
+])
+
+const priorityFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.filter_priority_all') },
+  { value: 'urgent', label: t('requests_page.filter_priority_urgent') },
+])
 
 const tabDefs = computed(() => [
   { id: 'all', label: t('requests_page.tab_all') },
@@ -1267,6 +1299,12 @@ function closeParentDetails(ev) {
   if (!el || typeof el.closest !== 'function') return
   const d = el.closest('details')
   if (d) d.open = false
+}
+
+function applyFilterPatch(ev, patch) {
+  Object.assign(filters, patch)
+  closeParentDetails(ev)
+  onFilterChange()
 }
 
 function onFilterDropdownChange(ev) {
