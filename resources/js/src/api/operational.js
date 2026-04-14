@@ -17,6 +17,18 @@ export async function listDrivers(params = {}) {
 }
 
 /** @param {number} driverId */
+export async function deleteDriver(driverId) {
+  const { data } = await http.delete(`/drivers/${driverId}`)
+  return data.data
+}
+
+/** @param {number} driverId */
+export async function restoreDriver(driverId) {
+  const { data } = await http.post(`/drivers/${driverId}/restore`)
+  return data.data
+}
+
+/** @param {number} driverId */
 export async function getDriver(driverId) {
   const { data } = await http.get(`/drivers/${driverId}`)
   return data.data

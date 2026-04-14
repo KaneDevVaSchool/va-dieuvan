@@ -16,6 +16,7 @@ class ListDriversRequest extends ApiFormRequest
         return [
             'employment_status' => ['nullable', 'string', 'in:active,on_leave,terminated'],
             'availability_status' => ['nullable', 'string', 'in:available,busy,offline'],
+            'only_trashed' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ];
     }

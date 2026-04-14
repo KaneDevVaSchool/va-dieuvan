@@ -13,7 +13,9 @@ use App\Http\Requests\Api\Operational\StoreTransportProviderRequest;
 use App\Http\Requests\Api\Operational\StoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateDriverRequest;
 use App\Http\Requests\Api\Operational\UpdateTransportProviderRequest;
+use App\Http\Requests\Api\Operational\DeleteDriverRequest;
 use App\Http\Requests\Api\Operational\DeleteVehicleRequest;
+use App\Http\Requests\Api\Operational\RestoreDriverRequest;
 use App\Http\Requests\Api\Operational\RestoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
 use App\Models\Driver;
@@ -63,8 +65,13 @@ class OperationalResourceController extends Controller
     {
         $data = $request->validated();
 
-        $q = Driver::query()
-            ->with(['user:id,name,email,phone,employee_code,avatar_url'])
+        $onlyTrashed = $request->boolean('only_trashed');
+
+        $q = $onlyTrashed
+            ? Driver::onlyTrashed()
+            : Driver::query();
+
+        $q->with(['user:id,name,email,phone,employee_code,avatar_url'])
             ->orderBy('full_name');
 
         $q->when(
@@ -178,6 +185,22 @@ class OperationalResourceController extends Controller
         return $this->ok($this->serializeDriver($driver, true));
     }
 
+    public function destroyDriver(DeleteDriverRequest $request, Driver $driver)
+    {
+        $driver->delete();
+
+        return $this->ok(['deleted' => true, 'trashed' => true]);
+    }
+
+    public function restoreDriver(RestoreDriverRequest $request, int $id)
+    {
+        $driver = Driver::onlyTrashed()->findOrFail($id);
+        $driver->restore();
+        $driver->load(['user:id,name,email,phone,employee_code,avatar_url']);
+
+        return $this->ok($this->serializeDriver($driver));
+    }
+
     public function updateVehicle(UpdateVehicleRequest $request, Vehicle $vehicle)
     {
         $vehicle->fill($request->validated());
@@ -263,6 +286,7 @@ class OperationalResourceController extends Controller
             'license_expires_at' => $d->license_expires_at?->format('Y-m-d'),
             'employment_status' => $d->employment_status,
             'availability_status' => $d->availability_status,
+            'deleted_at' => $d->deleted_at?->toIso8601String(),
             'user' => $d->user ? [
                 'id' => $d->user->id,
                 'name' => $d->user->name,

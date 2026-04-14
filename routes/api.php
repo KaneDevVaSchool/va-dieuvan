@@ -203,6 +203,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware('throttle:30,1');
         Route::patch('/drivers/{driver}', [OperationalResourceController::class, 'updateDriver'])
             ->middleware('throttle:30,1');
+        Route::delete('/drivers/{driver}', [OperationalResourceController::class, 'destroyDriver'])
+            ->middleware('throttle:30,1');
+        Route::post('/drivers/{id}/restore', [OperationalResourceController::class, 'restoreDriver'])
+            ->whereNumber('id')
+            ->middleware('throttle:30,1');
         Route::post('/drivers/{driver}/compliance-documents', [DriverComplianceDocumentController::class, 'store'])
             ->middleware('throttle:30,1');
         Route::patch('/drivers/{driver}/compliance-documents/{complianceDocument}', [DriverComplianceDocumentController::class, 'update'])

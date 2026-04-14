@@ -63,6 +63,37 @@
           </button>
         </div>
 
+        <div
+          v-if="activeTab === 'drivers'"
+          class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800"
+        >
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              driversViewMode === 'active'
+                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setDriversViewMode('active')"
+          >
+            {{ t('resources.drivers_view_active') }}
+          </button>
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              driversViewMode === 'trash'
+                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setDriversViewMode('trash')"
+          >
+            <TrashIcon class="h-4 w-4" aria-hidden="true" />
+            {{ t('resources.vehicles_view_trash') }}
+          </button>
+        </div>
+
         <div class="min-w-0 flex-1 overflow-x-auto overscroll-x-contain sm:flex-initial">
           <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
             <button
@@ -84,7 +115,7 @@
 
         <div class="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:ml-auto sm:shrink-0">
           <button
-            v-if="activeTab === 'drivers'"
+            v-if="activeTab === 'drivers' && driversViewMode === 'active'"
             type="button"
             class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-500 sm:min-h-0 sm:w-auto sm:py-2"
             @click="openAssignModal(null)"
@@ -108,7 +139,7 @@
             {{ t('resources.add_supplier') }}
           </button>
           <button
-            v-else-if="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash')"
+            v-else-if="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash')"
             type="button"
             class="inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 sm:min-h-0 sm:w-auto sm:py-2"
             disabled
@@ -121,7 +152,7 @@
 
     <!-- Filters: horizontal bar (same pattern as Requests) -->
     <div
-      v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash')"
+      v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash')"
       class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
     >
       <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
@@ -172,6 +203,14 @@
               <li v-if="activeTab === 'suppliers' && filters.contract" class="flex justify-between gap-2">
                 <span class="text-slate-500">{{ t('resources.filter_contract') }}</span>
                 <span class="max-w-[60%] text-right font-medium">{{ resourceFilterContractLabel }}</span>
+              </li>
+              <li v-if="activeTab === 'drivers' && filters.driver_license" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_driver_license') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDocStateLabel(filters.driver_license) }}</span>
+              </li>
+              <li v-if="activeTab === 'drivers' && filters.driver_availability" class="flex justify-between gap-2">
+                <span class="text-slate-500">{{ t('resources.filter_driver_availability') }}</span>
+                <span class="max-w-[60%] text-right font-medium">{{ resourceFilterDriverAvailabilityLabel }}</span>
               </li>
               <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
             </ul>
@@ -289,6 +328,72 @@
           </template>
 
           <!-- NCC: hợp đồng -->
+          <template v-if="activeTab === 'drivers' && driversViewMode === 'active'">
+            <details class="group relative min-w-0">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_driver_license') }}</span>
+                <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
+                  filters.driver_license ? resourceFilterDocStateLabel(filters.driver_license) : t('resources.filter_all')
+                }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <ul class="space-y-0.5 px-1 py-1">
+                  <li v-for="opt in resourceDocStateFilterOptions" :key="'dl-' + (opt.value === '' ? '_all' : opt.value)">
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                      :class="
+                        filters.driver_license === opt.value
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="applyResourceFilterPatch($event, { driver_license: opt.value })"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </details>
+
+            <details class="group relative min-w-0">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_driver_availability') }}</span>
+                <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
+                  filters.driver_availability ? resourceFilterDriverAvailabilityLabel : t('resources.filter_all')
+                }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+              >
+                <ul class="space-y-0.5 px-1 py-1">
+                  <li v-for="opt in resourceDriverAvailabilityFilterOptions" :key="'da-' + (opt.value === '' ? '_all' : opt.value)">
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                      :class="
+                        filters.driver_availability === opt.value
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-200'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="applyResourceFilterPatch($event, { driver_availability: opt.value })"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </details>
+          </template>
+
           <details v-if="activeTab === 'suppliers'" class="group relative min-w-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
@@ -696,38 +801,142 @@
           v-else-if="activeTab === 'drivers'"
           class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
         >
+          <div
+            v-if="driverTotalFiltered"
+            class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 bg-slate-50/60 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/50"
+          >
+            <p class="text-xs text-slate-600 dark:text-slate-400">
+              {{ t('resources.pagination_showing', { from: driverRangeFrom, to: driverRangeTo, total: driverTotalFiltered }) }}
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <details ref="driverColumnPickerRef" class="relative">
+                <summary
+                  class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
+                >
+                  <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
+                  {{ t('resources.table_columns') }}
+                  <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                </summary>
+                <div
+                  class="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
+                  @click.stop
+                >
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
+                  <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
+                    <li v-for="opt in driverColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+                      <input
+                        :id="`dcol-${opt.id}`"
+                        type="checkbox"
+                        class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                        :checked="driverColumnVisible[opt.id]"
+                        @change="setDriverColumn(opt.id, $event.target.checked)"
+                      />
+                      <label :for="`dcol-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
+                    </li>
+                  </ul>
+                </div>
+              </details>
+              <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                {{ t('resources.pagination_per_page') }}
+                <select
+                  v-model.number="driverPerPage"
+                  class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-8 text-xs font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  <option v-for="n in driverPerPageOptions" :key="n" :value="n">{{ n }}</option>
+                </select>
+              </label>
+            </div>
+          </div>
           <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
             <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
               <thead>
                 <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_driver_name') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_user_email') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_employee_code') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_license') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_phone') }}</th>
-                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_driver_name') }}</th>
+                  <th v-if="driverColOn('email')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_user_email') }}</th>
+                  <th v-if="driverColOn('employee_code')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_employee_code') }}</th>
+                  <th v-if="driverColOn('license_class')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('driver_detail.license_class') }}</th>
+                  <th v-if="driverColOn('license_expires')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('driver_detail.license_expires') }}</th>
+                  <th v-if="driverColOn('phone')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_phone') }}</th>
+                  <th v-if="driverColOn('employment')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.filter_status') }}</th>
+                  <th v-if="driverColOn('availability')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('driver_detail.availability') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                <tr v-for="d in filteredDrivers" :key="d.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                  <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900 dark:text-white">
+                <tr v-for="d in paginatedDrivers" :key="d.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-900 dark:text-white">
                     <RouterLink
+                      v-if="driversViewMode === 'active'"
                       :to="{ name: 'driverDetail', params: { id: d.id } }"
                       class="text-teal-700 hover:underline dark:text-teal-400"
                     >
                       {{ d.name }}
                     </RouterLink>
+                    <span v-else>{{ d.name }}</span>
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 text-slate-600 dark:text-slate-400">{{ d.email || '—' }}</td>
-                  <td class="whitespace-nowrap px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || '—' }}</td>
-                  <td class="whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-300">{{ d.license }}</td>
-                  <td class="whitespace-nowrap px-4 py-3 text-slate-600 dark:text-slate-400">{{ d.phone || '—' }}</td>
-                  <td class="whitespace-nowrap px-4 py-3">
+                  <td v-if="driverColOn('email')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.email || '—' }}</td>
+                  <td v-if="driverColOn('employee_code')" class="whitespace-nowrap px-3 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || '—' }}</td>
+                  <td v-if="driverColOn('license_class')" class="whitespace-nowrap px-3 py-3 text-slate-700 dark:text-slate-300">{{ d.license_class || '—' }}</td>
+                  <td v-if="driverColOn('license_expires')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    <span v-if="d.license_expires_at" :class="compliancePillClass(d.licenseExpiry)">{{ fmtVehicleTableDate(d.license_expires_at) }}</span>
+                    <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
+                  </td>
+                  <td v-if="driverColOn('phone')" class="whitespace-nowrap px-3 py-3 text-slate-600 dark:text-slate-400">{{ d.phone || '—' }}</td>
+                  <td v-if="driverColOn('employment')" class="whitespace-nowrap px-3 py-3">
                     <span :class="statusBadgeClass(d.uiStatus)">{{ labelVehicleStatus(d.uiStatus) }}</span>
+                  </td>
+                  <td v-if="driverColOn('availability')" class="whitespace-nowrap px-3 py-3 text-xs text-slate-700 dark:text-slate-300">
+                    {{ labelDriverAvailability(d.availability_status) }}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-3 text-right text-slate-400" @click.stop>
+                    <button
+                      v-if="driversViewMode === 'trash' && canManageDrivers"
+                      type="button"
+                      class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+                      :disabled="driverRestoring"
+                      @click="submitRestoreDriverById(d.id)"
+                    >
+                      {{ t('resources.action_restore_driver') }}
+                    </button>
+                    <button
+                      v-else-if="driversViewMode === 'active' && canManageDrivers"
+                      type="button"
+                      class="inline-flex rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
+                      :title="t('resources.driver_delete_action')"
+                      @click="openDriverDeleteModal(d)"
+                    >
+                      <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                    </button>
                   </td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <div
+            v-if="driverTotalFiltered"
+            class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 bg-slate-50/40 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40"
+          >
+            <span class="text-xs text-slate-500 dark:text-slate-400">{{ t('resources.pagination_page_of', { page: driverListPage, total: driverTotalPages }) }}</span>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="driverListPage <= 1"
+                :aria-label="t('resources.pagination_prev')"
+                @click="driverListPage = Math.max(1, driverListPage - 1)"
+              >
+                <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 p-2 text-slate-600 enabled:hover:bg-white disabled:opacity-40 dark:border-slate-600 dark:text-slate-400 dark:enabled:hover:bg-slate-800"
+                :disabled="driverListPage >= driverTotalPages"
+                :aria-label="t('resources.pagination_next')"
+                @click="driverListPage = Math.min(driverTotalPages, driverListPage + 1)"
+              >
+                <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -787,7 +996,7 @@
           {{ vehiclesViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
         </p>
         <p v-if="activeTab === 'drivers' && !filteredDrivers.length" class="py-8 text-center text-sm text-slate-500">
-          {{ t('resources.empty') }}
+          {{ driversViewMode === 'trash' ? t('resources.trash_empty') : t('resources.empty') }}
         </p>
         <p v-if="activeTab === 'suppliers' && !filteredSuppliers.length" class="py-8 text-center text-sm text-slate-500">
           {{ t('resources.empty') }}
@@ -1829,6 +2038,49 @@
         </div>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="driverDeleteModalOpen"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        @click.self="driverDeleteModalOpen = false"
+      >
+        <div class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900">
+          <div class="flex gap-3 border-b border-slate-100 px-4 py-4 dark:border-slate-700">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+              <TrashIcon class="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 id="driver-delete-title" class="text-base font-semibold text-slate-900 dark:text-white">
+                {{ t('resources.driver_delete_modal_title') }}
+              </h2>
+              <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                {{ t('resources.driver_delete_modal_body', { name: driverDeleteTarget?.name ?? '' }) }}
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-2 px-4 pb-4 pt-2">
+            <button
+              type="button"
+              class="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              @click="driverDeleteModalOpen = false"
+            >
+              {{ t('app.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded-lg bg-rose-600 py-2.5 text-sm font-medium text-white hover:bg-rose-500 disabled:opacity-50"
+              :disabled="driverDeleting"
+              @click="confirmMoveDriverToTrash"
+            >
+              {{ driverDeleting ? t('resources.loading') : t('resources.driver_delete_modal_confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -1853,12 +2105,14 @@ import {
   createTransportProvider,
   createVehicle,
   createVehicleComplianceDocument,
+  deleteDriver,
   deleteVehicle,
   deleteVehicleComplianceDocument,
   listDrivers,
   listTransportProviders,
   listVehicleComplianceDocuments,
   listVehicles,
+  restoreDriver as restoreDriverRequest,
   restoreVehicle as restoreVehicleRequest,
   searchUsersForDriverAssignment,
   updateTransportProvider,
@@ -1871,6 +2125,7 @@ import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon
 const { t } = useI18n()
 const auth = useAuthStore()
 const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
+const canManageDrivers = computed(() => auth.hasPermission('resource.driver.manage'))
 const canManageProviders = computed(() => auth.hasPermission('resource.provider.manage'))
 
 const tabs = [
@@ -1881,6 +2136,7 @@ const tabs = [
 
 const activeTab = ref('vehicles')
 const vehiclesViewMode = ref('active')
+const driversViewMode = ref('active')
 const search = ref('')
 const selectedVehicle = ref(null)
 const selectedSupplier = ref(null)
@@ -1899,6 +2155,8 @@ const filters = ref({
   inspection: '',
   road_fee: '',
   contract: '',
+  driver_license: '',
+  driver_availability: '',
 })
 
 const activeResourceFilterCount = computed(() => {
@@ -1912,6 +2170,10 @@ const activeResourceFilterCount = computed(() => {
     if (filters.value.road_fee) n++
   }
   if (activeTab.value === 'suppliers' && filters.value.contract) n++
+  if (activeTab.value === 'drivers') {
+    if (filters.value.driver_license) n++
+    if (filters.value.driver_availability) n++
+  }
   return n
 })
 
@@ -1974,6 +2236,8 @@ function resetResourceFilters() {
     inspection: '',
     road_fee: '',
     contract: '',
+    driver_license: '',
+    driver_availability: '',
   }
 }
 
@@ -2000,6 +2264,10 @@ const vehicleDeleteModalOpen = ref(false)
 const vehicleDeleteTarget = ref(null)
 const vehicleRestoring = ref(false)
 const vehicleFormError = ref('')
+const driverDeleteModalOpen = ref(false)
+const driverDeleteTarget = ref(null)
+const driverDeleting = ref(false)
+const driverRestoring = ref(false)
 const resourceFilterMenuRef = ref(null)
 const resourceFiltersExtraOpen = ref(false)
 
@@ -2021,6 +2289,21 @@ const resourceDriverDefaultFilterOptions = computed(() => [
   { value: '', label: t('resources.filter_all') },
   { value: 'assigned', label: t('resources.filter_driver_assigned') },
   { value: 'unassigned', label: t('resources.filter_driver_unassigned') },
+])
+
+const resourceFilterDriverAvailabilityLabel = computed(() => {
+  const f = filters.value.driver_availability
+  if (f === 'available') return t('driver_detail.avail_available')
+  if (f === 'busy') return t('driver_detail.avail_busy')
+  if (f === 'offline') return t('driver_detail.avail_offline')
+  return t('resources.filter_all')
+})
+
+const resourceDriverAvailabilityFilterOptions = computed(() => [
+  { value: '', label: t('resources.filter_all') },
+  { value: 'available', label: t('driver_detail.avail_available') },
+  { value: 'busy', label: t('driver_detail.avail_busy') },
+  { value: 'offline', label: t('driver_detail.avail_offline') },
 ])
 
 const resourceDocStateFilterOptions = computed(() => [
@@ -2115,9 +2398,68 @@ const vehicleColumnToggleOptions = computed(() => [
 
 const vehicleColumnPickerRef = ref(null)
 
+const DRIVER_COL_STORAGE_KEY = 'va-resources-driver-cols-v1'
+const DRIVER_COL_DEFAULTS = {
+  email: true,
+  employee_code: true,
+  license_class: true,
+  license_expires: true,
+  phone: true,
+  employment: true,
+  availability: false,
+}
+
+function loadDriverColumnPrefs() {
+  try {
+    const raw = localStorage.getItem(DRIVER_COL_STORAGE_KEY)
+    if (!raw) return { ...DRIVER_COL_DEFAULTS }
+    return { ...DRIVER_COL_DEFAULTS, ...JSON.parse(raw) }
+  } catch {
+    return { ...DRIVER_COL_DEFAULTS }
+  }
+}
+
+const driverColumnVisible = ref(loadDriverColumnPrefs())
+watch(
+  driverColumnVisible,
+  (v) => {
+    try {
+      localStorage.setItem(DRIVER_COL_STORAGE_KEY, JSON.stringify(v))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+function driverColOn(id) {
+  if (id === 'name' || id === 'actions') return true
+  return driverColumnVisible.value[id] !== false
+}
+
+function setDriverColumn(id, checked) {
+  driverColumnVisible.value = { ...driverColumnVisible.value, [id]: checked }
+}
+
+const driverColumnToggleOptions = computed(() => [
+  { id: 'email', labelKey: 'resources.col_user_email' },
+  { id: 'employee_code', labelKey: 'resources.col_employee_code' },
+  { id: 'license_class', labelKey: 'driver_detail.license_class' },
+  { id: 'license_expires', labelKey: 'driver_detail.license_expires' },
+  { id: 'phone', labelKey: 'resources.col_phone' },
+  { id: 'employment', labelKey: 'resources.filter_status' },
+  { id: 'availability', labelKey: 'driver_detail.availability' },
+])
+
+const driverColumnPickerRef = ref(null)
+
 const vehicleListPage = ref(1)
 const vehiclePerPage = ref(10)
 const vehiclePerPageOptions = [5, 10, 15, 20]
+
+const driverListPage = ref(1)
+const driverPerPage = ref(10)
+const driverPerPageOptions = [5, 10, 15, 20]
 
 function fmtVehicleTableDate(iso) {
   if (!iso) return '—'
@@ -2336,9 +2678,14 @@ function enrichDriver(raw) {
     email: raw.user?.email ?? '',
     employeeCode: raw.user?.employee_code ?? '',
     license: lic || '—',
+    license_class: raw.license_class ?? '',
+    license_expires_at: raw.license_expires_at ?? '',
+    licenseExpiry: docStateFromDate(raw.license_expires_at),
     phone: raw.phone || raw.user?.phone || '',
     employment_status: raw.employment_status,
+    availability_status: raw.availability_status ?? '',
     uiStatus: driverUiStatus(raw.employment_status),
+    deleted_at: raw.deleted_at ?? null,
   }
 }
 
@@ -2376,7 +2723,7 @@ async function loadAll() {
   try {
     const [vRes, dRes, pRes] = await Promise.all([
       listVehicles({ per_page: 200, only_trashed: vehiclesViewMode.value === 'trash' }),
-      listDrivers({ per_page: 200 }),
+      listDrivers({ per_page: 200, only_trashed: driversViewMode.value === 'trash' }),
       listTransportProviders({ per_page: 200 }),
     ])
     vehicles.value = (vRes.items || []).map(enrichVehicle)
@@ -2405,6 +2752,13 @@ function setTab(id) {
   selectedVehicle.value = null
   selectedSupplier.value = null
   if (id !== 'vehicles') vehiclesViewMode.value = 'active'
+  if (id !== 'drivers') driversViewMode.value = 'active'
+}
+
+function setDriversViewMode(mode) {
+  driversViewMode.value = mode
+  driverListPage.value = 1
+  loadAll()
 }
 
 function setVehiclesViewMode(mode) {
@@ -2525,6 +2879,25 @@ function matchesVehicleDocField(doc, f) {
   return doc?.state === f
 }
 
+function matchesDriverLicenseFilter(d) {
+  const f = filters.value.driver_license
+  if (!f) return true
+  return d.licenseExpiry?.state === f
+}
+
+function matchesDriverAvailabilityFilter(d) {
+  const f = filters.value.driver_availability
+  if (!f) return true
+  return d.availability_status === f
+}
+
+function labelDriverAvailability(s) {
+  if (s === 'available') return t('driver_detail.avail_available')
+  if (s === 'busy') return t('driver_detail.avail_busy')
+  if (s === 'offline') return t('driver_detail.avail_offline')
+  return '—'
+}
+
 const filteredVehicles = computed(() => {
   const q = search.value.trim().toLowerCase()
   return vehicles.value.filter((v) => {
@@ -2579,10 +2952,46 @@ const filteredDrivers = computed(() => {
   const q = search.value.trim().toLowerCase()
   return drivers.value.filter((d) => {
     if (!matchesDriverEmployment(d)) return false
+    if (!matchesDriverLicenseFilter(d)) return false
+    if (!matchesDriverAvailabilityFilter(d)) return false
     if (!q) return true
-    return `${d.name} ${d.email} ${d.license} ${d.phone} ${d.employeeCode}`.toLowerCase().includes(q)
+    return `${d.name} ${d.email} ${d.license} ${d.phone} ${d.employeeCode} ${d.license_class}`.toLowerCase().includes(q)
   })
 })
+
+const driverTotalFiltered = computed(() => filteredDrivers.value.length)
+const driverTotalPages = computed(() => Math.max(1, Math.ceil(driverTotalFiltered.value / driverPerPage.value)))
+
+const paginatedDrivers = computed(() => {
+  const list = filteredDrivers.value
+  const per = driverPerPage.value
+  const tp = driverTotalPages.value
+  const page = Math.min(Math.max(1, driverListPage.value), tp)
+  const start = (page - 1) * per
+  return list.slice(start, start + per)
+})
+
+const driverRangeFrom = computed(() => {
+  if (!driverTotalFiltered.value) return 0
+  return (driverListPage.value - 1) * driverPerPage.value + 1
+})
+const driverRangeTo = computed(() => Math.min(driverTotalFiltered.value, driverListPage.value * driverPerPage.value))
+
+watch(driverTotalPages, (tp) => {
+  if (driverListPage.value > tp) driverListPage.value = tp
+})
+
+watch(driverPerPage, () => {
+  driverListPage.value = 1
+})
+
+watch(
+  () => [search.value, filters.value, driversViewMode.value],
+  () => {
+    driverListPage.value = 1
+  },
+  { deep: true },
+)
 
 const filteredSuppliers = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -2617,6 +3026,8 @@ watch(activeTab, () => {
     inspection: '',
     road_fee: '',
     contract: '',
+    driver_license: '',
+    driver_availability: '',
   }
 })
 
@@ -3010,6 +3421,40 @@ async function submitRestoreVehicleById(id) {
     alert(t('resources.load_error'))
   } finally {
     vehicleRestoring.value = false
+  }
+}
+
+function openDriverDeleteModal(d) {
+  if (!d || !canManageDrivers.value) return
+  driverDeleteTarget.value = d
+  driverDeleteModalOpen.value = true
+}
+
+async function confirmMoveDriverToTrash() {
+  if (!driverDeleteTarget.value || !canManageDrivers.value) return
+  driverDeleting.value = true
+  try {
+    await deleteDriver(driverDeleteTarget.value.id)
+    driverDeleteModalOpen.value = false
+    driverDeleteTarget.value = null
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    driverDeleting.value = false
+  }
+}
+
+async function submitRestoreDriverById(id) {
+  if (!canManageDrivers.value) return
+  driverRestoring.value = true
+  try {
+    await restoreDriverRequest(id)
+    await loadAll()
+  } catch {
+    alert(t('resources.load_error'))
+  } finally {
+    driverRestoring.value = false
   }
 }
 
