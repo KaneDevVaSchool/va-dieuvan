@@ -26,10 +26,10 @@
 
     <!-- Filters: cùng pattern danh sách yêu cầu -->
     <div
-      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5"
+      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2"
     >
-      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <details ref="filterMenuRef" class="group relative">
+      <div class="flex min-w-0 items-center gap-1.5 sm:gap-2">
+        <details ref="filterMenuRef" class="group relative shrink-0">
           <summary
             class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
           >
@@ -87,10 +87,12 @@
           </div>
         </details>
 
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
+        <div class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block" aria-hidden="true" />
 
-        <div class="flex min-w-0 flex-1 flex-wrap items-end gap-x-2 gap-y-2 sm:gap-x-3">
-          <details class="group relative min-w-0">
+        <div
+          class="costs-filter-scroll flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto overscroll-x-contain py-0.5 [-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300/80"
+        >
+          <details class="group relative shrink-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
             >
@@ -122,7 +124,7 @@
             </div>
           </details>
 
-          <details class="group relative min-w-0">
+          <details class="group relative shrink-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
             >
@@ -154,7 +156,7 @@
             </div>
           </details>
 
-          <details class="group relative min-w-0">
+          <details class="group relative shrink-0">
             <summary
               class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
             >
@@ -183,7 +185,7 @@
             </div>
           </details>
 
-          <details class="group relative min-w-0">
+          <details class="group relative shrink-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
             >
@@ -247,21 +249,21 @@
             </div>
           </details>
 
-          <label class="inline-flex min-w-0 max-w-[min(100%,20rem)] flex-1 flex-col gap-0.5 sm:min-w-[12rem]">
-            <span class="text-xs text-slate-500">Tìm trong trang</span>
-            <input
-              v-model="searchQ"
-              type="search"
-              placeholder="Bãi xe, người gửi, mã trip…"
-              class="costs-input h-9 w-full text-sm"
-            />
-          </label>
+          <input
+            v-model="searchQ"
+            type="search"
+            aria-label="Tìm trong trang hiện tại"
+            placeholder="Tìm trong trang…"
+            title="Tìm trong trang hiện tại"
+            class="costs-input h-9 w-[9.5rem] shrink-0 text-sm sm:w-44"
+          />
 
-          <label class="inline-flex items-center gap-1.5">
-            <span class="text-xs text-slate-500 whitespace-nowrap">Số dòng/trang</span>
+          <label class="inline-flex shrink-0 items-center gap-1.5">
+            <span class="sr-only">Số dòng mỗi trang</span>
             <select
               v-model.number="filters.per_page"
               class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+              aria-label="Số dòng mỗi trang"
               @change="onPerPageChange"
             >
               <option :value="10">10</option>
@@ -270,30 +272,31 @@
               <option :value="50">50</option>
               <option :value="100">100</option>
             </select>
+            <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline" aria-hidden="true">dòng</span>
           </label>
         </div>
 
-        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+        <div
+          class="flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3"
+        >
           <button
             type="button"
             class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
             title="Xóa bộ lọc"
+            aria-label="Xóa bộ lọc"
             @click="resetFilters"
           >
             <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" />
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
               <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" />
             </span>
           </button>
-          <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
           <button
             type="button"
-            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-va-800 text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35"
-            title="Thêm chi phí"
-            aria-label="Thêm chi phí"
+            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35"
             @click="openAddCostModal"
           >
-            <PlusIcon class="h-5 w-5" aria-hidden="true" />
+            Thêm chi phí
           </button>
         </div>
       </div>
@@ -545,7 +548,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ChevronDownIcon, FunnelIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { listTripCosts, submitTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
