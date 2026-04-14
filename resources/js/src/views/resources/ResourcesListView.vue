@@ -3028,7 +3028,7 @@ import {
   updateVehicle,
   updateVehicleComplianceDocument,
 } from '../../api/operational'
-import { formatApiError } from '../../api/http'
+import { formatApiError, TOKEN_KEY } from '../../api/http'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
@@ -4190,12 +4190,33 @@ function isPdfAttachment(a) {
   }
 }
 
+/**
+ * Chuẩn hóa URL file public disk: API có thể trả về `APP_URL` khác host (localhost vs 127.0.0.1 / cổng),
+ * khiến fetch sai origin. Với `/storage/...` luôn dùng origin trang hoặc (dev) VITE_APP_URL.
+ */
 function resolveAttachmentAbsoluteUrl(a) {
   const u = a?.url
   if (!u) return ''
-  if (/^https?:\/\//i.test(u)) return u
-  const path = u.startsWith('/') ? u : `/${u}`
-  return `${window.location.origin}${path}`
+  if (typeof window === 'undefined') return u
+  const viteBackend =
+    import.meta.env.DEV && import.meta.env.VITE_APP_URL
+      ? String(import.meta.env.VITE_APP_URL).trim().replace(/\/$/, '')
+      : ''
+  try {
+    const parsed = new URL(u, window.location.origin)
+    if (parsed.pathname.startsWith('/storage')) {
+      const base = viteBackend || window.location.origin
+      return `${base}${parsed.pathname}${parsed.search}`
+    }
+    return parsed.href
+  } catch {
+    const path = u.startsWith('/') ? u : `/${u}`
+    if (path.startsWith('/storage')) {
+      const base = viteBackend || window.location.origin
+      return `${base}${path}`
+    }
+    return `${window.location.origin}${path}`
+  }
 }
 
 /** Tên file khi lưu PDF (blob download). */
@@ -4215,38 +4236,43 @@ function vehiclePdfAttachmentBusyKey(doc, a, aIdx) {
   return `${doc?.id ?? 'doc'}-${a?.id ?? aIdx}`
 }
 
-/** Tải PDF dạng nhị phân (fetch → blob) để tránh file hỏng so với `<a download>`. */
+/** Tải PDF dạng nhị phân (fetch → blob). Gửi Bearer như axios; fallback mở tab nếu fetch lỗi. */
 async function downloadVehiclePdfAttachment(doc, a, aIdx) {
   const busyKey = vehiclePdfAttachmentBusyKey(doc, a, aIdx)
   const url = resolveAttachmentAbsoluteUrl(a)
   if (!url || pdfAttachmentDownloadBusyKey.value === busyKey) return
   pdfAttachmentDownloadBusyKey.value = busyKey
+  const headers = {}
   try {
-    let sameOrigin = false
-    try {
-      const u = new URL(url, window.location.origin)
-      sameOrigin = u.origin === window.location.origin
-    } catch {
-      sameOrigin = false
+    const u = new URL(url, window.location.origin)
+    if (u.origin === window.location.origin) {
+      const token = localStorage.getItem(TOKEN_KEY)
+      if (token) headers.Authorization = `Bearer ${token}`
     }
-    if (sameOrigin) {
-      const res = await fetch(url, { credentials: 'same-origin' })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const blob = await res.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = attachmentDownloadName(a)
-      link.rel = 'noopener'
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      URL.revokeObjectURL(blobUrl)
-    } else {
-      window.open(url, '_blank', 'noopener,noreferrer')
-    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const res = await fetch(url, {
+      credentials: 'same-origin',
+      headers: Object.keys(headers).length ? headers : undefined,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const contentType = (res.headers.get('content-type') || '').toLowerCase()
+    if (contentType.includes('text/html')) throw new Error('unexpected_html')
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = attachmentDownloadName(a)
+    link.rel = 'noopener'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(blobUrl)
   } catch (e) {
-    showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+    const w = window.open(url, '_blank', 'noopener,noreferrer')
+    if (!w) showAppErrorFromApi(e, t('resources.attachment_download_failed'))
   } finally {
     pdfAttachmentDownloadBusyKey.value = null
   }
