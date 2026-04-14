@@ -704,7 +704,7 @@
             type="button"
             class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-sm font-medium text-rose-800 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="!selectedIds.length || bulkSubmitting"
-            @click="bulkSoftDeleteSelected"
+            @click="openBulkConfirm('delete')"
           >
             <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
             {{ t('requests_page.bulk_move_trash') }}
@@ -714,7 +714,7 @@
             type="button"
             class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-white px-3 py-1.5 text-sm font-medium text-teal-900 shadow-sm transition hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="!selectedIds.length || bulkSubmitting"
-            @click="bulkRestoreSelected"
+            @click="openBulkConfirm('restore')"
           >
             <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
             {{ t('requests_page.bulk_restore') }}
@@ -947,6 +947,71 @@
       </div>
     </div>
 
+    <Teleport to="body">
+      <div
+        v-if="bulkConfirmOpen"
+        class="fixed inset-0 z-[190] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="'bulk-confirm-title'"
+        @click.self="closeBulkConfirm"
+      >
+        <div
+          class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5"
+        >
+          <div
+            class="flex items-start gap-3 border-b border-slate-100 px-5 py-4"
+            :class="bulkConfirmKind === 'delete' ? 'bg-rose-50/80' : 'bg-teal-50/80'"
+          >
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              :class="bulkConfirmKind === 'delete' ? 'bg-rose-100 text-rose-700' : 'bg-teal-100 text-teal-800'"
+            >
+              <TrashIcon v-if="bulkConfirmKind === 'delete'" class="h-5 w-5" aria-hidden="true" />
+              <ArrowPathIcon v-else class="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 id="bulk-confirm-title" class="text-base font-semibold text-slate-900">
+                {{
+                  bulkConfirmKind === 'delete'
+                    ? t('requests_page.bulk_delete_modal_title')
+                    : t('requests_page.bulk_restore_modal_title')
+                }}
+              </h2>
+              <p class="mt-1 text-sm leading-relaxed text-slate-600">
+                {{
+                  bulkConfirmKind === 'delete'
+                    ? t('requests_page.bulk_delete_confirm')
+                    : t('requests_page.bulk_restore_confirm')
+                }}
+              </p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/50 px-5 py-3">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              @click="closeBulkConfirm"
+            >
+              {{ t('requests_page.bulk_confirm_cancel') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-offset-2"
+              :class="
+                bulkConfirmKind === 'delete'
+                  ? 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-500'
+                  : 'bg-teal-600 hover:bg-teal-700 focus:ring-teal-500'
+              "
+              :disabled="bulkSubmitting"
+              @click="submitBulkConfirm"
+            >
+              {{ t('requests_page.bulk_confirm_submit') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -1034,6 +1099,9 @@ const canBulkTrash = computed(
 
 const selectedIds = ref([])
 const bulkSubmitting = ref(false)
+const bulkConfirmOpen = ref(false)
+/** @type {import('vue').Ref<'delete' | 'restore' | null>} */
+const bulkConfirmKind = ref(null)
 const columnPickerRef = ref(null)
 
 const REQUEST_COL_STORAGE_KEY = 'va-requests-cols-v1'
@@ -1500,7 +1568,7 @@ async function loadInsights() {
       listTrips({ status: 'approved', per_page: 1, page: 1 }),
     ])
     pendingSpotlight.value = pendingRes.items ?? []
-    activeTripsTrack.value = inProgRes.items ?? []
+    activeTripsTrack.value = (inProgRes.items ?? []).filter((tr) => tr.dispatch_request)
     let assign = approvedRes.items?.[0] ?? null
     if (!assign) {
       const pendT = await listTrips({ status: 'pending', per_page: 1, page: 1 })
@@ -1524,7 +1592,11 @@ function buildListParams() {
     params.is_urgent = true
   }
 
-  if (activeTab.value === 'trip_in_progress') {
+  if (activeTab.value === 'trash') {
+    params.only_trashed = true
+    params.status = undefined
+    params.trip_status = undefined
+  } else if (activeTab.value === 'trip_in_progress') {
     params.trip_status = 'in_progress'
     params.status = undefined
   } else if (activeTab.value === 'trip_completed') {
@@ -1593,30 +1665,36 @@ async function reload() {
   void loadInsights()
 }
 
-async function bulkSoftDeleteSelected() {
+function openBulkConfirm(kind) {
   if (!selectedIds.value.length) return
-  if (!confirm(t('requests_page.bulk_delete_confirm'))) return
-  bulkSubmitting.value = true
-  try {
-    const res = await bulkSoftDeleteRequests({ ids: [...selectedIds.value] })
-    showAppSuccess(t('requests_page.bulk_deleted', { n: res.deleted ?? 0 }))
-    selectedIds.value = []
-    await reload()
-  } catch (e) {
-    showAppErrorFromApi(e)
-  } finally {
-    bulkSubmitting.value = false
-  }
+  bulkConfirmKind.value = kind
+  bulkConfirmOpen.value = true
 }
 
-async function bulkRestoreSelected() {
-  if (!selectedIds.value.length) return
-  if (!confirm(t('requests_page.bulk_restore_confirm'))) return
+function closeBulkConfirm() {
+  if (bulkSubmitting.value) return
+  bulkConfirmOpen.value = false
+  bulkConfirmKind.value = null
+}
+
+async function submitBulkConfirm() {
+  const kind = bulkConfirmKind.value
+  if (!kind || !selectedIds.value.length) {
+    closeBulkConfirm()
+    return
+  }
   bulkSubmitting.value = true
   try {
-    const res = await bulkRestoreRequests({ ids: [...selectedIds.value] })
-    showAppSuccess(t('requests_page.bulk_restored', { n: res.restored ?? 0 }))
+    if (kind === 'delete') {
+      const res = await bulkSoftDeleteRequests({ ids: [...selectedIds.value] })
+      showAppSuccess(t('requests_page.bulk_deleted', { n: res.deleted ?? 0 }))
+    } else {
+      const res = await bulkRestoreRequests({ ids: [...selectedIds.value] })
+      showAppSuccess(t('requests_page.bulk_restored', { n: res.restored ?? 0 }))
+    }
     selectedIds.value = []
+    bulkConfirmOpen.value = false
+    bulkConfirmKind.value = null
     await reload()
   } catch (e) {
     showAppErrorFromApi(e)

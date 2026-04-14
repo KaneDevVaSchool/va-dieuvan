@@ -23,6 +23,7 @@ class TripController extends Controller
         $user = $request->user();
 
         $q = TripVisibility::visibleTripsQuery($user)
+            ->whereHas('dispatchRequest')
             ->with([
                 'dispatcher:id,name,email',
                 'vehicle:id,license_plate,status',
