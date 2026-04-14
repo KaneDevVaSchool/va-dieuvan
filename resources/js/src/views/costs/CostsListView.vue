@@ -197,32 +197,34 @@
           <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900"
-            :aria-expanded="extraFiltersOpen"
-            @click="extraFiltersOpen = !extraFiltersOpen"
+            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-va-800 text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35"
+            title="Thêm chi phí"
+            aria-label="Thêm chi phí"
+            @click="openAddCostModal"
           >
-            Thuộc tính khác
-            <PlusCircleIcon class="h-5 w-5 text-teal-600" aria-hidden="true" />
+            <PlusIcon class="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      <div
-        v-show="extraFiltersOpen"
-        class="mt-3 flex flex-wrap items-center gap-4 border-t border-violet-100/80 pt-3"
-      >
-        <label class="inline-flex min-w-[12rem] flex-1 flex-col gap-1 sm:max-w-xs">
+      <div class="mt-3 flex flex-wrap items-center gap-4 border-t border-violet-100/80 pt-3">
+        <label class="inline-flex min-w-[12rem] flex-1 flex-col gap-1 sm:max-w-md">
           <span class="text-sm text-slate-600">Tìm trong trang hiện tại</span>
-          <input v-model="searchQ" type="search" placeholder="Nội dung, người gửi, loại…" class="costs-input w-full" />
+          <input
+            v-model="searchQ"
+            type="search"
+            placeholder="Ví dụ: bãi xe, tên người gửi, mã trip…"
+            class="costs-input w-full"
+          />
         </label>
         <label class="inline-flex flex-col gap-1">
-          <span class="text-sm text-slate-600">Trip ID</span>
+          <span class="text-sm text-slate-600">Lọc theo Trip ID</span>
           <input
             v-model.number="filters.trip_id"
             type="number"
             min="1"
-            placeholder="—"
-            class="costs-input h-9 w-32"
+            placeholder="Ví dụ: 1024"
+            class="costs-input h-9 w-36"
             @change="onTripIdChange"
           />
         </label>
@@ -366,57 +368,132 @@
       </div>
     </div>
 
-    <details class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.04]">
-      <summary
-        class="cursor-pointer list-none px-5 py-4 text-sm font-semibold text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden"
+    <Teleport to="body">
+      <div
+        v-if="addCostModalOpen"
+        class="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="costs-add-title"
       >
-        <span class="flex items-center justify-between gap-2">
-          Thêm chi phí theo chuyến
-          <span class="text-xs font-normal text-slate-500 group-open:hidden">Mở rộng</span>
-          <span class="hidden text-xs font-normal text-slate-500 group-open:inline">Thu gọn</span>
-        </span>
-      </summary>
-      <div class="border-t border-slate-100 px-5 pb-5 pt-2">
-        <form class="grid gap-4 md:grid-cols-2" @submit.prevent="submitCost">
-          <div>
-            <label class="mb-1 block text-xs font-medium text-slate-600">Trip ID</label>
-            <input v-model.number="costForm.trip_id" type="number" required class="costs-input w-full" />
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-slate-600">Loại</label>
-            <select v-model="costForm.type" class="costs-input w-full">
-              <option value="fuel">Xăng / dầu</option>
-              <option value="toll">Phí cầu đường</option>
-              <option value="parking">Bãi xe</option>
-              <option value="other">Khác</option>
-            </select>
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-slate-600">Số tiền ({{ costForm.currency }})</label>
-            <input v-model.number="costForm.amount" type="number" min="0" step="1000" required class="costs-input w-full" />
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-slate-600">Mô tả</label>
-            <input v-model="costForm.description" type="text" class="costs-input w-full" />
-          </div>
-          <div class="md:col-span-2 flex flex-wrap items-center gap-3">
-            <button type="submit" class="costs-btn-primary" :disabled="submitting">
-              <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-              Gửi chi phí
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeAddCostModal" />
+        <div
+          class="relative z-10 flex max-h-[min(92vh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10"
+          @click.stop
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+            <div>
+              <h2 id="costs-add-title" class="text-base font-semibold text-slate-900">Thêm chi phí</h2>
+              <p class="mt-0.5 text-xs text-slate-500">Chọn chuyến và nhập khoản phát sinh (gửi để đối soát).</p>
+            </div>
+            <button
+              type="button"
+              class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Đóng"
+              @click="closeAddCostModal"
+            >
+              <XMarkIcon class="h-5 w-5" />
             </button>
-            <span v-if="costMsg" class="text-sm text-slate-600">{{ costMsg }}</span>
           </div>
-        </form>
+
+          <form class="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4" @submit.prevent="submitCost">
+            <div class="grid gap-4">
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-700">Chuyến <span class="text-rose-600">*</span></label>
+                <input
+                  v-model="tripPickerSearch"
+                  type="search"
+                  class="costs-input mb-2 w-full"
+                  placeholder="Gõ để lọc theo mã trip, điểm đi hoặc điểm đến…"
+                  autocomplete="off"
+                />
+                <select
+                  v-model="costForm.trip_id"
+                  class="costs-input w-full font-medium"
+                  :required="!tripsForModalLoading"
+                  :disabled="tripsForModalLoading"
+                >
+                  <option disabled value="">
+                    {{
+                      tripsForModalLoading
+                        ? 'Đang tải danh sách chuyến…'
+                        : '— Chọn một chuyến —'
+                    }}
+                  </option>
+                  <option v-for="t in filteredTripsForPicker" :key="t.id" :value="String(t.id)">
+                    {{ formatTripPickerLabel(t) }}
+                  </option>
+                </select>
+                <p
+                  v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForPicker.length"
+                  class="mt-1 text-[11px] text-amber-800"
+                >
+                  Không có chuyến khớp từ khóa — xóa ô tìm hoặc thử từ khác.
+                </p>
+                <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-1 text-[11px] text-slate-500">
+                  Không có chuyến khả dụng trong phạm vi quyền.
+                </p>
+                <p v-else-if="!tripsForModalLoading && tripOptionsRaw.length" class="mt-1 text-[11px] text-slate-500">
+                  Danh sách theo quyền xem chuyến (tối đa 100 chuyến gần nhất).
+                </p>
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-700">Loại chi phí</label>
+                <select v-model="costForm.type" class="costs-input w-full">
+                  <option value="fuel">Xăng / dầu</option>
+                  <option value="toll">Phí cầu đường</option>
+                  <option value="parking">Bãi xe</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-700">Số tiền ({{ costForm.currency }})</label>
+                <input
+                  v-model.number="costForm.amount"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  required
+                  class="costs-input w-full"
+                  placeholder="Ví dụ: 150000"
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-700">Mô tả</label>
+                <input
+                  v-model="costForm.description"
+                  type="text"
+                  class="costs-input w-full"
+                  placeholder="Ví dụ: Phí gửi xe tháng 1/2025 — bãi X"
+                />
+              </div>
+            </div>
+            <p v-if="costMsg" class="mt-3 text-sm" :class="costMsgIsError ? 'text-rose-700' : 'text-emerald-800'">
+              {{ costMsg }}
+            </p>
+            <div class="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4">
+              <button type="button" class="costs-btn-ghost" :disabled="submitting" @click="closeAddCostModal">Hủy</button>
+              <button type="submit" class="costs-btn-primary" :disabled="submitting || tripsForModalLoading">
+                <span
+                  v-if="submitting"
+                  class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                />
+                Gửi chi phí
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </details>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FunnelIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { listTripCosts, submitTripCost } from '../../api/costs'
+import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd } from '../../util/labels'
 
@@ -443,8 +520,13 @@ const loading = ref(false)
 const items = ref([])
 const meta = ref({})
 const searchQ = ref('')
-const extraFiltersOpen = ref(false)
 const filterMenuRef = ref(null)
+
+const addCostModalOpen = ref(false)
+const tripPickerSearch = ref('')
+const tripOptionsRaw = ref([])
+const tripsForModalLoading = ref(false)
+const costMsgIsError = ref(false)
 
 const filters = reactive({
   status: '',
@@ -492,6 +574,19 @@ const filterDateSummary = computed(() => {
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
+const filteredTripsForPicker = computed(() => {
+  const q = tripPickerSearch.value.trim().toLowerCase()
+  const list = tripOptionsRaw.value
+  if (!q) return list
+  return list.filter((t) => {
+    const dr = t.dispatch_request ?? t.dispatchRequest
+    const id = String(t.id)
+    const o = String(dr?.origin ?? '').toLowerCase()
+    const d = String(dr?.destination ?? '').toLowerCase()
+    return id.includes(q) || o.includes(q) || d.includes(q)
+  })
+})
+
 const displayedItems = computed(() => {
   const q = searchQ.value.trim().toLowerCase()
   if (!q) return items.value
@@ -534,6 +629,65 @@ function formatDateDMY(iso) {
     return '—'
   }
 }
+
+function formatTripPickerLabel(t) {
+  const dr = t.dispatch_request ?? t.dispatchRequest
+  const o = (dr?.origin ?? '—').trim().slice(0, 48)
+  const d = (dr?.destination ?? '—').trim().slice(0, 48)
+  const dep = formatDateDMY(t.depart_at)
+  return `#${t.id} · ${o} → ${d} · ${dep}`
+}
+
+async function loadTripsForModal() {
+  tripsForModalLoading.value = true
+  try {
+    const res = await listTrips({ per_page: 100, page: 1 })
+    tripOptionsRaw.value = res.items ?? []
+  } catch {
+    tripOptionsRaw.value = []
+  } finally {
+    tripsForModalLoading.value = false
+  }
+}
+
+async function openAddCostModal() {
+  costMsg.value = ''
+  costMsgIsError.value = false
+  tripPickerSearch.value = ''
+  costForm.value = { trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' }
+  addCostModalOpen.value = true
+  await loadTripsForModal()
+}
+
+function closeAddCostModal() {
+  addCostModalOpen.value = false
+  costMsg.value = ''
+  costMsgIsError.value = false
+}
+
+let escapeCloseModal = null
+watch(addCostModalOpen, (open) => {
+  if (typeof document === 'undefined') return
+  document.body.style.overflow = open ? 'hidden' : ''
+  if (typeof window === 'undefined') return
+  if (escapeCloseModal) {
+    window.removeEventListener('keydown', escapeCloseModal)
+    escapeCloseModal = null
+  }
+  if (open) {
+    escapeCloseModal = (e) => {
+      if (e.key === 'Escape') closeAddCostModal()
+    }
+    window.addEventListener('keydown', escapeCloseModal)
+  }
+})
+
+onUnmounted(() => {
+  if (typeof document !== 'undefined') document.body.style.overflow = ''
+  if (typeof window !== 'undefined' && escapeCloseModal) {
+    window.removeEventListener('keydown', escapeCloseModal)
+  }
+})
 
 function closeParentDetails(ev) {
   const el = ev?.currentTarget
@@ -602,10 +756,17 @@ function page(d) {
 
 async function submitCost() {
   costMsg.value = ''
+  costMsgIsError.value = false
+  const tid = Number(costForm.value.trip_id)
+  if (!tid) {
+    costMsg.value = 'Vui lòng chọn chuyến.'
+    costMsgIsError.value = true
+    return
+  }
   submitting.value = true
   try {
     await submitTripCost(
-      costForm.value.trip_id,
+      tid,
       {
         type: costForm.value.type,
         amount: costForm.value.amount,
@@ -613,9 +774,10 @@ async function submitCost() {
       },
       { idempotencyKey: newIdempotencyKey() },
     )
-    costMsg.value = 'Đã gửi chi phí.'
+    closeAddCostModal()
     await reload()
   } catch (e) {
+    costMsgIsError.value = true
     costMsg.value = e?.response?.data?.message ?? 'Không gửi được chi phí.'
   } finally {
     submitting.value = false
