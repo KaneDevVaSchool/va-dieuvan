@@ -1,155 +1,559 @@
 <template>
-  <div class="grid gap-4 pb-24 lg:grid-cols-3 lg:pb-4">
-    <div class="lg:col-span-2 space-y-4">
-      <Card title="Tạo yêu cầu điều vận">
-        <p class="mb-3 text-sm text-slate-600">
-          Chọn mẫu nhanh hoặc điền thủ công. Giờ xuất phát được kiểm tra
-          <span class="font-medium">BR-001</span>
-          ngay khi bạn chọn.
+  <div
+    class="dispatch-wizard -mx-3 -mt-3 min-h-[calc(100dvh-4rem)] bg-[#0B0E14] px-4 py-6 text-slate-100 sm:-mx-4 md:-mx-6 md:px-8"
+  >
+    <!-- Header -->
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h1 class="text-xl font-semibold tracking-tight text-white sm:text-2xl">Tạo yêu cầu điều vận</h1>
+        <p class="mt-1 text-sm text-slate-400">
+          <span class="text-teal-400/90">Yêu cầu mới</span>
+          <span class="text-slate-600"> • </span>
+          {{ draftLabel }}
         </p>
+        <p class="mt-1 max-w-xl text-xs text-slate-500">
+          Mẫu tham chiếu BM.03/MH.QT.04 — Điều chuyển hàng hóa &amp; các loại chuyến. Dữ liệu chi tiết được đính kèm trong phần ghi chú khi gửi.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-600 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-white/5"
+          @click="onCancel"
+        >
+          Hủy
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg border border-slate-600 bg-[#1a2332] px-3 py-2 text-sm font-medium text-slate-100 transition hover:bg-[#243044]"
+          @click="saveDraft"
+        >
+          <DocumentArrowDownIcon class="h-4 w-4 opacity-80" />
+          Lưu nháp
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-[#0B0E14] shadow-lg shadow-teal-500/20 transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="headerPrimaryDisabled"
+          @click="primaryAction"
+        >
+          <span v-if="loading" class="h-4 w-4 animate-spin rounded-full border-2 border-[#0B0E14]/40 border-t-[#0B0E14]" />
+          {{ headerPrimaryLabel }}
+          <ArrowRightIcon v-if="!loading" class="h-4 w-4" />
+        </button>
+      </div>
+    </header>
 
-        <div class="mb-4 flex flex-wrap gap-2">
-          <span class="w-full text-xs font-medium text-slate-500 lg:w-auto lg:py-1">Mẫu nhanh</span>
-          <button
-            v-for="p in presets"
-            :key="p.id"
-            type="button"
-            class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-left text-sm hover:border-slate-300 hover:bg-white active:scale-[0.98]"
-            @click="applyPreset(p)"
+    <!-- Stepper -->
+    <nav class="mb-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2" aria-label="Các bước">
+      <template v-for="(s, i) in steps" :key="s.id">
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition sm:text-base"
+          :class="
+            step === i
+              ? 'bg-white/10 text-white ring-1 ring-teal-500/50'
+              : i < step
+                ? 'text-slate-300 hover:bg-white/5'
+                : 'text-slate-500 hover:text-slate-400'
+          "
+          @click="goStep(i)"
+        >
+          <span
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+            :class="
+              step === i
+                ? 'bg-teal-500 text-[#0B0E14]'
+                : i < step
+                  ? 'bg-teal-500/30 text-teal-200'
+                  : 'bg-slate-800 text-slate-500'
+            "
           >
-            {{ p.label }}
-          </button>
+            {{ i + 1 }}
+          </span>
+          <span class="font-medium">{{ s.title }}</span>
+        </button>
+        <ChevronDownIcon v-if="i < steps.length - 1" class="mx-auto h-4 w-4 text-slate-600 sm:hidden" />
+        <ChevronRightIcon v-if="i < steps.length - 1" class="mx-1 hidden h-4 w-4 text-slate-600 sm:inline" />
+      </template>
+    </nav>
+
+    <div class="grid gap-6 lg:grid-cols-[1fr_minmax(260px,320px)]">
+      <!-- Main card -->
+      <section class="rounded-2xl border border-slate-800/80 bg-[#151B26] p-5 shadow-xl shadow-black/40 sm:p-7">
+        <!-- Step 1 -->
+        <div v-show="step === 0">
+          <h2 class="text-lg font-semibold text-white">1. Chọn loại dịch vụ</h2>
+          <p class="mt-1 text-sm text-slate-400">Chọn đúng loại để form bước sau hiển thị đúng (hành khách / hàng hóa).</p>
+          <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <button
+              v-for="opt in tripTypeOptions"
+              :key="opt.value"
+              type="button"
+              class="group relative flex flex-col items-center rounded-xl border-2 p-4 text-center transition"
+              :class="
+                form.trip_type === opt.value
+                  ? opt.selectedClass
+                  : 'border-slate-700/80 bg-[#1a2332] hover:border-slate-600'
+              "
+              @click="form.trip_type = opt.value"
+            >
+              <component :is="opt.icon" class="mb-3 h-10 w-10 opacity-90" :class="opt.iconClass" />
+              <span class="font-semibold text-white">{{ opt.label }}</span>
+              <span class="mt-1 text-xs leading-snug text-slate-400">{{ opt.hint }}</span>
+              <span
+                v-if="opt.badge"
+                class="mt-2 rounded-full bg-orange-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-300"
+              >
+                {{ opt.badge }}
+              </span>
+            </button>
+          </div>
         </div>
 
-        <form class="grid gap-3 md:grid-cols-2" @submit.prevent="submit">
-          <Select v-model="form.trip_type" label="Loại chuyến" placeholder="Chọn loại chuyến">
-            <option value="door_to_door">Đưa đón (door-to-door)</option>
-            <option value="point_to_point">Điểm - điểm</option>
-            <option value="business">Công tác</option>
-            <option value="cargo">Hàng hóa</option>
-          </Select>
+        <!-- Step 2 -->
+        <div v-show="step === 1" class="space-y-8">
+          <div>
+            <h2 class="text-lg font-semibold text-white">2. Thông tin người đề nghị &amp; thời gian</h2>
+            <p class="mt-1 text-sm text-slate-400">Khớp mục A–D trên mẫu BM.03.</p>
+          </div>
 
-          <Select v-model="form.source_channel" label="Kênh" placeholder="portal / zalo / paper">
-            <option value="portal">Portal</option>
-            <option value="zalo">Zalo</option>
-            <option value="paper">Phiếu giấy</option>
-          </Select>
-
-          <Input v-model="form.origin" label="Điểm đi" placeholder="VD: VA Tân Bình" />
-          <Input v-model="form.destination" label="Điểm đến" placeholder="VD: Cơ sở Vũng Tàu" />
-
-          <div class="md:col-span-2 space-y-2">
-            <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
-              <div class="min-w-0 flex-1">
-                <Input
-                  v-model="form.depart_at"
-                  type="datetime-local"
-                  label="Giờ xuất phát"
-                  :min="departMin"
-                  hint="BR-001: tạo yêu cầu trước giờ xuất phát ít nhất 2 giờ (trừ lệnh gấp)."
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="space-y-4">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-teal-400/90">A. Người đề nghị</h3>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Họ và tên</span>
+                <input
+                  v-model="form.requester_name"
+                  type="text"
+                  placeholder="Nguyễn Văn A"
+                  class="dw-input"
                 />
+              </label>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Email VA</span>
+                <input v-model="form.requester_email" type="email" placeholder="ten@va.edu.vn" class="dw-input" />
+              </label>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Số điện thoại</span>
+                <input v-model="form.requester_phone" type="text" placeholder="0900…" class="dw-input" />
+              </label>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Đơn vị</span>
+                <input v-model="form.requester_unit" type="text" placeholder="Phòng / khối…" class="dw-input" />
+              </label>
+
+              <h3 class="pt-2 text-xs font-semibold uppercase tracking-wider text-teal-400/90">C. Thời gian</h3>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Ngày đề xuất</span>
+                <input v-model="form.proposed_date" type="date" class="dw-input" />
+              </label>
+              <p class="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-100/90">
+                Lưu ý: từ khi bộ phận Điều vận nhận đề nghị, tối thiểu
+                <strong class="text-amber-200">03 ngày làm việc</strong>
+                (trừ đề xuất xe từ 2000kg: báo trước ít nhất
+                <strong class="text-amber-200">05 ngày làm việc</strong>
+                ). Nhu cầu ngắn hơn được xem là gấp — tick mục Gấp bên dưới.
+              </p>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Ngày cần sử dụng xe</span>
+                <input v-model="form.date_needed" type="date" class="dw-input" />
+              </label>
+              <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-700 bg-[#1a2332] p-3">
+                <input v-model="form.is_urgent" type="checkbox" class="mt-1 h-4 w-4 shrink-0 rounded border-slate-500 text-teal-500 focus:ring-teal-500" />
+                <div class="min-w-0 flex-1">
+                  <span class="text-sm font-medium text-white">Gấp</span>
+                  <label class="mt-2 block">
+                    <span class="mb-1 block text-xs font-medium text-slate-400">Lý do</span>
+                    <input
+                      v-model="form.urgent_reason"
+                      type="text"
+                      placeholder="Bắt buộc khi chọn Gấp"
+                      :disabled="!form.is_urgent"
+                      class="dw-input disabled:opacity-50"
+                    />
+                  </label>
+                </div>
+              </label>
+            </div>
+
+            <div class="space-y-4">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-teal-400/90">B. Mục đích sử dụng</h3>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Mục đích sử dụng</span>
+                <textarea
+                  v-model="form.purpose"
+                  rows="3"
+                  placeholder="Mô tả ngắn gọn…"
+                  class="dw-input min-h-[5rem] resize-y"
+                />
+              </label>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Căn cứ đề xuất</span>
+                <input
+                  v-model="form.basis_reference"
+                  type="text"
+                  placeholder="Tờ trình số …/ ngày … & nội dung"
+                  class="dw-input"
+                />
+              </label>
+
+              <h3 class="pt-2 text-xs font-semibold uppercase tracking-wider text-teal-400/90">D. Đối tượng được phân bổ</h3>
+              <p class="text-xs text-slate-500">Chọn một hoặc nhiều đơn vị / đối tượng (cuộn để xem hết).</p>
+              <div class="max-h-48 overflow-y-auto rounded-lg border border-slate-700 bg-[#0f141c] p-2">
+                <label
+                  v-for="t in targetOptions"
+                  :key="t"
+                  class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-white/5"
+                >
+                  <input v-model="form.targets" type="checkbox" :value="t" class="h-3.5 w-3.5 rounded border-slate-600 text-teal-500" />
+                  <span class="text-slate-300">{{ t }}</span>
+                </label>
               </div>
-              <div class="flex flex-wrap gap-2 pb-0.5">
-                <Button variant="secondary" type="button" class="whitespace-nowrap text-xs sm:text-sm" @click="bumpDepartHours(2)">
-                  +2 giờ
-                </Button>
-                <Button variant="secondary" type="button" class="whitespace-nowrap text-xs sm:text-sm" @click="setNextMorning(7)">
-                  Sáng mai 7:00
-                </Button>
-                <Button variant="secondary" type="button" class="whitespace-nowrap text-xs sm:text-sm" @click="setNextMorning(13)">
-                  Mai 13:00
-                </Button>
+              <p v-if="form.targets.length" class="text-xs text-slate-500">Đã chọn {{ form.targets.length }} mục.</p>
+
+              <h3 class="pt-2 text-xs font-semibold uppercase tracking-wider text-teal-400/90">d.2 Nhân sự phụ trách điều phối</h3>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Họ tên</span>
+                <input v-model="form.coordinator_name" type="text" class="dw-input" />
+              </label>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">Email nhân viên</span>
+                <input v-model="form.coordinator_email" type="email" class="dw-input" />
+              </label>
+              <label class="block">
+                <span class="mb-1 block text-xs font-medium text-slate-400">SĐT</span>
+                <input v-model="form.coordinator_phone" type="text" class="dw-input" />
+              </label>
+
+              <div class="pt-2">
+                <label class="mb-1 block text-xs font-medium text-slate-400">Kênh gửi</label>
+                <select
+                  v-model="form.source_channel"
+                  class="w-full rounded-lg border border-slate-600 bg-[#1a2332] px-3 py-2 text-sm text-slate-100 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                >
+                  <option value="portal">Portal</option>
+                  <option value="zalo">Zalo</option>
+                  <option value="paper">Phiếu giấy</option>
+                </select>
               </div>
             </div>
           </div>
+        </div>
 
-          <Input v-model="form.arrive_by" type="datetime-local" label="Giờ đến (dự kiến)" />
+        <!-- Step 3 -->
+        <div v-show="step === 2" class="space-y-6">
+          <div>
+            <h2 class="text-lg font-semibold text-white">3. Chi tiết chuyến / hàng hóa</h2>
+            <p class="mt-1 text-sm text-slate-400">
+              {{
+                isCargo
+                  ? 'Bảng theo mục E — Điều chuyển hàng hóa (có thể thêm nhiều dòng).'
+                  : 'Bảng chuyến: giờ đi/điểm đón — giờ về/điểm trả (có thể thêm dòng).'
+              }}
+            </p>
+          </div>
 
-          <Input v-model="form.passenger_count" type="number" label="Số người / số khách" placeholder="Bỏ trống nếu hàng hóa" />
+          <!-- Passenger / business table -->
+          <div v-if="!isCargo" class="overflow-x-auto rounded-xl border border-slate-700">
+            <table class="min-w-[720px] w-full border-collapse text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-700 bg-[#1a2332] text-xs uppercase text-slate-400">
+                  <th class="px-2 py-2">STT</th>
+                  <th class="px-2 py-2">Giờ đi</th>
+                  <th class="px-2 py-2">Điểm đón</th>
+                  <th class="px-2 py-2">Giờ về</th>
+                  <th class="px-2 py-2">Điểm trả</th>
+                  <th class="px-2 py-2">Số khách</th>
+                  <th class="px-2 py-2">Đơn giá (VNĐ)</th>
+                  <th class="px-2 py-2 w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, idx) in passengerRows" :key="idx" class="border-b border-slate-800">
+                  <td class="px-2 py-1.5 text-slate-500">{{ idx + 1 }}</td>
+                  <td class="p-1"><input v-model="row.depart_at" type="datetime-local" class="dw-cell" /></td>
+                  <td class="p-1"><input v-model="row.pickup" type="text" placeholder="Điểm đón" class="dw-cell" /></td>
+                  <td class="p-1"><input v-model="row.return_at" type="datetime-local" class="dw-cell" /></td>
+                  <td class="p-1"><input v-model="row.dropoff" type="text" placeholder="Điểm trả" class="dw-cell" /></td>
+                  <td class="p-1"><input v-model="row.guests" type="number" min="1" class="dw-cell w-20" /></td>
+                  <td class="p-1"><input v-model="row.unit_price" type="number" min="0" step="1000" placeholder="0" class="dw-cell" /></td>
+                  <td class="px-1">
+                    <button
+                      v-if="passengerRows.length > 1"
+                      type="button"
+                      class="rounded p-1 text-rose-400 hover:bg-rose-500/10"
+                      title="Xóa dòng"
+                      @click="removePassengerRow(idx)"
+                    >
+                      <TrashIcon class="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="bg-[#1a2332]/80">
+                  <td colspan="6" class="px-3 py-2 text-right font-medium text-slate-300">Tổng (ước tính)</td>
+                  <td class="px-2 py-2 font-semibold text-teal-300">{{ formatCurrency(passengerTotal) }}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div class="flex flex-wrap gap-2 border-t border-slate-700 p-3">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-teal-300 hover:bg-white/5"
+                @click="addPassengerRow"
+              >
+                <PlusIcon class="h-4 w-4" />
+                Thêm chuyến
+              </button>
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-400">
+                <input v-model="form.multi_day" type="checkbox" class="rounded border-slate-600 text-teal-500" />
+                Dùng cho 3+ ngày (ghi chú trong tóm tắt)
+              </label>
+            </div>
+          </div>
 
-          <label class="flex items-center gap-2 rounded-md border bg-white px-3 py-2 md:col-span-2">
-            <input v-model="form.is_urgent" type="checkbox" class="h-4 w-4 shrink-0" />
-            <span class="text-sm">Lệnh gấp (bỏ qua BR-001)</span>
-          </label>
+          <!-- Cargo table -->
+          <div v-else class="overflow-x-auto rounded-xl border border-slate-700">
+            <table class="min-w-[1100px] w-full border-collapse text-left text-xs sm:text-sm">
+              <thead>
+                <tr class="border-b border-slate-700 bg-[#1a2332] text-[10px] uppercase leading-tight text-slate-400 sm:text-xs">
+                  <th class="px-1 py-2">STT</th>
+                  <th class="px-1 py-2">Tên HH</th>
+                  <th class="px-1 py-2">SL</th>
+                  <th class="px-1 py-2">Kích thước (1 kiện)</th>
+                  <th class="px-1 py-2">KL (1 kiện)</th>
+                  <th class="px-1 py-2">Ghi chú HH</th>
+                  <th class="px-1 py-2 border-l border-slate-700" colspan="3">Điểm tập kết</th>
+                  <th class="px-1 py-2 border-l border-slate-700" colspan="3">Điểm giao</th>
+                  <th class="px-1 py-2">VC / ghi chú NV</th>
+                  <th class="px-1 py-2">Chi phí</th>
+                  <th class="w-8"></th>
+                </tr>
+                <tr class="border-b border-slate-800 bg-[#151B26] text-[10px] normal-case text-slate-500">
+                  <th colspan="6"></th>
+                  <th class="border-l border-slate-700 px-1 py-1">Thời gian</th>
+                  <th class="px-1 py-1">Địa điểm</th>
+                  <th class="px-1 py-1">Người giao</th>
+                  <th class="border-l border-slate-700 px-1 py-1">Thời gian</th>
+                  <th class="px-1 py-1">Địa điểm</th>
+                  <th class="px-1 py-1">Người nhận</th>
+                  <th colspan="2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, idx) in cargoRows" :key="idx" class="border-b border-slate-800 align-top">
+                  <td class="px-1 py-1 text-slate-500">{{ idx + 1 }}</td>
+                  <td class="p-0.5"><input v-model="row.name" type="text" placeholder="Tên" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.qty" type="text" class="dw-cell w-14" /></td>
+                  <td class="p-0.5"><input v-model="row.dimensions" type="text" placeholder="cm" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.weight" type="text" placeholder="kg" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.item_notes" type="text" class="dw-cell" /></td>
+                  <td class="border-l border-slate-800 p-0.5"><input v-model="row.pickup_at" type="datetime-local" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.pickup_place" type="text" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.pickup_contact" type="text" class="dw-cell" /></td>
+                  <td class="border-l border-slate-800 p-0.5"><input v-model="row.delivery_at" type="datetime-local" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.delivery_place" type="text" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.delivery_contact" type="text" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.transport_note" type="text" placeholder="Xe VA / NCC…" class="dw-cell" /></td>
+                  <td class="p-0.5"><input v-model="row.cost" type="number" min="0" step="1000" class="dw-cell w-24" /></td>
+                  <td class="px-0.5">
+                    <button
+                      v-if="cargoRows.length > 1"
+                      type="button"
+                      class="rounded p-1 text-rose-400 hover:bg-rose-500/10"
+                      @click="removeCargoRow(idx)"
+                    >
+                      <TrashIcon class="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="bg-[#1a2332]/80">
+                  <td colspan="13" class="px-3 py-2 text-right font-medium text-slate-300">Tổng</td>
+                  <td class="px-2 py-2 font-semibold text-teal-300">{{ formatCurrency(cargoTotal) }}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div class="border-t border-slate-700 p-3">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-teal-300 hover:bg-white/5"
+                @click="addCargoRow"
+              >
+                <PlusIcon class="h-4 w-4" />
+                Thêm dòng hàng
+              </button>
+            </div>
+          </div>
+
+          <div v-if="isCargo" class="space-y-3 rounded-xl border border-slate-700 bg-[#1a2332]/50 p-4">
+            <div class="text-xs font-semibold uppercase text-slate-400">e.1.1 Ghi chú &amp; phát sinh</div>
+            <label class="block">
+              <span class="mb-1 block text-xs font-medium text-slate-400">Ghi chú khác (nếu có)</span>
+              <textarea v-model="form.cargo_extra_notes" rows="2" class="dw-input min-h-[3.5rem] resize-y" />
+            </label>
+            <label class="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+              <input v-model="form.need_porters" type="checkbox" class="rounded border-slate-600 text-teal-500" />
+              Yêu cầu bốc xếp / nhân công hỗ trợ
+              <input v-model="form.porter_qty" type="text" placeholder="SL" class="dw-cell w-20" />
+              <span class="text-slate-500">Chi phí phát sinh</span>
+              <input v-model="form.porter_cost" type="number" min="0" step="1000" class="dw-cell w-32" />
+            </label>
+            <label class="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+              <input v-model="form.interprovincial" type="checkbox" class="rounded border-slate-600 text-teal-500" />
+              Gửi chành xe đi tỉnh
+              <span class="text-slate-500">Chi phí phát sinh</span>
+              <input v-model="form.interprovincial_cost" type="number" min="0" step="1000" class="dw-cell w-32" />
+            </label>
+          </div>
+
+          <!-- BR-001 -->
+          <div class="grid gap-3 md:grid-cols-2">
+            <div v-if="!isCargo">
+              <label class="mb-1 block text-xs font-medium text-slate-400">Giờ xuất phát (áp dụng BR-001)</label>
+              <p class="mb-2 text-[11px] text-slate-500">Lấy từ dòng đầu hoặc chỉnh tay — kiểm tra tối thiểu 2 giờ trước giờ đi (trừ gấp).</p>
+              <input
+                v-model="form.depart_at"
+                type="datetime-local"
+                :min="departMin"
+                class="w-full rounded-lg border border-slate-600 bg-[#1a2332] px-3 py-2 text-sm text-slate-100 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              />
+            </div>
+            <div v-else>
+              <label class="mb-1 block text-xs font-medium text-slate-400">Giờ xuất phát hệ thống (BR-001)</label>
+              <p class="mb-2 text-[11px] text-slate-500">Tự động theo thời gian lấy hàng sớm nhất; có thể chỉnh.</p>
+              <input
+                v-model="form.depart_at"
+                type="datetime-local"
+                :min="departMin"
+                class="w-full rounded-lg border border-slate-600 bg-[#1a2332] px-3 py-2 text-sm text-slate-100 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              />
+            </div>
+          </div>
 
           <div
             v-if="br001.kind !== 'skipped'"
             role="status"
-            class="md:col-span-2 rounded-lg border px-3 py-2.5 text-sm"
+            class="rounded-lg border px-3 py-2.5 text-sm"
             :class="br001Ui.boxClass"
           >
             <div class="font-medium" :class="br001Ui.titleClass">{{ br001Ui.title }}</div>
-            <p class="mt-0.5 text-slate-700">{{ br001.message }}</p>
+            <p class="mt-0.5 opacity-90">{{ br001.message }}</p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div v-show="step === 3" class="space-y-6">
+          <div>
+            <h2 class="text-lg font-semibold text-white">4. Xác nhận &amp; nộp</h2>
+            <p class="mt-1 text-sm text-slate-400">Kiểm tra tóm tắt. Phần ký nhận thực hiện sau khi phê duyệt (mẫu giấy / quy trình nội bộ).</p>
           </div>
 
-          <label class="block md:col-span-2">
-            <div class="mb-1 text-xs font-medium text-slate-600">Ghi chú</div>
-            <textarea
-              v-model="form.notes"
-              rows="4"
-              class="w-full rounded-md border bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring"
-              placeholder="Mô tả nhu cầu, người đi, khối lượng hàng…"
-            />
-          </label>
-
-          <div
-            v-if="form.source_channel === 'paper'"
-            class="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-3 text-sm text-amber-950"
-          >
-            <div class="font-medium">Phiếu giấy</div>
-            <p class="mt-1 text-amber-900/90">
-              Sau khi tạo yêu cầu, có thể bổ sung <strong>ảnh scan / PDF</strong> tại trang chi tiết. Giai đoạn sau: OCR tự điền
-              mã phiếu &amp; nội dung (đang lập kế hoạch).
-            </p>
+          <div class="rounded-xl border border-slate-700 bg-[#0f141c] p-4 text-sm leading-relaxed text-slate-300">
+            <div class="font-semibold text-white">Tóm tắt yêu cầu</div>
+            <ul class="mt-3 list-inside list-disc space-y-1 text-slate-400">
+              <li>Loại: <span class="text-slate-200">{{ tripTypeLabel }}</span></li>
+              <li>Người đề nghị: {{ form.requester_name || '—' }} — {{ form.requester_email || '—' }}</li>
+              <li>Ngày đề xuất / cần dùng: {{ form.proposed_date || '—' }} → {{ form.date_needed || '—' }}</li>
+              <li v-if="form.is_urgent">Gấp: {{ form.urgent_reason || '(chưa ghi lý do)' }}</li>
+              <li v-if="!isCargo">Tổng khách (ước tính): {{ passengerGuestTotal || '—' }}</li>
+              <li v-else>Tổng chi phí hàng (ước tính): {{ formatCurrency(cargoTotal + extraCosts) }}</li>
+              <li>Kênh: {{ form.source_channel }}</li>
+            </ul>
+            <pre class="mt-4 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-800 bg-[#0B0E14] p-3 text-xs text-slate-500">{{ summaryPreview }}</pre>
           </div>
 
-          <div
-            class="md:col-span-2 flex flex-col gap-3 border-t border-slate-100 pt-4 lg:flex-row lg:items-center lg:justify-between"
-          >
-            <div v-if="error" class="text-sm text-rose-600">{{ error }}</div>
-            <div v-else class="hidden text-xs text-slate-400 lg:block">Mỗi lần gửi dùng Idempotency-Key — tránh trùng do double-tap.</div>
-            <div class="flex w-full gap-2 lg:w-auto">
-              <Button variant="secondary" type="button" class="flex-1 lg:flex-none" @click="reset">Xóa form</Button>
-              <Button
-                class="flex-1 lg:flex-none"
-                :loading="loading"
-                type="submit"
-                :disabled="submitDisabled"
-              >
-                Tạo yêu cầu
-              </Button>
+          <div>
+            <div class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">F &amp; G — Phần xác nhận (minh họa)</div>
+            <div class="grid gap-3 sm:grid-cols-3">
+              <div class="rounded-xl border border-dashed border-slate-600 bg-[#1a2332]/50 p-4 text-center text-sm text-slate-500">
+                <div class="font-medium text-slate-400">Người đề xuất</div>
+                <div class="mt-8 min-h-[3rem] text-xs">Chữ ký điện tử / xác nhận sau</div>
+              </div>
+              <div class="rounded-xl border border-dashed border-slate-600 bg-[#1a2332]/50 p-4 text-center text-sm text-slate-500">
+                <div class="font-medium text-slate-400">Trưởng đơn vị</div>
+                <div class="mt-8 min-h-[3rem] text-xs">Theo thẩm quyền</div>
+              </div>
+              <div class="rounded-xl border border-dashed border-slate-600 bg-[#1a2332]/50 p-4 text-center text-sm text-slate-500">
+                <div class="font-medium text-slate-400">Trưởng phòng Mua hàng</div>
+                <div class="mt-8 min-h-[3rem] text-xs">PO / xác nhận vận đơn</div>
+              </div>
             </div>
+            <p class="mt-2 text-xs text-slate-600">G.1 Mã vận đơn (PO), G.2 Ngày nhận đề nghị đã phê duyệt — cập nhật tại bước xử lý sau.</p>
           </div>
-        </form>
-      </Card>
-    </div>
 
-    <div class="space-y-4">
-      <Card title="Tóm tắt">
-        <div v-if="created" class="space-y-2 text-sm">
-          <div class="font-semibold">Đã tạo yêu cầu #{{ created.id }}</div>
-          <div class="text-slate-600">Trạng thái: {{ created.status }}</div>
-          <div class="text-slate-600">Phiếu giấy: {{ created.paper_status }}</div>
-          <RouterLink class="inline-flex rounded-md border px-3 py-2 text-sm hover:bg-slate-50" to="/requests">
+          <div v-if="error" class="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+            {{ error }}
+          </div>
+        </div>
+
+        <!-- Nav buttons -->
+        <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-6">
+          <button
+            type="button"
+            class="rounded-lg px-3 py-2 text-sm text-slate-400 hover:text-white disabled:opacity-40"
+            :disabled="step === 0"
+            @click="step--"
+          >
+            ← Quay lại
+          </button>
+          <div class="flex gap-2">
+            <button
+              v-if="step < 3"
+              type="button"
+              class="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-[#0B0E14] hover:bg-teal-400 disabled:opacity-40"
+              :disabled="!canGoNext"
+              @click="nextStep"
+            >
+              Tiếp theo
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Side panel -->
+      <aside class="space-y-4">
+        <div class="rounded-2xl border border-slate-800 bg-[#151B26] p-5">
+          <h3 class="font-semibold text-white">Trợ giúp nhanh</h3>
+          <ul class="mt-3 space-y-2 text-xs text-slate-400">
+            <li>• BR-001: tạo trước giờ xuất phát ít nhất 2 giờ (trừ gấp đã ghi lý do).</li>
+            <li>• Hàng hóa: điền đủ điểm tập kết / giao để điều phối xe phù hợp.</li>
+            <li>• Lưu nháp lưu trên trình duyệt này.</li>
+          </ul>
+        </div>
+        <div v-if="created" class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm">
+          <div class="font-semibold text-emerald-200">Đã tạo yêu cầu #{{ created.id }}</div>
+          <div class="mt-1 text-emerald-100/80">Trạng thái: {{ created.status }}</div>
+          <RouterLink class="mt-3 inline-flex rounded-lg border border-emerald-500/40 px-3 py-2 text-emerald-200 hover:bg-emerald-500/10" to="/requests">
             Về danh sách
           </RouterLink>
         </div>
-        <div v-else class="space-y-2 text-sm text-slate-600">
-          <p>BR-001 được kiểm tra phía server khi gửi; ô màu bên trái chỉ là gợi ý tức thời.</p>
-          <p class="text-xs text-slate-500">Desktop: form rộng. Mobile: cuộn xuống để gửi — đã chừa khoảng đệm dưới cùng.</p>
-        </div>
-      </Card>
+      </aside>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
-import Card from '../../components/ui/Card.vue'
-import Button from '../../components/ui/Button.vue'
-import Input from '../../components/ui/Input.vue'
-import Select from '../../components/ui/Select.vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import {
+  AcademicCapIcon,
+  ArrowRightIcon,
+  BriefcaseIcon,
+  BuildingOffice2Icon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CubeIcon,
+  DocumentArrowDownIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@heroicons/vue/24/outline'
+import { useAuthStore } from '../../store'
 import { createDispatchRequest } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -160,20 +564,169 @@ import {
   toDatetimeLocalValue,
 } from '../../util/datetime'
 
+const DRAFT_KEY = 'dispatch-request-wizard-draft-v1'
+const router = useRouter()
+const auth = useAuthStore()
+
+const steps = [
+  { id: 'type', title: 'Loại dịch vụ' },
+  { id: 'info', title: 'Người đề nghị & thời gian' },
+  { id: 'detail', title: 'Chi tiết' },
+  { id: 'confirm', title: 'Xác nhận' },
+]
+
+const step = ref(0)
 const loading = ref(false)
 const error = ref('')
 const created = ref(null)
+const draftSavedAt = ref(null)
+
+const targetOptions = [
+  'TiH Tân Bình',
+  'MN Phú Định',
+  'P. Kinh Doanh',
+  'Vườn Trường',
+  'THCS Tân Bình',
+  'TiH-THCS Phú Định',
+  'P. Công Nghệ',
+  'Ban TA TiHo',
+  'MN Bình Thới',
+  'MN Vĩnh Hội',
+  'BP.CUHC',
+  'Ban TA THCS',
+  'TiH Bình Thới',
+  'MN Thông Tây Hội',
+  'P. Kế Toán',
+  'Ban TA THPT',
+  'THCS Bình Thới',
+  'TiH-THCS Thông Tây Hội',
+  'P. Mua Hàng',
+  'VA - Cần Thơ',
+  'THPT VMA',
+  'MN Hạnh Thông',
+  'P. Đầu Tư',
+  'VA - Vũng Tàu',
+  'MN Hòa Bình',
+  'P.CSVC',
+  'Khóa Hè',
+  'Viễn Đông',
+  'P.HCNS',
+  'Tham vấn học đường',
+  'Ban Pháp chế (P.CSVC)',
+]
+
+function emptyPassengerRow() {
+  return {
+    depart_at: '',
+    pickup: '',
+    return_at: '',
+    dropoff: '',
+    guests: '1',
+    unit_price: '',
+  }
+}
+
+function emptyCargoRow() {
+  return {
+    name: '',
+    qty: '1',
+    dimensions: '',
+    weight: '',
+    item_notes: '',
+    pickup_at: '',
+    pickup_place: '',
+    pickup_contact: '',
+    delivery_at: '',
+    delivery_place: '',
+    delivery_contact: '',
+    transport_note: '',
+    cost: '',
+  }
+}
 
 const form = ref({
   trip_type: 'point_to_point',
   source_channel: 'portal',
-  origin: '',
-  destination: '',
-  depart_at: suggestBr001CompliantLocal(15),
-  arrive_by: '',
-  passenger_count: '',
-  notes: '',
+  requester_name: '',
+  requester_email: '',
+  requester_phone: '',
+  requester_unit: '',
+  purpose: '',
+  basis_reference: '',
+  proposed_date: '',
+  date_needed: '',
   is_urgent: false,
+  urgent_reason: '',
+  targets: [],
+  coordinator_name: '',
+  coordinator_email: '',
+  coordinator_phone: '',
+  depart_at: suggestBr001CompliantLocal(15),
+  multi_day: false,
+  cargo_extra_notes: '',
+  need_porters: false,
+  porter_qty: '',
+  porter_cost: '',
+  interprovincial: false,
+  interprovincial_cost: '',
+})
+
+const passengerRows = ref([emptyPassengerRow()])
+const cargoRows = ref([emptyCargoRow()])
+
+const tripTypeOptions = [
+  {
+    value: 'door_to_door',
+    label: 'Đưa đón (Door-to-door)',
+    hint: 'Học sinh — tuyến cố định.',
+    icon: AcademicCapIcon,
+    iconClass: 'text-violet-400',
+    selectedClass: 'border-violet-500 shadow-lg shadow-violet-500/10 ring-1 ring-violet-400/30',
+  },
+  {
+    value: 'point_to_point',
+    label: 'Điểm — Điểm',
+    hint: 'Nội bộ, hoạt ngoại khóa.',
+    icon: BuildingOffice2Icon,
+    iconClass: 'text-sky-400',
+    selectedClass: 'border-sky-500 shadow-lg shadow-sky-500/10 ring-1 ring-sky-400/30',
+  },
+  {
+    value: 'business',
+    label: 'Công tác',
+    hint: 'Họp, sân bay, công tác ngoài.',
+    icon: BriefcaseIcon,
+    iconClass: 'text-emerald-400',
+    selectedClass: 'border-emerald-500 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-400/30',
+  },
+  {
+    value: 'cargo',
+    label: 'Hàng hóa',
+    hint: 'Chuyển hàng giữa cơ sở.',
+    icon: CubeIcon,
+    iconClass: 'text-orange-400',
+    selectedClass: 'border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-400/30',
+    badge: 'SLA 3h',
+  },
+]
+
+const isCargo = computed(() => form.value.trip_type === 'cargo')
+
+const tripTypeLabel = computed(() => {
+  const o = tripTypeOptions.find((x) => x.value === form.value.trip_type)
+  return o?.label ?? form.value.trip_type
+})
+
+const draftLabel = computed(() => {
+  if (created.value) return 'Đã gửi'
+  if (draftSavedAt.value) {
+    try {
+      return `Bản nháp • Lưu ${new Date(draftSavedAt.value).toLocaleString('vi-VN')}`
+    } catch {
+      return 'Bản nháp'
+    }
+  }
+  return 'Bản nháp'
 })
 
 const departMin = computed(() => (form.value.is_urgent ? '' : minDepartDatetimeLocalValue(15)))
@@ -185,111 +738,227 @@ const br001Ui = computed(() => {
   if (k === 'ok' || k === 'skipped') {
     return {
       title: k === 'skipped' ? 'Lệnh gấp' : 'BR-001: đạt',
-      boxClass: k === 'skipped' ? 'border-slate-200 bg-slate-50' : 'border-emerald-200 bg-emerald-50/80',
-      titleClass: k === 'skipped' ? 'text-slate-800' : 'text-emerald-900',
+      boxClass: k === 'skipped' ? 'border-slate-600 bg-slate-800/50 text-slate-300' : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100',
+      titleClass: k === 'skipped' ? 'text-slate-200' : 'text-emerald-200',
     }
   }
   if (k === 'viol') {
     return {
       title: 'BR-001: chưa đạt',
-      boxClass: 'border-rose-200 bg-rose-50',
-      titleClass: 'text-rose-800',
+      boxClass: 'border-rose-500/40 bg-rose-500/10 text-rose-100',
+      titleClass: 'text-rose-200',
     }
   }
   return {
     title: 'BR-001',
-    boxClass: 'border-slate-200 bg-slate-50',
-    titleClass: 'text-slate-800',
+    boxClass: 'border-slate-600 bg-slate-800/50 text-slate-300',
+    titleClass: 'text-slate-200',
   }
 })
 
-const submitDisabled = computed(() => {
+function parseMoney(v) {
+  const n = Number(String(v).replace(/\s/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+const passengerTotal = computed(() =>
+  passengerRows.value.reduce((s, r) => s + parseMoney(r.unit_price), 0),
+)
+
+const passengerGuestTotal = computed(() =>
+  passengerRows.value.reduce((s, r) => s + parseMoney(r.guests), 0),
+)
+
+const cargoTotal = computed(() => cargoRows.value.reduce((s, r) => s + parseMoney(r.cost), 0))
+
+const extraCosts = computed(() => {
+  let x = 0
+  if (form.value.need_porters) x += parseMoney(form.value.porter_cost)
+  if (form.value.interprovincial) x += parseMoney(form.value.interprovincial_cost)
+  return x
+})
+
+function formatCurrency(n) {
+  if (n == null || Number.isNaN(Number(n))) return '—'
+  try {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(n))
+  } catch {
+    return `${n} ₫`
+  }
+}
+
+function earliestDatetimeLocal(rows, key) {
+  const vals = rows.map((r) => r[key]).filter(Boolean)
+  if (!vals.length) return ''
+  let min = null
+  for (const v of vals) {
+    const t = new Date(v).getTime()
+    if (!Number.isNaN(t) && (min === null || t < min)) min = t
+  }
+  if (min === null) return ''
+  return toDatetimeLocalValue(new Date(min))
+}
+
+const canGoNext = computed(() => {
+  if (step.value === 0) return !!form.value.trip_type
+  if (step.value === 1) {
+    return (
+      !!form.value.requester_name?.trim() &&
+      !!form.value.requester_email?.trim() &&
+      !!form.value.purpose?.trim() &&
+      !!form.value.proposed_date &&
+      !!form.value.date_needed &&
+      (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
+    )
+  }
+  if (step.value === 2) {
+    if (isCargo.value) {
+      const ok = cargoRows.value.some((r) => r.name?.trim())
+      return ok && br001.value.kind !== 'viol' && br001.value.kind !== 'empty' && br001.value.kind !== 'invalid'
+    }
+    const ok = passengerRows.value.some((r) => r.pickup?.trim() || r.dropoff?.trim())
+    return ok && br001.value.kind !== 'viol' && br001.value.kind !== 'empty' && br001.value.kind !== 'invalid'
+  }
+  return true
+})
+
+function goStep(i) {
+  if (i <= step.value) step.value = i
+}
+
+function syncDepartFromTable() {
+  const e = isCargo.value
+    ? earliestDatetimeLocal(cargoRows.value, 'pickup_at')
+    : earliestDatetimeLocal(passengerRows.value, 'depart_at')
+  if (e) form.value.depart_at = e
+}
+
+function nextStep() {
+  if (!canGoNext.value) return
+  if (step.value === 2) syncDepartFromTable()
+  if (step.value < 3) step.value++
+}
+
+function addPassengerRow() {
+  passengerRows.value.push(emptyPassengerRow())
+}
+
+function removePassengerRow(i) {
+  passengerRows.value.splice(i, 1)
+  if (!passengerRows.value.length) passengerRows.value.push(emptyPassengerRow())
+}
+
+function addCargoRow() {
+  cargoRows.value.push(emptyCargoRow())
+}
+
+function removeCargoRow(i) {
+  cargoRows.value.splice(i, 1)
+  if (!cargoRows.value.length) cargoRows.value.push(emptyCargoRow())
+}
+
+const summaryPreview = computed(() => buildNotesBody())
+
+const canSubmitApi = computed(() => {
+  if (form.value.is_urgent) return true
+  const k = br001.value.kind
+  return k !== 'viol' && k !== 'empty' && k !== 'invalid'
+})
+
+const headerPrimaryLabel = computed(() => {
+  if (loading.value) return 'Đang gửi…'
+  if (step.value < 3) return 'Tiếp tới xác nhận'
+  return 'Gửi yêu cầu'
+})
+
+const headerPrimaryDisabled = computed(() => {
   if (loading.value) return true
-  if (form.value.is_urgent) return false
-  return br001.value.kind === 'viol' || br001.value.kind === 'empty' || br001.value.kind === 'invalid'
+  if (step.value < 3) return !canGoNext.value
+  return !canSubmitApi.value
 })
 
-const presets = [
-  {
-    id: 'school',
-    label: 'Đi học (đưa đón)',
-    patch: {
-      trip_type: 'door_to_door',
-      source_channel: 'portal',
-      passenger_count: '40',
-      notes: 'Đưa đón học sinh — ghi rõ khối/lớp và điểm tập trung.',
-    },
-  },
-  {
-    id: 'work',
-    label: 'Công tác',
-    patch: {
-      trip_type: 'business',
-      source_channel: 'portal',
-      passenger_count: '4',
-      notes: 'Công tác nội bộ — ghi mục đích, người tham dự.',
-    },
-  },
-  {
-    id: 'cargo',
-    label: 'Hàng hóa',
-    patch: {
-      trip_type: 'cargo',
-      source_channel: 'portal',
-      passenger_count: '',
-      notes: 'Chuyển hàng nội bộ — ghi số kiện, kích thước/weight (ước lượng).',
-    },
-  },
-]
+function buildNotesBody() {
+  const f = form.value
+  const lines = []
+  lines.push('=== ĐỀ NGHỊ ĐIỀU VẬN (BM.03/MH.QT.04 — bản điện tử) ===')
+  lines.push('')
+  lines.push('A. Người đề nghị')
+  lines.push(`- Họ tên: ${f.requester_name || '—'}`)
+  lines.push(`- Email: ${f.requester_email || '—'}`)
+  lines.push(`- Điện thoại: ${f.requester_phone || '—'}`)
+  lines.push(`- Đơn vị: ${f.requester_unit || '—'}`)
+  lines.push('')
+  lines.push('B. Mục đích sử dụng')
+  lines.push(`- Mục đích: ${f.purpose || '—'}`)
+  lines.push(`- Căn cứ: ${f.basis_reference || '—'}`)
+  lines.push('')
+  lines.push('C. Thời gian')
+  lines.push(`- Ngày đề xuất: ${f.proposed_date || '—'}`)
+  lines.push(`- Ngày cần sử dụng xe: ${f.date_needed || '—'}`)
+  if (f.is_urgent) lines.push(`- GẤP — Lý do: ${f.urgent_reason || '—'}`)
+  lines.push('')
+  lines.push('D. Đối tượng / điều phối')
+  lines.push(`- Đối tượng: ${f.targets?.length ? f.targets.join(', ') : '—'}`)
+  lines.push(
+    `- Điều phối: ${f.coordinator_name || '—'} | ${f.coordinator_email || '—'} | ${f.coordinator_phone || '—'}`,
+  )
+  lines.push('')
 
-function applyPreset(p) {
-  error.value = ''
-  created.value = null
-  form.value = {
-    ...form.value,
-    ...p.patch,
-    passenger_count: p.patch.passenger_count ?? '',
+  if (isCargo.value) {
+    lines.push('E. Nội dung điều chuyển hàng hóa')
+    cargoRows.value.forEach((r, i) => {
+      if (!r.name?.trim()) return
+      lines.push(
+        `${i + 1}. ${r.name} | SL ${r.qty || '—'} | ${r.dimensions || '—'} | ${r.weight || '—'} | ${r.item_notes || ''}`,
+      )
+      lines.push(
+        `   Lấy: ${r.pickup_at || '—'} @ ${r.pickup_place || '—'} — ${r.pickup_contact || '—'}`,
+      )
+      lines.push(
+        `   Giao: ${r.delivery_at || '—'} @ ${r.delivery_place || '—'} — ${r.delivery_contact || '—'}`,
+      )
+      lines.push(`   Vận chuyển: ${r.transport_note || '—'} | Chi phí: ${r.cost || '0'}`)
+    })
+    lines.push(`Tổng hàng: ${formatCurrency(cargoTotal.value)}`)
+    if (f.cargo_extra_notes?.trim()) lines.push(`Ghi chú khác: ${f.cargo_extra_notes}`)
+    if (f.need_porters) {
+      lines.push(
+        `- Bốc xếp: SL ${f.porter_qty || '—'} — phát sinh ${f.porter_cost || '0'} VNĐ`,
+      )
+    }
+    if (f.interprovincial) {
+      lines.push(`- Chành xe tỉnh — phát sinh ${f.interprovincial_cost || '0'} VNĐ`)
+    }
+    lines.push(`Tổng cộng (ước tính): ${formatCurrency(cargoTotal.value + extraCosts.value)}`)
+  } else {
+    lines.push('E. Chi tiết chuyến')
+    if (f.multi_day) lines.push('(Dùng nhiều ngày — chi tiết bổ sung khi điều phối.)')
+    passengerRows.value.forEach((r, i) => {
+      if (!r.pickup?.trim() && !r.dropoff?.trim()) return
+      lines.push(
+        `${i + 1}. ${r.depart_at || '—'} ${r.pickup || '—'} → ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | ${r.unit_price || '0'} VNĐ`,
+      )
+    })
+    lines.push(`Tổng (ước tính): ${formatCurrency(passengerTotal.value)}`)
   }
-  if (!form.value.depart_at) {
-    form.value.depart_at = suggestBr001CompliantLocal(15)
-  }
+
+  lines.push('')
+  lines.push('--- Hệ thống: các trường trên được gửi kèm để bộ phận Điều vận xử lý.')
+  return lines.join('\n')
 }
 
-function bumpDepartHours(h) {
-  const base = form.value.depart_at ? new Date(form.value.depart_at) : new Date()
-  if (Number.isNaN(base.getTime())) return
-  base.setHours(base.getHours() + h)
-  form.value.depart_at = toDatetimeLocalValue(base)
-}
-
-/** Ngày mai, giờ cố định; nếu không đủ BR-001 thì cộng thêm ngày. */
-function setNextMorning(hour) {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  d.setHours(hour, 0, 0, 0)
-  let t = d.getTime()
-  const min = Date.now() + 2 * 60 * 60 * 1000
-  while (t < min) {
-    d.setDate(d.getDate() + 1)
-    d.setHours(hour, 0, 0, 0)
-    t = d.getTime()
+function computeApiOriginDestination() {
+  if (isCargo.value) {
+    const r = cargoRows.value.find((x) => x.name?.trim())
+    return {
+      origin: r?.pickup_place?.trim() || '',
+      destination: r?.delivery_place?.trim() || '',
+    }
   }
-  form.value.depart_at = toDatetimeLocalValue(d)
-}
-
-function reset() {
-  error.value = ''
-  created.value = null
-  form.value = {
-    trip_type: 'point_to_point',
-    source_channel: 'portal',
-    origin: '',
-    destination: '',
-    depart_at: suggestBr001CompliantLocal(15),
-    arrive_by: '',
-    passenger_count: '',
-    notes: '',
-    is_urgent: false,
+  const r = passengerRows.value.find((x) => x.pickup?.trim() || x.dropoff?.trim())
+  return {
+    origin: r?.pickup?.trim() || '',
+    destination: r?.dropoff?.trim() || '',
   }
 }
 
@@ -304,23 +973,84 @@ function toIsoMaybe(v) {
 
 let submitInFlight = false
 
-async function submit() {
+function primaryAction() {
+  if (step.value < 3) nextStep()
+  else doSubmit()
+}
+
+function validateBeforeApi() {
+  if (!form.value.trip_type) {
+    step.value = 0
+    return 'Chọn loại dịch vụ.'
+  }
+  if (
+    !form.value.requester_name?.trim() ||
+    !form.value.requester_email?.trim() ||
+    !form.value.purpose?.trim() ||
+    !form.value.proposed_date ||
+    !form.value.date_needed
+  ) {
+    step.value = 1
+    return 'Điền đủ thông tin bước 2 (A–C, mục đích).'
+  }
+  if (form.value.is_urgent && !form.value.urgent_reason?.trim()) {
+    step.value = 1
+    return 'Ghi lý do khi chọn Gấp.'
+  }
+  if (isCargo.value) {
+    if (!cargoRows.value.some((r) => r.name?.trim())) {
+      step.value = 2
+      return 'Thêm ít nhất một dòng hàng hóa (tên hàng).'
+    }
+  } else if (!passengerRows.value.some((r) => r.pickup?.trim() || r.dropoff?.trim())) {
+    step.value = 2
+    return 'Thêm ít nhất một chuyến (điểm đón hoặc điểm trả).'
+  }
+  if (!form.value.depart_at?.trim()) {
+    step.value = 2
+    return 'Chọn giờ xuất phát (mục BR-001 ở bước 3).'
+  }
+  if (!canSubmitApi.value) {
+    step.value = 2
+    return 'BR-001: điều chỉnh giờ xuất phát hoặc chọn Gấp có lý do.'
+  }
+  return ''
+}
+
+async function doSubmit() {
   if (submitInFlight || loading.value) return
+  const v = validateBeforeApi()
+  if (v) {
+    error.value = v
+    return
+  }
   error.value = ''
   created.value = null
   submitInFlight = true
   loading.value = true
   const idempotencyKey = newIdempotencyKey()
   try {
+    const { origin, destination } = computeApiOriginDestination()
+    const notes = buildNotesBody()
     const payload = {
-      ...form.value,
+      trip_type: form.value.trip_type,
+      source_channel: form.value.source_channel,
+      origin: origin || undefined,
+      destination: destination || undefined,
       depart_at: toIsoMaybe(form.value.depart_at),
-      arrive_by: form.value.arrive_by ? toIsoMaybe(form.value.arrive_by) : null,
-      passenger_count: form.value.passenger_count ? Number(form.value.passenger_count) : null,
+      arrive_by: null,
+      passenger_count: isCargo.value
+        ? null
+        : passengerGuestTotal.value > 0
+          ? Math.round(passengerGuestTotal.value)
+          : null,
+      notes,
       is_urgent: !!form.value.is_urgent,
     }
     Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
     created.value = await createDispatchRequest(payload, { idempotencyKey })
+    localStorage.removeItem(DRAFT_KEY)
+    draftSavedAt.value = null
   } catch (e) {
     error.value = formatApiError(e, 'Tạo yêu cầu thất bại.')
   } finally {
@@ -328,6 +1058,57 @@ async function submit() {
     submitInFlight = false
   }
 }
+
+function saveDraft() {
+  try {
+    const data = {
+      form: form.value,
+      passengerRows: passengerRows.value,
+      cargoRows: cargoRows.value,
+      step: step.value,
+    }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data))
+    draftSavedAt.value = Date.now()
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return
+    const data = JSON.parse(raw)
+    if (data.form) form.value = { ...form.value, ...data.form }
+    if (Array.isArray(data.passengerRows) && data.passengerRows.length) passengerRows.value = data.passengerRows
+    if (Array.isArray(data.cargoRows) && data.cargoRows.length) cargoRows.value = data.cargoRows
+    if (typeof data.step === 'number') step.value = data.step
+    draftSavedAt.value = Date.now()
+  } catch {
+    /* ignore */
+  }
+}
+
+function onCancel() {
+  if (created.value) {
+    router.push('/requests')
+    return
+  }
+  router.back()
+}
+
+onMounted(() => {
+  loadDraft()
+  if (auth.user) {
+    if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
+    if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
+  } else {
+    auth.fetchMe().then((u) => {
+      if (u && !form.value.requester_name?.trim()) form.value.requester_name = u.name || ''
+      if (u && !form.value.requester_email?.trim()) form.value.requester_email = u.email || ''
+    })
+  }
+})
 
 watch(
   () => form.value.is_urgent,
@@ -343,3 +1124,12 @@ watch(
   },
 )
 </script>
+
+<style scoped>
+.dw-input {
+  @apply w-full rounded-lg border border-slate-600 bg-[#1a2332] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500;
+}
+.dw-cell {
+  @apply w-full min-w-0 rounded border border-slate-700 bg-[#0f141c] px-1.5 py-1 text-xs text-slate-100 placeholder:text-slate-600 focus:border-teal-500 focus:outline-none sm:text-sm;
+}
+</style>

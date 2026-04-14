@@ -109,7 +109,7 @@ const router = createRouter({
             path: "/dispatch-requests/new",
             name: "dispatchRequestNew",
             component: DispatchRequestCreateView,
-            meta: { title: "Tạo yêu cầu", subtitle: "BR-001 & phiếu giấy" },
+            meta: { title: "Tạo yêu cầu điều vận", subtitle: "BM.03 — luồng 4 bước" },
         },
 
         {
