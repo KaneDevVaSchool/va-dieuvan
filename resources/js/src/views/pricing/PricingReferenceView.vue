@@ -1,90 +1,288 @@
 <template>
-  <div class="space-y-4">
-    <Card title="Bảng giá tham chiếu">
-      <p class="mb-4 text-sm text-slate-600">
-        Dữ liệu từ hệ thống (seed / cập nhật DB). Cuộn ngang trên điện thoại để xem đủ cột.
-      </p>
-      <div v-if="loading" class="text-sm text-slate-500">Đang tải…</div>
-      <div v-else-if="error" class="text-sm text-rose-600">{{ error }}</div>
-      <div v-else class="space-y-6">
-        <section>
-          <h2 class="mb-2 text-sm font-semibold text-slate-900">1. Xe hành khách (VNĐ)</h2>
-          <div class="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+  <div class="space-y-8 pb-10">
+    <Card>
+      <div class="mb-6 border-b border-slate-100 pb-5">
+        <h1 class="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">Bảng giá tham chiếu</h1>
+        <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+          Tra cứu nhanh đơn giá xe hành khách và vận chuyển hàng hóa nội bộ. Giá và điều khoản có thể được cập nhật theo quyết định Phòng Điều vận; vui lòng xác nhận với điều vận khi lên kế hoạch chuyến.
+        </p>
+      </div>
+
+      <div v-if="loading" class="flex items-center gap-2 py-12 text-sm text-slate-500">
+        <span
+          class="inline-block size-4 animate-spin rounded-full border-2 border-va-200 border-t-va-700"
+          aria-hidden="true"
+        />
+        Đang tải bảng giá…
+      </div>
+      <div v-else-if="error" class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        {{ error }}
+      </div>
+      <div v-else class="space-y-10">
+        <!-- 1. Hành khách -->
+        <section class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-900/5">
+          <div
+            class="flex flex-col gap-1 border-b border-va-800/20 bg-gradient-to-r from-va-800 to-va-700 px-4 py-4 text-white md:flex-row md:items-center md:justify-between md:px-5"
+          >
+            <div class="flex items-center gap-3">
+              <span
+                class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/15 text-sm font-bold tabular-nums"
+                >1</span
+              >
+              <div>
+                <h2 class="text-base font-semibold">Xe vận tải hành khách</h2>
+                <p class="mt-0.5 text-xs font-normal text-white/85">Đơn vị: VNĐ · Giá theo gói / tuyến</p>
+              </div>
+            </div>
+          </div>
+          <div class="-mx-px overflow-x-auto">
+            <table class="min-w-[880px] w-full border-collapse text-left text-xs md:text-sm">
+              <thead>
+                <tr class="bg-slate-50 text-slate-700">
+                  <th
+                    class="sticky left-0 z-[2] min-w-[200px] border-b border-slate-200 bg-slate-50 px-3 py-3 font-semibold shadow-[4px_0_12px_-4px_rgba(15,23,42,0.12)] md:px-4"
+                  >
+                    Gói / tuyến
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-3">Xe 7 chỗ</th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-3">Xe 15 chỗ</th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-3">Xe 28 chỗ</th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-3">Xe 33 chỗ</th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-3">
+                    <span class="block">Xe 45 chỗ</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-slate-500 md:text-[11px]"
+                      >Không đi tuyến vườn trường Hóc Môn</span
+                    >
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-3">Limousine 9 chỗ</th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-3">Limousine 11 chỗ</th>
+                  <th
+                    class="border-b border-slate-200 bg-emerald-50/90 px-2 py-3 text-center font-semibold text-emerald-900 md:px-3"
+                  >
+                    Chi phí tự túc TX
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(row, idx) in data.passenger_fares"
+                  :key="row.id"
+                  :class="idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'"
+                  class="border-b border-slate-100 transition-colors hover:bg-va-50/40"
+                >
+                  <td
+                    class="sticky left-0 z-[1] border-slate-100 bg-inherit px-3 py-2.5 font-medium text-slate-900 shadow-[4px_0_12px_-4px_rgba(15,23,42,0.08)] md:px-4"
+                  >
+                    {{ row.package_label }}
+                  </td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-3">{{ cellMoney(row.seat_7) }}</td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-3">{{ cellMoney(row.seat_15) }}</td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-3">{{ cellMoney(row.seat_28) }}</td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-3">{{ cellMoney(row.seat_33) }}</td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-3">{{ cellMoney(row.seat_45) }}</td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-3">{{ cellMoney(row.limo_9) }}</td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-3">{{ cellMoney(row.limo_11) }}</td>
+                  <td
+                    class="bg-emerald-50/50 px-2 py-2.5 text-center text-sm font-semibold tabular-nums text-emerald-900 md:px-3"
+                  >
+                    {{ cellMoney(row.driver_self_support) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Ghi chú xe khách (API) -->
+        <div v-if="passengerNoteBlocks.length" class="grid gap-3 md:grid-cols-2">
+          <div
+            v-for="block in passengerNoteBlocks"
+            :key="block.key"
+            class="rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50 to-white p-4 shadow-sm"
+          >
+            <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-sky-900">
+              <span class="size-2 rounded-full bg-sky-500" aria-hidden="true" />
+              {{ block.title }}
+            </div>
+            <p class="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">{{ block.body }}</p>
+          </div>
+        </div>
+
+        <!-- Huỷ xe — bảng cố định -->
+        <section class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-900/5">
+          <div
+            class="border-b border-amber-200/80 bg-gradient-to-r from-amber-700 to-amber-600 px-4 py-4 text-white md:px-5"
+          >
+            <h2 class="text-base font-semibold">Trường hợp chi phí huỷ xe (hành khách)</h2>
+            <p class="mt-1 text-xs font-normal text-amber-100/95">
+              Áp dụng khi thông báo huỷ so với ngày thực hiện dịch vụ và trạng thái điều xe.
+            </p>
+          </div>
+          <div class="-mx-px overflow-x-auto">
             <table class="min-w-[720px] w-full border-collapse text-left text-xs md:text-sm">
               <thead>
-                <tr class="border-b bg-slate-50 text-slate-600">
-                  <th class="sticky left-0 z-[1] bg-slate-50 px-2 py-2 font-medium">Gói / tuyến</th>
-                  <th class="px-2 py-2 font-medium">7 chỗ</th>
-                  <th class="px-2 py-2 font-medium">15</th>
-                  <th class="px-2 py-2 font-medium">28</th>
-                  <th class="px-2 py-2 font-medium">33</th>
-                  <th class="px-2 py-2 font-medium">45</th>
-                  <th class="px-2 py-2 font-medium">Lim 9</th>
-                  <th class="px-2 py-2 font-medium">Lim 11</th>
-                  <th class="px-2 py-2 font-medium">TX tự túc</th>
+                <tr class="bg-amber-50/90 text-amber-950">
+                  <th class="border-b border-amber-200/80 px-3 py-3 font-semibold md:px-4">Trường hợp huỷ</th>
+                  <th class="border-b border-amber-200/80 px-3 py-3 font-semibold md:px-4">Thời điểm / điều kiện</th>
+                  <th class="border-b border-amber-200/80 px-3 py-3 font-semibold md:px-4">Chi phí phát sinh</th>
+                  <th class="border-b border-amber-200/80 px-3 py-3 font-semibold md:px-4">Ghi chú</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in data.passenger_fares" :key="row.id" class="border-b border-slate-100">
-                  <td class="sticky left-0 bg-white px-2 py-2 font-medium text-slate-800">{{ row.package_label }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.seat_7) }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.seat_15) }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.seat_28) }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.seat_33) }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.seat_45) }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.limo_9) }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.limo_11) }}</td>
-                  <td class="px-2 py-2 text-slate-700">{{ cellMoney(row.driver_self_support) }}</td>
+                <tr
+                  v-for="(r, i) in cancellationRows"
+                  :key="i"
+                  class="border-b border-slate-100 transition-colors"
+                  :class="cancellationRowClass(i)"
+                >
+                  <td class="px-3 py-3 font-medium text-slate-900 md:px-4">{{ r.case }}</td>
+                  <td class="px-3 py-3 text-slate-700 md:px-4">{{ r.when }}</td>
+                  <td class="px-3 py-3 font-semibold tabular-nums md:px-4" :class="r.feeClass">{{ r.fee }}</td>
+                  <td class="px-3 py-3 text-slate-600 md:px-4">{{ r.note }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <section>
-          <h2 class="mb-2 text-sm font-semibold text-slate-900">2. Xe hàng hóa — một chiều (VNĐ)</h2>
-          <div class="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-            <table class="min-w-[900px] w-full border-collapse text-left text-xs md:text-sm">
+        <!-- 2. Hàng hóa -->
+        <section class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-900/5">
+          <div
+            class="flex flex-col gap-1 border-b border-indigo-900/20 bg-gradient-to-r from-indigo-800 to-indigo-700 px-4 py-4 text-white md:flex-row md:items-center md:justify-between md:px-5"
+          >
+            <div class="flex items-center gap-3">
+              <span
+                class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/15 text-sm font-bold tabular-nums"
+                >2</span
+              >
+              <div>
+                <h2 class="text-base font-semibold">Xe vận chuyển hàng hóa</h2>
+                <p class="mt-0.5 text-xs font-normal text-white/85">Đơn vị: VNĐ · Đơn giá một chiều</p>
+              </div>
+            </div>
+          </div>
+          <div class="-mx-px overflow-x-auto">
+            <table class="min-w-[1100px] w-full border-collapse text-left text-xs md:text-sm">
               <thead>
-                <tr class="border-b bg-slate-50 text-slate-600">
-                  <th class="sticky left-0 z-[1] bg-slate-50 px-2 py-2 font-medium">Lộ trình</th>
-                  <th class="px-2 py-2 font-medium">1 kiện</th>
-                  <th class="px-2 py-2 font-medium">2–5 kiện</th>
-                  <th class="px-2 py-2 font-medium">Van 500kg</th>
-                  <th class="px-2 py-2 font-medium">Van 1000kg</th>
-                  <th class="px-2 py-2 font-medium">Tải 2000kg</th>
-                  <th class="px-2 py-2 font-medium">Bốc xếp/điểm</th>
-                  <th class="px-2 py-2 font-medium">Chờ/giờ</th>
+                <tr class="bg-slate-50 text-slate-700">
+                  <th
+                    class="sticky left-0 z-[2] min-w-[220px] border-b border-slate-200 bg-slate-50 px-3 py-3 font-semibold shadow-[4px_0_12px_-4px_rgba(15,23,42,0.12)] md:px-4"
+                  >
+                    Lộ trình
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-2.5">
+                    <span class="block">1 kiện</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-slate-500 md:text-[11px]"
+                      >50×40×50 (cm)</span
+                    >
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-2.5">
+                    <span class="block">2–5 kiện</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-slate-500 md:text-[11px]"
+                      >50×40×50 (cm)</span
+                    >
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-2.5">
+                    <span class="block">Xe Van 500kg</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-slate-500 md:text-[11px]"
+                      >Thùng 160×120×110 cm</span
+                    >
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-2.5">
+                    <span class="block">Xe Van 1000kg</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-slate-500 md:text-[11px]"
+                      >Thùng 230×150×140 cm</span
+                    >
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-2.5">
+                    <span class="block">Xe tải 2000kg</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-slate-500 md:text-[11px]"
+                      >Thùng 350×170×170 cm</span
+                    >
+                  </th>
+                  <th class="border-b border-slate-200 px-2 py-3 text-center font-semibold md:px-2.5">
+                    <span class="block">Hỗ trợ bốc xếp</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-slate-500 md:text-[11px]"
+                      >1 người / 1 điểm lấy hàng</span
+                    >
+                  </th>
+                  <th class="border-b border-slate-200 bg-violet-50/90 px-2 py-3 text-center font-semibold text-violet-950 md:px-2.5">
+                    <span class="block">Phí chờ xe</span>
+                    <span class="mt-1 block text-[10px] font-normal leading-snug text-violet-800/90 md:text-[11px]"
+                      >Hàng số lượng lớn · Đơn giá/giờ</span
+                    >
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in data.cargo_fares" :key="row.id" class="border-b border-slate-100">
-                  <td class="sticky left-0 bg-white px-2 py-2">
-                    <div class="font-medium text-slate-800">{{ row.route_label }}</div>
-                    <div v-if="row.distance_km != null" class="text-[11px] text-slate-500">~{{ row.distance_km }} km</div>
+                <tr
+                  v-for="(row, idx) in data.cargo_fares"
+                  :key="row.id"
+                  :class="idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'"
+                  class="border-b border-slate-100 transition-colors hover:bg-indigo-50/35"
+                >
+                  <td
+                    class="sticky left-0 z-[1] border-slate-100 bg-inherit px-3 py-2.5 shadow-[4px_0_12px_-4px_rgba(15,23,42,0.08)] md:px-4"
+                  >
+                    <div class="font-medium text-slate-900">{{ row.route_label }}</div>
+                    <div v-if="row.distance_km != null" class="mt-0.5 text-[11px] text-slate-500">
+                      ≈ {{ formatDistance(row.distance_km) }} km
+                    </div>
                   </td>
-                  <td class="px-2 py-2">{{ formatVnd(row.one_crate_50_40_50) }}</td>
-                  <td class="px-2 py-2">{{ formatVnd(row.crates_2_to_5_50_40_50) }}</td>
-                  <td class="px-2 py-2">{{ formatVnd(row.van_500kg) }}</td>
-                  <td class="px-2 py-2">{{ formatVnd(row.van_1000kg) }}</td>
-                  <td class="px-2 py-2">{{ formatVnd(row.van_2000kg) }}</td>
-                  <td class="px-2 py-2">{{ formatVnd(row.loading_assist_per_point) }}</td>
-                  <td class="px-2 py-2">{{ formatVnd(row.waiting_fee_per_hour) }}</td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-2.5">
+                    {{ formatVnd(row.one_crate_50_40_50) }}
+                  </td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-2.5">
+                    {{ formatVnd(row.crates_2_to_5_50_40_50) }}
+                  </td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-2.5">
+                    {{ formatVnd(row.van_500kg) }}
+                  </td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-2.5">
+                    {{ formatVnd(row.van_1000kg) }}
+                  </td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-2.5">
+                    {{ formatVnd(row.van_2000kg) }}
+                  </td>
+                  <td class="px-2 py-2.5 text-center tabular-nums text-slate-800 md:px-2.5">
+                    {{ formatVnd(row.loading_assist_per_point) }}
+                  </td>
+                  <td
+                    class="bg-violet-50/40 px-2 py-2.5 text-center text-sm font-semibold tabular-nums text-violet-950 md:px-2.5"
+                  >
+                    {{ formatVnd(row.waiting_fee_per_hour) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <section>
-          <h2 class="mb-2 text-sm font-semibold text-slate-900">Ghi chú &amp; điều khoản</h2>
+        <!-- Ghi chú hàng hóa -->
+        <div v-if="cargoNoteBlocks.length" class="rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 to-white p-4 shadow-sm">
+          <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-indigo-950">
+            <span class="size-2 rounded-full bg-indigo-500" aria-hidden="true" />
+            Ghi chú xe hàng hóa
+          </div>
+          <ul class="list-inside list-disc space-y-2 text-sm leading-relaxed text-slate-700">
+            <li v-for="(block, i) in cargoNoteBlocks" :key="i" class="whitespace-pre-wrap pl-0.5 marker:text-indigo-400">
+              {{ block.body }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Ghi chú khác từ hệ thống (nếu có category lạ) -->
+        <section v-if="otherNotes.length">
+          <h3 class="mb-3 text-sm font-semibold text-slate-800">Thông tin bổ sung</h3>
           <div class="space-y-3">
             <details
-              v-for="n in data.notes"
+              v-for="n in otherNotes"
               :key="n.id"
               class="rounded-lg border border-slate-200 bg-white open:bg-slate-50/50"
             >
-              <summary class="cursor-pointer list-none px-3 py-2 text-sm font-medium text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden">
+              <summary
+                class="cursor-pointer list-none px-3 py-2 text-sm font-medium text-slate-900 marker:content-none [&::-webkit-details-marker]:hidden"
+              >
                 <span class="inline-flex items-center gap-2">
                   <span class="text-slate-400">▸</span>
                   {{ labelPricingNoteCategory(n.category) }}
@@ -101,7 +299,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import Card from '../../components/ui/Card.vue'
 import { getReferencePricing } from '../../api/pricing'
 import { formatVnd, labelPricingNoteCategory } from '../../util/labels'
@@ -114,9 +312,78 @@ const data = ref({
   notes: [],
 })
 
+/** Bảng huỷ xe — nội dung chuẩn theo quy định nội bộ (đồng bộ với ReferencePricingSeeder). */
+const cancellationRows = [
+  {
+    case: 'Huỷ xe trước ngày thực hiện dịch vụ',
+    when: 'Có thông báo trước (tối thiểu 12 giờ làm việc)',
+    fee: 'Không tính phí',
+    feeClass: 'text-emerald-800',
+    note: 'Báo huỷ hợp lệ',
+  },
+  {
+    case: 'Huỷ xe trước ngày thực hiện dịch vụ',
+    when: 'Thông báo muộn (dưới 12 giờ làm việc)',
+    fee: '50% giá trị chuyến xe',
+    feeClass: 'text-amber-800',
+    note: 'Đã chốt lịch nhưng chưa điều xe',
+  },
+  {
+    case: 'Huỷ khi Bên A đã điều xe đến điểm đón',
+    when: 'Xe đã di chuyển hoặc có mặt tại điểm đón',
+    fee: '70% giá trị chuyến xe',
+    feeClass: 'text-rose-800',
+    note: 'Tính phí theo thực tế điều động',
+  },
+  {
+    case: 'Huỷ do sự kiện bất khả kháng',
+    when: 'Có chứng minh bằng văn bản (hoặc thông tin xác nhận)',
+    fee: 'Hai bên cùng rà soát, không tính phí',
+    feeClass: 'text-slate-800',
+    note: 'Ví dụ: thiên tai, sự cố bất ngờ, quyết định hành chính,…',
+  },
+]
+
+function cancellationRowClass(index) {
+  const tones = ['bg-emerald-50/50', 'bg-amber-50/40', 'bg-rose-50/45', 'bg-slate-50/80']
+  return `${tones[index] ?? ''} hover:brightness-[0.99]`
+}
+
+const passengerNoteBlocks = computed(() => {
+  const notes = data.value.notes ?? []
+  return ['passenger_general', 'passenger_driver']
+    .map((cat) => {
+      const n = notes.find((x) => x.category === cat)
+      if (!n) return null
+      return {
+        key: cat,
+        title: n.title || (cat === 'passenger_general' ? 'Ghi chú chung' : 'Tài xế'),
+        body: n.body,
+      }
+    })
+    .filter(Boolean)
+})
+
+const cargoNoteBlocks = computed(() =>
+  (data.value.notes ?? []).filter((n) => n.category === 'cargo_general'),
+)
+
+/** Ẩn passenger_cancel khỏi UI vì đã hiển thị bảng huỷ xe cố định phía trên. */
+const otherNotes = computed(() =>
+  (data.value.notes ?? []).filter(
+    (n) => !['passenger_general', 'passenger_driver', 'passenger_cancel', 'cargo_general'].includes(n.category),
+  ),
+)
+
 function cellMoney(v) {
   if (v == null || v === '') return '—'
   return formatVnd(v)
+}
+
+function formatDistance(km) {
+  const n = Number(km)
+  if (Number.isInteger(n)) return String(n)
+  return n.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 1 })
 }
 
 onMounted(async () => {
