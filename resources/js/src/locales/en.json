@@ -304,6 +304,8 @@
     "attachment_download_failed": "Could not download the file. Please try again.",
     "attachment_download_html_title": "Response was not a PDF file",
     "attachment_download_html_hint": "The URL returned HTML (often a login page, 404, or SPA) instead of the PDF. A new tab was opened; if nothing appears, check popup blocking, the storage symlink, or APP_URL / reverse proxy.",
+    "attachment_download_not_pdf_title": "Content was not a PDF",
+    "attachment_download_not_pdf_hint": "The downloaded data is not a valid PDF (magic bytes / MIME). A new tab was opened — check the source file on the server or the proxy.",
     "vehicle_compliance_quick_add": "Quick add",
     "vehicle_doc_modal_add": "Add vehicle document",
     "vehicle_doc_modal_edit": "Edit vehicle document",

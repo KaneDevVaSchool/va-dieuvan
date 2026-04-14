@@ -304,6 +304,8 @@
         "attachment_download_failed": "Không tải được tệp. Thử lại sau.",
         "attachment_download_html_title": "Phản hồi không phải file PDF",
         "attachment_download_html_hint": "Địa chỉ tệp trả về trang HTML (thường là đăng nhập, 404 hoặc SPA) thay vì PDF. Đã thử mở tab mới; nếu không thấy, kiểm tra chặn popup, symlink storage, hoặc APP_URL / reverse proxy.",
+        "attachment_download_not_pdf_title": "Nội dung không phải PDF",
+        "attachment_download_not_pdf_hint": "Dữ liệu tải về không khớp định dạng PDF (magic bytes / MIME). Đã thử mở tab mới — kiểm tra file gốc trên máy chủ hoặc proxy.",
         "vehicle_compliance_quick_add": "Thêm nhanh",
         "vehicle_doc_modal_add": "Thêm giấy tờ xe",
         "vehicle_doc_modal_edit": "Sửa giấy tờ xe",

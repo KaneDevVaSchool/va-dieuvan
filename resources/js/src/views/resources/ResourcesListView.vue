@@ -3030,6 +3030,7 @@ import {
 } from '../../api/operational'
 import { formatApiError, TOKEN_KEY } from '../../api/http'
 import { showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
+import { downloadPdfAttachmentFromUrl } from '../../util/downloadPdfAttachment'
 import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
@@ -4236,46 +4237,36 @@ function vehiclePdfAttachmentBusyKey(doc, a, aIdx) {
   return `${doc?.id ?? 'doc'}-${a?.id ?? aIdx}`
 }
 
-/** Tải PDF dạng nhị phân (fetch → blob). Gửi Bearer như axios; fallback mở tab nếu fetch lỗi. */
+/** Tải PDF: axios + `file-type` + FileSaver — tránh lưu nhầm HTML/SPA thành “.pdf”. */
 async function downloadVehiclePdfAttachment(doc, a, aIdx) {
   const busyKey = vehiclePdfAttachmentBusyKey(doc, a, aIdx)
   const url = resolveAttachmentAbsoluteUrl(a)
   if (!url || pdfAttachmentDownloadBusyKey.value === busyKey) return
   pdfAttachmentDownloadBusyKey.value = busyKey
-  const headers = {}
+  let bearerToken = null
   try {
     const u = new URL(url, window.location.origin)
     if (u.origin === window.location.origin) {
-      const token = localStorage.getItem(TOKEN_KEY)
-      if (token) headers.Authorization = `Bearer ${token}`
+      bearerToken = localStorage.getItem(TOKEN_KEY)
     }
   } catch {
     /* ignore */
   }
   try {
-    const res = await fetch(url, {
-      credentials: 'same-origin',
-      headers: Object.keys(headers).length ? headers : undefined,
+    const result = await downloadPdfAttachmentFromUrl(url, {
+      filename: attachmentDownloadName(a),
+      bearerToken,
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const contentType = (res.headers.get('content-type') || '').toLowerCase()
-    if (contentType.includes('text/html')) {
-      const w = window.open(url, '_blank', 'noopener,noreferrer')
-      if (!w) {
+    if (result.ok) return
+
+    const w = window.open(url, '_blank', 'noopener,noreferrer')
+    if (!w) {
+      if (result.reason === 'html') {
         showAppInfo(t('resources.attachment_download_html_hint'), t('resources.attachment_download_html_title'))
+      } else {
+        showAppInfo(t('resources.attachment_download_not_pdf_hint'), t('resources.attachment_download_not_pdf_title'))
       }
-      return
     }
-    const blob = await res.blob()
-    const blobUrl = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = blobUrl
-    link.download = attachmentDownloadName(a)
-    link.rel = 'noopener'
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(blobUrl)
   } catch (e) {
     const w = window.open(url, '_blank', 'noopener,noreferrer')
     if (!w) showAppErrorFromApi(e, t('resources.attachment_download_failed'))
