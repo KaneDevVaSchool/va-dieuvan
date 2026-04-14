@@ -30,8 +30,40 @@
         </div>
       </div>
 
-      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <div class="w-full min-w-0 overflow-x-auto overscroll-x-contain sm:w-auto sm:overflow-visible">
+      <div class="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
+        <!-- Xe: danh sách / thùng rác (cùng hàng với tab + nút) -->
+        <div
+          v-if="activeTab === 'vehicles'"
+          class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800"
+        >
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              vehiclesViewMode === 'active'
+                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setVehiclesViewMode('active')"
+          >
+            {{ t('resources.vehicles_view_active') }}
+          </button>
+          <button
+            type="button"
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
+              vehiclesViewMode === 'trash'
+                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
+            ]"
+            @click="setVehiclesViewMode('trash')"
+          >
+            <TrashIcon class="h-4 w-4" aria-hidden="true" />
+            {{ t('resources.vehicles_view_trash') }}
+          </button>
+        </div>
+
+        <div class="min-w-0 flex-1 overflow-x-auto overscroll-x-contain sm:flex-initial">
           <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
             <button
               v-for="tab in tabs"
@@ -49,7 +81,8 @@
             </button>
           </div>
         </div>
-        <div class="flex w-full min-w-0 flex-1 flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+
+        <div class="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:ml-auto sm:shrink-0">
           <button
             v-if="activeTab === 'drivers'"
             type="button"
@@ -81,37 +114,6 @@
             disabled
           >
             {{ addButtonLabel }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Xe: danh sách / thùng rác -->
-      <div v-if="activeTab === 'vehicles'" class="mt-3 flex flex-wrap items-center gap-2">
-        <div class="inline-flex shrink-0 gap-0.5 rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-600 dark:bg-slate-800">
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              vehiclesViewMode === 'active'
-                ? 'bg-white text-teal-800 shadow-sm dark:bg-slate-700 dark:text-teal-300'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setVehiclesViewMode('active')"
-          >
-            {{ t('resources.vehicles_view_active') }}
-          </button>
-          <button
-            type="button"
-            :class="[
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition sm:py-1.5',
-              vehiclesViewMode === 'trash'
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white',
-            ]"
-            @click="setVehiclesViewMode('trash')"
-          >
-            <TrashIcon class="h-4 w-4" aria-hidden="true" />
-            {{ t('resources.vehicles_view_trash') }}
           </button>
         </div>
       </div>
@@ -552,35 +554,35 @@
               </label>
             </div>
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[900px] border-separate border-spacing-0 text-left text-sm">
+          <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+            <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
               <thead>
                 <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                  <th class="border-b border-slate-200 px-3 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_vehicle') }}</th>
-                  <th v-if="vehicleColOn('type_capacity')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_vehicle') }}</th>
+                  <th v-if="vehicleColOn('type_capacity')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
                     {{ t('resources.col_type_capacity') }}
                   </th>
-                  <th v-if="vehicleColOn('status')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
-                  <th v-if="vehicleColOn('compliance')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_compliance') }}</th>
-                  <th v-if="vehicleColOn('insurance_exp')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                  <th v-if="vehicleColOn('status')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                  <th v-if="vehicleColOn('compliance')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_compliance') }}</th>
+                  <th v-if="vehicleColOn('insurance_exp')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
                     {{ t('resources.col_insurance_exp') }}
                   </th>
-                  <th v-if="vehicleColOn('inspection_exp')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                  <th v-if="vehicleColOn('inspection_exp')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
                     {{ t('resources.col_inspection_exp') }}
                   </th>
-                  <th v-if="vehicleColOn('road_fee')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_road_fee_exp') }}</th>
-                  <th v-if="vehicleColOn('owner')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_owner') }}</th>
-                  <th v-if="vehicleColOn('year')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_year_mfg') }}</th>
-                  <th v-if="vehicleColOn('purchase')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_purchase') }}</th>
-                  <th v-if="vehicleColOn('driver')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_driver') }}</th>
-                  <th v-if="vehicleColOn('caretaker')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                  <th v-if="vehicleColOn('road_fee')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_road_fee_exp') }}</th>
+                  <th v-if="vehicleColOn('owner')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_owner') }}</th>
+                  <th v-if="vehicleColOn('year')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_year_mfg') }}</th>
+                  <th v-if="vehicleColOn('purchase')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_purchase') }}</th>
+                  <th v-if="vehicleColOn('driver')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.col_driver') }}</th>
+                  <th v-if="vehicleColOn('caretaker')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
                     {{ t('resources.col_caretaker') }}
                   </th>
-                  <th v-if="vehicleColOn('maintenance')" class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+                  <th v-if="vehicleColOn('maintenance')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">
                     {{ t('resources.col_maintenance') }}
                   </th>
-                  <th v-if="vehicleColOn('notes')" class="max-w-[200px] border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.vehicle_form_notes') }}</th>
-                  <th class="border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
+                  <th v-if="vehicleColOn('notes')" class="whitespace-nowrap border-b border-slate-200 px-3 py-3 dark:border-slate-700">{{ t('resources.vehicle_form_notes') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-3 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -596,20 +598,20 @@
                       <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400">
                         <component :is="vehicleIconComponent(v.iconKind)" class="h-5 w-5" aria-hidden="true" />
                       </div>
-                      <div class="min-w-0">
-                        <div class="font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
-                        <div class="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{{ v.model }}</div>
+                      <div>
+                        <div class="whitespace-nowrap font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
+                        <div class="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{{ v.model }}</div>
                       </div>
                     </div>
                   </td>
-                  <td v-if="vehicleColOn('type_capacity')" class="max-w-[180px] px-3 py-3 align-middle text-slate-700 dark:text-slate-300">
-                    <span class="line-clamp-2">{{ v.typeLabel }}</span>
+                  <td v-if="vehicleColOn('type_capacity')" class="whitespace-nowrap px-3 py-3 align-middle text-slate-700 dark:text-slate-300">
+                    {{ v.typeLabel }}
                   </td>
                   <td v-if="vehicleColOn('status')" class="px-3 py-3 align-middle whitespace-nowrap">
                     <span :class="statusBadgeClass(v.status)">{{ labelVehicleStatus(v.status) }}</span>
                   </td>
                   <td v-if="vehicleColOn('compliance')" class="px-3 py-3 align-middle">
-                    <div class="flex flex-wrap gap-1">
+                    <div class="flex flex-nowrap gap-1">
                       <span :class="compliancePillClass(v.insurance)">{{ t('resources.tag_ins') }} {{ insuranceHint(v.insurance) }}</span>
                       <span :class="compliancePillClass(v.inspection)">{{ t('resources.tag_reg') }} {{ insuranceHint(v.inspection) }}</span>
                     </div>
@@ -623,8 +625,8 @@
                   <td v-if="vehicleColOn('road_fee')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
                     {{ fmtVehicleTableDate(v.road_fee_expires_at) }}
                   </td>
-                  <td v-if="vehicleColOn('owner')" class="max-w-[160px] px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    <span class="line-clamp-2">{{ v.owner_name || '—' }}</span>
+                  <td v-if="vehicleColOn('owner')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    {{ v.owner_name || '—' }}
                   </td>
                   <td v-if="vehicleColOn('year')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
                     {{ v.year_manufactured ?? '—' }}
@@ -632,19 +634,19 @@
                   <td v-if="vehicleColOn('purchase')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
                     {{ fmtVehicleTableDate(v.purchased_at) }}
                   </td>
-                  <td v-if="vehicleColOn('driver')" class="max-w-[140px] px-3 py-3 align-middle">
+                  <td v-if="vehicleColOn('driver')" class="whitespace-nowrap px-3 py-3 align-middle">
                     <span v-if="v.driverName" class="text-slate-800 dark:text-slate-200">{{ v.driverName }}</span>
                     <span v-else class="italic text-slate-500">{{ t('resources.unassigned') }}</span>
                   </td>
-                  <td v-if="vehicleColOn('caretaker')" class="max-w-[140px] px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
-                    <span v-if="v.caretaker_name" class="line-clamp-2">{{ v.caretaker_name }}</span>
+                  <td v-if="vehicleColOn('caretaker')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-700 dark:text-slate-300">
+                    <span v-if="v.caretaker_name">{{ v.caretaker_name }}</span>
                     <span v-else class="text-slate-400">—</span>
                   </td>
-                  <td v-if="vehicleColOn('maintenance')" class="max-w-[200px] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    <span class="line-clamp-2">{{ vehicleMaintenanceLine(v) }}</span>
+                  <td v-if="vehicleColOn('maintenance')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
+                    {{ vehicleMaintenanceLine(v) }}
                   </td>
-                  <td v-if="vehicleColOn('notes')" class="max-w-[200px] px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
-                    <span class="line-clamp-2">{{ v.notes || '—' }}</span>
+                  <td v-if="vehicleColOn('notes')" class="whitespace-nowrap px-3 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
+                    {{ v.notes || '—' }}
                   </td>
                   <td class="px-3 py-3 align-middle text-right text-slate-400" @click.stop>
                     <button
@@ -694,87 +696,91 @@
           v-else-if="activeTab === 'drivers'"
           class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
         >
-          <table class="w-full min-w-[880px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                <th class="border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_driver_name') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_user_email') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_employee_code') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_license') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_phone') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_status') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr v-for="d in filteredDrivers" :key="d.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                  <RouterLink
-                    :to="{ name: 'driverDetail', params: { id: d.id } }"
-                    class="text-teal-700 hover:underline dark:text-teal-400"
-                  >
-                    {{ d.name }}
-                  </RouterLink>
-                </td>
-                <td class="max-w-[200px] truncate px-4 py-3 text-slate-600 dark:text-slate-400">{{ d.email || '—' }}</td>
-                <td class="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || '—' }}</td>
-                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ d.license }}</td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{{ d.phone || '—' }}</td>
-                <td class="px-4 py-3">
-                  <span :class="statusBadgeClass(d.uiStatus)">{{ labelVehicleStatus(d.uiStatus) }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+            <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
+              <thead>
+                <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_driver_name') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_user_email') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_employee_code') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_license') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_phone') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr v-for="d in filteredDrivers" :key="d.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900 dark:text-white">
+                    <RouterLink
+                      :to="{ name: 'driverDetail', params: { id: d.id } }"
+                      class="text-teal-700 hover:underline dark:text-teal-400"
+                    >
+                      {{ d.name }}
+                    </RouterLink>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 text-slate-600 dark:text-slate-400">{{ d.email || '—' }}</td>
+                  <td class="whitespace-nowrap px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300">{{ d.employeeCode || '—' }}</td>
+                  <td class="whitespace-nowrap px-4 py-3 text-slate-700 dark:text-slate-300">{{ d.license }}</td>
+                  <td class="whitespace-nowrap px-4 py-3 text-slate-600 dark:text-slate-400">{{ d.phone || '—' }}</td>
+                  <td class="whitespace-nowrap px-4 py-3">
+                    <span :class="statusBadgeClass(d.uiStatus)">{{ labelVehicleStatus(d.uiStatus) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div
           v-else
           class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900/50"
         >
-          <table class="w-full min-w-[900px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
-                <th class="border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_supplier') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_solutions_services') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_contract') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
-                <th class="border-b border-slate-200 px-4 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr
-                v-for="s in filteredSuppliers"
-                :key="s.id"
-                class="cursor-pointer transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
-                :class="selectedSupplier?.id === s.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
-                @click="selectSupplier(s)"
-              >
-                <td class="px-4 py-3 align-middle">
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
-                      <BuildingOffice2Icon class="h-5 w-5" aria-hidden="true" />
+          <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+            <table class="w-max min-w-full border-separate border-spacing-0 text-left text-sm">
+              <thead>
+                <tr class="bg-gradient-to-r from-slate-50 to-slate-100/90 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:from-slate-800 dark:to-slate-800/80 dark:text-slate-400">
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 first:rounded-tl-xl dark:border-slate-700">{{ t('resources.col_supplier') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_solutions_services') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_contract') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 dark:border-slate-700">{{ t('resources.col_status') }}</th>
+                  <th class="whitespace-nowrap border-b border-slate-200 px-4 py-3 text-right last:rounded-tr-xl dark:border-slate-700">{{ t('resources.col_actions') }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr
+                  v-for="s in filteredSuppliers"
+                  :key="s.id"
+                  class="cursor-pointer transition hover:bg-teal-50/40 dark:hover:bg-slate-800/60"
+                  :class="selectedSupplier?.id === s.id ? 'bg-teal-50/80 dark:bg-slate-800/80' : ''"
+                  @click="selectSupplier(s)"
+                >
+                  <td class="px-4 py-3 align-middle">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+                        <BuildingOffice2Icon class="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <div class="whitespace-nowrap font-semibold text-slate-900 dark:text-white">{{ s.name }}</div>
+                        <div class="whitespace-nowrap text-xs text-slate-500">{{ s.typeLabel }}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div class="font-semibold text-slate-900 dark:text-white">{{ s.name }}</div>
-                      <div class="text-xs text-slate-500">{{ s.typeLabel }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="max-w-[240px] px-4 py-3 align-middle text-slate-600 dark:text-slate-400">
-                  <span class="line-clamp-2 text-xs">{{ s.serviceSummary }}</span>
-                </td>
-                <td class="px-4 py-3 align-middle">
-                  <span :class="compliancePillClass(s.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(s.contract) }}</span>
-                </td>
-                <td class="px-4 py-3 align-middle">
-                  <span :class="statusBadgeClass(s.uiStatus)">{{ labelProviderStatus(s.uiStatus) }}</span>
-                </td>
-                <td class="px-4 py-3 align-middle text-right text-slate-400">
-                  <ChevronRightIcon class="ml-auto inline h-5 w-5" aria-hidden="true" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 align-middle text-xs text-slate-600 dark:text-slate-400">
+                    {{ s.serviceSummary }}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 align-middle">
+                    <span :class="compliancePillClass(s.contract)">{{ t('resources.tag_contract') }} {{ insuranceHint(s.contract) }}</span>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 align-middle">
+                    <span :class="statusBadgeClass(s.uiStatus)">{{ labelProviderStatus(s.uiStatus) }}</span>
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 align-middle text-right text-slate-400">
+                    <ChevronRightIcon class="ml-auto inline h-5 w-5" aria-hidden="true" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <p v-if="activeTab === 'vehicles' && !filteredVehicles.length" class="py-8 text-center text-sm text-slate-500">
