@@ -1606,6 +1606,17 @@
                             class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200/90 bg-white/70 px-2 py-1.5 dark:border-slate-600/80 dark:bg-slate-900/40"
                           >
                             <a
+                              v-if="isPdfAttachment(a)"
+                              :href="resolveAttachmentAbsoluteUrl(a)"
+                              :download="attachmentDownloadName(a)"
+                              class="min-w-0 flex-1 truncate text-teal-700 underline dark:text-teal-400"
+                              :title="t('resources.attachment_download_pdf_title')"
+                              @click.stop
+                            >
+                              {{ a.original_name || 'file' }}
+                            </a>
+                            <a
+                              v-else
                               :href="a.url"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -1613,15 +1624,6 @@
                             >
                               {{ a.original_name || 'file' }}
                             </a>
-                            <button
-                              v-if="isPdfAttachment(a)"
-                              type="button"
-                              class="shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                              :title="t('resources.attachment_pdf_preview_title')"
-                              @click.stop="openPdfPreview(a)"
-                            >
-                              {{ t('resources.attachment_pdf_preview') }}
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -4134,12 +4136,17 @@ function resolveAttachmentAbsoluteUrl(a) {
   return `${window.location.origin}${path}`
 }
 
-/** Mở PDF bằng trình xem mặc định của trình duyệt (tab mới) — không iframe/blob, tránh Vue Router. */
-function openPdfPreview(a) {
-  const resolved = resolveAttachmentAbsoluteUrl(a)
-  if (!resolved) return
-  const w = window.open(resolved, '_blank', 'noopener,noreferrer')
-  if (!w) window.location.assign(resolved)
+/** Tên file khi tải PDF (thuộc tính `download` — cùng origin). */
+function attachmentDownloadName(a) {
+  const n = String(a?.original_name || '').trim()
+  if (n) return n
+  try {
+    const path = String(a?.url || '').split('?')[0]
+    const seg = path.split('/').pop() || ''
+    return seg || 'document.pdf'
+  } catch {
+    return 'document.pdf'
+  }
 }
 
 function vehicleDocTypeLabel(type) {
