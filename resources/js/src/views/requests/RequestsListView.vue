@@ -808,7 +808,9 @@
               <th v-if="requestColOn('notes')" class="min-w-[8rem] px-3 py-3 font-semibold text-slate-700">
                 {{ t('requests_page.col_notes') }}
               </th>
-              <th class="w-28 px-3 py-3 text-right font-semibold text-slate-700">{{ t('requests_page.col_actions') }}</th>
+              <th class="w-[4.5rem] min-w-[4.5rem] px-2 py-3 text-right font-semibold text-slate-700">
+                {{ t('requests_page.col_actions') }}
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -901,43 +903,56 @@
               <td v-if="requestColOn('notes')" class="max-w-xs px-3 py-3 align-top text-xs text-slate-600">
                 <p class="line-clamp-2">{{ r.notes || '—' }}</p>
               </td>
-              <td class="px-3 py-3 align-top" :class="isTrashTab ? 'text-slate-800' : ''">
-                <div class="flex flex-wrap items-center justify-end gap-0.5 sm:gap-1">
-                  <template v-if="isTrashTab && canBulkTrash">
-                    <button
-                      type="button"
-                      class="inline-flex rounded-md p-2 text-teal-700 transition hover:bg-teal-100 hover:text-teal-950"
-                      :title="t('requests_page.bulk_restore')"
-                      @click="openBulkConfirm('restore', [r.id])"
-                    >
-                      <ArrowPathIcon class="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      class="inline-flex rounded-md p-2 text-red-700 transition hover:bg-red-100 hover:text-red-950"
-                      :title="t('requests_page.bulk_force_delete')"
-                      @click="openBulkConfirm('force_delete', [r.id])"
-                    >
-                      <ExclamationTriangleIcon class="h-5 w-5" />
-                    </button>
-                  </template>
-                  <RouterLink
-                    :to="`/requests/${r.id}`"
-                    class="inline-flex rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-                    :class="isTrashTab ? 'text-slate-600' : ''"
-                    :title="t('requests_page.view')"
+              <td class="relative px-2 py-3 align-top" :class="isTrashTab ? 'text-slate-800' : ''">
+                <details class="group/action-menu relative inline-block text-right">
+                  <summary
+                    class="inline-flex cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 [&::-webkit-details-marker]:hidden"
                   >
-                    <EyeIcon class="h-5 w-5" />
-                  </RouterLink>
-                  <RouterLink
-                    v-if="!isTrashTab && r.status === 'draft'"
-                    :to="`/requests/${r.id}`"
-                    class="inline-flex rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
-                    :title="t('requests_page.edit')"
+                    <EllipsisVerticalIcon class="h-5 w-5" aria-hidden="true" />
+                    <span class="sr-only">{{ t('requests_page.col_actions') }}</span>
+                  </summary>
+                  <div
+                    class="absolute right-0 top-[calc(100%+6px)] z-[60] min-w-[12.5rem] rounded-xl border border-slate-200/90 bg-white py-1 text-left text-sm shadow-lg ring-1 ring-slate-900/5"
+                    @click.stop
                   >
-                    <PencilSquareIcon class="h-5 w-5" />
-                  </RouterLink>
-                </div>
+                    <template v-if="isTrashTab && canBulkTrash">
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-teal-50 hover:text-teal-900"
+                        @click="closeRowActionMenuThen(() => openBulkConfirm('restore', [r.id]))"
+                      >
+                        <ArrowPathIcon class="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+                        {{ t('requests_page.bulk_restore') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-800 transition hover:bg-red-50"
+                        @click="closeRowActionMenuThen(() => openBulkConfirm('force_delete', [r.id]))"
+                      >
+                        <ExclamationTriangleIcon class="h-4 w-4 shrink-0 text-red-600" aria-hidden="true" />
+                        {{ t('requests_page.bulk_force_delete') }}
+                      </button>
+                      <div class="my-1 border-t border-slate-100" role="separator" />
+                    </template>
+                    <RouterLink
+                      :to="`/requests/${r.id}`"
+                      class="flex items-center gap-2 px-3 py-2 text-slate-700 transition hover:bg-slate-50"
+                      @click="closeRowActionMenu"
+                    >
+                      <EyeIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                      {{ t('requests_page.view') }}
+                    </RouterLink>
+                    <RouterLink
+                      v-if="!isTrashTab && r.status === 'draft'"
+                      :to="`/requests/${r.id}`"
+                      class="flex items-center gap-2 px-3 py-2 text-slate-700 transition hover:bg-slate-50"
+                      @click="closeRowActionMenu"
+                    >
+                      <PencilSquareIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                      {{ t('requests_page.edit') }}
+                    </RouterLink>
+                  </div>
+                </details>
               </td>
             </tr>
           </tbody>
@@ -1106,9 +1121,15 @@ import {
   XMarkIcon,
   AcademicCapIcon,
   CubeIcon,
+  EllipsisVerticalIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
-import { bulkRestoreRequests, bulkSoftDeleteRequests, listRequests } from '../../api/requests'
+import {
+  bulkForceDeleteRequests,
+  bulkRestoreRequests,
+  bulkSoftDeleteRequests,
+  listRequests,
+} from '../../api/requests'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { listTrips } from '../../api/trips'
 import { useAuthStore } from '../../store'
@@ -1728,6 +1749,19 @@ async function reload() {
     loading.value = false
   }
   void loadInsights()
+}
+
+function closeRowActionMenu(ev) {
+  const d = ev?.target?.closest?.('details')
+  if (d) d.open = false
+}
+
+function closeRowActionMenuThen(fn) {
+  return (ev) => {
+    const d = ev?.currentTarget?.closest?.('details')
+    if (d) d.open = false
+    fn()
+  }
 }
 
 function openBulkConfirm(kind, explicitIds = null) {
