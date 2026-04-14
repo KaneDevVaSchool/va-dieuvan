@@ -110,33 +110,66 @@ class AttachmentController extends Controller
             abort(404, 'Bản ghi đính kèm không có đường dẫn tệp (path).');
         }
 
-        $resolved = $this->resolveStoragePathForDownload($disk, (string) $rawPath);
+        $resolved = $this->resolveForAttachmentDownload($disk, (string) $rawPath);
         if (! $resolved) {
             abort(404, 'Không tìm thấy tệp trên máy chủ (storage). Kiểm tra `php artisan storage:link`, quyền thư mục, hoặc tải lại chứng từ.');
         }
 
-        [$path] = $resolved;
+        $name = $attachment->original_name ?: basename($resolved['path']);
 
-        $name = $attachment->original_name ?: basename($path);
+        if ($resolved['kind'] === 'absolute') {
+            return response()->download($resolved['path'], $name);
+        }
 
-        return Storage::disk($disk)->download($path, $name);
+        return Storage::disk($resolved['disk'])->download($resolved['path'], $name);
     }
 
     /**
-     * Chuẩn hóa path trong DB (đôi khi có tiền tố public/, storage/) và kiểm tra file thật trên disk.
-     *
-     * @return array{0: string, 1: string}|null [relativePath, absolutePath]
+     * @return array{kind: 'absolute', path: string}|array{kind: 'relative', disk: string, path: string}|null
      */
-    private function resolveStoragePathForDownload(string $disk, string $rawPath): ?array
+    private function resolveForAttachmentDownload(string $disk, string $rawPath): ?array
     {
-        foreach ($this->candidateStoragePaths($rawPath) as $rel) {
-            $abs = Storage::disk($disk)->path($rel);
-            if (is_file($abs)) {
-                return [$rel, $abs];
+        $trim = trim($rawPath);
+        if ($trim === '') {
+            return null;
+        }
+
+        if ($this->isAbsoluteFilesystemPath($trim) && is_file($trim)) {
+            return ['kind' => 'absolute', 'path' => $trim];
+        }
+
+        foreach ($this->candidateDisks($disk) as $tryDisk) {
+            foreach ($this->candidateStoragePaths($rawPath) as $rel) {
+                $abs = Storage::disk($tryDisk)->path($rel);
+                if (is_file($abs)) {
+                    return ['kind' => 'relative', 'disk' => $tryDisk, 'path' => $rel];
+                }
             }
         }
 
         return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function candidateDisks(string $disk): array
+    {
+        $disk = $disk ?: 'public';
+        if ($disk === 'public') {
+            return ['public'];
+        }
+
+        return [$disk, 'public'];
+    }
+
+    private function isAbsoluteFilesystemPath(string $path): bool
+    {
+        if (str_starts_with($path, '/')) {
+            return true;
+        }
+
+        return (bool) preg_match('/^[a-zA-Z]:[\\\\\\/]/', $path);
     }
 
     /**
@@ -149,17 +182,40 @@ class AttachmentController extends Controller
             return [];
         }
 
+        if (preg_match('#^https?://#i', $p)) {
+            $pathPart = parse_url($p, PHP_URL_PATH);
+            if (is_string($pathPart) && $pathPart !== '') {
+                $p = $pathPart;
+            }
+        }
+
         $p = ltrim($p, '/\\');
         $p = str_replace('\\', '/', $p);
 
         $out = [$p];
 
+        if (preg_match('#/(?:storage|public/storage)/(.+)$#', $p, $m)) {
+            $out[] = $m[1];
+        }
+
+        if (str_starts_with($p, 'storage/')) {
+            $after = substr($p, strlen('storage/'));
+            $out[] = $after;
+            if (str_starts_with($after, 'app/public/')) {
+                $out[] = substr($after, strlen('app/public/'));
+            }
+        }
+
+        if (str_starts_with($p, 'app/public/')) {
+            $out[] = substr($p, strlen('app/public/'));
+        }
+
         if (str_starts_with($p, 'public/')) {
             $out[] = substr($p, 7);
         }
 
-        if (str_starts_with($p, 'storage/')) {
-            $out[] = substr($p, 8);
+        if (str_starts_with($p, 'public/storage/')) {
+            $out[] = substr($p, strlen('public/storage/'));
         }
 
         return array_values(array_unique(array_filter($out)));
