@@ -30,6 +30,15 @@
           Lưu nháp
         </button>
         <button
+          v-if="hasDraftSnapshot"
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
+          title="Xóa bản nháp lưu trên trình duyệt (theo tài khoản hiện tại)"
+          @click="clearStoredDraft"
+        >
+          Xóa nháp
+        </button>
+        <button
           type="button"
           class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="headerPrimaryDisabled"
@@ -521,7 +530,7 @@
           <ul class="mt-3 space-y-2 text-xs text-slate-600">
             <li>• BR-001: tạo trước giờ xuất phát ít nhất 2 giờ (trừ gấp đã ghi lý do).</li>
             <li>• Hàng hóa: điền đủ điểm tập kết / giao để điều phối xe phù hợp.</li>
-            <li>• Lưu nháp lưu trên trình duyệt này.</li>
+            <li>• Một bản nháp / tài khoản (trình duyệt). Dòng bảng trống được gom khi lưu.</li>
           </ul>
         </div>
         <div v-if="created" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm">
@@ -562,9 +571,19 @@ import {
   toDatetimeLocalValue,
 } from '../../util/datetime'
 
-const DRAFT_KEY = 'dispatch-request-wizard-draft-v1'
+/** Một nháp / user để tránh chồng nhiều bản khi đổi tài khoản hoặc lặp khóa cũ. */
+const LEGACY_DRAFT_KEY = 'dispatch-request-wizard-draft-v1'
+
 const router = useRouter()
 const auth = useAuthStore()
+
+function draftKeyForUser(userId) {
+  return userId != null ? `${LEGACY_DRAFT_KEY}-u${userId}` : LEGACY_DRAFT_KEY
+}
+
+function currentDraftStorageKey() {
+  return draftKeyForUser(auth.user?.id)
+}
 
 const steps = [
   { id: 'type', title: 'Loại dịch vụ' },
@@ -578,6 +597,8 @@ const loading = ref(false)
 const error = ref('')
 const created = ref(null)
 const draftSavedAt = ref(null)
+/** Đã từng có nháp trong phiên (để hiện nút Xóa nháp). */
+const hasDraftSnapshot = ref(false)
 
 const targetOptions = [
   'TiH Tân Bình',
@@ -642,32 +663,71 @@ function emptyCargoRow() {
   }
 }
 
-const form = ref({
-  trip_type: 'point_to_point',
-  source_channel: 'portal',
-  requester_name: '',
-  requester_email: '',
-  requester_phone: '',
-  requester_unit: '',
-  purpose: '',
-  basis_reference: '',
-  proposed_date: '',
-  date_needed: '',
-  is_urgent: false,
-  urgent_reason: '',
-  targets: [],
-  coordinator_name: '',
-  coordinator_email: '',
-  coordinator_phone: '',
-  depart_at: suggestBr001CompliantLocal(15),
-  multi_day: false,
-  cargo_extra_notes: '',
-  need_porters: false,
-  porter_qty: '',
-  porter_cost: '',
-  interprovincial: false,
-  interprovincial_cost: '',
-})
+function createInitialForm() {
+  return {
+    trip_type: 'point_to_point',
+    source_channel: 'portal',
+    requester_name: '',
+    requester_email: '',
+    requester_phone: '',
+    requester_unit: '',
+    purpose: '',
+    basis_reference: '',
+    proposed_date: '',
+    date_needed: '',
+    is_urgent: false,
+    urgent_reason: '',
+    targets: [],
+    coordinator_name: '',
+    coordinator_email: '',
+    coordinator_phone: '',
+    depart_at: suggestBr001CompliantLocal(15),
+    multi_day: false,
+    cargo_extra_notes: '',
+    need_porters: false,
+    porter_qty: '',
+    porter_cost: '',
+    interprovincial: false,
+    interprovincial_cost: '',
+  }
+}
+
+function isPassengerRowFilled(r) {
+  if (r.pickup?.trim() || r.dropoff?.trim() || r.depart_at || r.return_at) return true
+  if (r.unit_price && String(r.unit_price).trim() !== '') return true
+  const g = String(r.guests ?? '').trim()
+  return !!(g && g !== '1')
+}
+
+function isCargoRowFilled(r) {
+  if (r.name?.trim()) return true
+  return !!(
+    r.pickup_place?.trim() ||
+    r.delivery_place?.trim() ||
+    r.pickup_at ||
+    r.delivery_at ||
+    r.pickup_contact?.trim() ||
+    r.delivery_contact?.trim() ||
+    (r.cost && String(r.cost).trim() !== '') ||
+    (r.qty && String(r.qty).trim() !== '' && String(r.qty).trim() !== '1') ||
+    r.dimensions?.trim() ||
+    r.weight?.trim() ||
+    r.item_notes?.trim() ||
+    r.transport_note?.trim()
+  )
+}
+
+function trimPassengerRowsInPlace() {
+  const kept = passengerRows.value.filter(isPassengerRowFilled)
+  passengerRows.value = kept.length ? kept : [emptyPassengerRow()]
+}
+
+function trimCargoRowsInPlace() {
+  const kept = cargoRows.value.filter(isCargoRowFilled)
+  cargoRows.value = kept.length ? kept : [emptyCargoRow()]
+}
+
+const form = ref(createInitialForm())
 
 const passengerRows = ref([emptyPassengerRow()])
 const cargoRows = ref([emptyCargoRow()])
@@ -1047,8 +1107,14 @@ async function doSubmit() {
     }
     Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
     created.value = await createDispatchRequest(payload, { idempotencyKey })
-    localStorage.removeItem(DRAFT_KEY)
+    try {
+      localStorage.removeItem(currentDraftStorageKey())
+      localStorage.removeItem(LEGACY_DRAFT_KEY)
+    } catch {
+      /* ignore */
+    }
     draftSavedAt.value = null
+    hasDraftSnapshot.value = false
   } catch (e) {
     error.value = formatApiError(e, 'Tạo yêu cầu thất bại.')
   } finally {
@@ -1057,16 +1123,33 @@ async function doSubmit() {
   }
 }
 
+function migrateLegacyDraft() {
+  if (typeof localStorage === 'undefined') return
+  const uid = auth.user?.id
+  if (uid == null) return
+  const userKey = draftKeyForUser(uid)
+  if (localStorage.getItem(userKey)) return
+  const legacy = localStorage.getItem(LEGACY_DRAFT_KEY)
+  if (!legacy) return
+  localStorage.setItem(userKey, legacy)
+  localStorage.removeItem(LEGACY_DRAFT_KEY)
+}
+
 function saveDraft() {
   try {
+    trimPassengerRowsInPlace()
+    trimCargoRowsInPlace()
+    const savedAt = Date.now()
     const data = {
       form: form.value,
       passengerRows: passengerRows.value,
       cargoRows: cargoRows.value,
       step: step.value,
+      savedAt,
     }
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(data))
-    draftSavedAt.value = Date.now()
+    localStorage.setItem(currentDraftStorageKey(), JSON.stringify(data))
+    draftSavedAt.value = savedAt
+    hasDraftSnapshot.value = true
   } catch {
     /* ignore */
   }
@@ -1074,17 +1157,45 @@ function saveDraft() {
 
 function loadDraft() {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY)
-    if (!raw) return
+    const raw = localStorage.getItem(currentDraftStorageKey())
+    if (!raw) {
+      hasDraftSnapshot.value = false
+      return
+    }
     const data = JSON.parse(raw)
     if (data.form) form.value = { ...form.value, ...data.form }
     if (Array.isArray(data.passengerRows) && data.passengerRows.length) passengerRows.value = data.passengerRows
     if (Array.isArray(data.cargoRows) && data.cargoRows.length) cargoRows.value = data.cargoRows
     if (typeof data.step === 'number') step.value = data.step
-    draftSavedAt.value = Date.now()
+    draftSavedAt.value = data.savedAt ?? Date.now()
+    trimPassengerRowsInPlace()
+    trimCargoRowsInPlace()
+    hasDraftSnapshot.value = true
+  } catch {
+    hasDraftSnapshot.value = false
+  }
+}
+
+function resetWizardForm() {
+  form.value = createInitialForm()
+  passengerRows.value = [emptyPassengerRow()]
+  cargoRows.value = [emptyCargoRow()]
+  step.value = 0
+  error.value = ''
+  created.value = null
+  draftSavedAt.value = null
+  hasDraftSnapshot.value = false
+}
+
+function clearStoredDraft() {
+  if (!confirm('Xóa bản nháp đã lưu trên trình duyệt và làm mới form?')) return
+  try {
+    localStorage.removeItem(currentDraftStorageKey())
+    localStorage.removeItem(LEGACY_DRAFT_KEY)
   } catch {
     /* ignore */
   }
+  resetWizardForm()
 }
 
 function onCancel() {
@@ -1095,16 +1206,20 @@ function onCancel() {
   router.back()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    if (!auth.user) await auth.fetchMe()
+  } catch {
+    /* router guard / 401 */
+  }
+  migrateLegacyDraft()
   loadDraft()
   if (auth.user) {
     if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
     if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
-  } else {
-    auth.fetchMe().then((u) => {
-      if (u && !form.value.requester_name?.trim()) form.value.requester_name = u.name || ''
-      if (u && !form.value.requester_email?.trim()) form.value.requester_email = u.email || ''
-    })
+  }
+  if (!hasDraftSnapshot.value && typeof localStorage !== 'undefined') {
+    hasDraftSnapshot.value = !!localStorage.getItem(currentDraftStorageKey())
   }
 })
 
