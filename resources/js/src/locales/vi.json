@@ -186,7 +186,7 @@
         "provider_form_ph_name": "Ví dụ: Công ty TNHH ABC",
         "provider_form_ph_contact_name": "Họ tên người liên hệ",
         "provider_form_ph_contact_phone": "Số điện thoại",
-        "provider_form_ph_contact_email": "email@domain.com",
+        "provider_form_ph_contact_email": "email{'@'}domain.com",
         "provider_form_ph_notes": "Ghi chú nội bộ, yêu cầu đặc biệt…",
         "provider_form_ph_contract": "Số hoặc ký hiệu hợp đồng",
         "filter_contract": "Hợp đồng",

@@ -186,7 +186,7 @@
     "provider_form_ph_name": "e.g. ABC Co., Ltd.",
     "provider_form_ph_contact_name": "Contact person name",
     "provider_form_ph_contact_phone": "Phone number",
-    "provider_form_ph_contact_email": "email@domain.com",
+    "provider_form_ph_contact_email": "email{'@'}domain.com",
     "provider_form_ph_notes": "Internal notes, special requirements…",
     "provider_form_ph_contract": "Contract number or reference",
     "filter_contract": "Contract",
