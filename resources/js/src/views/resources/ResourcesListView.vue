@@ -1852,6 +1852,7 @@
                         type="text"
                         required
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_plate')"
                       />
                     </label>
                     <label class="block sm:col-span-2">
@@ -1860,6 +1861,7 @@
                         v-model="vehicleForm.type"
                         type="text"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_type')"
                       />
                     </label>
                     <label class="block">
@@ -1869,6 +1871,7 @@
                         type="number"
                         min="0"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_seats')"
                       />
                     </label>
                     <label class="block">
@@ -1878,6 +1881,7 @@
                         type="number"
                         min="0"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_payload')"
                       />
                     </label>
                     <label class="block sm:col-span-2">
@@ -1899,6 +1903,7 @@
                         type="number"
                         min="0"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_odometer')"
                       />
                     </label>
                   </div>
@@ -1945,6 +1950,7 @@
                         v-model="vehicleForm.owner_name"
                         type="text"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_owner')"
                       />
                     </label>
                     <div class="grid gap-4 sm:grid-cols-3 lg:col-span-2">
@@ -1956,6 +1962,7 @@
                           min="1900"
                           max="2100"
                           class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          :placeholder="t('resources.vehicle_ph_year')"
                         />
                       </label>
                       <label class="block">
@@ -1974,6 +1981,7 @@
                           min="1900"
                           max="2100"
                           class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          :placeholder="t('resources.vehicle_ph_usage_year')"
                         />
                       </label>
                     </div>
@@ -1983,6 +1991,7 @@
                         v-model="vehicleForm.frame_engine_number"
                         rows="3"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_frame')"
                       />
                     </label>
                     <label class="block">
@@ -1991,6 +2000,7 @@
                         v-model="vehicleForm.insurance_provider"
                         type="text"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_insurer')"
                       />
                     </label>
                     <label class="block">
@@ -1999,6 +2009,7 @@
                         v-model="vehicleForm.registration_cycle_note"
                         type="text"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_reg_cycle')"
                       />
                     </label>
                     <label class="block lg:col-span-2">
@@ -2007,6 +2018,7 @@
                         v-model="vehicleForm.insurance_policy_note"
                         rows="2"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_insurance_policy')"
                       />
                     </label>
                   </div>
@@ -2031,6 +2043,7 @@
                           v-model="vehicleForm.caretaker_name"
                           type="text"
                           class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          :placeholder="t('resources.vehicle_ph_caretaker')"
                         />
                       </label>
                       <label class="block">
@@ -2039,6 +2052,7 @@
                           v-model="vehicleForm.caretaker_phone"
                           type="text"
                           class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          :placeholder="t('resources.vehicle_ph_caretaker_phone')"
                         />
                       </label>
                     </div>
@@ -2048,6 +2062,7 @@
                         v-model="vehicleForm.maintenance_schedule_note"
                         rows="2"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_maint_schedule')"
                       />
                     </label>
                     <label class="block lg:col-span-2">
@@ -2056,6 +2071,22 @@
                         v-model="vehicleForm.notes"
                         rows="3"
                         class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        :placeholder="t('resources.vehicle_ph_notes')"
+                      />
+                    </label>
+                    <label class="block lg:col-span-2">
+                      <span class="text-xs font-medium text-slate-600 dark:text-slate-400">{{
+                        t('resources.vehicle_form_attachment_label')
+                      }}</span>
+                      <p class="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                        {{ t('resources.vehicle_form_attachment_hint') }}
+                      </p>
+                      <input
+                        ref="vehicleFormAuxInputRef"
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/*"
+                        class="mt-2 block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200 dark:text-slate-300 dark:file:bg-slate-700 dark:file:text-slate-200"
+                        @change="onVehicleAuxFileChange"
                       />
                     </label>
                   </div>
@@ -2159,17 +2190,18 @@
         class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:items-center sm:p-6"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="provider-modal-title"
         @click.self="providerModalOpen = false"
       >
         <div
-          class="max-h-[min(92vh,880px)] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(92vh,880px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div
             class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/30 px-5 py-4 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20"
           >
             <div class="min-w-0">
-              <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
+              <h2 id="provider-modal-title" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                 {{ providerForm.id ? t('resources.provider_form_title_edit') : t('resources.provider_form_title_add') }}
               </h2>
               <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -2185,7 +2217,7 @@
               <XMarkIcon class="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
-          <form class="flex min-h-0 max-h-[min(78vh,720px)] flex-col" @submit.prevent="submitProviderForm">
+          <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitProviderForm">
             <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               <span>{{ t('resources.provider_form_name') }} <span class="text-rose-600" aria-hidden="true">*</span></span>
@@ -2277,7 +2309,7 @@
                   {{ t('resources.provider_form_add_row') }}
                 </button>
               </div>
-              <div v-for="(row, idx) in providerForm.services" :key="idx" class="mb-2 grid gap-2 rounded-lg border border-slate-100 p-2 dark:border-slate-700">
+              <div v-for="(row, idx) in providerForm.services" :key="row._key" class="mb-2 grid gap-2 rounded-lg border border-slate-100 p-2 dark:border-slate-700">
                 <div class="flex flex-wrap items-center gap-2">
                   <select v-model="row.kind" class="rounded border border-slate-200 py-1 pl-2 pr-6 text-xs dark:border-slate-600 dark:bg-slate-800">
                     <option value="solution">{{ t('resources.provider_kind_solution') }}</option>
@@ -3228,13 +3260,25 @@ function emptyVehicleForm() {
 }
 
 const vehicleForm = ref(emptyVehicleForm())
+const vehicleFormAuxFile = ref(null)
+const vehicleFormAuxInputRef = ref(null)
+
+function onVehicleAuxFileChange(ev) {
+  const file = ev?.target?.files?.[0]
+  vehicleFormAuxFile.value = file || null
+}
 
 const providerModalOpen = ref(false)
 const providerSaving = ref(false)
 const providerFormError = ref('')
 
 function emptyProviderServiceRow() {
-  return { kind: 'solution', name: '', note: '' }
+  return {
+    _key: `svc-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    kind: 'solution',
+    name: '',
+    note: '',
+  }
 }
 
 function emptyProviderForm() {
@@ -3975,7 +4019,8 @@ function removeProviderServiceRow(idx) {
 function openProviderForm(s) {
   providerFormError.value = ''
   if (s) {
-    const rows = (s.servicesList && s.servicesList.length ? s.servicesList : [emptyProviderServiceRow()]).map((r) => ({
+    const rows = (s.servicesList && s.servicesList.length ? s.servicesList : [emptyProviderServiceRow()]).map((r, i) => ({
+      _key: `svc-edit-${i}-${r.kind}-${String(r.name || '').slice(0, 32)}`,
       kind: r.kind === 'service' ? 'service' : 'solution',
       name: r.name || '',
       note: r.note || '',
@@ -4119,8 +4164,17 @@ watch(assignModalOpen, (open) => {
   }
 })
 
+watch(vehicleModalOpen, (open) => {
+  if (!open) {
+    vehicleFormAuxFile.value = null
+    if (vehicleFormAuxInputRef.value) vehicleFormAuxInputRef.value.value = ''
+  }
+})
+
 function openVehicleForm(v) {
   vehicleFormError.value = ''
+  vehicleFormAuxFile.value = null
+  if (vehicleFormAuxInputRef.value) vehicleFormAuxInputRef.value.value = ''
   if (v) {
     vehicleForm.value = {
       id: v.id,
@@ -4506,10 +4560,25 @@ async function submitVehicleForm() {
       caretaker_phone: strOrNull(f.caretaker_phone),
       notes: strOrNull(f.notes),
     }
+    let saved
     if (f.id) {
-      await updateVehicle(f.id, payload)
+      saved = await updateVehicle(f.id, payload)
     } else {
-      await createVehicle(payload)
+      saved = await createVehicle(payload)
+    }
+    const vehicleId = saved?.id ?? f.id
+    if (vehicleFormAuxFile.value && vehicleId) {
+      try {
+        const fd = new FormData()
+        fd.append('doc_type', 'other')
+        fd.append('title', t('resources.vehicle_form_attachment_doc_title'))
+        fd.append('file', vehicleFormAuxFile.value)
+        await createVehicleComplianceDocument(vehicleId, fd)
+      } catch (docErr) {
+        showAppErrorFromApi(docErr, t('resources.vehicle_form_attachment_upload_failed'))
+      }
+      vehicleFormAuxFile.value = null
+      if (vehicleFormAuxInputRef.value) vehicleFormAuxInputRef.value.value = ''
     }
     vehicleModalOpen.value = false
     await loadAll()

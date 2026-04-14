@@ -11,6 +11,19 @@ class StoreTransportProviderRequest extends ApiFormRequest
         return $this->allowAnyOf(['resource.provider.manage']);
     }
 
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+        foreach (['contact_name', 'contact_phone', 'contact_email', 'notes', 'contract_number'] as $k) {
+            if ($this->has($k) && $this->input($k) === '') {
+                $merge[$k] = null;
+            }
+        }
+        if ($merge !== []) {
+            $this->merge($merge);
+        }
+    }
+
     public function rules(): array
     {
         return [
