@@ -48,10 +48,8 @@ function buildRequestUrlForErrorDetails(cfg, err) {
   }
 
   if (!cfg || typeof cfg !== 'object') {
-    if (typeof window !== 'undefined') {
-      return `${window.location.origin}${DEFAULT_API_BASE}`
-    }
-    return DEFAULT_API_BASE
+    // Không có axios config (ví dụ `throw new Error(...)` trong fetch) — không gán giả mặc định /api (gây hiểu nhầm GET /api).
+    return '—'
   }
 
   const baseRaw =
@@ -274,7 +272,8 @@ export function buildApiErrorPresentation(err, fallback = 'Đã xảy ra lỗi.'
     networkHint,
     axiosCode: axiosCode || null,
     axiosMessage: axiosMessage || null,
-    configMissing: !cfg,
+    // Chỉ khi không có cả config axios và không có message (lỗi “trống”) mới gợi ý kiểm tra /api.
+    configMissing: Boolean(!cfg && !(typeof err?.message === 'string' && err.message.trim())),
   }
 
   return { title, friendly, details }

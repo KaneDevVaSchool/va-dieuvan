@@ -302,6 +302,8 @@
         "vehicle_compliance_attachments_hint": "Bổ sung đăng ký, BH, kiểm định bản scan… (các ngày hết hạn tổng hợp ở khối BH/ĐK phía trên).",
         "attachment_download_pdf_title": "Tải tệp PDF về máy",
         "attachment_download_failed": "Không tải được tệp. Thử lại sau.",
+        "attachment_download_html_title": "Phản hồi không phải file PDF",
+        "attachment_download_html_hint": "Địa chỉ tệp trả về trang HTML (thường là đăng nhập, 404 hoặc SPA) thay vì PDF. Đã thử mở tab mới; nếu không thấy, kiểm tra chặn popup, symlink storage, hoặc APP_URL / reverse proxy.",
         "vehicle_compliance_quick_add": "Thêm nhanh",
         "vehicle_doc_modal_add": "Thêm giấy tờ xe",
         "vehicle_doc_modal_edit": "Sửa giấy tờ xe",

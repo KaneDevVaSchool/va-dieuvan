@@ -3029,7 +3029,7 @@ import {
   updateVehicleComplianceDocument,
 } from '../../api/operational'
 import { formatApiError, TOKEN_KEY } from '../../api/http'
-import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
@@ -4259,7 +4259,13 @@ async function downloadVehiclePdfAttachment(doc, a, aIdx) {
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const contentType = (res.headers.get('content-type') || '').toLowerCase()
-    if (contentType.includes('text/html')) throw new Error('unexpected_html')
+    if (contentType.includes('text/html')) {
+      const w = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!w) {
+        showAppInfo(t('resources.attachment_download_html_hint'), t('resources.attachment_download_html_title'))
+      }
+      return
+    }
     const blob = await res.blob()
     const blobUrl = URL.createObjectURL(blob)
     const link = document.createElement('a')
