@@ -380,166 +380,272 @@
       </div>
     </Card>
 
-    <Modal :open="passengerEditOpen" wide title="Sửa giá — xe hành khách" @close="passengerEditOpen = false">
-      <form class="space-y-3" @submit.prevent="savePassengerEdit">
-        <label class="block text-xs font-medium text-slate-700">
-          Gói / tuyến
-          <input
-            v-model="passengerForm.package_label"
-            type="text"
-            class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
-            required
-          />
-        </label>
-        <label class="block text-xs font-medium text-slate-700">
-          Thứ tự hiển thị
-          <input
-            v-model.number="passengerForm.sort_order"
-            type="number"
-            min="0"
-            class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
-          />
-        </label>
-        <div class="grid grid-cols-2 gap-2 md:grid-cols-3">
-          <label v-for="f in passengerMoneyFields" :key="f.key" class="block text-[11px] font-medium text-slate-600">
-            {{ f.label }}
+    <Modal
+      :open="passengerEditOpen"
+      wide
+      title="Sửa giá — xe hành khách"
+      description="Các trường có dấu * là bắt buộc. Giá để trống nghĩa là không áp dụng (hiển thị — trên bảng)."
+      @close="passengerEditOpen = false"
+    >
+      <form class="space-y-5" @submit.prevent="savePassengerEdit">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label :class="labelClass">
+            <span>Gói / tuyến <span class="text-rose-600" aria-hidden="true">*</span></span>
             <input
-              v-model="passengerForm[f.key]"
+              v-model="passengerForm.package_label"
+              type="text"
+              :class="fieldInputClass"
+              placeholder="Ví dụ: TPHCM/4h/50km hoặc TPHCM - Cơ sở Vũng Tàu (1 ngày)"
+              required
+              autocomplete="off"
+            />
+          </label>
+          <label :class="labelClass">
+            <span>Thứ tự hiển thị</span>
+            <input
+              v-model.number="passengerForm.sort_order"
               type="number"
               min="0"
-              step="1000"
-              class="mt-0.5 w-full rounded border border-slate-200 px-2 py-1 text-sm tabular-nums"
+              :class="fieldInputClass"
+              placeholder="Số nhỏ hiển thị trước (ví dụ: 10, 20)"
             />
           </label>
         </div>
-        <p class="text-[11px] text-slate-500">Để trống cột giá = không áp dụng (—). Mỗi lần lưu hệ thống ghi nhận bản snapshot trước đó vào lịch sử.</p>
-        <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
-          <button type="button" class="rounded border border-slate-200 px-3 py-1.5 text-sm" @click="passengerEditOpen = false">
+        <div>
+          <p class="mb-2 text-xs font-medium text-slate-600">Đơn giá theo loại xe (VNĐ)</p>
+          <p class="mb-3 text-[11px] leading-relaxed text-slate-500">
+            Nhập số nguyên (đồng). Để trống nếu không áp dụng cho gói này.
+          </p>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <label v-for="f in passengerMoneyFields" :key="f.key" :class="labelClass">
+              <span>{{ f.label }}</span>
+              <input
+                v-model="passengerForm[f.key]"
+                type="number"
+                min="0"
+                step="1000"
+                :class="fieldInputClass"
+                :placeholder="`Ví dụ: 1296000 hoặc để trống`"
+                inputmode="numeric"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            @click="passengerEditOpen = false"
+          >
             Huỷ
           </button>
           <button
             type="submit"
-            class="rounded bg-va-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-va-900 disabled:opacity-50"
+            class="rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-va-900 disabled:opacity-50"
             :disabled="savePassengerLoading"
           >
-            {{ savePassengerLoading ? 'Đang lưu…' : 'Lưu' }}
+            {{ savePassengerLoading ? 'Đang lưu…' : 'Lưu thay đổi' }}
           </button>
         </div>
       </form>
     </Modal>
 
-    <Modal :open="cargoEditOpen" wide title="Sửa giá — hàng hóa" @close="cargoEditOpen = false">
-      <form class="space-y-3" @submit.prevent="saveCargoEdit">
-        <label class="block text-xs font-medium text-slate-700">
-          Lộ trình
-          <input
-            v-model="cargoForm.route_label"
-            type="text"
-            class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
-            required
-          />
-        </label>
-        <label class="block text-xs font-medium text-slate-700">
-          Khoảng cách (km, tuỳ chọn)
-          <input
-            v-model="cargoForm.distance_km"
-            type="text"
-            class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
-            placeholder="Để trống nếu không cố định"
-          />
-        </label>
-        <label class="block text-xs font-medium text-slate-700">
-          Thứ tự hiển thị
-          <input
-            v-model.number="cargoForm.sort_order"
-            type="number"
-            min="0"
-            class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
-          />
-        </label>
-        <div class="grid grid-cols-2 gap-2 md:grid-cols-3">
-          <label v-for="f in cargoMoneyFields" :key="f.key" class="block text-[11px] font-medium text-slate-600">
-            {{ f.label }}
+    <Modal
+      :open="cargoEditOpen"
+      wide
+      title="Sửa giá — hàng hóa"
+      description="Các trường có dấu * là bắt buộc. Khoảng cách có thể để trống nếu lộ trình không gắn số km cố định."
+      @close="cargoEditOpen = false"
+    >
+      <form class="space-y-5" @submit.prevent="saveCargoEdit">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="sm:col-span-2" :class="labelClass">
+            <span>Lộ trình <span class="text-rose-600" aria-hidden="true">*</span></span>
             <input
-              v-model="cargoForm[f.key]"
+              v-model="cargoForm.route_label"
+              type="text"
+              :class="fieldInputClass"
+              placeholder="Ví dụ: VA Tân Bình - VA Bình Thới (3 km)"
+              required
+              autocomplete="off"
+            />
+          </label>
+          <label :class="labelClass">
+            <span>Khoảng cách (km)</span>
+            <input
+              v-model="cargoForm.distance_km"
+              type="text"
+              :class="fieldInputClass"
+              placeholder="Ví dụ: 6,5 hoặc để trống"
+              inputmode="decimal"
+            />
+          </label>
+          <label :class="labelClass">
+            <span>Thứ tự hiển thị</span>
+            <input
+              v-model.number="cargoForm.sort_order"
               type="number"
               min="0"
-              step="1000"
-              class="mt-0.5 w-full rounded border border-slate-200 px-2 py-1 text-sm tabular-nums"
+              :class="fieldInputClass"
+              placeholder="Ví dụ: 10"
             />
           </label>
         </div>
-        <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
-          <button type="button" class="rounded border border-slate-200 px-3 py-1.5 text-sm" @click="cargoEditOpen = false">
+        <div>
+          <p class="mb-2 text-xs font-medium text-slate-600">Đơn giá một chiều (VNĐ)</p>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+            <label v-for="f in cargoMoneyFields" :key="f.key" :class="labelClass">
+              <span>{{ f.label }}</span>
+              <input
+                v-model="cargoForm[f.key]"
+                type="number"
+                min="0"
+                step="1000"
+                :class="fieldInputClass"
+                placeholder="Ví dụ: 30000"
+                inputmode="numeric"
+              />
+            </label>
+          </div>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            @click="cargoEditOpen = false"
+          >
             Huỷ
           </button>
           <button
             type="submit"
-            class="rounded bg-indigo-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-900 disabled:opacity-50"
+            class="rounded-lg bg-indigo-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-900 disabled:opacity-50"
             :disabled="saveCargoLoading"
           >
-            {{ saveCargoLoading ? 'Đang lưu…' : 'Lưu' }}
+            {{ saveCargoLoading ? 'Đang lưu…' : 'Lưu thay đổi' }}
           </button>
         </div>
       </form>
     </Modal>
 
-    <Modal :open="noteEditOpen" title="Sửa ghi chú" @close="noteEditOpen = false">
-      <form class="space-y-3" @submit.prevent="saveNoteEdit">
-        <label class="block text-xs font-medium text-slate-700">
-          Tiêu đề
-          <input v-model="noteForm.title" type="text" class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm" />
+    <Modal
+      :open="noteEditOpen"
+      title="Sửa ghi chú"
+      description="Nội dung có dấu * là bắt buộc. Tiêu đề có thể để trống."
+      @close="noteEditOpen = false"
+    >
+      <form class="space-y-4" @submit.prevent="saveNoteEdit">
+        <label :class="labelClass">
+          <span>Tiêu đề</span>
+          <input
+            v-model="noteForm.title"
+            type="text"
+            :class="fieldInputClass"
+            placeholder="Tóm tắt ngắn (tuỳ chọn)"
+            autocomplete="off"
+          />
         </label>
-        <label class="block text-xs font-medium text-slate-700">
-          Nội dung
+        <label :class="labelClass">
+          <span>Nội dung <span class="text-rose-600" aria-hidden="true">*</span></span>
           <textarea
             v-model="noteForm.body"
             rows="8"
-            class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
+            :class="fieldInputClass"
+            placeholder="Nhập đầy đủ điều khoản hoặc ghi chú hiển thị cho người dùng…"
             required
           />
         </label>
-        <label class="block text-xs font-medium text-slate-700">
-          Thứ tự
+        <label :class="labelClass">
+          <span>Thứ tự hiển thị</span>
           <input
             v-model.number="noteForm.sort_order"
             type="number"
             min="0"
-            class="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
+            :class="fieldInputClass"
+            placeholder="Ví dụ: 10"
           />
         </label>
-        <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
-          <button type="button" class="rounded border border-slate-200 px-3 py-1.5 text-sm" @click="noteEditOpen = false">
+        <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            @click="noteEditOpen = false"
+          >
             Huỷ
           </button>
           <button
             type="submit"
-            class="rounded bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-50"
+            class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 disabled:opacity-50"
             :disabled="saveNoteLoading"
           >
-            {{ saveNoteLoading ? 'Đang lưu…' : 'Lưu' }}
+            {{ saveNoteLoading ? 'Đang lưu…' : 'Lưu thay đổi' }}
           </button>
         </div>
       </form>
     </Modal>
 
-    <Modal :open="historyOpen" wide :title="historyTitle" @close="historyOpen = false">
-      <div v-if="historyLoading" class="py-8 text-center text-sm text-slate-500">Đang tải lịch sử…</div>
-      <div v-else class="space-y-3">
-        <p v-if="!historyItems.length" class="text-sm text-slate-600">Chưa có phiên chỉnh sửa nào được lưu (snapshot trước mỗi lần cập nhật).</p>
-        <div
-          v-for="rev in historyItems"
-          :key="rev.id"
-          class="rounded-lg border border-slate-200 bg-slate-50/50 p-3 text-sm shadow-sm"
-        >
-          <div class="flex flex-wrap items-baseline justify-between gap-2 text-xs text-slate-600">
-            <span class="font-medium text-slate-800">{{ formatHistoryDate(rev.created_at) }}</span>
-            <span>{{ rev.user?.name ?? '—' }} · {{ rev.user?.email ?? '' }}</span>
-          </div>
-          <pre
-            class="mt-2 max-h-56 overflow-auto rounded border border-slate-200 bg-white p-2 text-[11px] leading-relaxed text-slate-800"
-            >{{ formatHistorySnapshot(rev.snapshot) }}</pre
+    <Modal
+      :open="historyOpen"
+      wide
+      :title="historyTitle"
+      description="Mỗi phiên bản là bản dữ liệu đã lưu trước một lần chỉnh sửa (để đối chiếu và kiểm tra). Chọn tab để xem chi tiết."
+      @close="historyOpen = false"
+    >
+      <div v-if="historyLoading" class="flex flex-col items-center justify-center gap-2 py-12 text-sm text-slate-500">
+        <span
+          class="inline-block size-6 animate-spin rounded-full border-2 border-slate-200 border-t-va-700"
+          aria-hidden="true"
+        />
+        Đang tải lịch sử…
+      </div>
+      <div v-else-if="!sortedHistory.length" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-600">
+        Chưa có phiên bản lưu trữ nào. Sau lần chỉnh sửa đầu tiên, bạn sẽ thấy lịch sử tại đây.
+      </div>
+      <div v-else class="flex flex-col gap-4">
+        <div class="-mx-1 flex gap-1 overflow-x-auto pb-1">
+          <button
+            v-for="(rev, idx) in sortedHistory"
+            :key="rev.id"
+            type="button"
+            class="shrink-0 rounded-lg border px-3 py-2 text-xs font-medium transition md:text-sm"
+            :class="
+              historyTabIndex === idx
+                ? 'border-va-700 bg-va-800 text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+            "
+            @click="historyTabIndex = idx"
           >
+            Phiên bản {{ idx + 1 }}
+            <span v-if="idx === sortedHistory.length - 1" class="ml-1 opacity-90">· gần nhất</span>
+          </button>
+        </div>
+        <div v-if="selectedHistoryRevision" class="rounded-xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/80 p-4 shadow-sm">
+          <div class="mb-3 flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Thời điểm lưu bản này</p>
+              <p class="text-sm font-semibold text-slate-900">{{ formatHistoryDate(selectedHistoryRevision.created_at) }}</p>
+            </div>
+            <div class="text-right text-sm text-slate-600">
+              <span class="block text-xs text-slate-500">Người Đã Lưu</span>
+              <span class="font-medium text-slate-800">{{ selectedHistoryRevision.user?.name ?? '—' }}</span>
+              <span v-if="selectedHistoryRevision.user?.email" class="block text-xs text-slate-500">{{
+                selectedHistoryRevision.user.email
+              }}</span>
+            </div>
+          </div>
+          <p class="mb-4 text-xs leading-relaxed text-slate-500">
+            Nội dung dưới đây là toàn bộ giá trị tại thời điểm trước khi có thay đổi tiếp theo (dùng để đối chiếu).
+          </p>
+          <dl class="space-y-3">
+            <div v-for="(row, rIdx) in auditRowsForSnapshot(selectedHistoryRevision.snapshot)" :key="rIdx">
+              <dt class="text-xs font-medium text-slate-500">{{ row.label }}</dt>
+              <dd
+                class="mt-0.5 text-sm text-slate-900"
+                :class="row.multiline ? 'whitespace-pre-wrap leading-relaxed' : ''"
+              >
+                {{ row.value }}
+              </dd>
+            </div>
+          </dl>
         </div>
       </div>
     </Modal>
@@ -563,6 +669,10 @@ import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composa
 
 const auth = useAuthStore()
 const canEdit = computed(() => auth.hasPermission('reference_pricing.manage'))
+
+const labelClass = 'block text-xs font-medium text-slate-700'
+const fieldInputClass =
+  'mt-1.5 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-va-600 focus:outline-none focus:ring-2 focus:ring-va-600/15'
 
 const loading = ref(true)
 const error = ref('')
@@ -630,6 +740,15 @@ const historyOpen = ref(false)
 const historyLoading = ref(false)
 const historyTitle = ref('Lịch sử thay đổi')
 const historyItems = ref([])
+const historyEntityType = ref('passenger_fare_rate')
+const historyTabIndex = ref(0)
+
+const sortedHistory = computed(() => {
+  const items = [...(historyItems.value ?? [])]
+  return items.sort((a, b) => a.id - b.id)
+})
+
+const selectedHistoryRevision = computed(() => sortedHistory.value[historyTabIndex.value] ?? null)
 
 /** Bảng huỷ xe — nội dung chuẩn theo quy định nội bộ (đồng bộ với ReferencePricingSeeder). */
 const cancellationRows = [
@@ -720,13 +839,59 @@ function formatHistoryDate(iso) {
   }
 }
 
-function formatHistorySnapshot(snap) {
-  if (snap == null) return '—'
-  try {
-    return JSON.stringify(snap, null, 2)
-  } catch {
-    return String(snap)
+function fmtAuditMoney(v) {
+  if (v == null || v === '') return '— (không áp dụng)'
+  return formatVnd(v)
+}
+
+function buildPassengerAuditRows(snap) {
+  const rows = [
+    { label: 'Gói / tuyến', value: snap.package_label ?? '—' },
+    { label: 'Mã gói (hệ thống)', value: snap.package_code ?? '—' },
+    { label: 'Thứ tự hiển thị', value: snap.sort_order != null ? String(snap.sort_order) : '—' },
+  ]
+  for (const f of passengerMoneyFields) {
+    rows.push({ label: `${f.label} (VNĐ)`, value: fmtAuditMoney(snap[f.key]) })
   }
+  return rows
+}
+
+function buildCargoAuditRows(snap) {
+  const dk = snap.distance_km
+  const rows = [
+    { label: 'Lộ trình', value: snap.route_label ?? '—' },
+    { label: 'Mã tuyến (hệ thống)', value: snap.route_code ?? '—' },
+    {
+      label: 'Khoảng cách',
+      value:
+        dk == null || dk === ''
+          ? '— (không gắn km cố định)'
+          : `${formatDistance(Number(dk))} km`,
+    },
+    { label: 'Thứ tự hiển thị', value: snap.sort_order != null ? String(snap.sort_order) : '—' },
+  ]
+  for (const f of cargoMoneyFields) {
+    rows.push({ label: `${f.label} (VNĐ)`, value: fmtAuditMoney(snap[f.key]) })
+  }
+  return rows
+}
+
+function buildNoteAuditRows(snap) {
+  return [
+    { label: 'Loại ghi chú', value: labelPricingNoteCategory(snap.category) ?? '—' },
+    { label: 'Tiêu đề', value: snap.title?.trim() ? snap.title : '—' },
+    { label: 'Thứ tự hiển thị', value: snap.sort_order != null ? String(snap.sort_order) : '—' },
+    { label: 'Nội dung', value: snap.body ?? '—', multiline: true },
+  ]
+}
+
+function auditRowsForSnapshot(snapshot) {
+  const t = historyEntityType.value
+  if (!snapshot) return []
+  if (t === 'passenger_fare_rate') return buildPassengerAuditRows(snapshot)
+  if (t === 'cargo_fare_rate') return buildCargoAuditRows(snapshot)
+  if (t === 'pricing_note') return buildNoteAuditRows(snapshot)
+  return []
 }
 
 function openPassengerEdit(row) {
@@ -845,12 +1010,17 @@ async function saveNoteEdit() {
 }
 
 async function openHistory(type, id, label) {
+  historyEntityType.value = type
   historyTitle.value = label ? `Lịch sử — ${label}` : 'Lịch sử thay đổi'
   historyItems.value = []
+  historyTabIndex.value = 0
   historyOpen.value = true
   historyLoading.value = true
   try {
-    historyItems.value = await getReferencePricingRevisions(type, id)
+    const items = await getReferencePricingRevisions(type, id)
+    historyItems.value = items
+    const sorted = [...items].sort((a, b) => a.id - b.id)
+    historyTabIndex.value = sorted.length ? sorted.length - 1 : 0
   } catch (e) {
     showAppErrorFromApi(e)
     historyOpen.value = false
