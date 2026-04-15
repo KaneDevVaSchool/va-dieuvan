@@ -73,7 +73,8 @@ class Bm02P2pGoogleSheetHtmlRenderer
     private function injectPrintGridFallback(string $html): string
     {
         $fallback = '<style type="text/css" id="bm02-print-grid-fallback">'
-            .'.ritz.grid-container .waffle{border-collapse:collapse;table-layout:fixed;}'
+            .'.ritz.grid-container{width:100%;max-width:100%;}'
+            .'.ritz.grid-container .waffle{width:100%;border-collapse:collapse;table-layout:fixed;}'
             .'.ritz.grid-container .waffle td,.ritz.grid-container .waffle th{'
             .'border:1px solid #bfbfbf!important;'
             .'}'
