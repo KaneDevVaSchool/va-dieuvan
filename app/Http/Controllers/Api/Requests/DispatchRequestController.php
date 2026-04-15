@@ -120,6 +120,7 @@ class DispatchRequestController extends Controller
             'filename_xlsx' => 'BM02-denghi-dieuvan-preview.xlsx',
             'pdf_base64' => base64_encode($bin['pdf']),
             'excel_base64' => base64_encode($bin['xlsx']),
+            'excel_checkbox_cells' => $bin['excel_checkbox_cells'] ?? [],
         ]);
     }
 

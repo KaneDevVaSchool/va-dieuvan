@@ -547,8 +547,17 @@
                   </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  Phiếu BM.02 được xuất trực tiếp thành file. Dùng <span class="font-medium">Tải Excel</span> để tải file về máy.
+                  Xem trước dạng <span class="font-medium">sheet như Google Sheet</span> bên dưới. Dùng
+                  <span class="font-medium">Tải Excel</span> để tải file gốc.
                 </p>
+                <div v-if="bm02SheetPreviewHtml" class="mt-4 space-y-1.5">
+                  <div class="text-xs font-medium text-slate-700">Xem trước dạng sheet (Excel)</div>
+                  <div class="bm02-excel-sheet-preview overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                    <div class="bm02-excel-sheet-preview__scroll dw-table-wrap max-h-[min(62vh,520px)] min-h-[240px]">
+                      <div class="bm02-excel-sheet-preview__html" v-html="bm02SheetPreviewHtml" />
+                    </div>
+                  </div>
+                </div>
               </template>
             </div>
           </div>
@@ -795,6 +804,7 @@ const {
   bm02Loading,
   bm02PreviewError,
   bm02ExcelBase64,
+  bm02SheetPreviewHtml,
   created,
   hasDraftSnapshot,
   clearDraftModalOpen,

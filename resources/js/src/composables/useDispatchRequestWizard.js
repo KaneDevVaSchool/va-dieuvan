@@ -14,6 +14,7 @@ import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { newIdempotencyKey } from '../util/idempotency'
 import { toDatetimeLocalValue } from '../util/datetime'
+import { buildBm02ExcelSheetPreviewHtml } from '../util/bm02ExcelPreview'
 import {
   LEGACY_DRAFT_KEY,
   WIZARD_STEPS,
@@ -146,6 +147,7 @@ export function useDispatchRequestWizard() {
   const bm02PdfUrl = ref(null)
   const bm02PdfBase64 = ref('')
   const bm02ExcelBase64 = ref('')
+  const bm02SheetPreviewHtml = ref('')
   const bm02FilenamePdf = ref('BM02-denghi-dieuvan-preview.pdf')
   const bm02FilenameXlsx = ref('BM02-denghi-dieuvan-preview.xlsx')
   const created = ref(null)
@@ -862,6 +864,7 @@ export function useDispatchRequestWizard() {
       }
       bm02PdfUrl.value = null
     }
+    bm02SheetPreviewHtml.value = ''
   }
 
   function base64ToBlob(base64, mime) {
@@ -887,7 +890,9 @@ export function useDispatchRequestWizard() {
     bm02ExcelBase64.value = ''
     bm02Loading.value = true
     const prevPdfUrl = bm02PdfUrl.value
+    const prevSheetHtml = bm02SheetPreviewHtml.value
     bm02PdfUrl.value = null
+    bm02SheetPreviewHtml.value = ''
     try {
       const data = await previewBm02DispatchForm(buildWizardSnapshot())
       bm02PdfBase64.value = data.pdf_base64 ?? ''
@@ -896,6 +901,12 @@ export function useDispatchRequestWizard() {
       if (data.filename_xlsx) bm02FilenameXlsx.value = data.filename_xlsx
       if (data.pdf_base64) {
         bm02PdfUrl.value = URL.createObjectURL(base64ToBlob(data.pdf_base64, 'application/pdf'))
+      }
+      if (bm02ExcelBase64.value) {
+        bm02SheetPreviewHtml.value = buildBm02ExcelSheetPreviewHtml(
+          bm02ExcelBase64.value,
+          data.excel_checkbox_cells,
+        )
       }
       if (prevPdfUrl) {
         try {
@@ -906,6 +917,7 @@ export function useDispatchRequestWizard() {
       }
     } catch (e) {
       bm02PdfUrl.value = prevPdfUrl
+      bm02SheetPreviewHtml.value = prevSheetHtml
       bm02PreviewError.value = formatApiError(e, 'Không tạo được bản xem trước BM.02.')
     } finally {
       bm02Loading.value = false
@@ -1304,6 +1316,7 @@ export function useDispatchRequestWizard() {
     bm02PdfUrl,
     bm02PdfBase64,
     bm02ExcelBase64,
+    bm02SheetPreviewHtml,
     bm02FilenamePdf,
     bm02FilenameXlsx,
     created,
