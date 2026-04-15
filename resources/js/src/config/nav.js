@@ -17,7 +17,7 @@ export const NAV_SECTIONS = [
         featureKey: 'module.overview',
         children: [
           { to: '/', labelKey: 'nav.dashboard', icon: 'home', featureKey: 'module.overview' },
-          { to: '/hub', labelKey: 'nav.hub', icon: 'hub', featureKey: 'module.overview' },
+          { to: '/dispatcher', labelKey: 'nav.dispatcher_board', icon: 'dispatcher', featureKey: 'module.overview' },
         ],
       },
       {
@@ -146,7 +146,7 @@ export const NAV_SECTIONS = [
 /** Bottom bar (mobile): rút gọn */
 export const BOTTOM_NAV = [
   { to: '/', labelKey: 'nav.bottom_home', icon: 'home' },
-  { to: '/hub', labelKey: 'nav.bottom_hub', icon: 'hub' },
+  { to: '/dispatcher', labelKey: 'nav.bottom_dispatcher', icon: 'dispatcher' },
   {
     to: '/requests',
     labelKey: 'nav.bottom_requests',

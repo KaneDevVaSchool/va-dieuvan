@@ -495,25 +495,36 @@
                 </p>
               </div>
               <div>
-                <label class="mb-1 block text-xs font-medium text-slate-700">Loại chi phí</label>
+                <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+                  <label class="block text-xs font-medium text-slate-700">Loại chi phí</label>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 rounded-md border border-teal-200 bg-teal-50 px-2 py-1 text-[11px] font-medium text-teal-900 hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-200 dark:hover:bg-teal-900/60"
+                    @click="openQuickAddType"
+                  >
+                    <PlusCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    Thêm loại nhanh
+                  </button>
+                </div>
                 <select v-model="costForm.type" class="costs-input w-full">
-                  <option value="fuel">Xăng / dầu</option>
-                  <option value="toll">Phí cầu đường</option>
-                  <option value="parking">Bãi xe</option>
-                  <option value="other">Khác</option>
+                  <option v-for="opt in modalCostTypeOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </option>
                 </select>
               </div>
               <div>
                 <label class="mb-1 block text-xs font-medium text-slate-700">Số tiền ({{ costForm.currency }})</label>
                 <input
-                  v-model.number="costForm.amount"
-                  type="number"
-                  min="0"
-                  step="1000"
+                  :value="costAmountDisplay"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
                   required
                   class="costs-input w-full"
-                  placeholder="Ví dụ: 150000"
+                  placeholder="1.000.000"
+                  @input="onCostAmountInput"
                 />
+                <p class="mt-1 text-[11px] text-slate-500">Nhập số — tự phân tách hàng nghìn (vd. 1.000.000).</p>
               </div>
               <div>
                 <label class="mb-1 block text-xs font-medium text-slate-700">Mô tả</label>
@@ -542,17 +553,54 @@
         </div>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="quickAddTypeOpen"
+        class="fixed inset-0 z-[110] flex items-end justify-center p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="costs-quick-type-title"
+      >
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px]" aria-hidden="true" @click="quickAddTypeOpen = false" />
+        <div
+          class="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10"
+          @click.stop
+        >
+          <div class="border-b border-slate-100 px-4 py-3">
+            <h2 id="costs-quick-type-title" class="text-sm font-semibold text-slate-900">Thêm loại chi phí mới</h2>
+            <p class="mt-0.5 text-xs text-slate-500">Tên hiển thị (vd. Sửa xe, Ăn ca). Mã lưu tự tạo từ tên.</p>
+          </div>
+          <div class="space-y-3 p-4">
+            <label class="block text-xs font-medium text-slate-700">Tên loại</label>
+            <input
+              v-model="quickAddTypeLabel"
+              type="text"
+              class="costs-input w-full"
+              placeholder="Ví dụ: Phí cầu BOT"
+              maxlength="80"
+              @keydown.enter.prevent="submitQuickAddType"
+            />
+            <p v-if="quickAddTypeError" class="text-xs text-rose-600">{{ quickAddTypeError }}</p>
+            <div class="flex justify-end gap-2 pt-1">
+              <button type="button" class="costs-btn-ghost text-sm" @click="quickAddTypeOpen = false">Hủy</button>
+              <button type="button" class="costs-btn-primary text-sm" @click="submitQuickAddType">Lưu & chọn</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { listTripCosts, submitTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
-import { formatVnd } from '../../util/labels'
+import { formatVnd, formatVndDigitsInput } from '../../util/labels'
 
 const DEFAULT_PER_PAGE = 25
 
@@ -565,6 +613,21 @@ const TYPE_LABELS = {
   parking: 'Bãi xe',
   other: 'Khác',
 }
+
+const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
+const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
+
+const extraCostTypes = ref([])
+
+const modalCostTypeOptions = computed(() => {
+  const rows = BUILTIN_COST_TYPES.map((value) => ({ value, label: TYPE_LABELS[value] }))
+  for (const x of extraCostTypes.value) {
+    if (!rows.some((r) => r.value === x.slug)) {
+      rows.push({ value: x.slug, label: x.label })
+    }
+  }
+  return rows
+})
 
 const STATUS_LABELS = {
   draft: 'Nháp',
@@ -597,8 +660,23 @@ const filters = reactive({
 })
 
 const costForm = ref({ trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' })
+/** Chỉ chữ số — dùng format VND khi gõ */
+const costAmountDigits = ref('')
+const quickAddTypeOpen = ref(false)
+const quickAddTypeLabel = ref('')
+const quickAddTypeError = ref('')
 const submitting = ref(false)
 const costMsg = ref('')
+
+const costAmountDisplay = computed(() => formatVndDigitsInput(costAmountDigits.value))
+
+watch(extraCostTypes, (v) => {
+  try {
+    localStorage.setItem(EXTRA_TYPES_STORAGE_KEY, JSON.stringify(v))
+  } catch {
+    /* ignore */
+  }
+}, { deep: true })
 
 const statusFilterOptions = [
   { value: '', label: 'Tất cả' },
@@ -608,13 +686,21 @@ const statusFilterOptions = [
   { value: 'rejected', label: STATUS_LABELS.rejected },
 ]
 
-const typeFilterOptions = [
-  { value: '', label: 'Tất cả' },
-  { value: 'fuel', label: TYPE_LABELS.fuel },
-  { value: 'toll', label: TYPE_LABELS.toll },
-  { value: 'parking', label: TYPE_LABELS.parking },
-  { value: 'other', label: TYPE_LABELS.other },
-]
+const typeFilterOptions = computed(() => {
+  const rows = [
+    { value: '', label: 'Tất cả' },
+    { value: 'fuel', label: TYPE_LABELS.fuel },
+    { value: 'toll', label: TYPE_LABELS.toll },
+    { value: 'parking', label: TYPE_LABELS.parking },
+    { value: 'other', label: TYPE_LABELS.other },
+  ]
+  for (const x of extraCostTypes.value) {
+    if (!rows.some((r) => r.value === x.slug)) {
+      rows.push({ value: x.slug, label: x.label })
+    }
+  }
+  return rows
+})
 
 const activeFilterCount = computed(() => {
   let n = 0
@@ -704,7 +790,72 @@ function countOnPage(status) {
 }
 
 function typeLabel(t) {
-  return TYPE_LABELS[t] ?? t ?? '—'
+  if (!t) return '—'
+  if (TYPE_LABELS[t]) return TYPE_LABELS[t]
+  const hit = extraCostTypes.value.find((x) => x.slug === t)
+  return hit?.label ?? t
+}
+
+function loadExtraCostTypesFromStorage() {
+  try {
+    const raw = localStorage.getItem(EXTRA_TYPES_STORAGE_KEY)
+    const arr = raw ? JSON.parse(raw) : []
+    extraCostTypes.value = Array.isArray(arr) ? arr.filter((x) => x?.slug && x?.label) : []
+  } catch {
+    extraCostTypes.value = []
+  }
+}
+
+function slugifyCostTypeLabel(label) {
+  const s = String(label)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 64)
+  return s || `loai_${Date.now()}`
+}
+
+function openQuickAddType() {
+  quickAddTypeError.value = ''
+  quickAddTypeLabel.value = ''
+  quickAddTypeOpen.value = true
+}
+
+function submitQuickAddType() {
+  quickAddTypeError.value = ''
+  const label = quickAddTypeLabel.value.trim()
+  if (!label) {
+    quickAddTypeError.value = 'Nhập tên loại chi phí.'
+    return
+  }
+  let slug = slugifyCostTypeLabel(label)
+  if (BUILTIN_COST_TYPES.includes(slug)) {
+    slug = `${slug}_${Date.now()}`
+  }
+  if (extraCostTypes.value.some((x) => x.slug === slug)) {
+    costForm.value.type = slug
+    quickAddTypeOpen.value = false
+    quickAddTypeLabel.value = ''
+    return
+  }
+  extraCostTypes.value = [...extraCostTypes.value, { slug, label }]
+  costForm.value.type = slug
+  quickAddTypeOpen.value = false
+  quickAddTypeLabel.value = ''
+}
+
+function onCostAmountInput(e) {
+  const el = e?.target
+  if (!el) return
+  const raw = String(el.value ?? '').replace(/\D/g, '')
+  if (raw.length > 15) {
+    costAmountDigits.value = raw.slice(0, 15)
+  } else {
+    costAmountDigits.value = raw
+  }
 }
 
 function statusLabel(s) {
@@ -748,6 +899,7 @@ async function openAddCostModal() {
   costMsg.value = ''
   costMsgIsError.value = false
   tripPickerSearch.value = ''
+  costAmountDigits.value = ''
   costForm.value = { trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' }
   addCostModalOpen.value = true
   await loadTripPickerOptions()
@@ -853,13 +1005,19 @@ async function submitCost() {
     costMsgIsError.value = true
     return
   }
+  const amt = Number(costAmountDigits.value)
+  if (!costAmountDigits.value || !Number.isFinite(amt) || amt <= 0) {
+    costMsg.value = 'Nhập số tiền hợp lệ (lớn hơn 0).'
+    costMsgIsError.value = true
+    return
+  }
   submitting.value = true
   try {
     await submitTripCost(
       tid,
       {
         type: costForm.value.type,
-        amount: costForm.value.amount,
+        amount: amt,
         description: costForm.value.description || null,
       },
       { idempotencyKey: newIdempotencyKey() },
@@ -875,6 +1033,7 @@ async function submitCost() {
 }
 
 onMounted(async () => {
+  loadExtraCostTypesFromStorage()
   await loadTripPickerOptions()
   await reload()
 })

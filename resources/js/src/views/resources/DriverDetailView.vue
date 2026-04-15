@@ -211,18 +211,65 @@
                 <td class="px-3 py-2 align-top">
                   <span :class="expiryPillClass(doc.expiry)">{{ expiryLabel(doc.expiry) }}</span>
                 </td>
-                <td class="px-3 py-2 align-top text-xs" @click.stop>
-                  <a
-                    v-for="a in doc.attachments"
-                    :key="a.id"
-                    :href="a.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="mr-2 text-teal-700 dark:text-teal-400"
-                  >
-                    {{ a.original_name || a.id }}
-                  </a>
+                <td class="max-w-[min(100%,280px)] px-3 py-2 align-top text-xs" @click.stop>
                   <span v-if="!doc.attachments?.length" class="text-slate-400">—</span>
+                  <div v-else class="flex flex-col gap-2">
+                    <div
+                      v-for="(a, aIdx) in doc.attachments"
+                      :key="a.id ?? `att-${aIdx}`"
+                      class="rounded-lg border border-slate-200/90 bg-slate-50/80 px-2 py-1.5 dark:border-slate-600/80 dark:bg-slate-800/40"
+                    >
+                      <template v-if="isPdfAttachment(a)">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                          <PdfFileIcon class="shrink-0" size-class="h-8 w-6" />
+                          <span
+                            class="shrink-0 rounded px-1 py-0.5 text-[9px] font-bold uppercase leading-none text-red-700 ring-1 ring-red-600/25 dark:text-red-300 dark:ring-red-500/30"
+                            >{{ t('resources.attachment_pdf_badge') }}</span
+                          >
+                          <span class="min-w-0 flex-1 truncate text-[11px] text-slate-800 dark:text-slate-200">{{
+                            a.original_name || 'file'
+                          }}</span>
+                        </div>
+                        <div class="mt-1.5 flex flex-wrap gap-1">
+                          <button
+                            type="button"
+                            class="inline-flex items-center gap-0.5 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                            :title="t('resources.attachment_preview_pdf')"
+                            :disabled="
+                              (pdfPreviewLoading && pdfPreviewBusyKey === driverPdfAttachmentBusyKey(doc, a, aIdx)) ||
+                              pdfAttachmentDownloadBusyKey === driverPdfAttachmentBusyKey(doc, a, aIdx)
+                            "
+                            @click.stop="openDriverPdfPreview(doc, a, aIdx)"
+                          >
+                            <EyeIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                            {{ t('resources.attachment_preview_short') }}
+                          </button>
+                          <button
+                            type="button"
+                            class="inline-flex items-center gap-0.5 rounded bg-teal-600 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-teal-500 disabled:opacity-60"
+                            :title="t('resources.attachment_download_pdf_title')"
+                            :disabled="
+                              pdfAttachmentDownloadBusyKey === driverPdfAttachmentBusyKey(doc, a, aIdx) ||
+                              (pdfPreviewLoading && pdfPreviewBusyKey === driverPdfAttachmentBusyKey(doc, a, aIdx))
+                            "
+                            @click.stop="downloadDriverPdfAttachment(doc, a, aIdx)"
+                          >
+                            <ArrowDownTrayIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                            {{ t('resources.attachment_download_short') }}
+                          </button>
+                        </div>
+                      </template>
+                      <a
+                        v-else
+                        :href="a.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-teal-700 underline dark:text-teal-400"
+                      >
+                        {{ a.original_name || a.id }}
+                      </a>
+                    </div>
+                  </div>
                 </td>
                 <td v-if="canManage" class="whitespace-nowrap px-3 py-2 align-top text-right text-xs" @click.stop>
                   <button type="button" class="text-teal-700 hover:underline dark:text-teal-400" @click="openDocModal(doc)">
@@ -363,13 +410,65 @@
         </div>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="pdfPreviewOpen"
+        class="fixed inset-0 z-[110] flex flex-col bg-black/60 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('resources.attachment_preview_pdf')"
+        @click.self="closePdfPreview"
+      >
+        <div
+          class="mx-auto flex h-full w-full max-w-5xl flex-col border-x border-slate-700/50 bg-slate-900 shadow-2xl sm:my-4 sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl"
+          @click.stop
+        >
+          <div
+            class="flex shrink-0 items-center justify-between gap-3 border-b border-slate-700/80 bg-slate-900 px-3 py-2.5 text-white sm:px-4"
+          >
+            <div class="flex min-w-0 items-center gap-2">
+              <PdfFileIcon class="shrink-0" size-class="h-8 w-6" />
+              <div class="min-w-0">
+                <div class="truncate text-sm font-medium">{{ pdfPreviewFilename || 'PDF' }}</div>
+                <div class="truncate text-[11px] text-slate-400">{{ t('resources.attachment_preview_pdf_hint') }}</div>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-slate-800"
+              @click="closePdfPreview"
+            >
+              {{ t('app.close') }}
+            </button>
+          </div>
+          <div class="relative min-h-0 flex-1 bg-slate-950">
+            <div
+              v-if="pdfPreviewLoading"
+              class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-slate-950/90 text-sm text-slate-300"
+            >
+              <span class="inline-block h-8 w-8 animate-spin rounded-full border-2 border-teal-400 border-t-transparent"></span>
+              {{ t('resources.loading') }}
+            </div>
+            <iframe
+              v-if="pdfPreviewBlobUrl"
+              :src="pdfPreviewBlobUrl"
+              class="h-full min-h-[50vh] w-full border-0 sm:min-h-0"
+              title="PDF"
+            />
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ArrowDownTrayIcon, EyeIcon } from '@heroicons/vue/24/outline'
+import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import {
   createDriverComplianceDocument,
   deleteDriverComplianceDocument,
@@ -379,8 +478,14 @@ import {
   updateDriver,
   updateDriverComplianceDocument,
 } from '../../api/operational'
-import { formatApiError } from '../../api/http'
-import { showAppErrorFromApi } from '../../composables/appMessage'
+import { formatApiError, TOKEN_KEY } from '../../api/http'
+import { showAppError, showAppErrorFromApi, showAppInfo } from '../../composables/appMessage'
+import {
+  downloadPdfAttachmentFromApi,
+  downloadPdfAttachmentFromUrl,
+  fetchPdfBlobForPreview,
+  normalizeAxiosBlobError,
+} from '../../util/downloadPdfAttachment'
 import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
@@ -431,6 +536,13 @@ const docForm = ref({
   expires_at: '',
   replace_file: false,
 })
+
+const pdfAttachmentDownloadBusyKey = ref(null)
+const pdfPreviewOpen = ref(false)
+const pdfPreviewBlobUrl = ref(null)
+const pdfPreviewFilename = ref('')
+const pdfPreviewLoading = ref(false)
+const pdfPreviewBusyKey = ref(null)
 
 const docTypeOptions = computed(() =>
   DOC_TYPES.map((value) => ({
@@ -673,4 +785,178 @@ async function confirmDelete(doc) {
     showAppErrorFromApi(e, t('resources.load_error'))
   }
 }
+
+function isPdfAttachment(a) {
+  const mime = String(a?.mime_type || '').toLowerCase()
+  if (mime.includes('pdf')) return true
+  if (mime === 'application/octet-stream' || mime === 'binary/octet-stream') {
+    const name = String(a?.original_name || '').toLowerCase()
+    const path = String(a?.url || '').split('?')[0].toLowerCase()
+    if (name.endsWith('.pdf') || path.endsWith('.pdf')) return true
+  }
+  const name = String(a?.original_name || '').toLowerCase()
+  if (name.endsWith('.pdf')) return true
+  try {
+    const path = String(a?.url || '').split('?')[0].toLowerCase()
+    return path.endsWith('.pdf')
+  } catch {
+    return false
+  }
+}
+
+function resolveAttachmentAbsoluteUrl(a) {
+  const u = a?.url
+  if (!u) return ''
+  if (typeof window === 'undefined') return u
+  const viteBackend =
+    import.meta.env.DEV && import.meta.env.VITE_APP_URL
+      ? String(import.meta.env.VITE_APP_URL).trim().replace(/\/$/, '')
+      : ''
+  try {
+    const parsed = new URL(u, window.location.origin)
+    if (parsed.pathname.startsWith('/storage')) {
+      const base = viteBackend || window.location.origin
+      return `${base}${parsed.pathname}${parsed.search}`
+    }
+    return parsed.href
+  } catch {
+    const path = u.startsWith('/') ? u : `/${u}`
+    if (path.startsWith('/storage')) {
+      const base = viteBackend || window.location.origin
+      return `${base}${path}`
+    }
+    return `${window.location.origin}${path}`
+  }
+}
+
+function attachmentDownloadName(a) {
+  const n = String(a?.original_name || '').trim()
+  if (n) return n
+  try {
+    const path = String(a?.url || '').split('?')[0]
+    const seg = path.split('/').pop() || ''
+    return seg || 'document.pdf'
+  } catch {
+    return 'document.pdf'
+  }
+}
+
+function driverPdfAttachmentBusyKey(doc, a, aIdx) {
+  return `${doc?.id ?? 'doc'}-${a?.id ?? aIdx}`
+}
+
+function attachmentPdfSoftFail(result) {
+  if (result.reason === 'html') {
+    showAppInfo(t('resources.attachment_download_html_hint'), t('resources.attachment_download_html_title'))
+  } else if (result.reason === 'bad_json') {
+    showAppError(t('resources.attachment_download_failed'))
+  } else {
+    showAppInfo(t('resources.attachment_download_not_pdf_hint'), t('resources.attachment_download_not_pdf_title'))
+  }
+}
+
+function revokePdfPreviewBlobUrl() {
+  if (pdfPreviewBlobUrl.value) {
+    URL.revokeObjectURL(pdfPreviewBlobUrl.value)
+    pdfPreviewBlobUrl.value = null
+  }
+}
+
+function closePdfPreview() {
+  revokePdfPreviewBlobUrl()
+  pdfPreviewOpen.value = false
+  pdfPreviewFilename.value = ''
+}
+
+async function openDriverPdfPreview(doc, a, aIdx) {
+  const busyKey = driverPdfAttachmentBusyKey(doc, a, aIdx)
+  if (pdfPreviewLoading.value && pdfPreviewBusyKey.value === busyKey) return
+
+  if (a?.id == null) {
+    const url = resolveAttachmentAbsoluteUrl(a)
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      showAppError(t('resources.attachment_download_failed'))
+    }
+    return
+  }
+
+  pdfPreviewBusyKey.value = busyKey
+  pdfPreviewLoading.value = true
+  pdfPreviewFilename.value = attachmentDownloadName(a)
+  revokePdfPreviewBlobUrl()
+  pdfPreviewOpen.value = true
+
+  try {
+    const result = await fetchPdfBlobForPreview(a.id)
+    if (!result.ok) {
+      attachmentPdfSoftFail(result)
+      pdfPreviewOpen.value = false
+      return
+    }
+    pdfPreviewBlobUrl.value = URL.createObjectURL(new Blob([result.blob], { type: 'application/pdf' }))
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    pdfPreviewOpen.value = false
+    showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+  } finally {
+    pdfPreviewLoading.value = false
+    pdfPreviewBusyKey.value = null
+  }
+}
+
+async function downloadDriverPdfAttachment(doc, a, aIdx) {
+  const busyKey = driverPdfAttachmentBusyKey(doc, a, aIdx)
+  if (pdfAttachmentDownloadBusyKey.value === busyKey) return
+  const url = resolveAttachmentAbsoluteUrl(a)
+  if (a?.id == null && !url) return
+
+  pdfAttachmentDownloadBusyKey.value = busyKey
+  let bearerToken = null
+  try {
+    if (url) {
+      const u = new URL(url, window.location.origin)
+      if (u.origin === window.location.origin) {
+        bearerToken = localStorage.getItem(TOKEN_KEY)
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    let result
+    if (a?.id != null) {
+      result = await downloadPdfAttachmentFromApi(a.id, attachmentDownloadName(a))
+    } else {
+      result = await downloadPdfAttachmentFromUrl(url, {
+        filename: attachmentDownloadName(a),
+        bearerToken,
+      })
+    }
+    if (result.ok) return
+
+    if (url) {
+      const w = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!w) attachmentPdfSoftFail(result)
+    } else {
+      attachmentPdfSoftFail(result)
+    }
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    if (url) {
+      const w = window.open(url, '_blank', 'noopener,noreferrer')
+      if (!w) showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+    } else {
+      showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+    }
+  } finally {
+    pdfAttachmentDownloadBusyKey.value = null
+  }
+}
+
+onUnmounted(() => {
+  revokePdfPreviewBlobUrl()
+})
 </script>

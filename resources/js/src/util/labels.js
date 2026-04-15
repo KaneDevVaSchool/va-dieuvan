@@ -71,3 +71,12 @@ export function formatVnd(n) {
   const x = Number(n ?? 0)
   return new Intl.NumberFormat('vi-VN').format(x) + ' đ'
 }
+
+/** Chỉ phần số, dấu phân cách kiểu vi-VN (vd. 1000000 → 1.000.000) — dùng cho ô nhập tiền. */
+export function formatVndDigitsInput(digits) {
+  const d = String(digits ?? '').replace(/\D/g, '')
+  if (!d) return ''
+  const n = Number(d)
+  if (!Number.isFinite(n) || n < 0) return ''
+  return new Intl.NumberFormat('vi-VN').format(n)
+}

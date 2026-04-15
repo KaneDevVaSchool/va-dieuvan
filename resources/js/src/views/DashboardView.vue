@@ -54,9 +54,9 @@
 
     <Card title="Thao tác nhanh">
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/hub">
-          <div class="font-semibold">Trung tâm vận hành</div>
-          <div class="mt-1 text-xs text-slate-500">Mọi luồng quan trọng</div>
+        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/dispatcher">
+          <div class="font-semibold">Bảng điều vận</div>
+          <div class="mt-1 text-xs text-slate-500">Hàng đợi chuyến & lịch tài xế</div>
         </RouterLink>
         <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/schedule">
           <div class="font-semibold">Lịch 7 ngày</div>

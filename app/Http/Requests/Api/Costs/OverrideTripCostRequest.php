@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Costs;
 
 use App\Http\Requests\Api\ApiFormRequest;
-use Illuminate\Validation\Rule;
 
 class OverrideTripCostRequest extends ApiFormRequest
 {
@@ -17,7 +16,7 @@ class OverrideTripCostRequest extends ApiFormRequest
         return [
             'amount' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string', 'max:255'],
-            'type' => ['nullable', Rule::in(['fuel', 'toll', 'parking', 'other'])],
+            'type' => ['nullable', 'string', 'max:64', 'regex:/^[a-z0-9_\-]+$/i'],
             'reason' => ['required', 'string', 'max:255'],
         ];
     }

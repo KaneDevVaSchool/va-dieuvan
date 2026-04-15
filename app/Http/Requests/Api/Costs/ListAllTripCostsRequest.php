@@ -15,7 +15,7 @@ class ListAllTripCostsRequest extends ApiFormRequest
     {
         return [
             'status' => ['nullable', 'string', 'max:50'],
-            'type' => ['nullable', 'string', 'in:fuel,toll,parking,other'],
+            'type' => ['nullable', 'string', 'max:64'],
             'trip_id' => ['nullable', 'integer', 'min:1'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],

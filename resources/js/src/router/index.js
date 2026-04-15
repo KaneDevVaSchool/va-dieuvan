@@ -16,7 +16,7 @@ import CargoListView from "../views/cargo/CargoListView.vue";
 import RoutesListView from "../views/d2d/RoutesListView.vue";
 import ReportsView from "../views/reports/ReportsView.vue";
 import PricingReferenceView from "../views/pricing/PricingReferenceView.vue";
-import OperationsHubView from "../views/hub/OperationsHubView.vue";
+import DispatcherBoardView from "../views/dispatcher/DispatcherBoardView.vue";
 import ScheduleWeekView from "../views/schedule/ScheduleWeekView.vue";
 import ProfileView from "../views/profile/ProfileView.vue";
 import HelpGuideView from "../views/help/HelpGuideView.vue";
@@ -50,10 +50,13 @@ const router = createRouter({
             meta: { title: "Tổng quan", subtitle: "Tình trạng vận hành" },
         },
         {
-            path: "/hub",
-            name: "hub",
-            component: OperationsHubView,
-            meta: { title: "Trung tâm vận hành", subtitle: "Điểm vào nhanh" },
+            path: "/dispatcher",
+            name: "dispatcherBoard",
+            component: DispatcherBoardView,
+            meta: {
+                title: "Bảng điều vận",
+                subtitle: "Hàng đợi & lịch phân công",
+            },
         },
         {
             path: "/schedule",

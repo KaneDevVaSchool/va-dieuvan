@@ -16,18 +16,18 @@ import {
   PlusCircleIcon,
   QuestionMarkCircleIcon,
   ShieldCheckIcon,
-  Squares2X2Icon,
   TagIcon,
   RectangleStackIcon,
   TruckIcon,
   UserGroupIcon,
   UsersIcon,
+  ViewColumnsIcon,
 } from '@heroicons/vue/24/outline'
 
 /** Khóa dùng trong `nav.js` → component icon outline 24px, stroke 1.5 */
 export const NAV_ICON_MAP = {
   home: HomeIcon,
-  hub: Squares2X2Icon,
+  dispatcher: ViewColumnsIcon,
   schedule: CalendarIcon,
   calendar: CalendarDaysIcon,
   requests: ClipboardDocumentListIcon,

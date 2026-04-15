@@ -57,8 +57,8 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { onMounted, reactive, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
@@ -66,10 +66,16 @@ import Select from '../../components/ui/Select.vue'
 import { listTrips } from '../../api/trips'
 import { labelTripStatus } from '../../util/labels'
 
+const route = useRoute()
 const loading = ref(false)
 const items = ref([])
 const meta = ref({})
 const filters = reactive({ status: '', from: '', to: '', page: 1, per_page: 20 })
+
+function applyStatusFromRoute() {
+  const s = route.query.status
+  filters.status = typeof s === 'string' && s ? s : ''
+}
 
 function fmt(v) {
   return v ? new Date(v).toLocaleString('vi-VN') : '-'
@@ -93,5 +99,17 @@ function page(d) {
   reload()
 }
 
-onMounted(reload)
+onMounted(() => {
+  applyStatusFromRoute()
+  reload()
+})
+
+watch(
+  () => route.query.status,
+  () => {
+    applyStatusFromRoute()
+    filters.page = 1
+    reload()
+  },
+)
 </script>

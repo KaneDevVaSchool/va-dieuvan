@@ -3,7 +3,7 @@ export const NAV_SHORTCUT_PREFIX = 'g'
 
 export const NAV_SHORTCUT_ROUTES = {
   d: '/',
-  h: '/hub',
+  h: '/dispatcher',
   r: '/requests',
   t: '/trips',
   c: '/calendar',

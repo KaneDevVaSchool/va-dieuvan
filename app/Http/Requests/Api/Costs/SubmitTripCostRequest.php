@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Costs;
 
 use App\Http\Requests\Api\ApiFormRequest;
-use Illuminate\Validation\Rule;
 
 class SubmitTripCostRequest extends ApiFormRequest
 {
@@ -15,7 +14,7 @@ class SubmitTripCostRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', Rule::in(['fuel', 'toll', 'parking', 'other'])],
+            'type' => ['required', 'string', 'max:64', 'regex:/^[a-z0-9_\-]+$/i'],
             'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],
             'description' => ['nullable', 'string', 'max:255'],

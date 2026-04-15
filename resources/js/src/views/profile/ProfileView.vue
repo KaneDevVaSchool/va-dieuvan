@@ -59,9 +59,9 @@
               </Button>
               <RouterLink
                 class="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                to="/hub"
+                to="/dispatcher"
               >
-                Trung tâm vận hành
+                Bảng điều vận
               </RouterLink>
             </div>
           </div>
