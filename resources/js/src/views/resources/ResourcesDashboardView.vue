@@ -163,7 +163,10 @@
 
     <!-- 3-column workspace: horizontal scroll when viewport is tight -->
     <div class="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch]">
-      <div class="flex min-w-[1320px] flex-col gap-4 xl:flex-row xl:items-stretch">
+      <div
+        class="flex flex-col gap-4 xl:flex-row xl:items-stretch"
+        :class="panel ? 'min-w-[1320px]' : 'min-w-[960px]'"
+      >
       <!-- Left: resource lists -->
       <aside
         class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,340px)] xl:max-w-[380px]"
@@ -459,8 +462,9 @@
         </div>
       </section>
 
-      <!-- Right: action & constraints -->
+      <!-- Right: action & constraints (chỉ hiện khi đã chọn tài xế / xe / NCC / chuyến) -->
       <aside
+        v-if="panel"
         class="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50/90 to-white shadow-md ring-1 ring-slate-900/5 xl:w-[min(100%,460px)]"
       >
         <div class="border-b border-slate-200/80 bg-white/80 backdrop-blur-sm">
@@ -468,7 +472,6 @@
             <div class="min-w-0 flex flex-1 items-center gap-2">
               <h2 class="text-sm font-semibold tracking-tight text-slate-900">{{ t('resources_dashboard.panel_title') }}</h2>
               <button
-                v-if="panel"
                 type="button"
                 class="inline-flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-teal-700 hover:bg-teal-50"
                 :aria-expanded="panelHeaderHelpOpen"
@@ -484,7 +487,6 @@
               </button>
             </div>
             <button
-              v-if="panel"
               type="button"
               class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800"
               :aria-label="t('resources_dashboard.panel_close')"
@@ -500,12 +502,9 @@
             {{ t('resources_dashboard.panel_subtitle_v2') }}
           </p>
         </div>
-        <div v-if="!panel" class="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-10 text-center text-sm text-slate-500">
-          {{ t('resources_dashboard.panel_empty_v2') }}
-        </div>
 
         <!-- Trip -->
-        <div v-else-if="panel.type === 'trip'" class="flex flex-1 flex-col overflow-hidden">
+        <div v-if="panel.type === 'trip'" class="flex flex-1 flex-col overflow-hidden">
           <div class="flex-1 space-y-4 overflow-y-auto px-3 py-3 text-sm">
             <!-- Trip hero card -->
             <div
