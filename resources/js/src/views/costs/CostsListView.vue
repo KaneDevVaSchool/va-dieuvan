@@ -28,7 +28,9 @@
     <div
       class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2"
     >
-      <div class="flex min-w-0 items-center gap-1.5 sm:gap-2">
+      <div class="flex flex-col gap-2">
+        <div class="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-2">
+          <div class="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
         <details ref="filterMenuRef" class="group relative shrink-0">
           <summary
             class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
@@ -89,8 +91,49 @@
 
         <div class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block" aria-hidden="true" />
 
+        <button
+          type="button"
+          class="shrink-0 rounded-lg border border-white/80 bg-white/90 px-2.5 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+          :aria-expanded="costsFiltersExpanded"
+          :aria-controls="costsFiltersPanelId"
+          @click="costsFiltersExpanded = !costsFiltersExpanded"
+        >
+          {{ costsFiltersExpanded ? 'Ẩn bộ lọc' : 'Hiện bộ lọc' }}
+        </button>
+          </div>
+
         <div
-          class="costs-filter-scroll flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto overscroll-x-contain py-0.5 [-ms-overflow-style:none] [scrollbar-width:thin] sm:gap-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300/80"
+          class="flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3"
+        >
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
+            title="Xóa bộ lọc"
+            aria-label="Xóa bộ lọc"
+            @click="resetFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" />
+            </span>
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35"
+            @click="openAddCostModal"
+          >
+            Thêm chi phí
+          </button>
+        </div>
+      </div>
+
+        <div
+          :id="costsFiltersPanelId"
+          v-show="costsFiltersExpanded"
+          class="flex min-w-0 flex-col gap-2 border-t border-violet-200/50 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-2 sm:pt-2"
+        >
+        <div
+          class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:gap-2"
         >
           <details class="group relative shrink-0">
             <summary
@@ -275,29 +318,6 @@
             <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline" aria-hidden="true">dòng</span>
           </label>
         </div>
-
-        <div
-          class="flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3"
-        >
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
-            title="Xóa bộ lọc"
-            aria-label="Xóa bộ lọc"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" />
-            </span>
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35"
-            @click="openAddCostModal"
-          >
-            Thêm chi phí
-          </button>
         </div>
       </div>
     </div>
@@ -616,6 +636,7 @@ const TYPE_LABELS = {
 
 const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
 const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
+const COSTS_FILTERS_BAR_VISIBLE_KEY = 'va.costs.filters_bar_visible_v1'
 
 const extraCostTypes = ref([])
 
@@ -641,6 +662,8 @@ const items = ref([])
 const meta = ref({})
 const searchQ = ref('')
 const filterMenuRef = ref(null)
+const costsFiltersPanelId = 'costs-filters-panel'
+const costsFiltersExpanded = ref(true)
 
 const addCostModalOpen = ref(false)
 const tripPickerSearch = ref('')
@@ -677,6 +700,14 @@ watch(extraCostTypes, (v) => {
     /* ignore */
   }
 }, { deep: true })
+
+watch(costsFiltersExpanded, (v) => {
+  try {
+    localStorage.setItem(COSTS_FILTERS_BAR_VISIBLE_KEY, v ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+})
 
 const statusFilterOptions = [
   { value: '', label: 'Tất cả' },
@@ -1033,6 +1064,13 @@ async function submitCost() {
 }
 
 onMounted(async () => {
+  try {
+    const v = localStorage.getItem(COSTS_FILTERS_BAR_VISIBLE_KEY)
+    if (v === '0') costsFiltersExpanded.value = false
+    else if (v === '1') costsFiltersExpanded.value = true
+  } catch {
+    /* ignore */
+  }
   loadExtraCostTypesFromStorage()
   await loadTripPickerOptions()
   await reload()
