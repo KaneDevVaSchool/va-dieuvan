@@ -46,7 +46,46 @@ class Bm02P2pGoogleSheetHtmlRenderer
         $this->fillTripRows($xpath, $vm);
         $this->fillTotalRow($xpath, $vm);
 
-        return $this->serializeBodyInnerHtml($dom);
+        $this->enableSheetLikeGridOnTable($xpath);
+
+        $html = $this->serializeBodyInnerHtml($dom);
+
+        return $this->injectPrintGridFallback($html);
+    }
+
+    /**
+     * Bảng export Google dùng class `no-grid` + file sheet.css (đã bỏ) nên trong trình duyệt mất lưới ô.
+     */
+    private function enableSheetLikeGridOnTable(DOMXPath $xpath): void
+    {
+        foreach ($xpath->query('//table[contains(@class, "waffle")]') as $table) {
+            if (! $table instanceof DOMElement) {
+                continue;
+            }
+            $cls = $table->getAttribute('class');
+            $table->setAttribute('class', trim((string) preg_replace('/\bno-grid\b/', '', $cls)));
+        }
+    }
+
+    /**
+     * Lưới ô mặc định giống Excel (sheet.css gốc không tải được khi mở blob / in).
+     */
+    private function injectPrintGridFallback(string $html): string
+    {
+        $fallback = '<style type="text/css" id="bm02-print-grid-fallback">'
+            .'.ritz.grid-container .waffle{border-collapse:collapse;table-layout:fixed;}'
+            .'.ritz.grid-container .waffle td,.ritz.grid-container .waffle th{'
+            .'border:1px solid #bfbfbf!important;'
+            .'}'
+            .'.ritz.grid-container .waffle thead th{background:#f3f3f3;font-weight:600;}'
+            .'</style>';
+
+        $prefix = '<meta charset="utf-8">';
+        if (str_starts_with($html, $prefix)) {
+            return $prefix.$fallback.substr($html, strlen($prefix));
+        }
+
+        return $fallback.$html;
     }
 
     /**

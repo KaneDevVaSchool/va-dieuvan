@@ -41,5 +41,23 @@ export function buildBm02ExcelSheetPreviewHtml(excelBase64, excelCheckboxCells) 
 
   applyCheckboxMarksToWorksheet(ws, excelCheckboxCells)
 
-  return XLSX.utils.sheet_to_html(ws, { id: 'bm02-excel-preview-table', editable: false })
+  /** Chỉ lấy fragment `<table>` — mặc định SheetJS bọc cả `<html><body>` (lồng sai trong `v-html`). */
+  const inner = XLSX.utils.sheet_to_html(ws, {
+    id: 'bm02-excel-preview-table',
+    editable: false,
+    header: '',
+    footer: '',
+  })
+  return (
+    '<div class="bm02-excel-sheet-root">' +
+    '<style type="text/css">' +
+    '.bm02-excel-sheet-root .bm02-excel-preview-table{border-collapse:collapse;table-layout:fixed;width:100%;min-width:max(100%,720px);background:#fff;}' +
+    '.bm02-excel-sheet-root .bm02-excel-preview-table td,.bm02-excel-sheet-root .bm02-excel-preview-table th{' +
+    'border:1px solid #bfbfbf!important;vertical-align:middle;padding:2px 4px;font-size:11px;line-height:1.25;' +
+    '}' +
+    '.bm02-excel-sheet-root .bm02-excel-preview-table thead th{background:#e8f0e8;}' +
+    '</style>' +
+    inner +
+    '</div>'
+  )
 }
