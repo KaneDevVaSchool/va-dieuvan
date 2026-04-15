@@ -60,16 +60,16 @@
 
     <!-- Stepper — timeline -->
     <nav
-      class="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-slate-50 via-white to-white p-3 shadow-sm ring-1 ring-slate-900/5 sm:p-4"
+      class="rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50 via-white to-white p-2 shadow-sm ring-1 ring-slate-900/5 sm:p-3"
       aria-label="Các bước"
     >
-      <ol class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden">
+      <ol class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden">
         <template v-for="(s, i) in steps" :key="s.id">
-          <li class="flex min-w-[46%] shrink-0 snap-start flex-col sm:min-w-0 sm:flex-1">
+          <li class="flex min-w-[44%] shrink-0 snap-start flex-col sm:min-w-0 sm:flex-1">
             <div class="flex items-center">
               <button
                 type="button"
-                class="group flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition sm:flex-col sm:items-center sm:gap-2 sm:px-1 sm:py-0"
+                class="group flex w-full items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition sm:flex-col sm:items-center sm:gap-1.5 sm:px-1 sm:py-0"
                 :class="
                   i > maxReachedStep
                     ? 'cursor-not-allowed opacity-45'
@@ -84,7 +84,7 @@
                 @click="goStep(i)"
               >
                 <span
-                  class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm transition sm:h-10 sm:w-10"
+                  class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold shadow-sm transition sm:h-8 sm:w-8 sm:text-[11px]"
                   :class="
                     step === i
                       ? 'bg-va-800 text-white ring-1 ring-va-900/20'
@@ -95,11 +95,11 @@
                           : 'bg-slate-100 text-slate-400'
                   "
                 >
-                  <CheckIcon v-if="i < step" class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+                  <CheckIcon v-if="i < step" class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
                   <span v-else>{{ i + 1 }}</span>
                 </span>
                 <span
-                  class="min-w-0 flex-1 text-xs font-semibold leading-tight sm:text-center sm:text-[13px]"
+                  class="min-w-0 flex-1 text-[11px] font-semibold leading-tight sm:text-center sm:text-xs"
                   :class="step === i ? 'text-slate-900' : i < step ? 'text-slate-800' : 'text-slate-500'"
                 >
                   {{ s.title }}
@@ -107,7 +107,7 @@
               </button>
               <div
                 v-if="i < steps.length - 1"
-                class="mx-0.5 hidden h-0.5 w-6 shrink-0 rounded-full bg-slate-200 sm:block md:w-10 lg:w-14"
+                class="mx-0.5 hidden h-0.5 w-5 shrink-0 rounded-full bg-slate-200 sm:block md:w-8 lg:w-11"
                 aria-hidden="true"
               />
             </div>
