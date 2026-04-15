@@ -63,6 +63,15 @@ export async function createDispatchRequest(payload, opts = {}) {
   return data.data
 }
 
+/**
+ * Xem trước mẫu BM.02 (Excel + PDF) từ dữ liệu wizard.
+ * @param {Record<string, unknown>} wizard — { form, passengerRows, … }
+ */
+export async function previewBm02DispatchForm(wizard) {
+  const { data } = await http.post('/dispatch-requests/preview-bm02', { wizard })
+  return data.data
+}
+
 export async function markPaperReceived(dispatchRequestId, payload) {
   const { data } = await http.post(`/dispatch-requests/${dispatchRequestId}/paper-received`, payload)
   return data.data

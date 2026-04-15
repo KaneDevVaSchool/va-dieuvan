@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Requests\CreateDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DecideDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
+use App\Http\Requests\Api\Requests\PreviewBm02FormRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
 use App\Models\DispatchRequest;
 use App\Models\Role;
@@ -14,10 +15,13 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
+use App\Services\DispatchRequest\Bm02P2pFormGenerator;
+use App\Services\DispatchRequest\DispatchRequestBm02Attachments;
 use App\Support\Messages;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class DispatchRequestController extends Controller
@@ -65,6 +69,23 @@ class DispatchRequestController extends Controller
             'paper_status' => 'pending',
         ]);
 
+        if ($dispatchRequest->trip_type === 'point_to_point'
+            && is_array($dispatchRequest->wizard_snapshot)
+            && $dispatchRequest->wizard_snapshot !== []) {
+            try {
+                app(DispatchRequestBm02Attachments::class)->store(
+                    $dispatchRequest,
+                    $user->id,
+                    $dispatchRequest->wizard_snapshot,
+                );
+            } catch (\Throwable $e) {
+                Log::warning('bm02.attach_failed', [
+                    'dispatch_request_id' => $dispatchRequest->id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
         app(AuditLogger::class)->log(
             actorId: $user->id,
             event: 'request.create',
@@ -87,6 +108,19 @@ class DispatchRequestController extends Controller
         }
 
         return $this->created($dispatchRequest);
+    }
+
+    public function previewBm02(PreviewBm02FormRequest $request, Bm02P2pFormGenerator $generator)
+    {
+        $wizard = $request->validated()['wizard'];
+        $bin = $generator->generate($wizard);
+
+        return $this->ok([
+            'filename_pdf' => 'BM02-denghi-dieuvan-preview.pdf',
+            'filename_xlsx' => 'BM02-denghi-dieuvan-preview.xlsx',
+            'pdf_base64' => base64_encode($bin['pdf']),
+            'excel_base64' => base64_encode($bin['xlsx']),
+        ]);
     }
 
     public function markPaperReceived(MarkDispatchRequestPaperReceivedRequest $request, DispatchRequest $dispatchRequest)

@@ -4,15 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DispatchRequest extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
+    protected $hidden = [
+        'wizard_snapshot',
+    ];
 
     protected $fillable = [
         'requester_id',
@@ -31,6 +35,7 @@ class DispatchRequest extends Model
         'paper_received_at',
         'paper_reference',
         'rejection_reason',
+        'wizard_snapshot',
     ];
 
     protected $casts = [
@@ -38,6 +43,7 @@ class DispatchRequest extends Model
         'arrive_by' => 'datetime',
         'is_urgent' => 'boolean',
         'paper_received_at' => 'datetime',
+        'wizard_snapshot' => 'array',
     ];
 
     public function requester(): BelongsTo

@@ -135,6 +135,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Requests / approvals
         Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)->group(function () {
+            Route::post('/preview-bm02', 'previewBm02')->middleware('throttle:15,1');
             Route::post('/', 'store')
                 ->middleware(['throttle:20,1', 'idempotency'])
                 ->name('api.dispatch-requests.store');

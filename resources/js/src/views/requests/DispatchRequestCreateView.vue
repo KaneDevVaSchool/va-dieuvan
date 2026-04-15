@@ -954,6 +954,70 @@
             <pre class="mt-4 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">{{ summaryPreview }}</pre>
           </div>
 
+          <div
+            v-if="isPointToPointTrip"
+            class="overflow-hidden rounded-xl border border-va-800/20 bg-white shadow-sm ring-1 ring-slate-900/5"
+          >
+            <div class="border-b border-slate-100 bg-va-800/5 px-4 py-3">
+              <div class="font-semibold text-slate-900">Phiếu BM.02 / MH.QT.04 (Điểm — Điểm)</div>
+              <p class="mt-0.5 text-xs text-slate-600">
+                Điền tự động theo mẫu Excel BM.02/MH.QT.04 (Điểm — Điểm). Dùng <span class="font-medium">Làm mới</span> sau khi sửa
+                ở các bước trước.
+              </p>
+            </div>
+            <div class="p-4">
+              <div v-if="bm02Loading" class="flex items-center gap-2 text-sm text-slate-600">
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800" />
+                Đang tạo bản xem trước…
+              </div>
+              <div v-else-if="bm02PreviewError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                {{ bm02PreviewError }}
+              </div>
+              <template v-else>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
+                    :disabled="bm02Loading"
+                    title="Tạo lại bản xem trước sau khi sửa dữ liệu các bước trước"
+                    @click="loadBm02Preview"
+                  >
+                    <ArrowPathIcon class="h-4 w-4 text-slate-600" :class="{ 'animate-spin': bm02Loading }" />
+                    Làm mới
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
+                    :disabled="!bm02ExcelBase64"
+                    @click="downloadBm02Excel"
+                  >
+                    <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
+                    Tải Excel
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
+                    :disabled="!bm02PdfBase64"
+                    @click="downloadBm02Pdf"
+                  >
+                    <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
+                    Tải PDF
+                  </button>
+                </div>
+                <p class="mt-2 text-xs leading-relaxed text-slate-500">
+                  Nếu khung PDF trống (trình duyệt chặn), hãy dùng <span class="font-medium">Tải PDF</span>. Sau khi gửi
+                  yêu cầu, Excel và PDF được lưu trong chi tiết yêu cầu (đính kèm BM.02).
+                </p>
+                <div v-if="bm02PdfUrl" class="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                  <iframe :src="bm02PdfUrl" title="Xem trước BM.02 PDF" class="h-[min(70vh,520px)] w-full" />
+                </div>
+              </template>
+            </div>
+          </div>
+          <p v-else class="text-sm text-slate-500">
+            Mẫu BM.02 (Excel/PDF) được tạo tự động cho loại <span class="font-medium">Điểm — Điểm</span>. Với loại dịch vụ khác, nội dung chi tiết nằm trong phần ghi chú đã gửi.
+          </p>
+
           <div>
             <div class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">F &amp; G — Phần xác nhận (minh họa)</div>
             <div class="grid gap-3 sm:grid-cols-3">
@@ -1006,6 +1070,9 @@
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm shadow-sm">
           <div class="font-semibold text-emerald-900">Đã tạo yêu cầu #{{ created.id }}</div>
           <div class="mt-1 text-emerald-800">Trạng thái: {{ created.status }}</div>
+          <p v-if="created.trip_type === 'point_to_point'" class="mt-2 text-xs leading-relaxed text-emerald-900/90">
+            File BM.02 (Excel và PDF) đã được đính kèm — mở chi tiết yêu cầu để tải.
+          </p>
           <RouterLink
             class="mt-3 inline-flex rounded-lg border border-emerald-300 bg-white px-3 py-2 text-emerald-900 shadow-sm hover:bg-emerald-100/80"
             to="/requests"
@@ -1078,10 +1145,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import {
   AcademicCapIcon,
+  ArrowPathIcon,
   ArrowRightIcon,
   BriefcaseIcon,
   BuildingOffice2Icon,
@@ -1097,7 +1165,8 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
 import { uploadAttachment } from '../../api/attachments'
-import { createDispatchRequest } from '../../api/requests'
+import saveAs from 'file-saver'
+import { createDispatchRequest, previewBm02DispatchForm } from '../../api/requests'
 import { searchUsersForDispatchForm } from '../../api/operational'
 import { formatApiError } from '../../api/http'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -1129,6 +1198,14 @@ const step = ref(0)
 const maxReachedStep = ref(0)
 const loading = ref(false)
 const error = ref('')
+
+const bm02Loading = ref(false)
+const bm02PreviewError = ref('')
+const bm02PdfUrl = ref(null)
+const bm02PdfBase64 = ref('')
+const bm02ExcelBase64 = ref('')
+const bm02FilenamePdf = ref('BM02-denghi-dieuvan-preview.pdf')
+const bm02FilenameXlsx = ref('BM02-denghi-dieuvan-preview.xlsx')
 const created = ref(null)
 const draftSavedAt = ref(null)
 /** Đã từng có nháp trong phiên (để hiện nút Xóa nháp). */
@@ -1805,8 +1882,8 @@ function buildNotesBody() {
     }
     lines.push(`Tổng cộng (ước tính): ${formatCurrency(cargoTotal.value + extraCosts.value)}`)
   } else {
-    lines.push('E. Nội dung đề nghị vận chuyển')
-    lines.push('e.1. Nội dung đề xuất cho chương trình / sự kiện ngoại khóa')
+    lines.push('Nội dung đề nghị vận chuyển')
+    lines.push('Nội dung đề xuất cho chương trình / sự kiện ngoại khóa')
     if (f.multi_day) lines.push('(Dùng nhiều ngày — chi tiết bổ sung khi điều phối.)')
     passengerRows.value.forEach((r, i) => {
       if (!isPassengerRowFilled(r)) return
@@ -1814,7 +1891,7 @@ function buildNotesBody() {
         `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | NV: ${r.person_in_charge || '—'} | ĐG ${r.unit_price || '0'} + PS ${r.extra_fee || '0'} | ${r.notes || ''}`,
       )
     })
-    lines.push(`Tổng e.1 (ước tính): ${formatCurrency(passengerE1Total.value)}`)
+    lines.push(`Tổng (ước tính): ${formatCurrency(passengerE1Total.value)}`)
     if (f.trip_type !== 'point_to_point') {
       const wd = f.e1_weekdays || {}
       const wdLabels = []
@@ -1840,11 +1917,11 @@ function buildNotesBody() {
         )
       })
       lines.push(`Tổng e.2 (ước tính): ${formatCurrency(passengerE2Total.value)}`)
-      lines.push('e.2.1 Ghi chú khác (công tác)')
+      lines.push('Ghi chú khác (công tác)')
       if (f.e2_door_pickup) lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || '0'}`)
       if (f.e2_driver_self) lines.push(`- Tài xế tự túc: ${f.e2_driver_self_cost || '0'}`)
       if (f.e2_after_21h) lines.push(`- Xe sau 21h: ${f.e2_after_21h_cost || '0'}`)
-      lines.push(`Tổng E (ước tính): ${formatCurrency(passengerTotal.value)}`)
+      lines.push(`Tổng (ước tính): ${formatCurrency(passengerTotal.value)}`)
     }
   }
 
@@ -1961,6 +2038,9 @@ async function doSubmit() {
       notes,
       is_urgent: !!form.value.is_urgent,
     }
+    if (form.value.trip_type === 'point_to_point') {
+      payload.wizard_snapshot = buildWizardSnapshot()
+    }
     Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
     created.value = await createDispatchRequest(payload, { idempotencyKey })
     if (basisFile.value && created.value?.id) {
@@ -1992,6 +2072,83 @@ async function doSubmit() {
     loading.value = false
     submitInFlight = false
   }
+}
+
+function revokeBm02PdfUrl() {
+  if (bm02PdfUrl.value) {
+    try {
+      URL.revokeObjectURL(bm02PdfUrl.value)
+    } catch {
+      /* ignore */
+    }
+    bm02PdfUrl.value = null
+  }
+}
+
+function base64ToBlob(base64, mime) {
+  const bin = atob(base64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return new Blob([bytes], { type: mime })
+}
+
+function buildWizardSnapshot() {
+  return {
+    form: { ...form.value, basisFileName: basisFile.value?.name ?? '' },
+    passengerRows: passengerRows.value.map((r) => ({ ...r })),
+    businessRows: businessRows.value.map((r) => ({ ...r })),
+    cargoRows: cargoRows.value.map((r) => ({ ...r })),
+  }
+}
+
+async function loadBm02Preview() {
+  if (form.value.trip_type !== 'point_to_point') return
+  bm02PreviewError.value = ''
+  bm02PdfBase64.value = ''
+  bm02ExcelBase64.value = ''
+  bm02Loading.value = true
+  const prevUrl = bm02PdfUrl.value
+  bm02PdfUrl.value = null
+  try {
+    const data = await previewBm02DispatchForm(buildWizardSnapshot())
+    bm02PdfBase64.value = data.pdf_base64 ?? ''
+    bm02ExcelBase64.value = data.excel_base64 ?? ''
+    if (data.filename_pdf) bm02FilenamePdf.value = data.filename_pdf
+    if (data.filename_xlsx) bm02FilenameXlsx.value = data.filename_xlsx
+    if (data.pdf_base64) {
+      bm02PdfUrl.value = URL.createObjectURL(
+        base64ToBlob(data.pdf_base64, 'application/pdf'),
+      )
+    }
+    if (prevUrl) {
+      try {
+        URL.revokeObjectURL(prevUrl)
+      } catch {
+        /* ignore */
+      }
+    }
+  } catch (e) {
+    bm02PdfUrl.value = prevUrl
+    bm02PreviewError.value = formatApiError(e, 'Không tạo được bản xem trước BM.02.')
+  } finally {
+    bm02Loading.value = false
+  }
+}
+
+function downloadBm02Pdf() {
+  if (!bm02PdfBase64.value) return
+  saveAs(base64ToBlob(bm02PdfBase64.value, 'application/pdf'), bm02FilenamePdf.value)
+}
+
+function downloadBm02Excel() {
+  if (!bm02ExcelBase64.value) return
+  saveAs(
+    base64ToBlob(
+      bm02ExcelBase64.value,
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ),
+    bm02FilenameXlsx.value,
+  )
 }
 
 function migrateLegacyDraft() {
@@ -2142,10 +2299,15 @@ onMounted(async () => {
   }
 })
 
+onBeforeUnmount(() => {
+  revokeBm02PdfUrl()
+})
+
 watch(
   step,
   (s) => {
     if (s > maxReachedStep.value) maxReachedStep.value = s
+    if (s === 3 && form.value.trip_type === 'point_to_point') loadBm02Preview()
   },
   { immediate: true },
 )

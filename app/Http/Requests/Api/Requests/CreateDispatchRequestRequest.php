@@ -25,6 +25,7 @@ class CreateDispatchRequestRequest extends ApiFormRequest
             'source_channel' => ['nullable', Rule::in(['portal', 'zalo', 'paper'])],
             'is_urgent' => ['nullable', 'boolean'],
             'requester_id' => ['nullable', 'integer', 'min:1'],
+            'wizard_snapshot' => ['nullable', 'array'],
         ];
     }
 }
