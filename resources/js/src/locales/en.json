@@ -16,6 +16,7 @@
     "cargo": "Cargo",
     "routes": "D2D routes",
     "resources": "Resource management",
+    "resources_overview": "Resources",
     "payments": "Reconciliation & payments",
     "reports": "Reports",
     "pricing": "Reference pricing",
@@ -49,7 +50,8 @@
       "system_user_roles": "Users",
       "system_feature_toggles": "Toggles",
       "audit": "Log",
-      "resources": "Resources"
+      "resources": "Resources",
+      "resources_overview": "Resources"
     }
   },
   "dispatcher_board": {

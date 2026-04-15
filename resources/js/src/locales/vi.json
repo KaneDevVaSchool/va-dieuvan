@@ -16,6 +16,7 @@
         "cargo": "Hàng hóa (cargo)",
         "routes": "Tuyến D2D",
         "resources": "Quản lý nguồn lực",
+        "resources_overview": "Nguồn lực",
         "payments": "Đối Soát",
         "reports": "Báo cáo",
         "pricing": "Bảng giá tham chiếu",
@@ -49,7 +50,8 @@
             "system_user_roles": "Users",
             "system_feature_toggles": "Toggles",
             "audit": "Nhật ký",
-            "resources": "Nguồn lực"
+            "resources": "Nguồn lực",
+            "resources_overview": "Nguồn lực"
         }
     },
     "dispatcher_board": {

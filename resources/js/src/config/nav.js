@@ -18,6 +18,12 @@ export const NAV_SECTIONS = [
         children: [
           { to: '/', labelKey: 'nav.dashboard', icon: 'home', featureKey: 'module.overview' },
           { to: '/dispatcher', labelKey: 'nav.dispatcher_board', icon: 'dispatcher', featureKey: 'module.overview' },
+          {
+            to: '/resources',
+            labelKey: 'nav.resources_overview',
+            icon: 'resources',
+            featureKey: 'module.operations',
+          },
         ],
       },
     ],
