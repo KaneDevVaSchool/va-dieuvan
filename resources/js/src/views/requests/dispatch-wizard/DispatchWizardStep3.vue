@@ -5,7 +5,7 @@
           </div>
 
           <!-- Passenger: E / e.1 / e.2 -->
-          <div v-if="!w.isCargo" class="space-y-8">
+          <div v-if="!isCargo" class="space-y-8">
 
             <!-- e.1 -->
             <section class="dw-e-block dw-e-block--e1 space-y-4" aria-labelledby="dw-e1-heading">
@@ -81,7 +81,7 @@
 
             <!-- e.1.1 (ẩn với loại Điểm — Điểm) -->
             <section
-              v-if="!w.isPointToPointTrip"
+              v-if="!isPointToPointTrip"
               class="dw-e-panel dw-e-panel--e11"
               aria-labelledby="dw-e11-heading"
             >
@@ -163,7 +163,7 @@
 
             <!-- e.2 -->
             <section
-              v-if="!w.isPointToPointTrip"
+              v-if="!isPointToPointTrip"
               class="dw-e-block dw-e-block--e2 space-y-4"
               aria-labelledby="dw-e2-heading"
             >
@@ -245,7 +245,7 @@
 
             <!-- e.2.1 -->
             <section
-              v-if="!w.isPointToPointTrip"
+              v-if="!isPointToPointTrip"
               class="dw-e-panel dw-e-panel--e21"
               aria-labelledby="dw-e21-heading"
             >
@@ -445,10 +445,14 @@
   </div>
 </template>
 <script setup>
-import { inject } from 'vue'
+import { computed, inject, unref } from 'vue'
 import { PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { DISPATCH_WIZARD_KEY } from './injectionKeys'
 
 const w = inject(DISPATCH_WIZARD_KEY)
 if (!w) throw new Error('DispatchWizardStep3: missing DISPATCH_WIZARD_KEY provider')
+
+// inject() là object thường: w.isCargo (ComputedRef) trong v-if luôn truthy nếu không unref.
+const isCargo = computed(() => unref(w.isCargo))
+const isPointToPointTrip = computed(() => unref(w.isPointToPointTrip))
 </script>
