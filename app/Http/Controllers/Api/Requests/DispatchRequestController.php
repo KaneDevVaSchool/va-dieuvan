@@ -121,6 +121,7 @@ class DispatchRequestController extends Controller
             'pdf_base64' => base64_encode($bin['pdf']),
             'excel_base64' => base64_encode($bin['xlsx']),
             'html' => $bin['html'] ?? '',
+            'excel_checkbox_cells' => $bin['excel_checkbox_cells'] ?? [],
         ]);
     }
 

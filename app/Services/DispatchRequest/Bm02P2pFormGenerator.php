@@ -75,7 +75,7 @@ class Bm02P2pFormGenerator
 
     /**
      * @param  array{form?: array, passengerRows?: array<int, array>, businessRows?: array<int, array>, cargoRows?: array<int, array>}  $wizard
-     * @return array{xlsx: string, pdf: string, html: string}
+     * @return array{xlsx: string, pdf: string, html: string, excel_checkbox_cells: array<string, bool>}
      */
     public function generate(array $wizard): array
     {
@@ -102,7 +102,38 @@ class Bm02P2pFormGenerator
         $html = $this->renderPrintHtml($vm);
         $pdfBinary = $this->renderPdfFromHtml($html);
 
-        return ['xlsx' => $xlsxBinary, 'pdf' => $pdfBinary, 'html' => $html];
+        return [
+            'xlsx' => $xlsxBinary,
+            'pdf' => $pdfBinary,
+            'html' => $html,
+            'excel_checkbox_cells' => $this->buildExcelCheckboxCellStates($vm),
+        ];
+    }
+
+    /**
+     * Trạng thái ô tick trên mẫu Excel (ô ảnh tick không hiện khi parse .xlsx trên trình duyệt).
+     *
+     * @param  array<string, mixed>  $vm
+     * @return array<string, bool>
+     */
+    private function buildExcelCheckboxCellStates(array $vm): array
+    {
+        $out = ['B21' => ! empty($vm['is_urgent'])];
+        $tickSet = [];
+        foreach ($vm['target_tick_cells'] ?? [] as $c) {
+            if (is_string($c) && $c !== '') {
+                $tickSet[strtoupper($c)] = true;
+            }
+        }
+        foreach (self::P2P_TARGET_CHECKBOX_CELLS as $coord) {
+            if ($coord === null || $coord === '') {
+                continue;
+            }
+            $u = strtoupper((string) $coord);
+            $out[$u] = isset($tickSet[$u]);
+        }
+
+        return $out;
     }
 
     /**

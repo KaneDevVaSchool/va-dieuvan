@@ -556,10 +556,12 @@
                   </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  Xem trước dạng HTML (cùng nội dung với PDF tải về). File PDF được tạo từ cùng bản in này (mPDF). Sau khi gửi yêu cầu,
+                  Xem trước dạng <span class="font-medium">sheet Excel</span> (cùng nội dung file .xlsx tải về). Ô tick hiển thị dạng
+                  ô vuông (☐ / ☑) giống checkbox. Bản in PDF được tạo từ HTML (mPDF) — dùng
+                  <span class="font-medium">Tải PDF</span> hoặc <span class="font-medium">Mở PDF</span> khi cần. Sau khi gửi yêu cầu,
                   Excel và PDF được lưu trong chi tiết (đính kèm BM.02).
                 </p>
-                <div v-if="bm02HtmlBlobUrl || bm02PdfUrl" class="mt-4 space-y-2">
+                <div v-if="bm02SheetPreviewHtml || bm02HtmlBlobUrl || bm02PdfUrl" class="mt-4 space-y-2">
                   <div class="flex flex-wrap justify-end gap-3">
                     <button
                       v-if="bm02HtmlBlobUrl"
@@ -567,7 +569,7 @@
                       class="text-sm font-medium text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900"
                       @click="openBm02HtmlInNewTab"
                     >
-                      Mở phiếu HTML (tab mới)
+                      Mở phiếu in HTML (tab mới)
                     </button>
                     <button
                       v-if="bm02PdfUrl"
@@ -578,24 +580,13 @@
                       Mở PDF (tab mới)
                     </button>
                   </div>
-                  <div v-if="bm02HtmlBlobUrl" class="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                    <iframe
-                      title="Xem trước BM.02"
-                      :src="bm02HtmlBlobUrl"
-                      class="block h-[min(70vh,560px)] w-full min-h-[320px] bg-white"
-                    />
-                  </div>
-                  <div v-else-if="bm02PdfUrl" class="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                    <object
-                      :data="bm02PdfUrl"
-                      type="application/pdf"
-                      class="block h-[min(70vh,520px)] w-full min-h-[320px]"
-                    >
-                      <p class="px-4 py-8 text-center text-sm text-slate-600">
-                        Không hiển thị PDF trong khung — dùng <span class="font-medium">Mở PDF (tab mới)</span> hoặc
-                        <span class="font-medium">Tải PDF</span>.
-                      </p>
-                    </object>
+                  <div
+                    v-if="bm02SheetPreviewHtml"
+                    class="bm02-excel-sheet-preview overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+                  >
+                    <div class="bm02-excel-sheet-preview__scroll dw-table-wrap max-h-[min(70vh,560px)] min-h-[320px]">
+                      <div class="bm02-excel-sheet-preview__html" v-html="bm02SheetPreviewHtml" />
+                    </div>
                   </div>
                 </div>
               </template>
@@ -847,6 +838,7 @@ const {
   bm02HtmlBlobUrl,
   bm02PdfBase64,
   bm02ExcelBase64,
+  bm02SheetPreviewHtml,
   created,
   hasDraftSnapshot,
   clearDraftModalOpen,
