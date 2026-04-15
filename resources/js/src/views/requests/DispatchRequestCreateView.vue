@@ -1376,7 +1376,7 @@ const tripTypeOptions = [
   {
     value: 'door_to_door',
     label: 'Đưa đón (Door-to-door)',
-    hint: 'Học sinh — tuyến cố định.',
+
     icon: AcademicCapIcon,
     iconClass: 'text-violet-600',
     selectedClass: 'border-violet-500 bg-violet-50 shadow-sm ring-1 ring-violet-200',
@@ -1384,7 +1384,7 @@ const tripTypeOptions = [
   {
     value: 'point_to_point',
     label: 'Điểm — Điểm',
-    hint: 'Nội bộ, hoạt ngoại khóa.',
+
     icon: BuildingOffice2Icon,
     iconClass: 'text-sky-600',
     selectedClass: 'border-sky-500 bg-sky-50 shadow-sm ring-1 ring-sky-200',
@@ -1392,7 +1392,6 @@ const tripTypeOptions = [
   {
     value: 'business',
     label: 'Công tác',
-    hint: 'Họp, sân bay, công tác ngoài.',
     icon: BriefcaseIcon,
     iconClass: 'text-emerald-600',
     selectedClass: 'border-emerald-500 bg-emerald-50 shadow-sm ring-1 ring-emerald-200',
@@ -1400,7 +1399,6 @@ const tripTypeOptions = [
   {
     value: 'cargo',
     label: 'Hàng hóa',
-    hint: 'Chuyển hàng giữa cơ sở.',
     icon: CubeIcon,
     iconClass: 'text-orange-600',
     selectedClass: 'border-orange-500 bg-orange-50 shadow-sm ring-1 ring-orange-200',
