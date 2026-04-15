@@ -490,7 +490,7 @@
         <!-- Step 3 -->
         <div v-show="step === 2" class="space-y-6 sm:space-y-8">
           <div>
-            <h2 class="text-lg font-semibold text-slate-900">3. Chi tiết chuyến</h2>
+            <h2 class="text-lg font-semibold text-slate-900">3. Chi tiết chuyến (Nội dung đề nghị chuyến đi)</h2>
           </div>
 
           <!-- Passenger: E / e.1 / e.2 -->
@@ -498,13 +498,7 @@
 
             <!-- e.1 -->
             <section class="dw-e-block dw-e-block--e1 space-y-4" aria-labelledby="dw-e1-heading">
-              <header class="dw-e-block__intro">
-                <div>
-                  <h3 id="dw-e1-heading" class="dw-e-block__title">
-                    Nội dung đề nghị chuyến đi
-                  </h3>
-                </div>
-              </header>
+          
               <div class="dw-table-wrap -mx-1 rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-900/[0.04] sm:mx-0">
                 <table class="min-w-[1280px] w-full border-collapse text-left text-[11px] sm:text-sm">
                   <thead>
