@@ -545,19 +545,9 @@
                     <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
                     Tải Excel
                   </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
-                    :disabled="!bm02PdfBase64"
-                    @click="downloadBm02Pdf"
-                  >
-                    <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
-                    Tải PDF
-                  </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  Phiếu BM.02 được xuất trực tiếp thành file. Dùng <span class="font-medium">Tải PDF</span> để tải bản PDF về máy
-                  (và <span class="font-medium">Tải Excel</span> nếu cần file bảng tính).
+                  Phiếu BM.02 được xuất trực tiếp thành file. Dùng <span class="font-medium">Tải Excel</span> để tải file về máy.
                 </p>
               </template>
             </div>
@@ -804,7 +794,6 @@ const {
   error,
   bm02Loading,
   bm02PreviewError,
-  bm02PdfBase64,
   bm02ExcelBase64,
   created,
   hasDraftSnapshot,
@@ -851,7 +840,6 @@ const {
   headerPrimaryDisabled,
   primaryAction,
   loadBm02Preview,
-  downloadBm02Pdf,
   downloadBm02Excel,
   saveDraft,
   openClearDraftModal,
