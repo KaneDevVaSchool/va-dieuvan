@@ -9,9 +9,7 @@
           <span class="text-slate-400"> • </span>
           {{ draftLabel }}
         </p>
-        <p class="mt-1 max-w-xl text-xs text-slate-500">
-          Mẫu tham chiếu BM.03/MH.QT.04 — Điều chuyển hàng hóa &amp; các loại chuyến. Dữ liệu chi tiết được đính kèm trong phần ghi chú khi gửi.
-        </p>
+     
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button
@@ -146,15 +144,13 @@
         <div v-show="step === 1" class="space-y-8">
           <div>
             <h2 class="text-lg font-semibold text-slate-900">2. Thông tin người đề nghị &amp; thời gian</h2>
-            <p class="mt-1 text-sm text-slate-600">Khớp mục A–D trên mẫu BM.03.</p>
           </div>
 
           <div class="grid gap-8 xl:grid-cols-12">
             <!-- A + C -->
             <div class="space-y-6 xl:col-span-5">
               <div class="dw-fieldset">
-                <h3 class="dw-section-title">A. Người đề nghị</h3>
-                <p class="dw-hint mb-3">Gõ họ tên để tìm trong hệ thống — hệ thống tự điền các trường bên dưới.</p>
+                <h3 class="dw-section-title">Người đề nghị</h3>
                 <div class="relative">
                   <label class="dw-label">
                     <span>Tìm theo tên <span class="dw-req" aria-hidden="true">*</span></span>
@@ -224,7 +220,7 @@
               </div>
 
               <div class="dw-fieldset">
-                <h3 class="dw-section-title">C. Thời gian</h3>
+                <h3 class="dw-section-title">Thời gian</h3>
                 <label class="block">
                   <span class="dw-label-text" title="Ngày lập đề xuất thực tế. Bấm vào ô để mở lịch.">
                     Ngày đề xuất <span class="dw-req" aria-hidden="true">*</span>
@@ -237,13 +233,6 @@
                     @click="openDatePickerFromInput($event)"
                   />
                 </label>
-                <p class="dw-callout mt-3">
-                  Lưu ý: từ khi bộ phận Điều vận nhận đề nghị, tối thiểu
-                  <strong class="text-amber-900">03 ngày làm việc</strong>
-                  (trừ đề xuất xe từ 2000kg: báo trước ít nhất
-                  <strong class="text-amber-900">05 ngày làm việc</strong>
-                  ). Nhu cầu ngắn hơn được xem là gấp — bật mục Gấp bên dưới.
-                </p>
                 <label class="mt-4 block">
                   <span class="dw-label-text" title="Tự điền theo ngày đề xuất; có thể chỉnh lại nếu khác.">
                     Ngày cần sử dụng xe <span class="dw-req" aria-hidden="true">*</span>
@@ -296,10 +285,38 @@
               </div>
             </div>
 
-            <!-- B + D -->
             <div class="space-y-6 xl:col-span-7">
               <div class="dw-fieldset">
-                <h3 class="dw-section-title">B. Mục đích sử dụng</h3>
+                <h3 class="dw-section-title">Mục đích sử dụng</h3>
+                <div
+                  v-if="form.trip_type === 'point_to_point'"
+                  class="mb-4 flex flex-wrap gap-3"
+                  role="radiogroup"
+                  aria-label="Phân loại mục đích (Điểm — Điểm)"
+                >
+                  <label
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
+                  >
+                    <input
+                      v-model="form.point_purpose_kind"
+                      type="radio"
+                      value="point_to_point"
+                      class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
+                    />
+                    <span>Điểm — Điểm</span>
+                  </label>
+                  <label
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
+                  >
+                    <input
+                      v-model="form.point_purpose_kind"
+                      type="radio"
+                      value="extracurricular"
+                      class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
+                    />
+                    <span>Hoạt động ngoại khóa</span>
+                  </label>
+                </div>
                 <label class="block">
                   <span class="dw-label-text">Mục đích sử dụng <span class="dw-req" aria-hidden="true">*</span></span>
                   <textarea
@@ -364,8 +381,8 @@
               </div>
 
               <div class="dw-fieldset">
-                <h3 class="dw-section-title">D. Đối tượng được phân bổ</h3>
-                <p class="dw-hint mb-2">Chọn một hoặc nhiều đơn vị / đối tượng (cuộn để xem hết).</p>
+                <h3 class="dw-section-title">Đối tượng được phân bổ</h3>
+    
                 <div class="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2">
                   <label
                     v-for="t in targetOptions"
@@ -380,8 +397,8 @@
               </div>
 
               <div class="dw-fieldset">
-                <h3 class="dw-section-title">d.2 Nhân sự phụ trách điều phối</h3>
-                <p class="dw-hint mb-3">Tìm theo tên để điền nhanh (không bắt buộc).</p>
+                <h3 class="dw-section-title">Nhân sự phụ trách điều phối</h3>
+    
                 <div class="relative">
                   <label class="dw-label">
                     <span>Tìm theo tên</span>
@@ -473,31 +490,19 @@
         <!-- Step 3 -->
         <div v-show="step === 2" class="space-y-6 sm:space-y-8">
           <div>
-            <h2 class="text-lg font-semibold text-slate-900">3. Chi tiết chuyến / hàng hóa</h2>
-            <p class="mt-1 text-sm text-slate-600">
-              {{
-                isCargo
-                  ? 'Mục E — Điều chuyển hàng hóa (bảng chi tiết). Giờ xuất phát gửi hệ thống lấy theo thời gian lấy hàng sớm nhất trong bảng.'
-                  : 'Mục E — Ngoại khóa (e.1) và công tác (e.2). Giờ xuất phát gửi hệ thống lấy theo thời gian chuyến đi sớm nhất trong các bảng.'
-              }}
-            </p>
+            <h2 class="text-lg font-semibold text-slate-900">3. Chi tiết chuyến</h2>
           </div>
 
           <!-- Passenger: E / e.1 / e.2 -->
           <div v-if="!isCargo" class="space-y-8">
-            <div class="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/90 to-white px-4 py-3 sm:px-5">
-              <h3 class="text-sm font-bold uppercase tracking-wide text-va-800">E. Nội dung đề nghị vận chuyển</h3>
-            </div>
 
             <!-- e.1 -->
             <section class="dw-e-block dw-e-block--e1 space-y-4" aria-labelledby="dw-e1-heading">
               <header class="dw-e-block__intro">
                 <div>
                   <h3 id="dw-e1-heading" class="dw-e-block__title">
-                    <span class="dw-e-kicker">e.1</span>
-                    Nội dung đề xuất cho chương trình / sự kiện ngoại khóa (kèm bảng kê danh sách)
+                    Nội dung đề nghị chuyến đi
                   </h3>
-                  <p class="dw-e-block__meta">Chuyến đi — chuyến về; đơn giá &amp; phí phát sinh gồm VAT (ước tính).</p>
                 </div>
               </header>
               <div class="dw-table-wrap -mx-1 rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-900/[0.04] sm:mx-0">
@@ -569,17 +574,17 @@
               </div>
             </section>
 
-            <!-- e.1.1 -->
-            <section class="dw-e-panel dw-e-panel--e11" aria-labelledby="dw-e11-heading">
+            <!-- e.1.1 (ẩn với loại Điểm — Điểm) -->
+            <section
+              v-if="!isPointToPointTrip"
+              class="dw-e-panel dw-e-panel--e11"
+              aria-labelledby="dw-e11-heading"
+            >
               <header class="dw-e-panel__head">
                 <div>
                   <h3 id="dw-e11-heading" class="dw-e-panel__title">
-                    <span class="dw-e-kicker">e.1.1</span>
-                    Các ghi chú khác đề xuất (nếu có)
+                    Ghi chú khác đề xuất (nếu có)
                   </h3>
-                  <p class="dw-e-panel__lede">
-                    Dùng khi ngoại khóa kéo dài từ 3 ngày trở lên: khoảng thời gian, tổng ngày phát sinh, chi phí ước tính và các thứ áp dụng trong tuần.
-                  </p>
                 </div>
               </header>
 
@@ -652,16 +657,16 @@
             </section>
 
             <!-- e.2 -->
-            <section class="dw-e-block dw-e-block--e2 space-y-4" aria-labelledby="dw-e2-heading">
+            <section
+              v-if="!isPointToPointTrip"
+              class="dw-e-block dw-e-block--e2 space-y-4"
+              aria-labelledby="dw-e2-heading"
+            >
               <header class="dw-e-block__intro">
                 <div>
                   <h3 id="dw-e2-heading" class="dw-e-block__title">
-                    <span class="dw-e-kicker">e.2</span>
-                    Nội dung đề xuất cho nhân sự đi công tác (kèm bảng kê danh sách)
+                    Nội dung đề xuất cho nhân sự đi công tác
                   </h3>
-                  <p class="dw-e-block__meta">
-                    Điểm dừng giữa lịch trình, chuyến về; đơn giá &amp; phí phát sinh gồm VAT (ước tính).
-                  </p>
                 </div>
               </header>
               <div class="dw-table-wrap -mx-1 rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-900/[0.04] sm:mx-0">
@@ -734,14 +739,16 @@
             </section>
 
             <!-- e.2.1 -->
-            <section class="dw-e-panel dw-e-panel--e21" aria-labelledby="dw-e21-heading">
+            <section
+              v-if="!isPointToPointTrip"
+              class="dw-e-panel dw-e-panel--e21"
+              aria-labelledby="dw-e21-heading"
+            >
               <header class="dw-e-panel__head">
                 <div>
                   <h3 id="dw-e21-heading" class="dw-e-panel__title">
-                    <span class="dw-e-kicker">e.2.1</span>
-                    Các ghi chú khác đề xuất (nếu có)
+                    Ghi chú khác đề xuất (nếu có)
                   </h3>
-                  <p class="dw-e-panel__lede">Phát sinh ngoài lịch chạy chính: đưa đón tận nhà, tự túc tài xế, hoặc sử dụng xe sau 21h.</p>
                 </div>
               </header>
               <div class="dw-e21-rows">
@@ -801,19 +808,13 @@
                 </div>
               </div>
             </section>
-
-            <div class="dw-e-total" role="status">
-              <span class="dw-e-total__label">Tổng E (e.1 + e.2)</span>
-              <span class="dw-e-total__value">{{ formatCurrency(passengerTotal) }}</span>
-              <span class="dw-e-total__hint">Cộng từ các dòng e.1, e.2 và phí ghi trong bảng (ước tính).</span>
-            </div>
           </div>
 
           <!-- Cargo table -->
           <div v-else class="space-y-4">
             <div class="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/90 to-white px-4 py-3 sm:px-5">
-              <h3 class="text-sm font-bold uppercase tracking-wide text-va-800">E. Nội dung đề nghị vận chuyển</h3>
-              <p class="mt-1 text-xs text-slate-600">e.1. Nội dung chi tiết</p>
+              <h3 class="text-sm font-bold uppercase tracking-wide text-va-800">Nội dung đề nghị vận chuyển</h3>
+              <p class="mt-1 text-xs text-slate-600">Nội dung chi tiết</p>
             </div>
             <div class="dw-table-wrap rounded-xl border border-slate-200">
             <table class="min-w-[1420px] w-full border-collapse text-left text-xs sm:text-sm">
@@ -975,7 +976,7 @@
                 <div class="mt-8 min-h-[3rem] text-xs text-slate-500">PO / xác nhận vận đơn</div>
               </div>
             </div>
-            <p class="mt-2 text-xs text-slate-500">G.1 Mã vận đơn (PO), G.2 Ngày nhận đề nghị đã phê duyệt — cập nhật tại bước xử lý sau.</p>
+            <p class="mt-2 text-xs text-slate-500"> Mã vận đơn (PO), G.Ngày nhận đề nghị đã phê duyệt — cập nhật tại bước xử lý sau.</p>
           </div>
 
           <div v-if="error" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
@@ -1261,6 +1262,8 @@ function createInitialForm() {
     requester_phone: '',
     requester_unit: '',
     purpose: '',
+    /** Chỉ khi trip_type === point_to_point: 'point_to_point' | 'extracurricular' */
+    point_purpose_kind: 'point_to_point',
     proposed_date: today,
     date_needed: today,
     is_urgent: false,
@@ -1412,6 +1415,9 @@ const tripTypeOptions = [
 ]
 
 const isCargo = computed(() => form.value.trip_type === 'cargo')
+
+/** Điểm — Điểm: ẩn e.1.1 / e.2 / e.2.1 và không gộp e.2 vào tổng. */
+const isPointToPointTrip = computed(() => form.value.trip_type === 'point_to_point')
 
 const e1WeekdayOptions = [
   { k: 'mon', label: 'Thứ 2' },
@@ -1616,8 +1622,10 @@ const computedDepartAt = computed(() => {
     for (const r of passengerRows.value) {
       if (r.depart_at) vals.push(r.depart_at)
     }
-    for (const r of businessRows.value) {
-      if (r.depart_at) vals.push(r.depart_at)
+    if (!isPointToPointTrip.value) {
+      for (const r of businessRows.value) {
+        if (r.depart_at) vals.push(r.depart_at)
+      }
     }
   }
   return minDatetimeLocalFromValues(vals)
@@ -1678,6 +1686,9 @@ const canGoNext = computed(() => {
     if (!computedDepartAt.value?.trim()) return false
     if (isCargo.value) {
       return cargoRows.value.some((r) => r.name?.trim())
+    }
+    if (isPointToPointTrip.value) {
+      return passengerRows.value.some(isPassengerRowFilled)
     }
     return (
       passengerRows.value.some(isPassengerRowFilled) || businessRows.value.some(isBusinessRowFilled)
@@ -1743,26 +1754,31 @@ function buildNotesBody() {
   const lines = []
   lines.push('=== ĐỀ NGHỊ ĐIỀU VẬN (BM.03/MH.QT.04 — bản điện tử) ===')
   lines.push('')
-  lines.push('A. Người đề nghị')
+  lines.push('Người đề nghị')
   lines.push(`- Họ tên: ${f.requester_name || '—'}`)
   lines.push(`- Email: ${f.requester_email || '—'}`)
   lines.push(`- Điện thoại: ${f.requester_phone || '—'}`)
   lines.push(`- Đơn vị: ${f.requester_unit || '—'}`)
   lines.push('')
-  lines.push('B. Mục đích sử dụng')
+  lines.push('Mục đích sử dụng')
   lines.push(`- Mục đích: ${f.purpose || '—'}`)
+  if (f.trip_type === 'point_to_point') {
+    const pk =
+      f.point_purpose_kind === 'extracurricular' ? 'Hoạt động ngoại khóa' : 'Điểm — Điểm'
+    lines.push(`- Phân loại mục đích: ${pk}`)
+  }
   if (basisFile.value) {
     lines.push(`- Căn cứ đề xuất: đính kèm tệp «${basisFile.value.name}»`)
   } else {
     lines.push('- Căn cứ đề xuất: (chưa đính kèm tệp)')
   }
   lines.push('')
-  lines.push('C. Thời gian')
+  lines.push('Thời gian')
   lines.push(`- Ngày đề xuất: ${f.proposed_date || '—'}`)
   lines.push(`- Ngày cần sử dụng xe: ${f.date_needed || '—'}`)
   if (f.is_urgent) lines.push(`- GẤP — Lý do: ${f.urgent_reason || '—'}`)
   lines.push('')
-  lines.push('D. Đối tượng / điều phối')
+  lines.push('Đối tượng / điều phối')
   lines.push(`- Đối tượng: ${f.targets?.length ? f.targets.join(', ') : '—'}`)
   lines.push(
     `- Điều phối: ${f.coordinator_name || '—'} | ${f.coordinator_email || '—'} | ${f.coordinator_phone || '—'}`,
@@ -1770,8 +1786,8 @@ function buildNotesBody() {
   lines.push('')
 
   if (isCargo.value) {
-    lines.push('E. Nội dung đề nghị vận chuyển')
-    lines.push('e.1. Nội dung chi tiết')
+    lines.push('Nội dung đề nghị vận chuyển')
+    lines.push('Nội dung chi tiết')
     cargoRows.value.forEach((r, i) => {
       if (!r.name?.trim()) return
       lines.push(
@@ -1807,35 +1823,37 @@ function buildNotesBody() {
       )
     })
     lines.push(`Tổng e.1 (ước tính): ${formatCurrency(passengerE1Total.value)}`)
-    const wd = f.e1_weekdays || {}
-    const wdLabels = []
-    if (wd.mon) wdLabels.push('T2')
-    if (wd.tue) wdLabels.push('T3')
-    if (wd.wed) wdLabels.push('T4')
-    if (wd.thu) wdLabels.push('T5')
-    if (wd.fri) wdLabels.push('T6')
-    if (wd.sat) wdLabels.push('T7')
-    if (wd.sun) wdLabels.push('CN')
-    lines.push('e.1.1 Ghi chú khác đề xuất')
-    if (f.e1_use_3plus_days) {
-      lines.push(
-        `- Xe từ 3 ngày trở lên: ${f.e1_from_date || '—'} → ${f.e1_to_date || '—'} | Tổng ngày: ${f.e1_days_total || '—'} | Phát sinh: ${f.e1_extra_cost || '0'}`,
-      )
+    if (f.trip_type !== 'point_to_point') {
+      const wd = f.e1_weekdays || {}
+      const wdLabels = []
+      if (wd.mon) wdLabels.push('T2')
+      if (wd.tue) wdLabels.push('T3')
+      if (wd.wed) wdLabels.push('T4')
+      if (wd.thu) wdLabels.push('T5')
+      if (wd.fri) wdLabels.push('T6')
+      if (wd.sat) wdLabels.push('T7')
+      if (wd.sun) wdLabels.push('CN')
+      lines.push('e.1.1 Ghi chú khác đề xuất')
+      if (f.e1_use_3plus_days) {
+        lines.push(
+          `- Xe từ 3 ngày trở lên: ${f.e1_from_date || '—'} → ${f.e1_to_date || '—'} | Tổng ngày: ${f.e1_days_total || '—'} | Phát sinh: ${f.e1_extra_cost || '0'}`,
+        )
+      }
+      if (wdLabels.length) lines.push(`- Các thứ trong tuần: ${wdLabels.join(', ')}`)
+      lines.push('Nội dung đề xuất cho nhân sự đi công tác')
+      businessRows.value.forEach((r, i) => {
+        if (!isBusinessRowFilled(r)) return
+        lines.push(
+          `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Dừng: ${r.waypoint || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | ĐG+PS: ${formatCurrency(rowLineTotal(r))} | ${r.notes || ''}`,
+        )
+      })
+      lines.push(`Tổng e.2 (ước tính): ${formatCurrency(passengerE2Total.value)}`)
+      lines.push('e.2.1 Ghi chú khác (công tác)')
+      if (f.e2_door_pickup) lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || '0'}`)
+      if (f.e2_driver_self) lines.push(`- Tài xế tự túc: ${f.e2_driver_self_cost || '0'}`)
+      if (f.e2_after_21h) lines.push(`- Xe sau 21h: ${f.e2_after_21h_cost || '0'}`)
+      lines.push(`Tổng E (ước tính): ${formatCurrency(passengerTotal.value)}`)
     }
-    if (wdLabels.length) lines.push(`- Các thứ trong tuần: ${wdLabels.join(', ')}`)
-    lines.push('e.2. Nội dung đề xuất cho nhân sự đi công tác')
-    businessRows.value.forEach((r, i) => {
-      if (!isBusinessRowFilled(r)) return
-      lines.push(
-        `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Dừng: ${r.waypoint || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | ĐG+PS: ${formatCurrency(rowLineTotal(r))} | ${r.notes || ''}`,
-      )
-    })
-    lines.push(`Tổng e.2 (ước tính): ${formatCurrency(passengerE2Total.value)}`)
-    lines.push('e.2.1 Ghi chú khác (công tác)')
-    if (f.e2_door_pickup) lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || '0'}`)
-    if (f.e2_driver_self) lines.push(`- Tài xế tự túc: ${f.e2_driver_self_cost || '0'}`)
-    if (f.e2_after_21h) lines.push(`- Xe sau 21h: ${f.e2_after_21h_cost || '0'}`)
-    lines.push(`Tổng E (ước tính): ${formatCurrency(passengerTotal.value)}`)
   }
 
   lines.push('')
@@ -1853,7 +1871,9 @@ function computeApiOriginDestination() {
   }
   const r =
     passengerRows.value.find((x) => x.pickup?.trim() || x.dropoff?.trim()) ||
-    businessRows.value.find((x) => x.pickup?.trim() || x.dropoff?.trim())
+    (!isPointToPointTrip.value
+      ? businessRows.value.find((x) => x.pickup?.trim() || x.dropoff?.trim())
+      : undefined)
   return {
     origin: r?.pickup?.trim() || '',
     destination: r?.dropoff?.trim() || '',
@@ -1899,6 +1919,11 @@ function validateBeforeApi() {
     if (!cargoRows.value.some((r) => r.name?.trim())) {
       step.value = 2
       return 'Thêm ít nhất một dòng hàng hóa (tên hàng).'
+    }
+  } else if (form.value.trip_type === 'point_to_point') {
+    if (!passengerRows.value.some(isPassengerRowFilled)) {
+      step.value = 2
+      return 'Thêm ít nhất một dòng chi tiết (e.1) hoặc nhập thời gian chuyến.'
     }
   } else if (
     !passengerRows.value.some(isPassengerRowFilled) &&
