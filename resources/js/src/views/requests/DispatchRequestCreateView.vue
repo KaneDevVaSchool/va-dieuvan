@@ -556,59 +556,9 @@
                   </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  So sánh <span class="font-medium">biểu mẫu PDF chuẩn</span> với <span class="font-medium">PDF tạo từ dữ liệu</span> (xuất
-                  mPDF). <span class="font-medium">Tải Excel / Tải PDF</span> để lưu file. Mở PDF ở tab mới có thể hiện
-                  <span class="font-mono text-[11px]">blob:…</span> (PDF tạm trong trình duyệt).
+                  Phiếu BM.02 được xuất trực tiếp thành file. Dùng <span class="font-medium">Tải PDF</span> để tải bản PDF về máy
+                  (và <span class="font-medium">Tải Excel</span> nếu cần file bảng tính).
                 </p>
-                <div class="mt-4 space-y-4">
-                  <div class="flex flex-wrap justify-end gap-3">
-                    <button
-                      v-if="bm02PdfUrl"
-                      type="button"
-                      class="text-sm font-medium text-slate-700 underline decoration-slate-400/40 underline-offset-2 hover:text-slate-900"
-                      @click="openBm02PdfInNewTab"
-                    >
-                      Mở PDF đã tạo (tab mới)
-                    </button>
-                  </div>
-                  <div class="grid gap-4 lg:grid-cols-2">
-                    <div class="space-y-1.5">
-                      <div class="text-xs font-semibold text-emerald-900">Biểu mẫu chuẩn (tham chiếu)</div>
-                      <p class="text-[11px] leading-relaxed text-slate-500">
-                        PDF mẫu BM.02/MH.QT.04 — Điểm của điểm (bố cục &amp; lưới ô đối chiếu).
-                      </p>
-                      <div class="overflow-hidden rounded-lg border border-emerald-200/90 bg-white shadow-sm ring-1 ring-emerald-900/10">
-                        <iframe
-                          title="Biểu mẫu PDF BM.02 Điểm — Điểm"
-                          src="/documents/bm02-bieu-mau-p2p-diem-diem.pdf"
-                          class="block h-[min(62vh,520px)] w-full min-h-[280px] border-0"
-                        />
-                      </div>
-                    </div>
-                    <div class="space-y-1.5">
-                      <div class="text-xs font-semibold text-slate-800">PDF tạo từ dữ liệu của bạn</div>
-                      <p v-if="!bm02PdfUrl" class="text-[11px] text-slate-500">
-                        Đang chờ bản xem trước… hoặc bấm <span class="font-medium">Làm mới</span>.
-                      </p>
-                      <div
-                        v-if="bm02PdfUrl"
-                        class="overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm"
-                      >
-                        <iframe
-                          title="Xem trước PDF BM.02 từ dữ liệu đã nhập"
-                          :src="bm02PdfUrl"
-                          class="block h-[min(62vh,520px)] w-full min-h-[280px] border-0"
-                        />
-                      </div>
-                      <div
-                        v-else
-                        class="flex h-[min(62vh,520px)] min-h-[200px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/90 px-4 text-center text-xs text-slate-500"
-                      >
-                        Chưa có PDF xem trước.
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </template>
             </div>
           </div>
@@ -854,7 +804,6 @@ const {
   error,
   bm02Loading,
   bm02PreviewError,
-  bm02PdfUrl,
   bm02PdfBase64,
   bm02ExcelBase64,
   created,
@@ -921,12 +870,6 @@ function formatDraftTime(ts) {
     return new Date(ts).toLocaleString('vi-VN')
   } catch {
     return '—'
-  }
-}
-
-function openBm02PdfInNewTab() {
-  if (bm02PdfUrl.value) {
-    window.open(bm02PdfUrl.value, '_blank', 'noopener,noreferrer')
   }
 }
 </script>
