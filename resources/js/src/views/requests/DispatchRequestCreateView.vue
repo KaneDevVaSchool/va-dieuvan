@@ -556,21 +556,12 @@
                   </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  So sánh <span class="font-medium">biểu mẫu chuẩn</span> (PDF cố định trong hệ thống, cùng nguồn mẫu Điểm — Điểm) với
-                  <span class="font-medium">bản PDF của bạn</span> (tạo từ dữ liệu đã nhập). Phần
-                  <span class="font-medium">sheet Excel</span> là bảng đọc từ file .xlsx. Khi mở PDF ở tab mới, địa chỉ có thể hiện
-                  <span class="font-mono text-[11px]">blob:…</span> (file PDF tạm trong trình duyệt). Dùng <span class="font-medium">Tải PDF</span> để lưu file đặt tên.
+                  So sánh <span class="font-medium">biểu mẫu PDF chuẩn</span> với <span class="font-medium">PDF tạo từ dữ liệu</span> (xuất
+                  mPDF). <span class="font-medium">Tải Excel / Tải PDF</span> để lưu file. Mở PDF ở tab mới có thể hiện
+                  <span class="font-mono text-[11px]">blob:…</span> (PDF tạm trong trình duyệt).
                 </p>
                 <div class="mt-4 space-y-4">
                   <div class="flex flex-wrap justify-end gap-3">
-                    <button
-                      v-if="bm02HtmlBlobUrl"
-                      type="button"
-                      class="text-sm font-medium text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900"
-                      @click="openBm02HtmlInNewTab"
-                    >
-                      Mở phiếu in HTML (tab mới)
-                    </button>
                     <button
                       v-if="bm02PdfUrl"
                       type="button"
@@ -614,16 +605,6 @@
                         class="flex h-[min(62vh,520px)] min-h-[200px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/90 px-4 text-center text-xs text-slate-500"
                       >
                         Chưa có PDF xem trước.
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="bm02SheetPreviewHtml" class="space-y-1.5">
-                    <div class="text-xs font-medium text-slate-700">Xem trước dạng sheet (Excel)</div>
-                    <div
-                      class="bm02-excel-sheet-preview overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-                    >
-                      <div class="bm02-excel-sheet-preview__scroll dw-table-wrap max-h-[min(42vh,400px)] min-h-[200px]">
-                        <div class="bm02-excel-sheet-preview__html" v-html="bm02SheetPreviewHtml" />
                       </div>
                     </div>
                   </div>
@@ -874,10 +855,8 @@ const {
   bm02Loading,
   bm02PreviewError,
   bm02PdfUrl,
-  bm02HtmlBlobUrl,
   bm02PdfBase64,
   bm02ExcelBase64,
-  bm02SheetPreviewHtml,
   created,
   hasDraftSnapshot,
   clearDraftModalOpen,
@@ -948,12 +927,6 @@ function formatDraftTime(ts) {
 function openBm02PdfInNewTab() {
   if (bm02PdfUrl.value) {
     window.open(bm02PdfUrl.value, '_blank', 'noopener,noreferrer')
-  }
-}
-
-function openBm02HtmlInNewTab() {
-  if (bm02HtmlBlobUrl.value) {
-    window.open(bm02HtmlBlobUrl.value, '_blank', 'noopener,noreferrer')
   }
 }
 </script>

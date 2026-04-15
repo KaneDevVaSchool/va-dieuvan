@@ -64,7 +64,7 @@ export async function createDispatchRequest(payload, opts = {}) {
 }
 
 /**
- * Xem trước mẫu BM.02 (Excel + PDF) từ dữ liệu wizard.
+ * Xem trước mẫu BM.02: Excel + PDF (base64). Không trả HTML.
  * @param {Record<string, unknown>} wizard — { form, passengerRows, … }
  */
 export async function previewBm02DispatchForm(wizard) {
