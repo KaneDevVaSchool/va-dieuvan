@@ -296,6 +296,7 @@ class Bm02P2pFormGenerator
                 'person_in_charge' => (string) ($er['person_in_charge'] ?? ''),
                 'unit_price' => $er['unit_price'] === '' ? '' : (string) $er['unit_price'],
                 'extra_fee' => $er['extra_fee'] === '' ? '' : (string) $er['extra_fee'],
+                'line_total' => $er['line_total'] === '' ? '' : (string) $er['line_total'],
                 'notes' => (string) ($er['notes'] ?? ''),
             ];
         }
@@ -305,6 +306,9 @@ class Bm02P2pFormGenerator
         return [
             'now_excel' => $now,
             'printed_at' => $now->format('d/m/Y H:i'),
+            'issued_date' => $now->format('d/m/Y'),
+            'google_signatory_line2' => (string) ($form['coordinator_name'] ?? ''),
+            'google_checkbox_states' => $this->buildGoogleCheckboxStates($selectedNorm, $isUrgent),
             'requester_name' => (string) ($form['requester_name'] ?? ''),
             'requester_email' => (string) ($form['requester_email'] ?? ''),
             'requester_phone' => (string) ($form['requester_phone'] ?? ''),
@@ -370,7 +374,31 @@ class Bm02P2pFormGenerator
      */
     private function renderPrintHtml(array $vm): string
     {
+        $google = new Bm02P2pGoogleSheetHtmlRenderer;
+        $html = $google->render($vm);
+        if ($html !== null) {
+            return $html;
+        }
+
         return view('dispatch.bm02-p2p-print', ['vm' => $vm])->render();
+    }
+
+    /**
+     * @param  array<string, true>  $selectedNorm
+     * @return list<bool>
+     */
+    private function buildGoogleCheckboxStates(array $selectedNorm, bool $isUrgent): array
+    {
+        $states = [$isUrgent];
+        foreach (self::TARGET_LABELS as $i => $label) {
+            $cell = self::P2P_TARGET_CHECKBOX_CELLS[$i] ?? null;
+            if ($cell === null || $cell === '') {
+                continue;
+            }
+            $states[] = ! empty($selectedNorm[$this->normalizeTargetLabel($label)]);
+        }
+
+        return $states;
     }
 
     private function renderPdfFromHtml(string $html): string
