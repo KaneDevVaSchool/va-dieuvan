@@ -204,6 +204,7 @@ class DriverComplianceDocumentController extends Controller
             'original_name' => $file->getClientOriginalName(),
             'size_bytes' => $file->getSize(),
             'mime_type' => $file->getClientMimeType(),
+            'file_binary' => Attachment::bytesFromUpload($file),
         ]);
 
         app(AuditLogger::class)->log(

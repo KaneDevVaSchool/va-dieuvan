@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AttachmentController extends Controller
 {
@@ -77,6 +78,7 @@ class AttachmentController extends Controller
             'original_name' => $file->getClientOriginalName(),
             'size_bytes' => $file->getSize(),
             'mime_type' => $file->getClientMimeType(),
+            'file_binary' => Attachment::bytesFromUpload($file),
         ]);
 
         app(AuditLogger::class)->log(
@@ -103,6 +105,16 @@ class AttachmentController extends Controller
     public function download(Request $request, Attachment $attachment)
     {
         $this->authorizeAttachmentDownload($request, $attachment);
+
+        $name = $attachment->original_name ?: 'download';
+
+        $binary = $attachment->file_binary;
+        if ($binary !== null && $binary !== '') {
+            return response($binary, 200, [
+                'Content-Type' => $attachment->mime_type ?: 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="'.$this->asciiFilenameForContentDisposition($name).'"',
+            ]);
+        }
 
         $disk = $attachment->disk ?: 'public';
         $rawPath = $attachment->path;
@@ -363,5 +375,16 @@ class AttachmentController extends Controller
         );
 
         return $this->ok($attachment->fresh());
+    }
+
+    private function asciiFilenameForContentDisposition(string $name): string
+    {
+        $trim = trim($name) !== '' ? trim($name) : 'download';
+        $ascii = Str::ascii($trim);
+        if ($ascii === '') {
+            return 'download';
+        }
+
+        return str_replace(['"', "\r", "\n"], '_', $ascii);
     }
 }
