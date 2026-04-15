@@ -163,7 +163,7 @@
 
     <!-- 3-column workspace: horizontal scroll when viewport is tight -->
     <div class="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch]">
-      <div class="flex w-max min-w-full flex-col gap-4 xl:flex-row xl:items-stretch">
+      <div class="flex w-full min-w-0 flex-col gap-4 xl:flex-row xl:items-stretch">
       <!-- Left: resource lists -->
       <aside
         class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[340px] xl:max-w-[340px]"
@@ -357,9 +357,9 @@
         </div>
       </aside>
 
-      <!-- Center: timeline — cố định min-width xl, không co khi cột chi tiết render -->
+      <!-- Center: timeline — full width phần còn lại giữa sidebar và panel chi tiết -->
       <section
-        class="w-full shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm min-w-[min(100%,520px)] xl:min-w-[560px] xl:w-[560px] xl:max-w-[560px]"
+        class="min-w-0 w-full flex-1 rounded-xl border border-slate-200 bg-white shadow-sm"
       >
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 p-3">
           <div
