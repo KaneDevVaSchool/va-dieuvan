@@ -161,8 +161,9 @@
       </div>
     </div>
 
-    <!-- 3-column workspace -->
-    <div class="flex flex-col gap-4 xl:flex-row xl:items-stretch">
+    <!-- 3-column workspace: horizontal scroll when viewport is tight -->
+    <div class="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch]">
+      <div class="flex min-w-[1320px] flex-col gap-4 xl:flex-row xl:items-stretch">
       <!-- Left: resource lists -->
       <aside
         class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,340px)] xl:max-w-[380px]"
@@ -357,7 +358,7 @@
       </aside>
 
       <!-- Center: timeline -->
-      <section class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white shadow-sm">
+      <section class="min-w-[520px] flex-1 rounded-xl border border-slate-200 bg-white shadow-sm xl:min-w-[560px]">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 p-3">
           <div
             class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-600"
@@ -380,9 +381,9 @@
           </div>
         </div>
         <div class="overflow-x-auto">
-          <div class="min-w-[720px] p-3">
+          <div class="min-w-[1000px] p-3">
             <div class="mb-1 flex text-[10px] text-slate-500">
-              <div class="w-[140px] shrink-0" />
+              <div class="w-[160px] shrink-0" />
               <div class="grid min-w-0 flex-1" :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }">
                 <div
                   v-for="h in hourSlots"
@@ -402,7 +403,7 @@
                 :key="row.key"
                 class="flex border-b border-slate-100"
               >
-                <div class="flex w-[140px] shrink-0 flex-col justify-center border-r border-slate-200 py-2 pr-2 text-xs">
+                <div class="flex w-[160px] shrink-0 flex-col justify-center border-r border-slate-200 py-2 pr-2 text-xs">
                   <span class="truncate font-medium text-slate-800">{{ row.label }}</span>
                   <span v-if="row.sub" class="truncate text-[10px] text-rose-600">{{ row.sub }}</span>
                   <span v-else-if="row.meta" class="truncate text-[10px] text-slate-500">{{ row.meta }}</span>
@@ -460,22 +461,44 @@
 
       <!-- Right: action & constraints -->
       <aside
-        class="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50/90 to-white shadow-md ring-1 ring-slate-900/5 xl:w-[min(100%,420px)]"
+        class="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50/90 to-white shadow-md ring-1 ring-slate-900/5 xl:w-[min(100%,460px)]"
       >
-        <div class="flex items-start justify-between gap-2 border-b border-slate-200/80 bg-white/80 px-4 py-3 backdrop-blur-sm">
-          <div class="min-w-0">
-            <h2 class="text-sm font-semibold tracking-tight text-slate-900">{{ t('resources_dashboard.panel_title') }}</h2>
-            <p class="mt-0.5 text-[11px] leading-snug text-slate-500">{{ t('resources_dashboard.panel_subtitle_v2') }}</p>
+        <div class="border-b border-slate-200/80 bg-white/80 backdrop-blur-sm">
+          <div class="flex items-center justify-between gap-2 px-3 py-2.5">
+            <div class="min-w-0 flex flex-1 items-center gap-2">
+              <h2 class="text-sm font-semibold tracking-tight text-slate-900">{{ t('resources_dashboard.panel_title') }}</h2>
+              <button
+                v-if="panel"
+                type="button"
+                class="inline-flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-teal-700 hover:bg-teal-50"
+                :aria-expanded="panelHeaderHelpOpen"
+                :aria-label="t('resources_dashboard.panel_header_hint_toggle')"
+                @click="panelHeaderHelpOpen = !panelHeaderHelpOpen"
+              >
+                {{ t('resources_dashboard.action_details') }}
+                <ChevronDownIcon
+                  class="h-3.5 w-3.5 transition"
+                  :class="panelHeaderHelpOpen ? 'rotate-180' : ''"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <button
+              v-if="panel"
+              type="button"
+              class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800"
+              :aria-label="t('resources_dashboard.panel_close')"
+              @click="clearPanel"
+            >
+              <XMarkIcon class="h-5 w-5" />
+            </button>
           </div>
-          <button
-            v-if="panel"
-            type="button"
-            class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800"
-            :aria-label="t('resources_dashboard.panel_close')"
-            @click="clearPanel"
+          <p
+            v-show="panelHeaderHelpOpen"
+            class="border-t border-slate-100/80 px-3 py-2 text-[11px] leading-snug text-slate-500"
           >
-            <XMarkIcon class="h-5 w-5" />
-          </button>
+            {{ t('resources_dashboard.panel_subtitle_v2') }}
+          </p>
         </div>
         <div v-if="!panel" class="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-10 text-center text-sm text-slate-500">
           {{ t('resources_dashboard.panel_empty_v2') }}
@@ -651,99 +674,117 @@
 
         <!-- Driver -->
         <div v-else-if="panel.type === 'driver'" class="flex flex-1 flex-col overflow-hidden">
-          <div class="flex-1 space-y-4 overflow-y-auto px-3 py-3 text-sm">
-            <div
-              class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5"
-            >
-              <div class="border-l-4 border-amber-400 pl-4 pr-3 pt-3.5 pb-4">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {{ t('resources_dashboard.panel_driver_section') }}
-                </p>
-                <h3 class="mt-1 text-base font-semibold text-slate-900">{{ panel.data.full_name }}</h3>
-                <p class="mt-1 font-mono text-xs text-slate-600">#{{ panel.data.id }}</p>
-                <span
-                  class="mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                  :class="
-                    driverHoursWarn(panel.data.id)
-                      ? 'bg-rose-100 text-rose-900'
-                      : 'bg-emerald-100 text-emerald-900'
-                  "
-                >
-                  {{
-                    driverHoursWarn(panel.data.id)
-                      ? t('resources_dashboard.shift_limit_title')
-                      : t('resources_dashboard.compliance_ok_short')
-                  }}
-                </span>
-              </div>
-            </div>
-
-            <div
-              v-if="driverHoursWarn(panel.data.id)"
-              class="rounded-xl border border-rose-200 bg-rose-50/95 p-3 text-[11px] text-rose-900 shadow-sm"
-            >
-              <div class="flex items-start gap-2">
-                <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" />
-                <div>
-                  <p class="font-semibold">{{ t('resources_dashboard.shift_limit_title') }}</p>
-                  <p class="mt-1 leading-snug opacity-95">{{ t('resources_dashboard.panel_driver_hours_warn') }}</p>
+          <div class="flex-1 space-y-3 overflow-y-auto px-3 py-3 text-sm">
+            <!-- Compact summary: avatar + label + name + id on one row -->
+            <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm ring-1 ring-slate-900/5">
+              <div class="flex items-center gap-3">
+                <div class="relative shrink-0">
+                  <span
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-sm font-semibold text-teal-900 ring-2 ring-offset-2 ring-offset-white"
+                    :class="driverHoursWarn(panel.data.id) ? 'ring-rose-400' : 'ring-transparent'"
+                  >
+                    {{ initials(panel.data.full_name) }}
+                  </span>
+                  <span
+                    class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white"
+                    :class="driverAvailDotClass(panel.data)"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    {{ t('resources_dashboard.panel_driver_section') }}
+                  </p>
+                  <div class="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span class="truncate text-base font-semibold text-slate-900">{{ panel.data.full_name }}</span>
+                    <span class="font-mono text-xs text-slate-500">#{{ panel.data.id }}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <section>
-              <h4 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                {{ t('resources_dashboard.panel_section_compliance') }}
-              </h4>
-              <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                <dl class="space-y-2.5 text-xs">
-                  <div class="flex justify-between gap-2">
-                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_phone') }}</dt>
-                    <dd class="text-right font-medium text-slate-900">{{ panel.data.phone ?? panel.data.user?.phone ?? '—' }}</dd>
-                  </div>
-                  <div class="flex justify-between gap-2">
-                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_license') }}</dt>
-                    <dd class="text-right tabular-nums text-slate-900">{{ panel.data.license_expires_at ?? '—' }}</dd>
-                  </div>
-                  <div class="flex justify-between gap-2">
-                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_hours') }}</dt>
-                    <dd class="text-right font-medium tabular-nums text-slate-900">
-                      {{ formatHoursShort(driverTripHours(panel.data.id)) }}
-                    </dd>
-                  </div>
-                  <div class="flex justify-between gap-2">
-                    <dt class="text-slate-500">{{ t('resources_dashboard.field_status') }}</dt>
-                    <dd class="text-right text-slate-900">{{ availabilityLabel(panel.data) }}</dd>
-                  </div>
-                </dl>
-              </div>
-            </section>
-
-            <div>
-              <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                {{ t('resources_dashboard.panel_quick_actions') }}
-              </p>
-              <div class="flex flex-wrap gap-2">
-                <RouterLink
-                  class="inline-flex flex-1 min-w-[8rem] items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700"
-                  :to="`/resources/drivers/${panel.data.id}`"
-                >
-                  <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
-                  {{ t('resources_dashboard.panel_driver_open') }}
-                </RouterLink>
-                <RouterLink
-                  class="inline-flex flex-1 min-w-[8rem] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-                  to="/dispatcher"
-                >
-                  {{ t('resources_dashboard.action_dispatch_board') }}
-                </RouterLink>
+              <div class="mt-3 flex gap-2">
                 <button
                   type="button"
-                  class="w-full rounded-lg py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  class="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-slate-50/80 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
+                  :aria-expanded="panelDetailOpen"
+                  @click="panelDetailOpen = !panelDetailOpen"
+                >
+                  {{ panelDetailOpen ? t('resources_dashboard.action_hide_details') : t('resources_dashboard.action_details') }}
+                  <ChevronDownIcon
+                    class="h-3.5 w-3.5 shrink-0 transition"
+                    :class="panelDetailOpen ? 'rotate-180' : ''"
+                    aria-hidden="true"
+                  />
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg px-3 py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                   @click="clearPanel"
                 >
                   {{ t('resources_dashboard.action_clear') }}
                 </button>
+              </div>
+            </div>
+
+            <div v-show="panelDetailOpen" class="space-y-3">
+              <div
+                v-if="driverHoursWarn(panel.data.id)"
+                class="rounded-xl border border-rose-200 bg-rose-50/95 p-3 text-[11px] text-rose-900 shadow-sm"
+              >
+                <div class="flex items-start gap-2">
+                  <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p class="font-semibold">{{ t('resources_dashboard.shift_limit_title') }}</p>
+                    <p class="mt-1 leading-snug opacity-95">{{ t('resources_dashboard.panel_driver_hours_warn') }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <section>
+                <h4 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {{ t('resources_dashboard.panel_section_compliance') }}
+                </h4>
+                <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <dl class="space-y-2.5 text-xs">
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_phone') }}</dt>
+                      <dd class="text-right font-medium text-slate-900">{{ panel.data.phone ?? panel.data.user?.phone ?? '—' }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_license') }}</dt>
+                      <dd class="text-right tabular-nums text-slate-900">{{ panel.data.license_expires_at ?? '—' }}</dd>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_hours') }}</dt>
+                      <dd class="text-right font-medium tabular-nums text-slate-900">
+                        {{ formatHoursShort(driverTripHours(panel.data.id)) }}
+                      </dd>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-slate-500">{{ t('resources_dashboard.field_status') }}</dt>
+                      <dd class="text-right text-slate-900">{{ availabilityLabel(panel.data) }}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </section>
+
+              <div>
+                <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {{ t('resources_dashboard.panel_quick_actions') }}
+                </p>
+                <div class="flex flex-col gap-2">
+                  <RouterLink
+                    class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700"
+                    :to="`/resources/drivers/${panel.data.id}`"
+                  >
+                    <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
+                    {{ t('resources_dashboard.panel_driver_open') }}
+                  </RouterLink>
+                  <RouterLink
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                    to="/dispatcher"
+                  >
+                    {{ t('resources_dashboard.action_dispatch_board') }}
+                  </RouterLink>
+                </div>
               </div>
             </div>
           </div>
@@ -873,6 +914,7 @@
           </div>
         </div>
       </aside>
+      </div>
     </div>
   </div>
 </template>
@@ -885,6 +927,7 @@ import {
   BuildingOffice2Icon,
   ChartBarIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
   ExclamationTriangleIcon,
   MagnifyingGlassIcon,
   PencilSquareIcon,
@@ -931,6 +974,10 @@ const filterDriverAvail = ref('')
 const filterSupplier = ref('')
 
 const syncingFromRoute = ref(false)
+/** Mô tả dài dưới tiêu đề panel — chỉ hiện khi bấm "Chi tiết" */
+const panelHeaderHelpOpen = ref(false)
+/** Nội dung chi tiết (tuân thủ, cảnh báo, …) — tài xế và có thể dùng cho các panel khác */
+const panelDetailOpen = ref(false)
 const sidebarNavIndex = ref(-1)
 const assigningNcc = ref(false)
 /** @type {import('vue').Ref<null | { trip: object; startX: number; startDepart: number; lockVersion: number; track: Element; pointerId: number; barEl: Element }>} */
@@ -1058,6 +1105,8 @@ function setPanelSupplier(p) {
 function clearPanel() {
   panel.value = null
   sidebarNavIndex.value = -1
+  panelHeaderHelpOpen.value = false
+  panelDetailOpen.value = false
 }
 
 function navigateSidebar(delta) {
@@ -1146,6 +1195,8 @@ async function applyPanelFromQuery() {
 }
 
 watch(panel, (p) => {
+  panelHeaderHelpOpen.value = false
+  panelDetailOpen.value = false
   if (syncingFromRoute.value) return
   const want = panelToQuery(p)
   const cur = route.query.panel

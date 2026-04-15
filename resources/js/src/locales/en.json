@@ -209,7 +209,10 @@
     "panel_vehicle_section": "Vehicle",
     "panel_supplier_section": "Transport partner",
     "compliance_ok_short": "OK",
-    "panel_quick_actions": "Quick actions"
+    "panel_quick_actions": "Quick actions",
+    "action_details": "Details",
+    "action_hide_details": "Less",
+    "panel_header_hint_toggle": "Panel description"
   },
   "resources": {
     "page_title": "Resources list",

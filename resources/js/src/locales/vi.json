@@ -209,7 +209,10 @@
         "panel_vehicle_section": "Thông tin xe",
         "panel_supplier_section": "Đối tác vận chuyển",
         "compliance_ok_short": "Đạt",
-        "panel_quick_actions": "Thao tác nhanh"
+        "panel_quick_actions": "Thao tác nhanh",
+        "action_details": "Chi tiết",
+        "action_hide_details": "Thu gọn",
+        "panel_header_hint_toggle": "Mô tả panel"
     },
     "resources": {
         "page_title": "Danh sách nguồn lực",
