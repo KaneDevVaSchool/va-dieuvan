@@ -35,8 +35,6 @@
       </Card>
     </div>
 
-    <ResourceOverviewSection />
-
     <Card title="Chi phí confirmed theo NCC / nội bộ (tháng hiện tại)">
       <div v-if="loading" class="text-sm text-slate-500">Đang tải…</div>
       <template v-else>
@@ -59,10 +57,6 @@
         <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/dispatcher">
           <div class="font-semibold">Bảng điều vận</div>
           <div class="mt-1 text-xs text-slate-500">Hàng đợi chuyến & lịch tài xế</div>
-        </RouterLink>
-        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/resources">
-          <div class="font-semibold">Quản lý nguồn lực</div>
-          <div class="mt-1 text-xs text-slate-500">Xe, tài xế, nhà cung cấp</div>
         </RouterLink>
         <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/trips">
           <div class="font-semibold">Danh sách chuyến</div>
@@ -101,7 +95,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Card from '../components/ui/Card.vue'
-import ResourceOverviewSection from '../components/dashboard/ResourceOverviewSection.vue'
 import { getSummary } from '../api/reports'
 import { labelTripStatus } from '../util/labels'
 

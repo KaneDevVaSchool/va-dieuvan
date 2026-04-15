@@ -26,6 +26,7 @@ import SystemPermissionsView from "../views/system/SystemPermissionsView.vue";
 import SystemUserRolesView from "../views/system/SystemUserRolesView.vue";
 import SystemFeatureTogglesView from "../views/system/SystemFeatureTogglesView.vue";
 import ResourcesListView from "../views/resources/ResourcesListView.vue";
+import ResourcesDashboardView from "../views/resources/ResourcesDashboardView.vue";
 import DriverDetailView from "../views/resources/DriverDetailView.vue";
 
 const router = createRouter({
@@ -138,12 +139,26 @@ const router = createRouter({
             meta: { title: "Tuyến D2D", subtitle: "Door-to-door" },
         },
         {
-            path: "/resources",
-            name: "resources",
+            path: "/resources/dashboard",
+            redirect: "/resources",
+        },
+        {
+            path: "/resources/list",
+            name: "resourcesList",
             component: ResourcesListView,
             meta: {
                 title: "Quản lý nguồn lực",
                 subtitle: "Xe, tài xế, nhà cung cấp",
+                featureKey: "module.operations",
+            },
+        },
+        {
+            path: "/resources",
+            name: "resources",
+            component: ResourcesDashboardView,
+            meta: {
+                title: "Dashboard nguồn lực",
+                subtitle: "Lịch & tổng quan",
                 featureKey: "module.operations",
             },
         },

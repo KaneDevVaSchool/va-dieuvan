@@ -50,7 +50,7 @@ export const NAV_SECTIONS = [
       },
       { to: '/routes', labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.operations' },
       {
-        to: '/resources',
+        to: '/resources/list',
         labelKey: 'nav.resources',
         icon: 'resources',
         featureKey: 'module.operations',

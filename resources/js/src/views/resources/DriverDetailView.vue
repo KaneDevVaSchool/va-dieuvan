@@ -4,7 +4,7 @@
   >
     <div class="flex flex-wrap items-center gap-3">
       <RouterLink
-        to="/resources"
+        to="/resources/list?tab=drivers"
         class="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
       >
         ← {{ t('driver_detail.back') }}
