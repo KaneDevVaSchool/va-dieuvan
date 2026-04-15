@@ -54,12 +54,6 @@
       <div class="grid gap-3 md:grid-cols-2">
         <RoadmapCard
           priority="P2"
-          title="Lịch dạng calendar đầy đủ"
-          body="Tháng/tuần, kéo thả (nếu policy cho phép), in lịch tài xế."
-          tags="Schedule"
-        />
-        <RoadmapCard
-          priority="P2"
           title="Bản đồ &amp; ETA"
           body="Hiển thị điểm đón, tích hợp map (Google/Mapbox) cho điều vận."
           tags="Maps"

@@ -2,8 +2,6 @@ import {
   AdjustmentsHorizontalIcon,
   BanknotesIcon,
   BellIcon,
-  CalendarDaysIcon,
-  CalendarIcon,
   ChartBarIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
@@ -28,8 +26,6 @@ import {
 export const NAV_ICON_MAP = {
   home: HomeIcon,
   dispatcher: ViewColumnsIcon,
-  schedule: CalendarIcon,
-  calendar: CalendarDaysIcon,
   requests: ClipboardDocumentListIcon,
   new_request: PlusCircleIcon,
   trips: TruckIcon,

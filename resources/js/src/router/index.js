@@ -17,12 +17,10 @@ import RoutesListView from "../views/d2d/RoutesListView.vue";
 import ReportsView from "../views/reports/ReportsView.vue";
 import PricingReferenceView from "../views/pricing/PricingReferenceView.vue";
 import DispatcherBoardView from "../views/dispatcher/DispatcherBoardView.vue";
-import ScheduleWeekView from "../views/schedule/ScheduleWeekView.vue";
 import ProfileView from "../views/profile/ProfileView.vue";
 import HelpGuideView from "../views/help/HelpGuideView.vue";
 import RoadmapSuggestionsView from "../views/roadmap/RoadmapSuggestionsView.vue";
 import NotificationsHubView from "../views/notifications/NotificationsHubView.vue";
-import CalendarMonthView from "../views/calendar/CalendarMonthView.vue";
 import SystemRolesView from "../views/system/SystemRolesView.vue";
 import SystemPermissionsView from "../views/system/SystemPermissionsView.vue";
 import SystemUserRolesView from "../views/system/SystemUserRolesView.vue";
@@ -57,18 +55,6 @@ const router = createRouter({
                 title: "Bảng điều vận",
                 subtitle: "Hàng đợi & lịch phân công",
             },
-        },
-        {
-            path: "/schedule",
-            name: "schedule",
-            component: ScheduleWeekView,
-            meta: { title: "Lịch 7 ngày", subtitle: "Chuyến theo ngày" },
-        },
-        {
-            path: "/calendar",
-            name: "calendar",
-            component: CalendarMonthView,
-            meta: { title: "Lịch tháng", subtitle: "Chuyến theo tháng" },
         },
         {
             path: "/profile",

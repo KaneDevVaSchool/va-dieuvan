@@ -35,6 +35,8 @@
       </Card>
     </div>
 
+    <ResourceOverviewSection />
+
     <Card title="Chi phí confirmed theo NCC / nội bộ (tháng hiện tại)">
       <div v-if="loading" class="text-sm text-slate-500">Đang tải…</div>
       <template v-else>
@@ -58,9 +60,13 @@
           <div class="font-semibold">Bảng điều vận</div>
           <div class="mt-1 text-xs text-slate-500">Hàng đợi chuyến & lịch tài xế</div>
         </RouterLink>
-        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/schedule">
-          <div class="font-semibold">Lịch 7 ngày</div>
-          <div class="mt-1 text-xs text-slate-500">Chuyến theo ngày</div>
+        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/resources">
+          <div class="font-semibold">Quản lý nguồn lực</div>
+          <div class="mt-1 text-xs text-slate-500">Xe, tài xế, nhà cung cấp</div>
+        </RouterLink>
+        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/trips">
+          <div class="font-semibold">Danh sách chuyến</div>
+          <div class="mt-1 text-xs text-slate-500">Lọc, mở chi tiết từng chuyến</div>
         </RouterLink>
         <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/dispatch-requests/new">
           <div class="font-semibold">Tạo yêu cầu</div>
@@ -95,6 +101,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Card from '../components/ui/Card.vue'
+import ResourceOverviewSection from '../components/dashboard/ResourceOverviewSection.vue'
 import { getSummary } from '../api/reports'
 import { labelTripStatus } from '../util/labels'
 

@@ -53,7 +53,7 @@
           </RouterLink>
         </li>
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/schedule">Lịch chuyến 7 ngày</RouterLink>
+          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/trips">Danh sách chuyến</RouterLink>
         </li>
         <li>
           <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/cargo">Theo dõi cargo</RouterLink>

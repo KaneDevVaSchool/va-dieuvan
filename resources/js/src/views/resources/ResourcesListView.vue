@@ -3061,7 +3061,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
@@ -3121,6 +3121,7 @@ import { useAuthStore } from '../../store'
 import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const canManageVehicles = computed(() => auth.hasPermission('resource.vehicle.manage'))
@@ -3879,7 +3880,22 @@ async function loadAll() {
   }
 }
 
-onMounted(loadAll)
+function applyTabFromRoute() {
+  const tab = route.query.tab
+  if (tab === 'vehicles' || tab === 'drivers' || tab === 'suppliers') {
+    activeTab.value = tab
+  }
+}
+
+watch(
+  () => route.query.tab,
+  () => applyTabFromRoute(),
+)
+
+onMounted(() => {
+  applyTabFromRoute()
+  loadAll()
+})
 
 function setTab(id) {
   activeTab.value = id

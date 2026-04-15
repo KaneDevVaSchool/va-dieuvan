@@ -20,25 +20,6 @@ export const NAV_SECTIONS = [
           { to: '/dispatcher', labelKey: 'nav.dispatcher_board', icon: 'dispatcher', featureKey: 'module.overview' },
         ],
       },
-      {
-        labelKey: 'nav.group_schedule',
-        icon: 'schedule',
-        featureKey: 'module.overview',
-        children: [
-          {
-            to: '/schedule',
-            labelKey: 'nav.schedule7',
-            icon: 'schedule',
-            featureKey: 'module.overview',
-          },
-          {
-            to: '/calendar',
-            labelKey: 'nav.calendar',
-            icon: 'calendar',
-            featureKey: 'module.overview',
-          },
-        ],
-      },
     ],
   },
   {
@@ -154,5 +135,5 @@ export const BOTTOM_NAV = [
     badgeKey: 'pending_dispatch_requests',
   },
   { to: '/trips', labelKey: 'nav.bottom_trips', icon: 'trips' },
-  { to: '/schedule', labelKey: 'nav.bottom_schedule', icon: 'schedule' },
+  { to: '/costs', labelKey: 'nav.bottom_costs', icon: 'costs' },
 ]
