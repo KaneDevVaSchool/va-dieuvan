@@ -28,10 +28,19 @@
           Lưu nháp
         </button>
         <button
-          v-if="hasDraftSnapshot"
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+          title="Xem và mở các bản nháp đã lưu trên trình duyệt"
+          @click="openDraftsModal"
+        >
+          <ClipboardDocumentListIcon class="h-4 w-4 text-slate-500" />
+          Bản nháp đã lưu
+        </button>
+        <button
+          v-if="activeDraftId"
           type="button"
           class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
-          title="Xóa bản nháp lưu trên trình duyệt (theo tài khoản hiện tại)"
+          title="Xóa bản nháp đang mở (không xóa các bản khác trong danh sách)"
           @click="openClearDraftModal"
         >
           Xóa nháp
@@ -656,10 +665,11 @@
               </div>
               <div class="min-w-0 pt-0.5">
                 <h3 id="clear-draft-modal-title" class="text-base font-semibold leading-snug text-slate-900">
-                  Xóa bản nháp?
+                  Xóa bản nháp đang mở?
                 </h3>
                 <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                  Xóa bản nháp đã lưu trên trình duyệt và làm mới form. Thao tác này không thể hoàn tác.
+                  Xóa bản nháp hiện tại trên trình duyệt và làm mới form. Các bản nháp khác trong danh sách vẫn được giữ. Thao tác
+                  này không thể hoàn tác.
                 </p>
               </div>
             </div>
@@ -684,6 +694,104 @@
       </div>
     </Transition>
   </Teleport>
+
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="draftsModalOpen"
+        class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drafts-library-title"
+        @click.self="closeDraftsModal"
+      >
+        <div
+          class="flex max-h-[min(85vh,560px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          @click.stop
+        >
+          <div class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h3 id="drafts-library-title" class="text-base font-semibold leading-snug text-slate-900">
+                  Bản nháp đã lưu
+                </h3>
+                <p class="mt-1 text-xs leading-relaxed text-slate-600">
+                  Lưu trên trình duyệt theo tài khoản hiện tại (tối đa 25 bản). Chọn một bản để tiếp tục hoặc tạo form mới.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+                @click="startNewDraftSession"
+              >
+                Form mới
+              </button>
+            </div>
+          </div>
+          <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+            <p v-if="!savedDraftsList.length" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-600">
+              Chưa có bản nháp. Dùng <span class="font-medium">Lưu nháp</span> để lưu tại đây.
+            </p>
+            <ul v-else class="space-y-2">
+              <li
+                v-for="d in savedDraftsList"
+                :key="d.id"
+                class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm ring-1 ring-slate-900/[0.04]"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="text-xs font-semibold uppercase tracking-wide text-va-800">{{ d.tripLabel }}</span>
+                      <span
+                        v-if="activeDraftId === d.id"
+                        class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-800"
+                      >
+                        Đang mở
+                      </span>
+                    </div>
+                    <p class="mt-1 line-clamp-2 text-sm text-slate-800">{{ d.purposeLine }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ formatDraftTime(d.savedAt) }}</p>
+                  </div>
+                  <div class="flex shrink-0 flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                      @click="loadDraftById(d.id)"
+                    >
+                      Mở
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
+                      @click="deleteDraftById(d.id)"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:justify-end">
+            <button
+              type="button"
+              class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto"
+              @click="closeDraftsModal"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -693,6 +801,7 @@ import {
   ArrowPathIcon,
   ArrowRightIcon,
   CheckIcon,
+  ClipboardDocumentListIcon,
   CloudArrowUpIcon,
   DocumentArrowDownIcon,
   ExclamationTriangleIcon,
@@ -723,6 +832,9 @@ const {
   created,
   hasDraftSnapshot,
   clearDraftModalOpen,
+  activeDraftId,
+  savedDraftsList,
+  draftsModalOpen,
   targetOptions,
   form,
   basisFile,
@@ -768,8 +880,21 @@ const {
   openClearDraftModal,
   closeClearDraftModal,
   confirmClearDraft,
+  loadDraftById,
+  deleteDraftById,
+  startNewDraftSession,
+  openDraftsModal,
+  closeDraftsModal,
   onCancel,
 } = wizard
+
+function formatDraftTime(ts) {
+  try {
+    return new Date(ts).toLocaleString('vi-VN')
+  } catch {
+    return '—'
+  }
+}
 
 function openBm02PdfInNewTab() {
   if (bm02PdfUrl.value) {

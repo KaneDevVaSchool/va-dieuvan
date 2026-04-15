@@ -26,6 +26,11 @@ import {
   isPassengerRowFilled,
   isBusinessRowFilled,
   isCargoRowFilled,
+  draftListStorageKey,
+  draftItemStorageKey,
+  draftActiveStorageKey,
+  MAX_SAVED_DRAFTS,
+  TRIP_TYPE_LABEL_VI,
 } from './dispatchWizardConstants'
 
 export function useDispatchRequestWizard() {
@@ -44,6 +49,93 @@ export function useDispatchRequestWizard() {
     return draftKeyForUser(auth.user?.id)
   }
 
+  function uidOrNull() {
+    return auth.user?.id ?? null
+  }
+
+  function buildDraftMeta(draftId, data) {
+    const f = data.form || {}
+    const trip = f.trip_type || ''
+    const tripLabel = TRIP_TYPE_LABEL_VI[trip] || trip || '—'
+    const rawLine = (f.purpose || '').trim().split(/\r?\n/)[0] || '—'
+    const purposeLine = rawLine.length > 72 ? `${rawLine.slice(0, 69)}…` : rawLine
+    return {
+      id: draftId,
+      savedAt: data.savedAt ?? Date.now(),
+      tripLabel,
+      purposeLine,
+    }
+  }
+
+  function readDraftList(uid) {
+    try {
+      const raw = localStorage.getItem(draftListStorageKey(uid))
+      if (!raw) return { items: [] }
+      const parsed = JSON.parse(raw)
+      if (parsed && Array.isArray(parsed.items)) return { items: parsed.items }
+    } catch {
+      /* ignore */
+    }
+    return { items: [] }
+  }
+
+  function writeDraftList(uid, items) {
+    localStorage.setItem(draftListStorageKey(uid), JSON.stringify({ items }))
+  }
+
+  function refreshDraftsList() {
+    const uid = uidOrNull()
+    if (uid == null) {
+      savedDraftsList.value = []
+      return
+    }
+    const { items } = readDraftList(uid)
+    savedDraftsList.value = [...items].sort((a, b) => b.savedAt - a.savedAt)
+  }
+
+  /** Chuyển khóa nháp đơn (v1) sang danh sách nhiều bản (v2). */
+  function migrateV1SingleDraftToMulti(uid) {
+    const listKey = draftListStorageKey(uid)
+    if (localStorage.getItem(listKey)) {
+      const v1Key = draftKeyForUser(uid)
+      if (localStorage.getItem(v1Key)) localStorage.removeItem(v1Key)
+      return
+    }
+    const raw = localStorage.getItem(draftKeyForUser(uid))
+    if (!raw) return
+    try {
+      const data = JSON.parse(raw)
+      const id = `d-${Date.now()}`
+      localStorage.setItem(draftItemStorageKey(uid, id), raw)
+      const meta = buildDraftMeta(id, data)
+      writeDraftList(uid, [meta])
+      localStorage.setItem(draftActiveStorageKey(uid), id)
+      localStorage.removeItem(draftKeyForUser(uid))
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function applyDraftPayload(data) {
+    if (data.form) form.value = { ...createInitialForm(), ...data.form }
+    if (Array.isArray(data.passengerRows) && data.passengerRows.length) {
+      passengerRows.value = data.passengerRows.map((r) => ({ ...emptyPassengerRow(), ...r }))
+    }
+    if (Array.isArray(data.businessRows) && data.businessRows.length) {
+      businessRows.value = data.businessRows.map((r) => ({ ...emptyBusinessRow(), ...r }))
+    }
+    if (Array.isArray(data.cargoRows) && data.cargoRows.length) cargoRows.value = data.cargoRows
+    if (typeof data.step === 'number') step.value = data.step
+    if (typeof data.maxReachedStep === 'number') {
+      maxReachedStep.value = Math.max(data.maxReachedStep, step.value)
+    }
+    draftSavedAt.value = data.savedAt ?? Date.now()
+    trimPassengerRowsInPlace()
+    trimBusinessRowsInPlace()
+    trimCargoRowsInPlace()
+    hasDraftSnapshot.value = true
+  }
+
   const step = ref(0)
   const maxReachedStep = ref(0)
   const loading = ref(false)
@@ -60,6 +152,11 @@ export function useDispatchRequestWizard() {
   const draftSavedAt = ref(null)
   const hasDraftSnapshot = ref(false)
   const clearDraftModalOpen = ref(false)
+  /** Id bản nháp đang mở (chuỗi); null = phiên làm việc mới, lưu sẽ tạo bản mới. */
+  const activeDraftId = ref(null)
+  /** Meta cho danh sách (mới nhất trước). */
+  const savedDraftsList = ref([])
+  const draftsModalOpen = ref(false)
 
   const form = ref(createInitialForm())
 
@@ -317,6 +414,16 @@ export function useDispatchRequestWizard() {
 
   const draftLabel = computed(() => {
     if (created.value) return 'Đã gửi'
+    if (activeDraftId.value && savedDraftsList.value.length) {
+      const m = savedDraftsList.value.find((x) => x.id === activeDraftId.value)
+      if (m) {
+        try {
+          return `Bản nháp • ${m.tripLabel} • ${new Date(m.savedAt).toLocaleString('vi-VN')}`
+        } catch {
+          return 'Bản nháp'
+        }
+      }
+    }
     if (draftSavedAt.value) {
       try {
         return `Bản nháp • Lưu ${new Date(draftSavedAt.value).toLocaleString('vi-VN')}`
@@ -324,7 +431,7 @@ export function useDispatchRequestWizard() {
         return 'Bản nháp'
       }
     }
-    return 'Bản nháp'
+    return 'Phiên mới (chưa lưu)'
   })
 
   function minDatetimeLocalFromValues(values) {
@@ -719,11 +826,25 @@ export function useDispatchRequestWizard() {
       try {
         localStorage.removeItem(currentDraftStorageKey())
         localStorage.removeItem(LEGACY_DRAFT_KEY)
+        const uid = uidOrNull()
+        const submittedDraftId = activeDraftId.value
+        if (uid != null && submittedDraftId) {
+          localStorage.removeItem(draftItemStorageKey(uid, submittedDraftId))
+          let { items } = readDraftList(uid)
+          items = items.filter((x) => x.id !== submittedDraftId)
+          writeDraftList(uid, items)
+          localStorage.removeItem(draftActiveStorageKey(uid))
+        }
+        activeDraftId.value = null
       } catch {
         /* ignore */
       }
       draftSavedAt.value = null
-      hasDraftSnapshot.value = false
+      refreshDraftsList()
+      {
+        const u = uidOrNull()
+        hasDraftSnapshot.value = u != null && readDraftList(u).items.length > 0
+      }
     } catch (e) {
       error.value = formatApiError(e, 'Tạo yêu cầu thất bại.')
     } finally {
@@ -819,6 +940,38 @@ export function useDispatchRequestWizard() {
     localStorage.removeItem(LEGACY_DRAFT_KEY)
   }
 
+  function upsertDraftAndTrim(uid, meta, dataJson) {
+    let { items } = readDraftList(uid)
+    const idx = items.findIndex((x) => x.id === meta.id)
+    if (idx >= 0) items[idx] = meta
+    else items.push(meta)
+    items.sort((a, b) => b.savedAt - a.savedAt)
+    while (items.length > MAX_SAVED_DRAFTS) {
+      const removed = items.pop()
+      if (removed) {
+        try {
+          localStorage.removeItem(draftItemStorageKey(uid, removed.id))
+        } catch {
+          /* ignore */
+        }
+        if (activeDraftId.value === removed.id) {
+          activeDraftId.value = null
+          try {
+            localStorage.removeItem(draftActiveStorageKey(uid))
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    }
+    writeDraftList(uid, items)
+    try {
+      localStorage.setItem(draftItemStorageKey(uid, meta.id), dataJson)
+    } catch {
+      /* ignore */
+    }
+  }
+
   function saveDraft() {
     try {
       trimPassengerRowsInPlace()
@@ -834,42 +987,165 @@ export function useDispatchRequestWizard() {
         maxReachedStep: maxReachedStep.value,
         savedAt,
       }
-      localStorage.setItem(currentDraftStorageKey(), JSON.stringify(data))
+      const uid = uidOrNull()
+      if (uid == null) {
+        localStorage.setItem(currentDraftStorageKey(), JSON.stringify(data))
+        draftSavedAt.value = savedAt
+        hasDraftSnapshot.value = true
+        return
+      }
+      let id = activeDraftId.value
+      if (!id) {
+        try {
+          id = localStorage.getItem(draftActiveStorageKey(uid)) || null
+        } catch {
+          id = null
+        }
+      }
+      if (!id) id = `d-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      activeDraftId.value = id
+      const json = JSON.stringify(data)
+      const meta = buildDraftMeta(id, data)
+      try {
+        localStorage.setItem(draftActiveStorageKey(uid), id)
+      } catch {
+        /* ignore */
+      }
+      upsertDraftAndTrim(uid, meta, json)
       draftSavedAt.value = savedAt
       hasDraftSnapshot.value = true
+      refreshDraftsList()
     } catch {
       /* ignore */
     }
   }
 
-  function loadDraft() {
+  function loadDraftFromStorage() {
     try {
-      const raw = localStorage.getItem(currentDraftStorageKey())
-      if (!raw) {
-        hasDraftSnapshot.value = false
+      const uid = uidOrNull()
+      if (uid == null) {
+        const raw = localStorage.getItem(currentDraftStorageKey())
+        if (!raw) {
+          hasDraftSnapshot.value = false
+          refreshDraftsList()
+          return
+        }
+        const data = JSON.parse(raw)
+        applyDraftPayload(data)
+        refreshDraftsList()
         return
       }
-      const data = JSON.parse(raw)
-      if (data.form) form.value = { ...createInitialForm(), ...data.form }
-      if (Array.isArray(data.passengerRows) && data.passengerRows.length) {
-        passengerRows.value = data.passengerRows.map((r) => ({ ...emptyPassengerRow(), ...r }))
+      migrateV1SingleDraftToMulti(uid)
+      const activeStored = localStorage.getItem(draftActiveStorageKey(uid))
+      if (activeStored) {
+        const raw = localStorage.getItem(draftItemStorageKey(uid, activeStored))
+        if (raw) {
+          const data = JSON.parse(raw)
+          applyDraftPayload(data)
+          activeDraftId.value = activeStored
+          refreshDraftsList()
+          return
+        }
       }
-      if (Array.isArray(data.businessRows) && data.businessRows.length) {
-        businessRows.value = data.businessRows.map((r) => ({ ...emptyBusinessRow(), ...r }))
+      const { items } = readDraftList(uid)
+      if (items.length) {
+        const sorted = [...items].sort((a, b) => b.savedAt - a.savedAt)
+        const raw = localStorage.getItem(draftItemStorageKey(uid, sorted[0].id))
+        if (raw) {
+          const data = JSON.parse(raw)
+          applyDraftPayload(data)
+          activeDraftId.value = sorted[0].id
+          try {
+            localStorage.setItem(draftActiveStorageKey(uid), sorted[0].id)
+          } catch {
+            /* ignore */
+          }
+        }
+      } else {
+        hasDraftSnapshot.value = false
       }
-      if (Array.isArray(data.cargoRows) && data.cargoRows.length) cargoRows.value = data.cargoRows
-      if (typeof data.step === 'number') step.value = data.step
-      if (typeof data.maxReachedStep === 'number') {
-        maxReachedStep.value = Math.max(data.maxReachedStep, step.value)
-      }
-      draftSavedAt.value = data.savedAt ?? Date.now()
-      trimPassengerRowsInPlace()
-      trimBusinessRowsInPlace()
-      trimCargoRowsInPlace()
-      hasDraftSnapshot.value = true
+      refreshDraftsList()
     } catch {
       hasDraftSnapshot.value = false
+      refreshDraftsList()
     }
+  }
+
+  function loadDraftById(draftId) {
+    const uid = uidOrNull()
+    if (uid == null) return
+    try {
+      const raw = localStorage.getItem(draftItemStorageKey(uid, draftId))
+      if (!raw) return
+      const data = JSON.parse(raw)
+      applyDraftPayload(data)
+      activeDraftId.value = draftId
+      localStorage.setItem(draftActiveStorageKey(uid), draftId)
+      if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
+      if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
+      form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
+      form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
+      revokeBm02PdfUrl()
+      bm02PdfBase64.value = ''
+      bm02ExcelBase64.value = ''
+      bm02PreviewError.value = ''
+      error.value = ''
+      created.value = null
+      refreshDraftsList()
+      draftsModalOpen.value = false
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function deleteDraftById(draftId) {
+    const uid = uidOrNull()
+    if (uid == null) return
+    try {
+      const wasActive = activeDraftId.value === draftId
+      localStorage.removeItem(draftItemStorageKey(uid, draftId))
+      let { items } = readDraftList(uid)
+      items = items.filter((x) => x.id !== draftId)
+      writeDraftList(uid, items)
+      if (wasActive) {
+        try {
+          localStorage.removeItem(draftActiveStorageKey(uid))
+        } catch {
+          /* ignore */
+        }
+        resetWizardForm()
+        hasDraftSnapshot.value = items.length > 0
+      }
+      refreshDraftsList()
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function startNewDraftSession() {
+    const uid = uidOrNull()
+    if (uid != null) {
+      try {
+        localStorage.removeItem(draftActiveStorageKey(uid))
+      } catch {
+        /* ignore */
+      }
+    }
+    resetWizardForm()
+    if (uid != null) {
+      hasDraftSnapshot.value = readDraftList(uid).items.length > 0
+    }
+    refreshDraftsList()
+    draftsModalOpen.value = false
+  }
+
+  function openDraftsModal() {
+    refreshDraftsList()
+    draftsModalOpen.value = true
+  }
+
+  function closeDraftsModal() {
+    draftsModalOpen.value = false
   }
 
   function resetWizardForm() {
@@ -883,10 +1159,15 @@ export function useDispatchRequestWizard() {
     created.value = null
     draftSavedAt.value = null
     hasDraftSnapshot.value = false
+    activeDraftId.value = null
     basisFile.value = null
     basisFileError.value = ''
     requesterSearchQ.value = ''
     coordinatorSearchQ.value = ''
+    revokeBm02PdfUrl()
+    bm02PdfBase64.value = ''
+    bm02ExcelBase64.value = ''
+    bm02PreviewError.value = ''
   }
 
   function openClearDraftModal() {
@@ -899,13 +1180,26 @@ export function useDispatchRequestWizard() {
 
   function confirmClearDraft() {
     closeClearDraftModal()
+    const uid = uidOrNull()
+    const id = activeDraftId.value
+    if (uid != null && id) {
+      deleteDraftById(id)
+    } else {
+      try {
+        localStorage.removeItem(currentDraftStorageKey())
+        localStorage.removeItem(LEGACY_DRAFT_KEY)
+      } catch {
+        /* ignore */
+      }
+      resetWizardForm()
+    }
     try {
       localStorage.removeItem(currentDraftStorageKey())
       localStorage.removeItem(LEGACY_DRAFT_KEY)
     } catch {
       /* ignore */
     }
-    resetWizardForm()
+    refreshDraftsList()
   }
 
   watchEffect((onCleanup) => {
@@ -918,6 +1212,24 @@ export function useDispatchRequestWizard() {
     if (typeof window === 'undefined') return
     const onKey = (e) => {
       if (e.key === 'Escape') closeClearDraftModal()
+    }
+    window.addEventListener('keydown', onKey)
+    onCleanup(() => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKey)
+    })
+  })
+
+  watchEffect((onCleanup) => {
+    if (typeof document === 'undefined') return
+    if (!draftsModalOpen.value) {
+      document.body.style.overflow = ''
+      return
+    }
+    document.body.style.overflow = 'hidden'
+    if (typeof window === 'undefined') return
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeDraftsModal()
     }
     window.addEventListener('keydown', onKey)
     onCleanup(() => {
@@ -941,7 +1253,7 @@ export function useDispatchRequestWizard() {
       /* router guard / 401 */
     }
     migrateLegacyDraft()
-    loadDraft()
+    loadDraftFromStorage()
     if (auth.user) {
       if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
       if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
@@ -951,7 +1263,13 @@ export function useDispatchRequestWizard() {
     form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
     form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
     if (!hasDraftSnapshot.value && typeof localStorage !== 'undefined') {
-      hasDraftSnapshot.value = !!localStorage.getItem(currentDraftStorageKey())
+      const u = uidOrNull()
+      if (u != null) {
+        hasDraftSnapshot.value = readDraftList(u).items.length > 0
+      }
+      if (!hasDraftSnapshot.value) {
+        hasDraftSnapshot.value = !!localStorage.getItem(currentDraftStorageKey())
+      }
     }
   })
 
@@ -992,6 +1310,9 @@ export function useDispatchRequestWizard() {
     draftSavedAt,
     hasDraftSnapshot,
     clearDraftModalOpen,
+    activeDraftId,
+    savedDraftsList,
+    draftsModalOpen,
     targetOptions,
     form,
     basisFile,
@@ -1059,6 +1380,11 @@ export function useDispatchRequestWizard() {
     openClearDraftModal,
     closeClearDraftModal,
     confirmClearDraft,
+    loadDraftById,
+    deleteDraftById,
+    startNewDraftSession,
+    openDraftsModal,
+    closeDraftsModal,
     onCancel,
   }
 }

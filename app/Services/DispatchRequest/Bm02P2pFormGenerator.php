@@ -3,15 +3,18 @@
 namespace App\Services\DispatchRequest;
 
 use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfMpdf;
 
 /**
  * Điền mẫu Excel BM.02/MH.QT.04 (P2P) từ wizard_snapshot và xuất PDF (qua mPDF).
  *
- * Thứ tự đối tượng khớp `targetOptions` trên form (31 mục); cột E trong Excel không có ô tick — chỉ ghi trong mục đích.
+ * Thứ tự đối tượng khớp `targetOptions` trên form (31 mục); ô tick theo map P2P_TARGET_CHECKBOX_CELLS.
+ * Ô C13 chỉ nhận nội dung textarea «Mục đích sử dụng» (form.purpose).
  */
 class Bm02P2pFormGenerator
 {
@@ -28,6 +31,11 @@ class Bm02P2pFormGenerator
         'B30', null, 'H30', 'K30',
         'B31', null, 'H31', 'K31',
         'B32', null, 'H32',
+    ];
+
+    /** Ô boolean trên mẫu gốc nhưng không map vào `targetOptions` (ví dụ cột thừa hàng cuối). */
+    private const P2P_EXTRA_TEMPLATE_BOOL_CELLS = [
+        'K32',
     ];
 
     /**
@@ -48,6 +56,15 @@ class Bm02P2pFormGenerator
 
         $form = $wizard['form'] ?? [];
         $rows = $wizard['passengerRows'] ?? [];
+        $targets = $form['targets'] ?? [];
+
+        $filled = array_values(array_filter(
+            is_array($rows) ? $rows : [],
+            fn ($r) => is_array($r) && $this->rowHasPassengerContent($r),
+        ));
+
+        /** Mẫu gốc dùng kiểu boolean cho ô «tick» — Excel/mPDF hiển thị TRUE/FALSE; ghi đè bằng chuỗi. */
+        $this->resetTemplateCheckboxCells($sheet);
 
         $now = Carbon::now();
 
@@ -59,20 +76,17 @@ class Bm02P2pFormGenerator
         $sheet->setCellValue('E9', (string) ($form['requester_phone'] ?? ''));
         $sheet->setCellValue('E10', (string) ($form['requester_unit'] ?? ''));
 
-        $purpose = (string) ($form['purpose'] ?? '');
-        if (($form['trip_type'] ?? '') === 'point_to_point' && ! empty($form['point_purpose_kind'])) {
-            $purposeKind = $form['point_purpose_kind'] === 'extracurricular' ? 'Hoạt động ngoại khóa' : 'Điểm — Điểm';
-            $purpose .= "\n\nPhân loại: ".$purposeKind;
-        }
-        $targets = $form['targets'] ?? [];
-        if (is_array($targets) && $targets !== []) {
-            $purpose .= "\n\nĐối tượng: ".implode(', ', array_map('strval', $targets));
-        }
-        $sheet->setCellValue('C13', $purpose);
+        $sheet->setCellValue('C13', (string) ($form['purpose'] ?? ''));
 
         $basisNote = '';
         if (! empty($form['basisFileName'])) {
             $basisNote = 'Đính kèm: '.$form['basisFileName'];
+        }
+        $maxPassengerLinesOnForm = 5;
+        if (count($filled) > $maxPassengerLinesOnForm) {
+            $n = count($filled);
+            $overflowNote = "(Ghi chú: {$n} chuyến đã khai báo — trên mẫu in hiển thị tối đa {$maxPassengerLinesOnForm} dòng đầu; toàn bộ nằm trong portal.)";
+            $basisNote = $basisNote !== '' ? $basisNote."\n\n".$overflowNote : $overflowNote;
         }
         $sheet->setCellValue('C14', $basisNote !== '' ? $basisNote : '');
 
@@ -82,7 +96,10 @@ class Bm02P2pFormGenerator
         $sheet->setCellValue('E20', $this->formatDateCell($need));
 
         $urgent = ! empty($form['is_urgent']);
-        $sheet->setCellValue('B21', $urgent ? self::CHECKED_MARK : '');
+        $sheet->getCell('B21')->setValueExplicit(
+            $urgent ? self::CHECKED_MARK : '',
+            DataType::TYPE_STRING,
+        );
         $sheet->setCellValue('E21', $urgent ? (string) ($form['urgent_reason'] ?? '') : '');
 
         $this->applyTargetCheckboxes($sheet, is_array($targets) ? $targets : []);
@@ -101,13 +118,8 @@ class Bm02P2pFormGenerator
             $sheet->setCellValue('E33', implode(' — ', $coord));
         }
 
-        $filled = array_values(array_filter(
-            is_array($rows) ? $rows : [],
-            fn ($r) => is_array($r) && $this->rowHasPassengerContent($r),
-        ));
-
         $startDataRow = 40;
-        $maxLines = 5;
+        $maxLines = $maxPassengerLinesOnForm;
         for ($i = 0; $i < $maxLines; $i++) {
             $r = $filled[$i] ?? null;
             $excelRow = $startDataRow + $i;
@@ -127,15 +139,6 @@ class Bm02P2pFormGenerator
             $extra = (float) ($r['extra_fee'] ?? 0);
             $sheet->setCellValue("M{$excelRow}", $unit + $extra > 0 ? $unit + $extra : '');
             $sheet->setCellValue("N{$excelRow}", (string) ($r['notes'] ?? ''));
-        }
-
-        if (count($filled) > $maxLines) {
-            $n = count($filled);
-            $prev = (string) $sheet->getCell('C13')->getValue();
-            $sheet->setCellValue(
-                'C13',
-                $prev."\n\n(Ghi chú: {$n} chuyến đã khai báo — trên mẫu in hiển thị tối đa {$maxLines} dòng đầu; toàn bộ nằm trong portal.)",
-            );
         }
 
         $total = $this->passengerRowsTotal($filled);
@@ -158,6 +161,7 @@ class Bm02P2pFormGenerator
 
         $pdfWriter = new PdfMpdf($ss);
         $pdfWriter->setFont('dejavusans');
+        $pdfWriter->setUseInlineCss(true);
         ob_start();
         $pdfWriter->save('php://output');
         $pdfBinary = ob_get_clean();
@@ -165,10 +169,24 @@ class Bm02P2pFormGenerator
         return ['xlsx' => $xlsxBinary, 'pdf' => $pdfBinary];
     }
 
+    private function resetTemplateCheckboxCells(Worksheet $sheet): void
+    {
+        $sheet->getCell('B21')->setValueExplicit('', DataType::TYPE_STRING);
+        foreach (self::P2P_TARGET_CHECKBOX_CELLS as $coord) {
+            if ($coord === null || $coord === '') {
+                continue;
+            }
+            $sheet->getCell($coord)->setValueExplicit('', DataType::TYPE_STRING);
+        }
+        foreach (self::P2P_EXTRA_TEMPLATE_BOOL_CELLS as $coord) {
+            $sheet->getCell($coord)->setValueExplicit('', DataType::TYPE_STRING);
+        }
+    }
+
     /**
      * @param  array<int, string|mixed>  $selected
      */
-    private function applyTargetCheckboxes(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, array $selected): void
+    private function applyTargetCheckboxes(Worksheet $sheet, array $selected): void
     {
         $selectedNorm = [];
         foreach ($selected as $s) {
@@ -225,7 +243,7 @@ class Bm02P2pFormGenerator
             if (empty($selectedNorm[$this->normalizeTargetLabel($label)])) {
                 continue;
             }
-            $sheet->setCellValue($cell, self::CHECKED_MARK);
+            $sheet->getCell($cell)->setValueExplicit(self::CHECKED_MARK, DataType::TYPE_STRING);
         }
     }
 

@@ -1,6 +1,27 @@
 /** Một nháp / user để tránh chồng nhiều bản khi đổi tài khoản hoặc lặp khóa cũ. */
 export const LEGACY_DRAFT_KEY = 'dispatch-request-wizard-draft-v1'
 
+/** Danh sách meta nhiều bản nháp (JSON `{ items: DraftMeta[] }`). */
+export const draftListStorageKey = (userId) => `dispatch-request-wizard-draft-list-v2-u${userId}`
+
+/** Payload đầy đủ một bản nháp. */
+export const draftItemStorageKey = (userId, draftId) =>
+  `dispatch-request-wizard-draft-item-v2-u${userId}__${draftId}`
+
+/** Id bản nháp đang mở (chuỗi). */
+export const draftActiveStorageKey = (userId) => `dispatch-request-wizard-draft-active-v2-u${userId}`
+
+/** Giới hạn số bản nháp lưu trên trình duyệt / user. */
+export const MAX_SAVED_DRAFTS = 25
+
+/** Nhãn loại dịch vụ cho danh sách nháp. */
+export const TRIP_TYPE_LABEL_VI = {
+  door_to_door: 'Đưa đón',
+  point_to_point: 'Điểm — Điểm',
+  business: 'Công tác',
+  cargo: 'Hàng hóa',
+}
+
 export const WIZARD_STEPS = [
   { id: 'type', title: 'Loại dịch vụ' },
   { id: 'info', title: 'Người đề nghị & thời gian' },
