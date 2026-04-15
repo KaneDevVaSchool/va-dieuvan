@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Trips\AssignTripRequest;
 use App\Http\Requests\Api\Trips\ListTripsRequest;
+use App\Http\Requests\Api\Trips\RescheduleTripRequest;
 use App\Http\Requests\Api\Trips\ShowTripRequest;
 use App\Models\Trip;
 use App\Services\Dispatching\DispatchingService;
@@ -77,6 +78,26 @@ class TripController extends Controller
             ...$data,
             'actor_id' => $request->user()->id,
             'dispatcher_id' => $request->user()->id,
+        ]);
+
+        return $this->ok($updated);
+    }
+
+    public function reschedule(RescheduleTripRequest $request, Trip $trip, DispatchingService $dispatchingService)
+    {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $updated = $dispatchingService->rescheduleDepartAt($trip, [
+            ...$request->validated(),
+            'actor_id' => $request->user()->id,
+        ]);
+
+        $updated->load([
+            'dispatcher:id,name,email',
+            'vehicle:id,license_plate,status',
+            'driver:id,full_name',
+            'transportProvider:id,name',
+            'dispatchRequest:id,status,trip_type,origin,destination,arrive_by',
         ]);
 
         return $this->ok($updated);

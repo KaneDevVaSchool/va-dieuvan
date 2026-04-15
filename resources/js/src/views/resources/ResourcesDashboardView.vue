@@ -72,48 +72,70 @@
       {{ loadError }}
     </div>
 
-    <!-- KPI row -->
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="text-xs font-medium text-slate-500">{{ t('resources_dashboard.kpi_fleet') }}</div>
-        <div v-if="statsLoading" class="mt-2 h-8 w-24 animate-pulse rounded bg-slate-200" />
-        <template v-else>
-          <div class="mt-1 text-2xl font-bold tabular-nums">{{ vehiclesOperational }} / {{ vehiclesTotal }}</div>
-          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <div class="h-full rounded-full bg-teal-500" :style="{ width: pct(vehiclesOperational, vehiclesTotal) }" />
-          </div>
-        </template>
-      </div>
-      <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="text-xs font-medium text-slate-500">{{ t('resources_dashboard.kpi_drivers') }}</div>
-        <div v-if="statsLoading" class="mt-2 h-8 w-24 animate-pulse rounded bg-slate-200" />
-        <template v-else>
-          <div class="mt-1 text-2xl font-bold tabular-nums">{{ driversAvailable }} / {{ driversEmployed }}</div>
-          <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <div class="h-full rounded-full bg-amber-400" :style="{ width: pct(driversAvailable, driversEmployed) }" />
-          </div>
-        </template>
-      </div>
-      <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="text-xs font-medium text-slate-500">{{ t('resources_dashboard.kpi_gaps') }}</div>
-        <div v-if="statsLoading" class="mt-2 h-8 w-16 animate-pulse rounded bg-slate-200" />
-        <template v-else>
-          <div class="mt-1 flex items-baseline gap-2">
-            <span class="text-2xl font-bold tabular-nums text-rose-600">{{ coverageAlertCount }}</span>
-            <span class="text-xs text-slate-500">{{ t('resources_dashboard.kpi_gaps_unit') }}</span>
-          </div>
-          <p class="mt-1 text-[11px] leading-snug text-slate-500">{{ t('resources_dashboard.kpi_gaps_hint') }}</p>
-        </template>
-      </div>
-      <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs font-medium text-slate-500">{{ t('resources_dashboard.kpi_forecast') }}</span>
-          <span class="text-[10px] text-slate-400">{{ t('resources_dashboard.kpi_forecast_hint') }}</span>
+    <!-- KPI row: compact cards + wide forecast -->
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-12 xl:items-stretch">
+      <div class="flex gap-2.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:col-span-1 xl:col-span-2">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700">
+          <TruckIcon class="h-5 w-5" aria-hidden="true" />
         </div>
-        <div class="mt-2 h-[72px] w-full" role="img" :aria-label="t('resources_dashboard.kpi_forecast')">
+        <div class="min-w-0 flex-1">
+          <div class="text-[11px] font-medium text-slate-500">{{ t('resources_dashboard.kpi_fleet') }}</div>
+          <div v-if="statsLoading" class="mt-1 h-6 w-16 animate-pulse rounded bg-slate-200" />
+          <template v-else>
+            <div class="mt-0.5 text-lg font-bold tabular-nums leading-tight text-slate-900">{{ vehiclesOperational }} / {{ vehiclesTotal }}</div>
+            <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-100">
+              <div class="h-full rounded-full bg-teal-500" :style="{ width: pct(vehiclesOperational, vehiclesTotal) }" />
+            </div>
+          </template>
+        </div>
+      </div>
+      <div class="flex gap-2.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:col-span-1 xl:col-span-2">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+          <UsersIcon class="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-[11px] font-medium text-slate-500">{{ t('resources_dashboard.kpi_drivers') }}</div>
+          <div v-if="statsLoading" class="mt-1 h-6 w-16 animate-pulse rounded bg-slate-200" />
+          <template v-else>
+            <div class="mt-0.5 text-lg font-bold tabular-nums leading-tight text-slate-900">{{ driversAvailable }} / {{ driversEmployed }}</div>
+            <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-100">
+              <div class="h-full rounded-full bg-amber-400" :style="{ width: pct(driversAvailable, driversEmployed) }" />
+            </div>
+          </template>
+        </div>
+      </div>
+      <div class="flex gap-2.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:col-span-2 xl:col-span-2">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+          <ExclamationTriangleIcon class="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-[11px] font-medium text-slate-500">{{ t('resources_dashboard.kpi_gaps') }}</div>
+          <div v-if="statsLoading" class="mt-1 h-6 w-10 animate-pulse rounded bg-slate-200" />
+          <template v-else>
+            <div class="mt-0.5 flex items-baseline gap-1.5">
+              <span class="text-lg font-bold tabular-nums text-rose-600">{{ coverageAlertCount }}</span>
+              <span class="text-[10px] text-slate-500">{{ t('resources_dashboard.kpi_gaps_unit') }}</span>
+            </div>
+            <p class="mt-0.5 line-clamp-2 text-[10px] leading-snug text-slate-500">{{ t('resources_dashboard.kpi_gaps_hint') }}</p>
+          </template>
+        </div>
+      </div>
+      <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:col-span-2 xl:col-span-6">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <ChartBarIcon class="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div>
+              <div class="text-[11px] font-medium text-slate-600">{{ t('resources_dashboard.kpi_forecast') }}</div>
+              <p class="text-[10px] text-slate-400">{{ t('resources_dashboard.kpi_forecast_hint') }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2 h-[88px] w-full sm:h-[96px]" role="img" :aria-label="t('resources_dashboard.kpi_forecast')">
           <svg class="h-full w-full overflow-visible" viewBox="0 0 120 48" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="rd-fill" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="rd-fill-dash" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="rgb(13 148 136)" stop-opacity="0.2" />
                 <stop offset="100%" stop-color="rgb(13 148 136)" stop-opacity="0" />
               </linearGradient>
@@ -126,7 +148,7 @@
               stroke-dasharray="3 2"
               vector-effect="non-scaling-stroke"
             />
-            <polygon :points="forecastDemandFill" fill="url(#rd-fill)" />
+            <polygon :points="forecastDemandFill" fill="url(#rd-fill-dash)" />
             <polyline
               :points="forecastDemandPoints"
               fill="none"
@@ -143,71 +165,191 @@
     <div class="flex flex-col gap-4 xl:flex-row xl:items-stretch">
       <!-- Left: resource lists -->
       <aside
-        class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,300px)] xl:max-w-[320px]"
+        class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,340px)] xl:max-w-[380px]"
       >
-        <div class="border-b border-slate-200 p-3">
-          <label class="block">
+        <div class="space-y-2 border-b border-slate-200 p-3">
+          <label class="relative block">
+            <MagnifyingGlassIcon
+              class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              aria-hidden="true"
+            />
             <span class="sr-only">{{ t('resources_dashboard.search') }}</span>
             <input
               v-model="sideSearch"
               type="search"
-              class="w-full rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50/80 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
               :placeholder="t('resources_dashboard.search_placeholder')"
             />
           </label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="block">
+              <span class="mb-0.5 block text-[10px] font-medium text-slate-500">{{ t('resources_dashboard.filter_vehicle_type') }}</span>
+              <select
+                v-model="filterVehicleType"
+                class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              >
+                <option value="">{{ t('resources_dashboard.filter_all') }}</option>
+                <option value="van">{{ t('resources.type_van') }}</option>
+                <option value="truck">{{ t('resources.type_truck') }}</option>
+                <option value="bus">{{ t('resources.type_bus') }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="mb-0.5 block text-[10px] font-medium text-slate-500">{{ t('resources_dashboard.filter_vehicle_status') }}</span>
+              <select
+                v-model="filterVehicleStatus"
+                class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              >
+                <option value="">{{ t('resources_dashboard.filter_all') }}</option>
+                <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
+                <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
+                <option value="maintenance">{{ t('resources.status_maintenance') }}</option>
+                <option value="broken">{{ t('resources_dashboard.vehicle_broken') }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="mb-0.5 block text-[10px] font-medium text-slate-500">{{ t('resources_dashboard.filter_driver_status') }}</span>
+              <select
+                v-model="filterDriverAvail"
+                class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              >
+                <option value="">{{ t('resources_dashboard.filter_all') }}</option>
+                <option value="available">{{ t('resources_dashboard.avail_available') }}</option>
+                <option value="busy">{{ t('resources_dashboard.avail_busy') }}</option>
+                <option value="offline">{{ t('resources_dashboard.avail_offline') }}</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="mb-0.5 block text-[10px] font-medium text-slate-500">{{ t('resources_dashboard.filter_supplier') }}</span>
+              <select
+                v-model="filterSupplier"
+                class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              >
+                <option value="">{{ t('resources_dashboard.filter_all') }}</option>
+                <option value="active">{{ t('resources_dashboard.supplier_active') }}</option>
+                <option value="inactive">{{ t('resources_dashboard.supplier_inactive') }}</option>
+              </select>
+            </label>
+          </div>
         </div>
         <div class="min-h-[200px] flex-1 space-y-2 overflow-y-auto p-2 xl:max-h-[calc(100dvh-16rem)]">
           <details class="group rounded-lg border border-slate-100 bg-slate-50/50 open:bg-white" open>
             <summary
-              class="cursor-pointer list-none px-2 py-2 text-xs font-semibold text-slate-800 marker:content-none [&::-webkit-details-marker]:hidden"
+              class="flex cursor-pointer list-none items-center justify-between gap-1 px-2 py-2 text-xs font-semibold text-slate-800 marker:content-none [&::-webkit-details-marker]:hidden"
             >
-              {{ t('resources_dashboard.col_drivers') }}
-              <span class="font-normal text-slate-500">({{ filteredDrivers.length }}/{{ drivers.length }})</span>
+              <span>{{ t('resources_dashboard.col_drivers') }}</span>
+              <span class="font-normal text-slate-500">({{ driversFiltered.length }}/{{ drivers.length }})</span>
             </summary>
             <ul class="space-y-1 border-t border-slate-100 px-1 pb-2 pt-1">
-              <li v-for="d in filteredDrivers" :key="'d' + d.id">
-                <RouterLink
-                  :to="`/resources/drivers/${d.id}`"
-                  class="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition hover:bg-teal-50"
+              <li v-for="d in driversFiltered" :key="'d' + d.id">
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition"
+                  :class="
+                    sidebarRowActive('driver', d.id)
+                      ? 'bg-teal-50 ring-1 ring-teal-300'
+                      : driverHoursWarn(d.id)
+                        ? 'bg-rose-50/90 ring-1 ring-rose-200/80 hover:bg-rose-50'
+                        : 'hover:bg-slate-50'
+                  "
+                  @click="setPanelDriver(d)"
                 >
-                  <span
-                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[11px] font-semibold text-teal-900"
-                  >
-                    {{ initials(d.full_name) }}
+                  <span class="relative shrink-0">
+                    <span
+                      class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-[11px] font-semibold text-teal-900"
+                    >
+                      {{ initials(d.full_name) }}
+                    </span>
+                    <span
+                      class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white"
+                      :class="driverAvailDotClass(d)"
+                    />
                   </span>
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate font-medium text-slate-900">{{ d.full_name }}</span>
-                    <span class="block truncate text-[10px] text-slate-500">{{ availabilityLabel(d) }}</span>
+                    <span class="flex items-center gap-1">
+                      <TruckIcon class="h-3 w-3 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span class="block truncate font-medium text-slate-900">{{ d.full_name }}</span>
+                    </span>
+                    <span class="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10px] text-slate-500">
+                      <span class="rounded bg-teal-50 px-1 py-0.5 font-medium text-teal-800">{{ tripTypeLabelForDriver(d.id) }}</span>
+                      <span class="font-mono text-slate-400">·</span>
+                      <span class="font-mono text-[10px] text-slate-600">#{{ d.id }}</span>
+                    </span>
                   </span>
-                </RouterLink>
+                  <span
+                    class="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-slate-700"
+                  >
+                    {{ formatHoursShort(driverTripHours(d.id)) }}
+                  </span>
+                </button>
               </li>
             </ul>
           </details>
           <details class="group rounded-lg border border-slate-100 bg-slate-50/50 open:bg-white" open>
             <summary
-              class="cursor-pointer list-none px-2 py-2 text-xs font-semibold text-slate-800 marker:content-none [&::-webkit-details-marker]:hidden"
+              class="flex cursor-pointer list-none items-center justify-between gap-1 px-2 py-2 text-xs font-semibold text-slate-800 marker:content-none [&::-webkit-details-marker]:hidden"
             >
-              {{ t('resources_dashboard.col_vehicles') }}
-              <span class="font-normal text-slate-500">({{ filteredVehicles.length }}/{{ vehicles.length }})</span>
+              <span>{{ t('resources_dashboard.col_vehicles') }}</span>
+              <span class="font-normal text-slate-500">({{ vehiclesFiltered.length }}/{{ vehicles.length }})</span>
             </summary>
             <ul class="space-y-1 border-t border-slate-100 px-1 pb-2 pt-1">
-              <li v-for="v in filteredVehicles" :key="'v' + v.id" class="px-2 py-1.5 text-xs">
-                <div class="font-mono font-semibold text-slate-900">{{ v.license_plate }}</div>
-                <div class="text-[10px] text-slate-500">{{ vehicleStatusLabel(v.status) }}</div>
+              <li v-for="v in vehiclesFiltered" :key="'v' + v.id">
+                <button
+                  type="button"
+                  class="flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-xs transition"
+                  :class="sidebarRowActive('vehicle', v.id) ? 'bg-teal-50 ring-1 ring-teal-300' : 'hover:bg-slate-50'"
+                  @click="setPanelVehicle(v)"
+                >
+                  <span
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600"
+                  >
+                    <component :is="vehicleIconComponent(v)" class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="font-mono text-sm font-semibold text-slate-900">{{ v.license_plate }}</span>
+                    <span class="mt-0.5 block text-[10px] text-slate-500">{{ vehicleSubtitle(v) }}</span>
+                  </span>
+                  <span
+                    v-if="v.status === 'maintenance'"
+                    class="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-900"
+                  >
+                    {{ t('resources_dashboard.vehicle_maint_badge') }}
+                  </span>
+                </button>
               </li>
             </ul>
           </details>
           <details class="group rounded-lg border border-slate-100 bg-slate-50/50 open:bg-white" open>
             <summary
-              class="cursor-pointer list-none px-2 py-2 text-xs font-semibold text-slate-800 marker:content-none [&::-webkit-details-marker]:hidden"
+              class="flex cursor-pointer list-none items-center justify-between gap-1 px-2 py-2 text-xs font-semibold text-slate-800 marker:content-none [&::-webkit-details-marker]:hidden"
             >
-              {{ t('resources_dashboard.col_suppliers') }}
-              <span class="font-normal text-slate-500">({{ filteredSuppliers.length }}/{{ suppliers.length }})</span>
+              <span>{{ t('resources_dashboard.col_suppliers') }}</span>
+              <span class="font-normal text-slate-500">({{ suppliersFiltered.length }}/{{ suppliers.length }})</span>
             </summary>
             <ul class="space-y-1 border-t border-slate-100 px-1 pb-2 pt-1">
-              <li v-for="p in filteredSuppliers" :key="'p' + p.id" class="px-2 py-1.5 text-xs">
-                <div class="truncate font-medium text-slate-900">{{ p.name }}</div>
-                <div class="text-[10px] text-slate-500">{{ p.is_active ? t('resources_dashboard.supplier_active') : t('resources_dashboard.supplier_inactive') }}</div>
+              <li v-for="p in suppliersFiltered" :key="'p' + p.id">
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition"
+                  :class="sidebarRowActive('supplier', p.id) ? 'bg-teal-50 ring-1 ring-teal-300' : 'hover:bg-slate-50'"
+                  @click="setPanelSupplier(p)"
+                >
+                  <span
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600"
+                  >
+                    <BuildingOffice2Icon class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate font-medium text-slate-900">{{ p.name }}</span>
+                    <span class="block truncate text-[10px] text-slate-500">{{ supplierSubtitle(p) }}</span>
+                  </span>
+                  <span
+                    class="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
+                    :class="p.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'"
+                  >
+                    {{ p.is_active ? t('resources_dashboard.supplier_active') : t('resources_dashboard.supplier_inactive') }}
+                  </span>
+                </button>
               </li>
             </ul>
           </details>
@@ -234,6 +376,7 @@
               <span class="h-2 w-2 shrink-0 rounded-sm bg-rose-500" />
               {{ t('dispatcher_board.legend_conflict') }}
             </span>
+            <span v-if="canAssignTrip" class="text-slate-400">· {{ t('resources_dashboard.timeline_drag_hint') }}</span>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -264,7 +407,7 @@
                   <span v-if="row.sub" class="truncate text-[10px] text-rose-600">{{ row.sub }}</span>
                   <span v-else-if="row.meta" class="truncate text-[10px] text-slate-500">{{ row.meta }}</span>
                 </div>
-                <div class="relative min-h-[52px] min-w-0 flex-1 bg-slate-50/50">
+                <div data-timeline-track class="relative min-h-[52px] min-w-0 flex-1 bg-slate-50/50">
                   <div
                     class="pointer-events-none absolute inset-0 grid"
                     :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }"
@@ -288,10 +431,14 @@
                     :key="bar.trip.id"
                     type="button"
                     class="absolute top-1.5 z-[5] flex h-9 items-center overflow-hidden rounded border px-1.5 text-left text-[10px] font-medium leading-tight shadow-sm transition hover:opacity-95"
-                    :class="[bar.toneClass, selectedTrip?.id === bar.trip.id ? 'ring-2 ring-teal-500 ring-offset-1' : '']"
-                    :style="{ left: `${bar.left}%`, width: `max(${bar.width}%, 2%)` }"
+                    :class="[
+                      bar.toneClass,
+                      isPanelTrip(bar.trip) ? 'ring-2 ring-teal-500 ring-offset-1' : '',
+                      canAssignTrip ? 'cursor-grab active:cursor-grabbing touch-none' : '',
+                    ]"
+                    :style="tripBarStyle(bar)"
                     :title="`#${bar.trip.id}`"
-                    @click="selectedTrip = bar.trip"
+                    @pointerdown="onTripBarPointerDown($event, bar.trip)"
                   >
                     <span class="truncate">#{{ bar.trip.id }}</span>
                     <span
@@ -313,53 +460,91 @@
 
       <!-- Right: action & constraints -->
       <aside
-        class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,320px)]"
+        class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,360px)]"
       >
-        <div class="border-b border-slate-200 p-3">
-          <h2 class="text-sm font-semibold text-slate-900">{{ t('resources_dashboard.panel_title') }}</h2>
-          <p class="mt-0.5 text-[11px] text-slate-500">{{ t('resources_dashboard.panel_subtitle') }}</p>
+        <div class="flex items-start justify-between gap-2 border-b border-slate-200 p-3">
+          <div class="min-w-0">
+            <h2 class="text-sm font-semibold text-slate-900">{{ t('resources_dashboard.panel_title') }}</h2>
+            <p class="mt-0.5 text-[11px] text-slate-500">{{ t('resources_dashboard.panel_subtitle_v2') }}</p>
+          </div>
+          <button
+            v-if="panel"
+            type="button"
+            class="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+            :aria-label="t('resources_dashboard.panel_close')"
+            @click="clearPanel"
+          >
+            <XMarkIcon class="h-5 w-5" />
+          </button>
         </div>
-        <div v-if="!selectedTrip" class="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-slate-500">
-          {{ t('resources_dashboard.panel_empty') }}
+        <div v-if="!panel" class="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-slate-500">
+          {{ t('resources_dashboard.panel_empty_v2') }}
         </div>
-        <div v-else class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
+
+        <!-- Trip -->
+        <div v-else-if="panel.type === 'trip'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.trip_label') }}</div>
-            <div class="mt-1 font-semibold text-slate-900">{{ tripTitle(selectedTrip) }}</div>
-            <div class="mt-1 font-mono text-xs text-teal-700">#{{ selectedTrip.id }}</div>
+            <div class="mt-1 font-semibold text-slate-900">{{ tripTitle(panel.trip) }}</div>
+            <div class="mt-1 font-mono text-xs text-teal-700">#{{ panel.trip.id }}</div>
             <span
               class="mt-2 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-800"
             >
-              {{ labelTripStatus(selectedTrip.status) }}
+              {{ labelTripStatus(panel.trip.status) }}
             </span>
+          </div>
+          <div
+            v-if="tripPanelConflict"
+            class="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-[11px] text-rose-900"
+          >
+            <span class="font-semibold">{{ t('dispatcher_board.legend_conflict') }}:</span>
+            {{ t('resources_dashboard.panel_trip_conflict') }}
+          </div>
+          <div
+            v-if="tripPanelConflict && suggestedProvider"
+            class="rounded-lg border border-teal-200 bg-teal-50/80 p-2.5 text-[11px] text-teal-950"
+          >
+            <div class="font-semibold">{{ t('resources_dashboard.panel_suggested_ncc') }}</div>
+            <p class="mt-1 text-teal-900/90">{{ t('resources_dashboard.panel_suggested_ncc_hint') }}</p>
+            <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <span class="font-medium">{{ suggestedProvider.name }}</span>
+              <button
+                type="button"
+                class="rounded-lg border border-teal-600 bg-teal-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-teal-700 disabled:opacity-50"
+                :disabled="assigningNcc"
+                @click="assignSuggestedNcc"
+              >
+                {{ t('resources_dashboard.action_assign_ncc') }}
+              </button>
+            </div>
           </div>
           <dl class="space-y-2 text-xs">
             <div class="flex justify-between gap-2">
               <dt class="text-slate-500">{{ t('resources_dashboard.field_driver') }}</dt>
-              <dd class="text-right font-medium text-slate-900">{{ selectedTrip.driver?.full_name ?? '—' }}</dd>
+              <dd class="text-right font-medium text-slate-900">{{ panel.trip.driver?.full_name ?? '—' }}</dd>
             </div>
             <div class="flex justify-between gap-2">
               <dt class="text-slate-500">{{ t('resources_dashboard.field_vehicle') }}</dt>
-              <dd class="text-right font-medium text-slate-900">{{ selectedTrip.vehicle?.license_plate ?? '—' }}</dd>
+              <dd class="text-right font-medium text-slate-900">{{ panel.trip.vehicle?.license_plate ?? '—' }}</dd>
             </div>
             <div class="flex justify-between gap-2">
               <dt class="text-slate-500">{{ t('resources_dashboard.field_time') }}</dt>
               <dd class="text-right tabular-nums text-slate-900">
-                {{ fmtTime(selectedTrip.depart_at) }} – {{ fmtTime(tripEndAt(selectedTrip)) }}
+                {{ fmtTime(panel.trip.depart_at) }} – {{ fmtTime(tripEndAt(panel.trip)) }}
               </dd>
             </div>
           </dl>
           <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
             <RouterLink
               class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-              :to="`/trips/${selectedTrip.id}`"
+              :to="`/trips/${panel.trip.id}`"
             >
               {{ t('resources_dashboard.action_open_trip') }}
             </RouterLink>
             <button
               type="button"
               class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-              @click="selectedTrip = null"
+              @click="clearPanel"
             >
               {{ t('resources_dashboard.action_clear') }}
             </button>
@@ -369,9 +554,155 @@
             <ul class="mt-2 space-y-1.5">
               <li class="flex items-center gap-2">
                 <span class="text-emerald-600">✓</span>
-                {{ t('resources_dashboard.compliance_placeholder') }}
+                {{ t('resources_dashboard.panel_license_ok') }}
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-600">✓</span>
+                {{ t('resources_dashboard.panel_vehicle_ok') }}
+              </li>
+              <li v-if="tripPanelConflict" class="flex items-start gap-2 text-rose-800">
+                <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" />
+                {{ t('resources_dashboard.panel_trip_conflict') }}
               </li>
             </ul>
+          </div>
+        </div>
+
+        <!-- Driver -->
+        <div v-else-if="panel.type === 'driver'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
+          <div>
+            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.panel_driver_title') }}</div>
+            <div class="mt-1 text-base font-semibold text-slate-900">{{ panel.data.full_name }}</div>
+            <div class="mt-1 font-mono text-xs text-slate-600">#{{ panel.data.id }}</div>
+          </div>
+          <div
+            v-if="driverHoursWarn(panel.data.id)"
+            class="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-[11px] text-rose-900"
+          >
+            <div class="flex items-start gap-2">
+              <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{{ t('resources_dashboard.panel_driver_hours_warn') }}</span>
+            </div>
+          </div>
+          <dl class="space-y-2 text-xs">
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_phone') }}</dt>
+              <dd class="text-right font-medium text-slate-900">{{ panel.data.phone ?? panel.data.user?.phone ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_license') }}</dt>
+              <dd class="text-right tabular-nums text-slate-900">{{ panel.data.license_expires_at ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_hours') }}</dt>
+              <dd class="text-right font-medium tabular-nums text-slate-900">{{ formatHoursShort(driverTripHours(panel.data.id)) }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.field_status') }}</dt>
+              <dd class="text-right text-slate-900">{{ availabilityLabel(panel.data) }}</dd>
+            </div>
+          </dl>
+          <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+            <RouterLink
+              class="inline-flex flex-1 items-center justify-center rounded-lg border border-teal-600 bg-teal-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-700"
+              :to="`/resources/drivers/${panel.data.id}`"
+            >
+              {{ t('resources_dashboard.panel_driver_open') }}
+            </RouterLink>
+            <button
+              type="button"
+              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              @click="clearPanel"
+            >
+              {{ t('resources_dashboard.action_clear') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Vehicle -->
+        <div v-else-if="panel.type === 'vehicle'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
+          <div>
+            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.panel_vehicle_title') }}</div>
+            <div class="mt-1 font-mono text-lg font-semibold text-slate-900">{{ panel.data.license_plate }}</div>
+            <span
+              class="mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium"
+              :class="vehicleStatusPillClass(panel.data.status)"
+            >
+              {{ vehicleStatusLabel(panel.data.status) }}
+            </span>
+          </div>
+          <dl class="space-y-2 text-xs">
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.field_type') }}</dt>
+              <dd class="text-right text-slate-900">{{ panel.data.type ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.panel_vehicle_seats') }}</dt>
+              <dd class="text-right tabular-nums text-slate-900">
+                {{ [panel.data.seat_count, panel.data.payload_kg].filter(Boolean).join(' · ') || '—' }}
+              </dd>
+            </div>
+            <div v-if="panel.data.maintenance_schedule_note || panel.data.last_maintenance_at" class="flex flex-col gap-1">
+              <dt class="text-slate-500">{{ t('resources_dashboard.panel_vehicle_note') }}</dt>
+              <dd class="text-slate-800">{{ panel.data.maintenance_schedule_note || panel.data.last_maintenance_at }}</dd>
+            </div>
+          </dl>
+          <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+            <RouterLink
+              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              to="/resources/list?tab=vehicles"
+            >
+              {{ t('resources_dashboard.panel_vehicle_open') }}
+            </RouterLink>
+            <button
+              type="button"
+              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              @click="clearPanel"
+            >
+              {{ t('resources_dashboard.action_clear') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Supplier -->
+        <div v-else-if="panel.type === 'supplier'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
+          <div>
+            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.panel_supplier_title') }}</div>
+            <div class="mt-1 text-base font-semibold text-slate-900">{{ panel.data.name }}</div>
+            <span
+              class="mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium"
+              :class="panel.data.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'"
+            >
+              {{ panel.data.is_active ? t('resources_dashboard.supplier_active') : t('resources_dashboard.supplier_inactive') }}
+            </span>
+          </div>
+          <dl class="space-y-2 text-xs">
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.panel_supplier_contact') }}</dt>
+              <dd class="text-right text-slate-900">{{ [panel.data.contact_name, panel.data.contact_phone].filter(Boolean).join(' · ') || '—' }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-slate-500">{{ t('resources_dashboard.panel_supplier_contract') }}</dt>
+              <dd class="text-right tabular-nums text-slate-900">{{ panel.data.contract_expires_at ?? '—' }}</dd>
+            </div>
+          </dl>
+          <div class="rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-[11px] text-slate-600">
+            {{ t('resources_dashboard.supplier_sla_hint') }}
+          </div>
+          <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+            <RouterLink
+              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              to="/resources/list?tab=suppliers"
+            >
+              {{ t('resources_dashboard.open_list') }}
+            </RouterLink>
+            <button
+              type="button"
+              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              @click="clearPanel"
+            >
+              {{ t('resources_dashboard.action_clear') }}
+            </button>
           </div>
         </div>
       </aside>
@@ -380,15 +711,31 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import {
+  BuildingOffice2Icon,
+  ChartBarIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  TruckIcon,
+  UsersIcon,
+  XMarkIcon,
+} from '@heroicons/vue/24/outline'
 import { listDrivers, listTransportProviders, listVehicles } from '../../api/operational'
-import { listTrips } from '../../api/trips'
-import { labelTripStatus } from '../../util/labels'
+import { assignTrip, getTrip, listTrips, rescheduleTrip } from '../../api/trips'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { useAuthStore } from '../../store'
+import { labelTripStatus, labelTripType } from '../../util/labels'
 import { shortViDayLabel, toLocalDateKey } from '../../util/dates'
+import { VEHICLE_ICON_COMPONENTS, vehicleIconKind } from '../../util/vehicleIcon'
 
 const { t, locale } = useI18n()
+const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
+const canAssignTrip = computed(() => auth.hasPermission('trip.assign'))
 
 const GRID_START = 6
 const GRID_END = 22
@@ -405,9 +752,21 @@ const viewModes = computed(() => [
 const loading = ref(false)
 const loadError = ref('')
 const trips = ref([])
-const selectedTrip = ref(null)
+/** @type {import('vue').Ref<null | { type: 'trip'; trip: object } | { type: 'driver'; data: object } | { type: 'vehicle'; data: object } | { type: 'supplier'; data: object }>} */
+const panel = ref(null)
 const selectedDate = ref(new Date())
 const sideSearch = ref('')
+const filterVehicleType = ref('')
+const filterVehicleStatus = ref('')
+const filterDriverAvail = ref('')
+const filterSupplier = ref('')
+
+const syncingFromRoute = ref(false)
+const sidebarNavIndex = ref(-1)
+const assigningNcc = ref(false)
+/** @type {import('vue').Ref<null | { trip: object; startX: number; startDepart: number; lockVersion: number; track: Element; pointerId: number; barEl: Element }>} */
+const dragState = ref(null)
+const dragOffsetPx = ref(0)
 
 const statsLoading = ref(false)
 const vehiclesTotal = ref(0)
@@ -433,26 +792,287 @@ const vehiclesOperational = computed(() => vehiclesReady.value + vehiclesInUse.v
 
 const searchLower = computed(() => sideSearch.value.trim().toLowerCase())
 
-const filteredDrivers = computed(() => {
+const driversFiltered = computed(() => {
+  let list = drivers.value
+  if (filterDriverAvail.value) {
+    list = list.filter((d) => d.availability_status === filterDriverAvail.value)
+  }
   const q = searchLower.value
-  if (!q) return drivers.value
-  return drivers.value.filter((d) => {
-    const name = (d.full_name ?? '').toLowerCase()
-    return name.includes(q) || String(d.id).includes(q)
-  })
+  if (q) {
+    list = list.filter((d) => {
+      const name = (d.full_name ?? '').toLowerCase()
+      return name.includes(q) || String(d.id).includes(q)
+    })
+  }
+  return list
 })
 
-const filteredVehicles = computed(() => {
+const vehiclesFiltered = computed(() => {
+  let list = vehicles.value
+  if (filterVehicleType.value) {
+    list = list.filter((v) => (v.type || '').toLowerCase() === filterVehicleType.value)
+  }
+  if (filterVehicleStatus.value) {
+    list = list.filter((v) => v.status === filterVehicleStatus.value)
+  }
   const q = searchLower.value
-  if (!q) return vehicles.value
-  return vehicles.value.filter((v) => (v.license_plate ?? '').toLowerCase().includes(q))
+  if (q) {
+    list = list.filter((v) => (v.license_plate ?? '').toLowerCase().includes(q))
+  }
+  return list
 })
 
-const filteredSuppliers = computed(() => {
+const suppliersFiltered = computed(() => {
+  let list = suppliers.value
+  if (filterSupplier.value === 'active') list = list.filter((p) => p.is_active)
+  else if (filterSupplier.value === 'inactive') list = list.filter((p) => !p.is_active)
   const q = searchLower.value
-  if (!q) return suppliers.value
-  return suppliers.value.filter((p) => (p.name ?? '').toLowerCase().includes(q))
+  if (q) list = list.filter((p) => (p.name ?? '').toLowerCase().includes(q))
+  return list
 })
+
+const sidebarNavList = computed(() => {
+  const out = []
+  for (const d of driversFiltered.value) out.push({ kind: 'driver', data: d })
+  for (const v of vehiclesFiltered.value) out.push({ kind: 'vehicle', data: v })
+  for (const p of suppliersFiltered.value) out.push({ kind: 'supplier', data: p })
+  return out
+})
+
+function panelToQuery(p) {
+  if (!p) return null
+  if (p.type === 'trip') return `trip:${p.trip.id}`
+  if (p.type === 'driver') return `driver:${p.data.id}`
+  if (p.type === 'vehicle') return `vehicle:${p.data.id}`
+  if (p.type === 'supplier') return `supplier:${p.data.id}`
+  return null
+}
+
+function panelsEqual(a, b) {
+  if (!a && !b) return true
+  if (!a || !b) return false
+  if (a.type !== b.type) return false
+  if (a.type === 'trip') return a.trip.id === b.trip.id
+  return a.data.id === b.data.id
+}
+
+function sidebarRowActive(kind, id) {
+  const i = sidebarNavIndex.value
+  if (i < 0) return false
+  const e = sidebarNavList.value[i]
+  return Boolean(e && e.kind === kind && e.data.id === id)
+}
+
+function setPanelTrip(trip) {
+  panel.value = { type: 'trip', trip }
+  sidebarNavIndex.value = -1
+}
+
+function setPanelDriver(d) {
+  panel.value = { type: 'driver', data: d }
+  const idx = sidebarNavList.value.findIndex((e) => e.kind === 'driver' && e.data.id === d.id)
+  sidebarNavIndex.value = idx
+}
+
+function setPanelVehicle(v) {
+  panel.value = { type: 'vehicle', data: v }
+  const idx = sidebarNavList.value.findIndex((e) => e.kind === 'vehicle' && e.data.id === v.id)
+  sidebarNavIndex.value = idx
+}
+
+function setPanelSupplier(p) {
+  panel.value = { type: 'supplier', data: p }
+  const idx = sidebarNavList.value.findIndex((e) => e.kind === 'supplier' && e.data.id === p.id)
+  sidebarNavIndex.value = idx
+}
+
+function clearPanel() {
+  panel.value = null
+  sidebarNavIndex.value = -1
+}
+
+function navigateSidebar(delta) {
+  const list = sidebarNavList.value
+  const n = list.length
+  if (!n) return
+  let i = sidebarNavIndex.value
+  if (i < 0) i = delta > 0 ? 0 : n - 1
+  else i = Math.max(0, Math.min(n - 1, i + delta))
+  const entry = list[i]
+  if (!entry) return
+  if (entry.kind === 'driver') setPanelDriver(entry.data)
+  else if (entry.kind === 'vehicle') setPanelVehicle(entry.data)
+  else setPanelSupplier(entry.data)
+}
+
+function onGlobalKeydown(e) {
+  if (e.key === 'Escape') {
+    if (panel.value) {
+      e.preventDefault()
+      clearPanel()
+    }
+    return
+  }
+  const tag = e.target?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    navigateSidebar(1)
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    navigateSidebar(-1)
+  }
+}
+
+async function applyPanelFromQuery() {
+  const raw = route.query.panel
+  if (!raw || typeof raw !== 'string') {
+    if (panel.value) {
+      syncingFromRoute.value = true
+      panel.value = null
+      sidebarNavIndex.value = -1
+      syncingFromRoute.value = false
+    }
+    return
+  }
+  const colon = raw.indexOf(':')
+  if (colon === -1) return
+  const kind = raw.slice(0, colon)
+  const id = Number(raw.slice(colon + 1))
+  if (!id) return
+
+  let next = null
+  if (kind === 'driver') {
+    const d = drivers.value.find((x) => x.id === id)
+    if (d) next = { type: 'driver', data: d }
+  } else if (kind === 'vehicle') {
+    const v = vehicles.value.find((x) => x.id === id)
+    if (v) next = { type: 'vehicle', data: v }
+  } else if (kind === 'supplier') {
+    const p = suppliers.value.find((x) => x.id === id)
+    if (p) next = { type: 'supplier', data: p }
+  } else if (kind === 'trip') {
+    let tr = trips.value.find((x) => x.id === id)
+    if (!tr) {
+      try {
+        tr = await getTrip(id)
+      } catch {
+        tr = null
+      }
+    }
+    if (tr) next = { type: 'trip', trip: tr }
+  }
+  if (!next) return
+  if (panelsEqual(panel.value, next)) return
+
+  syncingFromRoute.value = true
+  try {
+    if (next.type === 'trip') setPanelTrip(next.trip)
+    else if (next.type === 'driver') setPanelDriver(next.data)
+    else if (next.type === 'vehicle') setPanelVehicle(next.data)
+    else setPanelSupplier(next.data)
+  } finally {
+    syncingFromRoute.value = false
+  }
+}
+
+watch(panel, (p) => {
+  if (syncingFromRoute.value) return
+  const want = panelToQuery(p)
+  const cur = route.query.panel
+  if (cur === want || (!cur && !want)) return
+  const q = { ...route.query }
+  if (want) q.panel = want
+  else delete q.panel
+  router.replace({ query: q })
+})
+
+watch(
+  () => route.query.panel,
+  () => {
+    applyPanelFromQuery()
+  },
+)
+
+function isPanelTrip(trip) {
+  return panel.value?.type === 'trip' && panel.value.trip?.id === trip.id
+}
+
+function isPanelDriver(d) {
+  return panel.value?.type === 'driver' && panel.value.data?.id === d.id
+}
+
+function isPanelVehicle(v) {
+  return panel.value?.type === 'vehicle' && panel.value.data?.id === v.id
+}
+
+function isPanelSupplier(p) {
+  return panel.value?.type === 'supplier' && panel.value.data?.id === p.id
+}
+
+function driverTripHours(driverId) {
+  let ms = 0
+  for (const trip of timelineTrips.value) {
+    if (trip.driver_id !== driverId) continue
+    ms += tripEndAt(trip).getTime() - new Date(trip.depart_at).getTime()
+  }
+  return ms / 3600000
+}
+
+function formatHoursShort(h) {
+  const n = Number(h) || 0
+  if (n <= 0) return '0m'
+  const hh = Math.floor(n)
+  const mm = Math.round((n - hh) * 60)
+  if (hh) return `${hh}h ${mm}m`
+  return `${mm}m`
+}
+
+function driverHoursWarn(driverId) {
+  return driverTripHours(driverId) > 10
+}
+
+function driverAvailDotClass(d) {
+  const a = d.availability_status
+  if (a === 'available') return 'bg-emerald-500'
+  if (a === 'busy') return 'bg-amber-500'
+  if (a === 'offline') return 'bg-slate-400'
+  return 'bg-slate-300'
+}
+
+function tripTypeLabelForDriver(driverId) {
+  const list = timelineTrips.value.filter((x) => x.driver_id === driverId)
+  const first = list[0]
+  if (!first) return '—'
+  const tt = dr(first)?.trip_type
+  if (!tt) return '—'
+  return labelTripType(tt)
+}
+
+function vehicleIconComponent(v) {
+  const k = vehicleIconKind(v)
+  return VEHICLE_ICON_COMPONENTS[k] || TruckIcon
+}
+
+function vehicleSubtitle(v) {
+  const parts = []
+  if (v.seat_count != null) parts.push(`${v.seat_count} chỗ`)
+  if (v.payload_kg != null) parts.push(`${v.payload_kg} kg`)
+  parts.push(vehicleStatusLabel(v.status))
+  return parts.join(' · ')
+}
+
+function supplierSubtitle(p) {
+  const kind = p.type === 'taxi' ? 'Taxi' : 'Vendor'
+  return [kind, p.contact_phone].filter(Boolean).join(' · ') || '—'
+}
+
+function vehicleStatusPillClass(s) {
+  if (s === 'maintenance') return 'bg-amber-100 text-amber-900'
+  if (s === 'broken') return 'bg-rose-100 text-rose-900'
+  if (s === 'in_use') return 'bg-sky-100 text-sky-800'
+  return 'bg-emerald-100 text-emerald-800'
+}
 
 function dr(trip) {
   return trip.dispatch_request ?? trip.dispatchRequest
@@ -544,6 +1164,130 @@ const timelineTrips = computed(() =>
 )
 
 const conflictIds = computed(() => computeConflicts(timelineTrips.value))
+
+const tripPanelConflict = computed(() => {
+  if (panel.value?.type !== 'trip') return false
+  return conflictIds.value.has(panel.value.trip.id)
+})
+
+const suggestedProvider = computed(() => {
+  if (panel.value?.type !== 'trip' || !tripPanelConflict.value) return null
+  if (!canAssignTrip.value) return null
+  const trip = panel.value.trip
+  const currentPid = trip.transport_provider_id ?? trip.transport_provider?.id ?? null
+  const pool = suppliers.value.filter((p) => p.is_active)
+  if (!pool.length) return null
+  const other = pool.find((p) => p.id !== currentPid)
+  return other ?? null
+})
+
+function tripBarStyle(bar) {
+  const { left, width } = pctRange(bar.trip)
+  const base = { left: `${left}%`, width: `max(${width}%, 2%)` }
+  const tid = bar.trip.id
+  if (dragState.value?.trip?.id === tid && dragOffsetPx.value) {
+    return { ...base, transform: `translateX(${dragOffsetPx.value}px)` }
+  }
+  return base
+}
+
+function onTripBarPointerMove(e) {
+  if (!dragState.value) return
+  dragOffsetPx.value = e.clientX - dragState.value.startX
+}
+
+async function onTripBarPointerUp(e) {
+  if (!dragState.value) return
+  const st = dragState.value
+  const trip = st.trip
+  const deltaX = e.clientX - st.startX
+  const track = st.track
+  const { pointerId, barEl } = st
+  dragState.value = null
+  dragOffsetPx.value = 0
+  window.removeEventListener('pointermove', onTripBarPointerMove)
+  window.removeEventListener('pointerup', onTripBarPointerUp, true)
+  try {
+    barEl.releasePointerCapture(pointerId)
+  } catch {
+    /* ignore */
+  }
+
+  if (!canAssignTrip.value) {
+    setPanelTrip(trip)
+    return
+  }
+  if (Math.abs(deltaX) < 6) {
+    setPanelTrip(trip)
+    return
+  }
+  const rect = track.getBoundingClientRect()
+  if (rect.width < 1) return
+  const spanH = GRID_END - GRID_START
+  const deltaHours = (deltaX / rect.width) * spanH
+  const newMs = st.startDepart + deltaHours * 3600000
+  try {
+    await rescheduleTrip(trip.id, {
+      depart_at: new Date(newMs).toISOString(),
+      lock_version: st.lockVersion,
+    })
+    showAppSuccess(t('resources_dashboard.reschedule_success'))
+    await loadTrips()
+    const t2 = trips.value.find((x) => x.id === trip.id)
+    if (t2 && panel.value?.type === 'trip' && panel.value.trip.id === trip.id) {
+      panel.value = { type: 'trip', trip: t2 }
+    }
+  } catch (err) {
+    showAppErrorFromApi(err)
+  }
+}
+
+function onTripBarPointerDown(e, trip) {
+  if (e.button !== 0) return
+  const track = e.currentTarget.closest('[data-timeline-track]')
+  if (!track) return
+  dragState.value = {
+    trip,
+    startX: e.clientX,
+    startDepart: new Date(trip.depart_at).getTime(),
+    lockVersion: trip.lock_version ?? 0,
+    track,
+    pointerId: e.pointerId,
+    barEl: e.currentTarget,
+  }
+  dragOffsetPx.value = 0
+  try {
+    e.currentTarget.setPointerCapture(e.pointerId)
+  } catch {
+    /* ignore */
+  }
+  window.addEventListener('pointermove', onTripBarPointerMove)
+  window.addEventListener('pointerup', onTripBarPointerUp, true)
+}
+
+async function assignSuggestedNcc() {
+  const trip = panel.value?.type === 'trip' ? panel.value.trip : null
+  const sp = suggestedProvider.value
+  if (!trip || !sp) return
+  assigningNcc.value = true
+  try {
+    const full = await getTrip(trip.id)
+    await assignTrip(trip.id, {
+      lock_version: full.lock_version ?? 0,
+      vehicle_id: null,
+      driver_id: null,
+      transport_provider_id: sp.id,
+    })
+    showAppSuccess(t('resources_dashboard.assign_ncc_success'))
+    await loadTrips()
+    const updated = trips.value.find((x) => x.id === trip.id) ?? (await getTrip(trip.id))
+    if (updated) setPanelTrip(updated)
+  } catch (e) {
+    showAppErrorFromApi(e)
+  } finally {
+    assigningNcc.value = false
+  }
+}
 
 const coverageAlertCount = computed(() => conflictIds.value.size)
 
@@ -744,11 +1488,18 @@ async function loadAll() {
 }
 
 watch(dayKey, () => {
-  selectedTrip.value = null
+  panel.value = null
+  sidebarNavIndex.value = -1
   loadTrips()
 })
 
-onMounted(() => {
-  loadAll()
+onMounted(async () => {
+  await loadAll()
+  await applyPanelFromQuery()
+  window.addEventListener('keydown', onGlobalKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onGlobalKeydown)
 })
 </script>

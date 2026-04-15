@@ -17,6 +17,11 @@ export async function assignTrip(tripId, payload, { idempotencyKey } = {}) {
   return data.data
 }
 
+export async function rescheduleTrip(tripId, payload) {
+  const { data } = await http.post(`/trips/${tripId}/reschedule`, payload)
+  return data.data
+}
+
 export async function updateTripStatus(tripId, payload) {
   const { data } = await http.post(`/trips/${tripId}/status`, payload)
   return data.data
