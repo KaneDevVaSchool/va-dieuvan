@@ -60,24 +60,26 @@
 
     <!-- Stepper — timeline -->
     <nav
-      class="rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50 via-white to-white p-2 shadow-sm ring-1 ring-slate-900/5 sm:p-3"
+      class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3"
       aria-label="Các bước"
     >
-      <ol class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden">
+      <ol
+        class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden"
+      >
         <template v-for="(s, i) in steps" :key="s.id">
           <li class="flex min-w-[44%] shrink-0 snap-start flex-col sm:min-w-0 sm:flex-1">
             <div class="flex items-center">
               <button
                 type="button"
-                class="group flex w-full items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition sm:flex-col sm:items-center sm:gap-1.5 sm:px-1 sm:py-0"
+                class="group flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased transition sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
                 :class="
                   i > maxReachedStep
                     ? 'cursor-not-allowed opacity-45'
                     : step === i
-                      ? 'bg-slate-50/90 text-slate-900 ring-1 ring-inset ring-va-800/15'
+                      ? 'border border-va-800/25 bg-slate-50 text-slate-900 shadow-sm'
                       : i < step
-                        ? 'text-slate-800 hover:bg-emerald-50/80'
-                        : 'text-slate-500 hover:bg-slate-50'
+                        ? 'border border-transparent text-slate-800 hover:bg-emerald-50'
+                        : 'border border-transparent text-slate-500 hover:bg-slate-50'
                 "
                 :disabled="i > maxReachedStep"
                 :aria-current="step === i ? 'step' : undefined"
@@ -99,7 +101,7 @@
                   <span v-else>{{ i + 1 }}</span>
                 </span>
                 <span
-                  class="min-w-0 flex-1 text-[11px] font-semibold leading-tight sm:text-center sm:text-xs"
+                  class="min-w-0 flex-1 text-[11px] font-semibold leading-snug sm:text-center sm:text-xs sm:leading-snug"
                   :class="step === i ? 'text-slate-900' : i < step ? 'text-slate-800' : 'text-slate-500'"
                 >
                   {{ s.title }}
