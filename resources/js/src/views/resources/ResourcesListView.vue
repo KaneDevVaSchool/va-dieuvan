@@ -1605,16 +1605,42 @@
                             :key="a.id ?? `att-${aIdx}`"
                             class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200/90 bg-white/70 px-2 py-1.5 dark:border-slate-600/80 dark:bg-slate-900/40"
                           >
-                            <button
-                              v-if="isPdfAttachment(a)"
-                              type="button"
-                              class="min-w-0 flex-1 truncate text-left text-teal-700 underline decoration-teal-700/40 underline-offset-2 hover:text-teal-600 disabled:cursor-wait disabled:opacity-60 dark:text-teal-400 dark:decoration-teal-400/40 dark:hover:text-teal-300"
-                              :title="t('resources.attachment_download_pdf_title')"
-                              :disabled="pdfAttachmentDownloadBusyKey === vehiclePdfAttachmentBusyKey(doc, a, aIdx)"
-                              @click.stop="downloadVehiclePdfAttachment(doc, a, aIdx)"
-                            >
-                              {{ a.original_name || 'file' }}
-                            </button>
+                            <template v-if="isPdfAttachment(a)">
+                              <PdfFileIcon class="shrink-0" size-class="h-9 w-7" />
+                              <span
+                                class="shrink-0 rounded px-1 py-0.5 text-[10px] font-bold uppercase leading-none text-red-700 ring-1 ring-red-600/25 dark:text-red-300 dark:ring-red-500/30"
+                                >{{ t('resources.attachment_pdf_badge') }}</span
+                              >
+                              <span class="min-w-0 flex-1 truncate text-xs text-slate-800 dark:text-slate-200">{{
+                                a.original_name || 'file'
+                              }}</span>
+                              <button
+                                type="button"
+                                class="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                :title="t('resources.attachment_preview_pdf')"
+                                :disabled="
+                                  (pdfPreviewLoading && pdfPreviewBusyKey === vehiclePdfAttachmentBusyKey(doc, a, aIdx)) ||
+                                  pdfAttachmentDownloadBusyKey === vehiclePdfAttachmentBusyKey(doc, a, aIdx)
+                                "
+                                @click.stop="openVehiclePdfPreview(doc, a, aIdx)"
+                              >
+                                <EyeIcon class="h-4 w-4" aria-hidden="true" />
+                                {{ t('resources.attachment_preview_short') }}
+                              </button>
+                              <button
+                                type="button"
+                                class="inline-flex shrink-0 items-center gap-1 rounded-md bg-teal-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-teal-500 disabled:cursor-wait disabled:opacity-60 dark:bg-teal-600 dark:hover:bg-teal-500"
+                                :title="t('resources.attachment_download_pdf_title')"
+                                :disabled="
+                                  pdfAttachmentDownloadBusyKey === vehiclePdfAttachmentBusyKey(doc, a, aIdx) ||
+                                  (pdfPreviewLoading && pdfPreviewBusyKey === vehiclePdfAttachmentBusyKey(doc, a, aIdx))
+                                "
+                                @click.stop="downloadVehiclePdfAttachment(doc, a, aIdx)"
+                              >
+                                <ArrowDownTrayIcon class="h-4 w-4" aria-hidden="true" />
+                                {{ t('resources.attachment_download_short') }}
+                              </button>
+                            </template>
                             <a
                               v-else
                               :href="a.url"
@@ -2978,18 +3004,72 @@
         </div>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="pdfPreviewOpen"
+        class="fixed inset-0 z-[70] flex flex-col bg-black/60 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('resources.attachment_preview_pdf')"
+        @click.self="closePdfPreview"
+      >
+        <div
+          class="mx-auto flex h-full w-full max-w-5xl flex-col border-x border-slate-700/50 bg-slate-900 shadow-2xl sm:my-4 sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl"
+          @click.stop
+        >
+          <div
+            class="flex shrink-0 items-center justify-between gap-3 border-b border-slate-700/80 bg-slate-900 px-3 py-2.5 text-white sm:px-4"
+          >
+            <div class="flex min-w-0 items-center gap-2">
+              <PdfFileIcon class="shrink-0" size-class="h-8 w-6" />
+              <div class="min-w-0">
+                <div class="truncate text-sm font-medium">{{ pdfPreviewFilename || 'PDF' }}</div>
+                <div class="truncate text-[11px] text-slate-400">{{ t('resources.attachment_preview_pdf_hint') }}</div>
+              </div>
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-slate-800"
+                @click="closePdfPreview"
+              >
+                {{ t('app.close') }}
+              </button>
+            </div>
+          </div>
+          <div class="relative min-h-0 flex-1 bg-slate-950">
+            <div
+              v-if="pdfPreviewLoading"
+              class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-slate-950/90 text-sm text-slate-300"
+            >
+              <span class="inline-block h-8 w-8 animate-spin rounded-full border-2 border-teal-400 border-t-transparent"></span>
+              {{ t('resources.loading') }}
+            </div>
+            <iframe
+              v-if="pdfPreviewBlobUrl"
+              :src="pdfPreviewBlobUrl"
+              class="h-full min-h-[50vh] w-full border-0 sm:min-h-0"
+              title="PDF"
+            />
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  ArrowDownTrayIcon,
   BuildingOffice2Icon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  EyeIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
@@ -2997,6 +3077,7 @@ import {
   ViewColumnsIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import {
   bulkDeleteDrivers,
   bulkDeleteTransportProviders,
@@ -3033,6 +3114,7 @@ import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '
 import {
   downloadPdfAttachmentFromApi,
   downloadPdfAttachmentFromUrl,
+  fetchPdfBlobForPreview,
   normalizeAxiosBlobError,
 } from '../../util/downloadPdfAttachment'
 import { useAuthStore } from '../../store'
@@ -3586,6 +3668,11 @@ const vehicleDocModalOpen = ref(false)
 const vehicleDocSaving = ref(false)
 const vehicleDocFormError = ref('')
 const pdfAttachmentDownloadBusyKey = ref(null)
+const pdfPreviewOpen = ref(false)
+const pdfPreviewBlobUrl = ref(null)
+const pdfPreviewFilename = ref('')
+const pdfPreviewLoading = ref(false)
+const pdfPreviewBusyKey = ref(null)
 const vehicleDocDeleteModalOpen = ref(false)
 const vehicleDocDeleteTarget = ref(null)
 const vehicleDocDeleting = ref(false)
@@ -4261,16 +4348,6 @@ async function downloadVehiclePdfAttachment(doc, a, aIdx) {
     /* ignore */
   }
 
-  const showSoftFail = (result) => {
-    if (result.reason === 'html') {
-      showAppInfo(t('resources.attachment_download_html_hint'), t('resources.attachment_download_html_title'))
-    } else if (result.reason === 'bad_json') {
-      showAppError(t('resources.attachment_download_failed'))
-    } else {
-      showAppInfo(t('resources.attachment_download_not_pdf_hint'), t('resources.attachment_download_not_pdf_title'))
-    }
-  }
-
   try {
     let result
     if (a?.id != null) {
@@ -4285,9 +4362,9 @@ async function downloadVehiclePdfAttachment(doc, a, aIdx) {
 
     if (url) {
       const w = window.open(url, '_blank', 'noopener,noreferrer')
-      if (!w) showSoftFail(result)
+      if (!w) attachmentPdfSoftFail(result)
     } else {
-      showSoftFail(result)
+      attachmentPdfSoftFail(result)
     }
   } catch (e) {
     await normalizeAxiosBlobError(e)
@@ -4301,6 +4378,71 @@ async function downloadVehiclePdfAttachment(doc, a, aIdx) {
     pdfAttachmentDownloadBusyKey.value = null
   }
 }
+
+function attachmentPdfSoftFail(result) {
+  if (result.reason === 'html') {
+    showAppInfo(t('resources.attachment_download_html_hint'), t('resources.attachment_download_html_title'))
+  } else if (result.reason === 'bad_json') {
+    showAppError(t('resources.attachment_download_failed'))
+  } else {
+    showAppInfo(t('resources.attachment_download_not_pdf_hint'), t('resources.attachment_download_not_pdf_title'))
+  }
+}
+
+function revokePdfPreviewBlobUrl() {
+  if (pdfPreviewBlobUrl.value) {
+    URL.revokeObjectURL(pdfPreviewBlobUrl.value)
+    pdfPreviewBlobUrl.value = null
+  }
+}
+
+function closePdfPreview() {
+  revokePdfPreviewBlobUrl()
+  pdfPreviewOpen.value = false
+  pdfPreviewFilename.value = ''
+}
+
+async function openVehiclePdfPreview(doc, a, aIdx) {
+  const busyKey = vehiclePdfAttachmentBusyKey(doc, a, aIdx)
+  if (pdfPreviewLoading.value && pdfPreviewBusyKey.value === busyKey) return
+
+  if (a?.id == null) {
+    const url = resolveAttachmentAbsoluteUrl(a)
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      showAppError(t('resources.attachment_download_failed'))
+    }
+    return
+  }
+
+  pdfPreviewBusyKey.value = busyKey
+  pdfPreviewLoading.value = true
+  pdfPreviewFilename.value = attachmentDownloadName(a)
+  revokePdfPreviewBlobUrl()
+  pdfPreviewOpen.value = true
+
+  try {
+    const result = await fetchPdfBlobForPreview(a.id)
+    if (!result.ok) {
+      attachmentPdfSoftFail(result)
+      pdfPreviewOpen.value = false
+      return
+    }
+    pdfPreviewBlobUrl.value = URL.createObjectURL(new Blob([result.blob], { type: 'application/pdf' }))
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    pdfPreviewOpen.value = false
+    showAppErrorFromApi(e, t('resources.attachment_download_failed'))
+  } finally {
+    pdfPreviewLoading.value = false
+    pdfPreviewBusyKey.value = null
+  }
+}
+
+onUnmounted(() => {
+  revokePdfPreviewBlobUrl()
+})
 
 function vehicleDocTypeLabel(type) {
   const k = `vehicle_compliance_doc_type.${type}`

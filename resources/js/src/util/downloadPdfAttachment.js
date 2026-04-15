@@ -39,6 +39,49 @@ export async function normalizeAxiosBlobError(err) {
 }
 
 /**
+ * Lấy blob qua API (Sanctum) để xem trước trong iframe — không lưu file.
+ * @param {number} attachmentId
+ * @returns {Promise<{ ok: true, blob: Blob } | { ok: false, reason: 'html' | 'not_pdf' | 'bad_json' }>}
+ */
+export async function fetchPdfBlobForPreview(attachmentId) {
+  let res
+  try {
+    res = await http.get(`/attachments/${attachmentId}/download`, {
+      responseType: 'blob',
+      headers: { Accept: '*/*' },
+    })
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
+
+  const blob = res.data
+  if (!(blob instanceof Blob)) {
+    throw new Error('invalid_response')
+  }
+
+  const ct = String(res.headers['content-type'] || '').toLowerCase()
+  if (ct.includes('text/html')) {
+    return { ok: false, reason: 'html' }
+  }
+  if (ct.includes('application/json')) {
+    return { ok: false, reason: 'bad_json' }
+  }
+
+  if (blob.size === 0) {
+    return { ok: false, reason: 'not_pdf' }
+  }
+
+  const ctOk = contentTypeLooksPdf(ct)
+  const magicOk = await blobLooksLikePdf(blob)
+  if (!ctOk && !magicOk) {
+    return { ok: false, reason: 'not_pdf' }
+  }
+
+  return { ok: true, blob }
+}
+
+/**
  * Tải qua API (Sanctum) — luôn dùng khi có `attachment.id` (không phụ thuộc /storage công khai).
  * @param {number} attachmentId
  * @param {string} filename
