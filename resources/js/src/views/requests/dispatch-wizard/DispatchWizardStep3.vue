@@ -33,7 +33,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(row, idx) in w.passengerRows" :key="'e1-' + idx" class="border-b border-slate-100 align-top">
+                    <tr v-for="(row, idx) in passengerRows" :key="'e1-' + idx" class="border-b border-slate-100 align-top">
                       <td class="px-1 py-1 text-slate-500">{{ idx + 1 }}</td>
                       <td class="min-w-[10rem] p-0.5"><input v-model="row.depart_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
                       <td class="min-w-[10rem] p-0.5"><input v-model="row.pickup" type="text" placeholder="Điểm đón" class="dw-cell dw-cell--table" /></td>
@@ -43,15 +43,15 @@
                       <td class="min-w-[10rem] p-0.5"><input v-model="row.person_in_charge" type="text" placeholder="Họ tên + SĐT" class="dw-cell dw-cell--table" /></td>
                       <td class="min-w-[7.5rem] p-0.5"><input v-model="row.unit_price" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
                       <td class="min-w-[7.5rem] p-0.5"><input v-model="row.extra_fee" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
-                      <td class="px-1 py-1 text-xs font-medium text-va-800">{{ w.formatCurrency(w.rowLineTotal(row)) }}</td>
+                      <td class="px-1 py-1 text-xs font-medium text-va-800">{{ formatCurrency(rowLineTotal(row)) }}</td>
                       <td class="min-w-[11rem] p-0.5"><input v-model="row.notes" type="text" placeholder="Ghi chú dòng…" class="dw-cell dw-cell--table" /></td>
                       <td class="px-0.5">
                         <button
-                          v-if="w.passengerRows.length > 1"
+                          v-if="passengerRows.length > 1"
                           type="button"
                           class="rounded p-1 text-rose-600 hover:bg-rose-50"
                           title="Xóa dòng"
-                          @click="w.removePassengerRow(idx)"
+                          @click="removePassengerRow(idx)"
                         >
                           <TrashIcon class="h-4 w-4" />
                         </button>
@@ -61,19 +61,19 @@
                   <tfoot>
                     <tr class="bg-slate-50">
                       <td colspan="9" class="px-3 py-2 text-right text-xs font-medium text-slate-700">Tổng e.1 (ước tính)</td>
-                      <td class="px-2 py-2 text-sm font-semibold text-va-800">{{ w.formatCurrency(w.passengerE1Total) }}</td>
+                      <td class="px-2 py-2 text-sm font-semibold text-va-800">{{ formatCurrency(passengerE1Total) }}</td>
                       <td colspan="2"></td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
               <div class="dw-table-toolbar">
-                <button type="button" class="dw-btn-row-add" @click="w.addPassengerRow">
+                <button type="button" class="dw-btn-row-add" @click="addPassengerRow">
                   <PlusIcon class="h-4 w-4" />
                   Thêm dòng
                 </button>
                 <label class="dw-table-toolbar__extra">
-                  <input v-model="w.form.multi_day" type="checkbox" class="dw-table-toolbar__extra-check" />
+                  <input v-model="form.multi_day" type="checkbox" class="dw-table-toolbar__extra-check" />
                   <span>Dùng cho 3+ ngày (ghi chú trong tóm tắt)</span>
                 </label>
               </div>
@@ -95,7 +95,7 @@
 
               <div class="dw-e11-flag">
                 <label class="dw-e11-flag__row">
-                  <input v-model="w.form.e1_use_3plus_days" type="checkbox" class="dw-e11-flag__check" />
+                  <input v-model="form.e1_use_3plus_days" type="checkbox" class="dw-e11-flag__check" />
                   <span class="dw-e11-flag__label">Thời gian sử dụng xe từ 03 ngày trở lên</span>
                 </label>
               </div>
@@ -104,34 +104,34 @@
                 <div class="dw-e11-field">
                   <span class="dw-e11-field__label">Từ ngày</span>
                   <input
-                    v-model="w.form.e1_from_date"
+                    v-model="form.e1_from_date"
                     type="date"
                     lang="vi"
                     class="dw-input dw-input--e11"
-                    @click="w.openDatePickerFromInput($event)"
+                    @click="openDatePickerFromInput($event)"
                   />
                   <span class="dw-e11-field__hint">dd/mm/yyyy</span>
                 </div>
                 <div class="dw-e11-field">
                   <span class="dw-e11-field__label">Đến ngày</span>
                   <input
-                    v-model="w.form.e1_to_date"
+                    v-model="form.e1_to_date"
                     type="date"
                     lang="vi"
                     class="dw-input dw-input--e11"
-                    @click="w.openDatePickerFromInput($event)"
+                    @click="openDatePickerFromInput($event)"
                   />
                   <span class="dw-e11-field__hint">dd/mm/yyyy</span>
                 </div>
                 <div class="dw-e11-field">
                   <span class="dw-e11-field__label">Tổng số ngày phát sinh</span>
-                  <input v-model="w.form.e1_days_total" type="text" class="dw-input dw-input--e11" placeholder="—" />
+                  <input v-model="form.e1_days_total" type="text" class="dw-input dw-input--e11" placeholder="—" />
                   <span class="dw-e11-field__hint">Ghi số ngày hoặc để trống</span>
                 </div>
                 <div class="dw-e11-field">
                   <span class="dw-e11-field__label">Chi phí phát sinh</span>
                   <input
-                    v-model="w.form.e1_extra_cost"
+                    v-model="form.e1_extra_cost"
                     type="number"
                     min="0"
                     step="1000"
@@ -146,14 +146,14 @@
                 <p id="dw-e11-weekdays-label" class="dw-e11-weekwrap__title">Bao gồm các thứ trong tuần từ</p>
                 <div class="dw-weekday-strip" role="group" aria-labelledby="dw-e11-weekdays-label">
                   <button
-                    v-for="wd in w.e1WeekdayOptions"
+                    v-for="wd in e1WeekdayOptions"
                     :key="wd.k"
                     type="button"
                     class="dw-weekday-chip"
-                    :class="{ 'dw-weekday-chip--on': w.form.e1_weekdays[wd.k] }"
+                    :class="{ 'dw-weekday-chip--on': form.e1_weekdays[wd.k] }"
                     role="checkbox"
-                    :aria-checked="!!w.form.e1_weekdays[wd.k]"
-                    @click="w.toggleE1Weekday(wd.k)"
+                    :aria-checked="!!form.e1_weekdays[wd.k]"
+                    @click="toggleE1Weekday(wd.k)"
                   >
                     {{ wd.label }}
                   </button>
@@ -197,7 +197,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(row, idx) in w.businessRows" :key="'e2-' + idx" class="border-b border-slate-100 align-top">
+                    <tr v-for="(row, idx) in businessRows" :key="'e2-' + idx" class="border-b border-slate-100 align-top">
                       <td class="px-1 py-1 text-slate-500">{{ idx + 1 }}</td>
                       <td class="min-w-[10rem] p-0.5"><input v-model="row.depart_at" type="datetime-local" class="dw-cell dw-cell--table" /></td>
                       <td class="min-w-[10rem] p-0.5"><input v-model="row.pickup" type="text" placeholder="Điểm đón" class="dw-cell dw-cell--table" /></td>
@@ -207,15 +207,15 @@
                       <td class="min-w-[5rem] p-0.5"><input v-model="row.guests" type="number" min="1" placeholder="—" class="dw-cell dw-cell--table min-w-[4.5rem]" /></td>
                       <td class="min-w-[7.5rem] p-0.5"><input v-model="row.unit_price" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
                       <td class="min-w-[7.5rem] p-0.5"><input v-model="row.extra_fee" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
-                      <td class="px-1 py-1 text-xs font-medium text-va-800">{{ w.formatCurrency(w.rowLineTotal(row)) }}</td>
+                      <td class="px-1 py-1 text-xs font-medium text-va-800">{{ formatCurrency(rowLineTotal(row)) }}</td>
                       <td class="min-w-[11rem] p-0.5"><input v-model="row.notes" type="text" placeholder="Ghi chú dòng…" class="dw-cell dw-cell--table" /></td>
                       <td class="px-0.5">
                         <button
-                          v-if="w.businessRows.length > 1"
+                          v-if="businessRows.length > 1"
                           type="button"
                           class="rounded p-1 text-rose-600 hover:bg-rose-50"
                           title="Xóa dòng"
-                          @click="w.removeBusinessRow(idx)"
+                          @click="removeBusinessRow(idx)"
                         >
                           <TrashIcon class="h-4 w-4" />
                         </button>
@@ -225,7 +225,7 @@
                   <tfoot>
                     <tr class="bg-slate-50">
                       <td colspan="9" class="px-3 py-2 text-right text-xs font-medium text-slate-700">Tổng e.2 (ước tính)</td>
-                      <td class="px-2 py-2 text-sm font-semibold text-va-800">{{ w.formatCurrency(w.passengerE2Total) }}</td>
+                      <td class="px-2 py-2 text-sm font-semibold text-va-800">{{ formatCurrency(passengerE2Total) }}</td>
                       <td colspan="2"></td>
                     </tr>
                   </tfoot>
@@ -235,7 +235,7 @@
                 <button
                   type="button"
                   class="dw-btn-row-add"
-                  @click="w.addBusinessRow"
+                  @click="addBusinessRow"
                 >
                   <PlusIcon class="h-4 w-4" />
                   Thêm dòng
@@ -259,13 +259,13 @@
               <div class="dw-e21-rows">
                 <div class="dw-e21-row">
                   <label class="dw-e21-row__opt">
-                    <input v-model="w.form.e2_door_pickup" type="checkbox" class="dw-e21-row__check" />
+                    <input v-model="form.e2_door_pickup" type="checkbox" class="dw-e21-row__check" />
                     <span class="dw-e21-row__label">Xe đưa đón tận nhà</span>
                   </label>
                   <div class="dw-e21-row__cost">
                     <span class="dw-e21-row__cost-label">Chi phí phát sinh</span>
                     <input
-                      v-model="w.form.e2_door_cost"
+                      v-model="form.e2_door_cost"
                       type="number"
                       min="0"
                       step="1000"
@@ -277,13 +277,13 @@
                 </div>
                 <div class="dw-e21-row">
                   <label class="dw-e21-row__opt">
-                    <input v-model="w.form.e2_driver_self" type="checkbox" class="dw-e21-row__check" />
+                    <input v-model="form.e2_driver_self" type="checkbox" class="dw-e21-row__check" />
                     <span class="dw-e21-row__label">Tài xế tự túc (ăn uống, khách sạn…)</span>
                   </label>
                   <div class="dw-e21-row__cost">
                     <span class="dw-e21-row__cost-label">Chi phí phát sinh</span>
                     <input
-                      v-model="w.form.e2_driver_self_cost"
+                      v-model="form.e2_driver_self_cost"
                       type="number"
                       min="0"
                       step="1000"
@@ -295,13 +295,13 @@
                 </div>
                 <div class="dw-e21-row">
                   <label class="dw-e21-row__opt">
-                    <input v-model="w.form.e2_after_21h" type="checkbox" class="dw-e21-row__check" />
+                    <input v-model="form.e2_after_21h" type="checkbox" class="dw-e21-row__check" />
                     <span class="dw-e21-row__label">Có nhu cầu sử dụng xe sau 21h trong ngày</span>
                   </label>
                   <div class="dw-e21-row__cost">
                     <span class="dw-e21-row__cost-label">Chi phí phát sinh</span>
                     <input
-                      v-model="w.form.e2_after_21h_cost"
+                      v-model="form.e2_after_21h_cost"
                       type="number"
                       min="0"
                       step="1000"
@@ -349,7 +349,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(row, idx) in w.cargoRows" :key="idx" class="border-b border-slate-100 align-top">
+                <tr v-for="(row, idx) in cargoRows" :key="idx" class="border-b border-slate-100 align-top">
                   <td class="px-1 py-1 text-slate-500">{{ idx + 1 }}</td>
                   <td class="min-w-[9rem] p-0.5"><input v-model="row.name" type="text" placeholder="Tên hàng hóa" class="dw-cell dw-cell--table" /></td>
                   <td class="min-w-[3.5rem] p-0.5"><input v-model="row.qty" type="text" placeholder="SL" class="dw-cell dw-cell--table min-w-[3.25rem]" /></td>
@@ -366,10 +366,10 @@
                   <td class="min-w-[7.5rem] p-0.5"><input v-model="row.cost" type="number" min="0" step="1000" placeholder="0" class="dw-cell dw-cell--table" /></td>
                   <td class="px-0.5">
                     <button
-                      v-if="w.cargoRows.length > 1"
+                      v-if="cargoRows.length > 1"
                       type="button"
                       class="rounded p-1 text-rose-600 hover:bg-rose-50"
-                      @click="w.removeCargoRow(idx)"
+                      @click="removeCargoRow(idx)"
                     >
                       <TrashIcon class="h-4 w-4" />
                     </button>
@@ -379,7 +379,7 @@
               <tfoot>
                 <tr class="bg-slate-50">
                   <td colspan="13" class="px-3 py-2 text-right font-medium text-slate-700">Tổng</td>
-                  <td class="px-2 py-2 font-semibold text-va-800">{{ w.formatCurrency(w.cargoTotal) }}</td>
+                  <td class="px-2 py-2 font-semibold text-va-800">{{ formatCurrency(cargoTotal) }}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -388,7 +388,7 @@
               <button
                 type="button"
                 class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-va-800 shadow-sm hover:bg-slate-50"
-                @click="w.addCargoRow"
+                @click="addCargoRow"
               >
                 <PlusIcon class="h-4 w-4" />
                 Thêm dòng hàng
@@ -400,20 +400,20 @@
             <div class="text-xs font-semibold uppercase text-slate-600">e.1.1 Ghi chú &amp; phát sinh</div>
             <label class="block">
               <span class="mb-1 block text-xs font-medium text-slate-600">Ghi chú khác (nếu có)</span>
-              <textarea v-model="w.form.cargo_extra_notes" rows="2" class="dw-input min-h-[3.5rem] resize-y" />
+              <textarea v-model="form.cargo_extra_notes" rows="2" class="dw-input min-h-[3.5rem] resize-y" />
             </label>
             <div class="divide-y divide-slate-200/80 rounded-lg border border-slate-200/80 bg-white/60">
               <div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-2.5">
                 <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 sm:items-center">
-                  <input v-model="w.form.need_porters" type="checkbox" class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0" />
+                  <input v-model="form.need_porters" type="checkbox" class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0" />
                   <span class="text-sm leading-snug text-slate-800">Yêu cầu bốc xếp / nhân công hỗ trợ</span>
                 </label>
                 <div class="flex min-w-0 flex-wrap items-center gap-2 sm:max-w-[28rem] sm:justify-end">
                   <span class="shrink-0 text-xs font-medium text-slate-600">Số lượng</span>
-                  <input v-model="w.form.porter_qty" type="text" placeholder="VD: 2 người" class="dw-cell dw-cell--e21 min-w-[6rem] max-w-[10rem]" />
+                  <input v-model="form.porter_qty" type="text" placeholder="VD: 2 người" class="dw-cell dw-cell--e21 min-w-[6rem] max-w-[10rem]" />
                   <span class="shrink-0 text-xs font-medium text-slate-600">Chi phí (VNĐ)</span>
                   <input
-                    v-model="w.form.porter_cost"
+                    v-model="form.porter_cost"
                     type="number"
                     min="0"
                     step="1000"
@@ -424,13 +424,13 @@
               </div>
               <div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-2.5">
                 <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 sm:items-center">
-                  <input v-model="w.form.interprovincial" type="checkbox" class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0" />
+                  <input v-model="form.interprovincial" type="checkbox" class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0" />
                   <span class="text-sm leading-snug text-slate-800">Gửi chành xe đi tỉnh</span>
                 </label>
                 <div class="flex min-w-0 shrink-0 items-center gap-2 sm:w-[min(100%,20rem)] sm:justify-end">
                   <span class="shrink-0 text-xs font-medium text-slate-600">Chi phí phát sinh (VNĐ)</span>
                   <input
-                    v-model="w.form.interprovincial_cost"
+                    v-model="form.interprovincial_cost"
                     type="number"
                     min="0"
                     step="1000"
@@ -452,7 +452,28 @@ import { DISPATCH_WIZARD_KEY } from './injectionKeys'
 const w = inject(DISPATCH_WIZARD_KEY)
 if (!w) throw new Error('DispatchWizardStep3: missing DISPATCH_WIZARD_KEY provider')
 
-// inject() là object thường: w.isCargo (ComputedRef) trong v-if luôn truthy nếu không unref.
+const {
+  passengerRows,
+  businessRows,
+  cargoRows,
+  form,
+  passengerE1Total,
+  passengerE2Total,
+  cargoTotal,
+  e1WeekdayOptions,
+  formatCurrency,
+  rowLineTotal,
+  addPassengerRow,
+  removePassengerRow,
+  addBusinessRow,
+  removeBusinessRow,
+  addCargoRow,
+  removeCargoRow,
+  openDatePickerFromInput,
+  toggleE1Weekday,
+} = w
+
+// inject trả về object thường: ref/computed lồng (w.x) không unwrap trong template → v-if / v-for sai.
 const isCargo = computed(() => unref(w.isCargo))
 const isPointToPointTrip = computed(() => unref(w.isPointToPointTrip))
 </script>
