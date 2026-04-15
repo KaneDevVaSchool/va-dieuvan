@@ -163,13 +163,10 @@
 
     <!-- 3-column workspace: horizontal scroll when viewport is tight -->
     <div class="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch]">
-      <div
-        class="flex flex-col gap-4 xl:flex-row xl:items-stretch"
-        :class="panel ? 'min-w-[1320px]' : 'min-w-[960px]'"
-      >
+      <div class="flex w-max min-w-full flex-col gap-4 xl:flex-row xl:items-stretch">
       <!-- Left: resource lists -->
       <aside
-        class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,340px)] xl:max-w-[380px]"
+        class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[340px] xl:max-w-[340px]"
       >
         <div class="space-y-2 border-b border-slate-200 p-3">
           <label class="relative block">
@@ -360,8 +357,10 @@
         </div>
       </aside>
 
-      <!-- Center: timeline -->
-      <section class="min-w-[520px] flex-1 rounded-xl border border-slate-200 bg-white shadow-sm xl:min-w-[560px]">
+      <!-- Center: timeline — cố định min-width xl, không co khi cột chi tiết render -->
+      <section
+        class="w-full shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm min-w-[min(100%,520px)] xl:min-w-[560px] xl:w-[560px] xl:max-w-[560px]"
+      >
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 p-3">
           <div
             class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-600"
@@ -465,7 +464,7 @@
       <!-- Right: action & constraints (chỉ hiện khi đã chọn tài xế / xe / NCC / chuyến) -->
       <aside
         v-if="panel"
-        class="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50/90 to-white shadow-md ring-1 ring-slate-900/5 xl:w-[min(100%,460px)]"
+        class="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50/90 to-white shadow-md ring-1 ring-slate-900/5 xl:w-[460px] xl:min-w-[460px] xl:max-w-[460px]"
       >
         <div class="border-b border-slate-200/80 bg-white/80 backdrop-blur-sm">
           <div class="flex items-center justify-between gap-2 px-3 py-2.5">
