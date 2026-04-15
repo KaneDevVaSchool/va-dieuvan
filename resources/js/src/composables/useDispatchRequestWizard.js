@@ -1,0 +1,1064 @@
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  AcademicCapIcon,
+  BriefcaseIcon,
+  BuildingOffice2Icon,
+  CubeIcon,
+} from '@heroicons/vue/24/outline'
+import { useAuthStore } from '../store'
+import { uploadAttachment } from '../api/attachments'
+import saveAs from 'file-saver'
+import { createDispatchRequest, previewBm02DispatchForm } from '../api/requests'
+import { searchUsersForDispatchForm } from '../api/operational'
+import { formatApiError } from '../api/http'
+import { newIdempotencyKey } from '../util/idempotency'
+import { toDatetimeLocalValue } from '../util/datetime'
+import {
+  LEGACY_DRAFT_KEY,
+  WIZARD_STEPS,
+  TARGET_OPTIONS,
+  E1_WEEKDAY_OPTIONS,
+  createInitialForm,
+  emptyPassengerRow,
+  emptyBusinessRow,
+  emptyCargoRow,
+  isPassengerRowFilled,
+  isBusinessRowFilled,
+  isCargoRowFilled,
+} from './dispatchWizardConstants'
+
+export function useDispatchRequestWizard() {
+  const router = useRouter()
+  const auth = useAuthStore()
+
+  const steps = WIZARD_STEPS
+  const targetOptions = TARGET_OPTIONS
+  const e1WeekdayOptions = E1_WEEKDAY_OPTIONS
+
+  function draftKeyForUser(userId) {
+    return userId != null ? `${LEGACY_DRAFT_KEY}-u${userId}` : LEGACY_DRAFT_KEY
+  }
+
+  function currentDraftStorageKey() {
+    return draftKeyForUser(auth.user?.id)
+  }
+
+  const step = ref(0)
+  const maxReachedStep = ref(0)
+  const loading = ref(false)
+  const error = ref('')
+
+  const bm02Loading = ref(false)
+  const bm02PreviewError = ref('')
+  const bm02PdfUrl = ref(null)
+  const bm02PdfBase64 = ref('')
+  const bm02ExcelBase64 = ref('')
+  const bm02FilenamePdf = ref('BM02-denghi-dieuvan-preview.pdf')
+  const bm02FilenameXlsx = ref('BM02-denghi-dieuvan-preview.xlsx')
+  const created = ref(null)
+  const draftSavedAt = ref(null)
+  const hasDraftSnapshot = ref(false)
+  const clearDraftModalOpen = ref(false)
+
+  const form = ref(createInitialForm())
+
+  const basisFile = ref(null)
+  const basisFileInput = ref(null)
+  const basisDragOver = ref(false)
+  const basisFileError = ref('')
+
+  let requesterSearchTimer = null
+  const requesterSearchQ = ref('')
+  const requesterSearchResults = ref([])
+  const requesterSearchLoading = ref(false)
+  const requesterDropdownOpen = ref(false)
+  let requesterBlurTimer = null
+
+  let coordinatorSearchTimer = null
+  const coordinatorSearchQ = ref('')
+  const coordinatorSearchResults = ref([])
+  const coordinatorSearchLoading = ref(false)
+  const coordinatorDropdownOpen = ref(false)
+  let coordinatorBlurTimer = null
+
+  const passengerRows = ref([emptyPassengerRow()])
+  const businessRows = ref([emptyBusinessRow()])
+  const cargoRows = ref([emptyCargoRow()])
+
+  const tripTypeOptions = [
+    {
+      value: 'door_to_door',
+      label: 'Đưa đón (Door-to-door)',
+      hint: '',
+      icon: AcademicCapIcon,
+      iconClass: 'text-violet-600',
+      selectedClass: 'border-violet-500 bg-violet-50 shadow-sm ring-1 ring-violet-200',
+    },
+    {
+      value: 'point_to_point',
+      label: 'Điểm — Điểm',
+      hint: '',
+      icon: BuildingOffice2Icon,
+      iconClass: 'text-sky-600',
+      selectedClass: 'border-sky-500 bg-sky-50 shadow-sm ring-1 ring-sky-200',
+    },
+    {
+      value: 'business',
+      label: 'Công tác',
+      hint: '',
+      icon: BriefcaseIcon,
+      iconClass: 'text-emerald-600',
+      selectedClass: 'border-emerald-500 bg-emerald-50 shadow-sm ring-1 ring-emerald-200',
+    },
+    {
+      value: 'cargo',
+      label: 'Hàng hóa',
+      hint: '',
+      icon: CubeIcon,
+      iconClass: 'text-orange-600',
+      selectedClass: 'border-orange-500 bg-orange-50 shadow-sm ring-1 ring-orange-200',
+      badge: 'SLA 3h',
+    },
+  ]
+
+  const isCargo = computed(() => form.value.trip_type === 'cargo')
+  const isPointToPointTrip = computed(() => form.value.trip_type === 'point_to_point')
+
+  function trimPassengerRowsInPlace() {
+    const kept = passengerRows.value.filter(isPassengerRowFilled)
+    passengerRows.value = kept.length ? kept : [emptyPassengerRow()]
+  }
+
+  function trimBusinessRowsInPlace() {
+    const kept = businessRows.value.filter(isBusinessRowFilled)
+    businessRows.value = kept.length ? kept : [emptyBusinessRow()]
+  }
+
+  function trimCargoRowsInPlace() {
+    const kept = cargoRows.value.filter(isCargoRowFilled)
+    cargoRows.value = kept.length ? kept : [emptyCargoRow()]
+  }
+
+  /** Chỉ giữ chữ số, tối đa 11 ký tự; hỗ trợ +84 → 0… */
+  function sanitizeVnPhoneDigits(raw) {
+    if (raw == null) return ''
+    let d = String(raw).replace(/\D/g, '')
+    if (d.startsWith('84') && d.length >= 10) d = `0${d.slice(2)}`
+    if (d.length > 11) d = d.slice(0, 11)
+    return d
+  }
+
+  function formatOrgUnitFromUser(u) {
+    const parts = [u.unit_name, u.department_name].filter(Boolean)
+    if (parts.length) return parts.join(' — ')
+    if (u.employee_code) return `Mã NV: ${u.employee_code}`
+    return ''
+  }
+
+  function formatFileSize(n) {
+    if (n == null || Number.isNaN(n)) return ''
+    if (n < 1024) return `${n} B`
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  function openDatePickerFromInput(evt) {
+    const inp = evt?.currentTarget
+    if (!inp || inp.type !== 'date') return
+    if (typeof inp.showPicker === 'function') {
+      try {
+        inp.showPicker()
+        return
+      } catch {
+        /* fallback */
+      }
+    }
+    try {
+      inp.focus({ preventScroll: true })
+    } catch {
+      inp.focus()
+    }
+  }
+
+  function toggleE1Weekday(k) {
+    const w = form.value.e1_weekdays
+    if (!w || typeof w[k] !== 'boolean') return
+    w[k] = !w[k]
+  }
+
+  function onRequesterPhoneInput(e) {
+    form.value.requester_phone = sanitizeVnPhoneDigits(e?.target?.value)
+  }
+
+  function onCoordinatorPhoneInput(e) {
+    form.value.coordinator_phone = sanitizeVnPhoneDigits(e?.target?.value)
+  }
+
+  function scheduleRequesterSearch() {
+    clearTimeout(requesterSearchTimer)
+    requesterSearchTimer = setTimeout(runRequesterSearch, 350)
+  }
+
+  async function runRequesterSearch() {
+    const q = requesterSearchQ.value.trim()
+    if (q.length < 2) {
+      requesterSearchResults.value = []
+      requesterDropdownOpen.value = false
+      return
+    }
+    requesterSearchLoading.value = true
+    try {
+      requesterSearchResults.value = await searchUsersForDispatchForm(q)
+      requesterDropdownOpen.value = requesterSearchResults.value.length > 0
+    } catch {
+      requesterSearchResults.value = []
+      requesterDropdownOpen.value = false
+    } finally {
+      requesterSearchLoading.value = false
+    }
+  }
+
+  function onRequesterSearchFocus() {
+    clearTimeout(requesterBlurTimer)
+    if (requesterSearchResults.value.length) requesterDropdownOpen.value = true
+  }
+
+  function onRequesterSearchBlur() {
+    requesterBlurTimer = setTimeout(() => {
+      requesterDropdownOpen.value = false
+    }, 200)
+  }
+
+  function pickRequester(u) {
+    form.value.requester_name = u.name || ''
+    form.value.requester_email = u.email || ''
+    form.value.requester_phone = sanitizeVnPhoneDigits(u.phone || '')
+    form.value.requester_unit = formatOrgUnitFromUser(u)
+    requesterSearchQ.value = u.name || ''
+    requesterSearchResults.value = []
+    requesterDropdownOpen.value = false
+  }
+
+  function scheduleCoordinatorSearch() {
+    clearTimeout(coordinatorSearchTimer)
+    coordinatorSearchTimer = setTimeout(runCoordinatorSearch, 350)
+  }
+
+  async function runCoordinatorSearch() {
+    const q = coordinatorSearchQ.value.trim()
+    if (q.length < 2) {
+      coordinatorSearchResults.value = []
+      coordinatorDropdownOpen.value = false
+      return
+    }
+    coordinatorSearchLoading.value = true
+    try {
+      coordinatorSearchResults.value = await searchUsersForDispatchForm(q)
+      coordinatorDropdownOpen.value = coordinatorSearchResults.value.length > 0
+    } catch {
+      coordinatorSearchResults.value = []
+      coordinatorDropdownOpen.value = false
+    } finally {
+      coordinatorSearchLoading.value = false
+    }
+  }
+
+  function onCoordinatorSearchFocus() {
+    clearTimeout(coordinatorBlurTimer)
+    if (coordinatorSearchResults.value.length) coordinatorDropdownOpen.value = true
+  }
+
+  function onCoordinatorSearchBlur() {
+    coordinatorBlurTimer = setTimeout(() => {
+      coordinatorDropdownOpen.value = false
+    }, 200)
+  }
+
+  function pickCoordinator(u) {
+    form.value.coordinator_name = u.name || ''
+    form.value.coordinator_email = u.email || ''
+    form.value.coordinator_phone = sanitizeVnPhoneDigits(u.phone || '')
+    coordinatorSearchQ.value = u.name || ''
+    coordinatorSearchResults.value = []
+    coordinatorDropdownOpen.value = false
+  }
+
+  function onBasisFileChange(e) {
+    basisFileError.value = ''
+    const f = e?.target?.files?.[0]
+    if (!f) return
+    if (f.size > 10 * 1024 * 1024) {
+      basisFile.value = null
+      basisFileError.value = 'Tệp vượt quá 10MB.'
+      if (basisFileInput.value) basisFileInput.value.value = ''
+      return
+    }
+    basisFile.value = f
+  }
+
+  function onBasisDrop(e) {
+    basisDragOver.value = false
+    basisFileError.value = ''
+    const f = e?.dataTransfer?.files?.[0]
+    if (!f) return
+    if (f.size > 10 * 1024 * 1024) {
+      basisFileError.value = 'Tệp vượt quá 10MB.'
+      return
+    }
+    basisFile.value = f
+  }
+
+  function clearBasisFile() {
+    basisFile.value = null
+    basisFileError.value = ''
+    if (basisFileInput.value) basisFileInput.value.value = ''
+  }
+
+  const draftLabel = computed(() => {
+    if (created.value) return 'Đã gửi'
+    if (draftSavedAt.value) {
+      try {
+        return `Bản nháp • Lưu ${new Date(draftSavedAt.value).toLocaleString('vi-VN')}`
+      } catch {
+        return 'Bản nháp'
+      }
+    }
+    return 'Bản nháp'
+  })
+
+  function minDatetimeLocalFromValues(values) {
+    const vals = values.filter(Boolean)
+    if (!vals.length) return ''
+    let min = null
+    for (const v of vals) {
+      const t = new Date(v).getTime()
+      if (!Number.isNaN(t) && (min === null || t < min)) min = t
+    }
+    if (min === null) return ''
+    return toDatetimeLocalValue(new Date(min))
+  }
+
+  const computedDepartAt = computed(() => {
+    const vals = []
+    if (isCargo.value) {
+      for (const r of cargoRows.value) {
+        if (r.pickup_at) vals.push(r.pickup_at)
+      }
+    } else {
+      for (const r of passengerRows.value) {
+        if (r.depart_at) vals.push(r.depart_at)
+      }
+      if (!isPointToPointTrip.value) {
+        for (const r of businessRows.value) {
+          if (r.depart_at) vals.push(r.depart_at)
+        }
+      }
+    }
+    return minDatetimeLocalFromValues(vals)
+  })
+
+  function parseMoney(v) {
+    const n = Number(String(v).replace(/\s/g, ''))
+    return Number.isFinite(n) ? n : 0
+  }
+
+  function rowLineTotal(r) {
+    return parseMoney(r.unit_price) + parseMoney(r.extra_fee)
+  }
+
+  const passengerE1Total = computed(() =>
+    passengerRows.value.reduce((s, r) => s + rowLineTotal(r), 0),
+  )
+
+  const passengerE2Total = computed(() =>
+    businessRows.value.reduce((s, r) => s + rowLineTotal(r), 0),
+  )
+
+  const passengerTotal = computed(() => passengerE1Total.value + passengerE2Total.value)
+
+  const passengerGuestTotal = computed(
+    () =>
+      passengerRows.value.reduce((s, r) => s + parseMoney(r.guests), 0) +
+      businessRows.value.reduce((s, r) => s + parseMoney(r.guests), 0),
+  )
+
+  const cargoTotal = computed(() => cargoRows.value.reduce((s, r) => s + parseMoney(r.cost), 0))
+
+  const extraCosts = computed(() => {
+    let x = 0
+    if (form.value.need_porters) x += parseMoney(form.value.porter_cost)
+    if (form.value.interprovincial) x += parseMoney(form.value.interprovincial_cost)
+    return x
+  })
+
+  function formatCurrency(n) {
+    if (n == null || Number.isNaN(Number(n))) return '—'
+    try {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(n))
+    } catch {
+      return `${n} ₫`
+    }
+  }
+
+  const canGoNext = computed(() => {
+    if (step.value === 0) return !!form.value.trip_type
+    if (step.value === 1) {
+      return (
+        !!form.value.requester_name?.trim() &&
+        !!form.value.requester_email?.trim() &&
+        !!form.value.purpose?.trim() &&
+        !!form.value.proposed_date &&
+        !!form.value.date_needed &&
+        (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
+      )
+    }
+    if (step.value === 2) {
+      if (!computedDepartAt.value?.trim()) return false
+      if (isCargo.value) {
+        return cargoRows.value.some((r) => r.name?.trim())
+      }
+      if (isPointToPointTrip.value) {
+        return passengerRows.value.some(isPassengerRowFilled)
+      }
+      return (
+        passengerRows.value.some(isPassengerRowFilled) || businessRows.value.some(isBusinessRowFilled)
+      )
+    }
+    return true
+  })
+
+  function goStep(i) {
+    if (i <= maxReachedStep.value) step.value = i
+  }
+
+  function nextStep() {
+    if (!canGoNext.value) return
+    if (step.value < 3) step.value++
+  }
+
+  function addPassengerRow() {
+    passengerRows.value.push(emptyPassengerRow())
+  }
+
+  function removePassengerRow(i) {
+    passengerRows.value.splice(i, 1)
+    if (!passengerRows.value.length) passengerRows.value.push(emptyPassengerRow())
+  }
+
+  function addBusinessRow() {
+    businessRows.value.push(emptyBusinessRow())
+  }
+
+  function removeBusinessRow(i) {
+    businessRows.value.splice(i, 1)
+    if (!businessRows.value.length) businessRows.value.push(emptyBusinessRow())
+  }
+
+  function addCargoRow() {
+    cargoRows.value.push(emptyCargoRow())
+  }
+
+  function removeCargoRow(i) {
+    cargoRows.value.splice(i, 1)
+    if (!cargoRows.value.length) cargoRows.value.push(emptyCargoRow())
+  }
+
+  const canSubmitApi = computed(() => !!computedDepartAt.value?.trim())
+
+  const headerPrimaryLabel = computed(() => {
+    if (loading.value) return 'Đang gửi…'
+    if (step.value < 3) return 'Tiếp tới xác nhận'
+    return 'Gửi yêu cầu'
+  })
+
+  const headerPrimaryDisabled = computed(() => {
+    if (loading.value) return true
+    if (step.value < 3) return !canGoNext.value
+    return !canSubmitApi.value
+  })
+
+  function buildNotesBody() {
+    const f = form.value
+    const lines = []
+    lines.push('=== ĐỀ NGHỊ ĐIỀU VẬN (BM.03/MH.QT.04 — bản điện tử) ===')
+    lines.push('')
+    lines.push('Người đề nghị')
+    lines.push(`- Họ tên: ${f.requester_name || '—'}`)
+    lines.push(`- Email: ${f.requester_email || '—'}`)
+    lines.push(`- Điện thoại: ${f.requester_phone || '—'}`)
+    lines.push(`- Đơn vị: ${f.requester_unit || '—'}`)
+    lines.push('')
+    lines.push('Mục đích sử dụng')
+    lines.push(`- Mục đích: ${f.purpose || '—'}`)
+    if (f.trip_type === 'point_to_point') {
+      const pk =
+        f.point_purpose_kind === 'extracurricular' ? 'Hoạt động ngoại khóa' : 'Điểm — Điểm'
+      lines.push(`- Phân loại mục đích: ${pk}`)
+    }
+    if (basisFile.value) {
+      lines.push(`- Căn cứ đề xuất: đính kèm tệp «${basisFile.value.name}»`)
+    } else {
+      lines.push('- Căn cứ đề xuất: (chưa đính kèm tệp)')
+    }
+    lines.push('')
+    lines.push('Thời gian')
+    lines.push(`- Ngày đề xuất: ${f.proposed_date || '—'}`)
+    lines.push(`- Ngày cần sử dụng xe: ${f.date_needed || '—'}`)
+    if (f.is_urgent) lines.push(`- GẤP — Lý do: ${f.urgent_reason || '—'}`)
+    lines.push('')
+    lines.push('Đối tượng / điều phối')
+    lines.push(`- Đối tượng: ${f.targets?.length ? f.targets.join(', ') : '—'}`)
+    lines.push(
+      `- Điều phối: ${f.coordinator_name || '—'} | ${f.coordinator_email || '—'} | ${f.coordinator_phone || '—'}`,
+    )
+    lines.push('')
+
+    if (isCargo.value) {
+      lines.push('Nội dung đề nghị vận chuyển')
+      lines.push('Nội dung chi tiết')
+      cargoRows.value.forEach((r, i) => {
+        if (!r.name?.trim()) return
+        lines.push(
+          `${i + 1}. ${r.name} | SL ${r.qty || '—'} | ${r.dimensions || '—'} | ${r.weight || '—'} | ${r.item_notes || ''}`,
+        )
+        lines.push(
+          `   Lấy: ${r.pickup_at || '—'} @ ${r.pickup_place || '—'} — ${r.pickup_contact || '—'}`,
+        )
+        lines.push(
+          `   Giao: ${r.delivery_at || '—'} @ ${r.delivery_place || '—'} — ${r.delivery_contact || '—'}`,
+        )
+        lines.push(`   Vận chuyển: ${r.transport_note || '—'} | Chi phí: ${r.cost || '0'}`)
+      })
+      lines.push(`Tổng hàng: ${formatCurrency(cargoTotal.value)}`)
+      if (f.cargo_extra_notes?.trim()) lines.push(`Ghi chú khác: ${f.cargo_extra_notes}`)
+      if (f.need_porters) {
+        lines.push(`- Bốc xếp: SL ${f.porter_qty || '—'} — phát sinh ${f.porter_cost || '0'} VNĐ`)
+      }
+      if (f.interprovincial) {
+        lines.push(`- Chành xe tỉnh — phát sinh ${f.interprovincial_cost || '0'} VNĐ`)
+      }
+      lines.push(`Tổng cộng (ước tính): ${formatCurrency(cargoTotal.value + extraCosts.value)}`)
+    } else {
+      lines.push('Nội dung đề nghị vận chuyển')
+      lines.push('Nội dung đề xuất cho chương trình / sự kiện ngoại khóa')
+      if (f.multi_day) lines.push('(Dùng nhiều ngày — chi tiết bổ sung khi điều phối.)')
+      passengerRows.value.forEach((r, i) => {
+        if (!isPassengerRowFilled(r)) return
+        lines.push(
+          `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | NV: ${r.person_in_charge || '—'} | ĐG ${r.unit_price || '0'} + PS ${r.extra_fee || '0'} | ${r.notes || ''}`,
+        )
+      })
+      lines.push(`Tổng (ước tính): ${formatCurrency(passengerE1Total.value)}`)
+      if (f.trip_type !== 'point_to_point') {
+        const wd = f.e1_weekdays || {}
+        const wdLabels = []
+        if (wd.mon) wdLabels.push('T2')
+        if (wd.tue) wdLabels.push('T3')
+        if (wd.wed) wdLabels.push('T4')
+        if (wd.thu) wdLabels.push('T5')
+        if (wd.fri) wdLabels.push('T6')
+        if (wd.sat) wdLabels.push('T7')
+        if (wd.sun) wdLabels.push('CN')
+        lines.push('e.1.1 Ghi chú khác đề xuất')
+        if (f.e1_use_3plus_days) {
+          lines.push(
+            `- Xe từ 3 ngày trở lên: ${f.e1_from_date || '—'} → ${f.e1_to_date || '—'} | Tổng ngày: ${f.e1_days_total || '—'} | Phát sinh: ${f.e1_extra_cost || '0'}`,
+          )
+        }
+        if (wdLabels.length) lines.push(`- Các thứ trong tuần: ${wdLabels.join(', ')}`)
+        lines.push('Nội dung đề xuất cho nhân sự đi công tác')
+        businessRows.value.forEach((r, i) => {
+          if (!isBusinessRowFilled(r)) return
+          lines.push(
+            `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Dừng: ${r.waypoint || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | ĐG+PS: ${formatCurrency(rowLineTotal(r))} | ${r.notes || ''}`,
+          )
+        })
+        lines.push(`Tổng e.2 (ước tính): ${formatCurrency(passengerE2Total.value)}`)
+        lines.push('Ghi chú khác (công tác)')
+        if (f.e2_door_pickup) lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || '0'}`)
+        if (f.e2_driver_self) lines.push(`- Tài xế tự túc: ${f.e2_driver_self_cost || '0'}`)
+        if (f.e2_after_21h) lines.push(`- Xe sau 21h: ${f.e2_after_21h_cost || '0'}`)
+        lines.push(`Tổng (ước tính): ${formatCurrency(passengerTotal.value)}`)
+      }
+    }
+
+    lines.push('')
+    lines.push('--- Hệ thống: các trường trên được gửi kèm để bộ phận Điều vận xử lý.')
+    return lines.join('\n')
+  }
+
+  function computeApiOriginDestination() {
+    if (isCargo.value) {
+      const r = cargoRows.value.find((x) => x.name?.trim())
+      return {
+        origin: r?.pickup_place?.trim() || '',
+        destination: r?.delivery_place?.trim() || '',
+      }
+    }
+    const r =
+      passengerRows.value.find((x) => x.pickup?.trim() || x.dropoff?.trim()) ||
+      (!isPointToPointTrip.value
+        ? businessRows.value.find((x) => x.pickup?.trim() || x.dropoff?.trim())
+        : undefined)
+    return {
+      origin: r?.pickup?.trim() || '',
+      destination: r?.dropoff?.trim() || '',
+    }
+  }
+
+  function toIsoMaybe(v) {
+    if (!v) return null
+    try {
+      return new Date(v).toISOString()
+    } catch {
+      return v
+    }
+  }
+
+  let submitInFlight = false
+
+  function primaryAction() {
+    if (step.value < 3) nextStep()
+    else doSubmit()
+  }
+
+  function validateBeforeApi() {
+    if (!form.value.trip_type) {
+      step.value = 0
+      return 'Chọn loại dịch vụ.'
+    }
+    if (
+      !form.value.requester_name?.trim() ||
+      !form.value.requester_email?.trim() ||
+      !form.value.purpose?.trim() ||
+      !form.value.proposed_date ||
+      !form.value.date_needed
+    ) {
+      step.value = 1
+      return 'Điền đủ thông tin bước 2 (A–C, mục đích).'
+    }
+    if (form.value.is_urgent && !form.value.urgent_reason?.trim()) {
+      step.value = 1
+      return 'Ghi lý do khi chọn Gấp.'
+    }
+    if (isCargo.value) {
+      if (!cargoRows.value.some((r) => r.name?.trim())) {
+        step.value = 2
+        return 'Thêm ít nhất một dòng hàng hóa (tên hàng).'
+      }
+    } else if (form.value.trip_type === 'point_to_point') {
+      if (!passengerRows.value.some(isPassengerRowFilled)) {
+        step.value = 2
+        return 'Thêm ít nhất một dòng chi tiết (e.1) hoặc nhập thời gian chuyến.'
+      }
+    } else if (
+      !passengerRows.value.some(isPassengerRowFilled) &&
+      !businessRows.value.some(isBusinessRowFilled)
+    ) {
+      step.value = 2
+      return 'Thêm ít nhất một dòng chi tiết (e.1 hoặc e.2) hoặc nhập thời gian chuyến.'
+    }
+    if (!computedDepartAt.value?.trim()) {
+      step.value = 2
+      return 'Nhập thời gian chuyến đi (ít nhất một ô thời gian trong bảng chi tiết).'
+    }
+    return ''
+  }
+
+  async function doSubmit() {
+    if (submitInFlight || loading.value) return
+    const v = validateBeforeApi()
+    if (v) {
+      error.value = v
+      return
+    }
+    error.value = ''
+    created.value = null
+    submitInFlight = true
+    loading.value = true
+    const idempotencyKey = newIdempotencyKey()
+    try {
+      const { origin, destination } = computeApiOriginDestination()
+      const notes = buildNotesBody()
+      const payload = {
+        trip_type: form.value.trip_type,
+        source_channel: form.value.source_channel,
+        origin: origin || undefined,
+        destination: destination || undefined,
+        depart_at: toIsoMaybe(computedDepartAt.value),
+        arrive_by: null,
+        passenger_count: isCargo.value
+          ? null
+          : passengerGuestTotal.value > 0
+            ? Math.round(passengerGuestTotal.value)
+            : null,
+        notes,
+        is_urgent: !!form.value.is_urgent,
+      }
+      if (form.value.trip_type === 'point_to_point') {
+        payload.wizard_snapshot = buildWizardSnapshot()
+      }
+      Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
+      created.value = await createDispatchRequest(payload, { idempotencyKey })
+      if (basisFile.value && created.value?.id) {
+        try {
+          await uploadAttachment({
+            attachable_type: 'dispatch_request',
+            attachable_id: created.value.id,
+            kind: 'proposal_basis',
+            file: basisFile.value,
+          })
+        } catch (attachErr) {
+          error.value = formatApiError(
+            attachErr,
+            'Đã tạo yêu cầu nhưng không tải được file căn cứ. Bạn có thể thử lại từ chi tiết yêu cầu (nếu được phép).',
+          )
+        }
+      }
+      try {
+        localStorage.removeItem(currentDraftStorageKey())
+        localStorage.removeItem(LEGACY_DRAFT_KEY)
+      } catch {
+        /* ignore */
+      }
+      draftSavedAt.value = null
+      hasDraftSnapshot.value = false
+    } catch (e) {
+      error.value = formatApiError(e, 'Tạo yêu cầu thất bại.')
+    } finally {
+      loading.value = false
+      submitInFlight = false
+    }
+  }
+
+  function revokeBm02PdfUrl() {
+    if (bm02PdfUrl.value) {
+      try {
+        URL.revokeObjectURL(bm02PdfUrl.value)
+      } catch {
+        /* ignore */
+      }
+      bm02PdfUrl.value = null
+    }
+  }
+
+  function base64ToBlob(base64, mime) {
+    const bin = atob(base64)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    return new Blob([bytes], { type: mime })
+  }
+
+  function buildWizardSnapshot() {
+    return {
+      form: { ...form.value, basisFileName: basisFile.value?.name ?? '' },
+      passengerRows: passengerRows.value.map((r) => ({ ...r })),
+      businessRows: businessRows.value.map((r) => ({ ...r })),
+      cargoRows: cargoRows.value.map((r) => ({ ...r })),
+    }
+  }
+
+  async function loadBm02Preview() {
+    if (form.value.trip_type !== 'point_to_point') return
+    bm02PreviewError.value = ''
+    bm02PdfBase64.value = ''
+    bm02ExcelBase64.value = ''
+    bm02Loading.value = true
+    const prevUrl = bm02PdfUrl.value
+    bm02PdfUrl.value = null
+    try {
+      const data = await previewBm02DispatchForm(buildWizardSnapshot())
+      bm02PdfBase64.value = data.pdf_base64 ?? ''
+      bm02ExcelBase64.value = data.excel_base64 ?? ''
+      if (data.filename_pdf) bm02FilenamePdf.value = data.filename_pdf
+      if (data.filename_xlsx) bm02FilenameXlsx.value = data.filename_xlsx
+      if (data.pdf_base64) {
+        bm02PdfUrl.value = URL.createObjectURL(base64ToBlob(data.pdf_base64, 'application/pdf'))
+      }
+      if (prevUrl) {
+        try {
+          URL.revokeObjectURL(prevUrl)
+        } catch {
+          /* ignore */
+        }
+      }
+    } catch (e) {
+      bm02PdfUrl.value = prevUrl
+      bm02PreviewError.value = formatApiError(e, 'Không tạo được bản xem trước BM.02.')
+    } finally {
+      bm02Loading.value = false
+    }
+  }
+
+  function downloadBm02Pdf() {
+    if (!bm02PdfBase64.value) return
+    saveAs(base64ToBlob(bm02PdfBase64.value, 'application/pdf'), bm02FilenamePdf.value)
+  }
+
+  function downloadBm02Excel() {
+    if (!bm02ExcelBase64.value) return
+    saveAs(
+      base64ToBlob(
+        bm02ExcelBase64.value,
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ),
+      bm02FilenameXlsx.value,
+    )
+  }
+
+  function migrateLegacyDraft() {
+    if (typeof localStorage === 'undefined') return
+    const uid = auth.user?.id
+    if (uid == null) return
+    const userKey = draftKeyForUser(uid)
+    if (localStorage.getItem(userKey)) return
+    const legacy = localStorage.getItem(LEGACY_DRAFT_KEY)
+    if (!legacy) return
+    localStorage.setItem(userKey, legacy)
+    localStorage.removeItem(LEGACY_DRAFT_KEY)
+  }
+
+  function saveDraft() {
+    try {
+      trimPassengerRowsInPlace()
+      trimBusinessRowsInPlace()
+      trimCargoRowsInPlace()
+      const savedAt = Date.now()
+      const data = {
+        form: form.value,
+        passengerRows: passengerRows.value,
+        businessRows: businessRows.value,
+        cargoRows: cargoRows.value,
+        step: step.value,
+        maxReachedStep: maxReachedStep.value,
+        savedAt,
+      }
+      localStorage.setItem(currentDraftStorageKey(), JSON.stringify(data))
+      draftSavedAt.value = savedAt
+      hasDraftSnapshot.value = true
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function loadDraft() {
+    try {
+      const raw = localStorage.getItem(currentDraftStorageKey())
+      if (!raw) {
+        hasDraftSnapshot.value = false
+        return
+      }
+      const data = JSON.parse(raw)
+      if (data.form) form.value = { ...createInitialForm(), ...data.form }
+      if (Array.isArray(data.passengerRows) && data.passengerRows.length) {
+        passengerRows.value = data.passengerRows.map((r) => ({ ...emptyPassengerRow(), ...r }))
+      }
+      if (Array.isArray(data.businessRows) && data.businessRows.length) {
+        businessRows.value = data.businessRows.map((r) => ({ ...emptyBusinessRow(), ...r }))
+      }
+      if (Array.isArray(data.cargoRows) && data.cargoRows.length) cargoRows.value = data.cargoRows
+      if (typeof data.step === 'number') step.value = data.step
+      if (typeof data.maxReachedStep === 'number') {
+        maxReachedStep.value = Math.max(data.maxReachedStep, step.value)
+      }
+      draftSavedAt.value = data.savedAt ?? Date.now()
+      trimPassengerRowsInPlace()
+      trimBusinessRowsInPlace()
+      trimCargoRowsInPlace()
+      hasDraftSnapshot.value = true
+    } catch {
+      hasDraftSnapshot.value = false
+    }
+  }
+
+  function resetWizardForm() {
+    form.value = createInitialForm()
+    passengerRows.value = [emptyPassengerRow()]
+    businessRows.value = [emptyBusinessRow()]
+    cargoRows.value = [emptyCargoRow()]
+    step.value = 0
+    maxReachedStep.value = 0
+    error.value = ''
+    created.value = null
+    draftSavedAt.value = null
+    hasDraftSnapshot.value = false
+    basisFile.value = null
+    basisFileError.value = ''
+    requesterSearchQ.value = ''
+    coordinatorSearchQ.value = ''
+  }
+
+  function openClearDraftModal() {
+    clearDraftModalOpen.value = true
+  }
+
+  function closeClearDraftModal() {
+    clearDraftModalOpen.value = false
+  }
+
+  function confirmClearDraft() {
+    closeClearDraftModal()
+    try {
+      localStorage.removeItem(currentDraftStorageKey())
+      localStorage.removeItem(LEGACY_DRAFT_KEY)
+    } catch {
+      /* ignore */
+    }
+    resetWizardForm()
+  }
+
+  watchEffect((onCleanup) => {
+    if (typeof document === 'undefined') return
+    if (!clearDraftModalOpen.value) {
+      document.body.style.overflow = ''
+      return
+    }
+    document.body.style.overflow = 'hidden'
+    if (typeof window === 'undefined') return
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeClearDraftModal()
+    }
+    window.addEventListener('keydown', onKey)
+    onCleanup(() => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKey)
+    })
+  })
+
+  function onCancel() {
+    if (created.value) {
+      router.push('/requests')
+      return
+    }
+    router.back()
+  }
+
+  onMounted(async () => {
+    try {
+      if (!auth.user) await auth.fetchMe()
+    } catch {
+      /* router guard / 401 */
+    }
+    migrateLegacyDraft()
+    loadDraft()
+    if (auth.user) {
+      if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
+      if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
+    }
+    if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
+    if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
+    form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
+    form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
+    if (!hasDraftSnapshot.value && typeof localStorage !== 'undefined') {
+      hasDraftSnapshot.value = !!localStorage.getItem(currentDraftStorageKey())
+    }
+  })
+
+  onBeforeUnmount(() => {
+    revokeBm02PdfUrl()
+  })
+
+  watch(
+    step,
+    (s) => {
+      if (s > maxReachedStep.value) maxReachedStep.value = s
+      if (s === 3 && form.value.trip_type === 'point_to_point') loadBm02Preview()
+    },
+    { immediate: true },
+  )
+
+  watch(
+    () => form.value.proposed_date,
+    (v) => {
+      if (v) form.value.date_needed = v
+    },
+  )
+
+  return {
+    steps,
+    step,
+    maxReachedStep,
+    loading,
+    error,
+    bm02Loading,
+    bm02PreviewError,
+    bm02PdfUrl,
+    bm02PdfBase64,
+    bm02ExcelBase64,
+    bm02FilenamePdf,
+    bm02FilenameXlsx,
+    created,
+    draftSavedAt,
+    hasDraftSnapshot,
+    clearDraftModalOpen,
+    targetOptions,
+    form,
+    basisFile,
+    basisFileInput,
+    basisDragOver,
+    basisFileError,
+    requesterSearchQ,
+    requesterSearchResults,
+    requesterSearchLoading,
+    requesterDropdownOpen,
+    coordinatorSearchQ,
+    coordinatorSearchResults,
+    coordinatorSearchLoading,
+    coordinatorDropdownOpen,
+    passengerRows,
+    businessRows,
+    cargoRows,
+    tripTypeOptions,
+    isCargo,
+    isPointToPointTrip,
+    e1WeekdayOptions,
+    openDatePickerFromInput,
+    toggleE1Weekday,
+    onRequesterPhoneInput,
+    onCoordinatorPhoneInput,
+    scheduleRequesterSearch,
+    onRequesterSearchFocus,
+    onRequesterSearchBlur,
+    pickRequester,
+    scheduleCoordinatorSearch,
+    onCoordinatorSearchFocus,
+    onCoordinatorSearchBlur,
+    pickCoordinator,
+    onBasisFileChange,
+    onBasisDrop,
+    clearBasisFile,
+    draftLabel,
+    computedDepartAt,
+    rowLineTotal,
+    passengerE1Total,
+    passengerE2Total,
+    passengerTotal,
+    passengerGuestTotal,
+    cargoTotal,
+    extraCosts,
+    formatCurrency,
+    formatFileSize,
+    canGoNext,
+    goStep,
+    nextStep,
+    addPassengerRow,
+    removePassengerRow,
+    addBusinessRow,
+    removeBusinessRow,
+    addCargoRow,
+    removeCargoRow,
+    canSubmitApi,
+    headerPrimaryLabel,
+    headerPrimaryDisabled,
+    primaryAction,
+    loadBm02Preview,
+    downloadBm02Pdf,
+    downloadBm02Excel,
+    saveDraft,
+    openClearDraftModal,
+    closeClearDraftModal,
+    confirmClearDraft,
+    onCancel,
+  }
+}

@@ -6,7 +6,6 @@ import DashboardView from "../views/DashboardView.vue";
 import LoginView from "../views/auth/LoginView.vue";
 import RequestsListView from "../views/requests/RequestsListView.vue";
 import RequestDetailView from "../views/requests/RequestDetailView.vue";
-import DispatchRequestCreateView from "../views/requests/DispatchRequestCreateView.vue";
 import AuditLogsView from "../views/audit/AuditLogsView.vue";
 import TripsListView from "../views/trips/TripsListView.vue";
 import TripDetailView from "../views/trips/TripDetailView.vue";
@@ -97,7 +96,8 @@ const router = createRouter({
         {
             path: "/dispatch-requests/new",
             name: "dispatchRequestNew",
-            component: DispatchRequestCreateView,
+            component: () =>
+                import("../views/requests/DispatchRequestCreateView.vue"),
             meta: { title: "Tạo yêu cầu điều vận", subtitle: "BM.03 — luồng 4 bước" },
         },
 
