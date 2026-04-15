@@ -1,15 +1,13 @@
 <template>
-  <div
-    class="-mx-3 -mt-3 min-h-[calc(100dvh-3rem)] bg-slate-950 px-3 py-4 text-slate-100 sm:-mx-4 sm:-mt-4 md:-mx-6 md:-mt-5 md:px-6 md:py-5"
-  >
+  <div class="space-y-4 text-slate-900">
     <div class="mx-auto max-w-[1920px] space-y-4">
       <!-- Header -->
-      <header class="flex flex-col gap-3 border-b border-slate-800/80 pb-4 lg:flex-row lg:items-center lg:justify-between">
+      <header class="flex flex-col gap-3 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 class="text-lg font-semibold tracking-tight text-white md:text-xl">
+          <h1 class="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">
             {{ t('dispatcher_board.title') }}
           </h1>
-          <p class="mt-0.5 text-sm text-slate-400">
+          <p class="mt-0.5 text-sm text-slate-600">
             {{ t('dispatcher_board.subtitle') }}
           </p>
         </div>
@@ -25,16 +23,16 @@
             <span
               :class="
                 step === 'Assign'
-                  ? 'rounded border border-teal-500/60 bg-teal-950/80 px-2 py-0.5 text-teal-200'
+                  ? 'rounded border border-teal-300 bg-teal-50 px-2 py-0.5 font-medium text-teal-800'
                   : ''
               "
             >{{ step }}</span>
-            <span v-if="i < processSteps.length - 1" class="text-slate-600">›</span>
+            <span v-if="i < processSteps.length - 1" class="text-slate-400">›</span>
           </span>
         </nav>
       </header>
 
-      <div v-if="loadError" class="rounded-lg border border-amber-500/40 bg-amber-950/40 px-3 py-2 text-sm text-amber-100">
+      <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
         {{ loadError }}
       </div>
 
@@ -42,21 +40,21 @@
         <!-- Trip queue -->
         <aside
           id="dispatcher-trip-queue"
-          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-800 bg-slate-900/50 xl:w-[min(100%,380px)]"
+          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,380px)]"
         >
-          <div class="border-b border-slate-800 p-3">
+          <div class="border-b border-slate-200 p-3">
             <div class="flex items-start justify-between gap-2">
               <div>
-                <h2 class="text-sm font-semibold text-white">
+                <h2 class="text-sm font-semibold text-slate-900">
                   {{ t('dispatcher_board.queue_title') }}
-                  <span class="font-normal text-slate-400">({{ queueTrips.length }})</span>
+                  <span class="font-normal text-slate-500">({{ queueTrips.length }})</span>
                 </h2>
                 <p v-if="pendingRequestsCount" class="mt-0.5 text-xs text-slate-500">
                   {{ t('dispatcher_board.pending_requests_hint', { n: pendingRequestsCount }) }}
                 </p>
               </div>
               <RouterLink
-                class="shrink-0 text-xs font-medium text-teal-400 hover:text-teal-300"
+                class="shrink-0 text-xs font-medium text-teal-700 hover:text-teal-800"
                 to="/requests?status=pending"
               >
                 {{ t('dispatcher_board.open_requests') }}
@@ -70,13 +68,16 @@
                 class="rounded-full px-2.5 py-1 text-xs font-medium transition-colors"
                 :class="
                   queueFilter === tab.id
-                    ? 'bg-teal-600/90 text-white'
-                    : 'bg-slate-800/80 text-slate-400 hover:bg-slate-800'
+                    ? 'bg-teal-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 "
                 @click="queueFilter = tab.id"
               >
                 {{ tab.label }}
-                <span class="tabular-nums text-slate-300/90">({{ tab.count }})</span>
+                <span
+                  class="tabular-nums"
+                  :class="queueFilter === tab.id ? 'text-teal-100' : 'text-slate-500'"
+                >({{ tab.count }})</span>
               </button>
             </div>
             <label class="mt-3 block">
@@ -84,7 +85,7 @@
               <input
                 v-model="queueSearch"
                 type="search"
-                class="w-full rounded-lg border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                 :placeholder="t('dispatcher_board.search_placeholder')"
               />
             </label>
@@ -98,10 +99,10 @@
                 v-for="trip in filteredQueueTrips"
                 :key="trip.id"
                 :to="`/trips/${trip.id}`"
-                class="block rounded-lg border border-slate-800 bg-slate-950/60 p-3 transition-colors hover:border-slate-600 hover:bg-slate-900/80"
+                class="block rounded-lg border border-slate-200 bg-slate-50/80 p-3 transition-colors hover:border-slate-300 hover:bg-white"
               >
                 <div class="flex items-start justify-between gap-2">
-                  <span class="font-mono text-xs font-semibold text-teal-300">#{{ trip.id }}</span>
+                  <span class="font-mono text-xs font-semibold text-teal-700">#{{ trip.id }}</span>
                   <span
                     v-if="queueBadge(trip)"
                     class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
@@ -110,22 +111,22 @@
                     {{ queueBadge(trip).text }}
                   </span>
                 </div>
-                <div class="mt-1 text-sm font-medium text-slate-100">
+                <div class="mt-1 text-sm font-medium text-slate-900">
                   {{ tripTitle(trip) }}
                 </div>
                 <div class="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-500">
                   <span>{{ labelTripType(tripType(trip)) }}</span>
-                  <span v-if="tripType(trip) === 'cargo'" class="text-slate-600">·</span>
+                  <span v-if="tripType(trip) === 'cargo'" class="text-slate-400">·</span>
                   <span v-if="tripType(trip) === 'cargo'">{{ t('dispatcher_board.cargo') }}</span>
                 </div>
-                <div class="mt-2 flex gap-2 border-l-2 border-slate-700 pl-2 text-[11px] leading-snug text-slate-400">
+                <div class="mt-2 flex gap-2 border-l-2 border-slate-300 pl-2 text-[11px] leading-snug text-slate-600">
                   <div class="min-w-0 flex-1">
-                    <div class="font-medium text-slate-300">{{ fmtTime(trip.depart_at) }}</div>
+                    <div class="font-medium text-slate-800">{{ fmtTime(trip.depart_at) }}</div>
                     <div class="truncate">{{ origin(trip) || '—' }}</div>
                   </div>
-                  <div class="text-slate-600">→</div>
+                  <div class="text-slate-400">→</div>
                   <div class="min-w-0 flex-1">
-                    <div class="font-medium text-slate-300">{{ fmtArrive(trip) }}</div>
+                    <div class="font-medium text-slate-800">{{ fmtArrive(trip) }}</div>
                     <div class="truncate">{{ dest(trip) || '—' }}</div>
                   </div>
                 </div>
@@ -139,30 +140,30 @@
 
         <!-- Timeline -->
         <section
-          class="min-w-0 flex-1 rounded-xl border border-slate-800 bg-slate-900/40"
+          class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white shadow-sm"
         >
-          <div class="space-y-3 border-b border-slate-800 p-3">
+          <div class="space-y-3 border-b border-slate-200 p-3">
             <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                class="rounded-lg border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:bg-slate-50"
                 @click="shiftDay(-1)"
               >
                 ‹
               </button>
-              <span class="min-w-[10rem] text-center text-sm font-medium text-white">
+              <span class="min-w-[10rem] text-center text-sm font-medium text-slate-900">
                 {{ dayTitle }}
               </span>
               <button
                 type="button"
-                class="rounded-lg border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:bg-slate-50"
                 @click="shiftDay(1)"
               >
                 ›
               </button>
               <button
                 type="button"
-                class="rounded-lg border border-teal-700/50 bg-teal-950/50 px-2.5 py-1 text-xs font-medium text-teal-200 hover:bg-teal-900/50"
+                class="rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-800 hover:bg-teal-100"
                 @click="goToday"
               >
                 {{ t('dispatcher_board.today') }}
@@ -170,7 +171,7 @@
             </div>
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div
-                class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-400"
+                class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-600"
                 role="list"
                 :aria-label="t('dispatcher_board.legend_aria')"
               >
@@ -189,11 +190,11 @@
               </div>
               <button
                 type="button"
-                class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-600/90 bg-slate-800/80 px-3 py-2 text-xs font-semibold text-slate-100 shadow-sm transition hover:border-slate-500 hover:bg-slate-800"
+                class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
                 :title="t('dispatcher_board.bulk_assign_hint')"
                 @click="goBulkAssign"
               >
-                <Square2StackIcon class="h-4 w-4 text-slate-300" aria-hidden="true" />
+                <Square2StackIcon class="h-4 w-4 text-slate-600" aria-hidden="true" />
                 {{ t('dispatcher_board.bulk_assign') }}
               </button>
             </div>
@@ -208,7 +209,7 @@
                   <div
                     v-for="h in hourSlots"
                     :key="h"
-                    class="border-l border-slate-800/80 pl-1 text-left tabular-nums"
+                    class="border-l border-slate-200 pl-1 text-left tabular-nums"
                   >
                     {{ String(h).padStart(2, '0') }}:00
                   </div>
@@ -218,14 +219,14 @@
               <div
                 v-for="(row, rowIdx) in timelineRows"
                 :key="row.key"
-                class="flex border-b border-slate-800/60"
+                class="flex border-b border-slate-100"
               >
-                <div class="flex w-[140px] shrink-0 flex-col justify-center border-r border-slate-800 py-2 pr-2 text-xs">
-                  <span class="truncate font-medium text-slate-200">{{ row.label }}</span>
-                  <span v-if="row.sub" class="truncate text-[10px] text-rose-400/90">{{ row.sub }}</span>
+                <div class="flex w-[140px] shrink-0 flex-col justify-center border-r border-slate-200 py-2 pr-2 text-xs">
+                  <span class="truncate font-medium text-slate-800">{{ row.label }}</span>
+                  <span v-if="row.sub" class="truncate text-[10px] text-rose-600">{{ row.sub }}</span>
                   <span v-else-if="row.meta" class="truncate text-[10px] text-slate-500">{{ row.meta }}</span>
                 </div>
-                <div class="relative min-h-[52px] min-w-0 flex-1">
+                <div class="relative min-h-[52px] min-w-0 flex-1 bg-slate-50/50">
                   <div
                     class="pointer-events-none absolute inset-0 grid"
                     :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }"
@@ -233,25 +234,25 @@
                     <div
                       v-for="h in hourSlots"
                       :key="`g-${row.key}-${h}`"
-                      class="border-l border-slate-800/40"
+                      class="border-l border-slate-200/90"
                     />
                   </div>
                   <!-- now line (once per scroll area — duplicate on each row for alignment) -->
                   <div
                     v-if="nowLinePct !== null"
-                    class="pointer-events-none absolute bottom-0 top-0 z-10 w-px bg-teal-400/90"
+                    class="pointer-events-none absolute bottom-0 top-0 z-10 w-px bg-teal-500"
                     :style="{ left: `${nowLinePct}%` }"
                   >
                     <span
                       v-if="rowIdx === 0"
-                      class="absolute -top-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-teal-950/90 px-1 py-0.5 text-[9px] font-medium text-teal-100 shadow"
+                      class="absolute -top-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded border border-slate-200 bg-white px-1 py-0.5 text-[9px] font-medium text-slate-700 shadow-sm"
                     >{{ nowLabel }}</span>
                   </div>
                   <RouterLink
                     v-for="bar in row.bars"
                     :key="bar.trip.id"
                     :to="`/trips/${bar.trip.id}`"
-                    class="absolute top-1.5 z-[5] flex h-9 items-center overflow-hidden rounded border px-1.5 text-[10px] font-medium leading-tight shadow-sm transition hover:brightness-110"
+                    class="absolute top-1.5 z-[5] flex h-9 items-center overflow-hidden rounded border px-1.5 text-[10px] font-medium leading-tight shadow-sm transition hover:opacity-95"
                     :class="bar.toneClass"
                     :style="{ left: `${bar.left}%`, width: `max(${bar.width}%, 2%)` }"
                     :title="`#${bar.trip.id} · ${labelTripStatus(bar.trip.status)}`"
@@ -393,10 +394,10 @@ const filteredQueueTrips = computed(() => {
 function queueBadge(trip) {
   const r = dr(trip)
   if (r?.status === 'approved') {
-    return { text: t('dispatcher_board.badge_approved'), class: 'bg-sky-900/80 text-sky-200' }
+    return { text: t('dispatcher_board.badge_approved'), class: 'bg-sky-100 text-sky-800' }
   }
   if (r?.is_urgent) {
-    return { text: t('dispatcher_board.badge_urgent'), class: 'bg-rose-900/80 text-rose-100' }
+    return { text: t('dispatcher_board.badge_urgent'), class: 'bg-rose-100 text-rose-800' }
   }
   return null
 }
@@ -426,15 +427,15 @@ function pctRange(trip) {
 
 function barTone(trip, conflict) {
   if (conflict) {
-    return 'border-rose-500/70 bg-rose-950/90 text-rose-50'
+    return 'border-rose-400 bg-rose-100 text-rose-900'
   }
   if (trip.status === 'in_progress') {
-    return 'border-sky-500/60 bg-sky-900/85 text-sky-50'
+    return 'border-sky-400 bg-sky-100 text-sky-900'
   }
   if (['assigned', 'driver_confirmed'].includes(trip.status)) {
-    return 'border-emerald-500/60 bg-emerald-950/90 text-emerald-50'
+    return 'border-emerald-400 bg-emerald-100 text-emerald-900'
   }
-  return 'border-slate-600 bg-slate-800/90 text-slate-100'
+  return 'border-slate-300 bg-slate-200 text-slate-800'
 }
 
 /** Cặp chuyến trùng giờ trên cùng tài xế */
