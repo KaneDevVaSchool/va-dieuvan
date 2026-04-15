@@ -104,15 +104,17 @@
           </template>
         </div>
       </div>
-      <div class="flex gap-2.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:col-span-2 xl:col-span-2">
+      <div
+        class="flex flex-col items-center justify-center gap-2 text-center sm:col-span-2 xl:col-span-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+      >
         <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
           <ExclamationTriangleIcon class="h-5 w-5" aria-hidden="true" />
         </div>
-        <div class="min-w-0 flex-1">
+        <div class="min-w-0 w-full">
           <div class="text-[11px] font-medium text-slate-500">{{ t('resources_dashboard.kpi_gaps') }}</div>
-          <div v-if="statsLoading" class="mt-1 h-6 w-10 animate-pulse rounded bg-slate-200" />
+          <div v-if="statsLoading" class="mx-auto mt-1 h-6 w-10 animate-pulse rounded bg-slate-200" />
           <template v-else>
-            <div class="mt-0.5 flex items-baseline gap-1.5">
+            <div class="mt-0.5 flex items-baseline justify-center gap-1.5">
               <span class="text-lg font-bold tabular-nums text-rose-600">{{ coverageAlertCount }}</span>
               <span class="text-[10px] text-slate-500">{{ t('resources_dashboard.kpi_gaps_unit') }}</span>
             </div>
