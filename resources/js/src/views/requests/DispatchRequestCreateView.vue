@@ -545,11 +545,32 @@
                   </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  Nếu khung PDF trống (trình duyệt chặn), hãy dùng <span class="font-medium">Tải PDF</span>. Sau khi gửi
-                  yêu cầu, Excel và PDF được lưu trong chi tiết yêu cầu (đính kèm BM.02).
+                  Nếu khung PDF trống (trình duyệt chặn nhúng PDF), dùng <span class="font-medium">Mở trong tab mới</span> hoặc
+                  <span class="font-medium">Tải PDF</span>. Sau khi gửi yêu cầu, Excel và PDF được lưu trong chi tiết yêu cầu (đính kèm
+                  BM.02).
                 </p>
-                <div v-if="bm02PdfUrl" class="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                  <iframe :src="bm02PdfUrl" title="Xem trước BM.02 PDF" class="h-[min(70vh,520px)] w-full" />
+                <div v-if="bm02PdfUrl" class="mt-4 space-y-2">
+                  <div class="flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      class="text-sm font-medium text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900"
+                      @click="openBm02PdfInNewTab"
+                    >
+                      Mở trong tab mới
+                    </button>
+                  </div>
+                  <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                    <object
+                      :data="bm02PdfUrl"
+                      type="application/pdf"
+                      class="block h-[min(70vh,520px)] w-full min-h-[320px]"
+                    >
+                      <p class="px-4 py-8 text-center text-sm text-slate-600">
+                        Trình duyệt không hiển thị PDF trong khung — chọn <span class="font-medium">Mở trong tab mới</span> hoặc
+                        <span class="font-medium">Tải PDF</span>.
+                      </p>
+                    </object>
+                  </div>
                 </div>
               </template>
             </div>
@@ -749,6 +770,12 @@ const {
   confirmClearDraft,
   onCancel,
 } = wizard
+
+function openBm02PdfInNewTab() {
+  if (bm02PdfUrl.value) {
+    window.open(bm02PdfUrl.value, '_blank', 'noopener,noreferrer')
+  }
+}
 </script>
 
 <style src="./dispatch-wizard/dispatchWizard.styles.css"></style>

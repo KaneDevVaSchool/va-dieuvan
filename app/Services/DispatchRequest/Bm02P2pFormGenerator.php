@@ -15,6 +15,9 @@ use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfMpdf;
  */
 class Bm02P2pFormGenerator
 {
+    /** Ký tự hiển thị trong ô (không dùng boolean Excel — tránh hiện chữ TRUE/FALSE). */
+    private const CHECKED_MARK = "\u{2611}";
+
     /** Cùng thứ tự với `targetOptions` trong DispatchRequestCreateView.vue — ô tick tương ứng (null = không có checkbox). */
     private const P2P_TARGET_CHECKBOX_CELLS = [
         'B25', null, 'H25', 'K25',
@@ -79,7 +82,7 @@ class Bm02P2pFormGenerator
         $sheet->setCellValue('E20', $this->formatDateCell($need));
 
         $urgent = ! empty($form['is_urgent']);
-        $sheet->setCellValue('B21', $urgent ? true : false);
+        $sheet->setCellValue('B21', $urgent ? self::CHECKED_MARK : '');
         $sheet->setCellValue('E21', $urgent ? (string) ($form['urgent_reason'] ?? '') : '');
 
         $this->applyTargetCheckboxes($sheet, is_array($targets) ? $targets : []);
@@ -222,7 +225,7 @@ class Bm02P2pFormGenerator
             if (empty($selectedNorm[$this->normalizeTargetLabel($label)])) {
                 continue;
             }
-            $sheet->setCellValue($cell, true);
+            $sheet->setCellValue($cell, self::CHECKED_MARK);
         }
     }
 
