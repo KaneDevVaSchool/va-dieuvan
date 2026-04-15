@@ -460,249 +460,416 @@
 
       <!-- Right: action & constraints -->
       <aside
-        class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,360px)]"
+        class="flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-b from-slate-50/90 to-white shadow-md ring-1 ring-slate-900/5 xl:w-[min(100%,420px)]"
       >
-        <div class="flex items-start justify-between gap-2 border-b border-slate-200 p-3">
+        <div class="flex items-start justify-between gap-2 border-b border-slate-200/80 bg-white/80 px-4 py-3 backdrop-blur-sm">
           <div class="min-w-0">
-            <h2 class="text-sm font-semibold text-slate-900">{{ t('resources_dashboard.panel_title') }}</h2>
-            <p class="mt-0.5 text-[11px] text-slate-500">{{ t('resources_dashboard.panel_subtitle_v2') }}</p>
+            <h2 class="text-sm font-semibold tracking-tight text-slate-900">{{ t('resources_dashboard.panel_title') }}</h2>
+            <p class="mt-0.5 text-[11px] leading-snug text-slate-500">{{ t('resources_dashboard.panel_subtitle_v2') }}</p>
           </div>
           <button
             v-if="panel"
             type="button"
-            class="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+            class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-800"
             :aria-label="t('resources_dashboard.panel_close')"
             @click="clearPanel"
           >
             <XMarkIcon class="h-5 w-5" />
           </button>
         </div>
-        <div v-if="!panel" class="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-slate-500">
+        <div v-if="!panel" class="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-10 text-center text-sm text-slate-500">
           {{ t('resources_dashboard.panel_empty_v2') }}
         </div>
 
         <!-- Trip -->
-        <div v-else-if="panel.type === 'trip'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.trip_label') }}</div>
-            <div class="mt-1 font-semibold text-slate-900">{{ tripTitle(panel.trip) }}</div>
-            <div class="mt-1 font-mono text-xs text-teal-700">#{{ panel.trip.id }}</div>
-            <span
-              class="mt-2 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-800"
+        <div v-else-if="panel.type === 'trip'" class="flex flex-1 flex-col overflow-hidden">
+          <div class="flex-1 space-y-4 overflow-y-auto px-3 py-3 text-sm">
+            <!-- Trip hero card -->
+            <div
+              class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5"
             >
-              {{ labelTripStatus(panel.trip.status) }}
-            </span>
-          </div>
-          <div
-            v-if="tripPanelConflict"
-            class="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-[11px] text-rose-900"
-          >
-            <span class="font-semibold">{{ t('dispatcher_board.legend_conflict') }}:</span>
-            {{ t('resources_dashboard.panel_trip_conflict') }}
-          </div>
-          <div
-            v-if="tripPanelConflict && suggestedProvider"
-            class="rounded-lg border border-teal-200 bg-teal-50/80 p-2.5 text-[11px] text-teal-950"
-          >
-            <div class="font-semibold">{{ t('resources_dashboard.panel_suggested_ncc') }}</div>
-            <p class="mt-1 text-teal-900/90">{{ t('resources_dashboard.panel_suggested_ncc_hint') }}</p>
-            <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <span class="font-medium">{{ suggestedProvider.name }}</span>
-              <button
-                type="button"
-                class="rounded-lg border border-teal-600 bg-teal-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-teal-700 disabled:opacity-50"
-                :disabled="assigningNcc"
-                @click="assignSuggestedNcc"
+              <div class="border-l-4 border-teal-500 pl-4 pr-3 pt-3.5 pb-4">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {{ t('resources_dashboard.trip_label') }}
+                    </p>
+                    <h3 class="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-slate-900">
+                      {{ tripTitle(panel.trip) }}
+                    </h3>
+                    <p class="mt-1 font-mono text-xs text-teal-700">#{{ panel.trip.id }}</p>
+                  </div>
+                  <span
+                    class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                    :class="tripStatusBadgeClass(panel.trip)"
+                  >
+                    {{ labelTripStatus(panel.trip.status) }}
+                  </span>
+                </div>
+                <dl class="mt-4 space-y-2.5 border-t border-slate-100 pt-3 text-xs">
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.field_trip_type') }}</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ tripTypeLine(panel.trip) }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.field_resource') }}</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ tripResourceLabel(panel.trip) }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.field_time') }}</dt>
+                    <dd class="text-right tabular-nums font-medium text-slate-900">
+                      {{ fmtTime(panel.trip.depart_at) }} – {{ fmtTime(tripEndAt(panel.trip)) }}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.field_vehicle') }}</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ panel.trip.vehicle?.license_plate ?? '—' }}</dd>
+                  </div>
+                </dl>
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                  <RouterLink
+                    class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-800 px-3 py-2.5 text-center text-xs font-semibold text-white shadow-sm transition hover:bg-slate-900"
+                    :to="`/trips/${panel.trip.id}`"
+                  >
+                    <PencilSquareIcon class="h-4 w-4 opacity-90" aria-hidden="true" />
+                    {{ t('resources_dashboard.action_edit_trip') }}
+                  </RouterLink>
+                  <RouterLink
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                    to="/dispatcher"
+                  >
+                    {{ t('resources_dashboard.action_dispatch_board') }}
+                  </RouterLink>
+                </div>
+                <button
+                  type="button"
+                  class="mt-2 w-full rounded-lg py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  @click="clearPanel"
+                >
+                  {{ t('resources_dashboard.action_clear') }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Compliance -->
+            <section>
+              <h4 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                {{ t('resources_dashboard.panel_section_compliance') }}
+              </h4>
+              <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm ring-1 ring-slate-900/5">
+                <ul class="space-y-2.5 text-[11px]">
+                  <li class="flex items-start gap-2 text-slate-800">
+                    <CheckCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                    <span>{{ t('resources_dashboard.panel_license_ok') }}</span>
+                  </li>
+                  <li class="flex items-start gap-2 text-slate-800">
+                    <CheckCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                    <span>{{ t('resources_dashboard.panel_vehicle_ok') }}</span>
+                  </li>
+                </ul>
+
+                <div
+                  v-if="tripShiftLimitWarn"
+                  class="mt-3 rounded-lg border border-rose-200/90 bg-rose-50/90 p-2.5"
+                >
+                  <div class="flex items-start gap-2">
+                    <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                    <div>
+                      <p class="text-[11px] font-semibold text-rose-900">{{ t('resources_dashboard.shift_limit_title') }}</p>
+                      <p class="mt-0.5 text-[11px] leading-snug text-rose-800/95">
+                        {{ t('resources_dashboard.shift_limit_body') }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  v-if="tripPanelConflict"
+                  class="mt-3 rounded-lg border border-rose-200/90 bg-rose-50/90 p-2.5"
+                >
+                  <div class="flex items-start gap-2">
+                    <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                    <div class="min-w-0 flex-1">
+                      <p class="text-[11px] font-semibold text-rose-900">{{ t('resources_dashboard.conflict_block_title') }}</p>
+                      <p class="mt-0.5 text-[11px] leading-snug text-rose-800/95">
+                        {{ t('resources_dashboard.panel_trip_conflict') }}
+                      </p>
+                      <button
+                        v-if="suggestedProvider"
+                        type="button"
+                        class="mt-2 text-left text-[11px] font-semibold text-teal-700 hover:text-teal-800 hover:underline"
+                        @click="scrollToSuggestedCoverage"
+                      >
+                        {{ t('resources_dashboard.action_view_alternatives') }} →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Suggested coverage -->
+            <section
+              v-if="tripPanelConflict && suggestedProvider"
+              id="panel-suggested-coverage"
+              class="scroll-mt-4"
+            >
+              <h4 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                {{ t('resources_dashboard.panel_section_suggested') }}
+              </h4>
+              <p class="mb-2 text-[10px] text-slate-400">{{ t('resources_dashboard.panel_suggested_context') }}</p>
+              <div
+                class="flex items-stretch gap-3 rounded-xl border border-teal-200/90 bg-gradient-to-br from-teal-50/90 to-white p-3 shadow-sm ring-1 ring-teal-900/5"
               >
-                {{ t('resources_dashboard.action_assign_ncc') }}
-              </button>
-            </div>
-          </div>
-          <dl class="space-y-2 text-xs">
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.field_driver') }}</dt>
-              <dd class="text-right font-medium text-slate-900">{{ panel.trip.driver?.full_name ?? '—' }}</dd>
-            </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.field_vehicle') }}</dt>
-              <dd class="text-right font-medium text-slate-900">{{ panel.trip.vehicle?.license_plate ?? '—' }}</dd>
-            </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.field_time') }}</dt>
-              <dd class="text-right tabular-nums text-slate-900">
-                {{ fmtTime(panel.trip.depart_at) }} – {{ fmtTime(tripEndAt(panel.trip)) }}
-              </dd>
-            </div>
-          </dl>
-          <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-            <RouterLink
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-              :to="`/trips/${panel.trip.id}`"
-            >
-              {{ t('resources_dashboard.action_open_trip') }}
-            </RouterLink>
-            <button
-              type="button"
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-              @click="clearPanel"
-            >
-              {{ t('resources_dashboard.action_clear') }}
-            </button>
-          </div>
-          <div class="rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-[11px] text-slate-600">
-            <div class="font-semibold text-slate-800">{{ t('resources_dashboard.compliance_title') }}</div>
-            <ul class="mt-2 space-y-1.5">
-              <li class="flex items-center gap-2">
-                <span class="text-emerald-600">✓</span>
-                {{ t('resources_dashboard.panel_license_ok') }}
-              </li>
-              <li class="flex items-center gap-2">
-                <span class="text-emerald-600">✓</span>
-                {{ t('resources_dashboard.panel_vehicle_ok') }}
-              </li>
-              <li v-if="tripPanelConflict" class="flex items-start gap-2 text-rose-800">
-                <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" />
-                {{ t('resources_dashboard.panel_trip_conflict') }}
-              </li>
-            </ul>
+                <div
+                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-inner"
+                >
+                  <BuildingOffice2Icon class="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold text-slate-900">{{ suggestedProvider.name }}</p>
+                  <p class="mt-0.5 text-[11px] text-slate-500">
+                    {{ t('resources_dashboard.est_cost_label') }}:
+                    <span class="font-medium text-slate-700">{{ t('resources_dashboard.est_cost_na') }}</span>
+                  </p>
+                  <p class="mt-1 text-[10px] leading-snug text-slate-500">
+                    {{ t('resources_dashboard.panel_suggested_ncc_hint') }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="shrink-0 self-center rounded-lg bg-teal-600 px-3 py-2 text-[11px] font-semibold text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
+                  :disabled="assigningNcc || !canAssignTrip"
+                  @click="assignSuggestedNcc"
+                >
+                  {{ t('resources_dashboard.action_assign_ncc') }}
+                </button>
+              </div>
+            </section>
           </div>
         </div>
 
         <!-- Driver -->
-        <div v-else-if="panel.type === 'driver'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.panel_driver_title') }}</div>
-            <div class="mt-1 text-base font-semibold text-slate-900">{{ panel.data.full_name }}</div>
-            <div class="mt-1 font-mono text-xs text-slate-600">#{{ panel.data.id }}</div>
-          </div>
-          <div
-            v-if="driverHoursWarn(panel.data.id)"
-            class="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-[11px] text-rose-900"
-          >
-            <div class="flex items-start gap-2">
-              <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{{ t('resources_dashboard.panel_driver_hours_warn') }}</span>
-            </div>
-          </div>
-          <dl class="space-y-2 text-xs">
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_phone') }}</dt>
-              <dd class="text-right font-medium text-slate-900">{{ panel.data.phone ?? panel.data.user?.phone ?? '—' }}</dd>
-            </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_license') }}</dt>
-              <dd class="text-right tabular-nums text-slate-900">{{ panel.data.license_expires_at ?? '—' }}</dd>
-            </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_hours') }}</dt>
-              <dd class="text-right font-medium tabular-nums text-slate-900">{{ formatHoursShort(driverTripHours(panel.data.id)) }}</dd>
-            </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.field_status') }}</dt>
-              <dd class="text-right text-slate-900">{{ availabilityLabel(panel.data) }}</dd>
-            </div>
-          </dl>
-          <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-            <RouterLink
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-teal-600 bg-teal-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-700"
-              :to="`/resources/drivers/${panel.data.id}`"
+        <div v-else-if="panel.type === 'driver'" class="flex flex-1 flex-col overflow-hidden">
+          <div class="flex-1 space-y-4 overflow-y-auto px-3 py-3 text-sm">
+            <div
+              class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5"
             >
-              {{ t('resources_dashboard.panel_driver_open') }}
-            </RouterLink>
-            <button
-              type="button"
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-              @click="clearPanel"
+              <div class="border-l-4 border-amber-400 pl-4 pr-3 pt-3.5 pb-4">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {{ t('resources_dashboard.panel_driver_section') }}
+                </p>
+                <h3 class="mt-1 text-base font-semibold text-slate-900">{{ panel.data.full_name }}</h3>
+                <p class="mt-1 font-mono text-xs text-slate-600">#{{ panel.data.id }}</p>
+                <span
+                  class="mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                  :class="
+                    driverHoursWarn(panel.data.id)
+                      ? 'bg-rose-100 text-rose-900'
+                      : 'bg-emerald-100 text-emerald-900'
+                  "
+                >
+                  {{
+                    driverHoursWarn(panel.data.id)
+                      ? t('resources_dashboard.shift_limit_title')
+                      : t('resources_dashboard.compliance_ok_short')
+                  }}
+                </span>
+              </div>
+            </div>
+
+            <div
+              v-if="driverHoursWarn(panel.data.id)"
+              class="rounded-xl border border-rose-200 bg-rose-50/95 p-3 text-[11px] text-rose-900 shadow-sm"
             >
-              {{ t('resources_dashboard.action_clear') }}
-            </button>
+              <div class="flex items-start gap-2">
+                <ExclamationTriangleIcon class="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p class="font-semibold">{{ t('resources_dashboard.shift_limit_title') }}</p>
+                  <p class="mt-1 leading-snug opacity-95">{{ t('resources_dashboard.panel_driver_hours_warn') }}</p>
+                </div>
+              </div>
+            </div>
+
+            <section>
+              <h4 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                {{ t('resources_dashboard.panel_section_compliance') }}
+              </h4>
+              <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <dl class="space-y-2.5 text-xs">
+                  <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_phone') }}</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ panel.data.phone ?? panel.data.user?.phone ?? '—' }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_license') }}</dt>
+                    <dd class="text-right tabular-nums text-slate-900">{{ panel.data.license_expires_at ?? '—' }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_driver_hours') }}</dt>
+                    <dd class="text-right font-medium tabular-nums text-slate-900">
+                      {{ formatHoursShort(driverTripHours(panel.data.id)) }}
+                    </dd>
+                  </div>
+                  <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.field_status') }}</dt>
+                    <dd class="text-right text-slate-900">{{ availabilityLabel(panel.data) }}</dd>
+                  </div>
+                </dl>
+              </div>
+            </section>
+
+            <div>
+              <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                {{ t('resources_dashboard.panel_quick_actions') }}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <RouterLink
+                  class="inline-flex flex-1 min-w-[8rem] items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700"
+                  :to="`/resources/drivers/${panel.data.id}`"
+                >
+                  <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
+                  {{ t('resources_dashboard.panel_driver_open') }}
+                </RouterLink>
+                <RouterLink
+                  class="inline-flex flex-1 min-w-[8rem] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                  to="/dispatcher"
+                >
+                  {{ t('resources_dashboard.action_dispatch_board') }}
+                </RouterLink>
+                <button
+                  type="button"
+                  class="w-full rounded-lg py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  @click="clearPanel"
+                >
+                  {{ t('resources_dashboard.action_clear') }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Vehicle -->
-        <div v-else-if="panel.type === 'vehicle'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.panel_vehicle_title') }}</div>
-            <div class="mt-1 font-mono text-lg font-semibold text-slate-900">{{ panel.data.license_plate }}</div>
-            <span
-              class="mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium"
-              :class="vehicleStatusPillClass(panel.data.status)"
+        <div v-else-if="panel.type === 'vehicle'" class="flex flex-1 flex-col overflow-hidden">
+          <div class="flex-1 space-y-4 overflow-y-auto px-3 py-3 text-sm">
+            <div
+              class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5"
             >
-              {{ vehicleStatusLabel(panel.data.status) }}
-            </span>
-          </div>
-          <dl class="space-y-2 text-xs">
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.field_type') }}</dt>
-              <dd class="text-right text-slate-900">{{ panel.data.type ?? '—' }}</dd>
+              <div class="border-l-4 border-sky-400 pl-4 pr-3 pt-3.5 pb-4">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {{ t('resources_dashboard.panel_vehicle_section') }}
+                </p>
+                <p class="mt-1 font-mono text-xl font-bold tracking-tight text-slate-900">{{ panel.data.license_plate }}</p>
+                <span
+                  class="mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                  :class="vehicleStatusPillClass(panel.data.status)"
+                >
+                  {{ vehicleStatusLabel(panel.data.status) }}
+                </span>
+              </div>
             </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.panel_vehicle_seats') }}</dt>
-              <dd class="text-right tabular-nums text-slate-900">
-                {{ [panel.data.seat_count, panel.data.payload_kg].filter(Boolean).join(' · ') || '—' }}
-              </dd>
+
+            <section>
+              <h4 class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                {{ t('resources_dashboard.panel_section_compliance') }}
+              </h4>
+              <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <ul class="space-y-2 text-[11px]">
+                  <li class="flex items-start gap-2">
+                    <CheckCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                    <span class="text-slate-700">{{ t('resources_dashboard.panel_vehicle_ok') }}</span>
+                  </li>
+                </ul>
+                <dl class="mt-3 space-y-2.5 border-t border-slate-100 pt-3 text-xs">
+                  <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.field_type') }}</dt>
+                    <dd class="text-right text-slate-900">{{ panel.data.type ?? '—' }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_vehicle_seats') }}</dt>
+                    <dd class="text-right tabular-nums text-slate-900">
+                      {{ [panel.data.seat_count, panel.data.payload_kg].filter(Boolean).join(' · ') || '—' }}
+                    </dd>
+                  </div>
+                  <div v-if="panel.data.maintenance_schedule_note || panel.data.last_maintenance_at" class="flex flex-col gap-1">
+                    <dt class="text-slate-500">{{ t('resources_dashboard.panel_vehicle_note') }}</dt>
+                    <dd class="text-slate-800">{{ panel.data.maintenance_schedule_note || panel.data.last_maintenance_at }}</dd>
+                  </div>
+                </dl>
+              </div>
+            </section>
+
+            <div class="flex flex-wrap gap-2">
+              <RouterLink
+                class="inline-flex flex-1 min-w-[8rem] items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                to="/resources/list?tab=vehicles"
+              >
+                {{ t('resources_dashboard.panel_vehicle_open') }}
+              </RouterLink>
+              <button
+                type="button"
+                class="w-full rounded-lg py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50"
+                @click="clearPanel"
+              >
+                {{ t('resources_dashboard.action_clear') }}
+              </button>
             </div>
-            <div v-if="panel.data.maintenance_schedule_note || panel.data.last_maintenance_at" class="flex flex-col gap-1">
-              <dt class="text-slate-500">{{ t('resources_dashboard.panel_vehicle_note') }}</dt>
-              <dd class="text-slate-800">{{ panel.data.maintenance_schedule_note || panel.data.last_maintenance_at }}</dd>
-            </div>
-          </dl>
-          <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-            <RouterLink
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-              to="/resources/list?tab=vehicles"
-            >
-              {{ t('resources_dashboard.panel_vehicle_open') }}
-            </RouterLink>
-            <button
-              type="button"
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-              @click="clearPanel"
-            >
-              {{ t('resources_dashboard.action_clear') }}
-            </button>
           </div>
         </div>
 
         <!-- Supplier -->
-        <div v-else-if="panel.type === 'supplier'" class="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
-          <div>
-            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('resources_dashboard.panel_supplier_title') }}</div>
-            <div class="mt-1 text-base font-semibold text-slate-900">{{ panel.data.name }}</div>
-            <span
-              class="mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium"
-              :class="panel.data.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'"
+        <div v-else-if="panel.type === 'supplier'" class="flex flex-1 flex-col overflow-hidden">
+          <div class="flex-1 space-y-4 overflow-y-auto px-3 py-3 text-sm">
+            <div
+              class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5"
             >
-              {{ panel.data.is_active ? t('resources_dashboard.supplier_active') : t('resources_dashboard.supplier_inactive') }}
-            </span>
-          </div>
-          <dl class="space-y-2 text-xs">
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.panel_supplier_contact') }}</dt>
-              <dd class="text-right text-slate-900">{{ [panel.data.contact_name, panel.data.contact_phone].filter(Boolean).join(' · ') || '—' }}</dd>
+              <div class="border-l-4 border-emerald-500 pl-4 pr-3 pt-3.5 pb-4">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  {{ t('resources_dashboard.panel_supplier_section') }}
+                </p>
+                <h3 class="mt-1 text-base font-semibold text-slate-900">{{ panel.data.name }}</h3>
+                <span
+                  class="mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                  :class="panel.data.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'"
+                >
+                  {{ panel.data.is_active ? t('resources_dashboard.supplier_active') : t('resources_dashboard.supplier_inactive') }}
+                </span>
+              </div>
             </div>
-            <div class="flex justify-between gap-2">
-              <dt class="text-slate-500">{{ t('resources_dashboard.panel_supplier_contract') }}</dt>
-              <dd class="text-right tabular-nums text-slate-900">{{ panel.data.contract_expires_at ?? '—' }}</dd>
+
+            <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <dl class="space-y-2.5 text-xs">
+                <div class="flex justify-between gap-2">
+                  <dt class="text-slate-500">{{ t('resources_dashboard.panel_supplier_contact') }}</dt>
+                  <dd class="text-right text-slate-900">
+                    {{ [panel.data.contact_name, panel.data.contact_phone].filter(Boolean).join(' · ') || '—' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                  <dt class="text-slate-500">{{ t('resources_dashboard.panel_supplier_contract') }}</dt>
+                  <dd class="text-right tabular-nums text-slate-900">{{ panel.data.contract_expires_at ?? '—' }}</dd>
+                </div>
+              </dl>
+              <p class="mt-3 border-t border-slate-100 pt-3 text-[11px] leading-snug text-slate-500">
+                {{ t('resources_dashboard.supplier_sla_hint') }}
+              </p>
             </div>
-          </dl>
-          <div class="rounded-lg border border-slate-100 bg-slate-50/80 p-3 text-[11px] text-slate-600">
-            {{ t('resources_dashboard.supplier_sla_hint') }}
-          </div>
-          <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-            <RouterLink
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-              to="/resources/list?tab=suppliers"
-            >
-              {{ t('resources_dashboard.open_list') }}
-            </RouterLink>
-            <button
-              type="button"
-              class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-              @click="clearPanel"
-            >
-              {{ t('resources_dashboard.action_clear') }}
-            </button>
+
+            <div class="flex flex-wrap gap-2">
+              <RouterLink
+                class="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+                to="/resources/list?tab=suppliers"
+              >
+                {{ t('resources_dashboard.open_list') }}
+              </RouterLink>
+              <button
+                type="button"
+                class="w-full rounded-lg py-2 text-[11px] font-medium text-slate-500 hover:bg-slate-50"
+                @click="clearPanel"
+              >
+                {{ t('resources_dashboard.action_clear') }}
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -717,8 +884,10 @@ import { useI18n } from 'vue-i18n'
 import {
   BuildingOffice2Icon,
   ChartBarIcon,
+  CheckCircleIcon,
   ExclamationTriangleIcon,
   MagnifyingGlassIcon,
+  PencilSquareIcon,
   TruckIcon,
   UsersIcon,
   XMarkIcon,
@@ -1180,6 +1349,39 @@ const suggestedProvider = computed(() => {
   const other = pool.find((p) => p.id !== currentPid)
   return other ?? null
 })
+
+const tripShiftLimitWarn = computed(() => {
+  if (panel.value?.type !== 'trip') return false
+  const id = panel.value.trip.driver_id
+  if (!id) return false
+  return driverTripHours(id) > 10
+})
+
+function tripStatusBadgeClass(trip) {
+  if (trip.status === 'in_progress') return 'bg-sky-100 text-sky-900'
+  if (['assigned', 'driver_confirmed'].includes(trip.status)) return 'bg-teal-100 text-teal-900'
+  return 'bg-slate-100 text-slate-800'
+}
+
+function tripResourceLabel(trip) {
+  const tpId = trip.transport_provider_id ?? trip.transport_provider?.id ?? trip.transportProvider?.id
+  if (tpId) {
+    const name = trip.transport_provider?.name ?? trip.transportProvider?.name
+    if (name) return `${name} (NCC)`
+  }
+  if (trip.driver?.full_name) return trip.driver.full_name
+  return t('dispatcher_board.row_unassigned')
+}
+
+function tripTypeLine(trip) {
+  const tt = dr(trip)?.trip_type
+  if (!tt) return '—'
+  return labelTripType(tt)
+}
+
+function scrollToSuggestedCoverage() {
+  document.getElementById('panel-suggested-coverage')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
 
 function tripBarStyle(bar) {
   const { left, width } = pctRange(bar.trip)
