@@ -46,6 +46,7 @@ class Bm02P2pGoogleSheetHtmlRenderer
         $this->fillTripRows($xpath, $vm);
         $this->fillTotalRow($xpath, $vm);
 
+        $this->stripSpreadsheetChrome($xpath);
         $this->enableSheetLikeGridOnTable($xpath);
 
         $html = $this->serializeBodyInnerHtml($dom);
@@ -68,16 +69,36 @@ class Bm02P2pGoogleSheetHtmlRenderer
     }
 
     /**
+     * Bỏ các phần "chrome" của Google Sheets (thead cột chữ cái, cột số dòng).
+     */
+    private function stripSpreadsheetChrome(DOMXPath $xpath): void
+    {
+        foreach ($xpath->query('//table[contains(@class, "waffle")]//thead') as $thead) {
+            if ($thead->parentNode) {
+                $thead->parentNode->removeChild($thead);
+            }
+        }
+        foreach ($xpath->query('//table[contains(@class, "waffle")]//th[contains(@class, "row-headers-background")]') as $th) {
+            if ($th->parentNode) {
+                $th->parentNode->removeChild($th);
+            }
+        }
+    }
+
+    /**
      * Lưới ô mặc định giống Excel (sheet.css gốc không tải được khi mở blob / in).
      */
     private function injectPrintGridFallback(string $html): string
     {
         $fallback = '<style type="text/css" id="bm02-print-grid-fallback">'
+            .'@page{margin:8mm 8mm 8mm 8mm;}'
+            .'body{font-family:"Times New Roman",serif;font-size:11pt;}'
             .'.ritz.grid-container{width:100%;max-width:100%;}'
             .'.ritz.grid-container .waffle{width:100%;border-collapse:collapse;table-layout:fixed;}'
             .'.ritz.grid-container .waffle td,.ritz.grid-container .waffle th{'
             .'border:1px solid #bfbfbf!important;'
             .'}'
+            .'.ritz.grid-container .column-headers-background,.ritz.grid-container .row-headers-background,.ritz.grid-container .row-header{display:none!important;}'
             .'.ritz.grid-container .waffle thead th{background:#f3f3f3;font-weight:600;}'
             .'</style>';
 
