@@ -279,7 +279,7 @@
 
         <!-- 3-column workspace: horizontal scroll when viewport is tight -->
         <div
-            class="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch]"
+            class="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
             <div
                 class="flex w-max min-w-full flex-col gap-4 xl:flex-row xl:items-stretch"
@@ -306,147 +306,202 @@
                                 "
                             />
                         </label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label class="block">
-                                <span
-                                    class="mb-0.5 block text-[10px] font-medium text-slate-500"
-                                    >{{
-                                        t(
-                                            "resources_dashboard.filter_vehicle_type",
-                                        )
-                                    }}</span
+                        <div
+                            class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3"
+                        >
+                            <!-- Loại xe -->
+                            <details
+                                ref="vehicleTypeFilterEl"
+                                class="group relative min-w-0 w-full sm:w-auto"
+                            >
+                                <summary
+                                    class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
                                 >
-                                <select
-                                    v-model="filterVehicleType"
-                                    class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
+                                        t("resources_dashboard.filter_vehicle_type")
+                                    }}</span>
+                                    <span
+                                        class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900"
+                                        >{{ filterVehicleTypeLabel }}</span
+                                    >
+                                    <ChevronDownIcon
+                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
+                                        aria-hidden="true"
+                                    />
+                                </summary>
+                                <div
+                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    @click.stop
                                 >
-                                    <option value="">
-                                        {{
-                                            t("resources_dashboard.filter_all")
-                                        }}
-                                    </option>
-                                    <option value="van">
-                                        {{ t("resources.type_van") }}
-                                    </option>
-                                    <option value="truck">
-                                        {{ t("resources.type_truck") }}
-                                    </option>
-                                    <option value="bus">
-                                        {{ t("resources.type_bus") }}
-                                    </option>
-                                </select>
-                            </label>
-                            <label class="block">
-                                <span
-                                    class="mb-0.5 block text-[10px] font-medium text-slate-500"
-                                    >{{
+                                    <ul
+                                        class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1"
+                                    >
+                                        <li
+                                            v-for="opt in vehicleTypeFilterOptions"
+                                            :key="opt.value"
+                                        >
+                                            <button
+                                                type="button"
+                                                class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                                                :class="
+                                                    filterVehicleType === opt.value
+                                                        ? 'bg-teal-50 font-medium text-teal-900'
+                                                        : 'text-slate-700 hover:bg-slate-50'
+                                                "
+                                                @click="setVehicleTypeFilter(opt.value)"
+                                            >
+                                                {{ opt.label }}
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <!-- Trạng thái xe -->
+                            <details
+                                ref="vehicleStatusFilterEl"
+                                class="group relative min-w-0 w-full sm:w-auto"
+                            >
+                                <summary
+                                    class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                >
+                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
                                         t(
                                             "resources_dashboard.filter_vehicle_status",
                                         )
-                                    }}</span
+                                    }}</span>
+                                    <span
+                                        class="min-w-0 truncate text-sm font-medium text-slate-900"
+                                        >{{ filterVehicleStatusLabel }}</span
+                                    >
+                                    <ChevronDownIcon
+                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
+                                        aria-hidden="true"
+                                    />
+                                </summary>
+                                <div
+                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    @click.stop
                                 >
-                                <select
-                                    v-model="filterVehicleStatus"
-                                    class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    <ul
+                                        class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1"
+                                    >
+                                        <li
+                                            v-for="opt in vehicleStatusFilterOptions"
+                                            :key="opt.value"
+                                        >
+                                            <button
+                                                type="button"
+                                                class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                                                :class="
+                                                    filterVehicleStatus === opt.value
+                                                        ? 'bg-teal-50 font-medium text-teal-900'
+                                                        : 'text-slate-700 hover:bg-slate-50'
+                                                "
+                                                @click="
+                                                    setVehicleStatusFilter(opt.value)
+                                                "
+                                            >
+                                                {{ opt.label }}
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <!-- Tài xế (availability) -->
+                            <details
+                                ref="driverAvailFilterEl"
+                                class="group relative min-w-0 w-full sm:w-auto"
+                            >
+                                <summary
+                                    class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
                                 >
-                                    <option value="">
-                                        {{
-                                            t("resources_dashboard.filter_all")
-                                        }}
-                                    </option>
-                                    <option value="ready">
-                                        {{
-                                            t("resources.vehicle_status_ready")
-                                        }}
-                                    </option>
-                                    <option value="in_use">
-                                        {{
-                                            t("resources.vehicle_status_in_use")
-                                        }}
-                                    </option>
-                                    <option value="maintenance">
-                                        {{ t("resources.status_maintenance") }}
-                                    </option>
-                                    <option value="broken">
-                                        {{
-                                            t(
-                                                "resources_dashboard.vehicle_broken",
-                                            )
-                                        }}
-                                    </option>
-                                </select>
-                            </label>
-                            <label class="block">
-                                <span
-                                    class="mb-0.5 block text-[10px] font-medium text-slate-500"
-                                    >{{
+                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
                                         t(
                                             "resources_dashboard.filter_driver_status",
                                         )
-                                    }}</span
+                                    }}</span>
+                                    <span
+                                        class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900"
+                                        >{{ filterDriverAvailLabel }}</span
+                                    >
+                                    <ChevronDownIcon
+                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
+                                        aria-hidden="true"
+                                    />
+                                </summary>
+                                <div
+                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    @click.stop
                                 >
-                                <select
-                                    v-model="filterDriverAvail"
-                                    class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    <ul class="space-y-0.5 px-1 py-1">
+                                        <li
+                                            v-for="opt in driverAvailFilterOptions"
+                                            :key="opt.value"
+                                        >
+                                            <button
+                                                type="button"
+                                                class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                                                :class="
+                                                    filterDriverAvail === opt.value
+                                                        ? 'bg-teal-50 font-medium text-teal-900'
+                                                        : 'text-slate-700 hover:bg-slate-50'
+                                                "
+                                                @click="setDriverAvailFilter(opt.value)"
+                                            >
+                                                {{ opt.label }}
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <!-- Đối tác -->
+                            <details
+                                ref="supplierFilterEl"
+                                class="group relative min-w-0 w-full sm:w-auto"
+                            >
+                                <summary
+                                    class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
                                 >
-                                    <option value="">
-                                        {{
-                                            t("resources_dashboard.filter_all")
-                                        }}
-                                    </option>
-                                    <option value="available">
-                                        {{
-                                            t(
-                                                "resources_dashboard.avail_available",
-                                            )
-                                        }}
-                                    </option>
-                                    <option value="busy">
-                                        {{
-                                            t("resources_dashboard.avail_busy")
-                                        }}
-                                    </option>
-                                    <option value="offline">
-                                        {{
-                                            t(
-                                                "resources_dashboard.avail_offline",
-                                            )
-                                        }}
-                                    </option>
-                                </select>
-                            </label>
-                            <label class="block">
-                                <span
-                                    class="mb-0.5 block text-[10px] font-medium text-slate-500"
-                                    >{{
+                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
                                         t("resources_dashboard.filter_supplier")
-                                    }}</span
+                                    }}</span>
+                                    <span
+                                        class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900"
+                                        >{{ filterSupplierLabel }}</span
+                                    >
+                                    <ChevronDownIcon
+                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
+                                        aria-hidden="true"
+                                    />
+                                </summary>
+                                <div
+                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    @click.stop
                                 >
-                                <select
-                                    v-model="filterSupplier"
-                                    class="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-2 pr-7 text-[11px] text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                >
-                                    <option value="">
-                                        {{
-                                            t("resources_dashboard.filter_all")
-                                        }}
-                                    </option>
-                                    <option value="active">
-                                        {{
-                                            t(
-                                                "resources_dashboard.supplier_active",
-                                            )
-                                        }}
-                                    </option>
-                                    <option value="inactive">
-                                        {{
-                                            t(
-                                                "resources_dashboard.supplier_inactive",
-                                            )
-                                        }}
-                                    </option>
-                                </select>
-                            </label>
+                                    <ul class="space-y-0.5 px-1 py-1">
+                                        <li
+                                            v-for="opt in supplierFilterOptions"
+                                            :key="opt.value"
+                                        >
+                                            <button
+                                                type="button"
+                                                class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                                                :class="
+                                                    filterSupplier === opt.value
+                                                        ? 'bg-teal-50 font-medium text-teal-900'
+                                                        : 'text-slate-700 hover:bg-slate-50'
+                                                "
+                                                @click="setSupplierFilter(opt.value)"
+                                            >
+                                                {{ opt.label }}
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
                         </div>
                     </div>
                     <div
@@ -734,7 +789,9 @@
                             >
                         </div>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div
+                        class="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                    >
                         <div class="min-w-[990px] p-3">
                             <div class="mb-1 flex text-[10px] text-slate-500">
                                 <div class="w-[160px] shrink-0" />
@@ -1918,6 +1975,91 @@ const filterVehicleType = ref("");
 const filterVehicleStatus = ref("");
 const filterDriverAvail = ref("");
 const filterSupplier = ref("");
+
+const vehicleTypeFilterEl = ref(null);
+const vehicleStatusFilterEl = ref(null);
+const driverAvailFilterEl = ref(null);
+const supplierFilterEl = ref(null);
+
+const vehicleTypeFilterOptions = computed(() => [
+    { value: "", label: t("resources_dashboard.filter_all") },
+    { value: "van", label: t("resources.type_van") },
+    { value: "truck", label: t("resources.type_truck") },
+    { value: "bus", label: t("resources.type_bus") },
+]);
+
+const vehicleStatusFilterOptions = computed(() => [
+    { value: "", label: t("resources_dashboard.filter_all") },
+    { value: "ready", label: t("resources.vehicle_status_ready") },
+    { value: "in_use", label: t("resources.vehicle_status_in_use") },
+    { value: "maintenance", label: t("resources.status_maintenance") },
+    { value: "broken", label: t("resources_dashboard.vehicle_broken") },
+]);
+
+const driverAvailFilterOptions = computed(() => [
+    { value: "", label: t("resources_dashboard.filter_all") },
+    { value: "available", label: t("resources_dashboard.avail_available") },
+    { value: "busy", label: t("resources_dashboard.avail_busy") },
+    { value: "offline", label: t("resources_dashboard.avail_offline") },
+]);
+
+const supplierFilterOptions = computed(() => [
+    { value: "", label: t("resources_dashboard.filter_all") },
+    { value: "active", label: t("resources_dashboard.supplier_active") },
+    { value: "inactive", label: t("resources_dashboard.supplier_inactive") },
+]);
+
+const filterVehicleTypeLabel = computed(
+    () =>
+        vehicleTypeFilterOptions.value.find(
+            (o) => o.value === filterVehicleType.value,
+        )?.label ?? t("resources_dashboard.filter_all"),
+);
+
+const filterVehicleStatusLabel = computed(
+    () =>
+        vehicleStatusFilterOptions.value.find(
+            (o) => o.value === filterVehicleStatus.value,
+        )?.label ?? t("resources_dashboard.filter_all"),
+);
+
+const filterDriverAvailLabel = computed(
+    () =>
+        driverAvailFilterOptions.value.find(
+            (o) => o.value === filterDriverAvail.value,
+        )?.label ?? t("resources_dashboard.filter_all"),
+);
+
+const filterSupplierLabel = computed(
+    () =>
+        supplierFilterOptions.value.find(
+            (o) => o.value === filterSupplier.value,
+        )?.label ?? t("resources_dashboard.filter_all"),
+);
+
+function closeFilterDetails(el) {
+    if (el && typeof el === "object" && "open" in el) el.open = false;
+}
+
+function setVehicleTypeFilter(v) {
+    filterVehicleType.value = v;
+    closeFilterDetails(vehicleTypeFilterEl.value);
+}
+
+function setVehicleStatusFilter(v) {
+    filterVehicleStatus.value = v;
+    closeFilterDetails(vehicleStatusFilterEl.value);
+}
+
+function setDriverAvailFilter(v) {
+    filterDriverAvail.value = v;
+    closeFilterDetails(driverAvailFilterEl.value);
+}
+
+function setSupplierFilter(v) {
+    filterSupplier.value = v;
+    closeFilterDetails(supplierFilterEl.value);
+}
 
 const syncingFromRoute = ref(false);
 /** Mô tả dài dưới tiêu đề panel — chỉ hiện khi bấm "Chi tiết" */
