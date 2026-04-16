@@ -8,7 +8,6 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfMpdfWriter;
@@ -149,8 +148,6 @@ class Bm02P2pFormGenerator
             ->setName('Times New Roman')
             ->setSize(12.5);
 
-        $sheet->getStyle('A53:N56')->getBorders()->getOutline()->setBorderStyle(Border::BORDER_MEDIUM);
-        $sheet->getStyle('A53:N56')->getBorders()->getInside()->setBorderStyle(Border::BORDER_THIN);
         $sheet->getStyle('A53:N56')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
         $sheet->getStyle('A1:N4')->getAlignment()
