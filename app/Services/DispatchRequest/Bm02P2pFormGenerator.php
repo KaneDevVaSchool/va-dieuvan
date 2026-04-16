@@ -24,14 +24,37 @@ class Bm02P2pFormGenerator
 
     /** Cùng thứ tự với `targetOptions` trong DispatchRequestCreateView.vue — ô tick tương ứng (null = không có checkbox). */
     private const P2P_TARGET_CHECKBOX_CELLS = [
-        'B25', 'E25', 'H25', 'K25',
-        'B26', 'E26', 'H26', 'K26',
-        'B27', 'E27', 'H27', 'K27',
-        'B28', 'E28', 'H28', 'K28',
-        'B29', 'E29', 'H29', 'K29',
-        'B30', 'E30', 'H30', 'K30',
-        'B31', 'E31', 'H31', 'K31',
-        'B32', 'E32', 'H32',
+        'B25',
+        'E25',
+        'H25',
+        'K25',
+        'B26',
+        'E26',
+        'H26',
+        'K26',
+        'B27',
+        'E27',
+        'H27',
+        'K27',
+        'B28',
+        'E28',
+        'H28',
+        'K28',
+        'B29',
+        'E29',
+        'H29',
+        'K29',
+        'B30',
+        'E30',
+        'H30',
+        'K30',
+        'B31',
+        'E31',
+        'H31',
+        'K31',
+        'B32',
+        'E32',
+        'H32',
     ];
 
     /** @var array<int, string> */
@@ -101,14 +124,11 @@ class Bm02P2pFormGenerator
         $writerXlsx->save('php://output');
         $xlsxBinary = ob_get_clean();
 
-        $pdfBinary = $this->renderPdfFromHtmlTemplate($vm);
-        if ($pdfBinary === null || $pdfBinary === '') {
-            // Fallback khi thiếu template HTML.
-            $pdfSpreadsheet = clone $ss;
-            $this->applyPdfSafeFont($pdfSpreadsheet);
-            $pdfBinary = $this->renderPdfFromSpreadsheet($pdfSpreadsheet);
-            $pdfSpreadsheet->disconnectWorksheets();
-        }
+        // PDF renderer (mPDF) không luôn có Times New Roman; clone và đổi sang font Unicode an toàn để tránh vỡ dấu.
+        $pdfSpreadsheet = clone $ss;
+        $this->applyPdfSafeFont($pdfSpreadsheet);
+        $pdfBinary = $this->renderPdfFromSpreadsheet($pdfSpreadsheet);
+        $pdfSpreadsheet->disconnectWorksheets();
 
         return [
             'xlsx' => $xlsxBinary,
@@ -210,147 +230,6 @@ class Bm02P2pFormGenerator
     }
 
     /**
-     * Dùng template HTML do nghiệp vụ duyệt để xuất PDF theo đúng bố cục mong muốn.
-     */
-    private function renderPdfFromHtmlTemplate(array $vm): ?string
-    {
-        $path = dirname(__DIR__, 3).'/scripts/bm02_dispatch_form.html';
-        if (! is_readable($path)) {
-            return null;
-        }
-        $html = file_get_contents($path);
-        if ($html === false || trim($html) === '') {
-            return null;
-        }
-
-        $html = preg_replace('#<script\b[^>]*>.*?</script>#is', '', $html) ?? $html;
-        $html = str_replace(
-            '<div class="target-grid" id="target-grid"></div>',
-            '<div class="target-grid" id="target-grid">'.$this->buildHtmlTargetGridCells($vm).'</div>',
-            $html,
-        );
-        $html = str_replace(
-            '<tbody id="trip-body"></tbody>',
-            '<tbody id="trip-body">'.$this->buildHtmlTripBodyRows($vm).'</tbody>',
-            $html,
-        );
-
-        $editableValues = [
-            (string) ($vm['issued_date'] ?? ''),
-            (string) ($vm['requester_name'] ?? ''),
-            (string) ($vm['requester_email'] ?? ''),
-            (string) ($vm['requester_phone'] ?? ''),
-            (string) ($vm['requester_unit'] ?? ''),
-            (string) ($vm['purpose'] ?? ''),
-            (string) ($vm['basis_note'] ?? ''),
-            (string) ($vm['proposed_date'] ?? ''),
-            (string) ($vm['date_needed'] ?? ''),
-            (string) (($vm['is_urgent'] ?? false) ? ($vm['urgent_reason'] ?? '') : ''),
-            (string) ($vm['coordinator_line'] ?? ''),
-            (string) ($vm['passenger_total'] ?? ''),
-            '',
-            '',
-        ];
-        $i = 0;
-        $html = preg_replace_callback(
-            '#<span class="field-line editable"[^>]*>(.*?)</span>#is',
-            function (array $m) use ($editableValues, &$i): string {
-                $val = $editableValues[$i] ?? '';
-                $i++;
-                $safe = htmlspecialchars((string) $val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                return preg_replace('#>(.*?)</span>#is', '>'.$safe.'</span>', $m[0]) ?? $m[0];
-            },
-            $html,
-        ) ?? $html;
-
-        // Checkbox "Gấp"
-        $html = str_replace(
-            '<span class="cb" id="cb-urgent" onclick="toggleCb(this)" title="Gấp">☐</span>',
-            '<span class="cb checked" id="cb-urgent" title="Gấp">'.(($vm['is_urgent'] ?? false) ? self::CHECKED_MARK : self::EMPTY_MARK).'</span>',
-            $html,
-        );
-
-        return $this->renderPdfFromHtml($html);
-    }
-
-    private function buildHtmlTargetGridCells(array $vm): string
-    {
-        $cells = [];
-        foreach (($vm['target_table_rows'] ?? []) as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            foreach ($row as $slot) {
-                if (! is_array($slot)) {
-                    $cells[] = '<div class="target-cell"></div>';
-                    continue;
-                }
-                $label = htmlspecialchars((string) ($slot['label'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                $checked = ! empty($slot['checked']) ? self::CHECKED_MARK : self::EMPTY_MARK;
-                $cells[] = '<div class="target-cell"><span class="cb">'.$checked.'</span><span>'.$label.'</span></div>';
-            }
-        }
-
-        return implode('', $cells);
-    }
-
-    private function buildHtmlTripBodyRows(array $vm): string
-    {
-        $rows = $vm['trip_lines'] ?? [];
-        $out = [];
-        for ($i = 0; $i < 5; $i++) {
-            $r = is_array($rows[$i] ?? null) ? $rows[$i] : [];
-            $vals = [
-                (string) ($r['depart_at'] ?? ''),
-                (string) ($r['pickup'] ?? ''),
-                (string) ($r['return_at'] ?? ''),
-                (string) ($r['dropoff'] ?? ''),
-                (string) ($r['guests'] ?? ''),
-                '', // Loại hình điều vận
-                '', // Thông tin xe
-                (string) ($r['person_in_charge'] ?? ''),
-                (string) ($r['unit_price'] ?? ''),
-                (string) ($r['extra_fee'] ?? ''),
-                (string) ($r['line_total'] ?? ''),
-                (string) ($r['notes'] ?? ''),
-            ];
-            $cells = '<td style="text-align:center;border:0.5px solid #bbb">'.($i + 1).'</td>';
-            foreach ($vals as $v) {
-                $safe = htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                $cells .= '<td style="border:0.5px solid #bbb; min-height:16px;">'.$safe.'</td>';
-            }
-            $out[] = '<tr>'.$cells.'</tr>';
-        }
-
-        return implode('', $out);
-    }
-
-    private function renderPdfFromHtml(string $html): string
-    {
-        $tempDir = storage_path('app/mpdf-tmp');
-        if (! is_dir($tempDir)) {
-            mkdir($tempDir, 0755, true);
-        }
-
-        $mpdf = new \Mpdf\Mpdf([
-            'mode' => 'utf-8',
-            'format' => 'A4-L',
-            'tempDir' => $tempDir,
-            'default_font' => 'dejavusans',
-            'autoScriptToLang' => true,
-            'autoLangToFont' => true,
-            'margin_left' => 6,
-            'margin_right' => 6,
-            'margin_top' => 6,
-            'margin_bottom' => 6,
-        ]);
-        $mpdf->SetTitle('BM.02 / MH.QT.04');
-        $mpdf->WriteHTML($html);
-
-        return $mpdf->Output('', 'S');
-    }
-
-    /**
      * @param  array<string, mixed>  $vm
      */
     private function fillSpreadsheetFromViewModel(Worksheet $sheet, array $vm): void
@@ -384,7 +263,7 @@ class Bm02P2pFormGenerator
 
         foreach ($vm['excel_passenger_rows'] as $i => $r) {
             $excelRow = 40 + $i;
-            if (! is_array($r)) {
+            if (!is_array($r)) {
                 continue;
             }
             $sheet->setCellValue("C{$excelRow}", $r['depart_at'] ?? '');
@@ -420,7 +299,7 @@ class Bm02P2pFormGenerator
 
         $tickSet = [];
         foreach ($vm['target_tick_cells'] as $coord) {
-            if (! is_string($coord) || $coord === '') {
+            if (!is_string($coord) || $coord === '') {
                 continue;
             }
             $tickSet[strtoupper($coord)] = true;
@@ -452,7 +331,7 @@ class Bm02P2pFormGenerator
 
         $slots = [];
         foreach ($vm['target_table_rows'] ?? [] as $row) {
-            if (! is_array($row)) {
+            if (!is_array($row)) {
                 continue;
             }
             foreach ($row as $slot) {
@@ -462,27 +341,30 @@ class Bm02P2pFormGenerator
 
         for ($r = 0; $r < $rows; $r++) {
             $excelRow = $startRow + $r;
-            $sheet->getRowDimension($excelRow)->setRowHeight(20);
+            $maxChars = 0;
             for ($c = 0; $c < 4; $c++) {
                 $slot = $slots[$r * 4 + $c] ?? null;
-                $labelAddr = $labelCols[$c].$excelRow;
-                $checkboxAddr = $checkboxCols[$c].$excelRow;
+                $labelAddr = $labelCols[$c] . $excelRow;
+                $checkboxAddr = $checkboxCols[$c] . $excelRow;
                 $label = is_array($slot) ? (string) ($slot['label'] ?? '') : '';
                 $sheet->setCellValue($labelAddr, $label);
+                $maxChars = max($maxChars, mb_strlen($label, 'UTF-8'));
 
                 // Các ô checkbox "thừa" (nếu có) phải trống hoàn toàn để không tạo tick giả.
-                if ($label === '' && ! in_array($checkboxAddr, self::P2P_TARGET_CHECKBOX_CELLS, true)) {
+                if ($label === '' && !in_array($checkboxAddr, self::P2P_TARGET_CHECKBOX_CELLS, true)) {
                     $sheet->setCellValue($checkboxAddr, '');
                 }
             }
+            $estimatedLines = max(1, (int) ceil($maxChars / 16));
+            $sheet->getRowDimension($excelRow)->setRowHeight(15 * $estimatedLines);
         }
 
         foreach (['C25:C32', 'F25:F32', 'I25:I32', 'L25:L32'] as $range) {
             $sheet->getStyle($range)->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_LEFT)
-                ->setVertical(Alignment::VERTICAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_TOP)
                 ->setWrapText(true);
-            $sheet->getStyle($range)->getFont()->setSize(10);
+            $sheet->getStyle($range)->getFont()->setSize(9.25);
         }
     }
 
@@ -535,7 +417,7 @@ class Bm02P2pFormGenerator
 
         $filled = array_values(array_filter(
             is_array($rows) ? $rows : [],
-            fn ($r) => is_array($r) && $this->rowHasPassengerContent($r),
+            fn($r) => is_array($r) && $this->rowHasPassengerContent($r),
         ));
 
         $selectedNorm = [];
@@ -552,42 +434,42 @@ class Bm02P2pFormGenerator
             if ($cell === null || $cell === '') {
                 continue;
             }
-            if (! empty($selectedNorm[$this->normalizeTargetLabel($label)])) {
+            if (!empty($selectedNorm[$this->normalizeTargetLabel($label)])) {
                 $targetTickCells[] = $cell;
             }
         }
 
         $basisNote = '';
-        if (! empty($form['basisFileName'])) {
-            $basisNote = 'Đính kèm: '.$form['basisFileName'];
+        if (!empty($form['basisFileName'])) {
+            $basisNote = 'Đính kèm: ' . $form['basisFileName'];
         }
         $maxPassengerLinesOnForm = 5;
         $overflowNote = null;
         if (count($filled) > $maxPassengerLinesOnForm) {
             $n = count($filled);
             $overflowNote = "(Ghi chú: {$n} chuyến đã khai báo — trên mẫu in hiển thị tối đa {$maxPassengerLinesOnForm} dòng đầu; toàn bộ nằm trong portal.)";
-            $basisNote = $basisNote !== '' ? $basisNote."\n\n".$overflowNote : $overflowNote;
+            $basisNote = $basisNote !== '' ? $basisNote . "\n\n" . $overflowNote : $overflowNote;
         }
 
         $coord = [];
-        if (! empty($form['coordinator_name'])) {
+        if (!empty($form['coordinator_name'])) {
             $coord[] = (string) $form['coordinator_name'];
         }
-        if (! empty($form['coordinator_email'])) {
+        if (!empty($form['coordinator_email'])) {
             $coord[] = (string) $form['coordinator_email'];
         }
-        if (! empty($form['coordinator_phone'])) {
+        if (!empty($form['coordinator_phone'])) {
             $coord[] = (string) $form['coordinator_phone'];
         }
         $coordinatorLine = $coord !== [] ? implode(' — ', $coord) : '';
 
         $now = Carbon::now();
-        $isUrgent = ! empty($form['is_urgent']);
+        $isUrgent = !empty($form['is_urgent']);
 
         $slots = [];
         foreach (self::TARGET_LABELS as $i => $lab) {
             $coordCell = self::P2P_TARGET_CHECKBOX_CELLS[$i] ?? null;
-            $checked = $coordCell && ! empty($selectedNorm[$this->normalizeTargetLabel($lab)]);
+            $checked = $coordCell && !empty($selectedNorm[$this->normalizeTargetLabel($lab)]);
             $slots[] = ['label' => $lab, 'checked' => $checked];
         }
         while (count($slots) % 4 !== 0) {
@@ -651,7 +533,7 @@ class Bm02P2pFormGenerator
      */
     private function excelRowFromPassenger(?array $r): array
     {
-        if (! is_array($r)) {
+        if (!is_array($r)) {
             return [
                 'depart_at' => '',
                 'pickup' => '',
@@ -699,7 +581,7 @@ class Bm02P2pFormGenerator
             if ($cell === null || $cell === '') {
                 continue;
             }
-            $states[] = ! empty($selectedNorm[$this->normalizeTargetLabel($label)]);
+            $states[] = !empty($selectedNorm[$this->normalizeTargetLabel($label)]);
         }
 
         return $states;
@@ -711,7 +593,7 @@ class Bm02P2pFormGenerator
     private function renderPdfFromSpreadsheet(Spreadsheet $spreadsheet): string
     {
         $tempDir = storage_path('app/mpdf-tmp');
-        if (! is_dir($tempDir)) {
+        if (!is_dir($tempDir)) {
             mkdir($tempDir, 0755, true);
         }
 
@@ -750,11 +632,11 @@ class Bm02P2pFormGenerator
     private function templatePath(): string
     {
         $root = dirname(__DIR__, 3);
-        $scripts = $root.'/scripts/P2P.xlsx';
+        $scripts = $root . '/scripts/P2P.xlsx';
         if (is_readable($scripts)) {
             return $scripts;
         }
-        $storage = $root.'/storage/app/templates/P2P.xlsx';
+        $storage = $root . '/storage/app/templates/P2P.xlsx';
         if (is_readable($storage)) {
             return $storage;
         }
