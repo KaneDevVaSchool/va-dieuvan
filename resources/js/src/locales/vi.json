@@ -702,4 +702,63 @@
         "logout_confirm_body": "Bạn sẽ cần đăng nhập lại để tiếp tục.",
         "logout_confirm_action": "Đăng xuất"
     }
+  ,
+  "trip_detail": {
+    "step": {
+      "pending": "Pending",
+      "waiting": "Waiting",
+      "en_route": "En Route",
+      "arrived": "Arrived",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "timeline": {
+      "trip_created": "Trip created",
+      "trip_created_subtitle": "Type: {type}",
+      "system": "System",
+      "status_change": "Trạng thái: {from} → {to}",
+      "status_change_short": "Thay đổi trạng thái",
+      "dispatcher_note": "Ghi chú điều vận",
+      "event": "Sự kiện"
+    },
+    "sla": {
+      "overdue": "Quá hạn",
+      "remaining_minutes": "Còn lại {n} phút"
+    }
+  },
+  "labels": {
+    "trip_status": {
+      "pending": "Chờ xử lý",
+      "approved": "Đã duyệt",
+      "assigned": "Đã phân công",
+      "driver_confirmed": "TX xác nhận",
+      "in_progress": "Đang chạy",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã huỷ",
+      "incident": "Sự cố"
+    },
+    "trip_type": {
+      "door_to_door": "Đưa đón (D2D)",
+      "point_to_point": "Điểm — điểm",
+      "business": "Công tác",
+      "cargo": "Hàng hóa"
+    },
+    "request_status": {
+      "draft": "Nháp",
+      "pending": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "rejected": "Từ chối",
+      "cancelled": "Đã huỷ"
+    },
+    "source_channel": {
+      "portal": "Portal",
+      "zalo": "Zalo",
+      "paper": "Phiếu giấy"
+    },
+    "paper_status": {
+      "pending": "Chưa nhận",
+      "received": "Đã nhận",
+      "digitally_signed": "Đã ký số"
+    }
+  }
 }

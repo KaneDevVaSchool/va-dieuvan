@@ -118,16 +118,22 @@
               <p v-if="resourceHint" class="text-xs text-amber-800">{{ resourceHint }}</p>
               <form class="grid gap-3" @submit.prevent="doAssign">
                 <Input v-model.number="assign.lock_version" label="lock_version" type="number" />
-                <Select v-model="vehicleChoice" label="Xe" placeholder="Chọn biển số">
-                  <option value="">— Không đổi / bỏ chọn —</option>
-                  <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
-                    {{ v.license_plate }} · {{ v.type ?? 'xe' }} {{ v.seat_count ? `(${v.seat_count} chỗ)` : '' }}
-                  </option>
-                </Select>
                 <Select v-model="driverChoice" label="Tài xế" placeholder="Chọn tài xế">
                   <option value="">— Không đổi / bỏ chọn —</option>
                   <option v-for="d in drivers" :key="d.id" :value="String(d.id)">
                     {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
+                  </option>
+                </Select>
+                <Select
+                  v-model="vehicleChoice"
+                  label="Xe"
+                  placeholder="Chọn biển số"
+                  :disabled="!driverChoice"
+                  :hint="!driverChoice ? 'Chọn tài xế trước để mở danh sách xe.' : ''"
+                >
+                  <option value="">— Không đổi / bỏ chọn —</option>
+                  <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
+                    {{ v.license_plate }} · {{ v.type ?? 'xe' }} {{ v.seat_count ? `(${v.seat_count} chỗ)` : '' }}
                   </option>
                 </Select>
                 <Input v-model.number="assign.transport_provider_id" label="transport_provider_id (tùy chọn)" type="number" />
@@ -296,6 +302,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
@@ -305,6 +312,7 @@ import { listVehicles, listDrivers } from '../../api/operational'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripStatus } from '../../util/labels'
 const route = useRoute()
+const { t, locale } = useI18n()
 const trip = ref(null)
 const loading = ref(true)
 const assigning = ref(false)
@@ -325,7 +333,8 @@ const noteMsg = ref('')
 const assign = ref({ lock_version: 0, vehicle_id: null, driver_id: null, transport_provider_id: null })
 
 function fmt(v) {
-  return v ? new Date(v).toLocaleString('vi-VN') : '-'
+  const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
+  return v ? new Date(v).toLocaleString(l) : '-'
 }
 
 const tripCode = computed(() => {
@@ -387,24 +396,24 @@ function dotClass(state) {
 
 const stepPickup = computed(() => {
   const s = trip.value?.status
-  if (s === 'completed') return { state: 'done', label: 'Completed' }
-  if (s === 'in_progress') return { state: 'done', label: 'Completed' }
-  if (s === 'cancelled') return { state: 'blocked', label: 'Cancelled' }
-  return { state: 'active', label: 'Pending' }
+  if (s === 'completed') return { state: 'done', label: t('trip_detail.step.completed') }
+  if (s === 'in_progress') return { state: 'done', label: t('trip_detail.step.completed') }
+  if (s === 'cancelled') return { state: 'blocked', label: t('trip_detail.step.cancelled') }
+  return { state: 'active', label: t('trip_detail.step.pending') }
 })
 const stepCurrent = computed(() => {
   const s = trip.value?.status
-  if (s === 'in_progress') return { state: 'active', label: 'En Route' }
-  if (s === 'completed') return { state: 'done', label: 'Arrived' }
-  if (s === 'cancelled') return { state: 'blocked', label: 'Cancelled' }
-  return { state: 'pending', label: 'Waiting' }
+  if (s === 'in_progress') return { state: 'active', label: t('trip_detail.step.en_route') }
+  if (s === 'completed') return { state: 'done', label: t('trip_detail.step.arrived') }
+  if (s === 'cancelled') return { state: 'blocked', label: t('trip_detail.step.cancelled') }
+  return { state: 'pending', label: t('trip_detail.step.waiting') }
 })
 const stepDropoff = computed(() => {
   const s = trip.value?.status
-  if (s === 'completed') return { state: 'done', label: 'Completed' }
-  if (s === 'cancelled') return { state: 'blocked', label: 'Cancelled' }
-  if (s === 'in_progress') return { state: 'active', label: 'Pending' }
-  return { state: 'pending', label: 'Pending' }
+  if (s === 'completed') return { state: 'done', label: t('trip_detail.step.completed') }
+  if (s === 'cancelled') return { state: 'blocked', label: t('trip_detail.step.cancelled') }
+  if (s === 'in_progress') return { state: 'active', label: t('trip_detail.step.pending') }
+  return { state: 'pending', label: t('trip_detail.step.pending') }
 })
 
 const mapsHref = computed(() => {
@@ -437,11 +446,11 @@ function eventTitle(e) {
   if (e.type === 'status_change') {
     const from = e?.data?.from
     const to = e?.data?.to
-    if (from && to) return `Status: ${labelTripStatus(from)} → ${labelTripStatus(to)}`
-    return 'Status change'
+    if (from && to) return t('trip_detail.timeline.status_change', { from: labelTripStatus(from), to: labelTripStatus(to) })
+    return t('trip_detail.timeline.status_change_short')
   }
-  if (e.type === 'note') return 'Dispatcher note'
-  return e.type || 'Event'
+  if (e.type === 'note') return t('trip_detail.timeline.dispatcher_note')
+  return e.type || t('trip_detail.timeline.event')
 }
 
 const timeline = computed(() => {
@@ -450,9 +459,9 @@ const timeline = computed(() => {
     items.push({
       key: `trip_created_${trip.value.id}`,
       icon: '+',
-      title: 'Trip created',
-      subtitle: trip.value?.dispatch_request?.trip_type ? `Type: ${tripTypeLabel.value}` : '',
-      actor: 'System',
+      title: t('trip_detail.timeline.trip_created'),
+      subtitle: trip.value?.dispatch_request?.trip_type ? t('trip_detail.timeline.trip_created_subtitle', { type: tripTypeLabel.value }) : '',
+      actor: t('trip_detail.timeline.system'),
       at: trip.value.created_at,
     })
   }
@@ -486,7 +495,7 @@ const sla = computed(() => {
   const remainingMin = Math.max(0, Math.floor(remainingMs / 60000))
   const progress = Math.max(0, Math.min(100, Math.round(((now - start) / (end - start)) * 100)))
   const isCritical = remainingMin <= 30
-  const label = remainingMs <= 0 ? 'Overdue' : `${remainingMin} phút còn lại`
+  const label = remainingMs <= 0 ? t('trip_detail.sla.overdue') : t('trip_detail.sla.remaining_minutes', { n: remainingMin })
   return { remainingMin, progress, isCritical, label }
 })
 
@@ -550,6 +559,10 @@ async function load() {
     loading.value = false
   }
 }
+
+watch(driverChoice, (v) => {
+  if (!v) vehicleChoice.value = ''
+})
 
 async function doAssign() {
   assignMsg.value = ''

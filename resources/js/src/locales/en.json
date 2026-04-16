@@ -702,4 +702,63 @@
     "logout_confirm_body": "You will need to sign in again to continue.",
     "logout_confirm_action": "Sign out"
   }
+  ,
+  "trip_detail": {
+    "step": {
+      "pending": "Pending",
+      "waiting": "Waiting",
+      "en_route": "En Route",
+      "arrived": "Arrived",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "timeline": {
+      "trip_created": "Trip created",
+      "trip_created_subtitle": "Type: {type}",
+      "system": "System",
+      "status_change": "Status: {from} → {to}",
+      "status_change_short": "Status change",
+      "dispatcher_note": "Dispatcher note",
+      "event": "Event"
+    },
+    "sla": {
+      "overdue": "Overdue",
+      "remaining_minutes": "{n} min remaining"
+    }
+  },
+  "labels": {
+    "trip_status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "assigned": "Assigned",
+      "driver_confirmed": "Driver confirmed",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "incident": "Incident"
+    },
+    "trip_type": {
+      "door_to_door": "Door-to-door (D2D)",
+      "point_to_point": "Point-to-point",
+      "business": "Business",
+      "cargo": "Cargo"
+    },
+    "request_status": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "source_channel": {
+      "portal": "Portal",
+      "zalo": "Zalo",
+      "paper": "Paper form"
+    },
+    "paper_status": {
+      "pending": "Pending",
+      "received": "Received",
+      "digitally_signed": "Digitally signed"
+    }
+  }
 }
