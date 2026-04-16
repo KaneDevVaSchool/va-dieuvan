@@ -185,11 +185,24 @@ class Bm02P2pFormGenerator
     private function applyPdfSafeFont(Spreadsheet $spreadsheet): void
     {
         $spreadsheet->getDefaultStyle()->getFont()
-            ->setName('DejaVu Serif')
-            ->setSize(12);
+            ->setName('DejaVu Sans')
+            ->setSize(10);
 
         foreach ($spreadsheet->getAllSheets() as $sheet) {
-            $sheet->getStyle($sheet->calculateWorksheetDimension())->getFont()->setName('DejaVu Serif')->setSize(12);
+            $dim = $sheet->calculateWorksheetDimension();
+            $sheet->getStyle($dim)->getFont()->setName('DejaVu Sans')->setSize(10);
+
+            // Vùng D (đối tượng phân bổ): giảm cỡ và wrap để không bị mất chữ khi render PDF.
+            $sheet->getStyle('B25:M32')->getFont()->setSize(9.5);
+            $sheet->getStyle('C25:D32')->getAlignment()->setWrapText(true);
+            $sheet->getStyle('F25:G32')->getAlignment()->setWrapText(true);
+            $sheet->getStyle('I25:J32')->getAlignment()->setWrapText(true);
+            $sheet->getStyle('L25:M32')->getAlignment()->setWrapText(true);
+
+            // Giữ các ô nhập chính nhỉnh hơn để dễ đọc.
+            foreach (['E7:E10', 'D13:D14', 'E17:E21', 'E33', 'C40:N45', 'E55'] as $range) {
+                $sheet->getStyle($range)->getFont()->setSize(11);
+            }
         }
     }
 
