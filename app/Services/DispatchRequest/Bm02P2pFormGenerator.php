@@ -3,17 +3,17 @@
 namespace App\Services\DispatchRequest;
 
 use Carbon\Carbon;
-use Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfMpdfWriter;
 
 /**
  * Điền mẫu Excel BM.02/MH.QT.04 (P2P) từ wizard_snapshot.
- * PDF: mPDF từ HTML mẫu Google (nội bộ) — không gửi HTML ra API; không dùng PhpSpreadsheet→HTML→PDF.
+ * PDF: xuất từ chính workbook đã điền (scripts/P2P.xlsx) qua PhpSpreadsheet Writer\Pdf\Mpdf — bám layout in của mẫu.
  * Excel: ô tick bằng ảnh PNG (Drawing) để hiển thị ổn định trên mọi Excel.
  */
 class Bm02P2pFormGenerator
@@ -99,8 +99,7 @@ class Bm02P2pFormGenerator
         $writerXlsx->save('php://output');
         $xlsxBinary = ob_get_clean();
 
-        $html = $this->renderPrintHtml($vm);
-        $pdfBinary = $this->renderPdfFromHtml($html);
+        $pdfBinary = $this->renderPdfFromSpreadsheet($ss);
 
         return [
             'xlsx' => $xlsxBinary,
@@ -375,17 +374,6 @@ class Bm02P2pFormGenerator
     /**
      * @param  array<string, mixed>  $vm
      */
-    private function renderPrintHtml(array $vm): string
-    {
-        $google = new Bm02P2pGoogleSheetHtmlRenderer;
-        $html = $google->render($vm);
-        if ($html !== null) {
-            return $html;
-        }
-
-        return view('dispatch.bm02-p2p-print', ['vm' => $vm])->render();
-    }
-
     /**
      * @param  array<string, true>  $selectedNorm
      * @return list<bool>
@@ -404,29 +392,24 @@ class Bm02P2pFormGenerator
         return $states;
     }
 
-    private function renderPdfFromHtml(string $html): string
+    /**
+     * PDF từ grid Excel đã điền (hướng trang, khổ giấy, lề lấy theo Page Setup của mẫu P2P.xlsx khi có).
+     */
+    private function renderPdfFromSpreadsheet(Spreadsheet $spreadsheet): string
     {
         $tempDir = storage_path('app/mpdf-tmp');
         if (! is_dir($tempDir)) {
             mkdir($tempDir, 0755, true);
         }
 
-        $mpdf = new Mpdf([
-            'mode' => 'utf-8',
-            'format' => 'A4-L',
-            'tempDir' => $tempDir,
-            'margin_left' => 8,
-            'margin_right' => 8,
-            'margin_top' => 10,
-            'margin_bottom' => 10,
-            'default_font' => 'dejavusans',
-            'autoScriptToLang' => true,
-            'autoLangToFont' => true,
-        ]);
-        $mpdf->SetTitle('BM.02 / MH.QT.04');
-        $mpdf->WriteHTML($html);
+        $writer = new PdfMpdfWriter($spreadsheet);
+        $writer->setTempDir($tempDir);
+        $writer->setFont('dejavusans');
 
-        return $mpdf->Output('', 'S');
+        ob_start();
+        $writer->save('php://output');
+
+        return ob_get_clean() ?: '';
     }
 
     private function resetTemplateCheckboxCells(Worksheet $sheet): void
