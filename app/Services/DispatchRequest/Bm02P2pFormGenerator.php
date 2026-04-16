@@ -298,20 +298,12 @@ class Bm02P2pFormGenerator
     {
         $sheet->getCell('B21')->setValueExplicit($vm['is_urgent'] ? self::CHECKED_MARK : self::EMPTY_MARK, DataType::TYPE_STRING);
 
-        $tickSet = [];
-        foreach ($vm['target_tick_cells'] as $coord) {
-            if (!is_string($coord) || $coord === '') {
-                continue;
-            }
-            $tickSet[strtoupper($coord)] = true;
-        }
-
         foreach (self::P2P_TARGET_CHECKBOX_CELLS as $coord) {
             if ($coord === null || $coord === '') {
                 continue;
             }
             $cell = strtoupper($coord);
-            $sheet->getCell($cell)->setValueExplicit(isset($tickSet[$cell]) ? self::CHECKED_MARK : self::EMPTY_MARK, DataType::TYPE_STRING);
+            $sheet->getCell($cell)->setValueExplicit('', DataType::TYPE_STRING);
         }
 
         $this->applyCheckboxVisualStyle($sheet);
@@ -349,13 +341,16 @@ class Bm02P2pFormGenerator
                 $labelAddr = $labelCols[$c] . $excelRow;
                 $checkboxAddr = $checkboxCols[$c] . $excelRow;
                 $label = is_array($slot) ? (string) ($slot['label'] ?? '') : '';
-                $sheet->setCellValue($labelAddr, $label);
-                $maxChars = max($maxChars, mb_strlen($label, 'UTF-8'));
-
-                // Các ô checkbox "thừa" (nếu có) phải trống hoàn toàn để không tạo tick giả.
-                if ($label === '') {
-                    $sheet->setCellValue($checkboxAddr, '');
+                $checked = is_array($slot) && !empty($slot['checked']);
+                if ($label !== '') {
+                    $mark = $checked ? self::CHECKED_MARK : self::EMPTY_MARK;
+                    $sheet->setCellValue($labelAddr, "{$mark}  {$label}");
+                    $maxChars = max($maxChars, mb_strlen($label, 'UTF-8') + 3);
+                } else {
+                    $sheet->setCellValue($labelAddr, '');
                 }
+                // Checkbox tách cột không dùng nữa; giữ trống để dấu tick nằm sát label.
+                $sheet->setCellValue($checkboxAddr, '');
             }
             $estimatedLines = max(1, (int) ceil($maxChars / 16));
             $sheet->getRowDimension($excelRow)->setRowHeight(15 * $estimatedLines);
@@ -410,11 +405,6 @@ class Bm02P2pFormGenerator
     private function applyCheckboxVisualStyle(Worksheet $sheet): void
     {
         $cells = ['B21'];
-        foreach (self::P2P_TARGET_CHECKBOX_CELLS as $coord) {
-            if ($coord !== null && $coord !== '') {
-                $cells[] = strtoupper($coord);
-            }
-        }
         foreach (self::P2P_EXTRA_TEMPLATE_BOOL_CELLS as $coord) {
             if ($coord !== '') {
                 $cells[] = strtoupper($coord);
