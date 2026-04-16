@@ -704,26 +704,145 @@
     }
   ,
   "trip_detail": {
-    "step": {
-      "pending": "Pending",
-      "waiting": "Waiting",
-      "en_route": "En Route",
-      "arrived": "Arrived",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
+    "loading": "Đang tải…",
+    "title": "Chi tiết chuyến & timeline",
+    "created_at": "Tạo {time}",
+    "high_priority": "Ưu tiên cao",
+    "actions": {
+      "copy_link": "Sao chép link",
+      "export": "Xuất"
+    },
+    "messages": {
+      "ok": "OK",
+      "error": "Lỗi",
+      "copied": "Đã sao chép",
+      "copy_failed": "Không sao chép được"
+    },
+    "current_location": {
+      "en_route": "Đang di chuyển"
+    },
+    "trip_status": {
+      "title": "Trạng thái chuyến",
+      "pickup": "ĐIỂM ĐÓN",
+      "current": "VỊ TRÍ HIỆN TẠI",
+      "dropoff": "ĐIỂM TRẢ"
     },
     "timeline": {
-      "trip_created": "Trip created",
-      "trip_created_subtitle": "Type: {type}",
-      "system": "System",
+      "title": "Dòng thời gian",
+      "empty": "Chưa có hoạt động.",
+      "trip_created": "Tạo chuyến",
+      "trip_created_subtitle": "Loại: {type}",
+      "system": "Hệ thống",
       "status_change": "Trạng thái: {from} → {to}",
       "status_change_short": "Thay đổi trạng thái",
       "dispatcher_note": "Ghi chú điều vận",
       "event": "Sự kiện"
     },
+    "route_tracking": {
+      "title": "Theo dõi tuyến đường",
+      "route": "Tuyến đường",
+      "open_map": "Mở bản đồ",
+      "hint_no_gps": "Gợi ý: hiện chưa có GPS tracking, nút “Mở bản đồ” sẽ mở chỉ đường theo điểm đón/trả."
+    },
+    "ops": {
+      "title": "Thao tác điều vận",
+      "subtitle": "Quản lý và điều chỉnh chuyến đi",
+      "hint": "",
+      "active": "Đang hoạt động",
+      "change": "Thay đổi",
+      "close": "Đóng",
+      "adjust_vehicle": {
+        "title": "Điều chỉnh xe",
+        "current": "Xe hiện tại",
+        "type": "Loại xe",
+        "assign_other": "Gán xe khác"
+      },
+      "adjust_driver": {
+        "title": "Điều chỉnh tài xế",
+        "driver": "Tài xế",
+        "rating": "Đánh giá",
+        "assign_other": "Gán tài xế khác"
+      },
+      "tiles": {
+        "time": { "title": "Điều chỉnh thời gian", "subtitle": "Thay đổi giờ đón/trả" },
+        "route": { "title": "Thay đổi tuyến đường", "subtitle": "Cập nhật điểm đón/trả" },
+        "passengers": { "title": "Điều chỉnh hành khách", "subtitle": "Thêm/bớt số người" }
+      },
+      "form": {
+        "driver": "Tài xế",
+        "vehicle": "Xe",
+        "pick_driver": "Chọn tài xế",
+        "pick_vehicle": "Chọn biển số",
+        "pick_driver_first": "Chọn tài xế trước để mở danh sách xe.",
+        "keep_or_clear": "— Không đổi / bỏ chọn —",
+        "provider_id_optional": "transport_provider_id (tùy chọn)",
+        "assign": "Gán"
+      },
+      "panels": {
+        "vehicle": "Điều chỉnh xe / tài xế",
+        "driver": "Điều chỉnh xe / tài xế",
+        "time": "Điều chỉnh thời gian",
+        "route": "Thay đổi tuyến đường",
+        "passengers": "Điều chỉnh hành khách",
+        "coming_soon": "Sắp có."
+      },
+      "messages": {
+        "vehicles_load_failed": "Không tải được danh sách xe.",
+        "drivers_load_failed": "Không tải được danh sách tài xế.",
+        "resources_load_failed": "Lỗi tải danh sách xe/tài xế."
+      }
+    },
+    "info": {
+      "title": "Thông tin chuyến",
+      "trip_id": "Trip ID",
+      "passengers": "Hành khách",
+      "trip_type": "Loại chuyến",
+      "requested_by": "Người yêu cầu",
+      "sla": "Service Level Agreement"
+    },
+    "assigned": {
+      "title": "Nguồn lực được gán",
+      "vehicle": "Xe",
+      "driver": "Tài xế",
+      "provider": "Nhà cung cấp"
+    },
+    "notes": {
+      "title": "Ghi chú điều vận",
+      "from_request": "Ghi chú từ yêu cầu",
+      "empty": "Chưa có note.",
+      "add_title": "+ Thêm note mới",
+      "placeholder": "Ghi chú cho dispatcher/ops…",
+      "add_action": "Thêm note"
+    },
+    "quick": {
+      "title": "Thao tác nhanh",
+      "call_requester": "Gọi người yêu cầu",
+      "call_driver": "Gọi tài xế",
+      "reassign": "Phân công / cập nhật"
+    },
+    "step": {
+      "pending": "Đang chờ",
+      "waiting": "Đang chờ",
+      "en_route": "Đang di chuyển",
+      "arrived": "Đã đến",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã huỷ"
+    },
     "sla": {
       "overdue": "Quá hạn",
       "remaining_minutes": "Còn lại {n} phút"
+    }
+    ,
+    "status_update": {
+      "title": "Cập nhật trạng thái",
+      "status": "Trạng thái",
+      "pick": "Chọn",
+      "note": "Ghi chú",
+      "update": "Cập nhật"
+    },
+    "costs": {
+      "title": "Chi phí (50 mới nhất)",
+      "empty": "Chưa có."
     }
   },
   "labels": {

@@ -1,15 +1,15 @@
 <template>
-  <div v-if="loading" class="text-sm text-slate-500">Đang tải…</div>
+  <div v-if="loading" class="text-sm text-slate-500">{{ t('trip_detail.loading') }}</div>
   <div v-else-if="trip" class="space-y-4">
     <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
       <div class="min-w-0">
-        <div class="text-lg font-semibold text-slate-900">Trip Details & Timeline</div>
+        <div class="text-lg font-semibold text-slate-900">{{ t('trip_detail.title') }}</div>
         <div class="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
           <span class="font-medium text-slate-900">{{ tripCode }}</span>
           <span class="text-slate-300">•</span>
-          <span>Tạo {{ fmt(trip.created_at) }}</span>
+          <span>{{ t('trip_detail.created_at', { time: fmt(trip.created_at) }) }}</span>
           <span v-if="trip.dispatch_request?.is_urgent" class="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
-            High Priority
+            {{ t('trip_detail.high_priority') }}
           </span>
           <span :class="['rounded-full px-2 py-0.5 text-xs font-medium', pillClassForStatus(trip.status)]">
             {{ labelTripStatus(trip.status) }}
@@ -17,19 +17,19 @@
         </div>
       </div>
       <div class="flex flex-wrap gap-2">
-        <Button variant="secondary" @click="copyLink">Sao chép link</Button>
-        <Button variant="secondary" @click="exportJson">Export</Button>
+        <Button variant="secondary" @click="copyLink">{{ t('trip_detail.actions.copy_link') }}</Button>
+        <Button variant="secondary" @click="exportJson">{{ t('trip_detail.actions.export') }}</Button>
       </div>
     </div>
 
     <div class="grid gap-4 lg:grid-cols-3">
       <div class="space-y-4 lg:col-span-2">
-        <Card title="Trip Status">
+        <Card :title="t('trip_detail.trip_status.title')">
           <div class="grid gap-4 md:grid-cols-3">
             <div class="flex items-start gap-3">
               <div :class="dotClass(stepPickup.state)"></div>
               <div class="min-w-0">
-                <div class="text-xs font-medium text-slate-500">PICKUP LOCATION</div>
+                <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.trip_status.pickup') }}</div>
                 <div class="mt-1 text-sm font-semibold text-slate-900">{{ originLabel }}</div>
                 <div class="mt-1 text-xs text-slate-500">
                   <span class="font-medium">{{ stepPickup.label }}</span>
@@ -41,7 +41,7 @@
             <div class="flex items-start gap-3">
               <div :class="dotClass(stepCurrent.state)"></div>
               <div class="min-w-0">
-                <div class="text-xs font-medium text-slate-500">CURRENT LOCATION</div>
+                <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.trip_status.current') }}</div>
                 <div class="mt-1 text-sm font-semibold text-slate-900">{{ currentLabel }}</div>
                 <div class="mt-1 text-xs text-slate-500">
                   <span class="font-medium">{{ stepCurrent.label }}</span>
@@ -53,7 +53,7 @@
             <div class="flex items-start gap-3">
               <div :class="dotClass(stepDropoff.state)"></div>
               <div class="min-w-0">
-                <div class="text-xs font-medium text-slate-500">DROP-OFF LOCATION</div>
+                <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.trip_status.dropoff') }}</div>
                 <div class="mt-1 text-sm font-semibold text-slate-900">{{ destinationLabel }}</div>
                 <div class="mt-1 text-xs text-slate-500">
                   <span class="font-medium">{{ stepDropoff.label }}</span>
@@ -64,7 +64,7 @@
           </div>
         </Card>
 
-        <Card title="Activity Timeline">
+        <Card :title="t('trip_detail.timeline.title')">
           <div class="space-y-3">
             <div v-for="e in timeline" :key="e.key" class="flex gap-3">
               <div class="mt-0.5 h-6 w-6 flex-none rounded-full border bg-white text-center text-xs leading-6 text-slate-600">
@@ -81,15 +81,15 @@
                 <div v-if="e.subtitle" class="mt-1 text-sm text-slate-700">{{ e.subtitle }}</div>
               </div>
             </div>
-            <div v-if="!timeline.length" class="text-sm text-slate-500">Chưa có hoạt động.</div>
+            <div v-if="!timeline.length" class="text-sm text-slate-500">{{ t('trip_detail.timeline.empty') }}</div>
           </div>
         </Card>
 
-        <Card title="Live Route Tracking">
+        <Card :title="t('trip_detail.route_tracking.title')">
           <div class="rounded-xl border bg-slate-50 p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div class="text-sm text-slate-700">
-                <div class="font-medium text-slate-900">Tuyến đường</div>
+                <div class="font-medium text-slate-900">{{ t('trip_detail.route_tracking.route') }}</div>
                 <div class="mt-1 text-xs text-slate-500">
                   {{ originLabel }} → {{ destinationLabel }}
                 </div>
@@ -101,96 +101,210 @@
                 rel="noopener"
                 class="inline-flex items-center justify-center rounded-md border bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
               >
-                Mở bản đồ
+                {{ t('trip_detail.route_tracking.open_map') }}
               </a>
             </div>
             <div class="mt-4 h-44 w-full rounded-lg bg-gradient-to-br from-emerald-100 via-sky-100 to-indigo-100"></div>
             <div class="mt-2 text-xs text-slate-500">
-              Gợi ý: hiện chưa có GPS tracking, nút “Mở bản đồ” sẽ mở chỉ đường theo origin/destination.
+              {{ t('trip_detail.route_tracking.hint_no_gps') }}
             </div>
           </div>
         </Card>
 
-        <Card ref="opsEl" title="Thao tác điều vận">
-          <div class="grid gap-4 lg:grid-cols-2">
-            <div class="space-y-3">
-              <div class="text-sm font-semibold text-slate-900">Gán tài nguyên</div>
-              <p v-if="resourceHint" class="text-xs text-amber-800">{{ resourceHint }}</p>
-              <form class="grid gap-3" @submit.prevent="doAssign">
-                <Input v-model.number="assign.lock_version" label="lock_version" type="number" />
-                <Select v-model="driverChoice" label="Tài xế" placeholder="Chọn tài xế">
-                  <option value="">— Không đổi / bỏ chọn —</option>
+        <Card ref="opsEl" :title="t('trip_detail.ops.title')">
+          <div class="rounded-xl border bg-emerald-50/50 p-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-center gap-3">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white">
+                  <span class="text-sm font-semibold">↻</span>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-slate-900">{{ t('trip_detail.ops.subtitle') }}</div>
+                  <div class="text-xs text-slate-600">{{ t('trip_detail.ops.hint') }}</div>
+                </div>
+              </div>
+              <span
+                class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
+              >
+                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                {{ t('trip_detail.ops.active') }}
+              </span>
+            </div>
+
+            <div class="mt-4 grid gap-3 lg:grid-cols-2">
+              <div class="rounded-xl border bg-white p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex items-center gap-2">
+                    <div class="text-sm font-semibold text-slate-900">{{ t('trip_detail.ops.adjust_vehicle.title') }}</div>
+                  </div>
+                  <button type="button" class="text-xs font-semibold text-emerald-700 hover:underline" @click="openOpsPanel('vehicle')">
+                    {{ t('trip_detail.ops.change') }}
+                  </button>
+                </div>
+                <div class="mt-3 grid gap-2 text-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500">{{ t('trip_detail.ops.adjust_vehicle.current') }}</span>
+                    <span class="font-medium text-slate-900">{{ trip.vehicle?.license_plate ?? '-' }}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500">{{ t('trip_detail.ops.adjust_vehicle.type') }}</span>
+                    <span class="font-medium text-slate-900">{{ trip.vehicle?.type ?? '-' }}</span>
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-md border bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+                    @click="openOpsPanel('vehicle')"
+                  >
+                    {{ t('trip_detail.ops.adjust_vehicle.assign_other') }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="rounded-xl border bg-white p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="text-sm font-semibold text-slate-900">{{ t('trip_detail.ops.adjust_driver.title') }}</div>
+                  <button type="button" class="text-xs font-semibold text-emerald-700 hover:underline" @click="openOpsPanel('driver')">
+                    {{ t('trip_detail.ops.change') }}
+                  </button>
+                </div>
+                <div class="mt-3 grid gap-2 text-sm">
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500">{{ t('trip_detail.ops.adjust_driver.driver') }}</span>
+                    <span class="font-medium text-slate-900">{{ trip.driver?.full_name ?? '-' }}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500">{{ t('trip_detail.ops.adjust_driver.rating') }}</span>
+                    <span class="font-medium text-slate-900">—</span>
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-md border bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-100"
+                    @click="openOpsPanel('driver')"
+                  >
+                    {{ t('trip_detail.ops.adjust_driver.assign_other') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3 grid gap-3 sm:grid-cols-3">
+              <button type="button" class="rounded-xl border bg-white p-4 text-left hover:bg-slate-50" @click="openOpsPanel('time')">
+                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-violet-700">⏱</div>
+                <div class="mt-3 text-sm font-semibold text-slate-900 text-center">{{ t('trip_detail.ops.tiles.time.title') }}</div>
+                <div class="mt-1 text-xs text-slate-500 text-center">{{ t('trip_detail.ops.tiles.time.subtitle') }}</div>
+              </button>
+              <button type="button" class="rounded-xl border bg-white p-4 text-left hover:bg-slate-50" @click="openOpsPanel('route')">
+                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700">🧭</div>
+                <div class="mt-3 text-sm font-semibold text-slate-900 text-center">{{ t('trip_detail.ops.tiles.route.title') }}</div>
+                <div class="mt-1 text-xs text-slate-500 text-center">{{ t('trip_detail.ops.tiles.route.subtitle') }}</div>
+              </button>
+              <button type="button" class="rounded-xl border bg-white p-4 text-left hover:bg-slate-50" @click="openOpsPanel('passengers')">
+                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-sky-700">👥</div>
+                <div class="mt-3 text-sm font-semibold text-slate-900 text-center">{{ t('trip_detail.ops.tiles.passengers.title') }}</div>
+                <div class="mt-1 text-xs text-slate-500 text-center">{{ t('trip_detail.ops.tiles.passengers.subtitle') }}</div>
+              </button>
+            </div>
+
+            <div v-if="resourceHint" class="mt-3 text-xs text-amber-800">{{ resourceHint }}</div>
+
+            <div v-if="opsPanel !== 'none'" class="mt-4 rounded-xl border bg-white p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div class="text-sm font-semibold text-slate-900">{{ opsPanelTitle }}</div>
+                <button type="button" class="text-xs font-semibold text-slate-600 hover:underline" @click="openOpsPanel('none')">
+                  {{ t('trip_detail.ops.close') }}
+                </button>
+              </div>
+
+              <div v-if="opsPanel === 'vehicle' || opsPanel === 'driver'" class="mt-3 grid gap-3 lg:grid-cols-2">
+                <Select v-model="driverChoice" :label="t('trip_detail.ops.form.driver')" :placeholder="t('trip_detail.ops.form.pick_driver')">
+                  <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
                   <option v-for="d in drivers" :key="d.id" :value="String(d.id)">
                     {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
                   </option>
                 </Select>
                 <Select
                   v-model="vehicleChoice"
-                  label="Xe"
-                  placeholder="Chọn biển số"
+                  :label="t('trip_detail.ops.form.vehicle')"
+                  :placeholder="t('trip_detail.ops.form.pick_vehicle')"
                   :disabled="!driverChoice"
-                  :hint="!driverChoice ? 'Chọn tài xế trước để mở danh sách xe.' : ''"
+                  :hint="!driverChoice ? t('trip_detail.ops.form.pick_driver_first') : ''"
                 >
-                  <option value="">— Không đổi / bỏ chọn —</option>
+                  <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
                   <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
                     {{ v.license_plate }} · {{ v.type ?? 'xe' }} {{ v.seat_count ? `(${v.seat_count} chỗ)` : '' }}
                   </option>
                 </Select>
-                <Input v-model.number="assign.transport_provider_id" label="transport_provider_id (tùy chọn)" type="number" />
-                <div class="flex items-center gap-3">
-                  <Button :loading="assigning" type="submit">Gán</Button>
+                <div class="lg:col-span-2">
+                  <Input v-model.number="assign.transport_provider_id" :label="t('trip_detail.ops.form.provider_id_optional')" type="number" />
+                </div>
+                <div class="lg:col-span-2 flex items-center gap-3">
+                  <Button :loading="assigning" type="button" @click="doAssign">{{ t('trip_detail.ops.form.assign') }}</Button>
                   <span v-if="assignMsg" class="text-sm text-slate-600">{{ assignMsg }}</span>
                 </div>
-              </form>
-            </div>
+              </div>
 
-            <div class="space-y-3">
-              <div class="text-sm font-semibold text-slate-900">Cập nhật trạng thái</div>
-              <form class="grid gap-3" @submit.prevent="doStatus">
-                <Select v-model="statusForm.status" label="Trạng thái" placeholder="Chọn">
-                  <option value="driver_confirmed">{{ labelTripStatus('driver_confirmed') }}</option>
-                  <option value="in_progress">{{ labelTripStatus('in_progress') }}</option>
-                  <option value="completed">{{ labelTripStatus('completed') }}</option>
-                  <option value="cancelled">{{ labelTripStatus('cancelled') }}</option>
-                </Select>
-                <Input v-model="statusForm.message" label="Ghi chú" />
-                <div class="flex items-center gap-3">
-                  <Button :loading="statusing" type="submit">Cập nhật</Button>
-                </div>
-              </form>
-
-              <div class="pt-2">
-                <div class="text-sm font-semibold text-slate-900">Chi phí (50 mới nhất)</div>
-                <div class="mt-2 space-y-2 text-sm">
-                  <div v-for="c in trip.costs ?? []" :key="c.id" class="flex justify-between border-b py-2">
-                    <span class="min-w-0 truncate">{{ c.type }} • {{ c.status }}</span>
-                    <span class="font-medium">{{ c.amount }} {{ c.currency }}</span>
-                  </div>
-                  <div v-if="!(trip.costs ?? []).length" class="text-slate-500">Chưa có.</div>
-                </div>
+              <div v-else-if="opsPanel === 'time'" class="mt-3 text-sm text-slate-600">
+                {{ t('trip_detail.ops.panels.coming_soon') }}
+              </div>
+              <div v-else-if="opsPanel === 'route'" class="mt-3 text-sm text-slate-600">
+                {{ t('trip_detail.ops.panels.coming_soon') }}
+              </div>
+              <div v-else-if="opsPanel === 'passengers'" class="mt-3 text-sm text-slate-600">
+                {{ t('trip_detail.ops.panels.coming_soon') }}
               </div>
             </div>
+          </div>
+        </Card>
+
+        <Card :title="t('trip_detail.status_update.title')">
+          <form class="grid gap-3 sm:grid-cols-3" @submit.prevent="doStatus">
+            <Select v-model="statusForm.status" :label="t('trip_detail.status_update.status')" :placeholder="t('trip_detail.status_update.pick')">
+              <option value="driver_confirmed">{{ labelTripStatus('driver_confirmed') }}</option>
+              <option value="in_progress">{{ labelTripStatus('in_progress') }}</option>
+              <option value="completed">{{ labelTripStatus('completed') }}</option>
+              <option value="cancelled">{{ labelTripStatus('cancelled') }}</option>
+            </Select>
+            <div class="sm:col-span-2">
+              <Input v-model="statusForm.message" :label="t('trip_detail.status_update.note')" />
+            </div>
+            <div class="sm:col-span-3 flex items-center gap-3">
+              <Button :loading="statusing" type="submit">{{ t('trip_detail.status_update.update') }}</Button>
+            </div>
+          </form>
+        </Card>
+
+        <Card :title="t('trip_detail.costs.title')">
+          <div class="space-y-2 text-sm">
+            <div v-for="c in trip.costs ?? []" :key="c.id" class="flex justify-between border-b py-2">
+              <span class="min-w-0 truncate">{{ c.type }} • {{ c.status }}</span>
+              <span class="font-medium">{{ c.amount }} {{ c.currency }}</span>
+            </div>
+            <div v-if="!(trip.costs ?? []).length" class="text-slate-500">{{ t('trip_detail.costs.empty') }}</div>
           </div>
         </Card>
       </div>
 
       <div class="space-y-4">
-        <Card title="Trip Information">
+        <Card :title="t('trip_detail.info.title')">
           <div class="space-y-3 text-sm">
             <div class="flex items-start justify-between gap-3">
-              <div class="text-slate-500">Trip ID</div>
+              <div class="text-slate-500">{{ t('trip_detail.info.trip_id') }}</div>
               <div class="font-medium text-slate-900">{{ tripCode }}</div>
             </div>
             <div class="flex items-start justify-between gap-3">
-              <div class="text-slate-500">Passengers</div>
+              <div class="text-slate-500">{{ t('trip_detail.info.passengers') }}</div>
               <div class="font-medium text-slate-900">{{ passengerLabel }}</div>
             </div>
             <div class="flex items-start justify-between gap-3">
-              <div class="text-slate-500">Trip type</div>
+              <div class="text-slate-500">{{ t('trip_detail.info.trip_type') }}</div>
               <div class="font-medium text-slate-900">{{ tripTypeLabel }}</div>
             </div>
             <div class="flex items-start justify-between gap-3">
-              <div class="text-slate-500">Requested by</div>
+              <div class="text-slate-500">{{ t('trip_detail.info.requested_by') }}</div>
               <div class="min-w-0 text-right">
                 <div class="truncate font-medium text-slate-900">{{ requesterName }}</div>
                 <a v-if="requesterPhone" class="text-xs text-slate-500 underline" :href="`tel:${requesterPhone}`">
@@ -201,7 +315,7 @@
 
             <div v-if="sla" class="pt-2">
               <div class="flex items-center justify-between text-xs text-slate-500">
-                <span>Service Level Agreement</span>
+                <span>{{ t('trip_detail.info.sla') }}</span>
                 <span :class="['font-medium', sla.isCritical ? 'text-rose-700' : 'text-emerald-700']">
                   {{ sla.label }}
                 </span>
@@ -213,14 +327,14 @@
           </div>
         </Card>
 
-        <Card title="Assigned Resources">
+        <Card :title="t('trip_detail.assigned.title')">
           <div class="space-y-3 text-sm">
             <div class="flex items-start justify-between gap-3">
-              <div class="text-slate-500">Vehicle</div>
+              <div class="text-slate-500">{{ t('trip_detail.assigned.vehicle') }}</div>
               <div class="font-medium text-slate-900">{{ trip.vehicle?.license_plate ?? '-' }}</div>
             </div>
             <div class="flex items-start justify-between gap-3">
-              <div class="text-slate-500">Driver</div>
+              <div class="text-slate-500">{{ t('trip_detail.assigned.driver') }}</div>
               <div class="min-w-0 text-right">
                 <div class="truncate font-medium text-slate-900">{{ trip.driver?.full_name ?? '-' }}</div>
                 <a v-if="trip.driver?.phone" class="text-xs text-slate-500 underline" :href="`tel:${trip.driver.phone}`">
@@ -229,68 +343,68 @@
               </div>
             </div>
             <div class="flex items-start justify-between gap-3">
-              <div class="text-slate-500">Provider</div>
+              <div class="text-slate-500">{{ t('trip_detail.assigned.provider') }}</div>
               <div class="font-medium text-slate-900">{{ trip.transport_provider?.name ?? '-' }}</div>
             </div>
           </div>
         </Card>
 
-        <Card title="Dispatcher Notes">
+        <Card :title="t('trip_detail.notes.title')">
           <div class="space-y-3">
             <div v-if="trip.dispatch_request?.notes" class="rounded-lg border bg-amber-50 p-3 text-sm text-amber-900">
-              <div class="text-xs font-medium text-amber-800">Ghi chú từ yêu cầu</div>
+              <div class="text-xs font-medium text-amber-800">{{ t('trip_detail.notes.from_request') }}</div>
               <div class="mt-1 whitespace-pre-wrap">{{ trip.dispatch_request.notes }}</div>
             </div>
 
             <div class="space-y-2">
               <div v-for="n in noteEvents" :key="n.id" class="rounded-lg border bg-white p-3">
                 <div class="flex items-baseline justify-between gap-2">
-                  <div class="text-xs font-medium text-slate-700">{{ n.creator?.name ?? 'System' }}</div>
+                  <div class="text-xs font-medium text-slate-700">{{ n.creator?.name ?? t('trip_detail.timeline.system') }}</div>
                   <div class="text-xs text-slate-400">{{ fmt(n.created_at) }}</div>
                 </div>
                 <div class="mt-1 whitespace-pre-wrap text-sm text-slate-800">{{ n.message }}</div>
               </div>
-              <div v-if="!noteEvents.length" class="text-sm text-slate-500">Chưa có note.</div>
+              <div v-if="!noteEvents.length" class="text-sm text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
             </div>
 
             <div class="pt-2">
-              <div class="text-sm font-semibold text-slate-900">+ Add new note</div>
+              <div class="text-sm font-semibold text-slate-900">{{ t('trip_detail.notes.add_title') }}</div>
               <textarea
                 v-model="newNote"
                 rows="3"
                 class="mt-2 w-full rounded-md border bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring"
-                placeholder="Ghi chú cho dispatcher/ops…"
+                :placeholder="t('trip_detail.notes.placeholder')"
               ></textarea>
               <div class="mt-2 flex items-center gap-2">
-                <Button :loading="noting" :disabled="!newNote.trim()" @click="addNote">Thêm note</Button>
+                <Button :loading="noting" :disabled="!newNote.trim()" @click="addNote">{{ t('trip_detail.notes.add_action') }}</Button>
                 <span v-if="noteMsg" class="text-sm text-slate-600">{{ noteMsg }}</span>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card title="Quick Actions">
+        <Card :title="t('trip_detail.quick.title')">
           <div class="grid gap-2">
             <a
               v-if="requesterPhone"
               class="inline-flex items-center justify-center rounded-md bg-va-800 px-3 py-2 text-sm font-medium text-white hover:bg-va-900"
               :href="`tel:${requesterPhone}`"
             >
-              Call requester
+              {{ t('trip_detail.quick.call_requester') }}
             </a>
             <a
               v-if="trip.driver?.phone"
               class="inline-flex items-center justify-center rounded-md border bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
               :href="`tel:${trip.driver.phone}`"
             >
-              Call driver
+              {{ t('trip_detail.quick.call_driver') }}
             </a>
             <button
               type="button"
               class="inline-flex items-center justify-center rounded-md border bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
               @click="scrollToOps"
             >
-              Reassign / Update status
+              {{ t('trip_detail.quick.reassign') }}
             </button>
           </div>
         </Card>
@@ -310,7 +424,7 @@ import Select from '../../components/ui/Select.vue'
 import { addTripEvent, assignTrip, getTrip, updateTripStatus } from '../../api/trips'
 import { listVehicles, listDrivers } from '../../api/operational'
 import { newIdempotencyKey } from '../../util/idempotency'
-import { labelTripStatus } from '../../util/labels'
+import { labelTripStatus, labelTripType } from '../../util/labels'
 const route = useRoute()
 const { t, locale } = useI18n()
 const trip = ref(null)
@@ -331,6 +445,7 @@ const noting = ref(false)
 const noteMsg = ref('')
 
 const assign = ref({ lock_version: 0, vehicle_id: null, driver_id: null, transport_provider_id: null })
+const opsPanel = ref('none') // none | vehicle | driver | time | route | passengers
 
 function fmt(v) {
   const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
@@ -346,9 +461,8 @@ const tripCode = computed(() => {
 const originLabel = computed(() => trip.value?.dispatch_request?.origin ?? '—')
 const destinationLabel = computed(() => trip.value?.dispatch_request?.destination ?? '—')
 const currentLabel = computed(() => {
-  if (trip.value?.status === 'completed') return '—'
-  if (trip.value?.status === 'cancelled') return '—'
-  return trip.value?.status === 'in_progress' ? 'En Route' : '—'
+  if (trip.value?.status === 'in_progress') return t('trip_detail.current_location.en_route')
+  return '—'
 })
 
 const passengerLabel = computed(() => {
@@ -358,15 +472,7 @@ const passengerLabel = computed(() => {
 })
 
 const tripTypeLabel = computed(() => {
-  const t = trip.value?.dispatch_request?.trip_type
-  if (!t) return '—'
-  const map = {
-    door_to_door: 'Door-to-door',
-    point_to_point: 'Point-to-point',
-    business: 'Business',
-    cargo: 'Cargo',
-  }
-  return map[t] ?? t
+  return labelTripType(trip.value?.dispatch_request?.trip_type)
 })
 
 const requesterName = computed(() => trip.value?.dispatch_request?.requester?.name ?? '—')
@@ -503,13 +609,34 @@ function scrollToOps() {
   opsEl.value?.$el?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
 }
 
+function openOpsPanel(which) {
+  opsPanel.value = which
+  if (which === 'none') return
+  // Ensure current values are reflected in selects
+  driverChoice.value = trip.value?.driver_id ? String(trip.value.driver_id) : ''
+  vehicleChoice.value = trip.value?.vehicle_id ? String(trip.value.vehicle_id) : ''
+  scrollToOps()
+}
+
+const opsPanelTitle = computed(() => {
+  const m = {
+    none: '',
+    vehicle: t('trip_detail.ops.panels.vehicle'),
+    driver: t('trip_detail.ops.panels.driver'),
+    time: t('trip_detail.ops.panels.time'),
+    route: t('trip_detail.ops.panels.route'),
+    passengers: t('trip_detail.ops.panels.passengers'),
+  }
+  return m[opsPanel.value] ?? ''
+})
+
 async function copyLink() {
   linkMsg.value = ''
   try {
     await navigator.clipboard.writeText(window.location.href)
-    linkMsg.value = 'Đã sao chép'
+    linkMsg.value = t('trip_detail.messages.copied')
   } catch {
-    linkMsg.value = 'Không sao chép được'
+    linkMsg.value = t('trip_detail.messages.copy_failed')
   }
 }
 
@@ -533,17 +660,17 @@ async function loadResources() {
     if (vr.status === 'fulfilled') {
       vehicles.value = vr.value.items ?? []
     } else {
-      resourceHint.value = 'Không tải được danh sách xe.'
+      resourceHint.value = t('trip_detail.ops.messages.vehicles_load_failed')
     }
     if (dr.status === 'fulfilled') {
       drivers.value = dr.value.items ?? []
     } else {
       resourceHint.value =
         resourceHint.value ||
-        'Không tải được danh sách tài xế.'
+        t('trip_detail.ops.messages.drivers_load_failed')
     }
   } catch {
-    resourceHint.value = 'Lỗi tải danh sách xe/tài xế.'
+    resourceHint.value = t('trip_detail.ops.messages.resources_load_failed')
   }
 }
 
@@ -575,10 +702,10 @@ async function doAssign() {
       payload.transport_provider_id = Number(assign.value.transport_provider_id)
     }
     await assignTrip(route.params.id, payload, { idempotencyKey: newIdempotencyKey() })
-    assignMsg.value = 'OK'
+    assignMsg.value = t('trip_detail.messages.ok')
     await load()
   } catch (e) {
-    assignMsg.value = e?.response?.data?.message ?? 'Lỗi'
+    assignMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
   } finally {
     assigning.value = false
   }
@@ -600,10 +727,10 @@ async function addNote() {
   try {
     await addTripEvent(route.params.id, { type: 'note', message: newNote.value.trim() })
     newNote.value = ''
-    noteMsg.value = 'OK'
+    noteMsg.value = t('trip_detail.messages.ok')
     await load()
   } catch (e) {
-    noteMsg.value = e?.response?.data?.message ?? 'Lỗi'
+    noteMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
   } finally {
     noting.value = false
   }

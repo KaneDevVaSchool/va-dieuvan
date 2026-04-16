@@ -704,15 +704,32 @@
   }
   ,
   "trip_detail": {
-    "step": {
-      "pending": "Pending",
-      "waiting": "Waiting",
-      "en_route": "En Route",
-      "arrived": "Arrived",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
+    "loading": "Loading…",
+    "title": "Trip details & timeline",
+    "created_at": "Created {time}",
+    "high_priority": "High priority",
+    "actions": {
+      "copy_link": "Copy link",
+      "export": "Export"
+    },
+    "messages": {
+      "ok": "OK",
+      "error": "Error",
+      "copied": "Copied",
+      "copy_failed": "Copy failed"
+    },
+    "current_location": {
+      "en_route": "En route"
+    },
+    "trip_status": {
+      "title": "Trip status",
+      "pickup": "PICKUP",
+      "current": "CURRENT",
+      "dropoff": "DROP-OFF"
     },
     "timeline": {
+      "title": "Activity timeline",
+      "empty": "No activity yet.",
       "trip_created": "Trip created",
       "trip_created_subtitle": "Type: {type}",
       "system": "System",
@@ -720,6 +737,107 @@
       "status_change_short": "Status change",
       "dispatcher_note": "Dispatcher note",
       "event": "Event"
+    },
+    "route_tracking": {
+      "title": "Live route tracking",
+      "route": "Route",
+      "open_map": "Open map",
+      "hint_no_gps": "Tip: GPS tracking is not available yet. “Open map” will open directions based on origin/destination."
+    },
+    "ops": {
+      "title": "Dispatch actions",
+      "subtitle": "Manage and adjust the trip",
+      "hint": "",
+      "active": "Active",
+      "change": "Change",
+      "close": "Close",
+      "adjust_vehicle": {
+        "title": "Adjust vehicle",
+        "current": "Current vehicle",
+        "type": "Vehicle type",
+        "assign_other": "Assign another vehicle"
+      },
+      "adjust_driver": {
+        "title": "Adjust driver",
+        "driver": "Driver",
+        "rating": "Rating",
+        "assign_other": "Assign another driver"
+      },
+      "tiles": {
+        "time": { "title": "Adjust time", "subtitle": "Change pickup/drop-off time" },
+        "route": { "title": "Change route", "subtitle": "Update pickup/drop-off points" },
+        "passengers": { "title": "Adjust passengers", "subtitle": "Add/remove passengers" }
+      },
+      "form": {
+        "driver": "Driver",
+        "vehicle": "Vehicle",
+        "pick_driver": "Pick a driver",
+        "pick_vehicle": "Pick a vehicle",
+        "pick_driver_first": "Pick a driver first to enable vehicles.",
+        "keep_or_clear": "— Keep / clear —",
+        "provider_id_optional": "transport_provider_id (optional)",
+        "assign": "Assign"
+      },
+      "panels": {
+        "vehicle": "Adjust vehicle / driver",
+        "driver": "Adjust vehicle / driver",
+        "time": "Adjust time",
+        "route": "Change route",
+        "passengers": "Adjust passengers",
+        "coming_soon": "Coming soon."
+      },
+      "messages": {
+        "vehicles_load_failed": "Could not load vehicles.",
+        "drivers_load_failed": "Could not load drivers.",
+        "resources_load_failed": "Could not load vehicles/drivers."
+      }
+    },
+    "info": {
+      "title": "Trip information",
+      "trip_id": "Trip ID",
+      "passengers": "Passengers",
+      "trip_type": "Trip type",
+      "requested_by": "Requested by",
+      "sla": "Service Level Agreement"
+    },
+    "assigned": {
+      "title": "Assigned resources",
+      "vehicle": "Vehicle",
+      "driver": "Driver",
+      "provider": "Provider"
+    },
+    "notes": {
+      "title": "Dispatcher notes",
+      "from_request": "Notes from request",
+      "empty": "No notes yet.",
+      "add_title": "+ Add new note",
+      "placeholder": "Add a note for dispatcher/ops…",
+      "add_action": "Add note"
+    },
+    "quick": {
+      "title": "Quick actions",
+      "call_requester": "Call requester",
+      "call_driver": "Call driver",
+      "reassign": "Reassign / update"
+    },
+    "status_update": {
+      "title": "Update status",
+      "status": "Status",
+      "pick": "Pick",
+      "note": "Note",
+      "update": "Update"
+    },
+    "costs": {
+      "title": "Costs (latest 50)",
+      "empty": "None yet."
+    },
+    "step": {
+      "pending": "Pending",
+      "waiting": "Waiting",
+      "en_route": "En Route",
+      "arrived": "Arrived",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     },
     "sla": {
       "overdue": "Overdue",
