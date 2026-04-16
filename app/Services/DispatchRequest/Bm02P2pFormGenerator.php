@@ -231,6 +231,7 @@ class Bm02P2pFormGenerator
         $sheet->getCell('B21')->setValueExplicit(self::EMPTY_MARK, DataType::TYPE_STRING);
         $sheet->setCellValue('E21', $vm['is_urgent'] ? $vm['urgent_reason'] : '');
 
+        $this->applyTargetAllocationSection($sheet, $vm);
         $this->applyCheckboxMarks($sheet, $vm);
 
         if ($vm['coordinator_line'] !== '') {
@@ -290,6 +291,55 @@ class Bm02P2pFormGenerator
         }
 
         $this->applyCheckboxVisualStyle($sheet);
+    }
+
+    /**
+     * Phần D thường bị lệch/mất nội dung khi template thay đổi.
+     * Luôn ghi lại label 4 cột (B/E/H/K + C/F/I/L) từ dữ liệu chuẩn để PDF/Excel nhất quán.
+     *
+     * @param array<string, mixed> $vm
+     */
+    private function applyTargetAllocationSection(Worksheet $sheet, array $vm): void
+    {
+        $labelCols = ['C', 'F', 'I', 'L'];
+        $checkboxCols = ['B', 'E', 'H', 'K'];
+        $startRow = 25;
+        $rows = 8; // 25..32
+
+        $slots = [];
+        foreach ($vm['target_table_rows'] ?? [] as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            foreach ($row as $slot) {
+                $slots[] = $slot;
+            }
+        }
+
+        for ($r = 0; $r < $rows; $r++) {
+            $excelRow = $startRow + $r;
+            $sheet->getRowDimension($excelRow)->setRowHeight(20);
+            for ($c = 0; $c < 4; $c++) {
+                $slot = $slots[$r * 4 + $c] ?? null;
+                $labelAddr = $labelCols[$c].$excelRow;
+                $checkboxAddr = $checkboxCols[$c].$excelRow;
+                $label = is_array($slot) ? (string) ($slot['label'] ?? '') : '';
+                $sheet->setCellValue($labelAddr, $label);
+
+                // Các ô checkbox "thừa" (nếu có) phải trống hoàn toàn để không tạo tick giả.
+                if ($label === '' && ! in_array($checkboxAddr, self::P2P_TARGET_CHECKBOX_CELLS, true)) {
+                    $sheet->setCellValue($checkboxAddr, '');
+                }
+            }
+        }
+
+        foreach (['C25:C32', 'F25:F32', 'I25:I32', 'L25:L32'] as $range) {
+            $sheet->getStyle($range)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                ->setVertical(Alignment::VERTICAL_CENTER)
+                ->setWrapText(true);
+            $sheet->getStyle($range)->getFont()->setSize(10);
+        }
     }
 
     private function applyCheckboxVisualStyle(Worksheet $sheet): void
