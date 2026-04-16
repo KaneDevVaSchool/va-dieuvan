@@ -101,11 +101,14 @@ class Bm02P2pFormGenerator
         $writerXlsx->save('php://output');
         $xlsxBinary = ob_get_clean();
 
-        // PDF renderer (mPDF) không luôn có Times New Roman; clone và đổi sang font Unicode an toàn để tránh vỡ dấu.
-        $pdfSpreadsheet = clone $ss;
-        $this->applyPdfSafeFont($pdfSpreadsheet);
-        $pdfBinary = $this->renderPdfFromSpreadsheet($pdfSpreadsheet);
-        $pdfSpreadsheet->disconnectWorksheets();
+        $pdfBinary = $this->renderPdfFromHtmlTemplate($vm);
+        if ($pdfBinary === null || $pdfBinary === '') {
+            // Fallback khi thiếu template HTML.
+            $pdfSpreadsheet = clone $ss;
+            $this->applyPdfSafeFont($pdfSpreadsheet);
+            $pdfBinary = $this->renderPdfFromSpreadsheet($pdfSpreadsheet);
+            $pdfSpreadsheet->disconnectWorksheets();
+        }
 
         return [
             'xlsx' => $xlsxBinary,
@@ -204,6 +207,147 @@ class Bm02P2pFormGenerator
                 $sheet->getStyle($range)->getFont()->setSize(11);
             }
         }
+    }
+
+    /**
+     * Dùng template HTML do nghiệp vụ duyệt để xuất PDF theo đúng bố cục mong muốn.
+     */
+    private function renderPdfFromHtmlTemplate(array $vm): ?string
+    {
+        $path = dirname(__DIR__, 3).'/scripts/bm02_dispatch_form.html';
+        if (! is_readable($path)) {
+            return null;
+        }
+        $html = file_get_contents($path);
+        if ($html === false || trim($html) === '') {
+            return null;
+        }
+
+        $html = preg_replace('#<script\b[^>]*>.*?</script>#is', '', $html) ?? $html;
+        $html = str_replace(
+            '<div class="target-grid" id="target-grid"></div>',
+            '<div class="target-grid" id="target-grid">'.$this->buildHtmlTargetGridCells($vm).'</div>',
+            $html,
+        );
+        $html = str_replace(
+            '<tbody id="trip-body"></tbody>',
+            '<tbody id="trip-body">'.$this->buildHtmlTripBodyRows($vm).'</tbody>',
+            $html,
+        );
+
+        $editableValues = [
+            (string) ($vm['issued_date'] ?? ''),
+            (string) ($vm['requester_name'] ?? ''),
+            (string) ($vm['requester_email'] ?? ''),
+            (string) ($vm['requester_phone'] ?? ''),
+            (string) ($vm['requester_unit'] ?? ''),
+            (string) ($vm['purpose'] ?? ''),
+            (string) ($vm['basis_note'] ?? ''),
+            (string) ($vm['proposed_date'] ?? ''),
+            (string) ($vm['date_needed'] ?? ''),
+            (string) (($vm['is_urgent'] ?? false) ? ($vm['urgent_reason'] ?? '') : ''),
+            (string) ($vm['coordinator_line'] ?? ''),
+            (string) ($vm['passenger_total'] ?? ''),
+            '',
+            '',
+        ];
+        $i = 0;
+        $html = preg_replace_callback(
+            '#<span class="field-line editable"[^>]*>(.*?)</span>#is',
+            function (array $m) use ($editableValues, &$i): string {
+                $val = $editableValues[$i] ?? '';
+                $i++;
+                $safe = htmlspecialchars((string) $val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                return preg_replace('#>(.*?)</span>#is', '>'.$safe.'</span>', $m[0]) ?? $m[0];
+            },
+            $html,
+        ) ?? $html;
+
+        // Checkbox "Gấp"
+        $html = str_replace(
+            '<span class="cb" id="cb-urgent" onclick="toggleCb(this)" title="Gấp">☐</span>',
+            '<span class="cb checked" id="cb-urgent" title="Gấp">'.(($vm['is_urgent'] ?? false) ? self::CHECKED_MARK : self::EMPTY_MARK).'</span>',
+            $html,
+        );
+
+        return $this->renderPdfFromHtml($html);
+    }
+
+    private function buildHtmlTargetGridCells(array $vm): string
+    {
+        $cells = [];
+        foreach (($vm['target_table_rows'] ?? []) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            foreach ($row as $slot) {
+                if (! is_array($slot)) {
+                    $cells[] = '<div class="target-cell"></div>';
+                    continue;
+                }
+                $label = htmlspecialchars((string) ($slot['label'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $checked = ! empty($slot['checked']) ? self::CHECKED_MARK : self::EMPTY_MARK;
+                $cells[] = '<div class="target-cell"><span class="cb">'.$checked.'</span><span>'.$label.'</span></div>';
+            }
+        }
+
+        return implode('', $cells);
+    }
+
+    private function buildHtmlTripBodyRows(array $vm): string
+    {
+        $rows = $vm['trip_lines'] ?? [];
+        $out = [];
+        for ($i = 0; $i < 5; $i++) {
+            $r = is_array($rows[$i] ?? null) ? $rows[$i] : [];
+            $vals = [
+                (string) ($r['depart_at'] ?? ''),
+                (string) ($r['pickup'] ?? ''),
+                (string) ($r['return_at'] ?? ''),
+                (string) ($r['dropoff'] ?? ''),
+                (string) ($r['guests'] ?? ''),
+                '', // Loại hình điều vận
+                '', // Thông tin xe
+                (string) ($r['person_in_charge'] ?? ''),
+                (string) ($r['unit_price'] ?? ''),
+                (string) ($r['extra_fee'] ?? ''),
+                (string) ($r['line_total'] ?? ''),
+                (string) ($r['notes'] ?? ''),
+            ];
+            $cells = '<td style="text-align:center;border:0.5px solid #bbb">'.($i + 1).'</td>';
+            foreach ($vals as $v) {
+                $safe = htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $cells .= '<td style="border:0.5px solid #bbb; min-height:16px;">'.$safe.'</td>';
+            }
+            $out[] = '<tr>'.$cells.'</tr>';
+        }
+
+        return implode('', $out);
+    }
+
+    private function renderPdfFromHtml(string $html): string
+    {
+        $tempDir = storage_path('app/mpdf-tmp');
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4-L',
+            'tempDir' => $tempDir,
+            'default_font' => 'dejavusans',
+            'autoScriptToLang' => true,
+            'autoLangToFont' => true,
+            'margin_left' => 6,
+            'margin_right' => 6,
+            'margin_top' => 6,
+            'margin_bottom' => 6,
+        ]);
+        $mpdf->SetTitle('BM.02 / MH.QT.04');
+        $mpdf->WriteHTML($html);
+
+        return $mpdf->Output('', 'S');
     }
 
     /**

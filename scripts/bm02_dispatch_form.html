@@ -1,0 +1,338 @@
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .form-wrap {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11px;
+    color: #111;
+    background: #fff;
+    padding: 12px 14px;
+    max-width: 1100px;
+    line-height: 1.4;
+  }
+  .header-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 160px;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .logo-box {
+    border: 1px solid #bbb;
+    width: 72px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; color: #888; text-align: center;
+    padding: 4px;
+  }
+  .title-center { text-align: center; }
+  .title-center h1 { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+  .title-center h2 { font-size: 11px; font-weight: normal; }
+  .meta-box { font-size: 9.5px; line-height: 1.8; text-align: right; }
+  .meta-box span { display: block; }
+  .section-header {
+    background: #ddd;
+    text-align: center;
+    font-weight: bold;
+    font-size: 10.5px;
+    padding: 2px 6px;
+    border: 0.5px solid #999;
+    margin: 4px 0 2px;
+    letter-spacing: 0.3px;
+  }
+  .field-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 1px 0;
+    border-bottom: 0.5px dotted #ccc;
+    min-height: 18px;
+  }
+  .field-row:last-child { border-bottom: none; }
+  .field-label { white-space: nowrap; font-size: 10px; color: #333; min-width: 0; }
+  .field-num { font-size: 9.5px; color: #555; margin-right: 2px; }
+  .field-line {
+    flex: 1;
+    border-bottom: 0.5px solid #555;
+    min-height: 14px;
+    display: inline-block;
+  }
+  .field-line.editable {
+    outline: none;
+    padding: 0 2px;
+  }
+  .field-line.editable:focus { background: #fffbe6; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .checkbox-row { display: flex; align-items: center; gap: 4px; padding: 1px 0; }
+  .cb { font-size: 13px; cursor: pointer; line-height: 1; }
+  .cb.checked { color: #222; }
+  .target-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-left: 0.5px solid #999;
+    border-top: 0.5px solid #999;
+  }
+  .target-cell {
+    border-right: 0.5px solid #999;
+    border-bottom: 0.5px solid #999;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    min-height: 18px;
+    font-size: 9.5px;
+  }
+  .target-cell .cb { font-size: 11px; }
+  table.trip-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+    margin-top: 3px;
+  }
+  table.trip-table th {
+    background: #eee;
+    border: 0.5px solid #999;
+    padding: 2px 3px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 9px;
+    line-height: 1.3;
+  }
+  table.trip-table td {
+    border: 0.5px solid #bbb;
+    padding: 2px 3px;
+    min-height: 16px;
+  }
+  table.trip-table td[contenteditable]:focus { background: #fffbe6; outline: none; }
+  .sign-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    margin-top: 4px;
+    text-align: center;
+    font-size: 9.5px;
+  }
+  .sign-cell { padding: 4px; min-height: 60px; }
+  .sign-cell .sign-title { font-weight: bold; font-size: 10px; border-bottom: 0.5px solid #999; padding-bottom: 2px; margin-bottom: 4px; }
+  .sign-cell .sign-name { margin-top: 8px; font-weight: bold; font-size: 10px; }
+  .sign-cell .sign-role { font-size: 9px; font-style: italic; color: #444; }
+  .purchase-section { border-top: 0.5px solid #999; margin-top: 4px; padding-top: 3px; }
+  .big-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border: 0.5px solid #999; padding: 2px 6px;
+    background: #f5f5f5; margin-bottom: 1px;
+    font-size: 9.5px;
+  }
+  .outer-border { border: 1px solid #888; padding: 0; }
+  .inner-pad { padding: 4px 6px; }
+  .urgency-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+  .total-row td { font-weight: bold; background: #f9f9f9; }
+  @media print {
+    .form-wrap { padding: 4px; }
+    .field-line.editable { background: none !important; }
+  }
+</style>
+
+<div class="form-wrap outer-border">
+  <div class="inner-pad">
+
+    <div class="header-row">
+      <div class="logo-box">VIETNAM<br>AMERICA<br>SCHOOLS</div>
+      <div class="title-center">
+        <h1>ĐỀ NGHỊ ĐIỀU VẬN</h1>
+        <h2>(Phục vụ Hành khách)</h2>
+      </div>
+      <div class="meta-box">
+        <span>Ký hiệu: <strong>BM.02/MH.QT.04</strong></span>
+        <span>Ngày ban hành: <span class="field-line editable" contenteditable style="min-width:70px">29/08/2025</span></span>
+        <span>Lần ban hành: 01</span>
+      </div>
+    </div>
+
+    <div class="section-header">A. Người đề nghị</div>
+    <div style="padding: 2px 4px;">
+      <div class="field-row">
+        <span class="field-num">a.1</span><span class="field-label">Họ và tên:</span>
+        <span class="field-line editable" contenteditable style="max-width:320px"></span>
+      </div>
+      <div class="field-row">
+        <span class="field-num">a.2</span><span class="field-label">Email và các nhận xét:</span>
+        <span class="field-line editable" contenteditable style="flex:1"></span>
+      </div>
+      <div class="field-row">
+        <span class="field-num">a.3</span><span class="field-label">Số điện thoại:</span>
+        <span class="field-line editable" contenteditable style="max-width:200px"></span>
+      </div>
+      <div class="field-row">
+        <span class="field-num">a.4</span><span class="field-label">Đơn vị:</span>
+        <span class="field-line editable" contenteditable style="flex:1"></span>
+      </div>
+    </div>
+
+    <div class="section-header">B. Mục đích sử dụng</div>
+    <div style="padding: 2px 4px;">
+      <div class="field-row">
+        <span class="field-num">b.1</span><span class="field-label">Mục đích sử dụng:</span>
+        <span class="field-line editable" contenteditable style="flex:1; min-height:22px"></span>
+      </div>
+      <div class="field-row">
+        <span class="field-num">b.2</span><span class="field-label">Căn cứ để xuất: Từ năm số .../ngày &amp; nội dung:</span>
+        <span class="field-line editable" contenteditable style="flex:1; min-height:22px"></span>
+      </div>
+    </div>
+
+    <div class="section-header">C. Thời gian</div>
+    <div style="padding: 2px 4px;">
+      <div class="field-row">
+        <span class="field-num">c.1</span><span class="field-label">Ngày đề xuất:</span>
+        <span class="field-line editable" contenteditable style="max-width:120px"></span>
+      </div>
+      <div style="font-size:8.5px; color:#555; padding: 1px 0 2px 12px; line-height:1.3;">
+        Lưu ý: số ngày đề nghị Điều vận nhận được đề nghị, thực quy trình làm việc với NOC để thiếu ẩm 01 ngày làm việc ngoài trừ trường hợp để xuất xe từ +3 chỗ hết tốn báo trước ít nhất 12 ngày làm việc. Các trường hợp yêu cầu ít hơn số ngày trên được xem là gấp yêu cầu để xuất phải bên dưới.
+      </div>
+      <div class="field-row">
+        <span class="field-num">c.2</span><span class="field-label">Ngày cần sử dụng xe:</span>
+        <span class="field-line editable" contenteditable style="max-width:140px"></span>
+      </div>
+      <div class="urgency-row">
+        <span class="cb" id="cb-urgent" onclick="toggleCb(this)" title="Gấp">☐</span>
+        <span class="field-label">Gấp:</span>
+        <span class="field-label">Lý do:</span>
+        <span class="field-line editable" contenteditable style="flex:1"></span>
+      </div>
+    </div>
+
+    <div class="section-header">D. Khu vực đối tượng được phân bổ</div>
+    <div style="padding: 2px 4px;">
+      <div style="font-size:9.5px; font-weight:bold; padding-bottom:3px;">d.1 Đối tượng sử dụng:</div>
+      <div class="target-grid" id="target-grid"></div>
+    </div>
+
+    <div class="section-header">E. NỘI DUNG CHUYẾN ĐI</div>
+    <div style="padding: 2px 4px;">
+      <div class="field-row" style="margin-bottom:3px;">
+        <span class="field-num">e.1</span><span class="field-label">Nội Dung đề xuất cho chương trình/sự kiện ngoại khóa <em>(Xem Sổng bộ danh sách)</em>:</span>
+        <span class="field-line editable" contenteditable style="flex:1"></span>
+      </div>
+      <table class="trip-table">
+        <thead>
+          <tr>
+            <th rowspan="2" style="width:28px">STT</th>
+            <th colspan="2">Chuyến đi</th>
+            <th colspan="2">Chuyến về</th>
+            <th rowspan="2" style="width:52px">Số lượng hành khách trên xe</th>
+            <th rowspan="2" style="width:62px">Loại hình điều vận</th>
+            <th rowspan="2" style="width:62px">Thông tin xe</th>
+            <th rowspan="2" style="width:62px">Người phụ trách<br><em>(Họ tên + SBT)</em></th>
+            <th rowspan="2" style="width:52px">Đơn giá<br><em>(Gồm VAT)</em></th>
+            <th rowspan="2" style="width:52px">Phí phát sinh<br><em>(Gồm VAT)</em></th>
+            <th rowspan="2" style="width:58px">Tổng chi phí<br><em>(Gồm VAT)</em></th>
+            <th rowspan="2" style="width:54px">Ghi chú</th>
+          </tr>
+          <tr>
+            <th style="width:68px">Thời gian</th>
+            <th style="width:68px">Địa điểm</th>
+            <th style="width:68px">Thời gian</th>
+            <th style="width:68px">Địa điểm</th>
+          </tr>
+        </thead>
+        <tbody id="trip-body"></tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="11" style="text-align:right; padding-right:6px;">Tổng:</td>
+            <td contenteditable class="field-line editable" style="border:0.5px solid #bbb;"></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="section-header">F. Phần Xác Nhận Của Các Bên Liên Quan:</div>
+    <div style="padding: 2px 4px;">
+      <div class="sign-grid">
+        <div class="sign-cell" style="border-right:0.5px solid #ddd">
+          <div class="sign-title">Trưởng phòng mua hàng</div>
+          <div style="min-height:50px"></div>
+        </div>
+        <div class="sign-cell" style="border-right:0.5px solid #ddd">
+          <div class="sign-title">Người đề xuất</div>
+          <div style="min-height:50px"></div>
+        </div>
+        <div class="sign-cell">
+          <div class="sign-title">Trưởng đơn vị đề xuất</div>
+          <div style="min-height:50px"></div>
+        </div>
+      </div>
+      <div class="sign-grid" style="margin-top:6px; border-top:0.5px solid #ddd; padding-top:4px;">
+        <div class="sign-cell" style="border-right:0.5px solid #ddd">
+          <div class="sign-name">Phạm Thanh Hùng</div>
+          <div class="sign-role">Giám đốc …</div>
+          <div style="font-size:8.5px; color:#666; font-style:italic">(bổ sung tùy vào lĩnh vực và thẩm quyền)</div>
+        </div>
+        <div class="sign-cell" style="border-right:0.5px solid #ddd">
+          <div style="margin-top:4px"><span class="sign-title">Giám đốc Vận hành</span></div>
+          <div style="min-height:40px"></div>
+        </div>
+        <div class="sign-cell">
+          <div style="margin-top:4px"><span class="sign-title">Tổng Giám đốc</span></div>
+          <div style="min-height:28px"></div>
+          <div class="sign-name">Bùi Quang Minh</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="purchase-section inner-pad">
+      <div class="section-header" style="margin-top:0">G. Phần xác nhận của phòng Mua Hàng:</div>
+      <div style="padding: 2px 4px;">
+        <div class="field-row">
+          <span class="field-num">g.1</span><span class="field-label">Mã văn đơn (PO):</span>
+          <span class="field-line editable" contenteditable style="max-width:220px"></span>
+        </div>
+        <div class="field-row">
+          <span class="field-num">g.2</span><span class="field-label">Ngày nhận đề nghị (đã được phê duyệt):</span>
+          <span class="field-line editable" contenteditable style="max-width:140px"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const TARGETS = [
+  'TiH Tân Bình','MN Phú Định','P. Kinh Doanh','Vườn Trường',
+  'THCS Tân Bình','TiH-THCS Phú Định','P. Công Nghệ','Ban TA TiHo',
+  'MN Bình Thới','MN Vĩnh Hội','BP.CUHC','Ban TA THCS',
+  'TiH Bình Thới','MN Thông Tây Hội','P. Kế Toán','Ban TA THPT',
+  'THCS Bình Thới','TiH-THCS Thông Tây Hội','P. Mua Hàng','VA - Cần Thơ',
+  'THPT VMA','MN Hạnh Thông','P. Đầu Tư','VA - Vũng Tàu',
+  'MN Hòa Bình','P.CSVC','Khóa Hè','Viễn Đông',
+  'P.HCNS','Tham vấn học đường','Ban Pháp chế (P.CSVC)',''
+];
+
+const grid = document.getElementById('target-grid');
+TARGETS.forEach((label, i) => {
+  const cell = document.createElement('div');
+  cell.className = 'target-cell';
+  if (label) {
+    cell.innerHTML = `<span class="cb" onclick="this.textContent=this.textContent==='☐'?'☑':'☐'">☐</span><span>${label}</span>`;
+  }
+  grid.appendChild(cell);
+});
+
+const tbody = document.getElementById('trip-body');
+for (let i = 1; i <= 5; i++) {
+  const tr = document.createElement('tr');
+  const cols = 13;
+  let html = `<td style="text-align:center;border:0.5px solid #bbb">${i}</td>`;
+  for (let c = 1; c < cols; c++) {
+    html += `<td contenteditable style="border:0.5px solid #bbb; min-height:16px; outline:none;" onfocus="this.style.background='#fffbe6'" onblur="this.style.background=''"></td>`;
+  }
+  tr.innerHTML = html;
+  tbody.appendChild(tr);
+}
+
+function toggleCb(el) {
+  el.textContent = el.textContent === '☐' ? '☑' : '☐';
+}
+</script>
