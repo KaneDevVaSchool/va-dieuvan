@@ -128,6 +128,36 @@ export async function downloadPdfAttachmentFromApi(attachmentId, filename) {
  * @param {{ filename?: string, bearerToken?: string|null }} [options]
  * @returns {Promise<{ ok: true } | { ok: false, reason: 'html' | 'not_pdf' }>}
  */
+/**
+ * Tải bất kỳ đính kèm nào (PDF, Excel, …) qua API đã xác thực.
+ * @param {number} attachmentId
+ * @param {string} [filename]
+ */
+export async function downloadBinaryAttachmentFromApi(attachmentId, filename) {
+  let res
+  try {
+    res = await http.get(`/attachments/${attachmentId}/download`, {
+      responseType: 'blob',
+      headers: { Accept: '*/*' },
+    })
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
+
+  const blob = res.data
+  if (!(blob instanceof Blob)) {
+    throw new Error('invalid_response')
+  }
+
+  const ct = String(res.headers['content-type'] || '').toLowerCase()
+  if (ct.includes('text/html') || ct.includes('application/json')) {
+    throw new Error('unexpected_body')
+  }
+
+  saveAs(blob, filename || 'download')
+}
+
 export async function downloadPdfAttachmentFromUrl(url, options = {}) {
   const { filename = 'document.pdf', bearerToken = null } = options
 

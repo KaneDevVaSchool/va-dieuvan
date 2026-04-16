@@ -566,7 +566,7 @@
                   <button
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
-                    :disabled="!bm02PdfBase64"
+                    :disabled="!canDownloadBm02Pdf"
                     @click="downloadBm02Pdf"
                   >
                     <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
@@ -575,7 +575,7 @@
                   <button
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
-                    :disabled="!bm02ExcelBase64"
+                    :disabled="!canDownloadBm02Excel"
                     @click="downloadBm02Excel"
                   >
                     <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
@@ -583,8 +583,7 @@
                   </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  Xem trước bằng <span class="font-medium">PDF</span> (cùng bản in với file đính kèm). Dùng
-                  <span class="font-medium">Tải Excel</span> khi cần chỉnh trực tiếp trên bảng tính.
+                  Trước khi gửi: PDF tạo tạm để xem. Sau khi gửi thành công: hệ thống dùng đúng file BM.02 đã lưu trong đính kèm (cùng nội dung khi tải từ chi tiết yêu cầu).
                 </p>
                 <div v-if="bm02PdfUrl" class="mt-4 space-y-1.5">
                   <div class="flex flex-wrap items-center justify-between gap-2">
@@ -854,6 +853,8 @@ const {
   bm02PdfUrl,
   bm02PdfBase64,
   bm02ExcelBase64,
+  canDownloadBm02Pdf,
+  canDownloadBm02Excel,
   created,
   hasDraftSnapshot,
   clearDraftModalOpen,

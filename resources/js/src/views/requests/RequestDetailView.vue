@@ -33,6 +33,56 @@
       </div>
     </Card>
 
+    <Card v-if="bm02PdfAttachment || bm02ExcelAttachment" title="BM.02 đính kèm (Điểm — Điểm)">
+      <p class="mb-3 text-xs text-slate-500">
+        File đã lưu trên máy chủ — xem trước PDF hoặc tải Excel/PDF qua API (có xác thực).
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <Button
+          v-if="bm02PdfAttachment"
+          variant="secondary"
+          type="button"
+          class="text-xs"
+          :loading="bm02DownloadBusy === `pdf-${bm02PdfAttachment.id}`"
+          @click="downloadBm02File(bm02PdfAttachment, 'pdf')"
+        >
+          Tải PDF
+        </Button>
+        <Button
+          v-if="bm02ExcelAttachment"
+          variant="secondary"
+          type="button"
+          class="text-xs"
+          :loading="bm02DownloadBusy === `xlsx-${bm02ExcelAttachment.id}`"
+          @click="downloadBm02File(bm02ExcelAttachment, 'xlsx')"
+        >
+          Tải Excel
+        </Button>
+      </div>
+      <div v-if="bm02PdfPreviewUrl" class="mt-4 space-y-1.5">
+        <div class="text-xs font-medium text-slate-700">Xem trước PDF</div>
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm">
+          <iframe
+            :src="bm02PdfPreviewUrl"
+            class="block h-[min(65vh,520px)] w-full min-h-[240px] border-0 bg-white"
+            title="BM.02 PDF"
+          />
+        </div>
+        <a
+          :href="bm02PdfPreviewUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-xs font-medium text-teal-700 hover:text-teal-800"
+        >
+          Mở tab mới
+        </a>
+      </div>
+      <p v-if="bm02DownloadErr" class="mt-2 text-xs text-rose-600">{{ bm02DownloadErr }}</p>
+      <p v-if="bm02PdfAttachment && !bm02PdfPreviewUrl && bm02PreviewErr" class="mt-2 text-xs text-rose-600">
+        {{ bm02PreviewErr }}
+      </p>
+    </Card>
+
     <Card v-if="req.status === 'pending'" title="Thao tác">
       <div class="flex flex-col gap-3 md:flex-row">
         <Button :loading="acting" @click="decide('approve')">Duyệt</Button>
@@ -103,13 +153,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import { runAttachmentOcr, uploadAttachment } from '../../api/attachments'
+import { downloadBinaryAttachmentFromApi, fetchPdfBlobForPreview } from '../../util/downloadPdfAttachment'
 import { decideDispatchRequest, getDispatchRequest, markPaperReceived } from '../../api/requests'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelPaperStatus, labelRequestStatus, labelSourceChannel, labelTripType } from '../../util/labels'
@@ -131,6 +182,61 @@ const paperScans = computed(() => {
   return list.filter((a) => a.kind === 'paper_scan')
 })
 
+const bm02PdfAttachment = computed(() => {
+  const list = req.value?.attachments ?? []
+  return list.find((a) => a.kind === 'bm02_pdf') ?? null
+})
+
+const bm02ExcelAttachment = computed(() => {
+  const list = req.value?.attachments ?? []
+  return list.find((a) => a.kind === 'bm02_excel') ?? null
+})
+
+const bm02PdfPreviewUrl = ref(null)
+const bm02PreviewErr = ref('')
+const bm02DownloadBusy = ref(null)
+const bm02DownloadErr = ref('')
+let bm02PdfBlobUrlToRevoke = null
+
+async function setupBm02PdfPreview() {
+  bm02PreviewErr.value = ''
+  if (bm02PdfBlobUrlToRevoke) {
+    try {
+      URL.revokeObjectURL(bm02PdfBlobUrlToRevoke)
+    } catch {
+      /* ignore */
+    }
+    bm02PdfBlobUrlToRevoke = null
+  }
+  bm02PdfPreviewUrl.value = null
+  const pdf = bm02PdfAttachment.value
+  if (!pdf?.id) return
+  try {
+    const r = await fetchPdfBlobForPreview(pdf.id)
+    if (r.ok) {
+      bm02PdfPreviewUrl.value = URL.createObjectURL(r.blob)
+      bm02PdfBlobUrlToRevoke = bm02PdfPreviewUrl.value
+    } else {
+      bm02PreviewErr.value = 'Không hiển thị được PDF (định dạng không hợp lệ).'
+    }
+  } catch {
+    bm02PreviewErr.value = 'Không tải được PDF để xem trước.'
+  }
+}
+
+async function downloadBm02File(att, kind) {
+  if (!att?.id) return
+  bm02DownloadErr.value = ''
+  bm02DownloadBusy.value = `${kind}-${att.id}`
+  try {
+    await downloadBinaryAttachmentFromApi(att.id, att.original_name || (kind === 'pdf' ? 'BM02.pdf' : 'BM02.xlsx'))
+  } catch {
+    bm02DownloadErr.value = 'Không tải được tệp đính kèm.'
+  } finally {
+    bm02DownloadBusy.value = null
+  }
+}
+
 function paperBadgeClass(status) {
   if (status === 'received' || status === 'digitally_signed') return 'bg-emerald-50 text-emerald-800'
   if (status === 'pending') return 'bg-amber-50 text-amber-800'
@@ -143,11 +249,13 @@ function fmt(v) {
 
 async function load() {
   loading.value = true
+  bm02DownloadErr.value = ''
   try {
     req.value = await getDispatchRequest(route.params.id)
     if (req.value?.paper_status === 'pending') {
       paperForm.value.paper_reference = req.value.paper_reference ?? ''
     }
+    await setupBm02PdfPreview()
   } finally {
     loading.value = false
   }
@@ -217,4 +325,15 @@ async function decide(d) {
 
 onMounted(load)
 watch(() => route.params.id, load)
+
+onBeforeUnmount(() => {
+  if (bm02PdfBlobUrlToRevoke) {
+    try {
+      URL.revokeObjectURL(bm02PdfBlobUrlToRevoke)
+    } catch {
+      /* ignore */
+    }
+    bm02PdfBlobUrlToRevoke = null
+  }
+})
 </script>
