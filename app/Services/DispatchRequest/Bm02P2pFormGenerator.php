@@ -24,14 +24,14 @@ class Bm02P2pFormGenerator
 
     /** Cùng thứ tự với `targetOptions` trong DispatchRequestCreateView.vue — ô tick tương ứng (null = không có checkbox). */
     private const P2P_TARGET_CHECKBOX_CELLS = [
-        'B25', null, 'H25', 'K25',
-        'B26', null, 'H26', 'K26',
-        'B27', null, 'H27', 'K27',
-        'B28', null, 'H28', 'K28',
-        'B29', null, 'H29', 'K29',
-        'B30', null, 'H30', 'K30',
-        'B31', null, 'H31', 'K31',
-        'B32', null, 'H32',
+        'B25', 'E25', 'H25', 'K25',
+        'B26', 'E26', 'H26', 'K26',
+        'B27', 'E27', 'H27', 'K27',
+        'B28', 'E28', 'H28', 'K28',
+        'B29', 'E29', 'H29', 'K29',
+        'B30', 'E30', 'H30', 'K30',
+        'B31', 'E31', 'H31', 'K31',
+        'B32', 'E32', 'H32',
     ];
 
     /** @var array<int, string> */
