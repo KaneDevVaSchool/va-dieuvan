@@ -63,8 +63,9 @@ class TripController extends Controller
             'driver:id,full_name,phone',
             'transportProvider:id,name',
             'dispatchRequest',
+            'dispatchRequest.requester:id,name,phone',
             'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
-            'events' => fn ($q) => $q->orderByDesc('id')->limit(50),
+            'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
         ]);
 
         return $this->ok($trip);
