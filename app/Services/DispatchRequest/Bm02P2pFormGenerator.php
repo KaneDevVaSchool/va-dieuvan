@@ -93,6 +93,7 @@ class Bm02P2pFormGenerator
             ->setSubject('BM.02/MH.QT.04');
 
         $this->fillSpreadsheetFromViewModel($sheet, $vm);
+        $this->applyBm02ReadableColumnWidths($sheet);
 
         $writerXlsx = IOFactory::createWriter($ss, 'Xlsx');
         ob_start();
@@ -105,6 +106,35 @@ class Bm02P2pFormGenerator
             'xlsx' => $xlsxBinary,
             'pdf' => $pdfBinary,
         ];
+    }
+
+    /**
+     * PdfWriter (Mpdf) dựng HTML từ lưới — nếu cột nhãn trong mẫu quá hẹp, chữ tiếng Việt bị xuống dòng lộn xộn.
+     * Ghi đè độ rộng tối thiểu cho vùng form (A–N) sau khi điền dữ liệu; không đụng các sheet khác.
+     */
+    private function applyBm02ReadableColumnWidths(Worksheet $sheet): void
+    {
+        $widths = [
+            'A' => 8,
+            'B' => 42,
+            'C' => 18,
+            'D' => 16,
+            'E' => 40,
+            'F' => 12,
+            'G' => 22,
+            'H' => 14,
+            'I' => 10,
+            'J' => 16,
+            'K' => 12,
+            'L' => 12,
+            'M' => 14,
+            'N' => 22,
+        ];
+        foreach ($widths as $col => $w) {
+            $dim = $sheet->getColumnDimension($col);
+            $dim->setAutoSize(false);
+            $dim->setWidth($w);
+        }
     }
 
     /**
