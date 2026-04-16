@@ -102,7 +102,11 @@ class Bm02P2pFormGenerator
         $writerXlsx->save('php://output');
         $xlsxBinary = ob_get_clean();
 
-        $pdfBinary = $this->renderPdfFromSpreadsheet($ss);
+        // PDF renderer (mPDF) không luôn có Times New Roman; clone và đổi sang font Unicode an toàn để tránh vỡ dấu.
+        $pdfSpreadsheet = clone $ss;
+        $this->applyPdfSafeFont($pdfSpreadsheet);
+        $pdfBinary = $this->renderPdfFromSpreadsheet($pdfSpreadsheet);
+        $pdfSpreadsheet->disconnectWorksheets();
 
         return [
             'xlsx' => $xlsxBinary,
@@ -179,6 +183,17 @@ class Bm02P2pFormGenerator
         $margins->setRight(0.25);
         $margins->setTop(0.25);
         $margins->setBottom(0.25);
+    }
+
+    private function applyPdfSafeFont(Spreadsheet $spreadsheet): void
+    {
+        $spreadsheet->getDefaultStyle()->getFont()
+            ->setName('DejaVu Serif')
+            ->setSize(12);
+
+        foreach ($spreadsheet->getAllSheets() as $sheet) {
+            $sheet->getStyle($sheet->calculateWorksheetDimension())->getFont()->setName('DejaVu Serif')->setSize(12);
+        }
     }
 
     /**
