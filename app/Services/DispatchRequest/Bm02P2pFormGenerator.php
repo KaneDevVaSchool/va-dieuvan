@@ -3,6 +3,7 @@
 namespace App\Services\DispatchRequest;
 
 use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
@@ -328,6 +329,7 @@ class Bm02P2pFormGenerator
         $checkboxCols = ['B', 'E', 'H', 'K'];
         $startRow = 25;
         $rows = 8; // 25..32
+        $mergedRanges = array_values($sheet->getMergeCells());
 
         $slots = [];
         foreach ($vm['target_table_rows'] ?? [] as $row) {
@@ -347,7 +349,8 @@ class Bm02P2pFormGenerator
                 $labelAddr = $labelCols[$c] . $excelRow;
                 $checkboxAddr = $checkboxCols[$c] . $excelRow;
                 $label = is_array($slot) ? (string) ($slot['label'] ?? '') : '';
-                $sheet->setCellValue($labelAddr, $label);
+                $writeAddr = $this->resolveWritableCellAddress($labelAddr, $mergedRanges);
+                $sheet->setCellValue($writeAddr, $label);
                 $maxChars = max($maxChars, mb_strlen($label, 'UTF-8'));
 
                 // Các ô checkbox "thừa" (nếu có) phải trống hoàn toàn để không tạo tick giả.
@@ -366,6 +369,35 @@ class Bm02P2pFormGenerator
                 ->setWrapText(true);
             $sheet->getStyle($range)->getFont()->setSize(9.25);
         }
+
+        // Thêm lớp style phủ rộng toàn khối để khi template thay đổi merge/ô vẫn không vỡ hiển thị.
+        $sheet->getStyle('B25:M32')->getAlignment()->setVertical(Alignment::VERTICAL_TOP)->setWrapText(true);
+        $sheet->getStyle('C25:M32')->getFont()->setSize(9.25);
+    }
+
+    /**
+     * Nếu ô nằm trong merge range và không phải top-left, phải ghi vào top-left mới hiển thị.
+     *
+     * @param list<string> $mergedRanges
+     */
+    private function resolveWritableCellAddress(string $addr, array $mergedRanges): string
+    {
+        [$col, $row] = Coordinate::coordinateFromString(strtoupper($addr));
+        $targetCol = Coordinate::columnIndexFromString($col);
+        $targetRow = (int) $row;
+        foreach ($mergedRanges as $range) {
+            [$start, $end] = Coordinate::rangeBoundaries($range);
+            $startCol = (int) $start[0];
+            $startRow = (int) $start[1];
+            $endCol = (int) $end[0];
+            $endRow = (int) $end[1];
+            if ($targetCol < $startCol || $targetCol > $endCol || $targetRow < $startRow || $targetRow > $endRow) {
+                continue;
+            }
+            return Coordinate::stringFromColumnIndex($startCol).$startRow;
+        }
+
+        return strtoupper($addr);
     }
 
     private function applyCheckboxVisualStyle(Worksheet $sheet): void
