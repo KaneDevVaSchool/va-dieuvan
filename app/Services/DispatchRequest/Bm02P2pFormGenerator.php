@@ -8,6 +8,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfMpdfWriter;
 
@@ -93,6 +95,7 @@ class Bm02P2pFormGenerator
 
         $this->fillSpreadsheetFromViewModel($sheet, $vm);
         $this->applyBm02ReadableColumnWidths($sheet);
+        $this->applyBm02VisualPolish($ss, $sheet);
 
         $writerXlsx = IOFactory::createWriter($ss, 'Xlsx');
         ob_start();
@@ -134,6 +137,48 @@ class Bm02P2pFormGenerator
             $dim->setAutoSize(false);
             $dim->setWidth($w);
         }
+    }
+
+    private function applyBm02VisualPolish(Spreadsheet $spreadsheet, Worksheet $sheet): void
+    {
+        $spreadsheet->getDefaultStyle()->getFont()
+            ->setName('Times New Roman')
+            ->setSize(12.5);
+
+        $sheet->getStyle('A53:N56')->getBorders()->getOutline()->setBorderStyle(Border::BORDER_MEDIUM);
+        $sheet->getStyle('A53:N56')->getBorders()->getInside()->setBorderStyle(Border::BORDER_THIN);
+        $sheet->getStyle('A53:N56')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+
+        $sheet->getStyle('A1:N4')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER);
+
+        foreach ($sheet->getDrawingCollection() as $drawing) {
+            if (method_exists($drawing, 'setResizeProportional')) {
+                $drawing->setResizeProportional(true);
+            }
+            if (method_exists($drawing, 'setHeight')) {
+                $drawing->setHeight(56);
+            }
+            if (method_exists($drawing, 'setOffsetX')) {
+                $drawing->setOffsetX(6);
+            }
+            if (method_exists($drawing, 'setOffsetY')) {
+                $drawing->setOffsetY(4);
+            }
+        }
+
+        $setup = $sheet->getPageSetup();
+        $setup->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
+        $setup->setPaperSize(PageSetup::PAPERSIZE_A3);
+        $setup->setFitToWidth(1);
+        $setup->setFitToHeight(0);
+
+        $margins = $sheet->getPageMargins();
+        $margins->setLeft(0.25);
+        $margins->setRight(0.25);
+        $margins->setTop(0.25);
+        $margins->setBottom(0.25);
     }
 
     /**
