@@ -185,22 +185,3 @@
 .dispatch-wizard .dw-date-input {
   @apply cursor-pointer;
 }
-
-.dispatch-wizard .bm02-excel-sheet-preview__scroll {
-  @apply overflow-auto;
-}
-.dispatch-wizard .bm02-excel-sheet-preview__html {
-  @apply inline-block min-w-full bg-white p-2;
-}
-.dispatch-wizard .bm02-excel-sheet-preview__html table {
-  border-collapse: collapse;
-  font-size: 11px;
-  line-height: 1.25;
-  font-family: ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
-}
-.dispatch-wizard .bm02-excel-sheet-preview__html td,
-.dispatch-wizard .bm02-excel-sheet-preview__html th {
-  border: 1px solid rgb(203 213 225);
-  padding: 2px 5px;
-  vertical-align: middle;
-}

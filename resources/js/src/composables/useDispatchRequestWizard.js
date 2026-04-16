@@ -14,7 +14,6 @@ import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { newIdempotencyKey } from '../util/idempotency'
 import { toDatetimeLocalValue } from '../util/datetime'
-import { buildBm02ExcelSheetPreviewHtml } from '../util/bm02ExcelPreview'
 import {
   LEGACY_DRAFT_KEY,
   WIZARD_STEPS,
@@ -147,7 +146,6 @@ export function useDispatchRequestWizard() {
   const bm02PdfUrl = ref(null)
   const bm02PdfBase64 = ref('')
   const bm02ExcelBase64 = ref('')
-  const bm02SheetPreviewHtml = ref('')
   const bm02FilenamePdf = ref('BM02-denghi-dieuvan-preview.pdf')
   const bm02FilenameXlsx = ref('BM02-denghi-dieuvan-preview.xlsx')
   const created = ref(null)
@@ -172,6 +170,7 @@ export function useDispatchRequestWizard() {
   const requesterSearchResults = ref([])
   const requesterSearchLoading = ref(false)
   const requesterDropdownOpen = ref(false)
+  const requesterSearchError = ref('')
   let requesterBlurTimer = null
 
   let coordinatorSearchTimer = null
@@ -179,6 +178,7 @@ export function useDispatchRequestWizard() {
   const coordinatorSearchResults = ref([])
   const coordinatorSearchLoading = ref(false)
   const coordinatorDropdownOpen = ref(false)
+  const coordinatorSearchError = ref('')
   let coordinatorBlurTimer = null
 
   const passengerRows = ref([emptyPassengerRow()])
@@ -248,6 +248,27 @@ export function useDispatchRequestWizard() {
     return d
   }
 
+  /** Chuỗi yyyy-mm-dd (input type=date) → timestamp nửa đêm local. */
+  function isoLocalDateMs(iso) {
+    const m = String(iso ?? '').match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!m) return null
+    const t = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime()
+    return Number.isNaN(t) ? null : t
+  }
+
+  function isDateNeededBeforeProposed(proposedDate, dateNeeded) {
+    const a = isoLocalDateMs(proposedDate)
+    const b = isoLocalDateMs(dateNeeded)
+    if (a == null || b == null) return false
+    return b < a
+  }
+
+  function isPlausibleEmail(s) {
+    const t = String(s ?? '').trim()
+    if (!t) return false
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)
+  }
+
   function formatOrgUnitFromUser(u) {
     const parts = [u.unit_name, u.department_name].filter(Boolean)
     if (parts.length) return parts.join(' — ')
@@ -295,6 +316,7 @@ export function useDispatchRequestWizard() {
   }
 
   function scheduleRequesterSearch() {
+    requesterSearchError.value = ''
     clearTimeout(requesterSearchTimer)
     requesterSearchTimer = setTimeout(runRequesterSearch, 350)
   }
@@ -303,16 +325,20 @@ export function useDispatchRequestWizard() {
     const q = requesterSearchQ.value.trim()
     if (q.length < 2) {
       requesterSearchResults.value = []
+      requesterSearchError.value = ''
       requesterDropdownOpen.value = false
       return
     }
     requesterSearchLoading.value = true
+    requesterDropdownOpen.value = true
     try {
       requesterSearchResults.value = await searchUsersForDispatchForm(q)
-      requesterDropdownOpen.value = requesterSearchResults.value.length > 0
-    } catch {
+      requesterSearchError.value = ''
+      requesterDropdownOpen.value = true
+    } catch (e) {
       requesterSearchResults.value = []
-      requesterDropdownOpen.value = false
+      requesterSearchError.value = formatApiError(e, 'Không tìm kiếm được nhân sự.')
+      requesterDropdownOpen.value = true
     } finally {
       requesterSearchLoading.value = false
     }
@@ -320,7 +346,7 @@ export function useDispatchRequestWizard() {
 
   function onRequesterSearchFocus() {
     clearTimeout(requesterBlurTimer)
-    if (requesterSearchResults.value.length) requesterDropdownOpen.value = true
+    if (requesterSearchQ.value.trim().length >= 2) requesterDropdownOpen.value = true
   }
 
   function onRequesterSearchBlur() {
@@ -330,6 +356,7 @@ export function useDispatchRequestWizard() {
   }
 
   function pickRequester(u) {
+    requesterSearchError.value = ''
     form.value.requester_name = u.name || ''
     form.value.requester_email = u.email || ''
     form.value.requester_phone = sanitizeVnPhoneDigits(u.phone || '')
@@ -340,6 +367,7 @@ export function useDispatchRequestWizard() {
   }
 
   function scheduleCoordinatorSearch() {
+    coordinatorSearchError.value = ''
     clearTimeout(coordinatorSearchTimer)
     coordinatorSearchTimer = setTimeout(runCoordinatorSearch, 350)
   }
@@ -348,16 +376,20 @@ export function useDispatchRequestWizard() {
     const q = coordinatorSearchQ.value.trim()
     if (q.length < 2) {
       coordinatorSearchResults.value = []
+      coordinatorSearchError.value = ''
       coordinatorDropdownOpen.value = false
       return
     }
     coordinatorSearchLoading.value = true
+    coordinatorDropdownOpen.value = true
     try {
       coordinatorSearchResults.value = await searchUsersForDispatchForm(q)
-      coordinatorDropdownOpen.value = coordinatorSearchResults.value.length > 0
-    } catch {
+      coordinatorSearchError.value = ''
+      coordinatorDropdownOpen.value = true
+    } catch (e) {
       coordinatorSearchResults.value = []
-      coordinatorDropdownOpen.value = false
+      coordinatorSearchError.value = formatApiError(e, 'Không tìm kiếm được nhân sự.')
+      coordinatorDropdownOpen.value = true
     } finally {
       coordinatorSearchLoading.value = false
     }
@@ -365,7 +397,7 @@ export function useDispatchRequestWizard() {
 
   function onCoordinatorSearchFocus() {
     clearTimeout(coordinatorBlurTimer)
-    if (coordinatorSearchResults.value.length) coordinatorDropdownOpen.value = true
+    if (coordinatorSearchQ.value.trim().length >= 2) coordinatorDropdownOpen.value = true
   }
 
   function onCoordinatorSearchBlur() {
@@ -375,6 +407,7 @@ export function useDispatchRequestWizard() {
   }
 
   function pickCoordinator(u) {
+    coordinatorSearchError.value = ''
     form.value.coordinator_name = u.name || ''
     form.value.coordinator_email = u.email || ''
     form.value.coordinator_phone = sanitizeVnPhoneDigits(u.phone || '')
@@ -510,15 +543,30 @@ export function useDispatchRequestWizard() {
     }
   }
 
+  const step2DateOrderInvalid = computed(() =>
+    isDateNeededBeforeProposed(form.value.proposed_date, form.value.date_needed),
+  )
+
+  const step2RequesterEmailInvalid = computed(
+    () => !!form.value.requester_email?.trim() && !isPlausibleEmail(form.value.requester_email),
+  )
+
+  const step2CoordinatorEmailInvalid = computed(
+    () => !!form.value.coordinator_email?.trim() && !isPlausibleEmail(form.value.coordinator_email),
+  )
+
   const canGoNext = computed(() => {
     if (step.value === 0) return !!form.value.trip_type
     if (step.value === 1) {
       return (
         !!form.value.requester_name?.trim() &&
         !!form.value.requester_email?.trim() &&
+        isPlausibleEmail(form.value.requester_email) &&
+        !step2CoordinatorEmailInvalid.value &&
         !!form.value.purpose?.trim() &&
         !!form.value.proposed_date &&
         !!form.value.date_needed &&
+        !step2DateOrderInvalid.value &&
         (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
       )
     }
@@ -740,12 +788,21 @@ export function useDispatchRequestWizard() {
     if (
       !form.value.requester_name?.trim() ||
       !form.value.requester_email?.trim() ||
+      !isPlausibleEmail(form.value.requester_email) ||
       !form.value.purpose?.trim() ||
       !form.value.proposed_date ||
       !form.value.date_needed
     ) {
       step.value = 1
       return 'Điền đủ thông tin bước 2 (A–C, mục đích).'
+    }
+    if (step2CoordinatorEmailInvalid.value) {
+      step.value = 1
+      return 'Email nhân sự điều phối không hợp lệ.'
+    }
+    if (isDateNeededBeforeProposed(form.value.proposed_date, form.value.date_needed)) {
+      step.value = 1
+      return 'Ngày cần sử dụng xe không được sớm hơn ngày đề xuất.'
     }
     if (form.value.is_urgent && !form.value.urgent_reason?.trim()) {
       step.value = 1
@@ -864,7 +921,6 @@ export function useDispatchRequestWizard() {
       }
       bm02PdfUrl.value = null
     }
-    bm02SheetPreviewHtml.value = ''
   }
 
   function base64ToBlob(base64, mime) {
@@ -890,9 +946,7 @@ export function useDispatchRequestWizard() {
     bm02ExcelBase64.value = ''
     bm02Loading.value = true
     const prevPdfUrl = bm02PdfUrl.value
-    const prevSheetHtml = bm02SheetPreviewHtml.value
     bm02PdfUrl.value = null
-    bm02SheetPreviewHtml.value = ''
     try {
       const data = await previewBm02DispatchForm(buildWizardSnapshot())
       bm02PdfBase64.value = data.pdf_base64 ?? ''
@@ -901,12 +955,6 @@ export function useDispatchRequestWizard() {
       if (data.filename_xlsx) bm02FilenameXlsx.value = data.filename_xlsx
       if (data.pdf_base64) {
         bm02PdfUrl.value = URL.createObjectURL(base64ToBlob(data.pdf_base64, 'application/pdf'))
-      }
-      if (bm02ExcelBase64.value) {
-        bm02SheetPreviewHtml.value = buildBm02ExcelSheetPreviewHtml(
-          bm02ExcelBase64.value,
-          data.excel_checkbox_cells,
-        )
       }
       if (prevPdfUrl) {
         try {
@@ -917,7 +965,6 @@ export function useDispatchRequestWizard() {
       }
     } catch (e) {
       bm02PdfUrl.value = prevPdfUrl
-      bm02SheetPreviewHtml.value = prevSheetHtml
       bm02PreviewError.value = formatApiError(e, 'Không tạo được bản xem trước BM.02.')
     } finally {
       bm02Loading.value = false
@@ -1175,7 +1222,9 @@ export function useDispatchRequestWizard() {
     basisFile.value = null
     basisFileError.value = ''
     requesterSearchQ.value = ''
+    requesterSearchError.value = ''
     coordinatorSearchQ.value = ''
+    coordinatorSearchError.value = ''
     revokeBm02PdfUrl()
     bm02PdfBase64.value = ''
     bm02ExcelBase64.value = ''
@@ -1300,8 +1349,11 @@ export function useDispatchRequestWizard() {
 
   watch(
     () => form.value.proposed_date,
-    (v) => {
-      if (v) form.value.date_needed = v
+    (newVal, oldVal) => {
+      if (!newVal) return
+      // Chỉ đồng bộ khi "Ngày cần xe" vẫn trùng ngày đề xuất cũ — tránh ghi đè khi người dùng / nháp đã tách hai ngày.
+      if (oldVal != null && form.value.date_needed !== oldVal) return
+      form.value.date_needed = newVal
     },
   )
 
@@ -1316,7 +1368,6 @@ export function useDispatchRequestWizard() {
     bm02PdfUrl,
     bm02PdfBase64,
     bm02ExcelBase64,
-    bm02SheetPreviewHtml,
     bm02FilenamePdf,
     bm02FilenameXlsx,
     created,
@@ -1336,10 +1387,15 @@ export function useDispatchRequestWizard() {
     requesterSearchResults,
     requesterSearchLoading,
     requesterDropdownOpen,
+    requesterSearchError,
     coordinatorSearchQ,
     coordinatorSearchResults,
     coordinatorSearchLoading,
     coordinatorDropdownOpen,
+    coordinatorSearchError,
+    step2DateOrderInvalid,
+    step2RequesterEmailInvalid,
+    step2CoordinatorEmailInvalid,
     passengerRows,
     businessRows,
     cargoRows,

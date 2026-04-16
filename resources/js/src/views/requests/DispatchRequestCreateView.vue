@@ -187,21 +187,26 @@
                     class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
                   />
                   <ul
-                    v-if="requesterDropdownOpen && requesterSearchResults.length"
+                    v-if="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
                     class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
                     role="listbox"
                   >
-                    <li v-for="u in requesterSearchResults" :key="u.id">
-                      <button
-                        type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
-                        @mousedown.prevent="pickRequester(u)"
-                      >
-                        <span class="font-medium text-slate-900">{{ u.name }}</span>
-                        <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
-                      </button>
-                    </li>
+                    <li v-if="requesterSearchLoading" class="px-3 py-2.5 text-slate-500">Đang tìm…</li>
+                    <template v-else-if="requesterSearchResults.length">
+                      <li v-for="u in requesterSearchResults" :key="u.id">
+                        <button
+                          type="button"
+                          class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                          @mousedown.prevent="pickRequester(u)"
+                        >
+                          <span class="font-medium text-slate-900">{{ u.name }}</span>
+                          <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                        </button>
+                      </li>
+                    </template>
+                    <li v-else class="px-3 py-2.5 text-slate-500">Không tìm thấy nhân sự phù hợp.</li>
                   </ul>
+                  <p v-if="requesterSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ requesterSearchError }}</p>
                 </div>
                 <label class="mt-4 block">
                   <span class="dw-label-text">Họ và tên <span class="dw-req" aria-hidden="true">*</span></span>
@@ -209,8 +214,14 @@
                 </label>
                 <label class="mt-3 block">
                   <span class="dw-label-text">Email VA <span class="dw-req" aria-hidden="true">*</span></span>
-                  <input v-model="form.requester_email" type="email" placeholder="ten@va.edu.vn" class="dw-input" />
+                  <input
+                    v-model="form.requester_email"
+                    type="email"
+                    placeholder="ten@va.edu.vn"
+                    :class="['dw-input', step2RequesterEmailInvalid ? 'ring-1 ring-rose-300' : '']"
+                  />
                 </label>
+                <p v-if="step2RequesterEmailInvalid" class="mt-1 text-xs text-rose-600">Nhập đúng định dạng email.</p>
                 <label class="mt-3 block">
                   <span class="dw-label-text">Số điện thoại</span>
                   <input
@@ -252,10 +263,13 @@
                     v-model="form.date_needed"
                     type="date"
                     lang="vi"
-                    class="dw-input dw-date-input mt-1"
+                    :class="['dw-input dw-date-input mt-1', step2DateOrderInvalid ? 'ring-1 ring-rose-300' : '']"
                     @click="openDatePickerFromInput($event)"
                   />
                 </label>
+                <p v-if="step2DateOrderInvalid" class="mt-2 text-xs font-medium text-rose-600">
+                  Ngày cần sử dụng xe không được sớm hơn ngày đề xuất.
+                </p>
                 <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
                   <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div class="flex min-w-[8rem] items-center justify-between gap-3 sm:flex-col sm:items-stretch">
@@ -405,6 +419,12 @@
                   </label>
                 </div>
                 <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">Đã chọn {{ form.targets.length }} mục.</p>
+                <p
+                  v-else-if="form.trip_type === 'point_to_point'"
+                  class="mt-2 text-xs leading-relaxed text-amber-800/90"
+                >
+                  Nên chọn ít nhất một đối tượng để phiếu BM.02 ghi đúng phân bổ.
+                </p>
               </div>
 
               <div class="dw-fieldset">
@@ -435,20 +455,26 @@
                     class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
                   />
                   <ul
-                    v-if="coordinatorDropdownOpen && coordinatorSearchResults.length"
+                    v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
                     class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                    role="listbox"
                   >
-                    <li v-for="u in coordinatorSearchResults" :key="u.id">
-                      <button
-                        type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
-                        @mousedown.prevent="pickCoordinator(u)"
-                      >
-                        <span class="font-medium text-slate-900">{{ u.name }}</span>
-                        <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
-                      </button>
-                    </li>
+                    <li v-if="coordinatorSearchLoading" class="px-3 py-2.5 text-slate-500">Đang tìm…</li>
+                    <template v-else-if="coordinatorSearchResults.length">
+                      <li v-for="u in coordinatorSearchResults" :key="u.id">
+                        <button
+                          type="button"
+                          class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                          @mousedown.prevent="pickCoordinator(u)"
+                        >
+                          <span class="font-medium text-slate-900">{{ u.name }}</span>
+                          <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                        </button>
+                      </li>
+                    </template>
+                    <li v-else class="px-3 py-2.5 text-slate-500">Không tìm thấy nhân sự phù hợp.</li>
                   </ul>
+                  <p v-if="coordinatorSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ coordinatorSearchError }}</p>
                 </div>
                 <label class="mt-4 block">
                   <span class="dw-label-text">Họ tên</span>
@@ -464,10 +490,11 @@
                   <input
                     v-model="form.coordinator_email"
                     type="email"
-                    class="dw-input"
+                    :class="['dw-input', step2CoordinatorEmailInvalid ? 'ring-1 ring-rose-300' : '']"
                     placeholder="email@va.edu.vn"
                   />
                 </label>
+                <p v-if="step2CoordinatorEmailInvalid" class="mt-1 text-xs text-rose-600">Nhập đúng định dạng email hoặc để trống.</p>
                 <label class="mt-3 block">
                   <span class="dw-label-text">SĐT</span>
                   <input
@@ -539,6 +566,15 @@
                   <button
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
+                    :disabled="!bm02PdfBase64"
+                    @click="downloadBm02Pdf"
+                  >
+                    <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
+                    Tải PDF
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
                     :disabled="!bm02ExcelBase64"
                     @click="downloadBm02Excel"
                   >
@@ -547,15 +583,27 @@
                   </button>
                 </div>
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  Xem trước dạng <span class="font-medium">sheet như Google Sheet</span> bên dưới. Dùng
-                  <span class="font-medium">Tải Excel</span> để tải file gốc.
+                  Xem trước bằng <span class="font-medium">PDF</span> (cùng bản in với file đính kèm). Dùng
+                  <span class="font-medium">Tải Excel</span> khi cần chỉnh trực tiếp trên bảng tính.
                 </p>
-                <div v-if="bm02SheetPreviewHtml" class="mt-4 space-y-1.5">
-                  <div class="text-xs font-medium text-slate-700">Xem trước dạng sheet (Excel)</div>
-                  <div class="bm02-excel-sheet-preview overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                    <div class="bm02-excel-sheet-preview__scroll dw-table-wrap max-h-[min(62vh,520px)] min-h-[240px]">
-                      <div class="bm02-excel-sheet-preview__html" v-html="bm02SheetPreviewHtml" />
-                    </div>
+                <div v-if="bm02PdfUrl" class="mt-4 space-y-1.5">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="text-xs font-medium text-slate-700">Xem trước PDF</div>
+                    <a
+                      :href="bm02PdfUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-xs font-medium text-teal-700 hover:text-teal-800"
+                    >
+                      Mở tab mới
+                    </a>
+                  </div>
+                  <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm">
+                    <iframe
+                      :src="bm02PdfUrl"
+                      class="bm02-pdf-preview-frame block h-[min(70vh,600px)] w-full min-h-[280px] border-0 bg-white"
+                      title="Xem trước phiếu BM.02 (PDF)"
+                    />
                   </div>
                 </div>
               </template>
@@ -803,8 +851,9 @@ const {
   error,
   bm02Loading,
   bm02PreviewError,
+  bm02PdfUrl,
+  bm02PdfBase64,
   bm02ExcelBase64,
-  bm02SheetPreviewHtml,
   created,
   hasDraftSnapshot,
   clearDraftModalOpen,
@@ -821,10 +870,15 @@ const {
   requesterSearchResults,
   requesterSearchLoading,
   requesterDropdownOpen,
+  requesterSearchError,
   coordinatorSearchQ,
   coordinatorSearchResults,
   coordinatorSearchLoading,
   coordinatorDropdownOpen,
+  coordinatorSearchError,
+  step2DateOrderInvalid,
+  step2RequesterEmailInvalid,
+  step2CoordinatorEmailInvalid,
   tripTypeOptions,
   isPointToPointTrip,
   openDatePickerFromInput,
@@ -850,6 +904,7 @@ const {
   headerPrimaryDisabled,
   primaryAction,
   loadBm02Preview,
+  downloadBm02Pdf,
   downloadBm02Excel,
   saveDraft,
   openClearDraftModal,
