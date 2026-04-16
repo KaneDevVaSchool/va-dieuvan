@@ -7,18 +7,18 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfMpdfWriter;
 
 /**
  * Điền mẫu Excel BM.02/MH.QT.04 (P2P) từ wizard_snapshot.
  * PDF: xuất từ chính workbook đã điền (scripts/P2P.xlsx) qua PhpSpreadsheet Writer\Pdf\Mpdf — bám layout in của mẫu.
- * Excel: ô tick bằng ảnh PNG (Drawing) để hiển thị ổn định trên mọi Excel.
+ * Excel/PDF: checkbox dùng ký tự ☑/☐ để khung hiển thị rõ trong cả file và bản in.
  */
 class Bm02P2pFormGenerator
 {
-    /** Ký tự dự phòng khi không có file ảnh tick. */
+    private const EMPTY_MARK = "\u{2610}";
     private const CHECKED_MARK = "\u{2611}";
 
     /** Cùng thứ tự với `targetOptions` trong DispatchRequestCreateView.vue — ô tick tương ứng (null = không có checkbox). */
@@ -86,7 +86,6 @@ class Bm02P2pFormGenerator
         /** @var Spreadsheet $ss */
         $ss = $reader->load($path);
         $sheet = $ss->getActiveSheet();
-        $sheet->getDrawingCollection()->exchangeArray([]);
 
         $ss->getProperties()
             ->setTitle('Đề nghị điều vận BM.02')
@@ -152,16 +151,17 @@ class Bm02P2pFormGenerator
         $sheet->setCellValue('E9', $vm['requester_phone']);
         $sheet->setCellValue('E10', $vm['requester_unit']);
 
-        $sheet->setCellValue('C13', $vm['purpose']);
-        $sheet->setCellValue('C14', $vm['basis_note']);
+        $sheet->setCellValue('D13', $vm['purpose']);
+        $sheet->setCellValue('D14', $vm['basis_note']);
+        $this->applyPurposeCellStyle($sheet);
 
         $sheet->setCellValue('E17', $vm['proposed_date']);
         $sheet->setCellValue('E20', $vm['date_needed']);
 
-        $sheet->getCell('B21')->setValueExplicit('', DataType::TYPE_STRING);
+        $sheet->getCell('B21')->setValueExplicit(self::EMPTY_MARK, DataType::TYPE_STRING);
         $sheet->setCellValue('E21', $vm['is_urgent'] ? $vm['urgent_reason'] : '');
 
-        $this->applyCheckboxGraphics($sheet, $vm);
+        $this->applyCheckboxMarks($sheet, $vm);
 
         if ($vm['coordinator_line'] !== '') {
             $sheet->setCellValue('E33', $vm['coordinator_line']);
@@ -199,45 +199,64 @@ class Bm02P2pFormGenerator
     /**
      * @param  array<string, mixed>  $vm
      */
-    private function applyCheckboxGraphics(Worksheet $sheet, array $vm): void
+    private function applyCheckboxMarks(Worksheet $sheet, array $vm): void
     {
-        $png = $this->checkboxTickImagePath();
-        $useImage = is_readable($png);
+        $sheet->getCell('B21')->setValueExplicit($vm['is_urgent'] ? self::CHECKED_MARK : self::EMPTY_MARK, DataType::TYPE_STRING);
 
-        if ($vm['is_urgent']) {
-            if ($useImage) {
-                $this->placeTickDrawing($sheet, $png, 'B21');
-            } else {
-                $sheet->getCell('B21')->setValueExplicit(self::CHECKED_MARK, DataType::TYPE_STRING);
-            }
-        }
-
+        $tickSet = [];
         foreach ($vm['target_tick_cells'] as $coord) {
-            if ($useImage) {
-                $this->placeTickDrawing($sheet, $png, $coord);
-            } else {
-                $sheet->getCell($coord)->setValueExplicit(self::CHECKED_MARK, DataType::TYPE_STRING);
+            if (! is_string($coord) || $coord === '') {
+                continue;
             }
+            $tickSet[strtoupper($coord)] = true;
+        }
+
+        foreach (self::P2P_TARGET_CHECKBOX_CELLS as $coord) {
+            if ($coord === null || $coord === '') {
+                continue;
+            }
+            $cell = strtoupper($coord);
+            $sheet->getCell($cell)->setValueExplicit(isset($tickSet[$cell]) ? self::CHECKED_MARK : self::EMPTY_MARK, DataType::TYPE_STRING);
+        }
+
+        $this->applyCheckboxVisualStyle($sheet);
+    }
+
+    private function applyCheckboxVisualStyle(Worksheet $sheet): void
+    {
+        $cells = ['B21'];
+        foreach (self::P2P_TARGET_CHECKBOX_CELLS as $coord) {
+            if ($coord !== null && $coord !== '') {
+                $cells[] = strtoupper($coord);
+            }
+        }
+        foreach (self::P2P_EXTRA_TEMPLATE_BOOL_CELLS as $coord) {
+            if ($coord !== '') {
+                $cells[] = strtoupper($coord);
+            }
+        }
+
+        $cells = array_values(array_unique($cells));
+        foreach ($cells as $addr) {
+            $style = $sheet->getStyle($addr);
+            $style->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+            $style->getFont()
+                ->setName('DejaVu Sans')
+                ->setBold(true)
+                ->setSize(12);
         }
     }
 
-    private function placeTickDrawing(Worksheet $sheet, string $pngPath, string $coord): void
+    private function applyPurposeCellStyle(Worksheet $sheet): void
     {
-        $drawing = new Drawing;
-        $drawing->setName('tick');
-        $drawing->setDescription('Đã chọn');
-        $drawing->setPath($pngPath);
-        $drawing->setCoordinates($coord);
-        $drawing->setWidth(12);
-        $drawing->setHeight(12);
-        $drawing->setOffsetX(2);
-        $drawing->setOffsetY(1);
-        $drawing->setWorksheet($sheet);
-    }
-
-    private function checkboxTickImagePath(): string
-    {
-        return dirname(__DIR__, 3).'/resources/dispatch/bm02_checkbox_tick.png';
+        foreach (['D13', 'D14'] as $addr) {
+            $sheet->getStyle($addr)->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                ->setVertical(Alignment::VERTICAL_TOP)
+                ->setWrapText(true);
+        }
     }
 
     /**
@@ -444,15 +463,15 @@ class Bm02P2pFormGenerator
 
     private function resetTemplateCheckboxCells(Worksheet $sheet): void
     {
-        $sheet->getCell('B21')->setValueExplicit('', DataType::TYPE_STRING);
+        $sheet->getCell('B21')->setValueExplicit(self::EMPTY_MARK, DataType::TYPE_STRING);
         foreach (self::P2P_TARGET_CHECKBOX_CELLS as $coord) {
             if ($coord === null || $coord === '') {
                 continue;
             }
-            $sheet->getCell($coord)->setValueExplicit('', DataType::TYPE_STRING);
+            $sheet->getCell($coord)->setValueExplicit(self::EMPTY_MARK, DataType::TYPE_STRING);
         }
         foreach (self::P2P_EXTRA_TEMPLATE_BOOL_CELLS as $coord) {
-            $sheet->getCell($coord)->setValueExplicit('', DataType::TYPE_STRING);
+            $sheet->getCell($coord)->setValueExplicit(self::EMPTY_MARK, DataType::TYPE_STRING);
         }
     }
 
