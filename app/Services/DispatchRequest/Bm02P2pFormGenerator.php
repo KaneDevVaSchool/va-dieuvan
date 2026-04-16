@@ -329,7 +329,7 @@ class Bm02P2pFormGenerator
         $checkboxCols = ['B', 'E', 'H', 'K'];
         $startRow = 25;
         $rows = 8; // 25..32
-        $mergedRanges = array_values($sheet->getMergeCells());
+        $this->normalizeTargetSectionLayout($sheet, $startRow, $rows);
 
         $slots = [];
         foreach ($vm['target_table_rows'] ?? [] as $row) {
@@ -349,12 +349,11 @@ class Bm02P2pFormGenerator
                 $labelAddr = $labelCols[$c] . $excelRow;
                 $checkboxAddr = $checkboxCols[$c] . $excelRow;
                 $label = is_array($slot) ? (string) ($slot['label'] ?? '') : '';
-                $writeAddr = $this->resolveWritableCellAddress($labelAddr, $mergedRanges);
-                $sheet->setCellValue($writeAddr, $label);
+                $sheet->setCellValue($labelAddr, $label);
                 $maxChars = max($maxChars, mb_strlen($label, 'UTF-8'));
 
                 // Các ô checkbox "thừa" (nếu có) phải trống hoàn toàn để không tạo tick giả.
-                if ($label === '' && !in_array($checkboxAddr, self::P2P_TARGET_CHECKBOX_CELLS, true)) {
+                if ($label === '') {
                     $sheet->setCellValue($checkboxAddr, '');
                 }
             }
@@ -376,28 +375,36 @@ class Bm02P2pFormGenerator
     }
 
     /**
-     * Nếu ô nằm trong merge range và không phải top-left, phải ghi vào top-left mới hiển thị.
-     *
-     * @param list<string> $mergedRanges
+     * Chuẩn hóa riêng layout phần D để ghi dữ liệu ổn định (không phụ thuộc merge ngẫu nhiên trong template).
      */
-    private function resolveWritableCellAddress(string $addr, array $mergedRanges): string
+    private function normalizeTargetSectionLayout(Worksheet $sheet, int $startRow, int $rows): void
     {
-        [$col, $row] = Coordinate::coordinateFromString(strtoupper($addr));
-        $targetCol = Coordinate::columnIndexFromString($col);
-        $targetRow = (int) $row;
-        foreach ($mergedRanges as $range) {
+        $targetStartRow = $startRow;
+        $targetEndRow = $startRow + $rows - 1;
+        $targetStartCol = Coordinate::columnIndexFromString('B');
+        $targetEndCol = Coordinate::columnIndexFromString('M');
+
+        foreach (array_values($sheet->getMergeCells()) as $range) {
             [$start, $end] = Coordinate::rangeBoundaries($range);
-            $startCol = (int) $start[0];
-            $startRow = (int) $start[1];
-            $endCol = (int) $end[0];
-            $endRow = (int) $end[1];
-            if ($targetCol < $startCol || $targetCol > $endCol || $targetRow < $startRow || $targetRow > $endRow) {
+            $rangeStartCol = (int) $start[0];
+            $rangeStartRow = (int) $start[1];
+            $rangeEndCol = (int) $end[0];
+            $rangeEndRow = (int) $end[1];
+            $intersectsCols = !($rangeEndCol < $targetStartCol || $rangeStartCol > $targetEndCol);
+            $intersectsRows = !($rangeEndRow < $targetStartRow || $rangeStartRow > $targetEndRow);
+            if (!$intersectsCols || !$intersectsRows) {
                 continue;
             }
-            return Coordinate::stringFromColumnIndex($startCol).$startRow;
+            $sheet->unmergeCells($range);
         }
 
-        return strtoupper($addr);
+        // 4 cụm cột cố định: checkbox + label (label merge 2 cột để đủ rộng)
+        for ($r = $targetStartRow; $r <= $targetEndRow; $r++) {
+            $sheet->mergeCells("C{$r}:D{$r}");
+            $sheet->mergeCells("F{$r}:G{$r}");
+            $sheet->mergeCells("I{$r}:J{$r}");
+            $sheet->mergeCells("L{$r}:M{$r}");
+        }
     }
 
     private function applyCheckboxVisualStyle(Worksheet $sheet): void
