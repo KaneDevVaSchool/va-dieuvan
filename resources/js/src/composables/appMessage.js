@@ -12,11 +12,17 @@ export const appMessageState = reactive({
   /** Chi tiết kỹ thuật (HTTP, endpoint) — chỉ dùng khi variant === 'error' */
   /** @type {null | { status: number|null, method: string, path: string, retryAfter: string|null, serverRaw: string, networkHint: string, axiosCode?: string|null, axiosMessage?: string|null, configMissing?: boolean }} */
   apiDetails: null,
+  /** Đường dẫn Vue Router (ví dụ `/trips`) — đóng modal sẽ điều hướng nếu có */
+  navigateTo: null,
+  /** Nhãn nút chính (mặc định OK) */
+  primaryLabel: null,
 })
 
 export function closeAppMessage() {
   appMessageState.open = false
   appMessageState.apiDetails = null
+  appMessageState.navigateTo = null
+  appMessageState.primaryLabel = null
 }
 
 /**
@@ -25,6 +31,8 @@ export function closeAppMessage() {
  */
 export function showAppError(message, title = 'Có lỗi') {
   appMessageState.apiDetails = null
+  appMessageState.navigateTo = null
+  appMessageState.primaryLabel = null
   appMessageState.title = title
   appMessageState.body = message || 'Có lỗi xảy ra.'
   appMessageState.variant = 'error'
@@ -38,6 +46,8 @@ export function showAppError(message, title = 'Có lỗi') {
  */
 export function showAppErrorFromApi(err, fallback = 'Đã xảy ra lỗi.') {
   const p = buildApiErrorPresentation(err, fallback)
+  appMessageState.navigateTo = null
+  appMessageState.primaryLabel = null
   appMessageState.title = p.title
   appMessageState.body = p.friendly
   appMessageState.apiDetails = p.details
@@ -48,9 +58,12 @@ export function showAppErrorFromApi(err, fallback = 'Đã xảy ra lỗi.') {
 /**
  * @param {string} message
  * @param {string} [title]
+ * @param {{ navigateTo?: string, primaryLabel?: string }} [opts]
  */
-export function showAppSuccess(message, title = 'Thành công') {
+export function showAppSuccess(message, title = 'Thành công', opts = {}) {
   appMessageState.apiDetails = null
+  appMessageState.navigateTo = opts.navigateTo ?? null
+  appMessageState.primaryLabel = opts.primaryLabel ?? null
   appMessageState.title = title
   appMessageState.body = message || 'Đã xử lý.'
   appMessageState.variant = 'success'
@@ -63,6 +76,8 @@ export function showAppSuccess(message, title = 'Thành công') {
  */
 export function showAppInfo(message, title = 'Thông báo') {
   appMessageState.apiDetails = null
+  appMessageState.navigateTo = null
+  appMessageState.primaryLabel = null
   appMessageState.title = title
   appMessageState.body = message || ''
   appMessageState.variant = 'info'

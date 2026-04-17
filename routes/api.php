@@ -143,7 +143,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/{dispatchRequest}/paper-received', 'markPaperReceived')->middleware('throttle:20,1');
             Route::post('/{dispatchRequest}/paper-revert', 'revertPaperReceived')->middleware('throttle:20,1');
             Route::post('/{dispatchRequest}/decision', 'approve')
-                ->middleware(['throttle:10,1', 'idempotency'])
+                ->middleware(['throttle:120,1', 'idempotency'])
                 ->name('api.dispatch-requests.decision');
         });
 

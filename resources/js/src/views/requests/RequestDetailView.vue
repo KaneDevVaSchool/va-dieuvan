@@ -52,7 +52,7 @@
         <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">Tiến trình yêu cầu</h2>
           <div class="mt-6 overflow-x-auto pb-2">
-            <div class="flex min-w-[640px] items-start">
+            <div class="flex min-w-[920px] items-start">
               <template v-for="(step, idx) in stepperSteps" :key="step.key">
                 <div class="flex min-w-0 flex-1 flex-col items-center text-center">
                   <div
@@ -62,6 +62,11 @@
                     <CheckIcon v-if="step.state === 'done'" class="h-5 w-5" />
                     <HandThumbUpIcon
                       v-else-if="step.key === 'approved' && (step.state === 'upcoming' || step.state === 'current')"
+                      class="h-5 w-5"
+                      :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                    />
+                    <Cog6ToothIcon
+                      v-else-if="step.key === 'dispatch' && step.state !== 'done'"
                       class="h-5 w-5"
                       :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
                     />
@@ -549,12 +554,14 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
   CalculatorIcon,
   CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
   ClockIcon,
+  Cog6ToothIcon,
   CubeIcon,
   DocumentTextIcon,
   DocumentIcon,
@@ -584,6 +591,7 @@ import { showAppSuccess } from '../../composables/appMessage'
 
 const route = useRoute()
 const auth = useAuthStore()
+const { t } = useI18n()
 
 const req = ref(null)
 const loading = ref(true)
@@ -749,6 +757,21 @@ const costEstimate = computed(() => {
   }
 })
 
+function fmtStepDetail(v) {
+  if (!v) return '—'
+  try {
+    return new Date(v).toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return '—'
+  }
+}
+
 const stepperSteps = computed(() => {
   const r = req.value
   if (!r) return []
@@ -756,30 +779,86 @@ const stepperSteps = computed(() => {
   const tripSt = trip?.status
   const st = r.status
 
+  const approvedAt = trip?.created_at
+  const pendingEndAt = st === 'rejected' ? r.updated_at : approvedAt
+  const isAssignedOrMore =
+    trip &&
+    ['assigned', 'driver_confirmed', 'in_progress', 'completed'].includes(tripSt)
+  const dispatchDoneAt =
+    tripSt === 'approved'
+      ? null
+      : isAssignedOrMore
+        ? ['assigned', 'driver_confirmed'].includes(tripSt)
+          ? trip.updated_at
+          : trip.started_at || trip.updated_at
+        : null
+  const runningAt = trip?.started_at
+  const completedAt = trip?.completed_at
+
   const steps = [
-    { key: 'created', label: 'Tạo', sub: fmtShort(r.created_at), state: 'done' },
-    { key: 'pending', label: 'Chờ duyệt', sub: '', state: 'upcoming' },
-    { key: 'approved', label: 'Đã duyệt', sub: '', state: 'upcoming' },
-    { key: 'running', label: 'Đang chạy', sub: '', state: 'upcoming' },
-    { key: 'done', label: 'Hoàn tất', sub: '', state: 'upcoming' },
+    { key: 'created', label: 'Tạo', sub: fmtStepDetail(r.created_at), state: 'upcoming' },
+    { key: 'pending', label: 'CHỜ DUYỆT', sub: '', state: 'upcoming' },
+    { key: 'approved', label: 'Đã Duyệt', sub: '', state: 'upcoming' },
+    { key: 'dispatch', label: 'Điều Phối', sub: '', state: 'upcoming' },
+    { key: 'running', label: 'Đang Chạy', sub: '', state: 'upcoming' },
+    { key: 'done', label: 'Hoàn Tất', sub: '', state: 'upcoming' },
   ]
 
+  steps[1].sub =
+    st === 'pending' || st === 'rejected'
+      ? fmtStepDetail(r.created_at)
+      : pendingEndAt
+        ? fmtStepDetail(pendingEndAt)
+        : '—'
+
+  steps[2].sub = approvedAt ? fmtStepDetail(approvedAt) : '—'
+
+  steps[3].sub =
+    tripSt === 'approved'
+      ? '—'
+      : dispatchDoneAt
+        ? fmtStepDetail(dispatchDoneAt)
+        : '—'
+
+  steps[4].sub =
+    tripSt === 'in_progress' || tripSt === 'completed'
+      ? fmtStepDetail(runningAt)
+      : ['assigned', 'driver_confirmed'].includes(tripSt)
+        ? fmtStepDetail(trip.updated_at)
+        : '—'
+
+  steps[5].sub = tripSt === 'completed' && completedAt ? fmtStepDetail(completedAt) : '—'
+
   let active = 1
-  if (st === 'pending') active = 1
-  else if (st === 'rejected') active = 1
+  if (st === 'draft') active = 0
+  else if (st === 'pending' || st === 'rejected') active = 1
+  else if (st === 'cancelled') active = 1
   else if (st === 'approved') {
-    active = 2
-    if (trip && ['assigned', 'driver_confirmed', 'in_progress'].includes(tripSt)) active = 3
-    if (tripSt === 'completed') active = 4
+    if (!trip) active = 2
+    else if (tripSt === 'approved') active = 3
+    else if (['assigned', 'driver_confirmed'].includes(tripSt)) active = 4
+    else if (tripSt === 'in_progress') active = 4
+    else if (tripSt === 'completed') active = 5
+    else active = 2
   }
 
-  steps[0].state = 'done'
+  steps[0].state = st === 'draft' ? 'current' : 'done'
   for (let i = 1; i < steps.length; i++) {
     if (i < active) steps[i].state = 'done'
-    else if (i === active) steps[i].state = st === 'rejected' && i === 1 ? 'rejected' : 'current'
-    else steps[i].state = 'upcoming'
+    else if (i === active) {
+      if (st === 'rejected' && i === 1) steps[i].state = 'rejected'
+      else if (st === 'cancelled' && i === 1) steps[i].state = 'current'
+      else steps[i].state = 'current'
+    } else steps[i].state = 'upcoming'
   }
+
   if (st === 'rejected') {
+    for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
+  }
+  if (st === 'draft') {
+    for (let i = 1; i < steps.length; i++) steps[i].state = 'upcoming'
+  }
+  if (st === 'cancelled') {
     for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
   }
 
@@ -991,8 +1070,16 @@ async function decide(d) {
       { idempotencyKey: newIdempotencyKey() },
     )
     msg.value = ''
-    await load()
-    showAppSuccess(d === 'approve' ? 'Đã duyệt yêu cầu.' : 'Đã từ chối yêu cầu.', 'Thành công')
+    if (d === 'approve') {
+      const code = requestRefCode.value || `REQ-${route.params.id}`
+      showAppSuccess(t('requests_page.approve_success_body', { code }), t('requests_page.approve_success_title'), {
+        navigateTo: '/trips',
+        primaryLabel: t('requests_page.approve_success_go_trips'),
+      })
+    } else {
+      await load()
+      showAppSuccess(t('requests_page.reject_success_body'), t('requests_page.reject_success_title'))
+    }
   } catch (e) {
     msg.value = e?.response?.data?.message ?? 'Lỗi'
   } finally {

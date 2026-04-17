@@ -6,7 +6,7 @@
       role="alertdialog"
       aria-modal="true"
       :aria-labelledby="titleId"
-      @click.self="closeAppMessage"
+      @click.self="dismissModal"
     >
       <div
         class="max-h-[min(32rem,90vh)] w-full overflow-hidden rounded-xl border shadow-xl"
@@ -18,13 +18,33 @@
             type="button"
             class="shrink-0 rounded px-2 py-1 text-xs transition"
             :class="closeBtnClass"
-            @click="closeAppMessage"
+            @click="dismissModal"
           >
             Đóng
           </button>
         </div>
         <div class="max-h-[min(22rem,75vh)] overflow-y-auto px-4 py-3 sm:px-5">
-          <p class="whitespace-pre-wrap break-words text-sm leading-relaxed" :class="bodyClass">{{ state.body }}</p>
+          <div
+            v-if="state.variant === 'success'"
+            class="flex gap-4 rounded-xl border border-emerald-100/90 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/40 p-4 dark:border-emerald-900/40 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/30"
+          >
+            <div
+              class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-900/20"
+              aria-hidden="true"
+            >
+              <CheckCircleIcon class="h-9 w-9" />
+            </div>
+            <p class="min-w-0 flex-1 whitespace-pre-wrap break-words text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-100">
+              {{ state.body }}
+            </p>
+          </div>
+          <p
+            v-else
+            class="whitespace-pre-wrap break-words text-sm leading-relaxed"
+            :class="bodyClass"
+          >
+            {{ state.body }}
+          </p>
           <div
             v-if="state.variant === 'error' && state.apiDetails"
             class="mt-4 rounded-lg border border-slate-200/90 bg-slate-50 p-3 text-left dark:border-slate-600 dark:bg-slate-800/80"
@@ -77,9 +97,9 @@
             type="button"
             class="rounded-md px-4 py-2 text-sm font-medium text-white transition focus:outline-none focus:ring-2 focus:ring-offset-1 dark:focus:ring-offset-slate-900"
             :class="primaryBtnClass"
-            @click="closeAppMessage"
+            @click="dismissModal"
           >
-            OK
+            {{ primaryButtonLabel }}
           </button>
         </div>
       </div>
@@ -89,9 +109,20 @@
 
 <script setup>
 import { computed, onUnmounted, watch, watchEffect } from 'vue'
+import { useRouter } from 'vue-router'
+import { CheckCircleIcon } from '@heroicons/vue/24/solid'
 import { appMessageState as state, closeAppMessage } from '../../composables/appMessage'
 
+const router = useRouter()
 const titleId = 'app-message-modal-title'
+
+const primaryButtonLabel = computed(() => state.primaryLabel || 'OK')
+
+function dismissModal() {
+  const to = state.navigateTo
+  closeAppMessage()
+  if (to) router.push(to)
+}
 
 const panelClass = computed(() => {
   if (state.variant === 'success') {
@@ -152,7 +183,7 @@ watch(
 watchEffect((onCleanup) => {
   if (!state.open || typeof window === 'undefined') return
   const onKey = (e) => {
-    if (e.key === 'Escape') closeAppMessage()
+    if (e.key === 'Escape') dismissModal()
   }
   window.addEventListener('keydown', onKey)
   onCleanup(() => window.removeEventListener('keydown', onKey))

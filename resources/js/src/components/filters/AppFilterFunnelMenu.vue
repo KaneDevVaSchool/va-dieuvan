@@ -15,7 +15,7 @@
       <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
     </summary>
     <div
-      class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+      class="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
     >
       <slot />
     </div>

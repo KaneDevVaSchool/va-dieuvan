@@ -66,20 +66,35 @@
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
             <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-              {{ t('requests_page.kpi_in_progress') }}
+              {{ t('requests_page.kpi_pending_approved') }}
             </p>
-            <p class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
-              {{ formatInt(stats.trips_in_progress) }}
-            </p>
-            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div class="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+              <div>
+                <p class="text-[11px] font-medium text-slate-500">{{ t('requests_page.tab_pending') }}</p>
+                <p class="mt-0.5 text-2xl font-semibold tabular-nums text-slate-900">
+                  {{ formatInt(approvalPendingCount) }}
+                </p>
+              </div>
+              <div>
+                <p class="text-[11px] font-medium text-slate-500">{{ t('requests_page.tab_approved') }}</p>
+                <p class="mt-0.5 text-2xl font-semibold tabular-nums text-slate-900">
+                  {{ formatInt(approvalApprovedCount) }}
+                </p>
+              </div>
+            </div>
+            <div class="mt-3 flex h-2 overflow-hidden rounded-full bg-slate-100">
               <div
-                class="h-full rounded-full bg-teal-500 transition-all"
-                :style="{ width: progressBarPct + '%' }"
+                class="h-full bg-amber-400 transition-all"
+                :style="{ width: approvalPendingBarPct + '%' }"
+              />
+              <div
+                class="h-full bg-teal-500 transition-all"
+                :style="{ width: approvalApprovedBarPct + '%' }"
               />
             </div>
           </div>
           <div class="rounded-lg bg-teal-50 p-2 text-teal-700">
-            <TruckIcon class="h-6 w-6" aria-hidden="true" />
+            <ClipboardDocumentCheckIcon class="h-6 w-6" aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -538,8 +553,17 @@
                 />
               </td>
               <td class="px-3 py-3 align-top">
-                <div class="font-semibold text-slate-900">REQ-{{ r.id }}</div>
-                <div class="text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
+                <RouterLink
+                  :to="`/requests/${r.id}`"
+                  class="group block max-w-fit rounded-md outline-none ring-teal-500/40 focus-visible:ring-2"
+                >
+                  <div
+                    class="font-semibold text-slate-900 decoration-teal-600/80 underline-offset-2 group-hover:text-teal-700 group-hover:underline"
+                  >
+                    REQ-{{ r.id }}
+                  </div>
+                  <div class="text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
+                </RouterLink>
               </td>
               <td class="max-w-xs px-3 py-3 align-top">
                 <div class="flex gap-2">
@@ -817,7 +841,7 @@ import {
   PlusCircleIcon,
   PlusIcon,
   RectangleStackIcon,
-  TruckIcon,
+  ClipboardDocumentCheckIcon,
   ViewColumnsIcon,
   XMarkIcon,
   AcademicCapIcon,
@@ -1067,11 +1091,21 @@ const tabDefs = computed(() => [
   { id: 'trash', label: t('requests_page.tab_trash') },
 ])
 
-const progressBarPct = computed(() => {
-  const t = stats.value.total || 0
-  const x = stats.value.trips_in_progress || 0
-  if (t <= 0) return 0
-  return Math.min(100, Math.round((x / t) * 100))
+const approvalPendingCount = computed(() => Number(stats.value.by_status?.pending ?? 0))
+const approvalApprovedCount = computed(() => Number(stats.value.by_status?.approved ?? 0))
+const approvalPendingBarPct = computed(() => {
+  const p = approvalPendingCount.value
+  const a = approvalApprovedCount.value
+  const sum = p + a
+  if (sum <= 0) return 0
+  return Math.min(100, Math.round((p / sum) * 100))
+})
+const approvalApprovedBarPct = computed(() => {
+  const p = approvalPendingCount.value
+  const a = approvalApprovedCount.value
+  const sum = p + a
+  if (sum <= 0) return 0
+  return 100 - approvalPendingBarPct.value
 })
 
 const sparklinePoints = computed(() => {
