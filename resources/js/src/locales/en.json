@@ -671,6 +671,7 @@
     "kpi_d2d": "D2D (door-to-door)",
     "kpi_p2p": "P2P (point-to-point)",
     "kpi_business": "Business",
+    "kpi_cargo": "Cargo",
     "kpi_awaiting_dispatch": "Awaiting dispatch",
     "kpi_running": "In progress",
     "kpi_completed": "Completed",

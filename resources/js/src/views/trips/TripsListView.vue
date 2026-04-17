@@ -11,9 +11,9 @@
       </div>
     </div>
 
-    <!-- KPI: 2 hàng × 4 card (loại chuyến / trạng thái vận hành) -->
+    <!-- KPI: hàng 1 loại chuyến (gồm hàng hóa), hàng 2 trạng thái vận hành -->
     <div class="space-y-3 sm:space-y-4">
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
         <div
           v-for="box in kpiBoxesRow1"
           :key="box.key"
@@ -1077,6 +1077,7 @@ const typeTabs = computed(() => {
     { value: 'door_to_door', label: t('trips_page.tab_d2d'), count: bt.door_to_door ?? 0 },
     { value: 'point_to_point', label: t('trips_page.tab_p2p'), count: bt.point_to_point ?? 0 },
     { value: 'business', label: t('trips_page.tab_business'), count: bt.business ?? 0 },
+    { value: 'cargo', label: t('trips_page.tab_cargo'), count: bt.cargo ?? 0 },
   ]
 })
 
@@ -1114,6 +1115,14 @@ const kpiBoxesRow1 = computed(() => {
       icon: BriefcaseIcon,
       iconWrap: 'bg-amber-100 dark:bg-amber-950/50',
       iconClass: 'text-amber-600 dark:text-amber-400',
+    },
+    {
+      key: 'cargo',
+      label: t('trips_page.kpi_cargo'),
+      value: bt.cargo ?? 0,
+      icon: CubeIcon,
+      iconWrap: 'bg-violet-100 dark:bg-violet-950/50',
+      iconClass: 'text-violet-600 dark:text-violet-400',
     },
   ]
 })
@@ -1317,9 +1326,20 @@ function setTripTypeTab(v) {
   onFilterChange()
 }
 
+const TRIP_TYPE_TAB_VALUES = ['door_to_door', 'point_to_point', 'business', 'cargo']
+
 function applyStatusFromRoute() {
   const s = route.query.status
   filters.status = typeof s === 'string' && s ? s : ''
+}
+
+function applyTripTypeFromRoute() {
+  const tt = route.query.trip_type
+  if (typeof tt === 'string' && TRIP_TYPE_TAB_VALUES.includes(tt)) {
+    filters.trip_type = tt
+  } else {
+    filters.trip_type = ''
+  }
 }
 
 function listParams() {
@@ -1401,6 +1421,7 @@ function resetFilters() {
   syncRangeForPreset('month')
   syncFiltersFromRange()
   applyStatusFromRoute()
+  applyTripTypeFromRoute()
   if (funnelDetailsRef.value) funnelDetailsRef.value.open = false
   reloadStats()
   reload()
@@ -1439,14 +1460,22 @@ watch(
   },
 )
 
+watch(
+  () => route.query.trip_type,
+  () => {
+    applyTripTypeFromRoute()
+    filters.page = 1
+    reloadStats()
+    reload()
+  },
+)
+
 onMounted(() => {
   loadFilterDropdownVisibility()
   syncRangeForPreset('month')
   syncFiltersFromRange()
   applyStatusFromRoute()
-  if (filters.trip_type === 'cargo') {
-    filters.trip_type = ''
-  }
+  applyTripTypeFromRoute()
   reloadStats()
   reload()
 })

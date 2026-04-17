@@ -671,6 +671,7 @@
         "kpi_d2d": "D2D (đưa đón)",
         "kpi_p2p": "P2P (điểm — điểm)",
         "kpi_business": "Công tác",
+        "kpi_cargo": "Hàng hóa",
         "kpi_awaiting_dispatch": "Chờ điều phối",
         "kpi_running": "Đang chạy",
         "kpi_completed": "Hoàn thành",
