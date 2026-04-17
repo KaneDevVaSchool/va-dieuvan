@@ -891,7 +891,8 @@
       "title": "Change departure time",
       "hint": "Trip duration is preserved; vehicle/driver conflicts are checked. Requires assign permission.",
       "save": "Update schedule",
-      "invalid": "Invalid date/time."
+      "invalid": "Invalid date/time.",
+      "success": "Departure time updated."
     },
     "title": "Trip details & timeline",
     "created_at": "Created {time}",
@@ -963,13 +964,18 @@
       "summary_allergy": "Driver should be informed about allergies / food restrictions."
     },
     "more_section": {
-      "title": "Costs & advanced status"
+      "title": "Costs & advanced status",
+      "subtitle": "Record costs and change trip status (driver confirmed, in progress, completed, cancelled)."
     },
     "coordination": {
       "title": "Coordination",
       "subtitle": "Assign resources and record decisions.",
       "assign_vehicle": "Assign vehicle",
       "assign_driver": "Assign driver",
+      "assign_pair_title": "Internal vehicle & driver",
+      "driver_default_vehicle_hint": "Choosing a driver selects their default vehicle when it exists in the list.",
+      "assign_success": "Resources assigned successfully.",
+      "reject_success": "Trip cancelled.",
       "hire_external": "Hire external taxi / vendor",
       "provider_id": "Provider ID (transport_provider_id)",
       "provider_select": "Transport provider",
@@ -1021,7 +1027,8 @@
       "ok": "OK",
       "error": "Error",
       "copied": "Copied",
-      "copy_failed": "Copy failed"
+      "copy_failed": "Copy failed",
+      "rate_limited": "Too many attempts. Please wait a few seconds and try again."
     },
     "current_location": {
       "en_route": "En route"
@@ -1119,23 +1126,9 @@
       "placeholder": "Add a note for dispatcher/ops…",
       "add_action": "Add note"
     },
-    "quick": {
-      "title": "Quick actions",
-      "subtitle": "Contact, maps, and dispatch shortcuts.",
-      "open_directions": "Open Google Maps directions",
-      "call_requester": "Call requester",
-      "email_requester": "Email requester",
-      "copy_requester_phone": "Copy requester phone",
-      "copied_phone": "Phone number copied.",
-      "call_driver": "Call driver",
-      "open_request": "Open source request",
-      "costs_section": "Costs & advanced status",
-      "reassign": "Reassign / update",
-      "scroll_prev": "Scroll left",
-      "scroll_next": "Scroll right"
-    },
     "status_update": {
       "title": "Update status",
+      "subtitle": "Record a status change on the trip (optional note).",
       "status": "Status",
       "pick": "Pick",
       "note": "Note",

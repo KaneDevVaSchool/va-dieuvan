@@ -891,7 +891,8 @@
       "title": "Đổi giờ khởi hành",
       "hint": "Hệ thống giữ độ dài chuyến và kiểm tra trùng xe/tài xế. Cần quyền gán chuyến.",
       "save": "Cập nhật lịch",
-      "invalid": "Giờ không hợp lệ."
+      "invalid": "Giờ không hợp lệ.",
+      "success": "Đã cập nhật lịch khởi hành."
     },
     "title": "Chi tiết chuyến & timeline",
     "created_at": "Tạo {time}",
@@ -963,13 +964,18 @@
       "summary_allergy": "Cần thông báo tài xế về dị ứng / thực phẩm."
     },
     "more_section": {
-      "title": "Chi phí & cập nhật trạng thái nâng cao"
+      "title": "Chi phí & cập nhật trạng thái nâng cao",
+      "subtitle": "Ghi nhận chi phí và đổi trạng thái chuyến (xác nhận tài xế, đang chạy, hoàn thành, hủy)."
     },
     "coordination": {
       "title": "Hành động điều phối",
       "subtitle": "Gán nguồn lực và ghi nhận quyết định.",
       "assign_vehicle": "Gán xe",
       "assign_driver": "Gán tài xế",
+      "assign_pair_title": "Xe & tài xế nội bộ",
+      "driver_default_vehicle_hint": "Chọn tài xế sẽ tự chọn xe mặc định gắn với tài xế đó (nếu có trong danh sách).",
+      "assign_success": "Đã gán nguồn lực thành công.",
+      "reject_success": "Đã hủy chuyến.",
       "hire_external": "Thuê ngoài taxi / NCC",
       "provider_id": "ID nhà cung cấp (transport_provider_id)",
       "provider_select": "Nhà cung cấp vận chuyển",
@@ -1021,7 +1027,8 @@
       "ok": "OK",
       "error": "Lỗi",
       "copied": "Đã sao chép",
-      "copy_failed": "Không sao chép được"
+      "copy_failed": "Không sao chép được",
+      "rate_limited": "Quá nhiều thao tác. Vui lòng đợi vài giây rồi thử lại."
     },
     "current_location": {
       "en_route": "Đang di chuyển"
@@ -1119,21 +1126,6 @@
       "placeholder": "Ghi chú cho dispatcher/ops…",
       "add_action": "Thêm note"
     },
-    "quick": {
-      "title": "Thao tác nhanh",
-      "subtitle": "Liên hệ, bản đồ và phím tắt điều phối.",
-      "open_directions": "Mở chỉ đường Google Maps",
-      "call_requester": "Gọi người yêu cầu",
-      "email_requester": "Gửi email người yêu cầu",
-      "copy_requester_phone": "Sao chép SĐT người yêu cầu",
-      "copied_phone": "Đã sao chép số điện thoại.",
-      "call_driver": "Gọi tài xế",
-      "open_request": "Mở yêu cầu gốc",
-      "costs_section": "Chi phí & cập nhật nâng cao",
-      "reassign": "Phân công / cập nhật",
-      "scroll_prev": "Cuộn trái",
-      "scroll_next": "Cuộn phải"
-    },
     "step": {
       "pending": "Đang chờ",
       "waiting": "Đang chờ",
@@ -1150,6 +1142,7 @@
     ,
     "status_update": {
       "title": "Cập nhật trạng thái",
+      "subtitle": "Ghi nhật ký trạng thái chuyến (kèm ghi chú tùy chọn).",
       "status": "Trạng thái",
       "pick": "Chọn",
       "note": "Ghi chú",

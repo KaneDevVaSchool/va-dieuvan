@@ -96,110 +96,6 @@
           </RouterLink>
         </div>
 
-        <section
-          class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/80 p-4 shadow-sm ring-1 ring-slate-100 print:hidden sm:p-5"
-          :aria-label="t('trip_detail.quick.title')"
-        >
-          <h2 class="text-center text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.quick.title') }}</h2>
-          <p class="mt-1 text-center text-xs text-slate-500">{{ t('trip_detail.quick.subtitle') }}</p>
-          <div class="mx-auto mt-3 flex max-w-full items-stretch justify-center gap-1 sm:gap-2">
-            <button
-              type="button"
-              class="flex h-14 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 sm:h-16 sm:w-10"
-              :disabled="!canScrollQuickLeft"
-              :aria-label="t('trip_detail.quick.scroll_prev')"
-              @click="scrollQuick(-1)"
-            >
-              <ChevronLeftIcon class="h-5 w-5 sm:h-6 sm:w-6" />
-            </button>
-            <div
-              ref="quickScrollRef"
-              class="quick-strip min-h-14 min-w-0 max-w-full flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] scroll-smooth [&::-webkit-scrollbar]:hidden"
-              @scroll.passive="updateQuickScrollArrows"
-            >
-              <div class="mx-auto flex h-full w-max flex-nowrap items-center gap-2 px-0.5 py-0.5 sm:gap-2.5">
-                <a
-                  v-if="mapsHref"
-                  :href="mapsHref"
-                  target="_blank"
-                  rel="noopener"
-                  class="quick-action-card border-emerald-200 bg-emerald-50/90 text-emerald-900 hover:bg-emerald-100"
-                >
-                  <MapIcon class="h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.open_directions') }}</span>
-                </a>
-                <a
-                  v-if="requesterPhone"
-                  class="quick-action-card border-sky-500 bg-sky-600 text-white hover:bg-sky-700"
-                  :href="`tel:${requesterPhone}`"
-                >
-                  <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.call_requester') }}</span>
-                </a>
-                <a
-                  v-if="requesterEmail"
-                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-                  :href="`mailto:${requesterEmail}`"
-                >
-                  <EnvelopeIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.email_requester') }}</span>
-                </a>
-                <button
-                  v-if="requesterPhone"
-                  type="button"
-                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-                  @click="copyPhone(requesterPhone)"
-                >
-                  <ClipboardDocumentIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.copy_requester_phone') }}</span>
-                </button>
-                <a
-                  v-if="trip.driver?.phone"
-                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-                  :href="`tel:${trip.driver.phone}`"
-                >
-                  <UserIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.call_driver') }}</span>
-                </a>
-                <RouterLink
-                  v-if="trip.dispatch_request?.id"
-                  :to="`/requests/${trip.dispatch_request.id}`"
-                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-                >
-                  <DocumentTextIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.open_request') }}</span>
-                </RouterLink>
-                <button
-                  type="button"
-                  class="quick-action-card border-violet-200 bg-violet-50/90 text-violet-900 hover:bg-violet-100"
-                  @click="scrollToCostsSection"
-                >
-                  <BanknotesIcon class="h-4 w-4 shrink-0 text-violet-700" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.costs_section') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
-                  @click="scrollToCoordination"
-                >
-                  <TruckIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.reassign') }}</span>
-                </button>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="flex h-14 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 sm:h-16 sm:w-10"
-              :disabled="!canScrollQuickRight"
-              :aria-label="t('trip_detail.quick.scroll_next')"
-              @click="scrollQuick(1)"
-            >
-              <ChevronRightIcon class="h-5 w-5 sm:h-6 sm:w-6" />
-            </button>
-          </div>
-          <p v-if="quickCopyMsg" class="mt-2 text-center text-xs text-slate-600">{{ quickCopyMsg }}</p>
-        </section>
-
         <div class="grid gap-6 lg:grid-cols-3">
           <!-- Main column -->
           <div class="space-y-6 lg:col-span-2">
@@ -476,20 +372,21 @@
               </div>
             </section>
 
-            <!-- Costs & advanced status -->
-            <details ref="moreDetailsRef" class="group rounded-2xl border border-slate-200/80 bg-white shadow-sm open:shadow-md open:ring-1 open:ring-sky-100/80">
-              <summary
-                class="cursor-pointer list-none px-5 py-4 text-sm font-semibold text-slate-900 marker:hidden [&::-webkit-details-marker]:hidden"
+            <!-- Costs & advanced status (always visible) -->
+            <section
+              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/90 print:break-inside-avoid"
+              :aria-label="t('trip_detail.more_section.title')"
+            >
+              <div
+                class="border-b border-slate-100/90 bg-gradient-to-r from-sky-50/90 via-white to-violet-50/70 px-5 py-4 sm:px-6"
               >
-                <span class="flex items-center justify-between gap-2">
-                  {{ t('trip_detail.more_section.title') }}
-                  <ChevronDownIcon class="h-5 w-5 shrink-0 text-slate-400 transition group-open:rotate-180" />
-                </span>
-              </summary>
-              <div class="space-y-5 border-t border-slate-100 px-5 pb-5 pt-4">
-                <div class="rounded-xl border border-slate-100 bg-gradient-to-b from-slate-50/50 to-white p-4">
+                <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.more_section.title') }}</h2>
+                <p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-600">{{ t('trip_detail.more_section.subtitle') }}</p>
+              </div>
+              <div class="grid gap-6 p-5 sm:p-6 lg:grid-cols-2 lg:gap-8">
+                <div class="rounded-xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-4 shadow-sm">
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.costs.title') }}</div>
+                    <div class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ t('trip_detail.costs.title') }}</div>
                     <div class="flex flex-wrap items-center gap-2">
                       <div v-if="(trip.costs ?? []).length" class="text-sm font-semibold tabular-nums text-slate-900">
                         {{ t('trip_detail.costs.total', { amount: costsTotalFormatted }) }}
@@ -504,10 +401,10 @@
                   </div>
                   <div
                     v-if="canSubmitQuickCost"
-                    class="mt-4 rounded-lg border border-dashed border-slate-200 bg-white/80 p-3"
+                    class="mt-4 rounded-lg border border-dashed border-slate-200/90 bg-white/90 p-3"
                   >
                     <div class="text-xs font-semibold text-slate-700">{{ t('trip_detail.costs.quick_title') }}</div>
-                    <div class="mt-2 grid gap-2 sm:grid-cols-4">
+                    <div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                       <Select v-model="costQuickForm.type" :label="t('trip_detail.costs.quick_type')">
                         <option value="fuel">{{ t('trip_detail.costs.type_fuel') }}</option>
                         <option value="toll">{{ t('trip_detail.costs.type_toll') }}</option>
@@ -523,7 +420,7 @@
                         :label="t('trip_detail.costs.quick_amount')"
                         :placeholder="t('trip_detail.costs.quick_amount_ph')"
                       />
-                      <div class="sm:col-span-2">
+                      <div class="sm:col-span-2 xl:col-span-2">
                         <Input v-model="costQuickForm.description" :label="t('trip_detail.costs.quick_desc')" :placeholder="t('trip_detail.costs.quick_desc_ph')" />
                       </div>
                     </div>
@@ -554,75 +451,104 @@
                     </div>
                   </div>
                 </div>
-                <form class="rounded-xl border border-sky-100 bg-sky-50/30 p-4 grid gap-3 sm:grid-cols-3" @submit.prevent="doStatus">
-                  <Select v-model="statusForm.status" :label="t('trip_detail.status_update.status')" :placeholder="t('trip_detail.status_update.pick')">
-                    <option value="driver_confirmed">{{ labelTripStatus('driver_confirmed') }}</option>
-                    <option value="in_progress">{{ labelTripStatus('in_progress') }}</option>
-                    <option value="completed">{{ labelTripStatus('completed') }}</option>
-                    <option value="cancelled">{{ labelTripStatus('cancelled') }}</option>
-                  </Select>
-                  <div class="sm:col-span-2">
-                    <Input v-model="statusForm.message" :label="t('trip_detail.status_update.note')" :placeholder="t('trip_detail.status_update.note_ph')" />
-                  </div>
-                  <div class="sm:col-span-3 flex items-center gap-3">
-                    <Button v-if="canUpdateStatus" :loading="statusing" type="submit">{{ t('trip_detail.status_update.update') }}</Button>
-                    <span v-else class="text-xs text-slate-500">{{ t('trip_detail.coordination.no_permission_status') }}</span>
+                <form
+                  class="flex flex-col rounded-xl border border-sky-200/70 bg-gradient-to-br from-sky-50/50 to-white p-4 shadow-sm ring-1 ring-sky-100/40"
+                  @submit.prevent="doStatus"
+                >
+                  <div class="text-xs font-bold uppercase tracking-wide text-sky-900/80">{{ t('trip_detail.status_update.title') }}</div>
+                  <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.status_update.subtitle') }}</p>
+                  <div class="mt-4 grid flex-1 gap-3 sm:grid-cols-3">
+                    <Select v-model="statusForm.status" :label="t('trip_detail.status_update.status')" :placeholder="t('trip_detail.status_update.pick')">
+                      <option value="driver_confirmed">{{ labelTripStatus('driver_confirmed') }}</option>
+                      <option value="in_progress">{{ labelTripStatus('in_progress') }}</option>
+                      <option value="completed">{{ labelTripStatus('completed') }}</option>
+                      <option value="cancelled">{{ labelTripStatus('cancelled') }}</option>
+                    </Select>
+                    <div class="sm:col-span-2">
+                      <Input v-model="statusForm.message" :label="t('trip_detail.status_update.note')" :placeholder="t('trip_detail.status_update.note_ph')" />
+                    </div>
+                    <div class="sm:col-span-3 flex items-center gap-3 border-t border-sky-100/80 pt-4">
+                      <Button v-if="canUpdateStatus" :loading="statusing" type="submit">{{ t('trip_detail.status_update.update') }}</Button>
+                      <span v-else class="text-xs text-slate-500">{{ t('trip_detail.coordination.no_permission_status') }}</span>
+                    </div>
                   </div>
                 </form>
               </div>
-            </details>
+            </section>
           </div>
 
           <!-- Sidebar -->
           <div class="space-y-6">
-            <section ref="coordinationEl" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.coordination.title') }}</h2>
-              <p class="mt-1 text-sm text-slate-600">{{ t('trip_detail.coordination.subtitle') }}</p>
+            <section
+              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden"
+              :aria-label="t('trip_detail.coordination.title')"
+            >
+              <div class="border-b border-slate-100/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/60 px-5 py-4 sm:px-6">
+                <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.coordination.title') }}</h2>
+                <p class="mt-1 text-xs leading-relaxed text-slate-600">{{ t('trip_detail.coordination.subtitle') }}</p>
+              </div>
 
-              <div class="mt-4 space-y-4">
+              <div class="space-y-5 p-5 sm:p-6">
                 <div
                   v-if="canRescheduleTrip"
-                  class="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-white p-3"
+                  class="rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 to-white p-4 shadow-sm"
                 >
-                  <div class="text-xs font-bold uppercase tracking-wide text-indigo-800">{{ t('trip_detail.reschedule.title') }}</div>
+                  <div class="text-xs font-bold uppercase tracking-wide text-indigo-900">{{ t('trip_detail.reschedule.title') }}</div>
                   <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.reschedule.hint') }}</p>
                   <input
                     v-model="rescheduleDepartLocal"
                     type="datetime-local"
-                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-indigo-200 focus:ring"
+                    class="mt-3 w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:border-indigo-300 focus:ring-indigo-100"
                   />
-                  <Button class="mt-2 w-full sm:w-auto" type="button" :loading="rescheduling" @click="doReschedule">
+                  <Button class="mt-3 w-full sm:w-auto" type="button" :loading="rescheduling" @click="doReschedule">
                     {{ t('trip_detail.reschedule.save') }}
                   </Button>
-                  <p v-if="rescheduleMsg" class="mt-2 text-xs text-slate-600">{{ rescheduleMsg }}</p>
-                </div>
-
-                <div>
-                  <Select
-                    v-model="vehicleChoice"
-                    :label="t('trip_detail.coordination.assign_vehicle')"
-                    :placeholder="t('trip_detail.ops.form.pick_vehicle')"
+                  <div
+                    v-if="rescheduleMsg"
+                    class="mt-3 rounded-lg border px-3 py-2 text-xs font-medium"
+                    :class="rescheduleFeedbackIsError ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'"
+                    role="status"
                   >
-                    <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                    <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
-                      {{ v.license_plate }} · {{ v.type ?? '—' }} {{ v.seat_count ? `(${v.seat_count})` : '' }}
-                    </option>
-                  </Select>
-                  <p v-if="suitableVehiclesHint" class="mt-1.5 text-xs font-medium text-emerald-700">{{ suitableVehiclesHint }}</p>
+                    {{ rescheduleMsg }}
+                  </div>
                 </div>
-                <Select v-model="driverChoice" :label="t('trip_detail.coordination.assign_driver')" :placeholder="t('trip_detail.ops.form.pick_driver')">
-                  <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                  <option v-for="d in drivers" :key="d.id" :value="String(d.id)">
-                    {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
-                  </option>
-                </Select>
 
-                <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-800">
+                <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 shadow-sm">
+                  <div class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ t('trip_detail.coordination.assign_pair_title') }}</div>
+                  <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.coordination.driver_default_vehicle_hint') }}</p>
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <Select
+                      v-model="vehicleChoice"
+                      :label="t('trip_detail.coordination.assign_vehicle')"
+                      :placeholder="t('trip_detail.ops.form.pick_vehicle')"
+                    >
+                      <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
+                      <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
+                        {{ v.license_plate }} · {{ v.type ?? '—' }} {{ v.seat_count ? `(${v.seat_count})` : '' }}
+                      </option>
+                    </Select>
+                    <Select
+                      v-model="driverChoice"
+                      :label="t('trip_detail.coordination.assign_driver')"
+                      :placeholder="t('trip_detail.ops.form.pick_driver')"
+                    >
+                      <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
+                      <option v-for="d in drivers" :key="d.id" :value="String(d.id)">
+                        {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
+                      </option>
+                    </Select>
+                  </div>
+                  <p v-if="suitableVehiclesHint" class="mt-3 text-xs font-medium text-emerald-800">{{ suitableVehiclesHint }}</p>
+                </div>
+
+                <label
+                  class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm"
+                >
                   <input v-model="hireExternal" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                   {{ t('trip_detail.coordination.hire_external') }}
                 </label>
 
-                <div v-if="hireExternal" class="grid gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                <div v-if="hireExternal" class="grid gap-3 rounded-xl border border-amber-200/80 bg-amber-50/60 p-4">
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
                     <div class="min-w-0 flex-1">
                       <Select
@@ -668,8 +594,23 @@
                   />
                 </div>
 
-                <div v-if="resourceHint" class="text-xs text-amber-800">{{ resourceHint }}</div>
-                <div v-if="assignMsg" class="text-sm text-slate-600">{{ assignMsg }}</div>
+                <div v-if="resourceHint" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950">
+                  {{ resourceHint }}
+                </div>
+                <div
+                  v-if="assignMsg"
+                  class="rounded-lg border px-3 py-2.5 text-sm font-medium"
+                  :class="
+                    assignFeedbackKind === 'success'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
+                      : assignFeedbackKind === 'error'
+                        ? 'border-rose-200 bg-rose-50 text-rose-950'
+                        : 'border-slate-200 bg-slate-50 text-slate-800'
+                  "
+                  role="alert"
+                >
+                  {{ assignMsg }}
+                </div>
 
                 <div v-if="canAssign || canUpdateStatus" class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
                   <Button
@@ -895,27 +836,16 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
   ArrowLeftIcon,
   ArrowPathIcon,
-  BanknotesIcon,
   BellIcon,
   CalendarDaysIcon,
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ClipboardDocumentIcon,
-  DocumentTextIcon,
-  EnvelopeIcon,
-  MapIcon,
-  PhoneIcon,
   TrashIcon,
-  TruckIcon,
-  UserIcon,
 } from '@heroicons/vue/24/outline'
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/solid'
 import Card from '../../components/ui/Card.vue'
@@ -948,6 +878,26 @@ const route = useRoute()
 const { t, te, locale } = useI18n()
 const auth = useAuthStore()
 
+function formatApiMessage(e) {
+  const d = e?.response?.data
+  if (typeof d?.message === 'string' && d.message.trim()) return d.message.trim()
+  if (d?.errors && typeof d.errors === 'object') {
+    const vals = Object.values(d.errors)
+      .flat()
+      .filter(Boolean)
+    if (vals.length) return String(vals[0])
+  }
+  const status = e?.response?.status
+  if (status === 429) return t('trip_detail.messages.rate_limited')
+  return t('trip_detail.messages.error')
+}
+
+function defaultVehicleIdForDriver(driverId) {
+  if (driverId == null || String(driverId).trim() === '') return null
+  const v = vehicles.value.find((x) => x.default_driver && String(x.default_driver.id) === String(driverId))
+  return v ? String(v.id) : null
+}
+
 const trip = ref(null)
 const loading = ref(true)
 const loadError = ref('')
@@ -956,20 +906,21 @@ const silentLoadError = ref('')
 const rescheduleDepartLocal = ref('')
 const rescheduling = ref(false)
 const rescheduleMsg = ref('')
+const rescheduleFeedbackIsError = ref(false)
 const costQuickForm = ref({ type: 'fuel', amount: '', description: '' })
 const costSubmitting = ref(false)
 const costFormMsg = ref('')
 const assigning = ref(false)
 const rejecting = ref(false)
 const assignMsg = ref('')
+const assignFeedbackKind = ref('')
+const suppressDriverVehicleSync = ref(false)
 const statusing = ref(false)
 const vehicles = ref([])
 const drivers = ref([])
 const resourceHint = ref('')
 const vehicleChoice = ref('')
 const driverChoice = ref('')
-const coordinationEl = ref(null)
-const moreDetailsRef = ref(null)
 const attachInputRef = ref(null)
 const linkMsg = ref('')
 const mapExpanded = ref(false)
@@ -988,10 +939,6 @@ const attachUploading = ref(false)
 const attachDeletingId = ref(null)
 const attachMsg = ref('')
 const attachMsgIsError = ref(false)
-const quickCopyMsg = ref('')
-const quickScrollRef = ref(null)
-const canScrollQuickLeft = ref(false)
-const canScrollQuickRight = ref(false)
 
 const newNote = ref('')
 const noting = ref(false)
@@ -1095,8 +1042,6 @@ const currentLabel = computed(() => {
 const tripTypeLabel = computed(() => labelTripType(trip.value?.dispatch_request?.trip_type))
 
 const requesterName = computed(() => trip.value?.dispatch_request?.requester?.name ?? '—')
-const requesterPhone = computed(() => trip.value?.dispatch_request?.requester?.phone ?? '')
-const requesterEmail = computed(() => trip.value?.dispatch_request?.requester?.email?.trim() ?? '')
 
 const requesterSubtitle = computed(() => {
   const u = snap.value?.form?.requester_unit
@@ -1567,20 +1512,18 @@ const timeline = computed(() => {
     .sort((a, b) => new Date(b.at) - new Date(a.at))
 })
 
-function scrollToCoordination() {
-  coordinationEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
-}
-
 function printPage() {
   if (typeof window !== 'undefined') window.print()
 }
 
 async function doReschedule() {
   rescheduleMsg.value = ''
+  rescheduleFeedbackIsError.value = false
   const raw = rescheduleDepartLocal.value
   if (!raw || !trip.value) return
   const d = new Date(raw)
   if (Number.isNaN(d.getTime())) {
+    rescheduleFeedbackIsError.value = true
     rescheduleMsg.value = t('trip_detail.reschedule.invalid')
     return
   }
@@ -1590,11 +1533,13 @@ async function doReschedule() {
       depart_at: d.toISOString(),
       lock_version: assign.value.lock_version ?? 0,
     })
-    rescheduleMsg.value = t('trip_detail.messages.ok')
+    rescheduleFeedbackIsError.value = false
+    rescheduleMsg.value = t('trip_detail.reschedule.success')
     await load({ silent: true })
     rescheduleDepartLocal.value = toDatetimeLocalValue(trip.value?.depart_at)
   } catch (e) {
-    rescheduleMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+    rescheduleFeedbackIsError.value = true
+    rescheduleMsg.value = formatApiMessage(e)
   } finally {
     rescheduling.value = false
   }
@@ -1631,49 +1576,6 @@ async function submitQuickCost() {
     costFormMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
   } finally {
     costSubmitting.value = false
-  }
-}
-
-let quickCopyTimer = null
-
-function updateQuickScrollArrows() {
-  const el = quickScrollRef.value
-  if (!el) {
-    canScrollQuickLeft.value = false
-    canScrollQuickRight.value = false
-    return
-  }
-  const { scrollLeft, scrollWidth, clientWidth } = el
-  canScrollQuickLeft.value = scrollLeft > 2
-  canScrollQuickRight.value = scrollLeft + clientWidth < scrollWidth - 2
-}
-
-function scrollQuick(dir) {
-  const el = quickScrollRef.value
-  if (!el) return
-  const step = Math.max(140, Math.round(el.clientWidth * 0.6))
-  el.scrollBy({ left: step * dir, behavior: 'smooth' })
-}
-
-async function scrollToCostsSection() {
-  const el = moreDetailsRef.value
-  if (!el) return
-  el.open = true
-  await nextTick()
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-async function copyPhone(phone) {
-  quickCopyMsg.value = ''
-  try {
-    await navigator.clipboard.writeText(phone)
-    quickCopyMsg.value = t('trip_detail.quick.copied_phone')
-    if (quickCopyTimer) clearTimeout(quickCopyTimer)
-    quickCopyTimer = setTimeout(() => {
-      quickCopyMsg.value = ''
-    }, 2500)
-  } catch {
-    quickCopyMsg.value = t('trip_detail.messages.copy_failed')
   }
 }
 
@@ -1821,8 +1723,14 @@ async function load(opts = {}) {
     const data = await getTrip(route.params.id)
     trip.value = data
     assign.value.lock_version = trip.value.lock_version ?? 0
-    vehicleChoice.value = trip.value.vehicle_id ? String(trip.value.vehicle_id) : ''
-    driverChoice.value = trip.value.driver_id ? String(trip.value.driver_id) : ''
+    suppressDriverVehicleSync.value = true
+    try {
+      vehicleChoice.value = trip.value.vehicle_id ? String(trip.value.vehicle_id) : ''
+      driverChoice.value = trip.value.driver_id ? String(trip.value.driver_id) : ''
+      await nextTick()
+    } finally {
+      suppressDriverVehicleSync.value = false
+    }
     hireExternal.value = !!trip.value.transport_provider_id
     externalVehicleRef.value = trip.value.external_vehicle_ref ?? ''
     externalDriverRef.value = trip.value.external_driver_ref ?? ''
@@ -1847,18 +1755,22 @@ async function load(opts = {}) {
 
 async function onApproveTransfer() {
   assignMsg.value = ''
+  assignFeedbackKind.value = ''
   const hasInternal = vehicleChoice.value && driverChoice.value
   const hasExternal = hireExternal.value && providerChoice.value && String(providerChoice.value).trim() !== ''
 
   if (!hasInternal && !hasExternal) {
+    assignFeedbackKind.value = 'error'
     assignMsg.value = t('trip_detail.coordination.validation_assign')
     return
   }
   if (hireExternal.value && !hasExternal) {
+    assignFeedbackKind.value = 'error'
     assignMsg.value = t('trip_detail.coordination.validation_provider')
     return
   }
   if (!hireExternal.value && !hasInternal) {
+    assignFeedbackKind.value = 'error'
     assignMsg.value = t('trip_detail.coordination.validation_assign')
     return
   }
@@ -1887,10 +1799,12 @@ async function onApproveTransfer() {
       }
     }
 
-    assignMsg.value = t('trip_detail.messages.ok')
+    assignFeedbackKind.value = 'success'
+    assignMsg.value = t('trip_detail.coordination.assign_success')
     await load({ silent: true })
   } catch (e) {
-    assignMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = formatApiMessage(e)
   } finally {
     assigning.value = false
   }
@@ -1907,13 +1821,18 @@ async function onRejectTrip() {
   })
   if (!ok) return
 
+  assignMsg.value = ''
+  assignFeedbackKind.value = ''
   rejecting.value = true
   try {
     const msg = coordinationNotes.value.trim() || undefined
     await updateTripStatus(route.params.id, { status: 'cancelled', message: msg })
+    assignFeedbackKind.value = 'success'
+    assignMsg.value = t('trip_detail.coordination.reject_success')
     await load({ silent: true })
   } catch (e) {
-    assignMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = formatApiMessage(e)
   } finally {
     rejecting.value = false
   }
@@ -1951,49 +1870,12 @@ watch(hireExternal, (on) => {
   if (!on) providerChoice.value = ''
 })
 
-watch([trip, loading], async () => {
-  if (!loading.value && trip.value) {
-    await nextTick()
-    updateQuickScrollArrows()
-  }
+watch(driverChoice, (id) => {
+  if (suppressDriverVehicleSync.value || hireExternal.value) return
+  const vid = defaultVehicleIdForDriver(id)
+  if (vid) vehicleChoice.value = vid
 })
 
-onMounted(() => {
-  window.addEventListener('resize', updateQuickScrollArrows)
-  load()
-})
-onUnmounted(() => {
-  window.removeEventListener('resize', updateQuickScrollArrows)
-})
+onMounted(load)
 watch(() => route.params.id, load)
 </script>
-
-<style scoped>
-.quick-action-card {
-  display: flex;
-  height: 3.5rem;
-  width: 7.5rem;
-  flex-shrink: 0;
-  scroll-snap-align: start;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  border-radius: 0.5rem;
-  border-width: 1px;
-  padding: 0.375rem 0.5rem;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-}
-@media (min-width: 640px) {
-  .quick-action-card {
-    height: 4rem;
-    width: 8.75rem;
-    font-size: 0.75rem;
-    line-height: 1.25rem;
-    padding: 0.5rem 0.5rem;
-  }
-}
-</style>
