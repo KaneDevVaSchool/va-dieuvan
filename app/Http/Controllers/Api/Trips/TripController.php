@@ -13,31 +13,26 @@ use App\Services\Dispatching\DispatchingService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
     use ApiResponses;
 
-    public function index(ListTripsRequest $request)
+    protected function newTripListBuilder($user): Builder
     {
-        $data = $request->validated();
-        $user = $request->user();
+        return TripVisibility::visibleTripsQuery($user)
+            ->whereHas('dispatchRequest');
+    }
 
-        $q = TripVisibility::visibleTripsQuery($user)
-            ->whereHas('dispatchRequest')
-            ->with([
-                'dispatcher:id,name,email',
-                'vehicle:id,license_plate,status',
-                'driver:id,full_name',
-                'transportProvider:id,name',
-                'dispatchRequest:id,status,trip_type,origin,destination',
-            ])
-            ->orderByDesc('depart_at')
-            ->orderByDesc('id');
-
-        $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
-        $q->when(isset($data['from']), fn (Builder $b) => $b->where('depart_at', '>=', Carbon::parse($data['from'])->startOfDay()));
-        $q->when(isset($data['to']), fn (Builder $b) => $b->where('depart_at', '<=', Carbon::parse($data['to'])->endOfDay()));
+    /**
+     * @param  array<string, mixed>  $data  validated list params
+     */
+    protected function applyTripListFilters(Builder $q, array $data): void
+    {
+        $q->when(isset($data['status']), fn (Builder $b) => $b->where('trips.status', $data['status']));
+        $q->when(isset($data['from']), fn (Builder $b) => $b->where('trips.depart_at', '>=', Carbon::parse($data['from'])->startOfDay()));
+        $q->when(isset($data['to']), fn (Builder $b) => $b->where('trips.depart_at', '<=', Carbon::parse($data['to'])->endOfDay()));
 
         $q->when(isset($data['trip_type']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('trip_type', $data['trip_type'])));
         $q->when(isset($data['source_channel']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('source_channel', $data['source_channel'])));
@@ -46,19 +41,54 @@ class TripController extends Controller
 
         $q->when(! empty($data['fleet_mode']), function (Builder $b) use ($data) {
             match ($data['fleet_mode']) {
-                'internal' => $b->whereNull('transport_provider_id')->whereNotNull('vehicle_id'),
-                'vendor_hire' => $b->whereNotNull('transport_provider_id')
+                'internal' => $b->whereNull('trips.transport_provider_id')->whereNotNull('trips.vehicle_id'),
+                'vendor_hire' => $b->whereNotNull('trips.transport_provider_id')
                     ->whereHas('transportProvider', function (Builder $p) {
                         $p->where(function (Builder $inner) {
                             $inner->whereNull('type')->orWhere('type', '!=', 'taxi');
                         });
                     }),
-                'taxi' => $b->whereNotNull('transport_provider_id')
+                'taxi' => $b->whereNotNull('trips.transport_provider_id')
                     ->whereHas('transportProvider', fn (Builder $p) => $p->where('type', 'taxi')),
-                'unspecified' => $b->whereNull('transport_provider_id')->whereNull('vehicle_id'),
+                'unspecified' => $b->whereNull('trips.transport_provider_id')->whereNull('trips.vehicle_id'),
                 default => null,
             };
         });
+
+        $term = isset($data['q']) ? trim((string) $data['q']) : '';
+        $q->when($term !== '', function (Builder $b) use ($term) {
+            $like = '%'.addcslashes($term, '%_\\').'%';
+            $b->where(function (Builder $inner) use ($term, $like) {
+                if (ctype_digit($term)) {
+                    $inner->where('trips.id', (int) $term);
+                }
+                $inner->orWhereHas('driver', fn (Builder $d) => $d->where('full_name', 'like', $like))
+                    ->orWhereHas('vehicle', fn (Builder $v) => $v->where('license_plate', 'like', $like))
+                    ->orWhereHas('dispatchRequest', fn (Builder $dr) => $dr
+                        ->where('origin', 'like', $like)
+                        ->orWhere('destination', 'like', $like));
+            });
+        });
+    }
+
+    public function index(ListTripsRequest $request)
+    {
+        $data = $request->validated();
+        $user = $request->user();
+
+        $q = $this->newTripListBuilder($user)
+            ->with([
+                'dispatcher:id,name,email',
+                'vehicle:id,license_plate,status',
+                'driver:id,full_name,phone',
+                'transportProvider:id,name',
+                'record:id,trip_id,distance_km',
+                'dispatchRequest:id,status,trip_type,origin,destination,arrive_by,passenger_count',
+            ])
+            ->orderByDesc('trips.depart_at')
+            ->orderByDesc('trips.id');
+
+        $this->applyTripListFilters($q, $data);
 
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
@@ -71,6 +101,46 @@ class TripController extends Controller
                 'total' => $results->total(),
                 'last_page' => $results->lastPage(),
             ],
+        ]);
+    }
+
+    /**
+     * Aggregates for list KPIs / tabs (ignores trip_type so breakdown stays stable while a type tab is selected).
+     */
+    public function stats(ListTripsRequest $request)
+    {
+        $data = $request->validated();
+        $user = $request->user();
+
+        $agg = $data;
+        unset($agg['trip_type'], $agg['page'], $agg['per_page']);
+
+        $base = $this->newTripListBuilder($user);
+        $this->applyTripListFilters($base, $agg);
+
+        $total = (clone $base)->count();
+
+        $byTypeRaw = (clone $base)
+            ->leftJoin('dispatch_requests', 'dispatch_requests.id', '=', 'trips.dispatch_request_id')
+            ->select(
+                DB::raw('COALESCE(dispatch_requests.trip_type, \'unspecified\') as trip_type'),
+                DB::raw('COUNT(*) as c'),
+            )
+            ->groupBy('trip_type')
+            ->pluck('c', 'trip_type');
+
+        $incident = (clone $base)->where('trips.status', 'incident')->count();
+
+        return $this->ok([
+            'total' => $total,
+            'by_trip_type' => [
+                'door_to_door' => (int) ($byTypeRaw['door_to_door'] ?? 0),
+                'point_to_point' => (int) ($byTypeRaw['point_to_point'] ?? 0),
+                'business' => (int) ($byTypeRaw['business'] ?? 0),
+                'cargo' => (int) ($byTypeRaw['cargo'] ?? 0),
+                'unspecified' => (int) ($byTypeRaw['unspecified'] ?? 0),
+            ],
+            'incident' => $incident,
         ]);
     }
 

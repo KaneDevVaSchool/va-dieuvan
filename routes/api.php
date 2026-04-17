@@ -73,6 +73,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::controller(TripController::class)->group(function () {
             Route::get('/trips', 'index');
+            Route::get('/trips/stats', 'stats');
             Route::get('/trips/{trip}', 'show');
         });
 

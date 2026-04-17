@@ -5,6 +5,11 @@ export async function listTrips(params = {}) {
   return data.data
 }
 
+export async function getTripStats(params = {}) {
+  const { data } = await http.get('/trips/stats', { params })
+  return data.data
+}
+
 export async function getTrip(id) {
   const { data } = await http.get(`/trips/${id}`)
   return data.data

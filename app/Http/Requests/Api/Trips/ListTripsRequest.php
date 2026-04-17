@@ -28,6 +28,10 @@ class ListTripsRequest extends ApiFormRequest
                 $merge[$key] = null;
             }
         }
+        if ($this->has('q')) {
+            $qt = trim((string) $this->input('q'));
+            $merge['q'] = $qt === '' ? null : $qt;
+        }
         if ($merge !== []) {
             $this->merge($merge);
         }
@@ -44,6 +48,7 @@ class ListTripsRequest extends ApiFormRequest
             'fleet_mode' => ['nullable', Rule::in(['internal', 'vendor_hire', 'taxi', 'unspecified'])],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'q' => ['nullable', 'string', 'max:120'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
         ];
