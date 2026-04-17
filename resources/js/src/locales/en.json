@@ -881,8 +881,9 @@
     "loading": "Loading…",
     "load_error": "Could not load this trip.",
     "retry": "Retry",
-    "nav": {
-      "aria": "Trip detail quick navigation",
+    "quick_bar": {
+      "title": "Quick actions",
+      "aria": "Quick actions on trip detail",
       "overview": "Overview",
       "route": "Route",
       "passengers": "Passengers",
@@ -1006,11 +1007,7 @@
       "validation_provider": "External hire requires selecting a provider.",
       "reject_confirm_title": "Cancel this trip?",
       "reject_confirm_body": "The trip will be marked cancelled. Internal notes (if any) are stored on the status change.",
-      "reject_cancel": "Back",
-      "filter_vehicle": "Filter vehicles",
-      "filter_vehicle_ph": "Plate, type…",
-      "filter_driver": "Filter drivers",
-      "filter_driver_ph": "Name, phone…"
+      "reject_cancel": "Back"
     },
     "attachments": {
       "title": "Attachments",
@@ -1164,7 +1161,12 @@
       "quick_desc": "Description (optional)",
       "quick_desc_ph": "Receipt note…",
       "quick_submit": "Submit cost",
-      "quick_invalid": "Pick a type and enter a valid amount."
+      "quick_invalid": "Pick a type and enter a valid amount.",
+      "type_fuel": "Fuel",
+      "type_toll": "Toll / road fee",
+      "type_parking": "Parking",
+      "type_labor": "Labor / allowance",
+      "type_other": "Other"
     },
     "step": {
       "pending": "Pending",

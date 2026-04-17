@@ -881,8 +881,9 @@
     "loading": "Đang tải…",
     "load_error": "Không tải được chuyến.",
     "retry": "Thử lại",
-    "nav": {
-      "aria": "Điều hướng nhanh trang chi tiết chuyến",
+    "quick_bar": {
+      "title": "Thao tác nhanh",
+      "aria": "Thao tác nhanh trên trang chi tiết chuyến",
       "overview": "Tổng quan",
       "route": "Tuyến đường",
       "passengers": "Hành khách",
@@ -1006,11 +1007,7 @@
       "validation_provider": "Khi thuê ngoài, chọn nhà cung cấp trong danh sách.",
       "reject_confirm_title": "Hủy chuyến này?",
       "reject_confirm_body": "Trạng thái chuyến sẽ chuyển sang đã hủy. Ghi chú nội bộ (nếu có) sẽ lưu vào nhật ký trạng thái.",
-      "reject_cancel": "Không",
-      "filter_vehicle": "Lọc xe",
-      "filter_vehicle_ph": "Biển số, loại xe…",
-      "filter_driver": "Lọc tài xế",
-      "filter_driver_ph": "Tên, SĐT…"
+      "reject_cancel": "Không"
     },
     "attachments": {
       "title": "Tệp đính kèm",
@@ -1178,7 +1175,12 @@
       "quick_desc": "Mô tả (tuỳ chọn)",
       "quick_desc_ph": "Ghi chú chứng từ…",
       "quick_submit": "Gửi chi phí",
-      "quick_invalid": "Chọn loại và nhập số tiền hợp lệ."
+      "quick_invalid": "Chọn loại và nhập số tiền hợp lệ.",
+      "type_fuel": "Xăng dầu",
+      "type_toll": "Phí cầu đường",
+      "type_parking": "Gửi xe / bãi",
+      "type_labor": "Nhân công / phụ cấp",
+      "type_other": "Khác"
     }
   },
   "dashboard_analytics": {

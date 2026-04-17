@@ -97,19 +97,21 @@
         </div>
 
         <nav
-          class="sticky top-0 z-30 -mx-4 mb-1 flex gap-1 overflow-x-auto rounded-xl border border-slate-200/80 bg-[#F8F9FA]/95 px-2 py-2 shadow-sm backdrop-blur-md sm:-mx-0 print:hidden"
-          :aria-label="t('trip_detail.nav.aria')"
+          class="sticky top-0 z-30 -mx-4 mb-1 rounded-xl border border-slate-200/80 bg-[#F8F9FA]/95 px-2 py-2 shadow-sm backdrop-blur-md sm:-mx-0 print:hidden"
+          :aria-label="t('trip_detail.quick_bar.aria')"
         >
-          <button
-            v-for="item in navItems"
-            :key="item.id"
-            type="button"
-            class="shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition"
-            :class="item.id === 'costs' ? 'bg-violet-100 text-violet-900' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
-            @click="item.action"
-          >
-            {{ item.label }}
-          </button>
+          <div class="px-1 pb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.quick_bar.title') }}</div>
+          <div class="flex gap-1 overflow-x-auto">
+            <button
+              v-for="item in quickBarItems"
+              :key="item.id"
+              type="button"
+              class="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+              @click="item.action"
+            >
+              {{ item.label }}
+            </button>
+          </div>
         </nav>
 
         <div class="grid gap-6 lg:grid-cols-3">
@@ -421,11 +423,11 @@
                     <div class="text-xs font-semibold text-slate-700">{{ t('trip_detail.costs.quick_title') }}</div>
                     <div class="mt-2 grid gap-2 sm:grid-cols-4">
                       <Select v-model="costQuickForm.type" :label="t('trip_detail.costs.quick_type')">
-                        <option value="fuel">fuel</option>
-                        <option value="toll">toll</option>
-                        <option value="parking">parking</option>
-                        <option value="labor">labor</option>
-                        <option value="other">other</option>
+                        <option value="fuel">{{ t('trip_detail.costs.type_fuel') }}</option>
+                        <option value="toll">{{ t('trip_detail.costs.type_toll') }}</option>
+                        <option value="parking">{{ t('trip_detail.costs.type_parking') }}</option>
+                        <option value="labor">{{ t('trip_detail.costs.type_labor') }}</option>
+                        <option value="other">{{ t('trip_detail.costs.type_other') }}</option>
                       </Select>
                       <Input
                         v-model="costQuickForm.amount"
@@ -452,7 +454,7 @@
                     >
                       <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
-                          <span class="text-sm font-medium text-slate-900">{{ c.type }}</span>
+                          <span class="text-sm font-medium text-slate-900">{{ costTypeLabel(c.type) }}</span>
                           <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide" :class="costStatusClass(c.status)">
                             {{ c.status }}
                           </span>
@@ -510,38 +512,24 @@
                 </div>
 
                 <div>
-                  <Input
-                    v-model="vehicleSearch"
-                    :label="t('trip_detail.coordination.filter_vehicle')"
-                    :placeholder="t('trip_detail.coordination.filter_vehicle_ph')"
-                    class="mb-2"
-                  />
                   <Select
                     v-model="vehicleChoice"
                     :label="t('trip_detail.coordination.assign_vehicle')"
                     :placeholder="t('trip_detail.ops.form.pick_vehicle')"
                   >
                     <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                    <option v-for="v in vehiclesFiltered" :key="v.id" :value="String(v.id)">
+                    <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
                       {{ v.license_plate }} · {{ v.type ?? '—' }} {{ v.seat_count ? `(${v.seat_count})` : '' }}
                     </option>
                   </Select>
                   <p v-if="suitableVehiclesHint" class="mt-1.5 text-xs font-medium text-emerald-700">{{ suitableVehiclesHint }}</p>
                 </div>
-                <div>
-                  <Input
-                    v-model="driverSearch"
-                    :label="t('trip_detail.coordination.filter_driver')"
-                    :placeholder="t('trip_detail.coordination.filter_driver_ph')"
-                    class="mb-2"
-                  />
-                  <Select v-model="driverChoice" :label="t('trip_detail.coordination.assign_driver')" :placeholder="t('trip_detail.ops.form.pick_driver')">
-                    <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                    <option v-for="d in driversFiltered" :key="d.id" :value="String(d.id)">
-                      {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
-                    </option>
-                  </Select>
-                </div>
+                <Select v-model="driverChoice" :label="t('trip_detail.coordination.assign_driver')" :placeholder="t('trip_detail.ops.form.pick_driver')">
+                  <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
+                  <option v-for="d in drivers" :key="d.id" :value="String(d.id)">
+                    {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
+                  </option>
+                </Select>
 
                 <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-800">
                   <input v-model="hireExternal" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
@@ -928,7 +916,7 @@ const WheelchairIcon = {
 }
 
 const route = useRoute()
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const auth = useAuthStore()
 
 const trip = ref(null)
@@ -942,8 +930,6 @@ const passengersEl = ref(null)
 const rescheduleDepartLocal = ref('')
 const rescheduling = ref(false)
 const rescheduleMsg = ref('')
-const vehicleSearch = ref('')
-const driverSearch = ref('')
 const costQuickForm = ref({ type: 'fuel', amount: '', description: '' })
 const costSubmitting = ref(false)
 const costFormMsg = ref('')
@@ -1010,33 +996,22 @@ const slaBanner = computed(() => {
   return { kind: 'ok', text: t('trip_detail.sla.remaining_minutes', { n: min }) }
 })
 
-const vehiclesFiltered = computed(() => {
-  const q = vehicleSearch.value.trim().toLowerCase()
-  if (!q) return vehicles.value
-  return vehicles.value.filter((v) => {
-    const plate = (v.license_plate ?? '').toLowerCase()
-    const typ = (v.type ?? '').toLowerCase()
-    return plate.includes(q) || typ.includes(q)
-  })
-})
-
-const driversFiltered = computed(() => {
-  const q = driverSearch.value.trim().toLowerCase()
-  if (!q) return drivers.value
-  return drivers.value.filter((d) => {
-    const name = (d.full_name ?? '').toLowerCase()
-    const phone = (d.phone ?? '').toLowerCase()
-    return name.includes(q) || phone.includes(q)
-  })
-})
-
-const navItems = computed(() => [
-  { id: 'overview', label: t('trip_detail.nav.overview'), action: () => overviewEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
-  { id: 'route', label: t('trip_detail.nav.route'), action: () => routeEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
-  { id: 'passengers', label: t('trip_detail.nav.passengers'), action: () => passengersEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
-  { id: 'costs', label: t('trip_detail.nav.costs'), action: () => scrollToCostsSection() },
-  { id: 'coordination', label: t('trip_detail.nav.coordination'), action: () => scrollToCoordination() },
+const quickBarItems = computed(() => [
+  { id: 'overview', label: t('trip_detail.quick_bar.overview'), action: () => overviewEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
+  { id: 'route', label: t('trip_detail.quick_bar.route'), action: () => routeEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
+  { id: 'passengers', label: t('trip_detail.quick_bar.passengers'), action: () => passengersEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
+  { id: 'costs', label: t('trip_detail.quick_bar.costs'), action: () => scrollToCostsSection() },
+  { id: 'coordination', label: t('trip_detail.quick_bar.coordination'), action: () => scrollToCoordination() },
 ])
+
+function costTypeLabel(type) {
+  const raw = String(type ?? '').trim()
+  if (!raw) return '—'
+  const slug = raw.toLowerCase().replace(/[^a-z0-9_]/g, '_')
+  const key = `trip_detail.costs.type_${slug}`
+  if (te(key)) return t(key)
+  return raw
+}
 
 function fmt(v) {
   const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
