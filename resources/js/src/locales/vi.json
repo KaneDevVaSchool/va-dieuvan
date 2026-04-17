@@ -650,7 +650,9 @@
         "action_track": "Theo dõi",
         "action_assign": "Phân công",
         "action_contact": "Liên hệ",
-        "page_range": "Hiển thị {from}–{to} trong {total} chuyến"
+        "page_range": "Hiển thị {from}–{to} trong {total} chuyến",
+        "filter_show_controls_title": "Hiển thị bộ lọc trên thanh",
+        "filter_show_controls_hint": "Chọn bộ lọc nào hiện trên thanh. Điều kiện đã chọn vẫn áp dụng khi ẩn (xem tóm tắt trong panel phễu)."
     },
     "reports_page": {
         "filter_title": "Khoảng thời gian báo cáo",

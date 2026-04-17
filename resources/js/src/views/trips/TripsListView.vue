@@ -35,9 +35,9 @@
       </div>
     </div>
 
-    <!-- Filters (cùng phong cách tổng quan) -->
+    <!-- Filters (cùng phong cách tổng quan) — isolate + z-index để panel không bị chồng bởi nội dung phía dưới -->
     <AppFilterBar>
-      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+      <div class="relative z-30 isolate flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
         <details ref="funnelDetailsRef" class="group relative">
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -54,7 +54,7 @@
             <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           </summary>
           <div
-            class="absolute left-0 top-[calc(100%+8px)] z-40 min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
+            class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
           >
             <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
               {{ t('dashboard_analytics.filter_applied_title') }}
@@ -84,6 +84,30 @@
                   <span class="font-medium text-slate-800 dark:text-slate-200">{{ filters.per_page }}</span>
                 </li>
               </ul>
+              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('trips_page.filter_show_controls_title') }}
+                </p>
+                <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                  {{ t('trips_page.filter_show_controls_hint') }}
+                </p>
+                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="fd in dimensionFilters" :key="'vis-' + fd.id" class="flex items-start gap-2">
+                    <input
+                      :id="'trips-filter-vis-' + fd.id"
+                      v-model="filterDropdownVisible[fd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                    />
+                    <label
+                      :for="'trips-filter-vis-' + fd.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ fd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
               <button
                 type="button"
                 class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -111,7 +135,7 @@
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+              class="absolute left-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
             >
               <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
                 <li v-for="p in presetDefs" :key="p.id">
@@ -154,7 +178,7 @@
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+8px)] z-40 w-[min(100vw-1rem,22rem)] overflow-hidden rounded-2xl border border-violet-200/60 bg-gradient-to-b from-white via-white to-slate-50/95 shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/45 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:shadow-black/40 dark:ring-slate-950/50 sm:left-auto sm:right-0 sm:w-[20.5rem]"
+              class="fixed inset-x-3 top-20 z-[200] max-h-[min(75vh,28rem)] w-auto overflow-y-auto overflow-x-hidden rounded-2xl border border-violet-200/60 bg-gradient-to-b from-white via-white to-slate-50/95 shadow-2xl shadow-violet-500/20 ring-1 ring-slate-900/5 dark:border-violet-800/45 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:shadow-black/50 dark:ring-slate-950/50 sm:absolute sm:inset-x-auto sm:left-auto sm:right-0 sm:top-[calc(100%+8px)] sm:z-[100] sm:max-h-[min(70vh,32rem)] sm:w-[20.5rem] sm:shadow-xl"
             >
               <div class="border-b border-violet-100/90 bg-gradient-to-r from-violet-50/80 to-indigo-50/40 px-3 py-2.5 dark:border-violet-900/40 dark:from-violet-950/40 dark:to-indigo-950/20">
                 <div class="flex items-start gap-2">
@@ -232,7 +256,7 @@
             </div>
           </details>
 
-          <template v-for="fd in dimensionFilters" :key="fd.id">
+          <template v-for="fd in visibleDimensionFilters" :key="fd.id">
             <details class="group relative min-w-0">
               <summary
                 class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -244,7 +268,7 @@
                 <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               </summary>
               <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+                class="absolute left-0 top-[calc(100%+6px)] z-[100] max-h-[min(70vh,24rem)] min-w-[220px] overflow-y-auto rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950 max-sm:fixed max-sm:inset-x-3 max-sm:top-24 max-sm:z-[200] max-sm:max-h-[min(75vh,28rem)] max-sm:w-auto"
               >
                 <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
                   <li v-for="opt in fd.options" :key="String(opt.value) + opt.label">
@@ -564,6 +588,37 @@ const searchInput = ref('')
 const searchDebounce = ref(null)
 const funnelDetailsRef = ref(null)
 
+/** Các dropdown chiều kích (ẩn/hiện) — lưu localStorage giống trang tổng quan */
+const TRIPS_FILTER_ROW_IDS = ['run', 'channel', 'paper', 'fleet', 'urgent']
+const TRIPS_FILTER_VISIBILITY_KEY = 'trips-list-filter-dropdowns'
+const filterDropdownVisible = reactive(Object.fromEntries(TRIPS_FILTER_ROW_IDS.map((id) => [id, true])))
+
+function loadFilterDropdownVisibility() {
+  try {
+    const raw = localStorage.getItem(TRIPS_FILTER_VISIBILITY_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    for (const id of TRIPS_FILTER_ROW_IDS) {
+      if (typeof o[id] === 'boolean') {
+        filterDropdownVisible[id] = o[id]
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+watch(
+  () => TRIPS_FILTER_ROW_IDS.map((id) => filterDropdownVisible[id]),
+  () => {
+    try {
+      localStorage.setItem(TRIPS_FILTER_VISIBILITY_KEY, JSON.stringify({ ...filterDropdownVisible }))
+    } catch {
+      /* ignore */
+    }
+  },
+)
+
 const TRIP_STATUS_VALUES = [
   'pending',
   'approved',
@@ -827,6 +882,10 @@ const dimensionFilters = computed(() => {
   ]
 })
 
+const visibleDimensionFilters = computed(() =>
+  dimensionFilters.value.filter((fd) => filterDropdownVisible[fd.id] !== false),
+)
+
 const activeFilterLines = computed(() => {
   const rows = []
   if (filters.status) {
@@ -875,7 +934,6 @@ const typeTabs = computed(() => {
     { value: 'door_to_door', label: t('trips_page.tab_d2d'), count: bt.door_to_door ?? 0 },
     { value: 'point_to_point', label: t('trips_page.tab_p2p'), count: bt.point_to_point ?? 0 },
     { value: 'business', label: t('trips_page.tab_business'), count: bt.business ?? 0 },
-    { value: 'cargo', label: t('trips_page.tab_cargo'), count: bt.cargo ?? 0 },
   ]
 })
 
@@ -1181,9 +1239,13 @@ watch(
 )
 
 onMounted(() => {
+  loadFilterDropdownVisibility()
   syncRangeForPreset('month')
   syncFiltersFromRange()
   applyStatusFromRoute()
+  if (filters.trip_type === 'cargo') {
+    filters.trip_type = ''
+  }
   reloadStats()
   reload()
 })

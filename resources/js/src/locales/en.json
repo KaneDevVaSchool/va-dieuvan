@@ -650,7 +650,9 @@
     "action_track": "Track",
     "action_assign": "Assign",
     "action_contact": "Contact",
-    "page_range": "Showing {from}–{to} of {total} trips"
+    "page_range": "Showing {from}–{to} of {total} trips",
+    "filter_show_controls_title": "Show filter controls",
+    "filter_show_controls_hint": "Choose which dropdowns appear in the bar. Your conditions still apply when a control is hidden."
   },
   "reports_page": {
     "filter_title": "Report period",

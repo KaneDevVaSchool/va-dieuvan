@@ -29,7 +29,9 @@ class TripVisibility
             return true;
         }
 
-        return false;
+        return $trip->dispatchRequest()
+            ->where('requester_id', $user->id)
+            ->exists();
     }
 
     /**
@@ -54,6 +56,7 @@ class TripVisibility
             if ($driverId) {
                 $w->orWhere('driver_id', $driverId);
             }
+            $w->orWhereHas('dispatchRequest', fn (Builder $dr) => $dr->where('requester_id', $user->id));
         });
     }
 }
