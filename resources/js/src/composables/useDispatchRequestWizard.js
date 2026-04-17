@@ -705,7 +705,7 @@ export function useDispatchRequestWizard() {
       !businessRows.value.some(isBusinessRowFilled)
     ) {
       step.value = 2
-      return 'Thêm ít nhất một dòng chi tiết (e.1 hoặc e.2) hoặc nhập thời gian chuyến.'
+      return 'Thêm ít nhất một dòng chi tiết hoặc nhập thời gian chuyến.'
     }
     if (!computedDepartAt.value?.trim()) {
       step.value = 2

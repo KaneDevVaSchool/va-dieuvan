@@ -5,6 +5,36 @@
 .dispatch-wizard .dw-cell {
   @apply w-full min-w-0 rounded border border-slate-200 bg-white px-1.5 py-1 text-xs text-slate-900 placeholder:text-slate-400 focus:border-va-800 focus:outline-none focus:ring-1 focus:ring-va-800/20 sm:text-sm;
 }
+.dispatch-wizard .dw-cell.dw-cell--table {
+  @apply min-h-[2.75rem] py-2 shadow-inner shadow-slate-900/[0.03];
+}
+.dispatch-wizard .dw-step3-guide {
+  @apply rounded-xl border border-sky-200/80 bg-gradient-to-br from-sky-50/95 via-white to-white px-4 py-3 shadow-sm ring-1 ring-sky-900/[0.04] sm:px-5 sm:py-4;
+}
+.dispatch-wizard .dw-step3-guide__title {
+  @apply text-[11px] font-bold uppercase tracking-wide text-sky-950 sm:text-xs;
+}
+.dispatch-wizard .dw-step3-guide__body {
+  @apply mt-2 space-y-2 text-xs leading-relaxed text-slate-600 sm:text-[13px];
+}
+.dispatch-wizard .dw-table-detail {
+  @apply rounded-xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.04];
+}
+.dispatch-wizard .dw-table-detail thead th {
+  @apply align-bottom;
+}
+.dispatch-wizard .dw-sec-intro {
+  @apply mb-3 rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-2.5 sm:px-4 sm:py-3;
+}
+.dispatch-wizard .dw-sec-intro__title {
+  @apply text-sm font-semibold text-slate-900;
+}
+.dispatch-wizard .dw-sec-intro__meta {
+  @apply mt-1 text-xs leading-relaxed text-slate-600 sm:text-[13px];
+}
+.dispatch-wizard .dw-th-req {
+  @apply inline font-semibold text-rose-600;
+}
 .dispatch-wizard .dw-table-wrap {
   @apply -mx-1 max-w-full overflow-x-auto sm:mx-0;
   scrollbar-width: thin;

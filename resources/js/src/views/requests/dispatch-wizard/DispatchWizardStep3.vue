@@ -4,18 +4,49 @@
             <h2 class="text-lg font-semibold text-slate-900">
                 3. Chi tiết chuyến (Nội dung đề nghị chuyến đi)
             </h2>
+            <div class="dw-step3-guide mt-3" role="note">
+                <p class="dw-step3-guide__title">Hướng dẫn điền</p>
+                <div class="dw-step3-guide__body">
+                    <p v-if="!isCargo">
+                        <span class="dw-req font-semibold">*</span>
+                        trên cột là trường cần ưu tiên. Để qua bước này: điền
+                        <strong class="text-slate-800">ít nhất một ô thời gian</strong>
+                        (đi hoặc về) trong toàn bộ bảng và có
+                        <strong class="text-slate-800">ít nhất một dòng</strong>
+                        có lịch trình / địa điểm. Số khách, đơn giá, phí… có thể bổ sung sau
+                        nếu chưa rõ.
+                    </p>
+                    <p v-else>
+                        <span class="dw-req font-semibold">*</span>
+                        <strong class="text-slate-800">Tên hàng hóa</strong>
+                        bắt buộc cho ít nhất một dòng; cần
+                        <strong class="text-slate-800">ít nhất một thời gian</strong>
+                        (tập kết hoặc giao). Các cột khác giúp bộ phận điều vận ước lượng xe —
+                        điền càng đầy càng tốt.
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- Passenger: E / e.1 / e.2 -->
         <div v-if="!isCargo" class="space-y-8">
-            <!-- e.1 -->
+            <!-- e.1 (ẩn với loại Đi công tác — chỉ dùng bảng e.2) -->
             <section
+                v-if="!isBusinessTrip"
                 class="dw-e-block dw-e-block--e1 space-y-4"
                 aria-labelledby="dw-e1-heading"
             >
-                <div
-                    class="dw-table-wrap -mx-1 rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-900/[0.04] sm:mx-0"
-                >
+                <header class="dw-sec-intro">
+                    <h3 id="dw-e1-heading" class="dw-sec-intro__title">
+                        Bảng chi tiết hành khách / chương trình (e.1)
+                    </h3>
+                    <p class="dw-sec-intro__meta">
+                        Mỗi dòng là một lượt hoặc một nhóm. Chọn ngày giờ bằng lịch trình duyệt; địa điểm
+                        ghi rõ địa chỉ hoặc tên điểm để tài xế chủ động.
+                    </p>
+                </header>
+                <div class="dw-table-wrap -mx-1 sm:mx-0">
+                    <div class="dw-table-detail">
                     <table
                         class="min-w-[1280px] w-full border-collapse text-left text-[11px] sm:text-sm"
                     >
@@ -86,6 +117,7 @@
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
                                 >
                                     Thời gian
+                                    <span class="dw-th-req" title="Ưu tiên điền">*</span>
                                 </th>
                                 <th
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
@@ -96,6 +128,7 @@
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
                                 >
                                     Thời gian
+                                    <span class="dw-th-req" title="Ưu tiên điền">*</span>
                                 </th>
                                 <th
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
@@ -117,30 +150,34 @@
                                     <input
                                         v-model="row.depart_at"
                                         type="datetime-local"
-                                        class="dw-cell dw-cell--table"
+                                        class="dw-cell dw-cell--table dw-date-input"
+                                        title="Giờ xuất phát chuyến đi"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.pickup"
                                         type="text"
-                                        placeholder="Điểm đón"
+                                        placeholder="VD: cổng trường, địa chỉ đón"
                                         class="dw-cell dw-cell--table"
+                                        title="Điểm đón chuyến đi"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.return_at"
                                         type="datetime-local"
-                                        class="dw-cell dw-cell--table"
+                                        class="dw-cell dw-cell--table dw-date-input"
+                                        title="Giờ về / kết thúc chuyến về"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.dropoff"
                                         type="text"
-                                        placeholder="Điểm trả"
+                                        placeholder="VD: điểm trả, địa chỉ"
                                         class="dw-cell dw-cell--table"
+                                        title="Điểm trả chuyến về"
                                     />
                                 </td>
                                 <td class="min-w-[5rem] p-0.5">
@@ -148,15 +185,16 @@
                                         v-model="row.guests"
                                         type="number"
                                         min="1"
-                                        placeholder="—"
+                                        placeholder="Số người"
                                         class="dw-cell dw-cell--table min-w-[4.5rem]"
+                                        title="Số hành khách (tối thiểu 1)"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.person_in_charge"
                                         type="text"
-                                        placeholder="Họ Tên "
+                                        placeholder="Họ và tên người phụ trách"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -166,8 +204,9 @@
                                         type="number"
                                         min="0"
                                         step="1000"
-                                        placeholder="0"
+                                        placeholder="VNĐ (ước tính)"
                                         class="dw-cell dw-cell--table"
+                                        title="Đơn giá ước tính, có thể 0"
                                     />
                                 </td>
                                 <td class="min-w-[7.5rem] p-0.5">
@@ -176,8 +215,9 @@
                                         type="number"
                                         min="0"
                                         step="1000"
-                                        placeholder="0"
+                                        placeholder="Phụ phí VNĐ"
                                         class="dw-cell dw-cell--table"
+                                        title="Phí phát sinh thêm trên dòng"
                                     />
                                 </td>
                                 <td
@@ -189,7 +229,7 @@
                                     <input
                                         v-model="row.notes"
                                         type="text"
-                                        placeholder="Ghi chú dòng…"
+                                        placeholder="Ghi chú cho dòng (tuỳ chọn)"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -223,6 +263,7 @@
                             </tr>
                         </tfoot>
                     </table>
+                    </div>
                 </div>
                 <div class="dw-table-toolbar">
                     <button
@@ -239,14 +280,17 @@
                             type="checkbox"
                             class="dw-table-toolbar__extra-check"
                         />
-                        <span>Dùng cho 3+ ngày (ghi chú trong tóm tắt)</span>
+                        <span
+                            title="Đánh dấu khi lịch trình kéo dài nhiều ngày"
+                            >Dùng cho 3+ ngày (ghi chú trong tóm tắt)</span
+                        >
                     </label>
                 </div>
             </section>
 
-            <!-- e.1.1 (ẩn P2P thường; hiện khi P2P + hoạt động ngoại khóa) -->
+            <!-- e.1.1 (ẩn P2P thường & ẩn Đi công tác) -->
             <section
-                v-if="showPassengerTripExtras"
+                v-if="showPassengerTripExtras && !isBusinessTrip"
                 class="dw-e-panel dw-e-panel--e11"
                 aria-labelledby="dw-e11-heading"
             >
@@ -281,26 +325,38 @@
 
                 <div class="dw-e11-fields">
                     <div class="dw-e11-field">
-                        <span class="dw-e11-field__label">Từ ngày</span>
+                        <span class="dw-e11-field__label"
+                            >Từ ngày
+                            <span class="font-normal text-slate-400">(tuỳ chọn)</span></span
+                        >
                         <input
                             v-model="form.e1_from_date"
                             type="date"
                             lang="vi"
-                            class="dw-input dw-input--e11"
+                            class="dw-input dw-input--e11 dw-date-input"
+                            title="Ngày bắt đầu dùng xe nhiều ngày"
                             @click="openDatePickerFromInput($event)"
                         />
-                        <span class="dw-e11-field__hint">dd/mm/yyyy</span>
+                        <span class="dw-e11-field__hint"
+                            >Chọn trên lịch — định dạng dd/mm/yyyy</span
+                        >
                     </div>
                     <div class="dw-e11-field">
-                        <span class="dw-e11-field__label">Đến ngày</span>
+                        <span class="dw-e11-field__label"
+                            >Đến ngày
+                            <span class="font-normal text-slate-400">(tuỳ chọn)</span></span
+                        >
                         <input
                             v-model="form.e1_to_date"
                             type="date"
                             lang="vi"
-                            class="dw-input dw-input--e11"
+                            class="dw-input dw-input--e11 dw-date-input"
+                            title="Ngày kết thúc"
                             @click="openDatePickerFromInput($event)"
                         />
-                        <span class="dw-e11-field__hint">dd/mm/yyyy</span>
+                        <span class="dw-e11-field__hint"
+                            >Phải sau hoặc trùng «Từ ngày» nếu điền cả hai</span
+                        >
                     </div>
                     <div class="dw-e11-field">
                         <span class="dw-e11-field__label"
@@ -309,11 +365,13 @@
                         <input
                             v-model="form.e1_days_total"
                             type="text"
+                            inputmode="numeric"
                             class="dw-input dw-input--e11"
-                            placeholder="—"
+                            placeholder="VD: 3"
+                            title="Số ngày dự kiến dùng xe"
                         />
                         <span class="dw-e11-field__hint"
-                            >Ghi số ngày hoặc để trống</span
+                            >Có thể để trống — NV Điều vận sẽ xác nhận</span
                         >
                     </div>
                     <div class="dw-e11-field">
@@ -326,10 +384,11 @@
                             min="0"
                             step="1000"
                             class="dw-input dw-input--e11"
-                            placeholder="0"
+                            placeholder="Nhập VNĐ (ước tính)"
+                            title="Liên hệ NV Điều vận nếu chưa biết mức"
                         />
                         <span class="dw-e11-field__hint"
-                            >VNĐ (ước tính, gồm VAT nếu có)</span
+                            >Ước tính, gồm VAT nếu có</span
                         >
                     </div>
                 </div>
@@ -339,7 +398,8 @@
                         id="dw-e11-weekdays-label"
                         class="dw-e11-weekwrap__title"
                     >
-                        Bao gồm các thứ trong tuần từ
+                        Bao gồm các thứ trong tuần
+                        <span class="font-normal text-slate-500">(tuỳ chọn — bấm để chọn/bỏ)</span>
                     </p>
                     <div
                         class="dw-weekday-strip"
@@ -373,13 +433,16 @@
                 <header class="dw-e-block__intro">
                     <div>
                         <h3 id="dw-e2-heading" class="dw-e-block__title">
-                            Nội dung đề xuất cho nhân sự đi công tác
+                            Nội dung đề xuất cho nhân sự đi công tác (e.2)
                         </h3>
+                        <p class="dw-e-block__meta">
+                            Ghi đủ thời gian — địa điểm giúp lập lộ trình. Cột «Điểm dừng» dùng khi có
+                            điểm trung chuyển; để trống nếu đi thẳng.
+                        </p>
                     </div>
                 </header>
-                <div
-                    class="dw-table-wrap -mx-1 rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-900/[0.04] sm:mx-0"
-                >
+                <div class="dw-table-wrap -mx-1 sm:mx-0">
+                    <div class="dw-table-detail">
                     <table
                         class="min-w-[1360px] w-full border-collapse text-left text-[11px] sm:text-sm"
                     >
@@ -450,6 +513,7 @@
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
                                 >
                                     Thời gian
+                                    <span class="dw-th-req" title="Ưu tiên điền">*</span>
                                 </th>
                                 <th
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
@@ -460,6 +524,7 @@
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
                                 >
                                     Thời gian
+                                    <span class="dw-th-req" title="Ưu tiên điền">*</span>
                                 </th>
                                 <th
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
@@ -481,14 +546,15 @@
                                     <input
                                         v-model="row.depart_at"
                                         type="datetime-local"
-                                        class="dw-cell dw-cell--table"
+                                        class="dw-cell dw-cell--table dw-date-input"
+                                        title="Giờ xuất phát công tác"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.pickup"
                                         type="text"
-                                        placeholder="Điểm đón"
+                                        placeholder="VD: VP, sân bay, địa chỉ đón"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -496,22 +562,24 @@
                                     <input
                                         v-model="row.waypoint"
                                         type="text"
-                                        placeholder="Điểm dừng"
+                                        placeholder="Điểm dừng (tuỳ chọn)"
                                         class="dw-cell dw-cell--table"
+                                        title="Trung chuyển giữa chặng"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.return_at"
                                         type="datetime-local"
-                                        class="dw-cell dw-cell--table"
+                                        class="dw-cell dw-cell--table dw-date-input"
+                                        title="Giờ về"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.dropoff"
                                         type="text"
-                                        placeholder="Điểm trả"
+                                        placeholder="VD: khách sạn, điểm trả"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -520,8 +588,9 @@
                                         v-model="row.guests"
                                         type="number"
                                         min="1"
-                                        placeholder="—"
+                                        placeholder="Số người"
                                         class="dw-cell dw-cell--table min-w-[4.5rem]"
+                                        title="Số nhân sự / khách trên dòng"
                                     />
                                 </td>
                                 <td class="min-w-[7.5rem] p-0.5">
@@ -530,7 +599,7 @@
                                         type="number"
                                         min="0"
                                         step="1000"
-                                        placeholder="0"
+                                        placeholder="VNĐ (ước tính)"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -540,7 +609,7 @@
                                         type="number"
                                         min="0"
                                         step="1000"
-                                        placeholder="0"
+                                        placeholder="Phụ phí VNĐ"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -553,7 +622,7 @@
                                     <input
                                         v-model="row.notes"
                                         type="text"
-                                        placeholder="Ghi chú dòng…"
+                                        placeholder="Ghi chú dòng (tuỳ chọn)"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -587,6 +656,7 @@
                             </tr>
                         </tfoot>
                     </table>
+                    </div>
                 </div>
                 <div class="dw-table-toolbar">
                     <button
@@ -616,6 +686,12 @@
                             class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
                         >
                             Gợi ý theo biểu mẫu; vui lòng liên hệ NV Điều vận để điền thông tin chi phí.
+                        </p>
+                        <p
+                            v-else
+                            class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
+                        >
+                            Tick nếu áp dụng; nhập chi phí ước tính (VNĐ) hoặc để trống để NV Điều vận bổ sung.
                         </p>
                     </div>
                 </header>
@@ -651,8 +727,9 @@
                                 type="number"
                                 min="0"
                                 step="1000"
-                                placeholder="0"
+                                placeholder="Ước tính VNĐ"
                                 class="dw-e21-row__input"
+                                title="Chi phí đưa đón tận nhà (ước tính)"
                             />
                             <span class="dw-e21-row__unit">VNĐ</span>
                         </div>
@@ -684,8 +761,9 @@
                                 type="number"
                                 min="0"
                                 step="1000"
-                                placeholder="0"
+                                placeholder="Ước tính VNĐ"
                                 class="dw-e21-row__input"
+                                title="Chi phí tài xế tự túc (ước tính)"
                             />
                             <span class="dw-e21-row__unit">VNĐ</span>
                         </div>
@@ -717,8 +795,9 @@
                                 type="number"
                                 min="0"
                                 step="1000"
-                                placeholder="0"
+                                placeholder="Ước tính VNĐ"
                                 class="dw-e21-row__input"
+                                title="Phụ phí sử dụng xe sau 21:00 (ước tính)"
                             />
                             <span class="dw-e21-row__unit">VNĐ</span>
                         </div>
@@ -729,17 +808,17 @@
 
         <!-- Cargo table -->
         <div v-else class="space-y-4">
-            <div
-                class="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/90 to-white px-4 py-3 sm:px-5"
-            >
-                <h3
-                    class="text-sm font-bold uppercase tracking-wide text-va-800"
-                >
-                    Nội dung đề nghị vận chuyển
-                </h3>
-                <p class="mt-1 text-xs text-slate-600">Nội dung chi tiết</p>
-            </div>
-            <div class="dw-table-wrap rounded-xl border border-slate-200">
+            <header class="dw-sec-intro">
+                <h3 class="dw-sec-intro__title">Nội dung đề nghị vận chuyển hàng hóa</h3>
+                <p class="dw-sec-intro__meta">
+                    Mỗi dòng một loại hàng hoặc một lô. Điền khối lượng / kích thước giúp chọn loại xe phù hợp.
+                    Cột có
+                    <span class="dw-th-req">*</span>
+                    cần ưu tiên để hệ thống xử lý đúng SLA.
+                </p>
+            </header>
+            <div class="dw-table-wrap">
+                <div class="dw-table-detail">
                 <table
                     class="min-w-[1420px] w-full border-collapse text-left text-xs sm:text-sm"
                 >
@@ -809,6 +888,7 @@
                                 class="min-w-[10rem] border-l border-slate-200 whitespace-normal px-1 py-1"
                             >
                                 Thời gian
+                                <span class="dw-th-req" title="Ưu tiên điền">*</span>
                             </th>
                             <th
                                 class="min-w-[10rem] whitespace-normal px-1 py-1"
@@ -824,6 +904,7 @@
                                 class="min-w-[10rem] border-l border-slate-200 whitespace-normal px-1 py-1"
                             >
                                 Thời gian
+                                <span class="dw-th-req" title="Ưu tiên điền">*</span>
                             </th>
                             <th
                                 class="min-w-[10rem] whitespace-normal px-1 py-1"
@@ -851,15 +932,16 @@
                                 <input
                                     v-model="row.name"
                                     type="text"
-                                    placeholder="Tên hàng hóa"
+                                    placeholder="Tên hàng, quy cách đóng gói"
                                     class="dw-cell dw-cell--table"
+                                    title="Tên hàng hóa — bắt buộc trên ít nhất một dòng"
                                 />
                             </td>
                             <td class="min-w-[3.5rem] p-0.5">
                                 <input
                                     v-model="row.qty"
                                     type="text"
-                                    placeholder="SL"
+                                    placeholder="Số lượng / kiện"
                                     class="dw-cell dw-cell--table min-w-[3.25rem]"
                                 />
                             </td>
@@ -893,14 +975,15 @@
                                 <input
                                     v-model="row.pickup_at"
                                     type="datetime-local"
-                                    class="dw-cell dw-cell--table"
+                                    class="dw-cell dw-cell--table dw-date-input"
+                                    title="Thời gian lấy / tập kết"
                                 />
                             </td>
                             <td class="min-w-[10rem] p-0.5">
                                 <input
                                     v-model="row.pickup_place"
                                     type="text"
-                                    placeholder="Địa chỉ tập kết"
+                                    placeholder="Địa chỉ, tên kho, tầng…"
                                     class="dw-cell dw-cell--table"
                                 />
                             </td>
@@ -908,7 +991,7 @@
                                 <input
                                     v-model="row.pickup_contact"
                                     type="text"
-                                    placeholder="Họ Tên "
+                                    placeholder="Họ tên người giao"
                                     class="dw-cell dw-cell--table"
                                 />
                             </td>
@@ -918,14 +1001,15 @@
                                 <input
                                     v-model="row.delivery_at"
                                     type="datetime-local"
-                                    class="dw-cell dw-cell--table"
+                                    class="dw-cell dw-cell--table dw-date-input"
+                                    title="Thời gian giao hàng"
                                 />
                             </td>
                             <td class="min-w-[10rem] p-0.5">
                                 <input
                                     v-model="row.delivery_place"
                                     type="text"
-                                    placeholder="Địa chỉ giao"
+                                    placeholder="Địa chỉ nhận, bộ phận…"
                                     class="dw-cell dw-cell--table"
                                 />
                             </td>
@@ -933,7 +1017,7 @@
                                 <input
                                     v-model="row.delivery_contact"
                                     type="text"
-                                    placeholder="Họ Tên "
+                                    placeholder="Họ tên người nhận"
                                     class="dw-cell dw-cell--table"
                                 />
                             </td>
@@ -941,7 +1025,7 @@
                                 <input
                                     v-model="row.transport_note"
                                     type="text"
-                                    placeholder="Xe VA / NCC…"
+                                    placeholder="Loại xe, NCC, yêu cầu đặc biệt…"
                                     class="dw-cell dw-cell--table"
                                 />
                             </td>
@@ -951,7 +1035,7 @@
                                     type="number"
                                     min="0"
                                     step="1000"
-                                    placeholder="0"
+                                    placeholder="Chi phí VNĐ (ước tính)"
                                     class="dw-cell dw-cell--table"
                                 />
                             </td>
@@ -982,15 +1066,16 @@
                         </tr>
                     </tfoot>
                 </table>
-                <div class="border-t border-slate-200 bg-white p-3">
+                <div class="dw-table-toolbar">
                     <button
                         type="button"
-                        class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-va-800 shadow-sm hover:bg-slate-50"
+                        class="dw-btn-row-add"
                         @click="addCargoRow"
                     >
                         <PlusIcon class="h-4 w-4" />
                         Thêm dòng hàng
                     </button>
+                </div>
                 </div>
             </div>
 
@@ -1002,12 +1087,14 @@
                 </div>
                 <label class="block">
                     <span class="mb-1 block text-xs font-medium text-slate-600"
-                        >Ghi chú khác (nếu có)</span
+                        >Ghi chú khác
+                        <span class="font-normal text-slate-400">(tuỳ chọn)</span></span
                     >
                     <textarea
                         v-model="form.cargo_extra_notes"
                         rows="2"
                         class="dw-input min-h-[3.5rem] resize-y"
+                        placeholder="Yêu cầu đặc biệt, giờ cấm tải, hàng dễ vỡ…"
                     />
                 </label>
                 <div
@@ -1127,6 +1214,7 @@ const {
 // inject trả về object thường: ref/computed lồng (w.x) không unwrap trong template → v-if / v-for sai.
 const isCargo = computed(() => unref(w.isCargo));
 const isPointToPointTrip = computed(() => unref(w.isPointToPointTrip));
+const isBusinessTrip = computed(() => form.value.trip_type === "business");
 /** P2P + mục đích tab 2: hoạt động ngoại khóa → hiện e.1.1 & e.2.1 */
 const isP2PExtracurricular = computed(
     () =>

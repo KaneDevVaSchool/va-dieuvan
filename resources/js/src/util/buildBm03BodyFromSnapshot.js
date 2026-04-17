@@ -31,6 +31,7 @@ export function buildBm03BodyFromWizardSnapshot(snapshot) {
 
   const isCargo = f.trip_type === 'cargo'
   const isPointToPoint = f.trip_type === 'point_to_point'
+  const isBusiness = f.trip_type === 'business'
   const basisName = typeof f.basisFileName === 'string' ? f.basisFileName.trim() : ''
 
   const lines = []
@@ -100,33 +101,7 @@ export function buildBm03BodyFromWizardSnapshot(snapshot) {
     lines.push(`Tổng cộng (ước tính): ${formatCurrency(cargoSum + extra)}`)
   } else {
     lines.push('Nội dung đề nghị vận chuyển')
-    lines.push('Nội dung đề xuất cho chương trình / sự kiện ngoại khóa')
-    if (f.multi_day) lines.push('(Dùng nhiều ngày — chi tiết bổ sung khi điều phối.)')
-    const e1Total = passengerRows.reduce((s, r) => s + (isPassengerRowFilled(r) ? rowLineTotal(r) : 0), 0)
-    passengerRows.forEach((r, i) => {
-      if (!isPassengerRowFilled(r)) return
-      lines.push(
-        `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | NV: ${r.person_in_charge || '—'} | ĐG ${r.unit_price || '0'} + PS ${r.extra_fee || '0'} | ${r.notes || ''}`,
-      )
-    })
-    lines.push(`Tổng (ước tính): ${formatCurrency(e1Total)}`)
-    if (!isPointToPoint) {
-      const wd = f.e1_weekdays || {}
-      const wdLabels = []
-      if (wd.mon) wdLabels.push('T2')
-      if (wd.tue) wdLabels.push('T3')
-      if (wd.wed) wdLabels.push('T4')
-      if (wd.thu) wdLabels.push('T5')
-      if (wd.fri) wdLabels.push('T6')
-      if (wd.sat) wdLabels.push('T7')
-      if (wd.sun) wdLabels.push('CN')
-      lines.push('e.1.1 Ghi chú khác đề xuất')
-      if (f.e1_use_3plus_days) {
-        lines.push(
-          `- Xe từ 3 ngày trở lên: ${f.e1_from_date || '—'} → ${f.e1_to_date || '—'} | Tổng ngày: ${f.e1_days_total || '—'} | Phát sinh: ${f.e1_extra_cost || '0'}`,
-        )
-      }
-      if (wdLabels.length) lines.push(`- Các thứ trong tuần: ${wdLabels.join(', ')}`)
+    if (isBusiness) {
       lines.push('Nội dung đề xuất cho nhân sự đi công tác')
       const e2Total = businessRows.reduce((s, r) => s + (isBusinessRowFilled(r) ? rowLineTotal(r) : 0), 0)
       businessRows.forEach((r, i) => {
@@ -140,7 +115,50 @@ export function buildBm03BodyFromWizardSnapshot(snapshot) {
       if (f.e2_door_pickup) lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || '0'}`)
       if (f.e2_driver_self) lines.push(`- Tài xế tự túc: ${f.e2_driver_self_cost || '0'}`)
       if (f.e2_after_21h) lines.push(`- Xe sau 21h: ${f.e2_after_21h_cost || '0'}`)
-      lines.push(`Tổng (ước tính): ${formatCurrency(e1Total + e2Total)}`)
+      lines.push(`Tổng (ước tính): ${formatCurrency(e2Total)}`)
+    } else {
+      lines.push('Nội dung đề xuất cho chương trình / sự kiện ngoại khóa')
+      if (f.multi_day) lines.push('(Dùng nhiều ngày — chi tiết bổ sung khi điều phối.)')
+      const e1Total = passengerRows.reduce((s, r) => s + (isPassengerRowFilled(r) ? rowLineTotal(r) : 0), 0)
+      passengerRows.forEach((r, i) => {
+        if (!isPassengerRowFilled(r)) return
+        lines.push(
+          `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | NV: ${r.person_in_charge || '—'} | ĐG ${r.unit_price || '0'} + PS ${r.extra_fee || '0'} | ${r.notes || ''}`,
+        )
+      })
+      lines.push(`Tổng (ước tính): ${formatCurrency(e1Total)}`)
+      if (!isPointToPoint) {
+        const wd = f.e1_weekdays || {}
+        const wdLabels = []
+        if (wd.mon) wdLabels.push('T2')
+        if (wd.tue) wdLabels.push('T3')
+        if (wd.wed) wdLabels.push('T4')
+        if (wd.thu) wdLabels.push('T5')
+        if (wd.fri) wdLabels.push('T6')
+        if (wd.sat) wdLabels.push('T7')
+        if (wd.sun) wdLabels.push('CN')
+        lines.push('e.1.1 Ghi chú khác đề xuất')
+        if (f.e1_use_3plus_days) {
+          lines.push(
+            `- Xe từ 3 ngày trở lên: ${f.e1_from_date || '—'} → ${f.e1_to_date || '—'} | Tổng ngày: ${f.e1_days_total || '—'} | Phát sinh: ${f.e1_extra_cost || '0'}`,
+          )
+        }
+        if (wdLabels.length) lines.push(`- Các thứ trong tuần: ${wdLabels.join(', ')}`)
+        lines.push('Nội dung đề xuất cho nhân sự đi công tác')
+        const e2Total = businessRows.reduce((s, r) => s + (isBusinessRowFilled(r) ? rowLineTotal(r) : 0), 0)
+        businessRows.forEach((r, i) => {
+          if (!isBusinessRowFilled(r)) return
+          lines.push(
+            `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Dừng: ${r.waypoint || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | ĐG+PS: ${formatCurrency(rowLineTotal(r))} | ${r.notes || ''}`,
+          )
+        })
+        lines.push(`Tổng (ước tính): ${formatCurrency(e2Total)}`)
+        lines.push('Ghi chú khác (công tác)')
+        if (f.e2_door_pickup) lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || '0'}`)
+        if (f.e2_driver_self) lines.push(`- Tài xế tự túc: ${f.e2_driver_self_cost || '0'}`)
+        if (f.e2_after_21h) lines.push(`- Xe sau 21h: ${f.e2_after_21h_cost || '0'}`)
+        lines.push(`Tổng (ước tính): ${formatCurrency(e1Total + e2Total)}`)
+      }
     }
   }
 
