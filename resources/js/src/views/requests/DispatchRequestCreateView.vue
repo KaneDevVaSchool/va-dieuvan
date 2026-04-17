@@ -539,8 +539,18 @@
             Loại <span class="font-medium text-slate-800">Điểm — Điểm</span>: toàn bộ dữ liệu biểu mẫu (kể cả phân bổ mục tiêu) được gửi kèm yêu cầu trong hệ thống.
           </div>
           <p v-else class="text-sm text-slate-500">
-            Với loại dịch vụ khác, chi tiết nằm trong phần ghi chú đã gửi.
+            Toàn bộ chi tiết biểu mẫu được lưu kèm yêu cầu trong hệ thống (không ghi vào cột ghi chú trừ khi bạn nhập bên dưới).
           </p>
+
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-800">Ghi chú thêm <span class="font-normal text-slate-500">(tùy chọn)</span></span>
+            <textarea
+              v-model="form.free_notes"
+              rows="3"
+              class="dw-input min-h-[4.5rem] w-full resize-y"
+              placeholder="Chỉ nội dung bạn nhập tại đây mới được lưu vào cột ghi chú trên hệ thống…"
+            />
+          </label>
 
           <div v-if="error" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
             {{ error }}

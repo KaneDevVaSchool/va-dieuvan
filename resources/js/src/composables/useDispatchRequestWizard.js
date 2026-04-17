@@ -838,7 +838,9 @@ export function useDispatchRequestWizard() {
     const idempotencyKey = newIdempotencyKey()
     try {
       const { origin, destination } = computeApiOriginDestination()
-      const notes = buildNotesBody()
+      const freeNotes = form.value.free_notes?.trim() || ''
+      const snapshot = buildWizardSnapshot()
+      snapshot.bm03_body = buildNotesBody()
       const payload = {
         trip_type: form.value.trip_type,
         source_channel: form.value.source_channel,
@@ -851,11 +853,9 @@ export function useDispatchRequestWizard() {
           : passengerGuestTotal.value > 0
             ? Math.round(passengerGuestTotal.value)
             : null,
-        notes,
+        notes: freeNotes || undefined,
         is_urgent: !!form.value.is_urgent,
-      }
-      if (form.value.trip_type === 'point_to_point') {
-        payload.wizard_snapshot = buildWizardSnapshot()
+        wizard_snapshot: snapshot,
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
       created.value = await createDispatchRequest(payload, { idempotencyKey })

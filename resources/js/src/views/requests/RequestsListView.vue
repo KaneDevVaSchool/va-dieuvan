@@ -669,7 +669,7 @@
                 <span v-else class="text-xs text-slate-400">—</span>
               </td>
               <td v-if="requestColOn('notes')" class="max-w-xs px-3 py-3 align-top text-xs text-slate-600">
-                <p class="line-clamp-2">{{ r.notes || '—' }}</p>
+                <p class="line-clamp-2">{{ requestNotesListCell(r) }}</p>
               </td>
               <td class="relative px-2 py-3 align-top" :class="isTrashTab ? 'text-slate-800' : ''">
                 <details class="group/action-menu relative inline-block text-right">
@@ -905,6 +905,7 @@ import {
   labelTripStatus,
   labelTripType,
 } from '../../util/labels'
+import { isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -986,6 +987,14 @@ watch(
 function requestColOn(id) {
   if (id === 'id' || id === 'trip' || id === 'actions') return true
   return requestColumnVisible.value[id] !== false
+}
+
+/** Chỉ hiển thị ghi chú do người dùng nhập; bản cũ lưu BM.03 trong `notes` thì để trống (xem chi tiết). */
+function requestNotesListCell(r) {
+  const n = String(r?.notes ?? '').trim()
+  if (!n) return '—'
+  if (isLegacyBm03NotesBlock(n)) return '—'
+  return n
 }
 
 function setRequestColumn(id, checked) {

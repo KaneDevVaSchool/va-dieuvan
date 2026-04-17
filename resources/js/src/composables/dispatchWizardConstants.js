@@ -174,6 +174,8 @@ export function createInitialForm() {
     e2_driver_self_cost: '',
     e2_after_21h: false,
     e2_after_21h_cost: '',
+    /** Ghi chú tự do — map vào cột `notes` DB; không gồm nội dung BM.03 tự sinh */
+    free_notes: '',
   }
 }
 

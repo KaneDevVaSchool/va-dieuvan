@@ -2,6 +2,11 @@ function escapeRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+/** Bản ghi cũ: toàn bộ BM.03 được lưu trong `notes`. */
+export function isLegacyBm03NotesBlock(s) {
+  return !!(s && typeof s === 'string' && /===\s*ĐỀ NGHỊ ĐIỀU VẬN/i.test(s))
+}
+
 /**
  * Chuẩn hoá ghi chú BM.03 để hiển thị: giữ xuống dòng; nếu ít ký tự xuống dòng, chèn ngắt trước các mục quen thuộc.
  * @param {string|null|undefined} raw

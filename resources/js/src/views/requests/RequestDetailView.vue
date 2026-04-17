@@ -3,11 +3,10 @@
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">Đang tải…</div>
 
     <template v-else-if="req">
-      <!-- Header: sticky trong khối main (không tràn lên sidebar; vẫn dính đầu khi cuộn) -->
-      <div
-        class="sticky top-0 z-20 w-full border-b border-slate-200/80 bg-[#F8F9FA]/95 px-4 py-4 shadow-sm backdrop-blur print:static print:shadow-none print:backdrop-blur-none"
-      >
-        <div class="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-10 print:pt-0">
+        <div
+          class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-center sm:justify-between print:border-0 print:pb-3"
+        >
           <div class="flex min-w-0 flex-1 items-start gap-3">
             <RouterLink
               to="/requests"
@@ -29,7 +28,10 @@
                 </span>
               </div>
               <p v-if="req.trip" class="mt-1 text-sm text-teal-700">
-                <RouterLink :to="`/trips/${req.trip.id}`" class="font-medium underline decoration-teal-600/30 underline-offset-2 hover:decoration-teal-700">
+                <RouterLink
+                  :to="`/trips/${req.trip.id}`"
+                  class="font-medium underline decoration-teal-600/30 underline-offset-2 hover:decoration-teal-700"
+                >
                   Mở chuyến #{{ req.trip.id }}
                 </RouterLink>
               </p>
@@ -63,9 +65,7 @@
             </button>
           </div>
         </div>
-      </div>
 
-      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-10 print:pt-0">
         <!-- Stepper -->
         <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm print:border print:shadow-none">
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">Tiến trình yêu cầu</h2>
@@ -209,7 +209,7 @@
                   </div>
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0" :class="{ 'md:col-span-2': !hasUserNotes }">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Số hành khách / Khối lượng</p>
                   <div class="mt-2 flex items-center gap-2 text-sm text-slate-800">
                     <CubeIcon class="h-5 w-5 shrink-0 text-teal-600" />
@@ -217,12 +217,22 @@
                   </div>
                 </div>
 
-                <div class="min-w-0">
+                <div v-if="hasUserNotes" class="min-w-0">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Ghi chú</p>
                   <div
                     class="mt-2 max-h-[min(28rem,55vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere] print:max-h-none md:max-h-[min(36rem,65vh)]"
                   >
-                    {{ notesDisplay }}
+                    {{ userNotesFormatted }}
+                  </div>
+                </div>
+
+                <div v-if="bm03Display" class="min-w-0 md:col-span-2">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Nội dung đơn điện tử (BM.03)</p>
+                  <p class="mt-1 text-xs text-slate-500">Tự động từ biểu mẫu tạo yêu cầu; không dùng cột ghi chú.</p>
+                  <div
+                    class="mt-2 max-h-[min(32rem,70vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere] print:max-h-none"
+                  >
+                    {{ bm03Display }}
                   </div>
                 </div>
 
@@ -415,7 +425,7 @@ import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/
 import { decideDispatchRequest, getDispatchRequest, markPaperReceived } from '../../api/requests'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelRequestStatus, labelTripType } from '../../util/labels'
-import { formatDispatchRequestNotesForDisplay } from '../../util/formatDispatchNotes'
+import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
 import { parseMoneyVnd } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { useAuthStore } from '../../store'
@@ -437,10 +447,25 @@ const ocrErr = ref('')
 const attachErr = ref('')
 const deletingId = ref(null)
 
-const notesDisplay = computed(() => {
+const hasUserNotes = computed(() => {
   const n = req.value?.notes?.trim()
-  if (!n) return '—'
+  if (!n) return false
+  return !isLegacyBm03NotesBlock(n)
+})
+
+const userNotesFormatted = computed(() => {
+  const n = req.value?.notes?.trim()
+  if (!n || isLegacyBm03NotesBlock(n)) return ''
   return formatDispatchRequestNotesForDisplay(n)
+})
+
+const bm03Display = computed(() => {
+  const r = req.value
+  const fromSnap = r?.wizard_snapshot?.bm03_body?.trim()
+  if (fromSnap) return formatDispatchRequestNotesForDisplay(fromSnap)
+  const n = r?.notes?.trim()
+  if (n && isLegacyBm03NotesBlock(n)) return formatDispatchRequestNotesForDisplay(n)
+  return ''
 })
 
 const requestRefCode = computed(() => {
