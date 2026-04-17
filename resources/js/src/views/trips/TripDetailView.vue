@@ -915,6 +915,7 @@ const rejecting = ref(false)
 const assignMsg = ref('')
 const assignFeedbackKind = ref('')
 const suppressDriverVehicleSync = ref(false)
+const needsVehicleResync = ref(false)
 const statusing = ref(false)
 const vehicles = ref([])
 const drivers = ref([])
@@ -1712,6 +1713,7 @@ async function loadResources() {
 
 async function load(opts = {}) {
   const silent = opts.silent === true
+  needsVehicleResync.value = false
   if (!silent) {
     loading.value = true
     loadError.value = ''
@@ -1868,12 +1870,30 @@ const statusForm = ref({ status: 'in_progress', message: '' })
 
 watch(hireExternal, (on) => {
   if (!on) providerChoice.value = ''
+  if (on) needsVehicleResync.value = false
 })
 
-watch(driverChoice, (id) => {
+function syncVehicleToDriver(driverId) {
   if (suppressDriverVehicleSync.value || hireExternal.value) return
+  const id = driverId ?? driverChoice.value
+  if (!id) {
+    needsVehicleResync.value = false
+    return
+  }
   const vid = defaultVehicleIdForDriver(id)
-  if (vid) vehicleChoice.value = vid
+  if (vid) {
+    vehicleChoice.value = vid
+    needsVehicleResync.value = false
+  } else {
+    needsVehicleResync.value = true
+  }
+}
+
+watch(driverChoice, (id) => syncVehicleToDriver(id), { flush: 'sync' })
+
+watch(vehicles, () => {
+  if (!needsVehicleResync.value) return
+  syncVehicleToDriver()
 })
 
 onMounted(load)

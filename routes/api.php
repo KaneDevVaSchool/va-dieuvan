@@ -156,7 +156,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::prefix('trips')->group(function () {
             Route::controller(TripController::class)->group(function () {
                 Route::post('/{trip}/assign', 'assign')
-                    ->middleware(['throttle:10,1', 'idempotency'])
+                    ->middleware(['throttle:60,1', 'idempotency'])
                     ->name('api.trips.assign');
                 Route::post('/{trip}/reschedule', 'reschedule')->middleware('throttle:30,1');
             });
