@@ -730,7 +730,6 @@
     "create": "Create request",
     "kpi_total": "Total requests",
     "kpi_no_trend": "Not enough data to compare months",
-    "kpi_pending_approved": "Pending & approved",
     "kpi_sla_risk": "SLA risk",
     "kpi_action_required": "Action required",
     "kpi_sla_ok": "Stable",

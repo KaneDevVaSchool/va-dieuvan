@@ -730,7 +730,6 @@
         "create": "Tạo yêu cầu",
         "kpi_total": "Tổng yêu cầu",
         "kpi_no_trend": "Chưa đủ dữ liệu so sánh tháng",
-        "kpi_pending_approved": "Chờ duyệt & đã duyệt",
         "kpi_sla_risk": "Rủi ro SLA",
         "kpi_action_required": "Cần xử lý",
         "kpi_sla_ok": "Ổn định",

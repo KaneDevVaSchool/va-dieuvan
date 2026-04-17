@@ -41,7 +41,7 @@
     </div>
 
     <!-- KPI cards -->
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
         <div class="flex items-start justify-between gap-2">
           <div>
@@ -66,30 +66,37 @@
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
             <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-              {{ t('requests_page.kpi_pending_approved') }}
+              {{ t('requests_page.tab_pending') }}
             </p>
-            <div class="mt-2 flex flex-wrap gap-x-6 gap-y-2">
-              <div>
-                <p class="text-[11px] font-medium text-slate-500">{{ t('requests_page.tab_pending') }}</p>
-                <p class="mt-0.5 text-2xl font-semibold tabular-nums text-slate-900">
-                  {{ formatInt(approvalPendingCount) }}
-                </p>
-              </div>
-              <div>
-                <p class="text-[11px] font-medium text-slate-500">{{ t('requests_page.tab_approved') }}</p>
-                <p class="mt-0.5 text-2xl font-semibold tabular-nums text-slate-900">
-                  {{ formatInt(approvalApprovedCount) }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-3 flex h-2 overflow-hidden rounded-full bg-slate-100">
+            <p class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
+              {{ formatInt(approvalPendingCount) }}
+            </p>
+            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
               <div
-                class="h-full bg-amber-400 transition-all"
-                :style="{ width: approvalPendingBarPct + '%' }"
+                class="h-full rounded-full bg-amber-400 transition-all"
+                :style="{ width: pendingShareOfTotalPct + '%' }"
               />
+            </div>
+          </div>
+          <div class="rounded-lg bg-amber-50 p-2 text-amber-700">
+            <ClockIcon class="h-6 w-6" aria-hidden="true" />
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+              {{ t('requests_page.tab_approved') }}
+            </p>
+            <p class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
+              {{ formatInt(approvalApprovedCount) }}
+            </p>
+            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
               <div
-                class="h-full bg-teal-500 transition-all"
-                :style="{ width: approvalApprovedBarPct + '%' }"
+                class="h-full rounded-full bg-teal-500 transition-all"
+                :style="{ width: approvedShareOfTotalPct + '%' }"
               />
             </div>
           </div>
@@ -832,6 +839,7 @@ import {
   TrashIcon,
   CheckCircleIcon,
   ChevronDownIcon,
+  ClockIcon,
   ExclamationTriangleIcon,
   EyeIcon,
   FunnelIcon,
@@ -1093,19 +1101,17 @@ const tabDefs = computed(() => [
 
 const approvalPendingCount = computed(() => Number(stats.value.by_status?.pending ?? 0))
 const approvalApprovedCount = computed(() => Number(stats.value.by_status?.approved ?? 0))
-const approvalPendingBarPct = computed(() => {
+const pendingShareOfTotalPct = computed(() => {
+  const t = stats.value.total || 0
   const p = approvalPendingCount.value
-  const a = approvalApprovedCount.value
-  const sum = p + a
-  if (sum <= 0) return 0
-  return Math.min(100, Math.round((p / sum) * 100))
+  if (t <= 0) return 0
+  return Math.min(100, Math.round((p / t) * 100))
 })
-const approvalApprovedBarPct = computed(() => {
-  const p = approvalPendingCount.value
+const approvedShareOfTotalPct = computed(() => {
+  const t = stats.value.total || 0
   const a = approvalApprovedCount.value
-  const sum = p + a
-  if (sum <= 0) return 0
-  return 100 - approvalPendingBarPct.value
+  if (t <= 0) return 0
+  return Math.min(100, Math.round((a / t) * 100))
 })
 
 const sparklinePoints = computed(() => {
