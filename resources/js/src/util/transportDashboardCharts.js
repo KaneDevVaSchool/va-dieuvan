@@ -12,6 +12,38 @@ const AXIS = {
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899']
 
+/** Centered empty state so chart areas never look blank. */
+export function emptyDashboardChartOption(message) {
+  return {
+    animation: false,
+    graphic: [
+      {
+        type: 'group',
+        left: 'center',
+        top: 'middle',
+        children: [
+          {
+            type: 'circle',
+            shape: { cx: 0, cy: -8, r: 22 },
+            style: { fill: '#f1f5f9', stroke: '#e2e8f0', lineWidth: 1 },
+          },
+          {
+            type: 'text',
+            y: 28,
+            style: {
+              text: message,
+              fill: '#64748b',
+              fontSize: 13,
+              fontWeight: 500,
+              textAlign: 'center',
+            },
+          },
+        ],
+      },
+    ],
+  }
+}
+
 export function sumTrips(tripsByStatus) {
   const o = tripsByStatus && typeof tripsByStatus === 'object' ? tripsByStatus : {}
   return Object.values(o).reduce((a, b) => a + Number(b ?? 0), 0)
@@ -32,7 +64,7 @@ export function normalizeTripsByHour(tripsByHour) {
   return out
 }
 
-export function tripsStatusDonutOption({ tripsByStatus, labelMap }) {
+export function tripsStatusDonutOption({ tripsByStatus, labelMap, emptyText }) {
   const entries = Object.entries(tripsByStatus ?? {}).filter(([, v]) => Number(v) > 0)
   const data = entries.map(([k, v], i) => ({
     value: Number(v),
@@ -40,9 +72,7 @@ export function tripsStatusDonutOption({ tripsByStatus, labelMap }) {
     itemStyle: { color: PALETTE[i % PALETTE.length] },
   }))
   if (!data.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   return {
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -61,16 +91,14 @@ export function tripsStatusDonutOption({ tripsByStatus, labelMap }) {
   }
 }
 
-export function costsByTypeBarOption({ costsByType, formatMoney }) {
+export function costsByTypeBarOption({ costsByType, formatMoney, emptyText }) {
   const entries = Object.entries(costsByType ?? {})
     .map(([k, v]) => [k, Number(v ?? 0)])
     .sort((a, b) => b[1] - a[1])
   const cats = entries.map(([k]) => k)
   const vals = entries.map(([, v]) => v)
   if (!cats.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   return {
     tooltip: {
@@ -115,12 +143,10 @@ export function costsByTypeBarOption({ costsByType, formatMoney }) {
   }
 }
 
-export function providersHorizontalBarOption({ rows, formatMoney, maxItems = 12 }) {
+export function providersHorizontalBarOption({ rows, formatMoney, maxItems = 12, emptyText }) {
   const list = (rows ?? []).slice(0, maxItems)
   if (!list.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   const names = list.map((r) => r.provider ?? '—').reverse()
   const vals = list.map((r) => Number(r.total_amount ?? 0)).reverse()
@@ -158,7 +184,11 @@ export function providersHorizontalBarOption({ rows, formatMoney, maxItems = 12 
   }
 }
 
-export function tripsByHourLineOption({ counts24, t }) {
+export function tripsByHourLineOption({ counts24, t, emptyText }) {
+  const total = (counts24 ?? []).reduce((a, b) => a + Number(b ?? 0), 0)
+  if (total <= 0 && emptyText) {
+    return emptyDashboardChartOption(emptyText)
+  }
   const labels = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`)
   const maxV = Math.max(...counts24, 1)
   const showLabels = maxV <= 30
@@ -207,7 +237,7 @@ export function tripsByHourLineOption({ counts24, t }) {
   }
 }
 
-export function fleetModeDonutOption({ tripsByFleetMode, labelMap }) {
+export function fleetModeDonutOption({ tripsByFleetMode, labelMap, emptyText }) {
   const order = ['internal', 'vendor_hire', 'taxi', 'unspecified']
   const data = order
     .map((k, i) => ({
@@ -217,9 +247,7 @@ export function fleetModeDonutOption({ tripsByFleetMode, labelMap }) {
     }))
     .filter((d) => d.value > 0)
   if (!data.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   return {
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -237,7 +265,7 @@ export function fleetModeDonutOption({ tripsByFleetMode, labelMap }) {
   }
 }
 
-export function statusDonutOption({ countsByStatus, labelMap }) {
+export function statusDonutOption({ countsByStatus, labelMap, emptyText }) {
   const entries = Object.entries(countsByStatus ?? {}).filter(([, v]) => Number(v) > 0)
   const data = entries.map(([k, v], i) => ({
     value: Number(v),
@@ -245,9 +273,7 @@ export function statusDonutOption({ countsByStatus, labelMap }) {
     itemStyle: { color: PALETTE[i % PALETTE.length] },
   }))
   if (!data.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   return {
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -265,15 +291,13 @@ export function statusDonutOption({ countsByStatus, labelMap }) {
   }
 }
 
-export function costsPipelineBarOption({ costsByPipelineStatus, labelMap, formatMoney }) {
+export function costsPipelineBarOption({ costsByPipelineStatus, labelMap, formatMoney, emptyText }) {
   const order = ['draft', 'submitted', 'confirmed', 'rejected']
   const entries = order
     .map((k) => [k, Number(costsByPipelineStatus?.[k] ?? 0)])
     .filter(([, v]) => v > 0)
   if (!entries.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   const cats = entries.map(([k]) => labelMap[k] ?? k)
   const vals = entries.map(([, v]) => v)
@@ -320,12 +344,10 @@ export function costsPipelineBarOption({ costsByPipelineStatus, labelMap, format
   }
 }
 
-export function topRequestersBarOption({ rows, tripsSuffix }) {
+export function topRequestersBarOption({ rows, tripsSuffix, emptyText }) {
   const list = (rows ?? []).slice(0, 15)
   if (!list.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   const names = list.map((r) => r.requester_label ?? '—').reverse()
   const vals = list.map((r) => Number(r.trip_count ?? 0)).reverse()
@@ -364,15 +386,13 @@ export function topRequestersBarOption({ rows, tripsSuffix }) {
   }
 }
 
-export function licensePlateTripsBarOption({ tripsByPlate, plateSuffix }) {
+export function licensePlateTripsBarOption({ tripsByPlate, plateSuffix, emptyText }) {
   const entries = Object.entries(tripsByPlate ?? {})
     .map(([plate, c]) => [plate, Number(c ?? 0)])
     .filter(([, v]) => v > 0)
     .sort((a, b) => b[1] - a[1])
   if (!entries.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   const names = entries.map(([p]) => p).reverse()
   const vals = entries.map(([, v]) => v).reverse()
@@ -411,15 +431,13 @@ export function licensePlateTripsBarOption({ tripsByPlate, plateSuffix }) {
   }
 }
 
-export function tripsByTripTypeBarOption({ tripsByTripType, labelMap }) {
+export function tripsByTripTypeBarOption({ tripsByTripType, labelMap, emptyText }) {
   const entries = Object.entries(tripsByTripType ?? {})
     .map(([k, v]) => [k, Number(v ?? 0)])
     .filter(([, v]) => v > 0)
     .sort((a, b) => b[1] - a[1])
   if (!entries.length) {
-    return {
-      title: { text: '—', left: 'center', top: 'middle', textStyle: { color: AXIS.label, fontSize: 14 } },
-    }
+    return emptyDashboardChartOption(emptyText ?? '—')
   }
   const cats = entries.map(([k]) => labelMap[k] ?? k)
   const vals = entries.map(([, v]) => v)
