@@ -25,9 +25,24 @@ class ReportSummaryTest extends TestCase
                 'data' => [
                     'range',
                     'trips_by_status',
+                    'trips_by_hour',
+                    'trips_by_trip_type',
+                    'trips_by_fleet_mode',
+                    'trips_by_license_plate',
+                    'trip_completion',
+                    'trip_records_distance_km',
+                    'top_requesters',
+                    'dispatch_requests_by_status',
+                    'costs_by_pipeline_status',
                     'confirmed_costs_by_type',
                     'confirmed_costs_by_provider',
                     'cargo_sla_breaches',
+                    'vehicle_compliance' => [
+                        'inspection' => ['overdue', 'due_within_30_days'],
+                        'insurance' => ['overdue', 'due_within_30_days'],
+                        'road_fee' => ['overdue', 'due_within_30_days'],
+                        'maintenance' => ['no_recent_service_180d'],
+                    ],
                 ],
             ]);
     }

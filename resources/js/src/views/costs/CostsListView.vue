@@ -24,76 +24,58 @@
       </div>
     </div>
 
-    <!-- Filters: cùng pattern danh sách yêu cầu -->
-    <div
-      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2"
-    >
+    <!-- Filters: shared AppFilter* components -->
+    <AppFilterBar>
       <div class="flex flex-col gap-2">
         <div class="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-2">
           <div class="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-        <details ref="filterMenuRef" class="group relative shrink-0">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5 text-slate-600" aria-hidden="true" />
-              <span
-                v-if="activeFilterCount > 0"
-                class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
+            <AppFilterFunnelMenu ref="filterMenuRef" class="shrink-0" :badge-count="activeFilterCount">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Bộ lọc đang áp dụng
+              </p>
+              <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                <li v-if="filters.status" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">Trạng thái</span>
+                  <span class="font-medium">{{ statusLabel(filters.status) }}</span>
+                </li>
+                <li v-if="filters.type" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">Loại chi phí</span>
+                  <span class="font-medium">{{ typeLabel(filters.type) }}</span>
+                </li>
+                <li v-if="filters.trip_id" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">Chuyến</span>
+                  <span class="max-w-[12rem] truncate text-right font-medium" :title="tripFilterSummaryFull">{{
+                    tripFilterSummaryFull
+                  }}</span>
+                </li>
+                <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">Ngày ghi nhận</span>
+                  <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
+                </li>
+                <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">Số dòng/trang</span>
+                  <span class="font-medium">{{ filters.per_page }}</span>
+                </li>
+                <li v-if="searchQ.trim()" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">Tìm nhanh</span>
+                  <span class="max-w-[10rem] truncate font-medium" :title="searchQ">{{ searchQ }}</span>
+                </li>
+                <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">Chưa chọn điều kiện lọc.</li>
+              </ul>
+              <button
+                type="button"
+                class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                @click="resetFilters(); closeFilterMenu()"
               >
-                {{ activeFilterCount > 9 ? '9+' : activeFilterCount }}
-              </span>
-            </span>
-            <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5"
-          >
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Bộ lọc đang áp dụng</p>
-            <ul class="mt-2 space-y-2 text-sm text-slate-700">
-              <li v-if="filters.status" class="flex justify-between gap-2">
-                <span class="text-slate-500">Trạng thái</span>
-                <span class="font-medium">{{ statusLabel(filters.status) }}</span>
-              </li>
-              <li v-if="filters.type" class="flex justify-between gap-2">
-                <span class="text-slate-500">Loại chi phí</span>
-                <span class="font-medium">{{ typeLabel(filters.type) }}</span>
-              </li>
-              <li v-if="filters.trip_id" class="flex justify-between gap-2">
-                <span class="text-slate-500">Chuyến</span>
-                <span class="max-w-[12rem] truncate text-right font-medium" :title="tripFilterSummaryFull">{{
-                  tripFilterSummaryFull
-                }}</span>
-              </li>
-              <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
-                <span class="text-slate-500">Ngày ghi nhận</span>
-                <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
-              </li>
-              <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2">
-                <span class="text-slate-500">Số dòng/trang</span>
-                <span class="font-medium">{{ filters.per_page }}</span>
-              </li>
-              <li v-if="searchQ.trim()" class="flex justify-between gap-2">
-                <span class="text-slate-500">Tìm nhanh</span>
-                <span class="max-w-[10rem] truncate font-medium" :title="searchQ">{{ searchQ }}</span>
-              </li>
-              <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa chọn điều kiện lọc.</li>
-            </ul>
-            <button
-              type="button"
-              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-              @click="resetFilters(); closeFilterMenu()"
-            >
-              Xóa tất cả bộ lọc
-            </button>
-          </div>
-        </details>
+                Xóa tất cả bộ lọc
+              </button>
+            </AppFilterFunnelMenu>
 
-        <div class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block" aria-hidden="true" />
+            <div class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
         <button
           type="button"
-          class="shrink-0 rounded-lg border border-white/80 bg-white/90 px-2.5 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+          class="shrink-0 rounded-lg border border-white/80 bg-white/90 px-2.5 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800"
           :aria-expanded="costsFiltersExpanded"
           :aria-controls="costsFiltersPanelId"
           @click="costsFiltersExpanded = !costsFiltersExpanded"
@@ -103,18 +85,20 @@
           </div>
 
         <div
-          class="flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3"
+          class="flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
         >
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
             title="Xóa bộ lọc"
             aria-label="Xóa bộ lọc"
             @click="resetFilters"
           >
             <span class="relative inline-flex">
               <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" />
+              <XMarkIcon
+                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+              />
             </span>
           </button>
           <button
@@ -130,167 +114,144 @@
         <div
           :id="costsFiltersPanelId"
           v-show="costsFiltersExpanded"
-          class="flex min-w-0 flex-col gap-2 border-t border-violet-200/50 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-2 sm:pt-2"
+          class="flex min-w-0 flex-col gap-2 border-t border-violet-200/50 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-2 sm:pt-2 dark:border-violet-900/30"
         >
         <div
           class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:gap-2"
         >
-          <details class="group relative shrink-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">Trạng thái</span>
-              <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900">{{
-                filters.status ? statusLabel(filters.status) : 'Tất cả'
-              }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
-            >
-              <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                <li v-for="opt in statusFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.status === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { status: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
+          <AppFilterDropdown
+            root-class="shrink-0"
+            label="Trạng thái"
+            :summary-text="filters.status ? statusLabel(filters.status) : 'Tất cả'"
+            summary-text-class="max-w-[10rem]"
+            panel-class="min-w-[220px] py-1"
+          >
+            <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+              <li v-for="opt in statusFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.status === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { status: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
 
-          <details class="group relative shrink-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">Loại chi phí</span>
-              <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900">{{
-                filters.type ? typeLabel(filters.type) : 'Tất cả'
-              }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
-            >
-              <ul class="space-y-0.5 px-1 py-1">
-                <li v-for="opt in typeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.type === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { type: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
+          <AppFilterDropdown
+            root-class="shrink-0"
+            label="Loại chi phí"
+            :summary-text="filters.type ? typeLabel(filters.type) : 'Tất cả'"
+            summary-text-class="max-w-[10rem]"
+            panel-class="min-w-[220px] py-1"
+          >
+            <ul class="space-y-0.5 px-1 py-1">
+              <li v-for="opt in typeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.type === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { type: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
 
-          <details class="group relative shrink-0">
-            <summary
-              class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">Ngày ghi nhận</span>
-              <span class="min-w-0 truncate text-sm font-medium text-slate-900">{{ filterDateSummary }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 w-[min(100vw-1.5rem,320px)] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 sm:w-max"
-            >
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <input
-                  v-model="filters.from"
-                  type="date"
-                  class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto"
-                  @change="onFilterDropdownChange"
-                />
-                <span class="hidden text-slate-300 sm:inline">—</span>
-                <input
-                  v-model="filters.to"
-                  type="date"
-                  class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto"
-                  @change="onFilterDropdownChange"
-                />
-              </div>
-            </div>
-          </details>
-
-          <details class="group relative shrink-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">Chuyến</span>
-              <span class="min-w-0 max-w-[11rem] truncate text-sm font-medium text-slate-900" :title="tripFilterSummaryFull">{{
-                tripFilterSummaryShort
-              }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 w-[min(100vw-1.5rem,320px)] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 sm:w-max sm:min-w-[280px]"
-            >
+          <AppFilterDropdown
+            root-class="shrink-0"
+            label="Ngày ghi nhận"
+            :summary-text="filterDateSummary"
+            full-width-summary
+            panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
+          >
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
-                v-model="filterTripSearch"
-                type="search"
-                class="costs-input mb-2 h-9 w-full text-sm"
-                placeholder="Tìm mã trip, điểm đi hoặc điểm đến…"
-                autocomplete="off"
-                @click.stop
+                v-model="filters.from"
+                type="date"
+                class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                @change="onFilterDropdownChange"
               />
-              <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-0.5 py-0.5">
-                <li>
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      !filters.trip_id
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { trip_id: '' })"
-                  >
-                    Tất cả chuyến
-                  </button>
-                </li>
-                <li v-for="t in filteredTripsForFilter" :key="t.id">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      String(filters.trip_id) === String(t.id)
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { trip_id: String(t.id) })"
-                  >
-                    {{ formatTripPickerLabel(t) }}
-                  </button>
-                </li>
-              </ul>
-              <p
-                v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForFilter.length"
-                class="mt-2 text-[11px] text-amber-800"
-              >
-                Không có chuyến khớp — xóa ô tìm hoặc chọn “Tất cả chuyến”.
-              </p>
-              <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500">Đang tải danh sách chuyến…</p>
-              <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500">
-                Không có chuyến trong phạm vi quyền.
-              </p>
+              <span class="hidden text-slate-300 dark:text-slate-600 sm:inline">—</span>
+              <input
+                v-model="filters.to"
+                type="date"
+                class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                @change="onFilterDropdownChange"
+              />
             </div>
-          </details>
+          </AppFilterDropdown>
+
+          <AppFilterDropdown
+            root-class="shrink-0"
+            label="Chuyến"
+            :summary-text="tripFilterSummaryShort"
+            :summary-title="tripFilterSummaryFull"
+            summary-text-class="max-w-[11rem]"
+            panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max sm:min-w-[280px]"
+          >
+            <input
+              v-model="filterTripSearch"
+              type="search"
+              class="costs-input mb-2 h-9 w-full text-sm"
+              placeholder="Tìm mã trip, điểm đi hoặc điểm đến…"
+              autocomplete="off"
+              @click.stop
+            />
+            <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-0.5 py-0.5">
+              <li>
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    !filters.trip_id
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { trip_id: '' })"
+                >
+                  Tất cả chuyến
+                </button>
+              </li>
+              <li v-for="tripRow in filteredTripsForFilter" :key="tripRow.id">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    String(filters.trip_id) === String(tripRow.id)
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { trip_id: String(tripRow.id) })"
+                >
+                  {{ formatTripPickerLabel(tripRow) }}
+                </button>
+              </li>
+            </ul>
+            <p
+              v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForFilter.length"
+              class="mt-2 text-[11px] text-amber-800 dark:text-amber-200"
+            >
+              Không có chuyến khớp — xóa ô tìm hoặc chọn “Tất cả chuyến”.
+            </p>
+            <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              Đang tải danh sách chuyến…
+            </p>
+            <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              Không có chuyến trong phạm vi quyền.
+            </p>
+          </AppFilterDropdown>
 
           <input
             v-model="searchQ"
@@ -305,7 +266,7 @@
             <span class="sr-only">Số dòng mỗi trang</span>
             <select
               v-model.number="filters.per_page"
-              class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+              class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
               aria-label="Số dòng mỗi trang"
               @change="onPerPageChange"
             >
@@ -320,7 +281,7 @@
         </div>
         </div>
       </div>
-    </div>
+    </AppFilterBar>
 
     <!-- Bảng -->
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05]">
@@ -617,6 +578,9 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import { listTripCosts, submitTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -974,8 +938,7 @@ function closeParentDetails(ev) {
 }
 
 function closeFilterMenu() {
-  const el = filterMenuRef.value
-  if (el && 'open' in el) el.open = false
+  filterMenuRef.value?.close?.()
 }
 
 function applyFilterPatch(ev, patch) {

@@ -133,278 +133,221 @@
     </div>
 
     <!-- Filters: horizontal bar -->
-    <div
-      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5"
-    >
+    <AppFilterBar>
       <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <!-- Main filter menu -->
-        <details ref="filterMenuRef" class="group relative">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {{ t('requests_page.filter_menu_title') }}
+          </p>
+          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+            <li v-if="filters.trip_type" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_trip_type') }}</span>
+              <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
+            </li>
+            <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_depart_range') }}</span>
+              <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
+            </li>
+            <li v-if="filters.source_channel" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_channel') }}</span>
+              <span class="font-medium">{{ labelSourceChannel(filters.source_channel) }}</span>
+            </li>
+            <li v-if="filters.paper_status" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_paper') }}</span>
+              <span class="font-medium">{{ labelPaperStatus(filters.paper_status) }}</span>
+            </li>
+            <li v-if="filters.priority === 'urgent'" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_priority') }}</span>
+              <span class="font-medium">{{ t('requests_page.filter_priority_urgent') }}</span>
+            </li>
+            <li v-if="filters.sla_risk_only" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.sla_toggle') }}</span>
+              <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
+            </li>
+            <li v-if="filters.per_page !== 10" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
+              <span class="font-medium">{{ filters.per_page }}</span>
+            </li>
+            <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">
+              {{ t('requests_page.filter_menu_empty') }}
+            </li>
+          </ul>
+          <button
+            type="button"
+            class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+            @click="resetFilters(); closeFilterMenu()"
           >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5 text-slate-600" aria-hidden="true" />
-              <span
-                v-if="activeFilterCount > 0"
-                class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
-              >
-                {{ activeFilterCount > 9 ? '9+' : activeFilterCount }}
-              </span>
-            </span>
-            <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5"
-          >
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {{ t('requests_page.filter_menu_title') }}
-            </p>
-            <ul class="mt-2 space-y-2 text-sm text-slate-700">
-              <li v-if="filters.trip_type" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('requests_page.filter_trip_type') }}</span>
-                <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
-              </li>
-              <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('requests_page.filter_depart_range') }}</span>
-                <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
-              </li>
-              <li v-if="filters.source_channel" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('requests_page.filter_channel') }}</span>
-                <span class="font-medium">{{ labelSourceChannel(filters.source_channel) }}</span>
-              </li>
-              <li v-if="filters.paper_status" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('requests_page.filter_paper') }}</span>
-                <span class="font-medium">{{ labelPaperStatus(filters.paper_status) }}</span>
-              </li>
-              <li v-if="filters.priority === 'urgent'" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('requests_page.filter_priority') }}</span>
-                <span class="font-medium">{{ t('requests_page.filter_priority_urgent') }}</span>
-              </li>
-              <li v-if="filters.sla_risk_only" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('requests_page.sla_toggle') }}</span>
-                <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
-              </li>
-              <li v-if="filters.per_page !== 10" class="flex justify-between gap-2">
-                <span class="text-slate-500">{{ t('requests_page.filter_per_page') }}</span>
-                <span class="font-medium">{{ filters.per_page }}</span>
-              </li>
-              <li v-if="activeFilterCount === 0" class="text-slate-400">{{ t('requests_page.filter_menu_empty') }}</li>
-            </ul>
-            <button
-              type="button"
-              class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-              @click="resetFilters(); closeFilterMenu()"
-            >
-              {{ t('requests_page.filter_clear_all') }}
-            </button>
-          </div>
-        </details>
+            {{ t('requests_page.filter_clear_all') }}
+          </button>
+        </AppFilterFunnelMenu>
 
-        <!-- Inline dropdowns -->
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
+        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-          <!-- Trip type: title opens panel -->
-          <details class="group relative min-w-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_trip_type') }}</span>
-              <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900">{{
-                filters.trip_type ? labelTripType(filters.trip_type) : t('requests_page.all')
-              }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
-            >
-              <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                <li v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.trip_type === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { trip_type: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
+          <AppFilterDropdown
+            :label="t('requests_page.filter_trip_type')"
+            :summary-text="filters.trip_type ? labelTripType(filters.trip_type) : t('requests_page.all')"
+            summary-text-class="max-w-[10rem]"
+            panel-class="min-w-[220px] py-1"
+          >
+            <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+              <li v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.trip_type === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { trip_type: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
 
-          <!-- Depart date range -->
-          <details class="group relative min-w-0">
-            <summary
-              class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_depart_range') }}</span>
-              <span class="min-w-0 truncate text-sm font-medium text-slate-900">{{ filterDepartSummary }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 w-[min(100vw-1.5rem,320px)] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 sm:w-max"
-            >
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <input
-                  v-model="filters.from"
-                  type="date"
-                  class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto"
-                  @change="onFilterDropdownChange"
-                />
-                <span class="hidden text-slate-300 sm:inline">—</span>
-                <input
-                  v-model="filters.to"
-                  type="date"
-                  class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto"
-                  @change="onFilterDropdownChange"
-                />
-              </div>
+          <AppFilterDropdown
+            :label="t('requests_page.filter_depart_range')"
+            :summary-text="filterDepartSummary"
+            full-width-summary
+            panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
+          >
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                v-model="filters.from"
+                type="date"
+                class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                @change="onFilterDropdownChange"
+              />
+              <span class="hidden text-slate-300 dark:text-slate-600 sm:inline">—</span>
+              <input
+                v-model="filters.to"
+                type="date"
+                class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                @change="onFilterDropdownChange"
+              />
             </div>
-          </details>
+          </AppFilterDropdown>
 
-          <details class="group relative min-w-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_channel') }}</span>
-              <span class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900">{{
-                filters.source_channel ? labelSourceChannel(filters.source_channel) : t('requests_page.all')
-              }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
-            >
-              <ul class="space-y-0.5 px-1 py-1">
-                <li v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.source_channel === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { source_channel: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
+          <AppFilterDropdown
+            :label="t('requests_page.filter_channel')"
+            :summary-text="filters.source_channel ? labelSourceChannel(filters.source_channel) : t('requests_page.all')"
+            summary-text-class="max-w-[8rem]"
+            panel-class="min-w-[200px] py-1"
+          >
+            <ul class="space-y-0.5 px-1 py-1">
+              <li v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.source_channel === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { source_channel: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
 
-          <details class="group relative min-w-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_paper') }}</span>
-              <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900">{{
-                filters.paper_status ? labelPaperStatus(filters.paper_status) : t('requests_page.all')
-              }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
-            >
-              <ul class="space-y-0.5 px-1 py-1">
-                <li v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.paper_status === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { paper_status: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
+          <AppFilterDropdown
+            :label="t('requests_page.filter_paper')"
+            :summary-text="filters.paper_status ? labelPaperStatus(filters.paper_status) : t('requests_page.all')"
+            summary-text-class="max-w-[9rem]"
+            panel-class="min-w-[220px] py-1"
+          >
+            <ul class="space-y-0.5 px-1 py-1">
+              <li v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.paper_status === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { paper_status: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
 
-          <details class="group relative min-w-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
-            >
-              <span class="whitespace-nowrap text-sm text-slate-600">{{ t('requests_page.filter_priority') }}</span>
-              <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900">{{
-                filters.priority === 'urgent'
-                  ? t('requests_page.filter_priority_urgent')
-                  : t('requests_page.filter_priority_all')
-              }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
-            >
-              <ul class="space-y-0.5 px-1 py-1">
-                <li v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                  <button
-                    type="button"
-                    class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                    :class="
-                      filters.priority === opt.value
-                        ? 'bg-teal-50 font-medium text-teal-900'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    "
-                    @click="applyFilterPatch($event, { priority: opt.value })"
-                  >
-                    {{ opt.label }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </details>
+          <AppFilterDropdown
+            :label="t('requests_page.filter_priority')"
+            :summary-text="
+              filters.priority === 'urgent'
+                ? t('requests_page.filter_priority_urgent')
+                : t('requests_page.filter_priority_all')
+            "
+            summary-text-class="max-w-[9rem]"
+            panel-class="min-w-[200px] py-1"
+          >
+            <ul class="space-y-0.5 px-1 py-1">
+              <li v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.priority === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { priority: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
         </div>
 
         <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
           <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
             :title="t('requests_page.filter_clear')"
             @click="resetFilters"
           >
             <span class="relative inline-flex">
               <FunnelIcon class="h-5 w-5" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100" />
+              <XMarkIcon
+                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+              />
             </span>
           </button>
 
-          <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
+          <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
             :aria-expanded="extraFiltersOpen"
             @click="extraFiltersOpen = !extraFiltersOpen"
           >
             {{ t('requests_page.filter_extra') }}
-            <PlusCircleIcon class="h-5 w-5 text-teal-600" aria-hidden="true" />
+            <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      <!-- Extra attributes -->
       <div
         v-show="extraFiltersOpen"
-        class="mt-3 flex flex-wrap items-center gap-4 border-t border-violet-100/80 pt-3"
+        class="mt-3 flex flex-wrap items-center gap-4 border-t border-violet-100/80 pt-3 dark:border-violet-900/30"
       >
         <label class="inline-flex cursor-pointer items-center gap-2">
           <button
             type="button"
             role="switch"
             :aria-checked="filters.sla_risk_only"
-            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30"
-            :class="filters.sla_risk_only ? 'bg-teal-600' : 'bg-slate-200'"
+            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600"
+            :class="filters.sla_risk_only ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
             @click="toggleSla"
           >
             <span
@@ -412,13 +355,13 @@
               :class="filters.sla_risk_only ? 'translate-x-5' : ''"
             />
           </button>
-          <span class="text-sm text-slate-700">{{ t('requests_page.sla_toggle') }}</span>
+          <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.sla_toggle') }}</span>
         </label>
         <label class="inline-flex items-center gap-2">
-          <span class="text-sm text-slate-600">{{ t('requests_page.filter_per_page') }}</span>
+          <span class="text-sm text-slate-600 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
           <select
             v-model.number="filters.per_page"
-            class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+            class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             @change="onFilterChange"
           >
             <option :value="10">10</option>
@@ -428,7 +371,7 @@
           </select>
         </label>
       </div>
-    </div>
+    </AppFilterBar>
 
     <!-- Status tabs -->
     <div class="-mx-1 overflow-x-auto pb-1">
@@ -882,6 +825,9 @@ import {
   EllipsisVerticalIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import {
   bulkForceDeleteRequests,
   bulkRestoreRequests,
@@ -1327,10 +1273,7 @@ function onFilterDropdownChange(ev) {
 }
 
 function closeFilterMenu() {
-  const el = filterMenuRef.value
-  if (el && 'open' in el) {
-    el.open = false
-  }
+  filterMenuRef.value?.close?.()
 }
 
 async function reload() {

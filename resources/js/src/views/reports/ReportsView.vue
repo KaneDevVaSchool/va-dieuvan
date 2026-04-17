@@ -1,53 +1,72 @@
 <template>
   <div class="space-y-4">
-    <Card>
+    <AppFilterBar>
+      <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('reports_page.filter_title') }}
+      </div>
       <div class="grid gap-3 md:grid-cols-2">
-        <Input v-model="from" label="Từ" type="date" />
-        <Input v-model="to" label="Đến" type="date" />
+        <Input v-model="from" :label="t('reports_page.from')" type="date" />
+        <Input v-model="to" :label="t('reports_page.to')" type="date" />
       </div>
       <div class="mt-3 flex flex-wrap gap-2">
-        <Button variant="secondary" :loading="loading" @click="load">Tải báo cáo</Button>
-        <Button v-if="summary" variant="secondary" type="button" @click="downloadCsv">Tải CSV (tóm tắt)</Button>
+        <Button variant="secondary" :loading="loading" @click="load">{{ t('reports_page.load') }}</Button>
+        <Button v-if="summary" variant="secondary" type="button" @click="downloadCsv">{{ t('reports_page.csv') }}</Button>
       </div>
-      <p class="mt-2 text-xs text-slate-500">
-        CSV gồm khoảng thời gian, trips theo trạng thái, chi phí theo loại, chi phí theo NCC/nội bộ, và số vi phạm SLA cargo — phục vụ biên bản nội bộ tạm thời.
+      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        {{ t('reports_page.csv_hint') }}
       </p>
-    </Card>
+    </AppFilterBar>
 
     <div v-if="summary" class="grid gap-4 md:grid-cols-3">
-      <Card title="Trips theo trạng thái">
-        <div v-for="(v, k) in summary.trips_by_status ?? {}" :key="k" class="flex justify-between text-sm">
+      <Card :title="t('reports_page.card_trips')">
+        <div
+          v-for="(v, k) in summary.trips_by_status ?? {}"
+          :key="k"
+          class="flex justify-between text-sm text-slate-800 dark:text-slate-200"
+        >
           <span>{{ k }}</span><span class="font-semibold">{{ v }}</span>
         </div>
       </Card>
-      <Card title="Chi phí confirmed">
-        <div v-for="(v, k) in summary.confirmed_costs_by_type ?? {}" :key="k" class="flex justify-between text-sm">
+      <Card :title="t('reports_page.card_costs')">
+        <div
+          v-for="(v, k) in summary.confirmed_costs_by_type ?? {}"
+          :key="k"
+          class="flex justify-between text-sm text-slate-800 dark:text-slate-200"
+        >
           <span>{{ k }}</span><span class="font-semibold">{{ formatMoney(v) }}</span>
         </div>
       </Card>
-      <Card title="Cargo SLA">
-        <div class="text-2xl font-bold">{{ summary.cargo_sla_breaches ?? 0 }}</div>
-        <div class="text-xs text-slate-500">Shipment trễ SLA</div>
+      <Card :title="t('reports_page.card_sla')">
+        <div class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ summary.cargo_sla_breaches ?? 0 }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('reports_page.card_sla_sub') }}</div>
       </Card>
     </div>
 
-    <Card v-if="summary" title="Chi phí confirmed theo NCC / nội bộ">
-      <p class="mb-3 text-xs text-slate-500">
-        Nguồn: chi phí đã xác nhận trong khoảng thời gian đã chọn; nhóm theo nhà cung cấp vận tải gắn chuyến (INTERNAL = nội bộ).
+    <Card v-if="summary" :title="t('reports_page.card_providers')">
+      <p class="mb-3 text-xs text-slate-500 dark:text-slate-400">
+        {{ t('reports_page.providers_hint') }}
       </p>
-      <div v-if="!providerRows.length" class="text-sm text-slate-500">Chưa có dữ liệu.</div>
+      <div v-if="!providerRows.length" class="text-sm text-slate-500 dark:text-slate-400">
+        {{ t('reports_page.no_data') }}
+      </div>
       <div v-else class="overflow-x-auto">
         <table class="w-full border-collapse text-sm">
           <thead>
-            <tr class="border-b text-left text-slate-500">
-              <th class="py-2 pr-4 font-medium">Đơn vị / NCC</th>
-              <th class="py-2 font-medium tabular-nums">Tổng (VND)</th>
+            <tr class="border-b border-slate-200 text-left text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              <th class="py-2 pr-4 font-medium">{{ t('reports_page.col_provider') }}</th>
+              <th class="py-2 font-medium tabular-nums">{{ t('reports_page.col_total') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, i) in providerRows" :key="i" class="border-b border-slate-100">
-              <td class="py-2 pr-4">{{ row.provider }}</td>
-              <td class="py-2 tabular-nums font-medium">{{ formatMoney(row.total_amount) }}</td>
+            <tr
+              v-for="(row, i) in providerRows"
+              :key="i"
+              class="border-b border-slate-100 dark:border-slate-800"
+            >
+              <td class="py-2 pr-4 text-slate-800 dark:text-slate-200">{{ row.provider }}</td>
+              <td class="py-2 tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                {{ formatMoney(row.total_amount) }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -58,10 +77,14 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import { getSummary } from '../../api/reports'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const summary = ref(null)
