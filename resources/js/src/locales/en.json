@@ -741,6 +741,8 @@
     "hero_title": "Cargo & shipments",
     "hero_subtitle": "Track SLA, PODs, and links to requests and trips.",
     "cta_new_request": "Create new request",
+    "link_cargo_requests": "Cargo dispatch requests",
+    "upgrade_empty": "No suggestions from current data.",
     "quick_create_title": "Quick create shipment",
     "pickup": "Pickup",
     "delivery": "Delivery",

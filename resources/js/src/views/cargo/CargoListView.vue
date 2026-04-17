@@ -9,13 +9,21 @@
           {{ t('cargo_page.hero_subtitle') }}
         </p>
       </div>
-      <RouterLink
-        to="/dispatch-requests/new"
-        class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700"
-      >
-        <PlusIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-        {{ t('cargo_page.cta_new_request') }}
-      </RouterLink>
+      <div class="flex flex-wrap items-center gap-2">
+        <RouterLink
+          to="/dispatch-requests/new"
+          class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700"
+        >
+          <PlusIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+          {{ t('cargo_page.cta_new_request') }}
+        </RouterLink>
+        <RouterLink
+          :to="{ path: '/requests', query: { trip_type: 'cargo' } }"
+          class="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        >
+          {{ t('cargo_page.link_cargo_requests') }}
+        </RouterLink>
+      </div>
     </div>
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
@@ -370,7 +378,7 @@
                       <div class="flex flex-wrap gap-2">
                         <RouterLink
                           v-if="dispatchRequestId(s)"
-                          :to="'/dispatch-requests/' + dispatchRequestId(s)"
+                          :to="'/requests/' + dispatchRequestId(s)"
                           class="text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
                         >
                           {{ t('cargo_page.link_request') }}
@@ -476,17 +484,10 @@
           </div>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2">
-          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.chart_fleet_title') }}</h3>
-            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.chart_fleet_sub') }}</p>
-            <DashboardEChart class="mt-2" height="200px" :option="fleetChartOption" :aria-label="t('cargo_page.chart_fleet_title')" />
-          </div>
-          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.chart_cost_title') }}</h3>
-            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.chart_cost_sub') }}</p>
-            <DashboardEChart class="mt-2" height="200px" :option="costDonutOption" :aria-label="t('cargo_page.chart_cost_title')" />
-          </div>
+        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.chart_fleet_title') }}</h3>
+          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.chart_fleet_sub') }}</p>
+          <DashboardEChart class="mt-2" height="220px" :option="fleetChartOption" :aria-label="t('cargo_page.chart_fleet_title')" />
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
@@ -509,7 +510,7 @@
           <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.upgrade_panel_title') }}</h3>
             <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.upgrade_panel_sub') }}</p>
-            <ul class="mt-4 space-y-3">
+            <ul v-if="upgradeSuggestions.length" class="mt-4 space-y-3">
               <li
                 v-for="(u, i) in upgradeSuggestions"
                 :key="i"
@@ -527,6 +528,7 @@
                 </div>
               </li>
             </ul>
+            <p v-else class="mt-4 text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.upgrade_empty') }}</p>
           </div>
         </div>
       </div>
@@ -540,18 +542,22 @@
           >
             {{ t('cargo_page.sidebar_track_badge', { n: fmtInt(kpi.inTransit) }) }}
           </div>
-          <div
-            class="mt-4 flex h-36 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-teal-50/80 text-slate-400 dark:from-slate-800 dark:to-teal-950/30 dark:text-slate-500"
-          >
-            <MapPinIcon class="h-10 w-10 opacity-40" aria-hidden="true" />
+          <div class="mt-4 flex flex-col gap-2 text-xs">
+            <RouterLink
+              to="/trips"
+              class="inline-flex items-center gap-1 font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400"
+            >
+              {{ t('cargo_page.sidebar_track_link') }}
+              <ChevronDownIcon class="h-3 w-3 -rotate-90" aria-hidden="true" />
+            </RouterLink>
+            <RouterLink
+              :to="{ path: '/requests', query: { trip_type: 'cargo' } }"
+              class="inline-flex items-center gap-1 font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400"
+            >
+              {{ t('cargo_page.link_cargo_requests') }}
+              <ChevronDownIcon class="h-3 w-3 -rotate-90" aria-hidden="true" />
+            </RouterLink>
           </div>
-          <RouterLink
-            to="/trips"
-            class="mt-3 inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400"
-          >
-            {{ t('cargo_page.sidebar_track_link') }}
-            <ChevronDownIcon class="h-3 w-3 -rotate-90" aria-hidden="true" />
-          </RouterLink>
         </div>
 
         <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
@@ -581,7 +587,6 @@ import {
   ClockIcon,
   ExclamationTriangleIcon,
   FunnelIcon,
-  MapPinIcon,
   PlusIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
@@ -918,32 +923,6 @@ const fleetChartOption = computed(() => ({
   ],
 }))
 
-const costDonutOption = computed(() => ({
-  tooltip: { trigger: 'item' },
-  legend: {
-    orient: 'vertical',
-    right: 4,
-    top: 'middle',
-    textStyle: { fontSize: 10, color: '#64748b' },
-  },
-  series: [
-    {
-      type: 'pie',
-      radius: ['48%', '72%'],
-      center: ['32%', '50%'],
-      avoidLabelOverlap: true,
-      label: { show: false },
-      data: [
-        { value: 40, name: t('cargo_page.cost_legend_fuel'), itemStyle: { color: '#0f766e' } },
-        { value: 30, name: t('cargo_page.cost_legend_salary'), itemStyle: { color: '#14b8a6' } },
-        { value: 15, name: t('cargo_page.cost_legend_maint'), itemStyle: { color: '#5eead4' } },
-        { value: 10, name: t('cargo_page.cost_legend_toll'), itemStyle: { color: '#99f6e4' } },
-        { value: 5, name: t('cargo_page.cost_legend_other'), itemStyle: { color: '#ccfbf1' } },
-      ],
-    },
-  ],
-}))
-
 const popularRoutes = ref([])
 
 function fmtInt(n) {
@@ -1140,17 +1119,7 @@ const upgradeSuggestions = computed(() => {
       badgeClass: 'bg-violet-100 text-violet-900 dark:bg-violet-950/40 dark:text-violet-100',
     })
   }
-  out.push({
-    title: t('cargo_page.suggest_capacity_title'),
-    body: t('cargo_page.suggest_capacity_body'),
-    badgeClass: 'bg-teal-100 text-teal-900 dark:bg-teal-950/40 dark:text-teal-100',
-  })
-  out.push({
-    title: t('cargo_page.suggest_pod_title'),
-    body: t('cargo_page.suggest_pod_body'),
-    badgeClass: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100',
-  })
-  return out.slice(0, 6)
+  return out.slice(0, 8)
 })
 
 const sidebarAlerts = computed(() => {

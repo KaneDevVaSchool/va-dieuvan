@@ -50,6 +50,13 @@ class RequestController extends Controller
                 if (ctype_digit($term)) {
                     $inner->orWhere('id', (int) $term);
                 }
+                if (preg_match('/^REQ-?(\d+)$/i', $term, $m)) {
+                    $inner->orWhere('id', (int) $m[1]);
+                }
+                $lower = mb_strtolower($term, 'UTF-8');
+                if ($lower === 'cargo' || $lower === 'hàng hóa' || $lower === 'hang hoa') {
+                    $inner->orWhere('trip_type', 'cargo');
+                }
             });
         });
 
@@ -72,13 +79,29 @@ class RequestController extends Controller
                 });
         });
 
-        $q->when(isset($data['from']), function (Builder $b) use ($data) {
-            $from = Carbon::parse($data['from'])->startOfDay();
-            $b->where('depart_at', '>=', $from);
-        });
-        $q->when(isset($data['to']), function (Builder $b) use ($data) {
-            $to = Carbon::parse($data['to'])->endOfDay();
-            $b->where('depart_at', '<=', $to);
+        // Khoảng ngày khởi hành: bản ghi depart_at null (một số luồng cũ / nhập tay) vẫn lọc theo created_at trong khoảng.
+        $q->when(isset($data['from']) || isset($data['to']), function (Builder $b) use ($data) {
+            $from = isset($data['from']) ? Carbon::parse($data['from'])->startOfDay() : null;
+            $to = isset($data['to']) ? Carbon::parse($data['to'])->endOfDay() : null;
+            $b->where(function (Builder $outer) use ($from, $to) {
+                $outer->where(function (Builder $hasDepart) use ($from, $to) {
+                    $hasDepart->whereNotNull('depart_at');
+                    if ($from) {
+                        $hasDepart->where('depart_at', '>=', $from);
+                    }
+                    if ($to) {
+                        $hasDepart->where('depart_at', '<=', $to);
+                    }
+                })->orWhere(function (Builder $noDepart) use ($from, $to) {
+                    $noDepart->whereNull('depart_at');
+                    if ($from) {
+                        $noDepart->where('created_at', '>=', $from);
+                    }
+                    if ($to) {
+                        $noDepart->where('created_at', '<=', $to);
+                    }
+                });
+            });
         });
 
         $perPage = (int) ($data['per_page'] ?? 20);
