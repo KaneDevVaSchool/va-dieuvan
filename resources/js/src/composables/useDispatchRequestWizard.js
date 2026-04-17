@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   AcademicCapIcon,
@@ -8,12 +8,10 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../store'
 import { uploadAttachment } from '../api/attachments'
-import saveAs from 'file-saver'
-import { createDispatchRequest, getDispatchRequest, previewBm02DispatchForm } from '../api/requests'
+import { createDispatchRequest } from '../api/requests'
 import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { newIdempotencyKey } from '../util/idempotency'
-import { downloadBinaryAttachmentFromApi, fetchPdfBlobForPreview } from '../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../util/datetime'
 import {
   LEGACY_DRAFT_KEY,
@@ -142,16 +140,6 @@ export function useDispatchRequestWizard() {
   const loading = ref(false)
   const error = ref('')
 
-  const bm02Loading = ref(false)
-  const bm02PreviewError = ref('')
-  const bm02PdfUrl = ref(null)
-  const bm02PdfBase64 = ref('')
-  const bm02ExcelBase64 = ref('')
-  const bm02FilenamePdf = ref('BM02-denghi-dieuvan-preview.pdf')
-  const bm02FilenameXlsx = ref('BM02-denghi-dieuvan-preview.xlsx')
-  /** Sau khi gửi yêu cầu: file BM.02 lấy từ attachments (DB), không dùng base64 preview. */
-  const bm02PdfAttachmentId = ref(null)
-  const bm02ExcelAttachmentId = ref(null)
   const created = ref(null)
   const draftSavedAt = ref(null)
   const hasDraftSnapshot = ref(false)
@@ -871,9 +859,6 @@ export function useDispatchRequestWizard() {
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
       created.value = await createDispatchRequest(payload, { idempotencyKey })
-      if (created.value?.id && created.value.trip_type === 'point_to_point') {
-        await hydrateBm02FromSavedDispatchRequest(created.value.id)
-      }
       if (basisFile.value && created.value?.id) {
         try {
           await uploadAttachment({
@@ -919,24 +904,6 @@ export function useDispatchRequestWizard() {
     }
   }
 
-  function revokeBm02PdfUrl() {
-    if (bm02PdfUrl.value) {
-      try {
-        URL.revokeObjectURL(bm02PdfUrl.value)
-      } catch {
-        /* ignore */
-      }
-      bm02PdfUrl.value = null
-    }
-  }
-
-  function base64ToBlob(base64, mime) {
-    const bin = atob(base64)
-    const bytes = new Uint8Array(bin.length)
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-    return new Blob([bytes], { type: mime })
-  }
-
   function buildWizardSnapshot() {
     return {
       form: { ...form.value, basisFileName: basisFile.value?.name ?? '' },
@@ -944,115 +911,6 @@ export function useDispatchRequestWizard() {
       businessRows: businessRows.value.map((r) => ({ ...r })),
       cargoRows: cargoRows.value.map((r) => ({ ...r })),
     }
-  }
-
-  async function hydrateBm02FromSavedDispatchRequest(dispatchRequestId) {
-    if (!dispatchRequestId) return
-    bm02PreviewError.value = ''
-    try {
-      const dr = await getDispatchRequest(dispatchRequestId)
-      const atts = dr.attachments ?? []
-      const pdfAtt = atts.find((a) => a.kind === 'bm02_pdf')
-      const xlsxAtt = atts.find((a) => a.kind === 'bm02_excel')
-      bm02PdfAttachmentId.value = pdfAtt?.id ?? null
-      bm02ExcelAttachmentId.value = xlsxAtt?.id ?? null
-      if (pdfAtt?.original_name) bm02FilenamePdf.value = pdfAtt.original_name
-      if (xlsxAtt?.original_name) bm02FilenameXlsx.value = xlsxAtt.original_name
-      bm02PdfBase64.value = ''
-      bm02ExcelBase64.value = ''
-      const prevPdfUrl = bm02PdfUrl.value
-      bm02PdfUrl.value = null
-      if (prevPdfUrl) {
-        try {
-          URL.revokeObjectURL(prevPdfUrl)
-        } catch {
-          /* ignore */
-        }
-      }
-      if (pdfAtt?.id) {
-        const r = await fetchPdfBlobForPreview(pdfAtt.id)
-        if (r.ok) {
-          bm02PdfUrl.value = URL.createObjectURL(r.blob)
-        } else {
-          bm02PreviewError.value = 'Không hiển thị được PDF BM.02 từ đính kèm đã lưu.'
-        }
-      }
-    } catch (e) {
-      bm02PreviewError.value = formatApiError(e, 'Không đọc được BM.02 đã lưu trên máy chủ.')
-    }
-  }
-
-  async function loadBm02Preview() {
-    if (form.value.trip_type !== 'point_to_point') return
-    bm02PdfAttachmentId.value = null
-    bm02ExcelAttachmentId.value = null
-    bm02PreviewError.value = ''
-    bm02PdfBase64.value = ''
-    bm02ExcelBase64.value = ''
-    bm02Loading.value = true
-    const prevPdfUrl = bm02PdfUrl.value
-    bm02PdfUrl.value = null
-    try {
-      const data = await previewBm02DispatchForm(buildWizardSnapshot())
-      bm02PdfBase64.value = data.pdf_base64 ?? ''
-      bm02ExcelBase64.value = data.excel_base64 ?? ''
-      if (data.filename_pdf) bm02FilenamePdf.value = data.filename_pdf
-      if (data.filename_xlsx) bm02FilenameXlsx.value = data.filename_xlsx
-      if (data.pdf_base64) {
-        bm02PdfUrl.value = URL.createObjectURL(base64ToBlob(data.pdf_base64, 'application/pdf'))
-      }
-      if (prevPdfUrl) {
-        try {
-          URL.revokeObjectURL(prevPdfUrl)
-        } catch {
-          /* ignore */
-        }
-      }
-    } catch (e) {
-      bm02PdfUrl.value = prevPdfUrl
-      bm02PreviewError.value = formatApiError(e, 'Không tạo được bản xem trước BM.02.')
-    } finally {
-      bm02Loading.value = false
-    }
-  }
-
-  const canDownloadBm02Pdf = computed(
-    () => !!(bm02PdfAttachmentId.value || bm02PdfBase64.value),
-  )
-  const canDownloadBm02Excel = computed(
-    () => !!(bm02ExcelAttachmentId.value || bm02ExcelBase64.value),
-  )
-
-  async function downloadBm02Pdf() {
-    if (bm02PdfAttachmentId.value) {
-      try {
-        await downloadBinaryAttachmentFromApi(bm02PdfAttachmentId.value, bm02FilenamePdf.value)
-      } catch (e) {
-        bm02PreviewError.value = formatApiError(e, 'Không tải được PDF BM.02.')
-      }
-      return
-    }
-    if (!bm02PdfBase64.value) return
-    saveAs(base64ToBlob(bm02PdfBase64.value, 'application/pdf'), bm02FilenamePdf.value)
-  }
-
-  async function downloadBm02Excel() {
-    if (bm02ExcelAttachmentId.value) {
-      try {
-        await downloadBinaryAttachmentFromApi(bm02ExcelAttachmentId.value, bm02FilenameXlsx.value)
-      } catch (e) {
-        bm02PreviewError.value = formatApiError(e, 'Không tải được Excel BM.02.')
-      }
-      return
-    }
-    if (!bm02ExcelBase64.value) return
-    saveAs(
-      base64ToBlob(
-        bm02ExcelBase64.value,
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ),
-      bm02FilenameXlsx.value,
-    )
   }
 
   function migrateLegacyDraft() {
@@ -1212,12 +1070,6 @@ export function useDispatchRequestWizard() {
       if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
       form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
       form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
-      revokeBm02PdfUrl()
-      bm02PdfBase64.value = ''
-      bm02ExcelBase64.value = ''
-      bm02PdfAttachmentId.value = null
-      bm02ExcelAttachmentId.value = null
-      bm02PreviewError.value = ''
       error.value = ''
       created.value = null
       refreshDraftsList()
@@ -1295,12 +1147,6 @@ export function useDispatchRequestWizard() {
     requesterSearchError.value = ''
     coordinatorSearchQ.value = ''
     coordinatorSearchError.value = ''
-    revokeBm02PdfUrl()
-    bm02PdfBase64.value = ''
-    bm02ExcelBase64.value = ''
-    bm02PdfAttachmentId.value = null
-    bm02ExcelAttachmentId.value = null
-    bm02PreviewError.value = ''
   }
 
   function openClearDraftModal() {
@@ -1406,15 +1252,10 @@ export function useDispatchRequestWizard() {
     }
   })
 
-  onBeforeUnmount(() => {
-    revokeBm02PdfUrl()
-  })
-
   watch(
     step,
     (s) => {
       if (s > maxReachedStep.value) maxReachedStep.value = s
-      if (s === 3 && form.value.trip_type === 'point_to_point') loadBm02Preview()
     },
     { immediate: true },
   )
@@ -1435,15 +1276,6 @@ export function useDispatchRequestWizard() {
     maxReachedStep,
     loading,
     error,
-    bm02Loading,
-    bm02PreviewError,
-    bm02PdfUrl,
-    bm02PdfBase64,
-    bm02ExcelBase64,
-    bm02FilenamePdf,
-    bm02FilenameXlsx,
-    canDownloadBm02Pdf,
-    canDownloadBm02Excel,
     created,
     draftSavedAt,
     hasDraftSnapshot,
@@ -1516,9 +1348,6 @@ export function useDispatchRequestWizard() {
     headerPrimaryLabel,
     headerPrimaryDisabled,
     primaryAction,
-    loadBm02Preview,
-    downloadBm02Pdf,
-    downloadBm02Excel,
     saveDraft,
     openClearDraftModal,
     closeClearDraftModal,

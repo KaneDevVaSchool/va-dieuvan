@@ -135,7 +135,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Requests / approvals
         Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)->group(function () {
-            Route::post('/preview-bm02', 'previewBm02')->middleware('throttle:15,1');
             Route::post('/', 'store')
                 ->middleware(['throttle:20,1', 'idempotency'])
                 ->name('api.dispatch-requests.store');
@@ -276,6 +275,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Attachments can be heavier; keep separate throttle
         Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {
             Route::post('/', 'upload')->middleware('throttle:30,1');
+            Route::delete('/{attachment}', 'destroy')
+                ->whereNumber('attachment')
+                ->middleware('throttle:30,1');
             Route::get('/{attachment}/download', 'download')
                 ->whereNumber('attachment')
                 ->middleware('throttle:120,1');

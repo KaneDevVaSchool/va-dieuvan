@@ -139,238 +139,6 @@
       </div>
     </div>
 
-    <!-- Yêu cầu mới -->
-    <section class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
-      <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 class="text-base font-semibold text-slate-900">{{ t('requests_page.section_new_requests') }}</h2>
-          <p class="text-xs text-slate-500">{{ t('requests_page.section_new_requests_hint') }}</p>
-        </div>
-      </div>
-      <div v-if="insightsLoading" class="py-6 text-center text-sm text-slate-400">{{ t('requests_page.loading') }}</div>
-      <div v-else-if="!pendingSpotlight.length" class="py-6 text-center text-sm text-slate-500">
-        {{ t('requests_page.new_requests_empty') }}
-      </div>
-      <ul v-else class="space-y-3">
-        <li
-          v-for="r in pendingSpotlight"
-          :key="r.id"
-          class="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div class="flex min-w-0 flex-1 gap-3">
-            <span class="w-1 shrink-0 rounded-full" :class="requestCardAccentClass(r)" aria-hidden="true" />
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <span
-                  v-if="r.is_urgent"
-                  class="inline-flex rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800"
-                >
-                  {{ t('requests_page.filter_priority_urgent') }}
-                </span>
-                <span
-                  v-else
-                  class="inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium"
-                  :class="tripTypeTagClass(r.trip_type)"
-                >
-                  {{ labelTripType(r.trip_type) }}
-                </span>
-              </div>
-              <p class="mt-1 font-medium leading-snug text-slate-900">
-                {{ requestCardTitle(r) }}
-              </p>
-              <p class="mt-0.5 text-xs text-slate-500">
-                {{ requestCardSub(r) }}
-              </p>
-            </div>
-          </div>
-          <RouterLink
-            :to="`/requests/${r.id}`"
-            class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-900 transition hover:bg-teal-100"
-          >
-            {{ canApproveRequests ? t('requests_page.cta_review') : t('requests_page.cta_detail') }}
-            <ArrowTopRightOnSquareIcon class="h-4 w-4" />
-          </RouterLink>
-        </li>
-      </ul>
-    </section>
-
-    <!-- Phân công tài nguyên -->
-    <section
-      v-if="canShowAssignPanel"
-      class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm"
-    >
-      <h2 class="text-base font-semibold text-slate-900">
-        {{ t('requests_page.section_assign') }}
-        <span v-if="assignTripRef" class="font-mono text-sm font-normal text-slate-500">
-          — Trip #{{ assignTripRef.id }}
-        </span>
-      </h2>
-      <div v-if="insightsLoading" class="py-8 text-center text-sm text-slate-400">{{ t('requests_page.loading') }}</div>
-      <div v-else-if="!assignTripRef" class="py-6 text-center text-sm text-slate-500">
-        {{ t('requests_page.assign_no_trip') }}
-      </div>
-      <div v-else class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 md:items-stretch">
-        <div class="flex min-h-0 flex-col space-y-3 rounded-xl border border-slate-100 bg-slate-50/40 p-4">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {{ t('requests_page.assign_plan_title') }}
-          </p>
-          <p class="text-sm text-slate-700">
-            <span class="font-medium text-slate-900">{{ labelTripType(assignTripRef.dispatch_request?.trip_type) }}</span>
-            <span v-if="assignTripRef.depart_at" class="text-slate-600">
-              · {{ formatTripWhen(assignTripRef.depart_at) }}
-            </span>
-          </p>
-          <p class="text-sm text-slate-800">
-            {{ (assignTripRef.dispatch_request?.origin ?? '—') + ' → ' + (assignTripRef.dispatch_request?.destination ?? '—') }}
-          </p>
-          <p v-if="assignTripRef.dispatch_request?.passenger_count" class="text-xs text-slate-500">
-            {{ t('requests_page.passengers', { n: assignTripRef.dispatch_request.passenger_count }) }}
-          </p>
-          <div class="border-t border-slate-200/80 pt-3">
-            <ol class="space-y-2">
-              <li>
-                <span
-                  class="block rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900"
-                >
-                  1. {{ t('requests_page.assign_plan_1') }}
-                </span>
-              </li>
-              <li>
-                <span class="block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                  2. {{ t('requests_page.assign_plan_2') }}
-                </span>
-              </li>
-              <li>
-                <span class="block rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                  3. {{ t('requests_page.assign_plan_3') }}
-                </span>
-              </li>
-            </ol>
-          </div>
-        </div>
-        <div class="flex min-h-0 flex-col rounded-xl border border-slate-100 bg-slate-50/40 p-4">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {{ t('requests_page.assign_resources_title') }}
-          </p>
-          <div class="mt-3 flex-1 space-y-4 text-sm">
-            <div>
-              <p class="text-xs text-slate-500">{{ t('requests_page.assign_internal_vehicles') }}</p>
-              <p v-if="assignTripRef.vehicle?.license_plate" class="mt-1 font-mono text-slate-900">
-                {{ assignTripRef.vehicle.license_plate }}
-                <span v-if="assignTripRef.vehicle.status" class="text-xs font-sans text-slate-500">
-                  · {{ assignTripRef.vehicle.status }}
-                </span>
-              </p>
-              <p v-else class="mt-1 text-slate-400">—</p>
-            </div>
-            <div>
-              <p class="text-xs text-slate-500">{{ t('requests_page.assign_drivers_free') }}</p>
-              <div v-if="assignTripRef.driver?.full_name" class="mt-1 flex flex-wrap gap-2">
-                <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-900">
-                  {{ assignTripRef.driver.full_name }}
-                </span>
-              </div>
-              <p v-else class="mt-1 text-slate-400">—</p>
-            </div>
-          </div>
-          <RouterLink
-            :to="`/trips/${assignTripRef.id}`"
-            class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
-          >
-            {{ t('requests_page.cta_confirm_assign') }}
-            <ArrowTopRightOnSquareIcon class="h-5 w-5" />
-          </RouterLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- Theo dõi trip đang chạy -->
-    <section class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
-      <h2 class="text-base font-semibold text-slate-900">{{ t('requests_page.section_track') }}</h2>
-      <div v-if="insightsLoading" class="py-8 text-center text-sm text-slate-400">{{ t('requests_page.loading') }}</div>
-      <div v-else-if="!activeTripsTrack.length" class="py-6 text-center text-sm text-slate-500">
-        {{ t('requests_page.track_empty') }}
-      </div>
-      <div v-else class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <RouterLink
-          v-for="(row, idx) in activeTripsTrackWithSteps"
-          :key="row.tr.id"
-          :to="`/trips/${row.tr.id}`"
-          class="block rounded-xl border p-3 transition hover:shadow-md sm:p-4"
-          :class="tripTrackCardClass(idx)"
-        >
-          <div class="flex items-start justify-between gap-2">
-            <span class="font-mono text-xs font-semibold text-slate-500">#{{ row.tr.id }}</span>
-            <span class="text-[11px] font-medium" :class="tripTrackStatusClass(row.tr)">
-              {{ tripTrackStatusLabel(row.tr) }}
-            </span>
-          </div>
-          <p class="mt-2 text-sm font-medium text-slate-900">
-            {{ labelTripType(row.tr.dispatch_request?.trip_type) }}
-          </p>
-          <p class="mt-1 line-clamp-2 text-xs text-slate-600">
-            {{ (row.tr.dispatch_request?.origin ?? '—') + ' → ' + (row.tr.dispatch_request?.destination ?? '—') }}
-          </p>
-          <p class="mt-2 text-xs text-slate-500">
-            <span v-if="row.tr.driver?.full_name">TX: {{ row.tr.driver.full_name }}</span>
-            <span v-if="row.tr.vehicle?.license_plate"> · {{ row.tr.vehicle.license_plate }}</span>
-            <span v-if="row.tr.transport_provider?.name"> · {{ row.tr.transport_provider.name }}</span>
-          </p>
-          <div v-if="row.steps.length" class="mt-3 border-t border-slate-200/80 pt-3">
-            <p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-              {{ t('requests_page.section_timeline') }}
-            </p>
-            <div class="-mx-0.5 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
-              <div class="flex min-w-[280px] items-start gap-0 px-0.5 sm:min-w-0">
-                <div
-                  v-for="(step, si) in row.steps"
-                  :key="step.id"
-                  class="flex min-w-0 flex-1 flex-col items-stretch"
-                >
-                  <div class="flex items-center">
-                    <div
-                      v-if="si > 0"
-                      class="h-px min-w-[4px] flex-1"
-                      :class="row.steps[si - 1].done ? 'bg-teal-300' : 'bg-slate-200'"
-                    />
-                    <div
-                      class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold leading-none"
-                      :class="
-                        step.current
-                          ? 'border-teal-600 bg-teal-50 text-teal-800'
-                          : step.done
-                            ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
-                            : 'border-slate-200 bg-white text-slate-300'
-                      "
-                      :title="step.label + (step.time ? ' · ' + formatShortDate(step.time) : '')"
-                    >
-                      <CheckCircleIcon
-                        v-if="step.done && !step.current"
-                        class="h-3 w-3 text-emerald-600"
-                        aria-hidden="true"
-                      />
-                      <PlayCircleIcon v-else-if="step.current" class="h-3 w-3 text-teal-600" aria-hidden="true" />
-                      <span v-else class="tabular-nums">{{ si + 1 }}</span>
-                    </div>
-                    <div
-                      v-if="si < row.steps.length - 1"
-                      class="h-px min-w-[4px] flex-1"
-                      :class="step.done ? 'bg-teal-300' : 'bg-slate-200'"
-                    />
-                  </div>
-                  <p
-                    class="mt-1 max-w-[100%] truncate text-center text-[9px] font-medium leading-tight text-slate-500"
-                  >
-                    {{ step.label }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </RouterLink>
-      </div>
-    </section>
-
     <!-- Filters: horizontal bar -->
     <div
       class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5"
@@ -1101,7 +869,6 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
   TrashIcon,
   BellIcon,
   CheckCircleIcon,
@@ -1112,7 +879,6 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
   PencilSquareIcon,
-  PlayCircleIcon,
   PlusCircleIcon,
   PlusIcon,
   RectangleStackIcon,
@@ -1131,7 +897,6 @@ import {
   listRequests,
 } from '../../api/requests'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
-import { listTrips } from '../../api/trips'
 import { useAuthStore } from '../../store'
 import {
   labelPaperStatus,
@@ -1165,14 +930,6 @@ const searchInput = ref('')
 let searchDebounce = null
 const filterMenuRef = ref(null)
 const extraFiltersOpen = ref(false)
-
-const insightsLoading = ref(true)
-const pendingSpotlight = ref([])
-const assignTripRef = ref(null)
-const activeTripsTrack = ref([])
-
-const canApproveRequests = computed(() => auth.hasPermission('request.approve'))
-const canShowAssignPanel = computed(() => auth.hasPermission('trip.assign'))
 
 const canBulkTrash = computed(
   () =>
@@ -1510,166 +1267,6 @@ function tabCount(tabId) {
   }
 }
 
-/**
- * @param {Record<string, unknown> | null} trip
- */
-function buildTimelineSteps(trip, tr) {
-  if (!trip) return []
-  const dr = trip.dispatch_request
-  if (!dr) return []
-  const hasAssign = !!(trip.vehicle_id || trip.driver_id || trip.transport_provider_id)
-  const st = trip.status
-  const isRunning = st === 'in_progress' || st === 'driver_confirmed'
-
-  return [
-    {
-      id: 'req',
-      label: tr('requests_page.tl_request'),
-      time: dr.created_at,
-      done: true,
-      current: false,
-    },
-    {
-      id: 'appr',
-      label: tr('requests_page.tl_approve'),
-      time: dr.status === 'approved' ? trip.created_at : null,
-      done: dr.status === 'approved',
-      current: false,
-    },
-    {
-      id: 'trip',
-      label: tr('requests_page.tl_trip'),
-      time: trip.created_at,
-      done: !!trip.created_at,
-      current: false,
-    },
-    {
-      id: 'as',
-      label: tr('requests_page.tl_assigned'),
-      time: hasAssign ? trip.updated_at : null,
-      done: hasAssign,
-      current: false,
-    },
-    {
-      id: 'run',
-      label: tr('requests_page.tl_in_progress'),
-      time: trip.started_at,
-      done: !!trip.started_at && !isRunning,
-      current: isRunning,
-    },
-    {
-      id: 'done',
-      label: tr('requests_page.tl_completed'),
-      time: trip.completed_at,
-      done: !!trip.completed_at,
-      current: false,
-    },
-    {
-      id: 'paid',
-      label: tr('requests_page.tl_paid'),
-      time: trip.paid_at,
-      done: trip.payment_status === 'paid' && !!trip.paid_at,
-      current: false,
-    },
-  ]
-}
-
-const activeTripsTrackWithSteps = computed(() =>
-  activeTripsTrack.value.map((tr) => ({
-    tr,
-    steps: buildTimelineSteps(tr, t),
-  })),
-)
-
-function requestCardAccentClass(r) {
-  if (r.is_urgent) return 'bg-rose-500'
-  if (r.trip_type === 'cargo') return 'bg-emerald-500'
-  if (r.trip_type === 'business') return 'bg-slate-400'
-  return 'bg-teal-500'
-}
-
-function tripTypeTagClass(tripType) {
-  if (tripType === 'cargo') return 'bg-emerald-100 text-emerald-800'
-  if (tripType === 'business') return 'bg-slate-100 text-slate-700'
-  return 'bg-teal-100 text-teal-800'
-}
-
-function requestCardTitle(r) {
-  const route = `${r.origin ?? '—'} → ${r.destination ?? '—'}`
-  if (!r.depart_at) return route
-  try {
-    const d = new Date(r.depart_at)
-    return `${route} · ${d.toLocaleDateString('vi-VN')}`
-  } catch {
-    return route
-  }
-}
-
-function requestCardSub(r) {
-  const parts = []
-  if (r.passenger_count) parts.push(`${r.passenger_count} khách`)
-  if (r.notes) parts.push(String(r.notes).slice(0, 96))
-  return parts.join(' · ') || '—'
-}
-
-function formatTripWhen(v) {
-  if (!v) return ''
-  try {
-    return new Date(v).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
-  } catch {
-    return String(v)
-  }
-}
-
-function tripTrackCardClass(idx) {
-  const rings = [
-    'border-teal-200 ring-1 ring-teal-100',
-    'border-amber-200 ring-1 ring-amber-100',
-    'border-sky-200 ring-1 ring-sky-100',
-  ]
-  return rings[idx % 3]
-}
-
-function tripTrackStatusLabel(tr) {
-  if (tr.status === 'assigned' && tr.depart_at && new Date(tr.depart_at) < new Date()) {
-    return t('requests_page.status_delay')
-  }
-  return labelTripStatus(tr.status)
-}
-
-function tripTrackStatusClass(tr) {
-  if (tr.status === 'assigned' && tr.depart_at && new Date(tr.depart_at) < new Date()) {
-    return 'text-amber-700'
-  }
-  if (tr.status === 'in_progress') return 'text-teal-700'
-  return 'text-slate-600'
-}
-
-async function loadInsights() {
-  insightsLoading.value = true
-  try {
-    const [pendingRes, inProgRes, approvedRes] = await Promise.all([
-      listRequests({ status: 'pending', per_page: 5, page: 1 }),
-      listTrips({ status: 'in_progress', per_page: 3, page: 1 }),
-      listTrips({ status: 'approved', per_page: 1, page: 1 }),
-    ])
-    pendingSpotlight.value = pendingRes.items ?? []
-    activeTripsTrack.value = (inProgRes.items ?? []).filter((tr) => tr.dispatch_request)
-    let assign = approvedRes.items?.[0] ?? null
-    if (!assign) {
-      const pendT = await listTrips({ status: 'pending', per_page: 1, page: 1 })
-      assign = pendT.items?.[0] ?? null
-    }
-    assignTripRef.value = assign
-  } catch {
-    pendingSpotlight.value = []
-    activeTripsTrack.value = []
-    assignTripRef.value = null
-  } finally {
-    insightsLoading.value = false
-  }
-}
-
 function buildListParams() {
   const params = { ...filters }
   delete params.priority
@@ -1748,7 +1345,6 @@ async function reload() {
   } finally {
     loading.value = false
   }
-  void loadInsights()
 }
 
 function closeRowActionMenu(ev) {

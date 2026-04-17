@@ -34,6 +34,14 @@ export async function runAttachmentOcr(attachmentId) {
   return data.data
 }
 
+/**
+ * @param {number} attachmentId
+ */
+export async function deleteAttachment(attachmentId) {
+  const { data } = await http.delete(`/attachments/${attachmentId}`)
+  return data.data
+}
+
 export async function uploadCargoPod(cargoShipmentId, file, onProgress) {
   const fd = new FormData()
   fd.append('file', file)

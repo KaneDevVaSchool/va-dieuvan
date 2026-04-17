@@ -29,7 +29,7 @@ export const WIZARD_STEPS = [
   { id: 'confirm', title: 'Xác nhận' },
 ]
 
-/** Căn chỉnh với backend BM.02 (31 mục). */
+/** Danh sách đối tượng phân bổ (31 mục) — giữ thứ tự khớp backend khi có xuất biểu mẫu. */
 export const TARGET_OPTIONS = [
   'TiH Tân Bình',
   'MN Phú Định',

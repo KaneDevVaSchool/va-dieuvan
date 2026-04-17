@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Attachments;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Attachments\DestroyAttachmentRequest;
 use App\Http\Requests\Api\Attachments\RunAttachmentOcrRequest;
 use App\Http\Requests\Api\Attachments\UploadAttachmentRequest;
 use App\Models\Attachment;
@@ -97,6 +98,32 @@ class AttachmentController extends Controller
             ...$attachment->toArray(),
             'url' => Storage::url($path),
         ]);
+    }
+
+    public function destroy(DestroyAttachmentRequest $request, Attachment $attachment)
+    {
+        $this->authorizeAttachmentDownload($request, $attachment);
+
+        $user = $request->user();
+        $before = $attachment->toArray();
+        $attachmentId = $attachment->getKey();
+
+        $disk = $attachment->disk ?: 'public';
+        if ($attachment->path) {
+            Storage::disk($disk)->delete($attachment->path);
+        }
+        $attachment->delete();
+
+        app(AuditLogger::class)->log(
+            actorId: $user?->id,
+            event: 'attachment.delete',
+            auditable: null,
+            before: $before,
+            after: null,
+            metadata: ['attachment_id' => $attachmentId],
+        );
+
+        return $this->ok(['deleted' => true]);
     }
 
     /**

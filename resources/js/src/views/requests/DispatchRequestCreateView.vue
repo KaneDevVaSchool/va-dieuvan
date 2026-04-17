@@ -423,7 +423,7 @@
                   v-else-if="form.trip_type === 'point_to_point'"
                   class="mt-2 text-xs leading-relaxed text-amber-800/90"
                 >
-                  Nên chọn ít nhất một đối tượng để phiếu BM.02 ghi đúng phân bổ.
+                  Nên chọn ít nhất một đối tượng để ghi rõ phân bổ nội bộ khi xử lý yêu cầu.
                 </p>
               </div>
 
@@ -534,82 +534,12 @@
 
           <div
             v-if="isPointToPointTrip"
-            class="overflow-hidden rounded-xl border border-va-800/20 bg-white shadow-sm ring-1 ring-slate-900/5"
+            class="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-relaxed text-slate-600"
           >
-            <div class="border-b border-slate-100 bg-va-800/5 px-4 py-3">
-              <div class="font-semibold text-slate-900">Phiếu BM.02 / MH.QT.04 (Điểm — Điểm)</div>
-              <p class="mt-0.5 text-xs text-slate-600">
-                Điền tự động theo mẫu Excel BM.02/MH.QT.04 (Điểm — Điểm). Dùng <span class="font-medium">Làm mới</span> sau khi sửa
-                ở các bước trước.
-              </p>
-            </div>
-            <div class="p-4">
-              <div v-if="bm02Loading" class="flex items-center gap-2 text-sm text-slate-600">
-                <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800" />
-                Đang tạo bản xem trước…
-              </div>
-              <div v-else-if="bm02PreviewError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                {{ bm02PreviewError }}
-              </div>
-              <template v-else>
-                <div class="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
-                    :disabled="bm02Loading"
-                    title="Tạo lại bản xem trước sau khi sửa dữ liệu các bước trước"
-                    @click="loadBm02Preview"
-                  >
-                    <ArrowPathIcon class="h-4 w-4 text-slate-600" :class="{ 'animate-spin': bm02Loading }" />
-                    Làm mới
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
-                    :disabled="!canDownloadBm02Pdf"
-                    @click="downloadBm02Pdf"
-                  >
-                    <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
-                    Tải PDF
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-40"
-                    :disabled="!canDownloadBm02Excel"
-                    @click="downloadBm02Excel"
-                  >
-                    <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
-                    Tải Excel
-                  </button>
-                </div>
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                  Trước khi gửi: PDF tạo tạm để xem. Sau khi gửi thành công: hệ thống dùng đúng file BM.02 đã lưu trong đính kèm (cùng nội dung khi tải từ chi tiết yêu cầu).
-                </p>
-                <div v-if="bm02PdfUrl" class="mt-4 space-y-1.5">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="text-xs font-medium text-slate-700">Xem trước PDF</div>
-                    <a
-                      :href="bm02PdfUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-xs font-medium text-teal-700 hover:text-teal-800"
-                    >
-                      Mở tab mới
-                    </a>
-                  </div>
-                  <div class="overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm">
-                    <iframe
-                      :src="bm02PdfUrl"
-                      class="bm02-pdf-preview-frame block h-[min(70vh,600px)] w-full min-h-[280px] border-0 bg-white"
-                      title="Xem trước phiếu BM.02 (PDF)"
-                    />
-                  </div>
-                </div>
-              </template>
-            </div>
+            Loại <span class="font-medium text-slate-800">Điểm — Điểm</span>: toàn bộ dữ liệu biểu mẫu (kể cả phân bổ mục tiêu) được gửi kèm yêu cầu trong hệ thống.
           </div>
           <p v-else class="text-sm text-slate-500">
-            Mẫu BM.02 (Excel/PDF) được tạo tự động cho loại <span class="font-medium">Điểm — Điểm</span>. Với loại dịch vụ khác, nội dung chi tiết nằm trong phần ghi chú đã gửi.
+            Với loại dịch vụ khác, chi tiết nằm trong phần ghi chú đã gửi.
           </p>
 
           <div v-if="error" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
@@ -645,9 +575,6 @@
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm shadow-sm">
           <div class="font-semibold text-emerald-900">Đã tạo yêu cầu #{{ created.id }}</div>
           <div class="mt-1 text-emerald-800">Trạng thái: {{ created.status }}</div>
-          <p v-if="created.trip_type === 'point_to_point'" class="mt-2 text-xs leading-relaxed text-emerald-900/90">
-            File BM.02 (Excel và PDF) đã được đính kèm — mở chi tiết yêu cầu để tải.
-          </p>
           <RouterLink
             class="mt-3 inline-flex rounded-lg border border-emerald-300 bg-white px-3 py-2 text-emerald-900 shadow-sm hover:bg-emerald-100/80"
             to="/requests"
@@ -822,7 +749,6 @@
 import { defineAsyncComponent, provide } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
-  ArrowPathIcon,
   ArrowRightIcon,
   CheckIcon,
   ClipboardDocumentListIcon,
@@ -848,13 +774,6 @@ const {
   maxReachedStep,
   loading,
   error,
-  bm02Loading,
-  bm02PreviewError,
-  bm02PdfUrl,
-  bm02PdfBase64,
-  bm02ExcelBase64,
-  canDownloadBm02Pdf,
-  canDownloadBm02Excel,
   created,
   hasDraftSnapshot,
   clearDraftModalOpen,
@@ -904,9 +823,6 @@ const {
   headerPrimaryLabel,
   headerPrimaryDisabled,
   primaryAction,
-  loadBm02Preview,
-  downloadBm02Pdf,
-  downloadBm02Excel,
   saveDraft,
   openClearDraftModal,
   closeClearDraftModal,

@@ -1,5 +1,11 @@
 <template>
-  <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-4">
+  <div
+    class="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-4 transition-colors"
+    :class="dragOver ? 'border-teal-500 bg-teal-50/40' : ''"
+    @dragover.prevent="onDragOver"
+    @dragleave.prevent="onDragLeave"
+    @drop.prevent="onDrop"
+  >
     <div class="text-sm font-medium text-slate-800">{{ label }}</div>
     <p v-if="hint" class="mt-1 text-xs text-slate-500">{{ hint }}</p>
 
@@ -48,6 +54,8 @@ const props = defineProps({
   hint: { type: String, default: '' },
   accept: { type: String, default: 'image/*,.pdf,.doc,.docx' },
   uploadFn: { type: Function, required: true },
+  /** Bật kéo-thả file vào vùng viền nét đứt */
+  dragDrop: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['uploaded'])
@@ -59,6 +67,7 @@ const progress = ref(0)
 const uploading = ref(false)
 const error = ref('')
 const resultUrl = ref('')
+const dragOver = ref(false)
 
 const isImage = computed(() => {
   const f = file.value
@@ -76,13 +85,36 @@ watch(file, (f) => {
   previewUrl.value = f && f.type.startsWith('image/') ? URL.createObjectURL(f) : ''
 })
 
-function onPick(e) {
+function setFileFromList(list) {
   error.value = ''
   resultUrl.value = ''
-  const f = e.target.files?.[0]
+  const f = list?.[0]
   file.value = f || null
   fileName.value = f?.name ?? ''
+}
+
+function onPick(e) {
+  setFileFromList(e.target.files)
   e.target.value = ''
+}
+
+function onDragOver(e) {
+  if (!props.dragDrop) return
+  e.preventDefault()
+  dragOver.value = true
+}
+
+function onDragLeave(e) {
+  if (!props.dragDrop) return
+  e.preventDefault()
+  dragOver.value = false
+}
+
+function onDrop(e) {
+  if (!props.dragDrop) return
+  dragOver.value = false
+  const files = e.dataTransfer?.files
+  if (files?.length) setFileFromList(files)
 }
 
 function clear() {
