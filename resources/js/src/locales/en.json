@@ -881,15 +881,6 @@
     "loading": "Loading…",
     "load_error": "Could not load this trip.",
     "retry": "Retry",
-    "quick_bar": {
-      "title": "Quick actions",
-      "aria": "Quick actions on trip detail",
-      "overview": "Overview",
-      "route": "Route",
-      "passengers": "Passengers",
-      "costs": "Costs & status",
-      "coordination": "Coordination"
-    },
     "meta": {
       "dispatcher": "Dispatcher: {name}",
       "source": "Channel: {ch}",

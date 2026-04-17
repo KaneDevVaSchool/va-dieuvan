@@ -96,29 +96,81 @@
           </RouterLink>
         </div>
 
-        <nav
-          class="sticky top-0 z-30 -mx-4 mb-1 rounded-xl border border-slate-200/80 bg-[#F8F9FA]/95 px-2 py-2 shadow-sm backdrop-blur-md sm:-mx-0 print:hidden"
-          :aria-label="t('trip_detail.quick_bar.aria')"
+        <section
+          class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/80 p-5 shadow-sm ring-1 ring-slate-100 print:hidden"
+          :aria-label="t('trip_detail.quick.title')"
         >
-          <div class="px-1 pb-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.quick_bar.title') }}</div>
-          <div class="flex gap-1 overflow-x-auto">
-            <button
-              v-for="item in quickBarItems"
-              :key="item.id"
-              type="button"
-              class="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
-              @click="item.action"
+          <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.quick.title') }}</h2>
+          <p class="mt-1 text-xs text-slate-500">{{ t('trip_detail.quick.subtitle') }}</p>
+          <div class="mt-3 grid gap-2">
+            <a
+              v-if="mapsHref"
+              :href="mapsHref"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
             >
-              {{ item.label }}
+              {{ t('trip_detail.quick.open_directions') }}
+            </a>
+            <a
+              v-if="requesterPhone"
+              class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+              :href="`tel:${requesterPhone}`"
+            >
+              {{ t('trip_detail.quick.call_requester') }}
+            </a>
+            <a
+              v-if="requesterEmail"
+              class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              :href="`mailto:${requesterEmail}`"
+            >
+              {{ t('trip_detail.quick.email_requester') }}
+            </a>
+            <button
+              v-if="requesterPhone"
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              @click="copyPhone(requesterPhone)"
+            >
+              {{ t('trip_detail.quick.copy_requester_phone') }}
+            </button>
+            <a
+              v-if="trip.driver?.phone"
+              class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              :href="`tel:${trip.driver.phone}`"
+            >
+              {{ t('trip_detail.quick.call_driver') }}
+            </a>
+            <RouterLink
+              v-if="trip.dispatch_request?.id"
+              :to="`/requests/${trip.dispatch_request.id}`"
+              class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+            >
+              {{ t('trip_detail.quick.open_request') }}
+            </RouterLink>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2.5 text-sm font-semibold text-violet-900 hover:bg-violet-100"
+              @click="scrollToCostsSection"
+            >
+              {{ t('trip_detail.quick.costs_section') }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              @click="scrollToCoordination"
+            >
+              {{ t('trip_detail.quick.reassign') }}
             </button>
           </div>
-        </nav>
+          <p v-if="quickCopyMsg" class="mt-2 text-center text-xs text-slate-600">{{ quickCopyMsg }}</p>
+        </section>
 
         <div class="grid gap-6 lg:grid-cols-3">
           <!-- Main column -->
           <div class="space-y-6 lg:col-span-2">
             <!-- Overview -->
-            <section ref="overviewEl" class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm scroll-mt-24">
+            <section class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div class="absolute right-4 top-4">
                 <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', pillClassForStatus(trip.status)]">
                   {{ labelTripStatus(trip.status) }}
@@ -269,7 +321,7 @@
             </section>
 
             <!-- Route + map -->
-            <section ref="routeEl" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm scroll-mt-24">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.route.section_title') }}</h2>
                 <div v-if="routeStops.length" class="flex flex-wrap gap-2 text-xs text-slate-600">
@@ -328,7 +380,7 @@
             </section>
 
             <!-- Passengers -->
-            <section ref="passengersEl" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm scroll-mt-24">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">
                   {{ t('trip_detail.passengers.title', { n: passengerRowsDisplay.length }) }}
@@ -391,7 +443,7 @@
             </section>
 
             <!-- Costs & advanced status -->
-            <details ref="moreDetailsRef" class="group scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white shadow-sm open:shadow-md open:ring-1 open:ring-sky-100/80">
+            <details ref="moreDetailsRef" class="group rounded-2xl border border-slate-200/80 bg-white shadow-sm open:shadow-md open:ring-1 open:ring-sky-100/80">
               <summary
                 class="cursor-pointer list-none px-5 py-4 text-sm font-semibold text-slate-900 marker:hidden [&::-webkit-details-marker]:hidden"
               >
@@ -489,7 +541,7 @@
 
           <!-- Sidebar -->
           <div class="space-y-6">
-            <section ref="coordinationEl" class="scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <section ref="coordinationEl" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.coordination.title') }}</h2>
               <p class="mt-1 text-sm text-slate-600">{{ t('trip_detail.coordination.subtitle') }}</p>
 
@@ -714,73 +766,6 @@
               </div>
             </section>
 
-            <section class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/80 p-5 shadow-sm ring-1 ring-slate-100">
-              <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.quick.title') }}</h2>
-              <p class="mt-1 text-xs text-slate-500">{{ t('trip_detail.quick.subtitle') }}</p>
-              <div class="mt-3 grid gap-2">
-                <a
-                  v-if="mapsHref"
-                  :href="mapsHref"
-                  target="_blank"
-                  rel="noopener"
-                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
-                >
-                  {{ t('trip_detail.quick.open_directions') }}
-                </a>
-                <a
-                  v-if="requesterPhone"
-                  class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
-                  :href="`tel:${requesterPhone}`"
-                >
-                  {{ t('trip_detail.quick.call_requester') }}
-                </a>
-                <a
-                  v-if="requesterEmail"
-                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                  :href="`mailto:${requesterEmail}`"
-                >
-                  {{ t('trip_detail.quick.email_requester') }}
-                </a>
-                <button
-                  v-if="requesterPhone"
-                  type="button"
-                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                  @click="copyPhone(requesterPhone)"
-                >
-                  {{ t('trip_detail.quick.copy_requester_phone') }}
-                </button>
-                <a
-                  v-if="trip.driver?.phone"
-                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                  :href="`tel:${trip.driver.phone}`"
-                >
-                  {{ t('trip_detail.quick.call_driver') }}
-                </a>
-                <RouterLink
-                  v-if="trip.dispatch_request?.id"
-                  :to="`/requests/${trip.dispatch_request.id}`"
-                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                >
-                  {{ t('trip_detail.quick.open_request') }}
-                </RouterLink>
-                <button
-                  type="button"
-                  class="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2.5 text-sm font-semibold text-violet-900 hover:bg-violet-100"
-                  @click="scrollToCostsSection"
-                >
-                  {{ t('trip_detail.quick.costs_section') }}
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                  @click="scrollToCoordination"
-                >
-                  {{ t('trip_detail.quick.reassign') }}
-                </button>
-              </div>
-              <p v-if="quickCopyMsg" class="mt-2 text-center text-xs text-slate-600">{{ quickCopyMsg }}</p>
-            </section>
-
             <Card v-if="trip.vehicle || trip.driver || trip.transport_provider" :title="t('trip_detail.assigned.title')">
               <div class="space-y-2 text-sm">
                 <div class="flex justify-between gap-2">
@@ -924,9 +909,6 @@ const loading = ref(true)
 const loadError = ref('')
 const refreshing = ref(false)
 const silentLoadError = ref('')
-const overviewEl = ref(null)
-const routeEl = ref(null)
-const passengersEl = ref(null)
 const rescheduleDepartLocal = ref('')
 const rescheduling = ref(false)
 const rescheduleMsg = ref('')
@@ -995,14 +977,6 @@ const slaBanner = computed(() => {
   if (min < 0) return { kind: 'overdue', text: t('trip_detail.sla.overdue_detail', { n: Math.abs(min) }) }
   return { kind: 'ok', text: t('trip_detail.sla.remaining_minutes', { n: min }) }
 })
-
-const quickBarItems = computed(() => [
-  { id: 'overview', label: t('trip_detail.quick_bar.overview'), action: () => overviewEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
-  { id: 'route', label: t('trip_detail.quick_bar.route'), action: () => routeEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
-  { id: 'passengers', label: t('trip_detail.quick_bar.passengers'), action: () => passengersEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
-  { id: 'costs', label: t('trip_detail.quick_bar.costs'), action: () => scrollToCostsSection() },
-  { id: 'coordination', label: t('trip_detail.quick_bar.coordination'), action: () => scrollToCoordination() },
-])
 
 function costTypeLabel(type) {
   const raw = String(type ?? '').trim()

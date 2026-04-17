@@ -881,15 +881,6 @@
     "loading": "Đang tải…",
     "load_error": "Không tải được chuyến.",
     "retry": "Thử lại",
-    "quick_bar": {
-      "title": "Thao tác nhanh",
-      "aria": "Thao tác nhanh trên trang chi tiết chuyến",
-      "overview": "Tổng quan",
-      "route": "Tuyến đường",
-      "passengers": "Hành khách",
-      "costs": "Chi phí & trạng thái",
-      "coordination": "Điều phối"
-    },
     "meta": {
       "dispatcher": "Điều vận: {name}",
       "source": "Kênh: {ch}",
