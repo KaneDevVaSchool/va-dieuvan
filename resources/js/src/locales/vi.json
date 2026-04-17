@@ -738,6 +738,7 @@
         "kpi_volume_hint": "7 ngày gần nhất (theo ngày tạo)",
         "approve_success_title": "Duyệt phiếu thành công",
         "approve_success_body": "Phiếu {code} đã được phê duyệt. Chuyến có thể được phân công từ danh sách chuyến.",
+        "approve_success_body_trip": "Phiếu {code} đã được phê duyệt. Bạn đang ở chi tiết chuyến — có thể phân công xe, tài xế hoặc NCC ngay tại đây.",
         "approve_success_go_trips": "Đến danh sách chuyến",
         "reject_success_title": "Đã từ chối yêu cầu",
         "reject_success_body": "Phiếu đã chuyển sang trạng thái từ chối.",

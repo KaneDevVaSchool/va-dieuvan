@@ -738,6 +738,7 @@
     "kpi_volume_hint": "Last 7 days (by created date)",
     "approve_success_title": "Request approved",
     "approve_success_body": "Request {code} has been approved. You can assign the trip from the trip list.",
+    "approve_success_body_trip": "Request {code} has been approved. You are on the trip detail page — assign vehicle, driver, or vendor here.",
     "approve_success_go_trips": "Go to trip list",
     "reject_success_title": "Request rejected",
     "reject_success_body": "The request has been marked as rejected.",

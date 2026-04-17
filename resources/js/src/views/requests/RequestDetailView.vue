@@ -553,7 +553,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
@@ -590,6 +590,7 @@ import { confirmAction } from '../../composables/useConfirm'
 import { showAppSuccess } from '../../composables/appMessage'
 
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const { t } = useI18n()
 
@@ -1064,7 +1065,7 @@ async function decide(d) {
   msg.value = ''
   acting.value = true
   try {
-    await decideDispatchRequest(
+    const res = await decideDispatchRequest(
       route.params.id,
       { decision: d, reason: d === 'reject' ? 'reject' : null },
       { idempotencyKey: newIdempotencyKey() },
@@ -1072,10 +1073,16 @@ async function decide(d) {
     msg.value = ''
     if (d === 'approve') {
       const code = requestRefCode.value || `REQ-${route.params.id}`
-      showAppSuccess(t('requests_page.approve_success_body', { code }), t('requests_page.approve_success_title'), {
-        navigateTo: '/trips',
-        primaryLabel: t('requests_page.approve_success_go_trips'),
-      })
+      const tripId = res?.trip?.id
+      if (tripId) {
+        await router.push(`/trips/${tripId}`)
+        showAppSuccess(t('requests_page.approve_success_body_trip', { code }), t('requests_page.approve_success_title'))
+      } else {
+        showAppSuccess(t('requests_page.approve_success_body', { code }), t('requests_page.approve_success_title'), {
+          navigateTo: '/trips',
+          primaryLabel: t('requests_page.approve_success_go_trips'),
+        })
+      }
     } else {
       await load()
       showAppSuccess(t('requests_page.reject_success_body'), t('requests_page.reject_success_title'))
