@@ -411,12 +411,7 @@
                   >
                     {{ labelPaperStatus(trip.dispatch_request.paper_status) }}
                   </span>
-                  <span
-                    v-if="trip.dispatch_request?.status"
-                    class="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200"
-                  >
-                    {{ t('trips_page.request_status_prefix') }} {{ labelRequestStatus(trip.dispatch_request.status) }}
-                  </span>
+             
                 </div>
               </div>
             </div>
