@@ -879,6 +879,28 @@
   ,
   "trip_detail": {
     "loading": "Đang tải…",
+    "load_error": "Không tải được chuyến.",
+    "retry": "Thử lại",
+    "nav": {
+      "aria": "Điều hướng nhanh trang chi tiết chuyến",
+      "overview": "Tổng quan",
+      "route": "Tuyến đường",
+      "passengers": "Hành khách",
+      "costs": "Chi phí & trạng thái",
+      "coordination": "Điều phối"
+    },
+    "meta": {
+      "dispatcher": "Điều vận: {name}",
+      "source": "Kênh: {ch}",
+      "paper": "Giấy tờ: {st}",
+      "paid": "Đã thanh toán"
+    },
+    "reschedule": {
+      "title": "Đổi giờ khởi hành",
+      "hint": "Hệ thống giữ độ dài chuyến và kiểm tra trùng xe/tài xế. Cần quyền gán chuyến.",
+      "save": "Cập nhật lịch",
+      "invalid": "Giờ không hợp lệ."
+    },
     "title": "Chi tiết chuyến & timeline",
     "created_at": "Tạo {time}",
     "high_priority": "Ưu tiên cao",
@@ -899,7 +921,15 @@
       "est_distance": "Quãng đường ước tính",
       "est_cost": "Chi phí ước tính",
       "duration_hours": "{n} giờ",
-      "employee_code": "Mã NV: {code}"
+      "employee_code": "Mã NV: {code}",
+      "pax_count": "Số khách theo yêu cầu: {n}",
+      "arrive_deadline": "Hạn đến nơi (chuyến): {time}",
+      "depart_vs_request": "Khởi hành khác YC gốc: yêu cầu {req} · chuyến {trip}",
+      "arrive_vs_request": "Hạn đến khác YC gốc: yêu cầu {req} · chuyến {trip}",
+      "distance_from_record": "Theo bản ghi hành trình (trip record).",
+      "distance_not_recorded": "Chưa có km ghi nhận — cập nhật sau khi hoàn thành hoặc nhập tay ở hồ sơ chuyến.",
+      "cost_from_wizard": "Ước tính từ biểu mẫu / wizard khi tạo yêu cầu.",
+      "cost_no_estimate": "Không có dòng giá trong snapshot — xem mục chi phí thực tế bên dưới."
     },
     "route": {
       "section_title": "Chi tiết tuyến đường",
@@ -912,7 +942,11 @@
       "open_in_google_maps": "Mở chỉ đường đầy đủ trên Google Maps",
       "stop_pickup": "Điểm đón",
       "stop_waypoint": "Điểm dừng",
-      "stop_dropoff": "Điểm trả"
+      "stop_dropoff": "Điểm trả",
+      "stop_count": "{n} điểm",
+      "recorded_km": "Đã ghi {km} km",
+      "contact": "Liên hệ: {c}",
+      "ctx_passenger": "Hành khách: {name}"
     },
     "passengers": {
       "title": "Hành khách ({n})",
@@ -946,8 +980,21 @@
       "assign_driver": "Gán tài xế",
       "hire_external": "Thuê ngoài taxi / NCC",
       "provider_id": "ID nhà cung cấp (transport_provider_id)",
+      "provider_select": "Nhà cung cấp vận chuyển",
+      "provider_placeholder": "Chọn taxi / NCC…",
+      "provider_quick_add": "Tạo NCC nhanh",
+      "provider_modal_title": "Tạo nhà cung cấp nhanh",
+      "provider_modal_hint": "Tên hiển thị khi điều phối. Loại: taxi hoặc đối tác (vendor).",
+      "provider_modal_name": "Tên NCC",
+      "provider_modal_name_ph": "VD: Taxi Mai Linh, NCC ABC…",
+      "provider_modal_type": "Loại",
+      "provider_modal_cancel": "Hủy",
+      "provider_modal_save": "Tạo & chọn",
+      "provider_modal_name_required": "Nhập tên nhà cung cấp.",
       "external_vehicle": "Tham chiếu xe ngoài",
+      "external_vehicle_ph": "Biển số / mã xe đối tác…",
       "external_driver": "Tham chiếu tài xế ngoài",
+      "external_driver_ph": "Tên / SĐT tài xế đối tác…",
       "internal_notes": "Ghi chú nội bộ / lý do",
       "internal_notes_ph": "Ghi chú cho điều vận, đính kèm khi gán hoặc hủy…",
       "reject": "Từ chối / Hủy chuyến",
@@ -956,17 +1003,29 @@
       "no_permission_assign": "Bạn không có quyền gán nguồn lực hoặc hủy chuyến.",
       "suitable_vehicles": "{n} xe phù hợp sức chỗ trong danh sách sẵn sàng.",
       "validation_assign": "Chọn đủ xe và tài xế nội bộ, hoặc chọn thuê ngoài kèm NCC.",
-      "validation_provider": "Khi thuê ngoài, nhập ID nhà cung cấp.",
+      "validation_provider": "Khi thuê ngoài, chọn nhà cung cấp trong danh sách.",
       "reject_confirm_title": "Hủy chuyến này?",
       "reject_confirm_body": "Trạng thái chuyến sẽ chuyển sang đã hủy. Ghi chú nội bộ (nếu có) sẽ lưu vào nhật ký trạng thái.",
-      "reject_cancel": "Không"
+      "reject_cancel": "Không",
+      "filter_vehicle": "Lọc xe",
+      "filter_vehicle_ph": "Biển số, loại xe…",
+      "filter_driver": "Lọc tài xế",
+      "filter_driver_ph": "Tên, SĐT…"
     },
     "attachments": {
       "title": "Tệp đính kèm",
       "unnamed": "Tệp không tên",
-      "empty": "Không có tệp trên yêu cầu gốc."
+      "empty": "Không có tệp trên yêu cầu gốc.",
+      "upload": "Tải lên",
+      "delete": "Xóa",
+      "delete_confirm_title": "Xóa tệp đính kèm?",
+      "delete_confirm_body": "Xóa «{name}»? Không hoàn tác.",
+      "deleted_ok": "Đã xóa tệp.",
+      "upload_ok": "Đã tải lên."
     },
     "actions": {
+      "refresh": "Tải lại",
+      "print": "In",
       "copy_link": "Sao chép link",
       "export": "Xuất"
     },
@@ -1074,8 +1133,15 @@
     },
     "quick": {
       "title": "Thao tác nhanh",
+      "subtitle": "Liên hệ, bản đồ và phím tắt điều phối.",
+      "open_directions": "Mở chỉ đường Google Maps",
       "call_requester": "Gọi người yêu cầu",
+      "email_requester": "Gửi email người yêu cầu",
+      "copy_requester_phone": "Sao chép SĐT người yêu cầu",
+      "copied_phone": "Đã sao chép số điện thoại.",
       "call_driver": "Gọi tài xế",
+      "open_request": "Mở yêu cầu gốc",
+      "costs_section": "Chi phí & cập nhật nâng cao",
       "reassign": "Phân công / cập nhật"
     },
     "step": {
@@ -1088,7 +1154,8 @@
     },
     "sla": {
       "overdue": "Quá hạn",
-      "remaining_minutes": "Còn lại {n} phút"
+      "overdue_detail": "Quá hạn đến nơi {n} phút",
+      "remaining_minutes": "Còn lại {n} phút tới hạn đến nơi"
     }
     ,
     "status_update": {
@@ -1096,11 +1163,22 @@
       "status": "Trạng thái",
       "pick": "Chọn",
       "note": "Ghi chú",
+      "note_ph": "Lý do / bàn giao…",
       "update": "Cập nhật"
     },
     "costs": {
       "title": "Chi phí (50 mới nhất)",
-      "empty": "Chưa có."
+      "empty": "Chưa có.",
+      "total": "Tổng: {amount}",
+      "open_list": "Mở trang chi phí",
+      "quick_title": "Ghi nhận chi phí nhanh",
+      "quick_type": "Loại",
+      "quick_amount": "Số tiền (VND)",
+      "quick_amount_ph": "VD: 150000",
+      "quick_desc": "Mô tả (tuỳ chọn)",
+      "quick_desc_ph": "Ghi chú chứng từ…",
+      "quick_submit": "Gửi chi phí",
+      "quick_invalid": "Chọn loại và nhập số tiền hợp lệ."
     }
   },
   "dashboard_analytics": {

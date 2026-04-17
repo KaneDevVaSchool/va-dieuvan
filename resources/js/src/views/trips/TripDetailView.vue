@@ -1,6 +1,27 @@
 <template>
   <div class="min-h-screen bg-[#F8F9FA]">
-    <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">{{ t('trip_detail.loading') }}</div>
+    <div v-if="loading && !trip" class="mx-auto max-w-6xl space-y-6 px-4 py-10">
+      <div class="animate-pulse space-y-4">
+        <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
+        <div class="grid gap-6 lg:grid-cols-3">
+          <div class="space-y-4 lg:col-span-2">
+            <div class="h-64 rounded-2xl bg-slate-200/80" />
+            <div class="h-48 rounded-2xl bg-slate-200/70" />
+            <div class="h-56 rounded-2xl bg-slate-200/70" />
+          </div>
+          <div class="space-y-4">
+            <div class="h-72 rounded-2xl bg-slate-200/80" />
+            <div class="h-40 rounded-2xl bg-slate-200/70" />
+          </div>
+        </div>
+      </div>
+      <p class="text-center text-xs text-slate-500">{{ t('trip_detail.loading') }}</p>
+    </div>
+
+    <div v-else-if="loadError && !trip" class="mx-auto max-w-lg px-4 py-20 text-center">
+      <p class="text-sm text-rose-700">{{ loadError }}</p>
+      <Button class="mt-4" @click="load()">{{ t('trip_detail.retry') }}</Button>
+    </div>
 
     <template v-else-if="trip">
       <div class="mx-auto max-w-6xl space-y-6 px-4 pb-12">
@@ -35,6 +56,15 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+              :disabled="refreshing"
+              :title="t('trip_detail.actions.refresh')"
+              @click="load({ silent: true })"
+            >
+              <ArrowPathIcon class="h-5 w-5" :class="refreshing ? 'animate-spin' : ''" />
+            </button>
             <RouterLink
               to="/notifications"
               class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
@@ -42,10 +72,14 @@
             >
               <BellIcon class="h-5 w-5" />
             </RouterLink>
+            <Button variant="secondary" class="!px-3" @click="printPage">{{ t('trip_detail.actions.print') }}</Button>
             <Button variant="secondary" class="!px-3" @click="copyLink">{{ t('trip_detail.actions.copy_link') }}</Button>
             <Button variant="secondary" class="!px-3" @click="exportJson">{{ t('trip_detail.actions.export') }}</Button>
           </div>
           <p v-if="linkMsg" class="w-full text-right text-xs text-slate-600 sm:order-last">{{ linkMsg }}</p>
+          <p v-if="silentLoadError" class="w-full rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-900 sm:order-last">
+            {{ silentLoadError }}
+          </p>
         </header>
 
         <div
@@ -62,17 +96,68 @@
           </RouterLink>
         </div>
 
+        <nav
+          class="sticky top-0 z-30 -mx-4 mb-1 flex gap-1 overflow-x-auto rounded-xl border border-slate-200/80 bg-[#F8F9FA]/95 px-2 py-2 shadow-sm backdrop-blur-md sm:-mx-0 print:hidden"
+          :aria-label="t('trip_detail.nav.aria')"
+        >
+          <button
+            v-for="item in navItems"
+            :key="item.id"
+            type="button"
+            class="shrink-0 rounded-lg px-3 py-2 text-xs font-semibold transition"
+            :class="item.id === 'costs' ? 'bg-violet-100 text-violet-900' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+            @click="item.action"
+          >
+            {{ item.label }}
+          </button>
+        </nav>
+
         <div class="grid gap-6 lg:grid-cols-3">
           <!-- Main column -->
           <div class="space-y-6 lg:col-span-2">
             <!-- Overview -->
-            <section class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <section ref="overviewEl" class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm scroll-mt-24">
               <div class="absolute right-4 top-4">
                 <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', pillClassForStatus(trip.status)]">
                   {{ labelTripStatus(trip.status) }}
                 </span>
               </div>
               <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.overview.title') }}</h2>
+
+              <div
+                v-if="slaBanner"
+                class="mt-3 rounded-xl border px-3 py-2 text-sm font-medium"
+                :class="slaBanner.kind === 'overdue' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-sky-200 bg-sky-50 text-sky-950'"
+              >
+                {{ slaBanner.text }}
+              </div>
+
+              <div class="mt-3 flex flex-wrap gap-2 print:hidden">
+                <span
+                  v-if="trip.dispatcher?.name"
+                  class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800"
+                >
+                  {{ t('trip_detail.meta.dispatcher', { name: trip.dispatcher.name }) }}
+                </span>
+                <span
+                  v-if="trip.dispatch_request?.source_channel"
+                  class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-900"
+                >
+                  {{ t('trip_detail.meta.source', { ch: trip.dispatch_request.source_channel }) }}
+                </span>
+                <span
+                  v-if="trip.dispatch_request?.paper_status"
+                  class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900"
+                >
+                  {{ t('trip_detail.meta.paper', { st: trip.dispatch_request.paper_status }) }}
+                </span>
+                <span
+                  v-if="trip.payment_status === 'paid'"
+                  class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-900"
+                >
+                  {{ t('trip_detail.meta.paid') }}
+                </span>
+              </div>
 
               <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div class="flex min-w-0 items-center gap-3">
@@ -119,15 +204,24 @@
                     {{ scheduleTimeRange }}
                     <span v-if="scheduleDuration" class="text-slate-500">({{ scheduleDuration }})</span>
                   </div>
+                  <ul class="mt-2 space-y-1 text-xs text-slate-600">
+                    <li v-if="trip.dispatch_request?.passenger_count != null && trip.dispatch_request.passenger_count > 0">
+                      {{ t('trip_detail.overview.pax_count', { n: trip.dispatch_request.passenger_count }) }}
+                    </li>
+                    <li v-if="trip.arrive_by">{{ t('trip_detail.overview.arrive_deadline', { time: fmtTime(trip.arrive_by) }) }}</li>
+                    <li v-for="(ln, i) in scheduleMismatchNotes" :key="i" class="text-amber-800/90">{{ ln }}</li>
+                  </ul>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
                     <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.overview.est_distance') }}</div>
                     <div class="mt-1 text-lg font-semibold tabular-nums text-slate-900">{{ estimatedDistanceLabel }}</div>
+                    <p class="mt-1 text-[11px] leading-snug text-slate-500">{{ estimatedDistanceSub }}</p>
                   </div>
                   <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
                     <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.overview.est_cost') }}</div>
                     <div class="mt-1 text-lg font-semibold tabular-nums text-slate-900">{{ estimatedCostLabel }}</div>
+                    <p class="mt-1 text-[11px] leading-snug text-slate-500">{{ estimatedCostSub }}</p>
                   </div>
                 </div>
               </div>
@@ -173,8 +267,19 @@
             </section>
 
             <!-- Route + map -->
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.route.section_title') }}</h2>
+            <section ref="routeEl" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm scroll-mt-24">
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.route.section_title') }}</h2>
+                <div v-if="routeStops.length" class="flex flex-wrap gap-2 text-xs text-slate-600">
+                  <span class="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+                    {{ t('trip_detail.route.stop_count', { n: routeStops.length }) }}
+                  </span>
+                  <span v-if="trip.record?.distance_km != null && trip.record.distance_km !== ''" class="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-800">
+                    {{ t('trip_detail.route.recorded_km', { km: trip.record.distance_km }) }}
+                  </span>
+                  <span class="rounded-full bg-sky-50 px-2.5 py-1 font-medium text-sky-800">{{ tripTypeLabel }}</span>
+                </div>
+              </div>
               <div class="mt-4 flex flex-col gap-5 lg:flex-row">
                 <div class="min-w-0 flex-1">
                   <ol class="relative space-y-0 border-l-2 border-slate-200 pl-6">
@@ -187,6 +292,9 @@
                       </span>
                       <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ stopLabel(stop.kind) }}</div>
                       <div class="mt-1 text-sm font-medium text-slate-900">{{ stop.address }}</div>
+                      <ul v-if="stop.detailLines?.length" class="mt-2 space-y-0.5 border-l-2 border-slate-100 pl-3">
+                        <li v-for="(dl, j) in stop.detailLines" :key="j" class="text-xs leading-relaxed text-slate-600">{{ dl }}</li>
+                      </ul>
                     </li>
                   </ol>
                   <div v-if="!routeStops.length" class="text-sm text-slate-500">{{ t('trip_detail.route.no_stops') }}</div>
@@ -218,7 +326,7 @@
             </section>
 
             <!-- Passengers -->
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <section ref="passengersEl" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm scroll-mt-24">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">
                   {{ t('trip_detail.passengers.title', { n: passengerRowsDisplay.length }) }}
@@ -281,7 +389,7 @@
             </section>
 
             <!-- Costs & advanced status -->
-            <details class="group rounded-2xl border border-slate-200/80 bg-white shadow-sm open:shadow-md">
+            <details ref="moreDetailsRef" class="group scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white shadow-sm open:shadow-md open:ring-1 open:ring-sky-100/80">
               <summary
                 class="cursor-pointer list-none px-5 py-4 text-sm font-semibold text-slate-900 marker:hidden [&::-webkit-details-marker]:hidden"
               >
@@ -291,17 +399,74 @@
                 </span>
               </summary>
               <div class="space-y-5 border-t border-slate-100 px-5 pb-5 pt-4">
-                <div>
-                  <div class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.costs.title') }}</div>
-                  <div class="mt-2 space-y-2 text-sm">
-                    <div v-for="c in trip.costs ?? []" :key="c.id" class="flex justify-between border-b border-slate-50 py-2">
-                      <span class="min-w-0 truncate">{{ c.type }} · {{ c.status }}</span>
-                      <span class="font-medium tabular-nums">{{ c.amount }} {{ c.currency }}</span>
+                <div class="rounded-xl border border-slate-100 bg-gradient-to-b from-slate-50/50 to-white p-4">
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.costs.title') }}</div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <div v-if="(trip.costs ?? []).length" class="text-sm font-semibold tabular-nums text-slate-900">
+                        {{ t('trip_detail.costs.total', { amount: costsTotalFormatted }) }}
+                      </div>
+                      <RouterLink
+                        to="/costs"
+                        class="text-xs font-semibold text-sky-700 hover:text-sky-800 hover:underline"
+                      >
+                        {{ t('trip_detail.costs.open_list') }}
+                      </RouterLink>
                     </div>
-                    <div v-if="!(trip.costs ?? []).length" class="text-slate-500">{{ t('trip_detail.costs.empty') }}</div>
+                  </div>
+                  <div
+                    v-if="canSubmitQuickCost"
+                    class="mt-4 rounded-lg border border-dashed border-slate-200 bg-white/80 p-3"
+                  >
+                    <div class="text-xs font-semibold text-slate-700">{{ t('trip_detail.costs.quick_title') }}</div>
+                    <div class="mt-2 grid gap-2 sm:grid-cols-4">
+                      <Select v-model="costQuickForm.type" :label="t('trip_detail.costs.quick_type')">
+                        <option value="fuel">fuel</option>
+                        <option value="toll">toll</option>
+                        <option value="parking">parking</option>
+                        <option value="labor">labor</option>
+                        <option value="other">other</option>
+                      </Select>
+                      <Input
+                        v-model="costQuickForm.amount"
+                        type="number"
+                        min="0"
+                        step="1"
+                        :label="t('trip_detail.costs.quick_amount')"
+                        :placeholder="t('trip_detail.costs.quick_amount_ph')"
+                      />
+                      <div class="sm:col-span-2">
+                        <Input v-model="costQuickForm.description" :label="t('trip_detail.costs.quick_desc')" :placeholder="t('trip_detail.costs.quick_desc_ph')" />
+                      </div>
+                    </div>
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                      <Button type="button" variant="secondary" class="!py-1.5 !text-xs" :loading="costSubmitting" @click="submitQuickCost">{{ t('trip_detail.costs.quick_submit') }}</Button>
+                      <span v-if="costFormMsg" class="text-xs text-slate-600">{{ costFormMsg }}</span>
+                    </div>
+                  </div>
+                  <div class="mt-3 space-y-2">
+                    <div
+                      v-for="c in trip.costs ?? []"
+                      :key="c.id"
+                      class="flex flex-col gap-1 rounded-lg border border-slate-100 bg-white px-3 py-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                          <span class="text-sm font-medium text-slate-900">{{ c.type }}</span>
+                          <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide" :class="costStatusClass(c.status)">
+                            {{ c.status }}
+                          </span>
+                        </div>
+                        <p v-if="c.description?.trim()" class="mt-0.5 text-xs text-slate-600">{{ c.description.trim() }}</p>
+                      </div>
+                      <div class="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{{ formatCostAmount(c.amount, c.currency) }}</div>
+                    </div>
+                    <div v-if="!(trip.costs ?? []).length" class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-sm text-slate-500">
+                      {{ t('trip_detail.costs.empty') }}
+                    </div>
                   </div>
                 </div>
-                <form class="grid gap-3 sm:grid-cols-3" @submit.prevent="doStatus">
+                <form class="rounded-xl border border-sky-100 bg-sky-50/30 p-4 grid gap-3 sm:grid-cols-3" @submit.prevent="doStatus">
                   <Select v-model="statusForm.status" :label="t('trip_detail.status_update.status')" :placeholder="t('trip_detail.status_update.pick')">
                     <option value="driver_confirmed">{{ labelTripStatus('driver_confirmed') }}</option>
                     <option value="in_progress">{{ labelTripStatus('in_progress') }}</option>
@@ -309,7 +474,7 @@
                     <option value="cancelled">{{ labelTripStatus('cancelled') }}</option>
                   </Select>
                   <div class="sm:col-span-2">
-                    <Input v-model="statusForm.message" :label="t('trip_detail.status_update.note')" />
+                    <Input v-model="statusForm.message" :label="t('trip_detail.status_update.note')" :placeholder="t('trip_detail.status_update.note_ph')" />
                   </div>
                   <div class="sm:col-span-3 flex items-center gap-3">
                     <Button v-if="canUpdateStatus" :loading="statusing" type="submit">{{ t('trip_detail.status_update.update') }}</Button>
@@ -322,30 +487,61 @@
 
           <!-- Sidebar -->
           <div class="space-y-6">
-            <section ref="coordinationEl" class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <section ref="coordinationEl" class="scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.coordination.title') }}</h2>
               <p class="mt-1 text-sm text-slate-600">{{ t('trip_detail.coordination.subtitle') }}</p>
 
               <div class="mt-4 space-y-4">
+                <div
+                  v-if="canRescheduleTrip"
+                  class="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-white p-3"
+                >
+                  <div class="text-xs font-bold uppercase tracking-wide text-indigo-800">{{ t('trip_detail.reschedule.title') }}</div>
+                  <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.reschedule.hint') }}</p>
+                  <input
+                    v-model="rescheduleDepartLocal"
+                    type="datetime-local"
+                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-indigo-200 focus:ring"
+                  />
+                  <Button class="mt-2 w-full sm:w-auto" type="button" :loading="rescheduling" @click="doReschedule">
+                    {{ t('trip_detail.reschedule.save') }}
+                  </Button>
+                  <p v-if="rescheduleMsg" class="mt-2 text-xs text-slate-600">{{ rescheduleMsg }}</p>
+                </div>
+
                 <div>
+                  <Input
+                    v-model="vehicleSearch"
+                    :label="t('trip_detail.coordination.filter_vehicle')"
+                    :placeholder="t('trip_detail.coordination.filter_vehicle_ph')"
+                    class="mb-2"
+                  />
                   <Select
                     v-model="vehicleChoice"
                     :label="t('trip_detail.coordination.assign_vehicle')"
                     :placeholder="t('trip_detail.ops.form.pick_vehicle')"
                   >
                     <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                    <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
+                    <option v-for="v in vehiclesFiltered" :key="v.id" :value="String(v.id)">
                       {{ v.license_plate }} · {{ v.type ?? '—' }} {{ v.seat_count ? `(${v.seat_count})` : '' }}
                     </option>
                   </Select>
                   <p v-if="suitableVehiclesHint" class="mt-1.5 text-xs font-medium text-emerald-700">{{ suitableVehiclesHint }}</p>
                 </div>
-                <Select v-model="driverChoice" :label="t('trip_detail.coordination.assign_driver')" :placeholder="t('trip_detail.ops.form.pick_driver')">
-                  <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                  <option v-for="d in drivers" :key="d.id" :value="String(d.id)">
-                    {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
-                  </option>
-                </Select>
+                <div>
+                  <Input
+                    v-model="driverSearch"
+                    :label="t('trip_detail.coordination.filter_driver')"
+                    :placeholder="t('trip_detail.coordination.filter_driver_ph')"
+                    class="mb-2"
+                  />
+                  <Select v-model="driverChoice" :label="t('trip_detail.coordination.assign_driver')" :placeholder="t('trip_detail.ops.form.pick_driver')">
+                    <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
+                    <option v-for="d in driversFiltered" :key="d.id" :value="String(d.id)">
+                      {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
+                    </option>
+                  </Select>
+                </div>
 
                 <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-800">
                   <input v-model="hireExternal" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
@@ -353,9 +549,39 @@
                 </label>
 
                 <div v-if="hireExternal" class="grid gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                  <Input v-model.number="assign.transport_provider_id" :label="t('trip_detail.coordination.provider_id')" type="number" />
-                  <Input v-model="externalVehicleRef" :label="t('trip_detail.coordination.external_vehicle')" />
-                  <Input v-model="externalDriverRef" :label="t('trip_detail.coordination.external_driver')" />
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <div class="min-w-0 flex-1">
+                      <Select
+                        v-model="providerChoice"
+                        :label="t('trip_detail.coordination.provider_select')"
+                        :placeholder="t('trip_detail.coordination.provider_placeholder')"
+                      >
+                        <option value="">{{ t('trip_detail.coordination.provider_placeholder') }}</option>
+                        <option v-for="p in transportProviders" :key="p.id" :value="String(p.id)">
+                          {{ p.name }}<template v-if="p.type"> ({{ p.type }})</template>
+                        </option>
+                      </Select>
+                    </div>
+                    <Button
+                      v-if="canQuickCreateProvider"
+                      type="button"
+                      variant="secondary"
+                      class="shrink-0 !px-3"
+                      @click="openProviderModal"
+                    >
+                      {{ t('trip_detail.coordination.provider_quick_add') }}
+                    </Button>
+                  </div>
+                  <Input
+                    v-model="externalVehicleRef"
+                    :label="t('trip_detail.coordination.external_vehicle')"
+                    :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
+                  />
+                  <Input
+                    v-model="externalDriverRef"
+                    :label="t('trip_detail.coordination.external_driver')"
+                    :placeholder="t('trip_detail.coordination.external_driver_ph')"
+                  />
                 </div>
 
                 <div>
@@ -397,7 +623,16 @@
             </section>
 
             <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.attachments.title') }}</h2>
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.attachments.title') }}</h2>
+                <div v-if="canManageAttachments && trip.dispatch_request?.id" class="flex flex-wrap items-center gap-2">
+                  <input ref="attachInputRef" type="file" class="hidden" @change="onAttachmentFile" />
+                  <Button type="button" variant="secondary" class="!px-3" :loading="attachUploading" @click="attachInputRef?.click()">
+                    {{ t('trip_detail.attachments.upload') }}
+                  </Button>
+                </div>
+              </div>
+              <p v-if="attachMsg" class="mt-2 text-xs" :class="attachMsgIsError ? 'text-rose-600' : 'text-slate-600'">{{ attachMsg }}</p>
               <ul class="mt-3 space-y-2">
                 <li
                   v-for="a in attachmentsList"
@@ -408,16 +643,28 @@
                     <div class="truncate text-sm font-medium text-slate-900">{{ a.original_name || t('trip_detail.attachments.unnamed') }}</div>
                     <div class="text-xs text-slate-500">{{ fmtFileSize(a.size_bytes) }}</div>
                   </div>
-                  <a
-                    v-if="a.url"
-                    :href="a.url"
-                    target="_blank"
-                    rel="noopener"
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    :download="a.original_name || undefined"
-                  >
-                    <ArrowDownTrayIcon class="h-5 w-5" />
-                  </a>
+                  <div class="flex shrink-0 items-center gap-1">
+                    <a
+                      v-if="a.url"
+                      :href="a.url"
+                      target="_blank"
+                      rel="noopener"
+                      class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      :download="a.original_name || undefined"
+                    >
+                      <ArrowDownTrayIcon class="h-5 w-5" />
+                    </a>
+                    <button
+                      v-if="canManageAttachments"
+                      type="button"
+                      class="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                      :disabled="attachDeletingId === a.id"
+                      :title="t('trip_detail.attachments.delete')"
+                      @click="removeAttachment(a)"
+                    >
+                      <TrashIcon class="h-5 w-5" />
+                    </button>
+                  </div>
                 </li>
               </ul>
               <p v-if="!attachmentsList.length" class="mt-2 text-sm text-slate-500">{{ t('trip_detail.attachments.empty') }}</p>
@@ -479,31 +726,71 @@
               </div>
             </section>
 
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50/80 p-5 shadow-sm ring-1 ring-slate-100">
               <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.quick.title') }}</h2>
+              <p class="mt-1 text-xs text-slate-500">{{ t('trip_detail.quick.subtitle') }}</p>
               <div class="mt-3 grid gap-2">
                 <a
+                  v-if="mapsHref"
+                  :href="mapsHref"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
+                >
+                  {{ t('trip_detail.quick.open_directions') }}
+                </a>
+                <a
                   v-if="requesterPhone"
-                  class="inline-flex items-center justify-center rounded-lg bg-sky-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+                  class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
                   :href="`tel:${requesterPhone}`"
                 >
                   {{ t('trip_detail.quick.call_requester') }}
                 </a>
                 <a
+                  v-if="requesterEmail"
+                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                  :href="`mailto:${requesterEmail}`"
+                >
+                  {{ t('trip_detail.quick.email_requester') }}
+                </a>
+                <button
+                  v-if="requesterPhone"
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                  @click="copyPhone(requesterPhone)"
+                >
+                  {{ t('trip_detail.quick.copy_requester_phone') }}
+                </button>
+                <a
                   v-if="trip.driver?.phone"
-                  class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
                   :href="`tel:${trip.driver.phone}`"
                 >
                   {{ t('trip_detail.quick.call_driver') }}
                 </a>
+                <RouterLink
+                  v-if="trip.dispatch_request?.id"
+                  :to="`/requests/${trip.dispatch_request.id}`"
+                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                >
+                  {{ t('trip_detail.quick.open_request') }}
+                </RouterLink>
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                  class="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2.5 text-sm font-semibold text-violet-900 hover:bg-violet-100"
+                  @click="scrollToCostsSection"
+                >
+                  {{ t('trip_detail.quick.costs_section') }}
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
                   @click="scrollToCoordination"
                 >
                   {{ t('trip_detail.quick.reassign') }}
                 </button>
               </div>
+              <p v-if="quickCopyMsg" class="mt-2 text-center text-xs text-slate-600">{{ quickCopyMsg }}</p>
             </section>
 
             <Card v-if="trip.vehicle || trip.driver || trip.transport_provider" :title="t('trip_detail.assigned.title')">
@@ -569,28 +856,59 @@
           </div>
         </div>
       </Teleport>
+
+      <Teleport to="body">
+        <div
+          v-if="providerModalOpen"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          @click.self="providerModalOpen = false"
+        >
+          <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
+            <h3 class="text-sm font-semibold text-slate-900">{{ t('trip_detail.coordination.provider_modal_title') }}</h3>
+            <p class="mt-1 text-xs text-slate-500">{{ t('trip_detail.coordination.provider_modal_hint') }}</p>
+            <div class="mt-4 space-y-3">
+              <Input v-model="newProviderName" :label="t('trip_detail.coordination.provider_modal_name')" :placeholder="t('trip_detail.coordination.provider_modal_name_ph')" />
+              <Select v-model="newProviderType" :label="t('trip_detail.coordination.provider_modal_type')">
+                <option value="taxi">taxi</option>
+                <option value="vendor">vendor</option>
+              </Select>
+              <p v-if="providerModalError" class="text-xs text-rose-600">{{ providerModalError }}</p>
+            </div>
+            <div class="mt-5 flex justify-end gap-2">
+              <Button type="button" variant="secondary" @click="providerModalOpen = false">{{ t('trip_detail.coordination.provider_modal_cancel') }}</Button>
+              <Button type="button" :loading="providerCreating" @click="submitQuickProvider">{{ t('trip_detail.coordination.provider_modal_save') }}</Button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
     </template>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
   ArrowLeftIcon,
+  ArrowPathIcon,
   BellIcon,
   CalendarDaysIcon,
   ChevronDownIcon,
+  TrashIcon,
 } from '@heroicons/vue/24/outline'
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/solid'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
-import { addTripEvent, assignTrip, getTrip, updateTripStatus } from '../../api/trips'
-import { listVehicles, listDrivers } from '../../api/operational'
+import { addTripEvent, assignTrip, getTrip, rescheduleTrip, updateTripStatus } from '../../api/trips'
+import { submitTripCost } from '../../api/costs'
+import { listVehicles, listDrivers, listTransportProviders, createTransportProvider } from '../../api/operational'
+import { uploadAttachment, deleteAttachment } from '../../api/attachments'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripStatus, labelTripType } from '../../util/labels'
 import { parseMoneyVnd } from '../../util/money'
@@ -615,6 +933,20 @@ const auth = useAuthStore()
 
 const trip = ref(null)
 const loading = ref(true)
+const loadError = ref('')
+const refreshing = ref(false)
+const silentLoadError = ref('')
+const overviewEl = ref(null)
+const routeEl = ref(null)
+const passengersEl = ref(null)
+const rescheduleDepartLocal = ref('')
+const rescheduling = ref(false)
+const rescheduleMsg = ref('')
+const vehicleSearch = ref('')
+const driverSearch = ref('')
+const costQuickForm = ref({ type: 'fuel', amount: '', description: '' })
+const costSubmitting = ref(false)
+const costFormMsg = ref('')
 const assigning = ref(false)
 const rejecting = ref(false)
 const assignMsg = ref('')
@@ -625,21 +957,86 @@ const resourceHint = ref('')
 const vehicleChoice = ref('')
 const driverChoice = ref('')
 const coordinationEl = ref(null)
+const moreDetailsRef = ref(null)
+const attachInputRef = ref(null)
 const linkMsg = ref('')
 const mapExpanded = ref(false)
 const hireExternal = ref(false)
 const externalVehicleRef = ref('')
 const externalDriverRef = ref('')
 const coordinationNotes = ref('')
+const transportProviders = ref([])
+const providerChoice = ref('')
+const providerModalOpen = ref(false)
+const newProviderName = ref('')
+const newProviderType = ref('vendor')
+const providerModalError = ref('')
+const providerCreating = ref(false)
+const attachUploading = ref(false)
+const attachDeletingId = ref(null)
+const attachMsg = ref('')
+const attachMsgIsError = ref(false)
+const quickCopyMsg = ref('')
 
 const newNote = ref('')
 const noting = ref(false)
 const noteMsg = ref('')
 
-const assign = ref({ lock_version: 0, vehicle_id: null, driver_id: null, transport_provider_id: null })
+const assign = ref({ lock_version: 0, vehicle_id: null, driver_id: null })
 
 const canAssign = computed(() => auth.hasPermission('trip.assign'))
 const canUpdateStatus = computed(() => auth.hasPermission('trip.update_status'))
+const canManageAttachments = computed(() => auth.hasPermission('attachment.upload'))
+const canQuickCreateProvider = computed(() => auth.hasPermission('resource.provider.manage'))
+const canSubmitQuickCost = computed(
+  () => auth.hasPermission('trip.record.create') || auth.hasPermission('trip.update_status'),
+)
+const canRescheduleTrip = computed(() => {
+  if (!canAssign.value || !trip.value) return false
+  if ((trip.value.payment_status ?? 'unpaid') === 'paid') return false
+  const s = trip.value.status
+  if (s === 'cancelled' || s === 'completed') return false
+  return true
+})
+
+const slaBanner = computed(() => {
+  const tr = trip.value
+  if (!tr?.arrive_by) return null
+  if (['completed', 'cancelled'].includes(tr.status)) return null
+  const end = new Date(tr.arrive_by).getTime()
+  if (!Number.isFinite(end)) return null
+  const min = Math.round((end - Date.now()) / 60000)
+  if (min < 0) return { kind: 'overdue', text: t('trip_detail.sla.overdue_detail', { n: Math.abs(min) }) }
+  return { kind: 'ok', text: t('trip_detail.sla.remaining_minutes', { n: min }) }
+})
+
+const vehiclesFiltered = computed(() => {
+  const q = vehicleSearch.value.trim().toLowerCase()
+  if (!q) return vehicles.value
+  return vehicles.value.filter((v) => {
+    const plate = (v.license_plate ?? '').toLowerCase()
+    const typ = (v.type ?? '').toLowerCase()
+    return plate.includes(q) || typ.includes(q)
+  })
+})
+
+const driversFiltered = computed(() => {
+  const q = driverSearch.value.trim().toLowerCase()
+  if (!q) return drivers.value
+  return drivers.value.filter((d) => {
+    const name = (d.full_name ?? '').toLowerCase()
+    const phone = (d.phone ?? '').toLowerCase()
+    return name.includes(q) || phone.includes(q)
+  })
+})
+
+const navItems = computed(() => [
+  { id: 'overview', label: t('trip_detail.nav.overview'), action: () => overviewEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
+  { id: 'route', label: t('trip_detail.nav.route'), action: () => routeEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
+  { id: 'passengers', label: t('trip_detail.nav.passengers'), action: () => passengersEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }) },
+  { id: 'costs', label: t('trip_detail.nav.costs'), action: () => scrollToCostsSection() },
+  { id: 'coordination', label: t('trip_detail.nav.coordination'), action: () => scrollToCoordination() },
+])
 
 function fmt(v) {
   const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
@@ -656,6 +1053,14 @@ function fmtDateLong(v) {
   return v
     ? new Date(v).toLocaleDateString(l, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     : '—'
+}
+
+function toDatetimeLocalValue(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 function fmtFileSize(bytes) {
@@ -695,6 +1100,7 @@ const tripTypeLabel = computed(() => labelTripType(trip.value?.dispatch_request?
 
 const requesterName = computed(() => trip.value?.dispatch_request?.requester?.name ?? '—')
 const requesterPhone = computed(() => trip.value?.dispatch_request?.requester?.phone ?? '')
+const requesterEmail = computed(() => trip.value?.dispatch_request?.requester?.email?.trim() ?? '')
 
 const requesterSubtitle = computed(() => {
   const u = snap.value?.form?.requester_unit
@@ -731,10 +1137,40 @@ const scheduleDuration = computed(() => {
   return t('trip_detail.overview.duration_hours', { n: h })
 })
 
+function scheduleSame(isoA, isoB) {
+  if (!isoA || !isoB) return true
+  return new Date(isoA).getTime() === new Date(isoB).getTime()
+}
+
+const scheduleMismatchNotes = computed(() => {
+  const dr = trip.value?.dispatch_request
+  const tr = trip.value
+  if (!dr || !tr) return []
+  const out = []
+  if (dr.depart_at && tr.depart_at && !scheduleSame(dr.depart_at, tr.depart_at)) {
+    out.push(t('trip_detail.overview.depart_vs_request', { req: fmtTime(dr.depart_at), trip: fmtTime(tr.depart_at) }))
+  }
+  if (dr.arrive_by && tr.arrive_by && !scheduleSame(dr.arrive_by, tr.arrive_by)) {
+    out.push(t('trip_detail.overview.arrive_vs_request', { req: fmtTime(dr.arrive_by), trip: fmtTime(tr.arrive_by) }))
+  }
+  return out
+})
+
 const estimatedDistanceLabel = computed(() => {
   const km = trip.value?.record?.distance_km
   if (km != null && km !== '') return `${km} km`
   return '—'
+})
+
+const estimatedDistanceSub = computed(() => {
+  const km = trip.value?.record?.distance_km
+  if (km != null && km !== '') return t('trip_detail.overview.distance_from_record')
+  return t('trip_detail.overview.distance_not_recorded')
+})
+
+const estimatedCostSub = computed(() => {
+  if (estimatedCostVnd.value != null) return t('trip_detail.overview.cost_from_wizard')
+  return t('trip_detail.overview.cost_no_estimate')
 })
 
 const estimatedCostLabel = computed(() => {
@@ -765,6 +1201,30 @@ const estimatedCostVnd = computed(() => {
   const total = extras + totalPass + totalBus + cargoCosts
   return total > 0 ? total : null
 })
+
+const costsTotalFormatted = computed(() => {
+  const list = trip.value?.costs ?? []
+  if (!list.length) return '—'
+  const cur = list[0]?.currency || 'VND'
+  const sum = list.reduce((s, c) => s + (Number(c.amount) || 0), 0)
+  return `${new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(sum)} ${cur}`
+})
+
+function formatCostAmount(amount, currency) {
+  const n = Number(amount)
+  const c = currency || 'VND'
+  if (!Number.isFinite(n)) return `— ${c}`
+  return `${new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(n)} ${c}`
+}
+
+function costStatusClass(s) {
+  const x = String(s ?? '').toLowerCase()
+  if (x === 'confirmed' || x === 'approved') return 'bg-emerald-100 text-emerald-800'
+  if (x === 'rejected') return 'bg-rose-100 text-rose-800'
+  if (x === 'pending') return 'bg-amber-100 text-amber-900'
+  if (x === 'submitted') return 'bg-sky-100 text-sky-900'
+  return 'bg-slate-100 text-slate-700'
+}
 
 function pillClassForStatus(s) {
   const map = {
@@ -856,38 +1316,68 @@ const routeStops = computed(() => {
   const s = snap.value
   const out = []
 
-  const pushAddr = (addr, kind) => {
+  const pushAddr = (addr, kind, lines = []) => {
     const tAddr = (addr ?? '').trim()
     if (!tAddr) return
+    const norm = lines.map((x) => String(x).trim()).filter(Boolean)
     const last = out[out.length - 1]
-    if (last && last.address === tAddr) return
-    out.push({ kind, address: tAddr })
+    if (last && last.address === tAddr) {
+      for (const ln of norm) {
+        if (!last.detailLines.includes(ln)) last.detailLines.push(ln)
+      }
+      if (kind === 'pickup' || kind === 'dropoff') last.kind = kind
+      return
+    }
+    out.push({ kind, address: tAddr, detailLines: [...norm] })
   }
 
   if (!dr) return out
 
   if (dr.trip_type === 'cargo' && s?.cargoRows?.length) {
+    let i = 0
     for (const r of s.cargoRows) {
       if (!isCargoRowFilled(r)) continue
-      pushAddr(r.pickup_place || r.pickup_contact, 'pickup')
-      pushAddr(r.delivery_place || r.delivery_contact, 'dropoff')
+      i += 1
+      const label = r.name?.trim() || t('trip_detail.passengers.cargo_item', { n: i })
+      const pickLines = [label]
+      if (r.pickup_contact?.trim()) pickLines.push(t('trip_detail.route.contact', { c: r.pickup_contact.trim() }))
+      if (r.item_notes?.trim()) pickLines.push(r.item_notes.trim().slice(0, 100))
+      pushAddr(r.pickup_place || r.pickup_contact, 'pickup', pickLines)
+      const dropLines = [label]
+      if (r.delivery_contact?.trim()) dropLines.push(t('trip_detail.route.contact', { c: r.delivery_contact.trim() }))
+      if (r.transport_note?.trim()) dropLines.push(r.transport_note.trim().slice(0, 100))
+      pushAddr(r.delivery_place || r.delivery_contact, 'dropoff', dropLines)
     }
     if (!out.length) {
-      pushAddr(dr.origin, 'pickup')
-      pushAddr(dr.destination, 'dropoff')
+      pushAddr(dr.origin, 'pickup', [])
+      pushAddr(dr.destination, 'dropoff', [])
     }
   } else {
-    const rows = [...(s?.passengerRows ?? []), ...(s?.businessRows ?? [])]
-    for (const r of rows) {
-      const filled = 'waypoint' in r ? isBusinessRowFilled(r) : isPassengerRowFilled(r)
-      if (!filled) continue
-      pushAddr(r.pickup, 'pickup')
-      if (r.waypoint?.trim()) pushAddr(r.waypoint, 'waypoint')
-      pushAddr(r.dropoff, 'dropoff')
+    let gidx = 0
+    for (const r of s?.passengerRows ?? []) {
+      if (!isPassengerRowFilled(r)) continue
+      gidx += 1
+      const who = r.person_in_charge?.trim() || t('trip_detail.passengers.guest', { n: gidx })
+      const base = [t('trip_detail.route.ctx_passenger', { name: who })]
+      if (r.notes?.trim()) base.push(r.notes.trim().slice(0, 120))
+      pushAddr(r.pickup, 'pickup', base)
+      if (r.waypoint?.trim()) pushAddr(r.waypoint, 'waypoint', [who])
+      pushAddr(r.dropoff, 'dropoff', base)
+    }
+    let bidx = 0
+    for (const r of s?.businessRows ?? []) {
+      if (!isBusinessRowFilled(r)) continue
+      bidx += 1
+      const who = t('trip_detail.passengers.business_party', { n: bidx })
+      const base = [who]
+      if (r.notes?.trim()) base.push(r.notes.trim().slice(0, 120))
+      pushAddr(r.pickup, 'pickup', base)
+      if (r.waypoint?.trim()) pushAddr(r.waypoint, 'waypoint', [who])
+      pushAddr(r.dropoff, 'dropoff', base)
     }
     if (!out.length) {
-      pushAddr(dr.origin, 'pickup')
-      pushAddr(dr.destination, 'dropoff')
+      pushAddr(dr.origin, 'pickup', [])
+      pushAddr(dr.destination, 'dropoff', [])
     }
   }
 
@@ -1085,6 +1575,177 @@ function scrollToCoordination() {
   coordinationEl.value?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
 }
 
+function printPage() {
+  if (typeof window !== 'undefined') window.print()
+}
+
+async function doReschedule() {
+  rescheduleMsg.value = ''
+  const raw = rescheduleDepartLocal.value
+  if (!raw || !trip.value) return
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) {
+    rescheduleMsg.value = t('trip_detail.reschedule.invalid')
+    return
+  }
+  rescheduling.value = true
+  try {
+    await rescheduleTrip(route.params.id, {
+      depart_at: d.toISOString(),
+      lock_version: assign.value.lock_version ?? 0,
+    })
+    rescheduleMsg.value = t('trip_detail.messages.ok')
+    await load({ silent: true })
+    rescheduleDepartLocal.value = toDatetimeLocalValue(trip.value?.depart_at)
+  } catch (e) {
+    rescheduleMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+  } finally {
+    rescheduling.value = false
+  }
+}
+
+async function submitQuickCost() {
+  if (!canSubmitQuickCost.value) return
+  costFormMsg.value = ''
+  const type = String(costQuickForm.value.type ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+  const amount = Number(costQuickForm.value.amount)
+  if (!type || !Number.isFinite(amount) || amount <= 0) {
+    costFormMsg.value = t('trip_detail.costs.quick_invalid')
+    return
+  }
+  costSubmitting.value = true
+  try {
+    await submitTripCost(
+      route.params.id,
+      {
+        type,
+        amount,
+        currency: 'VND',
+        description: costQuickForm.value.description?.trim() || undefined,
+      },
+      { idempotencyKey: newIdempotencyKey() },
+    )
+    costQuickForm.value = { type: costQuickForm.value.type, amount: '', description: '' }
+    costFormMsg.value = t('trip_detail.messages.ok')
+    await load({ silent: true })
+  } catch (e) {
+    costFormMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+  } finally {
+    costSubmitting.value = false
+  }
+}
+
+let quickCopyTimer = null
+async function scrollToCostsSection() {
+  const el = moreDetailsRef.value
+  if (!el) return
+  el.open = true
+  await nextTick()
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+async function copyPhone(phone) {
+  quickCopyMsg.value = ''
+  try {
+    await navigator.clipboard.writeText(phone)
+    quickCopyMsg.value = t('trip_detail.quick.copied_phone')
+    if (quickCopyTimer) clearTimeout(quickCopyTimer)
+    quickCopyTimer = setTimeout(() => {
+      quickCopyMsg.value = ''
+    }, 2500)
+  } catch {
+    quickCopyMsg.value = t('trip_detail.messages.copy_failed')
+  }
+}
+
+async function loadTransportProvidersList() {
+  try {
+    const res = await listTransportProviders({ is_active: true, per_page: 200 })
+    transportProviders.value = res.items ?? []
+  } catch {
+    transportProviders.value = []
+  }
+}
+
+function openProviderModal() {
+  providerModalError.value = ''
+  newProviderName.value = ''
+  newProviderType.value = 'vendor'
+  providerModalOpen.value = true
+}
+
+async function submitQuickProvider() {
+  providerModalError.value = ''
+  const name = newProviderName.value.trim()
+  if (!name) {
+    providerModalError.value = t('trip_detail.coordination.provider_modal_name_required')
+    return
+  }
+  providerCreating.value = true
+  try {
+    const created = await createTransportProvider({ name, type: newProviderType.value, is_active: true })
+    await loadTransportProvidersList()
+    if (created?.id != null) providerChoice.value = String(created.id)
+    providerModalOpen.value = false
+  } catch (e) {
+    providerModalError.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+  } finally {
+    providerCreating.value = false
+  }
+}
+
+async function removeAttachment(a) {
+  if (!canManageAttachments.value) return
+  const ok = await confirmAction({
+    title: t('trip_detail.attachments.delete_confirm_title'),
+    message: t('trip_detail.attachments.delete_confirm_body', { name: a.original_name || t('trip_detail.attachments.unnamed') }),
+    confirmLabel: t('trip_detail.attachments.delete'),
+    danger: true,
+  })
+  if (!ok) return
+  attachMsg.value = ''
+  attachDeletingId.value = a.id
+  try {
+    await deleteAttachment(a.id)
+    await load({ silent: true })
+    attachMsg.value = t('trip_detail.attachments.deleted_ok')
+    attachMsgIsError.value = false
+  } catch (e) {
+    attachMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+    attachMsgIsError.value = true
+  } finally {
+    attachDeletingId.value = null
+  }
+}
+
+async function onAttachmentFile(ev) {
+  const input = ev.target
+  const file = input.files?.[0]
+  if (input) input.value = ''
+  if (!file || !trip.value?.dispatch_request?.id) return
+  attachMsg.value = ''
+  attachUploading.value = true
+  try {
+    await uploadAttachment({
+      attachable_type: 'dispatch_request',
+      attachable_id: trip.value.dispatch_request.id,
+      kind: 'request_attachment',
+      file,
+    })
+    await load({ silent: true })
+    attachMsg.value = t('trip_detail.attachments.upload_ok')
+    attachMsgIsError.value = false
+  } catch (e) {
+    attachMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
+    attachMsgIsError.value = true
+  } finally {
+    attachUploading.value = false
+  }
+}
+
 async function copyLink() {
   linkMsg.value = ''
   try {
@@ -1108,9 +1769,10 @@ function exportJson() {
 async function loadResources() {
   resourceHint.value = ''
   try {
-    const [vr, dr] = await Promise.allSettled([
+    const [vr, dr, pr] = await Promise.allSettled([
       listVehicles({ status: 'ready', per_page: 150 }),
       listDrivers({ employment_status: 'active', availability_status: 'available', per_page: 150 }),
+      listTransportProviders({ is_active: true, per_page: 200 }),
     ])
     if (vr.status === 'fulfilled') {
       vehicles.value = vr.value.items ?? []
@@ -1122,34 +1784,55 @@ async function loadResources() {
     } else {
       resourceHint.value = resourceHint.value || t('trip_detail.ops.messages.drivers_load_failed')
     }
+    if (pr.status === 'fulfilled') {
+      transportProviders.value = pr.value.items ?? []
+    }
   } catch {
     resourceHint.value = t('trip_detail.ops.messages.resources_load_failed')
   }
 }
 
-async function load() {
-  loading.value = true
+async function load(opts = {}) {
+  const silent = opts.silent === true
+  if (!silent) {
+    loading.value = true
+    loadError.value = ''
+  } else {
+    silentLoadError.value = ''
+    refreshing.value = true
+  }
   try {
-    trip.value = await getTrip(route.params.id)
+    const data = await getTrip(route.params.id)
+    trip.value = data
     assign.value.lock_version = trip.value.lock_version ?? 0
     vehicleChoice.value = trip.value.vehicle_id ? String(trip.value.vehicle_id) : ''
     driverChoice.value = trip.value.driver_id ? String(trip.value.driver_id) : ''
     hireExternal.value = !!trip.value.transport_provider_id
     externalVehicleRef.value = trip.value.external_vehicle_ref ?? ''
     externalDriverRef.value = trip.value.external_driver_ref ?? ''
-    assign.value.transport_provider_id = trip.value.transport_provider_id ?? null
+    providerChoice.value = trip.value.transport_provider_id ? String(trip.value.transport_provider_id) : ''
+    rescheduleDepartLocal.value = toDatetimeLocalValue(trip.value.depart_at)
     coordinationNotes.value = ''
     await loadResources()
+    if (!silent) loadError.value = ''
+  } catch (e) {
+    const msg = e?.response?.data?.message ?? t('trip_detail.load_error')
+    if (!silent) {
+      trip.value = null
+      loadError.value = msg
+    } else {
+      silentLoadError.value = msg
+    }
   } finally {
-    loading.value = false
+    if (!silent) loading.value = false
+    refreshing.value = false
   }
 }
 
 async function onApproveTransfer() {
   assignMsg.value = ''
   const hasInternal = vehicleChoice.value && driverChoice.value
-  const hasExternal =
-    hireExternal.value && assign.value.transport_provider_id != null && String(assign.value.transport_provider_id).trim() !== ''
+  const hasExternal = hireExternal.value && providerChoice.value && String(providerChoice.value).trim() !== ''
 
   if (!hasInternal && !hasExternal) {
     assignMsg.value = t('trip_detail.coordination.validation_assign')
@@ -1169,8 +1852,8 @@ async function onApproveTransfer() {
     const payload = { lock_version: assign.value.lock_version }
     if (vehicleChoice.value) payload.vehicle_id = Number(vehicleChoice.value)
     if (driverChoice.value) payload.driver_id = Number(driverChoice.value)
-    if (hireExternal.value && assign.value.transport_provider_id != null && assign.value.transport_provider_id !== '') {
-      payload.transport_provider_id = Number(assign.value.transport_provider_id)
+    if (hireExternal.value && providerChoice.value) {
+      payload.transport_provider_id = Number(providerChoice.value)
     } else {
       payload.transport_provider_id = null
     }
@@ -1189,7 +1872,7 @@ async function onApproveTransfer() {
     }
 
     assignMsg.value = t('trip_detail.messages.ok')
-    await load()
+    await load({ silent: true })
   } catch (e) {
     assignMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
   } finally {
@@ -1212,7 +1895,7 @@ async function onRejectTrip() {
   try {
     const msg = coordinationNotes.value.trim() || undefined
     await updateTripStatus(route.params.id, { status: 'cancelled', message: msg })
-    await load()
+    await load({ silent: true })
   } catch (e) {
     assignMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
   } finally {
@@ -1225,7 +1908,7 @@ async function doStatus() {
   statusing.value = true
   try {
     await updateTripStatus(route.params.id, statusForm.value)
-    await load()
+    await load({ silent: true })
   } finally {
     statusing.value = false
   }
@@ -1238,7 +1921,7 @@ async function addNote() {
     await addTripEvent(route.params.id, { type: 'note', message: newNote.value.trim() })
     newNote.value = ''
     noteMsg.value = t('trip_detail.messages.ok')
-    await load()
+    await load({ silent: true })
   } catch (e) {
     noteMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
   } finally {
@@ -1247,6 +1930,10 @@ async function addNote() {
 }
 
 const statusForm = ref({ status: 'in_progress', message: '' })
+
+watch(hireExternal, (on) => {
+  if (!on) providerChoice.value = ''
+})
 
 onMounted(load)
 watch(() => route.params.id, load)
