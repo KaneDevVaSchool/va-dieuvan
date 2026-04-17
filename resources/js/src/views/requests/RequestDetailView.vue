@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-[#F8F9FA] pb-10 print:bg-white print:pb-0">
+  <div class="min-h-screen bg-[#F8F9FA] print:bg-white">
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">Đang tải…</div>
 
     <template v-else-if="req">
-      <!-- Header -->
+      <!-- Header: fixed to viewport (không cuộn theo nội dung) -->
       <div
-        class="sticky top-0 z-10 border-b border-slate-200/80 bg-[#F8F9FA]/95 px-4 py-4 backdrop-blur print:static print:border-0 print:bg-white"
+        class="fixed left-0 right-0 top-0 z-20 w-full border-b border-slate-200/80 bg-[#F8F9FA]/95 px-4 py-4 shadow-sm backdrop-blur print:static print:shadow-none print:backdrop-blur-none"
       >
         <div class="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex min-w-0 flex-1 items-start gap-3">
@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <div class="mx-auto max-w-6xl space-y-6 px-4 pt-6">
+      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-10 pt-28 sm:pt-24 print:pt-0">
         <!-- Stepper -->
         <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm print:border print:shadow-none">
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">Tiến trình yêu cầu</h2>
@@ -150,8 +150,8 @@
                 </span>
               </div>
 
-              <div class="mt-5 space-y-6">
-                <div>
+              <div class="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div class="min-w-0">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Người yêu cầu</p>
                   <div class="mt-2 flex items-center gap-3">
                     <img
@@ -166,14 +166,14 @@
                     >
                       {{ requesterInitials }}
                     </div>
-                    <div>
+                    <div class="min-w-0">
                       <p class="font-semibold text-slate-900">{{ req.requester?.name ?? '—' }}</p>
                       <p class="text-sm text-slate-500">{{ requesterSubtitle }}</p>
                     </div>
                   </div>
                 </div>
 
-                <div>
+                <div class="min-w-0">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Thời gian yêu cầu</p>
                   <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-800">
                     <span class="inline-flex items-center gap-1.5">
@@ -188,7 +188,7 @@
                   </div>
                 </div>
 
-                <div>
+                <div class="min-w-0 md:col-span-2">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Lộ trình</p>
                   <div class="mt-3 flex gap-3">
                     <div class="flex flex-col items-center pt-1">
@@ -209,15 +209,15 @@
                   </div>
                 </div>
 
-                <div>
+                <div class="min-w-0">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Số hành khách / Khối lượng</p>
                   <div class="mt-2 flex items-center gap-2 text-sm text-slate-800">
-                    <CubeIcon class="h-5 w-5 text-teal-600" />
+                    <CubeIcon class="h-5 w-5 shrink-0 text-teal-600" />
                     <span>{{ passengerOrCargoLine }}</span>
                   </div>
                 </div>
 
-                <div>
+                <div class="min-w-0">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Ghi chú</p>
                   <div class="mt-2 rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700">
                     {{ req.notes?.trim() ? req.notes : '—' }}
@@ -225,7 +225,7 @@
                 </div>
 
                 <!-- Attached documents -->
-                <div>
+                <div class="min-w-0 md:col-span-2">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tài liệu đính kèm</p>
                   <p class="mt-1 text-xs text-slate-500">Tải thêm chứng từ, ảnh hoặc file liên quan (tối đa 10MB). Kéo thả hoặc chọn tệp.</p>
 
