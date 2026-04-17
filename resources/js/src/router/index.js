@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { TOKEN_KEY } from "../api/http";
 import { useAuthStore } from "../store";
-import { i18n } from "../i18n";
+import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
 
 /** Tải theo route — giảm bundle trang đầu; giữ các màn hay dùng là import tĩnh. */
 import DashboardView from "../views/DashboardView.vue";
@@ -18,14 +18,7 @@ function scrollAppMainToTop() {
 }
 
 function updateDocumentTitle(to) {
-    if (typeof document === "undefined") return;
-    const appTitle = i18n.global.t("app.title");
-    const pageTitle = to.meta?.title;
-    if (to.meta?.public && to.name === "login") {
-        document.title = pageTitle ? `${String(pageTitle)} · ${appTitle}` : appTitle;
-        return;
-    }
-    document.title = pageTitle ? `${String(pageTitle)} · ${appTitle}` : appTitle;
+    applyRouteDocumentTitle(to.meta, to.name);
 }
 
 const router = createRouter({

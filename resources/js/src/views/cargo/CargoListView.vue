@@ -362,7 +362,9 @@
                     </td>
                     <td class="px-4 py-3 tabular-nums text-xs text-slate-600 dark:text-slate-400">
                       {{ fmt(s.created_at) }}
-                      <div v-if="s.sla_due_at" class="mt-0.5 text-[11px] text-slate-500">SLA: {{ fmt(s.sla_due_at) }}</div>
+                      <div v-if="s.sla_due_at" class="mt-0.5 text-[11px] text-slate-500">
+                        {{ t('cargo_page.sla_prefix') }} {{ fmt(s.sla_due_at) }}
+                      </div>
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex flex-wrap gap-2">

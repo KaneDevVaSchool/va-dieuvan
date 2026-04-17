@@ -287,6 +287,7 @@ import UserAvatar from '../branding/UserAvatar.vue'
 import { useAuthStore } from '../../store'
 import { useUiStore } from '../../store/ui'
 import { setLocale } from '../../i18n'
+import { applyRouteDocumentTitle } from '../../util/routeDocumentTitle'
 
 const props = defineProps({
   layout: { type: String, required: true, validator: (v) => v === 'vertical' || v === 'horizontal' },
@@ -356,6 +357,7 @@ async function confirmLogout() {
 
 function onLocale(v) {
   setLocale(v)
+  applyRouteDocumentTitle(router.currentRoute.value.meta, router.currentRoute.value.name)
 }
 
 function updateAccountMenuPosition() {

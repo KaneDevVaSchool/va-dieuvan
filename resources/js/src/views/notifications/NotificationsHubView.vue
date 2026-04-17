@@ -1,12 +1,16 @@
 <template>
   <div class="space-y-4">
-    <Card title="Hộp thông báo">
+    <Card :title="t('notifications_hub.card_inbox_title')">
       <div class="mb-3 flex flex-wrap items-center gap-2">
-        <Button variant="secondary" type="button" :loading="loading" @click="load">Làm mới</Button>
-        <Button variant="secondary" type="button" :loading="markingAll" @click="markAll">Đánh dấu đã đọc hết</Button>
+        <Button variant="secondary" type="button" :loading="loading" @click="load">{{
+          t('notifications_hub.refresh')
+        }}</Button>
+        <Button variant="secondary" type="button" :loading="markingAll" @click="markAll">{{
+          t('notifications_hub.mark_all_read')
+        }}</Button>
       </div>
       <p v-if="error" class="text-sm text-rose-600">{{ error }}</p>
-      <div v-if="!loading && !items.length" class="text-sm text-slate-500">Chưa có thông báo.</div>
+      <div v-if="!loading && !items.length" class="text-sm text-slate-500">{{ t('notifications_hub.empty') }}</div>
       <ul class="divide-y divide-slate-100">
         <li v-for="n in items" :key="n.id" class="py-3">
           <div class="flex flex-wrap items-start justify-between gap-2">
@@ -19,7 +23,7 @@
                 class="mt-2 inline-block text-xs font-medium text-slate-900 underline"
                 :to="`/requests/${n.data.dispatch_request_id}`"
               >
-                Mở yêu cầu #{{ n.data.dispatch_request_id }}
+                {{ t('notifications_hub.open_request', { id: n.data.dispatch_request_id }) }}
               </RouterLink>
             </div>
             <div class="shrink-0">
@@ -27,7 +31,7 @@
                 v-if="!n.read"
                 class="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900"
               >
-                Mới
+                {{ t('notifications_hub.badge_new') }}
               </span>
               <Button
                 v-if="!n.read"
@@ -37,7 +41,7 @@
                 :loading="markingId === n.id"
                 @click="markOne(n.id)"
               >
-                Đã đọc
+                {{ t('notifications_hub.mark_read') }}
               </Button>
             </div>
           </div>
@@ -45,21 +49,21 @@
       </ul>
     </Card>
 
-    <Card title="Gợi ý liên quan">
+    <Card :title="t('notifications_hub.card_suggestions_title')">
       <ul class="grid gap-2 text-sm md:grid-cols-2">
         <li>
           <RouterLink class="text-slate-900 underline hover:text-slate-600" :to="{ path: '/requests', query: { status: 'pending' } }">
-            Yêu cầu chờ duyệt
+            {{ t('notifications_hub.link_pending_requests') }}
           </RouterLink>
         </li>
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/trips">Danh sách chuyến</RouterLink>
+          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/trips">{{ t('notifications_hub.link_trips') }}</RouterLink>
         </li>
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/cargo">Theo dõi cargo</RouterLink>
+          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/cargo">{{ t('notifications_hub.link_cargo') }}</RouterLink>
         </li>
         <li>
-          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/costs">Danh sách chi phí</RouterLink>
+          <RouterLink class="text-slate-900 underline hover:text-slate-600" to="/costs">{{ t('notifications_hub.link_costs') }}</RouterLink>
         </li>
       </ul>
     </Card>
@@ -69,9 +73,12 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import { listInbox, markAllNotificationsRead, markNotificationRead } from '../../api/notifications'
+
+const { t, locale } = useI18n()
 
 const loading = ref(false)
 const markingAll = ref(false)
@@ -79,41 +86,48 @@ const markingId = ref(null)
 const error = ref('')
 const items = ref([])
 
-function fmt(v) {
-  return v ? new Date(v).toLocaleString('vi-VN') : ''
+function fmt(iso) {
+  if (!iso) return ''
+  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  return new Date(iso).toLocaleString(loc)
 }
 
 async function load() {
   loading.value = true
   error.value = ''
   try {
-    const res = await listInbox({ per_page: 30 })
-    items.value = res.items ?? []
+    const data = await listInbox()
+    items.value = data.items ?? []
   } catch (e) {
-    error.value = e?.response?.data?.message ?? 'Không tải được thông báo.'
-    items.value = []
+    error.value = e?.response?.data?.message ?? String(e?.message ?? 'Error')
   } finally {
     loading.value = false
   }
 }
 
-async function markOne(id) {
-  markingId.value = id
-  try {
-    await markNotificationRead(id)
-    await load()
-  } finally {
-    markingId.value = null
-  }
-}
-
 async function markAll() {
   markingAll.value = true
+  error.value = ''
   try {
     await markAllNotificationsRead()
     await load()
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? String(e?.message ?? 'Error')
   } finally {
     markingAll.value = false
+  }
+}
+
+async function markOne(id) {
+  markingId.value = id
+  error.value = ''
+  try {
+    await markNotificationRead(id)
+    await load()
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? String(e?.message ?? 'Error')
+  } finally {
+    markingId.value = null
   }
 }
 
