@@ -3,9 +3,9 @@
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">Đang tải…</div>
 
     <template v-else-if="req">
-      <!-- Header: fixed to viewport (không cuộn theo nội dung) -->
+      <!-- Header: sticky trong khối main (không tràn lên sidebar; vẫn dính đầu khi cuộn) -->
       <div
-        class="fixed left-0 right-0 top-0 z-20 w-full border-b border-slate-200/80 bg-[#F8F9FA]/95 px-4 py-4 shadow-sm backdrop-blur print:static print:shadow-none print:backdrop-blur-none"
+        class="sticky top-0 z-20 w-full border-b border-slate-200/80 bg-[#F8F9FA]/95 px-4 py-4 shadow-sm backdrop-blur print:static print:shadow-none print:backdrop-blur-none"
       >
         <div class="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex min-w-0 flex-1 items-start gap-3">
@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-10 pt-28 sm:pt-24 print:pt-0">
+      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-10 print:pt-0">
         <!-- Stepper -->
         <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm print:border print:shadow-none">
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">Tiến trình yêu cầu</h2>
@@ -219,8 +219,10 @@
 
                 <div class="min-w-0">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Ghi chú</p>
-                  <div class="mt-2 rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700">
-                    {{ req.notes?.trim() ? req.notes : '—' }}
+                  <div
+                    class="mt-2 max-h-[min(28rem,55vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere] print:max-h-none md:max-h-[min(36rem,65vh)]"
+                  >
+                    {{ notesDisplay }}
                   </div>
                 </div>
 
@@ -413,6 +415,7 @@ import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/
 import { decideDispatchRequest, getDispatchRequest, markPaperReceived } from '../../api/requests'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelRequestStatus, labelTripType } from '../../util/labels'
+import { formatDispatchRequestNotesForDisplay } from '../../util/formatDispatchNotes'
 import { parseMoneyVnd } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { useAuthStore } from '../../store'
@@ -433,6 +436,12 @@ const ocrErr = ref('')
 
 const attachErr = ref('')
 const deletingId = ref(null)
+
+const notesDisplay = computed(() => {
+  const n = req.value?.notes?.trim()
+  if (!n) return '—'
+  return formatDispatchRequestNotesForDisplay(n)
+})
 
 const requestRefCode = computed(() => {
   const r = req.value
