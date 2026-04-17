@@ -132,29 +132,63 @@
       </div>
 
       <div
-        class="col-span-2 rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm md:col-span-4 lg:col-span-1 lg:min-w-0"
+        class="relative col-span-2 overflow-hidden rounded-2xl border border-teal-200/70 bg-gradient-to-br from-white via-teal-50/40 to-emerald-50/30 p-0 shadow-lg shadow-teal-500/15 ring-1 ring-teal-100/60 transition hover:shadow-xl hover:shadow-teal-500/20 md:col-span-4 lg:col-span-1 lg:min-w-0 dark:border-teal-900/50 dark:from-slate-900 dark:via-teal-950/30 dark:to-emerald-950/20 dark:shadow-black/30 dark:ring-teal-900/40"
       >
-        <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-          {{ t('requests_page.kpi_volume') }}
-        </p>
-        <div class="mt-2 h-20 w-full sm:h-24">
-          <svg
-            class="h-full w-full text-teal-600"
-            viewBox="0 0 200 48"
-            preserveAspectRatio="none"
-            aria-hidden="true"
+        <div
+          class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 opacity-95"
+          aria-hidden="true"
+        />
+        <div class="relative flex items-start justify-between gap-3 p-3.5 sm:p-4">
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-teal-900/85 dark:text-teal-200/90">
+              {{ t('requests_page.kpi_volume') }}
+            </p>
+            <p class="mt-0.5 text-[10px] font-medium text-teal-700/70 dark:text-teal-300/80">
+              {{ t('requests_page.kpi_volume_hint') }}
+            </p>
+          </div>
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-100 to-emerald-100 text-teal-700 shadow-md shadow-teal-600/10 ring-1 ring-white/80 dark:from-teal-950/80 dark:to-emerald-950/60 dark:text-teal-200 dark:ring-teal-800/50"
           >
-            <polyline
-              :points="sparklinePoints"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+            <ArrowTrendingUpIcon class="h-5 w-5" aria-hidden="true" />
+          </div>
         </div>
-        <p class="mt-1 text-[11px] text-slate-400">{{ t('requests_page.kpi_volume_hint') }}</p>
+        <div class="px-3.5 pb-3.5 sm:px-4 sm:pb-4">
+          <div
+            class="rounded-xl border border-teal-100/80 bg-white/85 p-2 shadow-inner shadow-slate-900/5 ring-1 ring-slate-100/80 dark:border-teal-900/40 dark:bg-slate-950/50 dark:ring-slate-800/80"
+          >
+            <div class="h-20 w-full sm:h-24">
+              <svg
+                class="h-full w-full text-teal-600 dark:text-teal-400"
+                viewBox="0 0 200 48"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="requests-volume-spark-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#0d9488" stop-opacity="0.28" />
+                    <stop offset="55%" stop-color="#14b8a6" stop-opacity="0.08" />
+                    <stop offset="100%" stop-color="#14b8a6" stop-opacity="0" />
+                  </linearGradient>
+                  <linearGradient id="requests-volume-spark-line" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#0f766e" />
+                    <stop offset="100%" stop-color="#14b8a6" />
+                  </linearGradient>
+                </defs>
+                <polygon :points="sparklineAreaPoints" fill="url(#requests-volume-spark-fill)" />
+                <polyline
+                  :points="sparklinePoints"
+                  fill="none"
+                  stroke="url(#requests-volume-spark-line)"
+                  stroke-width="2.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="drop-shadow-sm"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -840,6 +874,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowPathIcon,
+  ArrowTrendingUpIcon,
   TrashIcon,
   CheckCircleIcon,
   ChevronDownIcon,
@@ -1118,19 +1153,38 @@ const approvedShareOfTotalPct = computed(() => {
   return Math.min(100, Math.round((a / t) * 100))
 })
 
-const sparklinePoints = computed(() => {
-  const pts = stats.value.volume_trend
-  if (!pts?.length) return '0,40 200,40'
+const SPARK_W = 200
+const SPARK_H = 40
+const SPARK_VB_H = 48
+
+function buildSparklineCoords(pts) {
+  if (!pts?.length) {
+    return [
+      { x: 0, y: SPARK_H },
+      { x: SPARK_W, y: SPARK_H },
+    ]
+  }
   const max = Math.max(...pts, 1)
-  const w = 200
-  const h = 40
-  return pts
-    .map((v, i) => {
-      const x = (i / Math.max(pts.length - 1, 1)) * w
-      const y = h - (v / max) * (h - 4) - 2
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
+  return pts.map((v, i) => {
+    const x = (i / Math.max(pts.length - 1, 1)) * SPARK_W
+    const y = SPARK_H - (v / max) * (SPARK_H - 4) - 2
+    return { x, y }
+  })
+}
+
+const sparklinePoints = computed(() => {
+  const coords = buildSparklineCoords(stats.value.volume_trend)
+  return coords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+})
+
+/** Vùng tô dưới đường (polygon khép xuống đáy viewBox) */
+const sparklineAreaPoints = computed(() => {
+  const coords = buildSparklineCoords(stats.value.volume_trend)
+  if (coords.length < 2) {
+    return `0,${SPARK_VB_H} ${SPARK_W},${SPARK_VB_H}`
+  }
+  const top = coords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+  return `0,${SPARK_VB_H} ${top} ${SPARK_W},${SPARK_VB_H}`
 })
 
 const pageFrom = computed(() => {

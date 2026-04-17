@@ -24,8 +24,9 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // SPA tải nhiều song song (dashboard, trips, reports…); 60/phút dễ 429. Đồng bộ với nhóm mutating 180/phút.
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return Limit::perMinute(180)->by($request->user()?->id ?: $request->ip());
         });
 
         $this->routes(function () {

@@ -99,7 +99,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         Route::controller(ReportController::class)->group(function () {
-            Route::get('/reports/summary', 'summary')->middleware('throttle:30,1');
+            Route::get('/reports/summary', 'summary');
         });
 
         Route::get('/reference-pricing', [ReferencePricingController::class, 'index'])->middleware('throttle:60,1');
@@ -159,7 +159,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
                 Route::post('/{trip}/assign', 'assign')
                     ->middleware(['throttle:60,1', 'idempotency'])
                     ->name('api.trips.assign');
-                Route::post('/{trip}/reschedule', 'reschedule')->middleware('throttle:30,1');
+                Route::post('/{trip}/reschedule', 'reschedule')->middleware('throttle:60,1');
                 Route::patch('/{trip}/passenger-list', 'updatePassengerList')->middleware('throttle:30,1');
             });
 
