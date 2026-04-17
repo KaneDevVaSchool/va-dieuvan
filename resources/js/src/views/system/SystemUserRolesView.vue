@@ -1,27 +1,27 @@
 <template>
   <div class="space-y-4">
-    <Card title="Gán quyền người dùng">
-      <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Danh sách tất cả user (đã gán hoặc chưa gán role). Chọn vai trò trên từng dòng rồi bấm
-        <b>Lưu hàng</b> để cập nhật ngay.
+    <Card title="Gán vai trò cho tài khoản">
+      <p class="mb-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+        Tìm nhân viên theo tên hoặc email, chọn một hoặc nhiều vai trò trên từng dòng, rồi bấm
+        <b>Lưu dòng này</b> để áp dụng ngay cho người đó.
       </p>
 
       <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
         <div class="w-full max-w-md lg:w-auto lg:min-w-[14rem]">
           <Input
             v-model="filters.q"
-            label="Tìm kiếm"
-            placeholder="Tên, email, mã nhân viên…"
-            hint="Enter hoặc bấm «Áp dụng lọc» để tìm."
+            label="Tìm người dùng"
+            placeholder="Họ tên, email hoặc mã nhân viên…"
+            hint="Nhấn Enter hoặc bấm «Áp dụng lọc»."
             @keydown.enter="reload(1)"
           />
         </div>
-        <Select v-model="filters.assignment" label="Gán role" hint="Lọc user đã có / chưa có vai trò." class="min-w-[14rem]">
+        <Select v-model="filters.assignment" label="Trạng thái gán vai trò" hint="Lọc người đã có hoặc chưa có vai trò nào." class="min-w-[14rem]">
           <option value="all">Tất cả</option>
           <option value="assigned">Đã có ít nhất một vai trò</option>
           <option value="unassigned">Chưa có vai trò nào</option>
         </Select>
-        <Select v-model="filters.per_page" label="Số dòng / trang" class="min-w-[11rem]" hint="«Tất cả» giới hạn 500 dòng đầu.">
+        <Select v-model="filters.per_page" label="Số người mỗi trang" class="min-w-[11rem]" hint="Chế độ «Tất cả» chỉ hiển thị tối đa 500 người đầu tiên.">
           <option value="5">5</option>
           <option value="10">10</option>
           <option value="15">15</option>
@@ -47,7 +47,7 @@
               <th class="py-2 pr-3 font-medium">Họ tên</th>
               <th class="py-2 pr-3 font-medium">Email</th>
               <th class="py-2 pr-3 font-medium">Mã NV</th>
-              <th class="py-2 pr-3 font-medium">Vai trò (chọn để gán)</th>
+              <th class="py-2 pr-3 font-medium">Vai trò áp dụng</th>
               <th class="py-2 text-right font-medium">Thao tác</th>
             </tr>
           </thead>
@@ -72,7 +72,7 @@
               </td>
               <td class="py-2 text-right align-top">
                 <Button class="whitespace-nowrap px-2.5 py-1.5 text-xs" :loading="savingId === u.id" @click="saveRow(u.id)">
-                  Lưu hàng
+                  Lưu dòng này
                 </Button>
               </td>
             </tr>
@@ -123,6 +123,7 @@ import Select from '../../components/ui/Select.vue'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
+import { confirmAction } from '../../composables/useConfirm'
 
 const loading = ref(true)
 const savingId = ref(null)
@@ -209,10 +210,19 @@ function goPage(p) {
 }
 
 async function saveRow(userId) {
+  const u = items.value.find((x) => x.id === userId)
+  const ok = await confirmAction({
+    title: 'Lưu vai trò cho tài khoản?',
+    message: u
+      ? `Cập nhật vai trò cho «${u.name}» (${u.email}) theo lựa chọn hiện tại?`
+      : 'Cập nhật vai trò cho tài khoản này?',
+    confirmLabel: 'Lưu',
+  })
+  if (!ok) return
   savingId.value = userId
   try {
     await admin.syncUserRoles(userId, rowState[userId] ?? [])
-    showAppSuccess('Đã cập nhật vai trò cho user.')
+    showAppSuccess('Đã cập nhật vai trò.', 'Thành công')
     await reload(meta.value.current_page ?? 1)
   } catch (e) {
     showAppError(formatApiError(e))

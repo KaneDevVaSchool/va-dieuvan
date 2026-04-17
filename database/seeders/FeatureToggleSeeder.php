@@ -15,7 +15,6 @@ class FeatureToggleSeeder extends Seeder
             ['key' => 'module.operations', 'name' => 'Điều vận (yêu cầu, chuyến, D2D…)', 'module' => 'operations', 'is_enabled' => true],
             ['key' => 'module.finance', 'name' => 'Kế toán / đối soát', 'module' => 'finance', 'is_enabled' => true],
             ['key' => 'module.reports', 'name' => 'Báo cáo & giá', 'module' => 'reports', 'is_enabled' => true],
-            ['key' => 'module.help', 'name' => 'Hỗ trợ & thông báo', 'module' => 'help', 'is_enabled' => true],
             ['key' => 'module.system.roles', 'name' => 'Quyền hạn — Quản lý Role', 'module' => 'system', 'is_enabled' => true],
             ['key' => 'module.system.permissions', 'name' => 'Quyền hạn — Quản lý Permission', 'module' => 'system', 'is_enabled' => true],
             ['key' => 'module.system.user_roles', 'name' => 'Quyền hạn — Gán quyền người dùng', 'module' => 'system', 'is_enabled' => true],

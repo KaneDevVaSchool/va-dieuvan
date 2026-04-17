@@ -1,68 +1,91 @@
 <template>
-  <div class="space-y-4">
-    <Card title="Lọc activity log">
-      <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Giá trị <b>event</b> lặp lại trong code khi ghi audit. Chọn nhanh bên dưới hoặc để
-        <b>Tất cả</b> để tải mọi loại (có thể chậm hơn).
+  <div class="space-y-4 sm:space-y-6">
+    <Card title="Lọc nhật ký hoạt động">
+      <p class="mb-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+        Nhật ký ghi lại thao tác và lượt truy cập hệ thống. Chọn loại sự kiện và khoảng thời gian để thu hẹp kết quả.
+        Để trống ngày nếu không cần giới hạn theo thời gian.
       </p>
-      <div class="grid gap-3 md:grid-cols-4">
-        <Select v-model="filters.event" label="Event" hint="api.request: log tự động theo middleware mỗi API." placeholder="">
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Select
+          v-model="filters.event"
+          label="Loại sự kiện"
+          hint="«Tất cả» tải mọi loại — có thể chậm hơn khi dữ liệu lớn."
+          placeholder=""
+        >
           <option value="">Tất cả sự kiện</option>
           <option v-for="e in auditEventPresets" :key="e.value" :value="e.value">{{ e.label }}</option>
         </Select>
         <Input
           v-model="filters.actor_id"
-          label="Actor ID"
+          label="Mã người thực hiện"
           type="number"
-          placeholder="Ví dụ 12"
-          hint="ID người dùng (bảng users) — người thực hiện tác vụ được ghi log."
+          placeholder="Ví dụ: 12"
+          hint="Số định danh tài khoản trong hệ thống (bảng người dùng)."
         />
-        <Input v-model="filters.from" label="Từ ngày" type="date" hint="Lọc theo created_at, giờ địa phương trình duyệt." />
-        <Input v-model="filters.to" label="Đến ngày" type="date" hint="Inclusive theo ngày; để trống nếu không giới hạn cuối." />
+        <Input
+          v-model="filters.from"
+          label="Từ ngày"
+          type="date"
+          placeholder=""
+          hint="Lọc theo ngày tạo bản ghi (giờ trên máy bạn)."
+        />
+        <Input
+          v-model="filters.to"
+          label="Đến ngày"
+          type="date"
+          placeholder=""
+          hint="Bao gồm cả ngày chọn; để trống nếu không giới hạn cuối."
+        />
       </div>
-      <div class="mt-3 flex items-center justify-between">
-        <div class="text-xs text-slate-500 dark:text-slate-400">
-          Mặc định chọn <b>api.request</b> giúp xem traffic API; đổi sang các event nghiệp vụ (request.create, …) khi cần.
-        </div>
-        <div class="flex gap-2">
-          <Button variant="secondary" :loading="loading" @click="reload">Lọc</Button>
-        </div>
+      <div class="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+          Gợi ý: chọn «api.request» để xem các lần gọi API; đổi sang sự kiện nghiệp vụ (tạo yêu cầu, duyệt…) khi cần truy vết chi tiết.
+        </p>
+        <Button variant="secondary" class="w-full shrink-0 sm:w-auto" :loading="loading" @click="reload(true)">
+          Áp dụng bộ lọc
+        </Button>
       </div>
     </Card>
 
-    <Card title="Audit logs">
+    <Card title="Danh sách nhật ký">
       <div v-if="loading" class="text-sm text-slate-500">Đang tải…</div>
       <div v-else>
-        <div v-if="!items.length" class="text-sm text-slate-500">Không có dữ liệu hoặc bạn chưa có quyền `audit_log.view`.</div>
+        <div v-if="!items.length" class="text-sm text-slate-500">
+          Không có dữ liệu phù hợp hoặc bạn chưa có quyền xem nhật ký.
+        </div>
 
         <div v-else class="space-y-2">
-          <div v-for="l in items" :key="l.id" class="rounded-lg border bg-white p-3">
+          <div
+            v-for="l in items"
+            :key="l.id"
+            class="rounded-lg border border-slate-200/90 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/80"
+          >
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="text-sm font-semibold">
-                #{{ l.id }} • {{ l.event }}
+              <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                #{{ l.id }} · {{ l.event }}
               </div>
               <div class="text-xs text-slate-500">{{ formatDate(l.created_at) }}</div>
             </div>
-            <div class="mt-2 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
+            <div class="mt-2 grid gap-2 text-xs text-slate-600 dark:text-slate-400 md:grid-cols-2">
               <div>
-                <span class="text-slate-500">Actor:</span>
-                <span class="ml-1">{{ l.actor?.name ?? l.actor_id ?? '-' }}</span>
+                <span class="text-slate-500">Người thực hiện:</span>
+                <span class="ml-1">{{ l.actor?.name ?? l.actor_id ?? '—' }}</span>
               </div>
               <div class="truncate">
-                <span class="text-slate-500">Target:</span>
-                <span class="ml-1">{{ l.auditable_type ?? '-' }}#{{ l.auditable_id ?? '' }}</span>
+                <span class="text-slate-500">Đối tượng:</span>
+                <span class="ml-1">{{ l.auditable_type ?? '—' }}#{{ l.auditable_id ?? '' }}</span>
               </div>
               <div class="md:col-span-2">
-                <span class="text-slate-500">Metadata:</span>
+                <span class="text-slate-500">Chi tiết:</span>
                 <span class="ml-1">{{ previewMeta(l.metadata) }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 flex items-center justify-between text-sm">
-          <div class="text-slate-500">Total: {{ meta.total ?? 0 }}</div>
-          <div class="flex items-center gap-2">
+        <div class="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 text-sm dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+          <div class="text-slate-500">Tổng: {{ meta.total ?? 0 }}</div>
+          <div class="flex flex-wrap items-center gap-2">
             <Button variant="secondary" :disabled="(meta.current_page ?? 1) <= 1" @click="goPage((meta.current_page ?? 1) - 1)">
               Trước
             </Button>
@@ -91,6 +114,8 @@ import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
 import { listAuditLogs } from '../../api/audit'
 import { AUDIT_EVENT_PRESETS } from '../../config/systemSeedOptions'
+import { showAppError, showAppSuccess } from '../../composables/appMessage'
+import { formatApiError } from '../../api/http'
 
 const loading = ref(false)
 const items = ref([])
@@ -119,12 +144,12 @@ function previewMeta(m) {
   if (!m) return '-'
   const parts = []
   if (m.method) parts.push(`${m.method} ${m.path ?? ''}`.trim())
-  if (m.status) parts.push(`status=${m.status}`)
-  if (m.duration_ms != null) parts.push(`${m.duration_ms}ms`)
-  return parts.join(' • ') || JSON.stringify(m)
+  if (m.status) parts.push(`trạng thái ${m.status}`)
+  if (m.duration_ms != null) parts.push(`${m.duration_ms} ms`)
+  return parts.join(' · ') || JSON.stringify(m)
 }
 
-async function reload() {
+async function reload(notify = false) {
   loading.value = true
   try {
     const params = { ...filters }
@@ -132,6 +157,9 @@ async function reload() {
     const res = await listAuditLogs(params)
     items.value = res.items ?? []
     meta.value = res.meta ?? {}
+    if (notify) showAppSuccess('Đã tải danh sách theo bộ lọc.', 'Thành công')
+  } catch (e) {
+    showAppError(formatApiError(e))
   } finally {
     loading.value = false
   }
@@ -139,9 +167,8 @@ async function reload() {
 
 function goPage(p) {
   filters.page = p
-  reload()
+  reload(false)
 }
 
-onMounted(reload)
+onMounted(() => reload(false))
 </script>
-

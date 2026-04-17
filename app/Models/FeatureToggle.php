@@ -11,11 +11,15 @@ class FeatureToggle extends Model
         'key',
         'name',
         'is_enabled',
+        'maintenance_mode',
+        'upgrade_notice',
         'module',
     ];
 
     protected $casts = [
         'is_enabled' => 'boolean',
+        'maintenance_mode' => 'boolean',
+        'upgrade_notice' => 'boolean',
     ];
 
     protected static function booted(): void

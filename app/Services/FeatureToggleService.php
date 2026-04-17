@@ -36,7 +36,7 @@ class FeatureToggleService
 
     /**
      * @param EloquentCollection<int, FeatureToggle> $rows
-     * @return list<array{id:int,key:string,name:string,is_enabled:bool,module:?string}>
+     * @return list<array{id:int,key:string,name:string,is_enabled:bool,maintenance_mode:bool,upgrade_notice:bool,module:?string}>
      */
     protected function mapRows(EloquentCollection $rows): array
     {
@@ -45,6 +45,8 @@ class FeatureToggleService
             'key' => $t->key,
             'name' => $t->name,
             'is_enabled' => $t->is_enabled,
+            'maintenance_mode' => (bool) $t->maintenance_mode,
+            'upgrade_notice' => (bool) $t->upgrade_notice,
             'module' => $t->module,
         ])->values()->all();
     }
@@ -73,6 +75,27 @@ class FeatureToggleService
         foreach ($this->allCached() as $row) {
             $k = $row['key'];
             $out[$k] = $user->isSuperAdmin() ? true : (bool) $row['is_enabled'];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Trạng thái đầy đủ từ cache (bật menu, bảo trì, nâng cấp) — dùng banner runtime, không phụ thuộc superadmin.
+     *
+     * @return array<string, array{is_enabled: bool, maintenance_mode: bool, upgrade_notice: bool, name: string}>
+     */
+    public function mapStatesForRuntime(): array
+    {
+        $out = [];
+        foreach ($this->allCached() as $row) {
+            $k = $row['key'];
+            $out[$k] = [
+                'is_enabled' => (bool) ($row['is_enabled'] ?? false),
+                'maintenance_mode' => (bool) ($row['maintenance_mode'] ?? false),
+                'upgrade_notice' => (bool) ($row['upgrade_notice'] ?? false),
+                'name' => (string) ($row['name'] ?? ''),
+            ];
         }
 
         return $out;

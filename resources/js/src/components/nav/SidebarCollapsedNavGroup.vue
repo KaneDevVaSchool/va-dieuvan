@@ -73,6 +73,7 @@ const props = defineProps({
   children: { type: Array, required: true },
   badgeCount: { type: Function, required: true },
   open: { type: Boolean, default: false },
+  tone: { type: String, default: 'default', validator: (v) => ['default', 'brand'].includes(v) },
 })
 
 const emit = defineEmits(['toggle', 'close'])
@@ -112,6 +113,12 @@ const iconClass = computed(() => {
 const badgeClass = computed(() => {
   const base =
     'absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full px-0.5 text-[10px] font-bold leading-none'
+  if (props.tone === 'brand') {
+    if (anyChildActive.value) {
+      return `${base} bg-white text-[color:var(--va-brand)]`
+    }
+    return `${base} bg-amber-100 text-amber-900`
+  }
   if (anyChildActive.value) {
     return `${base} bg-slate-700 text-white dark:bg-slate-500`
   }
@@ -122,6 +129,16 @@ const buttonClass = computed(() => {
   const base = [
     'relative flex w-full items-center justify-center rounded-lg px-2 py-2 text-sm transition-colors',
   ]
+  if (props.tone === 'brand') {
+    if (anyChildActive.value) {
+      base.push(
+        'bg-white/15 font-semibold text-white before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-white before:content-[\'\']',
+      )
+    } else {
+      base.push('text-white/90 hover:bg-white/10')
+    }
+    return base.join(' ')
+  }
   if (anyChildActive.value) {
     base.push(
       'bg-slate-100 font-semibold text-slate-900 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-slate-800 before:content-[\'\'] dark:bg-slate-800/70 dark:text-slate-100 dark:before:bg-slate-300',

@@ -74,13 +74,13 @@
           <div class="font-semibold">Bảng giá tham chiếu</div>
           <div class="mt-1 text-xs text-slate-500">Xe khách &amp; hàng hóa</div>
         </RouterLink>
-        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/help">
-          <div class="font-semibold">Hướng dẫn</div>
-          <div class="mt-1 text-xs text-slate-500">BR-001, BR-002, phiếu giấy</div>
+        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/cargo">
+          <div class="font-semibold">Hàng hóa &amp; SLA</div>
+          <div class="mt-1 text-xs text-slate-500">Theo dõi trễ hạn giao nhận</div>
         </RouterLink>
-        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/roadmap">
-          <div class="font-semibold">Đề xuất &amp; lộ trình</div>
-          <div class="mt-1 text-xs text-slate-500">Tính năng đề xuất, UX</div>
+        <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/costs">
+          <div class="font-semibold">Chi phí chuyến</div>
+          <div class="mt-1 text-xs text-slate-500">Nhập và đối soát nhanh</div>
         </RouterLink>
         <RouterLink class="rounded-lg border bg-white p-3 text-sm transition-colors hover:border-slate-300 hover:bg-slate-50" to="/audit-logs">
           <div class="font-semibold">Activity log</div>

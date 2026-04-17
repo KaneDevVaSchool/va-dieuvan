@@ -8,11 +8,13 @@
   >
     <AppSidebar />
     <main
+      id="app-main-scroll"
       :class="[
-        'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5',
+        'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
         isHorizontalMobilePad,
       ]"
     >
+      <OperationalStatusBanner />
       <slot />
     </main>
     <!-- Menu dưới: chỉ layout ngang + viewport &lt; md -->
@@ -30,6 +32,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import AppSidebar from './AppSidebar.vue'
+import OperationalStatusBanner from './OperationalStatusBanner.vue'
 import MobileBottomNav from '../nav/MobileBottomNav.vue'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useAuthStore } from '../../store'

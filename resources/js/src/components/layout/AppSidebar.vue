@@ -5,7 +5,7 @@
     :class="verticalAsideClass"
   >
     <div
-      class="shrink-0 border-b border-slate-100 bg-white/90 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90"
+      class="shrink-0 border-b border-white/15 bg-[color:var(--va-brand)]/95 backdrop-blur-sm"
       :class="ui.sidebarCollapsed ? 'px-1 py-2 md:px-1.5 md:py-2.5' : 'px-2 py-2.5 md:px-4 md:py-3'"
     >
       <div
@@ -26,22 +26,22 @@
           size="sm"
         />
         <div v-if="!ui.sidebarCollapsed" class="min-w-0 flex-1">
-          <div class="truncate text-xs font-semibold tracking-tight text-va-900 dark:text-va-100">
+          <div class="truncate text-xs font-semibold tracking-tight text-white">
             {{ t('app.title') }}
           </div>
-          <div class="mt-0.5 hidden text-[11px] leading-snug text-slate-500 lg:block dark:text-slate-400">
-            Vehicle Dispatching · VA Schools
+          <div class="mt-0.5 hidden text-[11px] leading-snug text-white/75 lg:block">
+            Điều vận xe · VA Schools
           </div>
         </div>
         <button
           type="button"
-          class="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+          class="inline-flex shrink-0 items-center justify-center rounded-lg border border-white/25 text-white/90 transition hover:bg-white/10"
           :class="ui.sidebarCollapsed ? 'h-8 w-8 min-w-0 p-0' : 'h-9 min-w-[2.25rem] px-0'"
           :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
           @click="ui.toggleSidebarCollapsed()"
         >
-          <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-5 w-5" aria-hidden="true" />
-          <ChevronDoubleRightIcon v-else class="h-4 w-4" aria-hidden="true" />
+          <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-5 w-5 text-white" aria-hidden="true" />
+          <ChevronDoubleRightIcon v-else class="h-4 w-4 text-white" aria-hidden="true" />
           <span class="sr-only">
             {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
           </span>
@@ -49,7 +49,9 @@
       </div>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scrollbar-hidden px-1 py-2 md:px-2 md:py-2.5">
+    <div
+      class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain scrollbar-hidden border-white/5 px-1 py-2 md:px-2 md:py-2.5"
+    >
       <nav class="space-y-0.5" :aria-label="t('app.title')">
         <template v-for="(section, si) in sections" :key="'vsec' + si">
           <!-- Khối không có tiêu đề section (trang đầu) -->
@@ -63,6 +65,7 @@
                   :icon="item.icon"
                   :children="item.children"
                   :badge-count="badgeCount"
+                  tone="brand"
                   :open="flyoutOpenKey === subGroupKey(si, ii)"
                   @toggle="toggleFlyout(subGroupKey(si, ii))"
                   @close="flyoutOpenKey = null"
@@ -71,14 +74,14 @@
                   <div class="px-1">
                     <button
                       type="button"
-                      class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                      class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-white/85 transition hover:bg-white/10"
                       :class="ii > 0 || si > 0 ? 'mt-3' : 'mt-0.5'"
                       :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
                       @click="toggleGroup(subGroupKey(si, ii))"
                     >
                       <span class="truncate">{{ t(item.labelKey) }}</span>
                       <ChevronDownIcon
-                        class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                        class="h-4 w-4 shrink-0 text-white/55 transition-transform"
                         :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
                         aria-hidden="true"
                       />
@@ -86,7 +89,7 @@
                   </div>
                   <div
                     v-show="isGroupOpen(subGroupKey(si, ii))"
-                    class="ml-2 space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
+                    class="ml-2 space-y-0.5 border-l border-white/15 pl-2"
                   >
                     <SidebarNavItem
                       v-for="c in item.children"
@@ -96,6 +99,7 @@
                       :icon="c.icon"
                       :badge-count="badgeCount(c)"
                       :variant="navVariant"
+                      tone="brand"
                     />
                   </div>
                 </template>
@@ -107,22 +111,23 @@
                 :icon="item.icon"
                 :badge-count="badgeCount(item)"
                 :variant="navVariant"
+                tone="brand"
               />
             </template>
           </template>
 
           <!-- Section có tiêu đề: collapse cả khối -->
-          <div v-else :class="si >= 1 ? 'mt-3 border-t border-slate-200/70 pt-2 dark:border-slate-700/70' : 'mt-2'">
+          <div v-else :class="si >= 1 ? 'mt-3 border-t border-white/15 pt-2' : 'mt-2'">
             <div v-if="!ui.sidebarCollapsed" class="mb-1 px-1">
               <button
                 type="button"
-                class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                class="flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-white/80 transition hover:bg-white/10"
                 :aria-expanded="isGroupOpen(sectionGroupKey(si))"
                 @click="toggleGroup(sectionGroupKey(si))"
               >
                 <span class="truncate">{{ t(section.headingKey) }}</span>
                 <ChevronDownIcon
-                  class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                  class="h-4 w-4 shrink-0 text-white/50 transition-transform"
                   :class="isGroupOpen(sectionGroupKey(si)) ? 'rotate-0' : '-rotate-90'"
                   aria-hidden="true"
                 />
@@ -138,6 +143,7 @@
                     :icon="item.icon"
                     :children="item.children"
                     :badge-count="badgeCount"
+                    tone="brand"
                     :open="flyoutOpenKey === subGroupKey(si, ii)"
                     @toggle="toggleFlyout(subGroupKey(si, ii))"
                     @close="flyoutOpenKey = null"
@@ -155,19 +161,20 @@
                       :icon="c.icon"
                       :badge-count="badgeCount(c)"
                       :variant="navVariant"
+                      tone="brand"
                     />
                   </div>
                   <template v-else>
                     <div class="px-1">
                       <button
                         type="button"
-                        class="mt-2 flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                        class="mt-2 flex w-full items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-xs font-medium text-white/85 transition hover:bg-white/10"
                         :aria-expanded="isGroupOpen(subGroupKey(si, ii))"
                         @click="toggleGroup(subGroupKey(si, ii))"
                       >
                         <span class="truncate">{{ t(item.labelKey) }}</span>
                         <ChevronDownIcon
-                          class="h-4 w-4 shrink-0 text-slate-400 transition-transform dark:text-slate-500"
+                          class="h-4 w-4 shrink-0 text-white/55 transition-transform"
                           :class="isGroupOpen(subGroupKey(si, ii)) ? 'rotate-0' : '-rotate-90'"
                           aria-hidden="true"
                         />
@@ -175,7 +182,7 @@
                     </div>
                     <div
                       v-show="isGroupOpen(subGroupKey(si, ii))"
-                      class="ml-2 space-y-0.5 border-l border-slate-200/90 pl-2 dark:border-slate-700/80"
+                      class="ml-2 space-y-0.5 border-l border-white/15 pl-2"
                     >
                       <SidebarNavItem
                         v-for="c in item.children"
@@ -185,6 +192,7 @@
                         :icon="c.icon"
                         :badge-count="badgeCount(c)"
                         :variant="navVariant"
+                        tone="brand"
                       />
                     </div>
                   </template>
@@ -196,6 +204,7 @@
                   :icon="item.icon"
                   :badge-count="badgeCount(item)"
                   :variant="navVariant"
+                  tone="brand"
                 />
               </template>
             </div>
@@ -204,7 +213,7 @@
       </nav>
     </div>
 
-    <SidebarAccountBlock layout="vertical" :compact="ui.sidebarCollapsed" />
+    <SidebarAccountBlock layout="vertical" brand :compact="ui.sidebarCollapsed" />
 
     <p class="sr-only" aria-live="polite">{{ t(preferenceLabelKey) }}</p>
   </aside>
@@ -401,8 +410,7 @@ function toggleGroup(key) {
 
 const verticalAsideClass = computed(() => {
   const base = [
-    'flex flex-col border-slate-200/80 bg-gradient-to-b from-white via-white to-slate-50/90',
-    'border-r shadow-[inset_-1px_0_0_0_rgba(15,23,42,0.04)] dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950/90',
+    'flex flex-col border-r border-white/10 bg-[color:var(--va-brand)] text-white shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.08)]',
   ]
   if (ui.sidebarCollapsed) {
     /** Rail cố định ~4.25rem — tránh sm:w-14 quá hẹp làm vỡ logo + nút */

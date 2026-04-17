@@ -11,6 +11,22 @@ export const useAuthStore = defineStore('auth', {
     isLoggedIn: (s) => !!s.token || !!localStorage.getItem(TOKEN_KEY),
     roleNames: (s) => (s.user?.roles ?? []).map((r) => r.name),
     permissionNames: (s) => s.user?.permissions ?? [],
+    /**
+     * @returns {(featureKey: string) => { is_enabled: boolean, maintenance_mode: boolean, upgrade_notice: boolean, name: string } | null}
+     */
+    featureToggleRuntimeState: (s) => (featureKey) => {
+      if (!featureKey || !s.user) return null
+      const st = s.user.feature_toggle_states
+      if (!st || typeof st !== 'object') return null
+      const row = st[featureKey]
+      if (!row || typeof row !== 'object') return null
+      return {
+        is_enabled: !!row.is_enabled,
+        maintenance_mode: !!row.maintenance_mode,
+        upgrade_notice: !!row.upgrade_notice,
+        name: typeof row.name === 'string' ? row.name : '',
+      }
+    },
   },
   actions: {
     initFromStorage() {

@@ -31,13 +31,6 @@
           />
         </div>
         <RouterLink
-          to="/notifications"
-          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-          :title="t('requests_page.notifications')"
-        >
-          <BellIcon class="h-5 w-5" aria-hidden="true" />
-        </RouterLink>
-        <RouterLink
           to="/dispatch-requests/new"
           class="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700"
         >
@@ -870,7 +863,6 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowPathIcon,
   TrashIcon,
-  BellIcon,
   CheckCircleIcon,
   ChevronDownIcon,
   ExclamationTriangleIcon,

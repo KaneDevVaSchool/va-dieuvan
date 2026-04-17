@@ -67,21 +67,6 @@ export const NAV_SECTIONS = [
     ],
   },
   {
-    sectionKey: 'help',
-    headingKey: 'nav.section_help',
-    items: [
-      { to: '/help', labelKey: 'nav.help', icon: 'help', featureKey: 'module.help' },
-      { to: '/roadmap', labelKey: 'nav.roadmap', icon: 'roadmap', featureKey: 'module.help' },
-      {
-        to: '/notifications',
-        labelKey: 'nav.notifications',
-        icon: 'notifications',
-        badgeKey: 'notifications_unread',
-        featureKey: 'module.help',
-      },
-    ],
-  },
-  {
     sectionKey: 'system',
     headingKey: 'nav.section_system',
     items: [
@@ -143,3 +128,35 @@ export const BOTTOM_NAV = [
   { to: '/trips', labelKey: 'nav.bottom_trips', icon: 'trips' },
   { to: '/costs', labelKey: 'nav.bottom_costs', icon: 'costs' },
 ]
+
+/**
+ * Các mục lá trên menu (đường dẫn + khóa bật/tắt) — dùng màn cài đặt & tài liệu vận hành.
+ * @returns {{ to: string, labelKey: string, featureKey: string, sectionKey: string|null }[]}
+ */
+export function flattenNavLeaves() {
+  const out = []
+  for (const sec of NAV_SECTIONS) {
+    for (const item of sec.items ?? []) {
+      if (item.children?.length) {
+        for (const c of item.children) {
+          if (c.to) {
+            out.push({
+              to: c.to,
+              labelKey: c.labelKey,
+              featureKey: c.featureKey,
+              sectionKey: sec.sectionKey ?? null,
+            })
+          }
+        }
+      } else if (item.to) {
+        out.push({
+          to: item.to,
+          labelKey: item.labelKey,
+          featureKey: item.featureKey,
+          sectionKey: sec.sectionKey ?? null,
+        })
+      }
+    }
+  }
+  return out
+}

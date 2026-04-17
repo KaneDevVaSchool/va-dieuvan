@@ -1,35 +1,38 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { TOKEN_KEY } from "../api/http";
 import { useAuthStore } from "../store";
+import { i18n } from "../i18n";
 
+/** Tải theo route — giảm bundle trang đầu; giữ các màn hay dùng là import tĩnh. */
 import DashboardView from "../views/DashboardView.vue";
 import LoginView from "../views/auth/LoginView.vue";
 import RequestsListView from "../views/requests/RequestsListView.vue";
 import RequestDetailView from "../views/requests/RequestDetailView.vue";
-import AuditLogsView from "../views/audit/AuditLogsView.vue";
-import TripsListView from "../views/trips/TripsListView.vue";
-import TripDetailView from "../views/trips/TripDetailView.vue";
-import CostsListView from "../views/costs/CostsListView.vue";
-import PaymentsHubView from "../views/payments/PaymentsHubView.vue";
-import CargoListView from "../views/cargo/CargoListView.vue";
-import RoutesListView from "../views/d2d/RoutesListView.vue";
-import ReportsView from "../views/reports/ReportsView.vue";
-import PricingReferenceView from "../views/pricing/PricingReferenceView.vue";
-import DispatcherBoardView from "../views/dispatcher/DispatcherBoardView.vue";
 import ProfileView from "../views/profile/ProfileView.vue";
-import HelpGuideView from "../views/help/HelpGuideView.vue";
-import RoadmapSuggestionsView from "../views/roadmap/RoadmapSuggestionsView.vue";
-import NotificationsHubView from "../views/notifications/NotificationsHubView.vue";
-import SystemRolesView from "../views/system/SystemRolesView.vue";
-import SystemPermissionsView from "../views/system/SystemPermissionsView.vue";
-import SystemUserRolesView from "../views/system/SystemUserRolesView.vue";
-import SystemFeatureTogglesView from "../views/system/SystemFeatureTogglesView.vue";
-import ResourcesListView from "../views/resources/ResourcesListView.vue";
-import ResourcesDashboardView from "../views/resources/ResourcesDashboardView.vue";
-import DriverDetailView from "../views/resources/DriverDetailView.vue";
+
+function scrollAppMainToTop() {
+    if (typeof document === "undefined") return;
+    requestAnimationFrame(() => {
+        document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "auto" });
+    });
+}
+
+function updateDocumentTitle(to) {
+    if (typeof document === "undefined") return;
+    const appTitle = i18n.global.t("app.title");
+    const pageTitle = to.meta?.title;
+    if (to.meta?.public && to.name === "login") {
+        document.title = pageTitle ? `${String(pageTitle)} · ${appTitle}` : appTitle;
+        return;
+    }
+    document.title = pageTitle ? `${String(pageTitle)} · ${appTitle}` : appTitle;
+}
 
 const router = createRouter({
     history: createWebHistory(),
+    scrollBehavior() {
+        return false;
+    },
     routes: [
         {
             path: "/login",
@@ -45,15 +48,20 @@ const router = createRouter({
             path: "/",
             name: "dashboard",
             component: DashboardView,
-            meta: { title: "Tổng quan", subtitle: "Tình trạng vận hành" },
+            meta: {
+                title: "Tổng quan",
+                subtitle: "Tình trạng vận hành",
+                featureKey: "module.overview",
+            },
         },
         {
             path: "/dispatcher",
             name: "dispatcherBoard",
-            component: DispatcherBoardView,
+            component: () => import("../views/dispatcher/DispatcherBoardView.vue"),
             meta: {
                 title: "Bảng điều vận",
                 subtitle: "Hàng đợi & lịch phân công",
+                featureKey: "module.overview",
             },
         },
         {
@@ -63,80 +71,97 @@ const router = createRouter({
             meta: { title: "Hồ sơ", subtitle: "Tài khoản" },
         },
         {
-            path: "/help",
-            name: "help",
-            component: HelpGuideView,
-            meta: { title: "Hướng dẫn", subtitle: "Quy tắc nghiệp vụ" },
-        },
-        {
-            path: "/roadmap",
-            name: "roadmap",
-            component: RoadmapSuggestionsView,
-            meta: { title: "Đề xuất & lộ trình", subtitle: "Tính năng & UX" },
-        },
-        {
-            path: "/notifications",
-            name: "notifications",
-            component: NotificationsHubView,
-            meta: { title: "Thông báo", subtitle: "Sắp có" },
-        },
-
-        {
             path: "/requests",
             name: "requests",
             component: RequestsListView,
-            meta: { title: "Yêu cầu điều xe", subtitle: "Danh sách & trạng thái" },
+            meta: {
+                title: "Yêu cầu điều xe",
+                subtitle: "Danh sách & trạng thái",
+                featureKey: "module.operations",
+            },
         },
         {
             path: "/requests/:id",
             name: "requestDetail",
             component: RequestDetailView,
-            meta: { title: "Chi tiết yêu cầu", subtitle: "" },
+            meta: {
+                title: "Chi tiết yêu cầu",
+                subtitle: "",
+                featureKey: "module.operations",
+            },
         },
         {
             path: "/dispatch-requests/new",
             name: "dispatchRequestNew",
             component: () =>
                 import("../views/requests/DispatchRequestCreateView.vue"),
-            meta: { title: "Tạo yêu cầu điều vận", subtitle: "BM.03 — luồng 4 bước" },
+            meta: {
+                title: "Tạo yêu cầu điều vận",
+                subtitle: "BM.03 — luồng 4 bước",
+                featureKey: "module.operations",
+            },
         },
 
         {
             path: "/trips",
             name: "trips",
-            component: TripsListView,
-            meta: { title: "Chuyến đi", subtitle: "Danh sách" },
+            component: () => import("../views/trips/TripsListView.vue"),
+            meta: {
+                title: "Chuyến đi",
+                subtitle: "Danh sách",
+                featureKey: "module.operations",
+            },
         },
         {
             path: "/trips/:id",
             name: "tripDetail",
-            component: TripDetailView,
-            meta: { title: "Chi tiết chuyến", subtitle: "" },
+            component: () => import("../views/trips/TripDetailView.vue"),
+            meta: {
+                title: "Chi tiết chuyến",
+                subtitle: "",
+                featureKey: "module.operations",
+            },
         },
 
         {
             path: "/costs",
             name: "costs",
-            component: CostsListView,
-            meta: { title: "Chi phí", subtitle: "Danh sách & nhập nhanh" },
+            component: () => import("../views/costs/CostsListView.vue"),
+            meta: {
+                title: "Chi phí",
+                subtitle: "Danh sách & nhập nhanh",
+                featureKey: "module.operations",
+            },
         },
         {
             path: "/payments",
             name: "payments",
-            component: PaymentsHubView,
-            meta: { title: "Đối Soát", subtitle: "Kỳ & payments" },
+            component: () => import("../views/payments/PaymentsHubView.vue"),
+            meta: {
+                title: "Đối Soát",
+                subtitle: "Kỳ & payments",
+                featureKey: "module.finance",
+            },
         },
         {
             path: "/cargo",
             name: "cargo",
-            component: CargoListView,
-            meta: { title: "Hàng hóa", subtitle: "Cargo & SLA" },
+            component: () => import("../views/cargo/CargoListView.vue"),
+            meta: {
+                title: "Hàng hóa",
+                subtitle: "Cargo & SLA",
+                featureKey: "module.operations",
+            },
         },
         {
             path: "/routes",
             name: "routes",
-            component: RoutesListView,
-            meta: { title: "Tuyến D2D", subtitle: "Door-to-door" },
+            component: () => import("../views/d2d/RoutesListView.vue"),
+            meta: {
+                title: "Tuyến D2D",
+                subtitle: "Door-to-door",
+                featureKey: "module.operations",
+            },
         },
         {
             path: "/resources/dashboard",
@@ -145,7 +170,7 @@ const router = createRouter({
         {
             path: "/resources/list",
             name: "resourcesList",
-            component: ResourcesListView,
+            component: () => import("../views/resources/ResourcesListView.vue"),
             meta: {
                 title: "Quản lý nguồn lực",
                 subtitle: "Xe, tài xế, nhà cung cấp",
@@ -155,7 +180,7 @@ const router = createRouter({
         {
             path: "/resources",
             name: "resources",
-            component: ResourcesDashboardView,
+            component: () => import("../views/resources/ResourcesDashboardView.vue"),
             meta: {
                 title: "Dashboard nguồn lực",
                 subtitle: "Lịch & tổng quan",
@@ -165,7 +190,7 @@ const router = createRouter({
         {
             path: "/resources/drivers/:id",
             name: "driverDetail",
-            component: DriverDetailView,
+            component: () => import("../views/resources/DriverDetailView.vue"),
             meta: {
                 title: "Chi tiết tài xế",
                 subtitle: "Hồ sơ & giấy tờ",
@@ -175,26 +200,31 @@ const router = createRouter({
         {
             path: "/reports",
             name: "reports",
-            component: ReportsView,
-            meta: { title: "Báo cáo", subtitle: "Theo khoảng thời gian" },
+            component: () => import("../views/reports/ReportsView.vue"),
+            meta: {
+                title: "Báo cáo",
+                subtitle: "Theo khoảng thời gian",
+                featureKey: "module.reports",
+            },
         },
         {
             path: "/pricing",
             name: "pricing",
-            component: PricingReferenceView,
+            component: () => import("../views/pricing/PricingReferenceView.vue"),
             meta: {
                 title: "Bảng giá tham chiếu",
                 subtitle: "Xe khách & hàng hóa",
+                featureKey: "module.reports",
             },
         },
 
         {
             path: "/audit-logs",
             name: "auditLogs",
-            component: AuditLogsView,
+            component: () => import("../views/audit/AuditLogsView.vue"),
             meta: {
-                title: "Activity log",
-                subtitle: "Quyền hạn",
+                title: "Nhật ký hoạt động",
+                subtitle: "Quản trị",
                 permission: "audit_log.view",
                 featureKey: "module.system.audit",
             },
@@ -202,10 +232,10 @@ const router = createRouter({
         {
             path: "/system/roles",
             name: "systemRoles",
-            component: SystemRolesView,
+            component: () => import("../views/system/SystemRolesView.vue"),
             meta: {
-                title: "Quản lý Role",
-                subtitle: "Quyền hạn",
+                title: "Vai trò người dùng",
+                subtitle: "Quản trị",
                 permission: "system.roles.manage",
                 featureKey: "module.system.roles",
             },
@@ -213,10 +243,10 @@ const router = createRouter({
         {
             path: "/system/permissions",
             name: "systemPermissions",
-            component: SystemPermissionsView,
+            component: () => import("../views/system/SystemPermissionsView.vue"),
             meta: {
-                title: "Quản lý Permission",
-                subtitle: "Quyền hạn",
+                title: "Quyền thao tác",
+                subtitle: "Quản trị",
                 permission: "system.permissions.manage",
                 featureKey: "module.system.permissions",
             },
@@ -224,10 +254,10 @@ const router = createRouter({
         {
             path: "/system/user-roles",
             name: "systemUserRoles",
-            component: SystemUserRolesView,
+            component: () => import("../views/system/SystemUserRolesView.vue"),
             meta: {
-                title: "Gán quyền người dùng",
-                subtitle: "Quyền hạn",
+                title: "Gán vai trò tài khoản",
+                subtitle: "Quản trị",
                 permission: "system.user_roles.manage",
                 featureKey: "module.system.user_roles",
             },
@@ -235,10 +265,10 @@ const router = createRouter({
         {
             path: "/system/feature-toggles",
             name: "systemFeatureToggles",
-            component: SystemFeatureTogglesView,
+            component: () => import("../views/system/SystemFeatureTogglesView.vue"),
             meta: {
-                title: "Feature toggle",
-                subtitle: "Quyền hạn",
+                title: "Bật tắt tính năng menu",
+                subtitle: "Quản trị",
                 permission: "system.feature_toggles.manage",
                 featureKey: "module.system.feature_toggles",
             },
@@ -283,6 +313,11 @@ router.beforeEach(async (to) => {
         }
     }
     return true;
+});
+
+router.afterEach((to) => {
+    updateDocumentTitle(to);
+    scrollAppMainToTop();
 });
 
 export default router;

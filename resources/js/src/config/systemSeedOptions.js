@@ -52,7 +52,6 @@ export const SEED_FEATURE_TOGGLE_PRESETS = [
     { key: 'module.operations', name: 'Điều vận (yêu cầu, chuyến, D2D…)', module: 'operations' },
     { key: 'module.finance', name: 'Kế toán / đối soát', module: 'finance' },
     { key: 'module.reports', name: 'Báo cáo & giá', module: 'reports' },
-    { key: 'module.help', name: 'Hỗ trợ & thông báo', module: 'help' },
     { key: 'module.system.roles', name: 'Quyền hạn — Quản lý Role', module: 'system' },
     { key: 'module.system.permissions', name: 'Quyền hạn — Quản lý Permission', module: 'system' },
     { key: 'module.system.user_roles', name: 'Quyền hạn — Gán quyền người dùng', module: 'system' },

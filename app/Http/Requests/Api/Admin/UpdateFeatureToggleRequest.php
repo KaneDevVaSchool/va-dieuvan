@@ -17,6 +17,8 @@ class UpdateFeatureToggleRequest extends ApiFormRequest
             'key' => ['sometimes', 'required', 'string', 'max:120', 'regex:/^[a-z0-9_.]+$/'],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'is_enabled' => ['sometimes', 'boolean'],
+            'maintenance_mode' => ['sometimes', 'boolean'],
+            'upgrade_notice' => ['sometimes', 'boolean'],
             'module' => ['nullable', 'string', 'max:120'],
         ];
     }

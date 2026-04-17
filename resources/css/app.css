@@ -15,8 +15,9 @@
 
 @layer base {
   :root {
-    --va-brand: #8b1538;
-    --va-brand-dark: #6f112d;
+    --va-brand: #9a0036;
+    --va-brand-dark: #7a0029;
+    --va-brand-soft: rgba(154, 0, 54, 0.12);
   }
 
   html {
@@ -29,7 +30,8 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-va-700/40 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900;
+    outline: 2px solid var(--va-brand);
+    outline-offset: 2px;
   }
 }
 

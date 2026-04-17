@@ -45,6 +45,7 @@ class AuthController extends Controller
                 'permissions' => $permissions,
                 'is_superadmin' => $user->isSuperAdmin(),
                 'feature_toggles' => $featureToggles->mapForUser($user),
+                'feature_toggle_states' => $featureToggles->mapStatesForRuntime(),
             ]),
         ]);
     }

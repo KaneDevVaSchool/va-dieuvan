@@ -39,6 +39,12 @@ const props = defineProps({
     default: 'vertical-full',
     validator: (v) => ['vertical-full', 'vertical-compact', 'horizontal', 'bottom'].includes(v),
   },
+  /** default | brand — sidebar màu thương hiệu (#9A0036) */
+  tone: {
+    type: String,
+    default: 'default',
+    validator: (v) => ['default', 'brand'].includes(v),
+  },
 })
 
 defineEmits(['navigate'])
@@ -102,6 +108,14 @@ const badgeClass = computed(() => {
   } else if (props.variant === 'bottom') {
     base.push('absolute -right-0.5 top-0.5 h-4 min-w-[1rem] px-0.5 text-[9px]')
   }
+  if (props.tone === 'brand') {
+    if (isActive.value) {
+      base.push('bg-white text-[color:var(--va-brand)]')
+    } else {
+      base.push('bg-amber-100 text-amber-900')
+    }
+    return base.join(' ')
+  }
   if (isActive.value) {
     if (props.variant === 'vertical-full' || props.variant === 'vertical-compact') {
       base.push('bg-slate-700 text-white dark:bg-slate-500')
@@ -116,6 +130,8 @@ const badgeClass = computed(() => {
 
 const linkClass = computed(() => {
   const v = props.variant
+  const brand = props.tone === 'brand'
+
   if (v === 'bottom') {
     const base = [
       'relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-0.5 py-1 transition-colors',
@@ -154,6 +170,17 @@ const linkClass = computed(() => {
     base.push('justify-center px-2 py-2')
   } else {
     base.push('py-2.5 pl-3 pr-3')
+  }
+
+  if (brand) {
+    if (isActive.value) {
+      base.push(
+        'bg-white/15 font-semibold text-white before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-white before:content-[\'\']',
+      )
+    } else {
+      base.push('text-white/90 hover:bg-white/10')
+    }
+    return base.join(' ')
   }
 
   if (isActive.value) {

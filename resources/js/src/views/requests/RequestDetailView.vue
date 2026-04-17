@@ -36,14 +36,6 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2 sm:justify-end">
-            <RouterLink
-              to="/notifications"
-              class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50"
-              title="Thông báo"
-            >
-              <BellIcon class="h-5 w-5" />
-              <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" aria-hidden="true" />
-            </RouterLink>
             <button
               type="button"
               class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-400 shadow-sm"
@@ -133,7 +125,7 @@
                 <Button
                   :loading="acting"
                   class="min-h-[2.75rem] w-full justify-center !bg-teal-600 !py-2.5 text-[15px] font-semibold shadow-sm hover:!bg-teal-700"
-                  @click="decide('approve')"
+                  @click="onDecideClick('approve')"
                 >
                   Duyệt yêu cầu
                 </Button>
@@ -141,7 +133,7 @@
                   variant="danger"
                   :loading="acting"
                   class="min-h-[2.75rem] w-full justify-center !border-rose-200 !bg-white !py-2.5 text-[15px] font-semibold !text-rose-700 shadow-sm hover:!bg-rose-50"
-                  @click="decide('reject')"
+                  @click="onDecideClick('reject')"
                 >
                   Từ chối
                 </Button>
@@ -388,8 +380,7 @@
                 <div class="min-w-0 flex-1">
                   <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
                   <p v-if="paperScans.length" class="mt-1 text-[11px] leading-snug text-slate-500">
-                    OCR (demo): chỉ cho loại
-                    <code class="rounded bg-slate-100 px-1 py-0.5 text-[10px] font-medium text-slate-700">paper_scan</code>
+                    Đọc chữ từ ảnh/PDF phiếu giấy (chỉ áp dụng cho tệp loại phiếu đã quét).
                   </p>
                 </div>
               </div>
@@ -450,11 +441,23 @@
                 v-if="req.paper_status === 'pending' && canManagePaper"
                 class="mt-4 border-t border-slate-100 pt-3"
               >
-                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Đánh dấu đã nhận phiếu</h3>
-                <p class="mt-1 text-[11px] text-slate-500">Quyền: <span class="font-medium">request.paper.manage</span></p>
+                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Xác nhận đã nhận phiếu giấy</h3>
+                <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
+                  Điền khi bộ phận điều vận đã nhận bản giấy đúng với yêu cầu. Cần quyền quản lý phiếu trên hệ thống.
+                </p>
                 <form class="mt-3 grid gap-2.5" @submit.prevent="doMarkPaper">
-                  <Input v-model="paperForm.paper_reference" label="Số tham chiếu / mã phiếu" placeholder="Tùy chọn" />
-                  <Input v-model="paperForm.paper_received_at" label="Thời điểm nhận" type="datetime-local" />
+                  <Input
+                    v-model="paperForm.paper_reference"
+                    label="Số phiếu / mã tham chiếu"
+                    placeholder="Ví dụ: PG-2026-00123 (nếu có)"
+                    hint="Có thể để trống nếu chỉ cần ghi nhận thời điểm nhận."
+                  />
+                  <Input
+                    v-model="paperForm.paper_received_at"
+                    label="Thời điểm nhận phiếu"
+                    type="datetime-local"
+                    hint="Chọn ngày giờ thực tế khi nhận được phiếu. Chạm vào ô để mở lịch — không cần bấm biểu tượng."
+                  />
                   <div class="flex flex-wrap items-center gap-2 pt-0.5">
                     <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Đánh dấu đã nhận</Button>
                     <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
@@ -474,7 +477,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import {
   ArrowLeftIcon,
-  BellIcon,
   CalculatorIcon,
   CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
@@ -501,6 +503,8 @@ import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '..
 import { parseMoneyVnd } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { useAuthStore } from '../../store'
+import { confirmAction } from '../../composables/useConfirm'
+import { showAppSuccess } from '../../composables/appMessage'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -805,11 +809,19 @@ async function downloadFile(a) {
 
 async function removeAttachment(a) {
   if (!canDeleteAttachment.value) return
+  const ok = await confirmAction({
+    title: 'Xóa tệp đính kèm?',
+    message: `Bạn có chắc muốn xóa «${a.original_name || 'tệp này'}»? Thao tác không thể hoàn tác.`,
+    confirmLabel: 'Xóa tệp',
+    danger: true,
+  })
+  if (!ok) return
   attachErr.value = ''
   deletingId.value = a.id
   try {
     await deleteAttachment(a.id)
     await load()
+    showAppSuccess('Đã xóa tệp đính kèm.', 'Đã xử lý')
   } catch (e) {
     attachErr.value = e?.response?.data?.message ?? 'Không xóa được file.'
   } finally {
@@ -838,6 +850,27 @@ async function doMarkPaper() {
   }
 }
 
+async function onDecideClick(d) {
+  if (d === 'approve') {
+    const ok = await confirmAction({
+      title: 'Duyệt yêu cầu?',
+      message:
+        'Sau khi duyệt, yêu cầu có thể được phân công chuyến. Bạn có chắc muốn duyệt yêu cầu này?',
+      confirmLabel: 'Duyệt',
+    })
+    if (!ok) return
+  } else {
+    const ok = await confirmAction({
+      title: 'Từ chối yêu cầu?',
+      message: 'Yêu cầu sẽ chuyển sang trạng thái từ chối. Bạn có chắc?',
+      confirmLabel: 'Từ chối',
+      danger: true,
+    })
+    if (!ok) return
+  }
+  await decide(d)
+}
+
 async function decide(d) {
   msg.value = ''
   acting.value = true
@@ -847,8 +880,9 @@ async function decide(d) {
       { decision: d, reason: d === 'reject' ? 'reject' : null },
       { idempotencyKey: newIdempotencyKey() },
     )
-    msg.value = 'Đã xử lý'
+    msg.value = ''
     await load()
+    showAppSuccess(d === 'approve' ? 'Đã duyệt yêu cầu.' : 'Đã từ chối yêu cầu.', 'Thành công')
   } catch (e) {
     msg.value = e?.response?.data?.message ?? 'Lỗi'
   } finally {

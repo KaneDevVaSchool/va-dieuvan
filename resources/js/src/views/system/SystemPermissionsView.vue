@@ -1,47 +1,47 @@
 <template>
   <div class="space-y-4">
-    <Card title="Quản lý Permission">
-      <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">
-        Đặt tên quyền theo <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">module.hành_động</code> (ví dụ
-        <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">request.create</code>). Danh sách dưới khớp
-        <code class="rounded bg-slate-100 px-1 dark:bg-slate-800">RbacSeeder</code>.
+    <Card title="Quyền thao tác (Permission)">
+      <p class="mb-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+        Mỗi quyền mô tả một hành động cụ thể (ví dụ tạo yêu cầu, duyệt chuyến). Mã quyền dùng chữ thường và dấu chấm,
+        ví dụ <span class="font-mono text-xs">request.create</span>. Chọn mẫu có sẵn để điền nhanh và giảm sai sót.
       </p>
       <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-2 lg:grid-cols-4" @submit.prevent="create">
         <Select
           v-model="permissionPreset"
-          label="Mẫu permission (seed)"
-          hint="Chọn để điền tên, nhãn và mô tả dễ hiểu từ mẫu hệ thống."
+          label="Mẫu có sẵn"
+          hint="Điền sẵn mã và mô tả; có thể chỉnh trước khi thêm."
           placeholder="— Không dùng mẫu —"
         >
+          <option value="">— Không dùng mẫu —</option>
           <option v-for="p in seedPermissions" :key="p.name" :value="p.name">{{ p.name }}</option>
         </Select>
         <Input
           v-model="form.name"
-          label="Tên quyền"
-          placeholder="module.action"
-          hint="Không khoảng trắng; dùng dấu chấm phân tách (vd. trip.assign)."
+          label="Mã quyền trong hệ thống"
+          placeholder="vd. request.create"
+          hint="Không dấu cách; các phần cách nhau bằng dấu chấm."
           required
         />
         <Input
           v-model="form.display_name"
-          label="Mô tả hiển thị (kỹ thuật)"
-          placeholder="Giống tên quyền hoặc nhãn ngắn"
-          hint="Nhãn khi admin xem danh sách permission."
+          label="Nhãn ngắn (tùy chọn)"
+          placeholder="vd. request.create"
+          hint="Hiển thị cạnh mã trong danh sách quản trị."
         />
         <div class="flex items-end">
-          <Button type="submit" :loading="saving">Thêm</Button>
+          <Button type="submit" :loading="saving">Thêm quyền</Button>
         </div>
         <div class="md:col-span-2 lg:col-span-4">
           <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Mô tả dễ hiểu (cho người không chuyên IT)</span>
+            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Giải thích cho người vận hành</span>
             <textarea
               v-model="form.plain_description"
               rows="2"
               class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring dark:border-slate-600 dark:bg-slate-900"
-              placeholder="Ví dụ: Được tạo yêu cầu điều xe mới — trình bày bằng tiếng đời thường."
+              placeholder="Ví dụ: Được phép tạo yêu cầu điều xe mới trên hệ thống."
             />
             <span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">
-              Có thể để trống: hệ thống sẽ dùng mô tả mẫu theo tên quyền (nếu có).
+              Nên điền để bộ phận nhân sự / quản trị hiểu rõ quyền này dùng để làm gì. Có thể để trống nếu đã có mô tả mẫu.
             </span>
           </label>
         </div>
@@ -52,9 +52,9 @@
         <table class="w-full min-w-[44rem] text-left text-sm">
           <thead>
             <tr class="border-b border-slate-200 text-slate-500 dark:border-slate-700">
-              <th class="py-2 pr-2">Permission</th>
-              <th class="py-2 pr-2">Nhãn hiển thị</th>
-              <th class="py-2 pr-2">Ý nghĩa (dễ hiểu)</th>
+              <th class="py-2 pr-2">Mã quyền</th>
+              <th class="py-2 pr-2">Nhãn ngắn</th>
+              <th class="py-2 pr-2">Giải thích</th>
               <th class="py-2 text-right">Thao tác</th>
             </tr>
           </thead>
@@ -78,26 +78,26 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       @click.self="editing = null"
     >
-      <Card class="w-full max-w-lg" title="Sửa permission">
+      <Card class="w-full max-w-lg" title="Sửa quyền">
         <div class="space-y-3">
           <Input
             v-model="editForm.name"
-            label="Tên quyền"
-            hint="Đổi tên sẽ cần cập nhật mọi nơi đang kiểm tra permission bằng chuỗi cũ."
+            label="Mã quyền"
+            hint="Đổi mã cần rà soát toàn bộ chỗ đang dùng mã cũ — chỉ thực hiện khi có kế hoạch."
           />
           <Input
             v-model="editForm.display_name"
-            label="Nhãn hiển thị (kỹ thuật)"
-            hint="Hiển thị bên cạnh tên trong danh sách admin."
+            label="Nhãn ngắn"
+            hint="Hiển thị trong danh sách quản trị."
           />
           <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Mô tả dễ hiểu (không chuyên IT)</span>
+            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Giải thích cho người vận hành</span>
             <textarea
               v-model="editForm.plain_description"
               rows="3"
               class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring dark:border-slate-600 dark:bg-slate-900"
             />
-            <span class="mt-1 block text-xs text-slate-500">Để trống = dùng mô tả mẫu theo tên (file dữ liệu hệ thống).</span>
+            <span class="mt-1 block text-xs text-slate-500">Để trống: dùng mô tả mẫu theo mã (nếu có trong hệ thống).</span>
           </label>
           <div class="flex justify-end gap-2">
             <Button variant="secondary" type="button" @click="editing = null">Hủy</Button>
@@ -119,7 +119,8 @@ import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
 import permissionPlainVi from '../../data/permission_plain_vi.json'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
-import { showAppError } from '../../composables/appMessage'
+import { showAppError, showAppSuccess } from '../../composables/appMessage'
+import { confirmAction } from '../../composables/useConfirm'
 
 const loading = ref(true)
 const saving = ref(false)
@@ -165,6 +166,7 @@ async function create() {
     form.plain_description = ''
     permissionPreset.value = ''
     await load()
+    showAppSuccess('Đã thêm quyền mới.', 'Thành công')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -190,6 +192,7 @@ async function saveEdit() {
     })
     editing.value = null
     await load()
+    showAppSuccess('Đã lưu thay đổi quyền.', 'Thành công')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -198,10 +201,17 @@ async function saveEdit() {
 }
 
 async function remove(p) {
-  if (!confirm(`Xóa permission ${p.name}?`)) return
+  const ok = await confirmAction({
+    title: 'Xóa quyền?',
+    message: `Xóa quyền «${p.name}»? Các vai trò đang dùng quyền này có thể cần chỉnh lại.`,
+    confirmLabel: 'Xóa',
+    danger: true,
+  })
+  if (!ok) return
   try {
     await admin.deletePermission(p.id)
     await load()
+    showAppSuccess('Đã xóa quyền.', 'Thành công')
   } catch (e) {
     showAppError(formatApiError(e))
   }
