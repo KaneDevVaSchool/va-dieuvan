@@ -882,6 +882,90 @@
     "title": "Trip details & timeline",
     "created_at": "Created {time}",
     "high_priority": "High priority",
+    "header": {
+      "back_trips": "Back to trips list",
+      "page_title": "Trip detail & dispatch",
+      "request_ref": "Request #{code}",
+      "trip_ref": "Trip {code}",
+      "notifications": "Notifications"
+    },
+    "banner": {
+      "request_pending": "The source request is still pending approval.",
+      "open_request": "Open request details"
+    },
+    "overview": {
+      "title": "Trip overview",
+      "schedule": "Schedule",
+      "est_distance": "Estimated distance",
+      "est_cost": "Estimated cost",
+      "duration_hours": "{n} hours",
+      "employee_code": "Employee ID: {code}"
+    },
+    "route": {
+      "section_title": "Route details",
+      "no_stops": "No detailed stops yet.",
+      "map_title": "Route map",
+      "map_placeholder": "Add pickup/drop-off to preview a map.",
+      "expand_map": "Expand",
+      "map_modal_title": "Map view",
+      "close_map": "Close",
+      "open_in_google_maps": "Open full directions in Google Maps",
+      "stop_pickup": "Pickup",
+      "stop_waypoint": "Stop",
+      "stop_dropoff": "Drop-off"
+    },
+    "passengers": {
+      "title": "Passengers ({n})",
+      "edit_hint": "Edit list (source request)",
+      "col_name": "Name",
+      "col_role": "Role",
+      "col_contact": "Contact",
+      "col_notes": "Notes",
+      "empty": "No passenger rows from the submitted form.",
+      "special_summary_title": "Special considerations",
+      "role_cargo": "Cargo",
+      "role_student": "Student",
+      "role_staff": "Staff",
+      "role_guest": "Guest",
+      "cargo_item": "Cargo {n}",
+      "guest": "Guest {n}",
+      "business_party": "Business party {n}",
+      "unlisted": "{n} people (per request)",
+      "flag_wheelchair": "Wheelchair assistance",
+      "flag_allergy": "Allergy / diet",
+      "summary_wheelchair": "Vehicle should support wheelchair boarding.",
+      "summary_allergy": "Driver should be informed about allergies / food restrictions."
+    },
+    "more_section": {
+      "title": "Costs & advanced status"
+    },
+    "coordination": {
+      "title": "Coordination",
+      "subtitle": "Assign resources and record decisions.",
+      "assign_vehicle": "Assign vehicle",
+      "assign_driver": "Assign driver",
+      "hire_external": "Hire external taxi / vendor",
+      "provider_id": "Provider ID (transport_provider_id)",
+      "external_vehicle": "External vehicle reference",
+      "external_driver": "External driver reference",
+      "internal_notes": "Internal notes / reason",
+      "internal_notes_ph": "Notes for dispatch, saved with assign or cancel…",
+      "reject": "Reject / Cancel trip",
+      "approve_transfer": "Approve & hand off",
+      "no_permission_status": "You cannot change trip status.",
+      "no_permission_assign": "You cannot assign resources or cancel this trip.",
+      "suitable_vehicles": "{n} vehicles in the ready list meet seat capacity.",
+      "validation_assign": "Pick an internal vehicle and driver, or external hire with a provider.",
+      "validation_provider": "External hire requires a provider ID.",
+      "reject_confirm_title": "Cancel this trip?",
+      "reject_confirm_body": "The trip will be marked cancelled. Internal notes (if any) are stored on the status change.",
+      "reject_cancel": "Back"
+    },
+    "attachments": {
+      "title": "Attachments",
+      "unnamed": "Untitled file",
+      "empty": "No files on the source request."
+    },
     "actions": {
       "copy_link": "Copy link",
       "export": "Export"

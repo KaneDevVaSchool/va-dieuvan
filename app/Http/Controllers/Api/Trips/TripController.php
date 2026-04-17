@@ -150,14 +150,20 @@ class TripController extends Controller
 
         $trip->load([
             'dispatcher:id,name,email,employee_code',
-            'vehicle:id,license_plate,status',
+            'vehicle:id,license_plate,status,type,seat_count',
             'driver:id,full_name,phone',
             'transportProvider:id,name',
+            'record:id,trip_id,distance_km',
             'dispatchRequest',
-            'dispatchRequest.requester:id,name,phone',
+            'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
+            'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
         ]);
+
+        if ($trip->relationLoaded('dispatchRequest') && $trip->dispatchRequest) {
+            $trip->dispatchRequest->makeVisible(['wizard_snapshot']);
+        }
 
         return $this->ok($trip);
     }

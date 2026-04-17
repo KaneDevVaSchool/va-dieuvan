@@ -882,6 +882,90 @@
     "title": "Chi tiết chuyến & timeline",
     "created_at": "Tạo {time}",
     "high_priority": "Ưu tiên cao",
+    "header": {
+      "back_trips": "Quay lại danh sách chuyến",
+      "page_title": "Chi tiết chuyến đi & điều phối",
+      "request_ref": "Yêu cầu #{code}",
+      "trip_ref": "Chuyến {code}",
+      "notifications": "Thông báo"
+    },
+    "banner": {
+      "request_pending": "Yêu cầu gốc vẫn đang chờ duyệt.",
+      "open_request": "Mở chi tiết yêu cầu"
+    },
+    "overview": {
+      "title": "Tổng quan chuyến",
+      "schedule": "Lịch trình",
+      "est_distance": "Quãng đường ước tính",
+      "est_cost": "Chi phí ước tính",
+      "duration_hours": "{n} giờ",
+      "employee_code": "Mã NV: {code}"
+    },
+    "route": {
+      "section_title": "Chi tiết tuyến đường",
+      "no_stops": "Chưa có điểm dừng chi tiết.",
+      "map_title": "Bản đồ tuyến",
+      "map_placeholder": "Thêm điểm đón/trả để xem bản đồ gợi ý.",
+      "expand_map": "Mở rộng",
+      "map_modal_title": "Xem bản đồ",
+      "close_map": "Đóng",
+      "open_in_google_maps": "Mở chỉ đường đầy đủ trên Google Maps",
+      "stop_pickup": "Điểm đón",
+      "stop_waypoint": "Điểm dừng",
+      "stop_dropoff": "Điểm trả"
+    },
+    "passengers": {
+      "title": "Hành khách ({n})",
+      "edit_hint": "Chỉnh sửa danh sách (yêu cầu gốc)",
+      "col_name": "Họ tên",
+      "col_role": "Vai trò",
+      "col_contact": "Liên hệ",
+      "col_notes": "Ghi chú",
+      "empty": "Chưa có danh sách chi tiết từ biểu mẫu.",
+      "special_summary_title": "Lưu ý đặc biệt",
+      "role_cargo": "Hàng hóa",
+      "role_student": "Học sinh",
+      "role_staff": "Nhân viên",
+      "role_guest": "Khách",
+      "cargo_item": "Hàng {n}",
+      "guest": "Khách {n}",
+      "business_party": "Đoàn công tác {n}",
+      "unlisted": "{n} người (theo yêu cầu)",
+      "flag_wheelchair": "Hỗ trợ xe lăn",
+      "flag_allergy": "Dị ứng / chế độ ăn",
+      "summary_wheelchair": "Xe cần hỗ trợ lên xuống cho xe lăn.",
+      "summary_allergy": "Cần thông báo tài xế về dị ứng / thực phẩm."
+    },
+    "more_section": {
+      "title": "Chi phí & cập nhật trạng thái nâng cao"
+    },
+    "coordination": {
+      "title": "Hành động điều phối",
+      "subtitle": "Gán nguồn lực và ghi nhận quyết định.",
+      "assign_vehicle": "Gán xe",
+      "assign_driver": "Gán tài xế",
+      "hire_external": "Thuê ngoài taxi / NCC",
+      "provider_id": "ID nhà cung cấp (transport_provider_id)",
+      "external_vehicle": "Tham chiếu xe ngoài",
+      "external_driver": "Tham chiếu tài xế ngoài",
+      "internal_notes": "Ghi chú nội bộ / lý do",
+      "internal_notes_ph": "Ghi chú cho điều vận, đính kèm khi gán hoặc hủy…",
+      "reject": "Từ chối / Hủy chuyến",
+      "approve_transfer": "Phê duyệt & chuyển giao",
+      "no_permission_status": "Bạn không có quyền đổi trạng thái chuyến.",
+      "no_permission_assign": "Bạn không có quyền gán nguồn lực hoặc hủy chuyến.",
+      "suitable_vehicles": "{n} xe phù hợp sức chỗ trong danh sách sẵn sàng.",
+      "validation_assign": "Chọn đủ xe và tài xế nội bộ, hoặc chọn thuê ngoài kèm NCC.",
+      "validation_provider": "Khi thuê ngoài, nhập ID nhà cung cấp.",
+      "reject_confirm_title": "Hủy chuyến này?",
+      "reject_confirm_body": "Trạng thái chuyến sẽ chuyển sang đã hủy. Ghi chú nội bộ (nếu có) sẽ lưu vào nhật ký trạng thái.",
+      "reject_cancel": "Không"
+    },
+    "attachments": {
+      "title": "Tệp đính kèm",
+      "unnamed": "Tệp không tên",
+      "empty": "Không có tệp trên yêu cầu gốc."
+    },
     "actions": {
       "copy_link": "Sao chép link",
       "export": "Xuất"
