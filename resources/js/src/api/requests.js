@@ -5,7 +5,7 @@ import { http } from './http'
  * Always send 0/1 for boolean query params so production works even without server-side normalization.
  * @param {Record<string, unknown>} params
  */
-function normalizeRequestListParams(params) {
+export function normalizeRequestListParams(params) {
   const p = { ...params }
   if (p.only_trashed === true) p.only_trashed = 1
   if (p.only_trashed === false) delete p.only_trashed

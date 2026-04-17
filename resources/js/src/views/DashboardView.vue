@@ -27,18 +27,18 @@
         <h2 class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {{ t('dashboard_analytics.quick_title') }}
         </h2>
-        <div class="relative -mx-1 mt-2">
+        <div class="relative -mx-1 mt-2 flex justify-center">
           <div
-            class="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] scroll-smooth sm:gap-3"
+            class="flex max-w-full snap-x snap-mandatory justify-center gap-2 overflow-x-auto overscroll-x-contain px-2 pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] scroll-smooth sm:gap-3"
           >
             <RouterLink
               v-for="item in quickLinks"
               :key="item.to"
               :to="item.to"
-              class="snap-start flex w-[4.75rem] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-slate-200/90 bg-white/90 px-2 py-3 text-center shadow-sm transition hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-800 sm:w-[5.25rem]"
+              class="snap-center flex w-[4.75rem] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-slate-200/90 bg-white/90 px-2 py-3 text-center shadow-sm transition hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-800 sm:w-[5.25rem]"
             >
-              <component :is="item.icon" class="h-6 w-6 text-teal-600 dark:text-teal-400" aria-hidden="true" />
-              <span class="line-clamp-2 text-[11px] font-medium leading-tight text-slate-800 dark:text-slate-100">
+              <component :is="item.icon" class="h-6 w-6 shrink-0 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+              <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight text-slate-800 dark:text-slate-100">
                 {{ item.title }}
               </span>
             </RouterLink>
@@ -50,39 +50,57 @@
         <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
           <details class="group relative">
             <summary
-              class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
             >
               <span class="relative inline-flex">
                 <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                <span
+                  v-if="activeFilterCount > 0"
+                  class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
+                >
+                  {{ activeFilterCount }}
+                </span>
               </span>
               <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+              class="absolute left-0 top-[calc(100%+8px)] z-40 min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
             >
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
                 {{ t('dashboard_analytics.filter_applied_title') }}
               </p>
+              <div class="p-3 pt-2">
               <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                 <li class="font-medium text-slate-900 dark:text-slate-100">{{ currentPresetLabel }}</li>
                 <li class="tabular-nums text-slate-600 dark:text-slate-400">
-                  {{ t('dashboard_analytics.filter_applied_range', { from: rangeFrom, to: rangeTo }) }}
+                  {{ rangeDisplayFormatted }}
+                  <span
+                    v-if="rangeValid && rangeDaySpan > 0"
+                    class="ml-1.5 inline-block rounded-md bg-violet-100/90 px-1.5 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
+                  >
+                    {{ t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) }}
+                  </span>
+                </li>
+                <li v-for="(row, i) in activeFilterLines" :key="i" class="border-t border-slate-100 pt-2 dark:border-slate-700">
+                  <span class="text-slate-500 dark:text-slate-400">{{ row.label }}:</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">{{ row.value }}</span>
                 </li>
               </ul>
               <button
                 type="button"
-                class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                 @click="resetFilters"
               >
                 {{ t('dashboard_analytics.filter_clear_all') }}
               </button>
+              </div>
             </div>
           </details>
           <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
           <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
             <details class="group relative min-w-0">
               <summary
-                class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+                class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
               >
                 <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                   {{ t('dashboard_analytics.filter_period_label') }}
@@ -115,46 +133,142 @@
             </details>
             <details class="group relative min-w-0">
               <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
               >
+                <CalendarDaysIcon class="h-4 w-4 shrink-0 text-violet-500 dark:text-violet-400" aria-hidden="true" />
                 <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                   {{ t('dashboard_analytics.filter_dates_label') }}
                 </span>
-                <span class="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {{ rangeFrom }} — {{ rangeTo }}
+                <span class="flex min-w-0 max-w-[11rem] items-center gap-1.5 sm:max-w-[14rem]">
+                  <span class="min-w-0 truncate text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                    {{ rangeDisplayFormatted }}
+                  </span>
+                  <span
+                    v-if="rangeValid && rangeDaySpan > 0"
+                    class="shrink-0 rounded-md bg-violet-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
+                  >
+                    {{ rangeDaySpan }}
+                  </span>
                 </span>
                 <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               </summary>
               <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 w-[min(100vw-1.5rem,320px)] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950 sm:w-max"
+                class="absolute left-0 top-[calc(100%+8px)] z-40 w-[min(100vw-1rem,22rem)] overflow-hidden rounded-2xl border border-violet-200/60 bg-gradient-to-b from-white via-white to-slate-50/95 shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/45 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 dark:shadow-black/40 dark:ring-slate-950/50 sm:left-auto sm:right-0 sm:w-[20.5rem]"
               >
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <input
-                    v-model="rangeFrom"
-                    type="date"
-                    class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                    @change="onManualDateChange"
-                  />
-                  <span class="hidden text-slate-300 dark:text-slate-600 sm:inline">—</span>
-                  <input
-                    v-model="rangeTo"
-                    type="date"
-                    class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                    @change="onManualDateChange"
-                  />
+                <div class="border-b border-violet-100/90 bg-gradient-to-r from-violet-50/80 to-indigo-50/40 px-3 py-2.5 dark:border-violet-900/40 dark:from-violet-950/40 dark:to-indigo-950/20">
+                  <div class="flex items-start gap-2">
+                    <CalendarDaysIcon class="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden="true" />
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                        {{ t('dashboard_analytics.date_range_title') }}
+                      </p>
+                      <p class="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-400">
+                        {{ t('dashboard_analytics.date_range_hint') }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  v-if="preset === 'custom'"
-                  type="button"
-                  class="mt-3 w-full rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-teal-700 disabled:opacity-50 dark:bg-teal-500 dark:hover:bg-teal-600"
-                  :disabled="loading || !rangeValid"
-                  @click="reloadSummary"
-                >
-                  {{ t('dashboard_analytics.apply_range') }}
-                </button>
-                <p v-if="!rangeValid" class="mt-2 text-xs text-rose-600 dark:text-rose-400">
-                  {{ t('dashboard_analytics.range_invalid') }}
-                </p>
+                <div class="p-3">
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="chip in dateQuickChips"
+                      :key="chip.kind"
+                      type="button"
+                      class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
+                      @click="applyQuickDateRange(chip.kind)"
+                    >
+                      {{ chip.label }}
+                    </button>
+                  </div>
+                  <div class="mt-3 space-y-3">
+                    <div
+                      class="rounded-xl border border-slate-200/80 bg-white/90 p-2.5 shadow-inner shadow-slate-200/20 dark:border-slate-600 dark:bg-slate-950/50 dark:shadow-none"
+                    >
+                      <label
+                        class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                        for="dash-range-from"
+                      >
+                        {{ t('dashboard_analytics.range_from') }}
+                      </label>
+                      <input
+                        id="dash-range-from"
+                        v-model="rangeFrom"
+                        type="date"
+                        :max="rangeTo || undefined"
+                        class="dash-date-input mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm transition focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        @change="onRangeFromChange"
+                      />
+                    </div>
+                    <div class="flex items-center justify-center gap-2 px-1">
+                      <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
+                      <span class="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-950/80 dark:text-violet-200">
+                        {{ rangeValid ? t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) : '—' }}
+                      </span>
+                      <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
+                    </div>
+                    <div
+                      class="rounded-xl border border-slate-200/80 bg-white/90 p-2.5 shadow-inner shadow-slate-200/20 dark:border-slate-600 dark:bg-slate-950/50 dark:shadow-none"
+                    >
+                      <label
+                        class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                        for="dash-range-to"
+                      >
+                        {{ t('dashboard_analytics.range_to') }}
+                      </label>
+                      <input
+                        id="dash-range-to"
+                        v-model="rangeTo"
+                        type="date"
+                        :min="rangeFrom || undefined"
+                        class="dash-date-input mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm transition focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        @change="onRangeToChange"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    v-if="preset === 'custom'"
+                    type="button"
+                    class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-600/25 transition hover:from-teal-700 hover:to-teal-600 disabled:opacity-50 dark:shadow-teal-900/30"
+                    :disabled="loading || !rangeValid"
+                    @click="reloadSummary"
+                  >
+                    {{ t('dashboard_analytics.apply_range') }}
+                  </button>
+                  <p v-if="!rangeValid" class="mt-2 text-center text-xs text-rose-600 dark:text-rose-400">
+                    {{ t('dashboard_analytics.range_invalid') }}
+                  </p>
+                </div>
+              </div>
+            </details>
+            <details v-for="fd in dimensionFilters" :key="fd.id" class="group relative min-w-0">
+              <summary
+                class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
+                <span class="max-w-[9rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">
+                  {{ fd.summary }}
+                </span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+              >
+                <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+                  <li v-for="opt in fd.options" :key="String(opt.value) + opt.label">
+                    <button
+                      type="button"
+                      :class="[
+                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
+                        fd.isSelected(opt.value)
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
+                      ]"
+                      @click="fd.pick(opt.value)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
               </div>
             </details>
           </div>
@@ -257,46 +371,152 @@
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <Card :title="t('dashboard_analytics.chart_trips_donut')">
+      <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">
+            {{ t('dashboard_analytics.section_recent_trips') }}
+          </h2>
+          <RouterLink
+            class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
+            to="/trips"
+          >
+            {{ t('dashboard_analytics.recent_see_all') }} →
+          </RouterLink>
+        </div>
+        <div v-if="recentLoading" class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.loading') }}</div>
+        <ul v-else-if="recentTrips.length" class="divide-y divide-slate-100 dark:divide-slate-800">
+          <li v-for="tr in recentTrips" :key="tr.id" class="py-2 first:pt-0">
+            <RouterLink
+              :to="`/trips/${tr.id}`"
+              class="group flex flex-col gap-0.5 rounded-lg py-0.5 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="min-w-0">
+                <div class="truncate text-sm font-medium text-slate-900 group-hover:text-teal-700 dark:text-slate-100 dark:group-hover:text-teal-400">
+                  {{ tr.dispatch_request?.origin ?? '—' }}
+                  <span class="text-slate-400">→</span>
+                  {{ tr.dispatch_request?.destination ?? '—' }}
+                </div>
+                <div class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                  {{ formatDepartShort(tr.depart_at) }}
+                </div>
+              </div>
+              <span class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">
+                {{ labelTripStatus(tr.status) }}
+              </span>
+            </RouterLink>
+          </li>
+        </ul>
+        <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
+      </div>
+      <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">
+            {{ t('dashboard_analytics.section_recent_requests') }}
+          </h2>
+          <RouterLink
+            class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
+            to="/requests"
+          >
+            {{ t('dashboard_analytics.recent_see_all') }} →
+          </RouterLink>
+        </div>
+        <div v-if="recentLoading" class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.loading') }}</div>
+        <ul v-else-if="recentRequests.length" class="divide-y divide-slate-100 dark:divide-slate-800">
+          <li v-for="rq in recentRequests" :key="rq.id" class="py-2 first:pt-0">
+            <RouterLink
+              :to="`/requests/${rq.id}`"
+              class="group flex flex-col gap-0.5 rounded-lg py-0.5 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="min-w-0">
+                <div class="truncate text-sm font-medium text-slate-900 group-hover:text-teal-700 dark:text-slate-100 dark:group-hover:text-teal-400">
+                  #{{ rq.id }} · {{ rq.origin ?? '—' }}
+                  <span class="text-slate-400">→</span>
+                  {{ rq.destination ?? '—' }}
+                </div>
+                <div class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                  {{ formatDepartShort(rq.depart_at) }}
+                </div>
+              </div>
+              <span class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">
+                {{ labelRequestStatus(rq.status) }}
+              </span>
+            </RouterLink>
+          </li>
+        </ul>
+        <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
+      </div>
+    </div>
+
+    <p class="text-center text-[11px] text-slate-400 dark:text-slate-500">
+      {{ t('dashboard_analytics.chart_toolbar_hint') }}
+    </p>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_trips_donut')"
+        :hint="t('dashboard_analytics.chart_hint_trips_donut')"
+        :badge="chartBadgeTripsTotal"
+        persist-key="donut-status"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeight"
           :option="optDonut"
           :aria-label="t('dashboard_analytics.chart_trips_donut')"
         />
-      </Card>
-      <Card :title="t('dashboard_analytics.chart_fleet_mode')">
+      </DashboardChartSection>
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_fleet_mode')"
+        :hint="t('dashboard_analytics.chart_hint_fleet')"
+        persist-key="donut-fleet"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeight"
           :option="optFleet"
           :aria-label="t('dashboard_analytics.chart_fleet_mode')"
         />
-      </Card>
+      </DashboardChartSection>
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <Card :title="t('dashboard_analytics.chart_trip_type')">
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_trip_type')"
+        :hint="t('dashboard_analytics.chart_hint_trip_type')"
+        persist-key="bar-trip-type"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeight"
           :option="optTripType"
           :aria-label="t('dashboard_analytics.chart_trip_type')"
         />
-      </Card>
-      <Card :title="t('dashboard_analytics.chart_dispatch_status')">
+      </DashboardChartSection>
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_dispatch_status')"
+        :hint="t('dashboard_analytics.chart_hint_dispatch')"
+        persist-key="donut-dispatch"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeight"
           :option="optDispatchDonut"
           :aria-label="t('dashboard_analytics.chart_dispatch_status')"
         />
-      </Card>
+      </DashboardChartSection>
     </div>
 
-    <div
-      class="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-      :title="t('dashboard_analytics.chart_hour_hint')"
+    <DashboardChartSection
+      :title="t('dashboard_analytics.chart_hour_line')"
+      :hint="`${t('dashboard_analytics.chart_hint_hour')} ${t('dashboard_analytics.chart_hour_hint')}`"
+      persist-key="line-hour"
+      :expand-label="t('dashboard_analytics.chart_expand')"
+      :collapse-label="t('dashboard_analytics.chart_collapse')"
     >
-      <div class="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
-        {{ t('dashboard_analytics.chart_hour_line') }}
-      </div>
       <div class="rounded-lg border border-slate-100 bg-slate-50/60 p-0.5 dark:border-slate-700 dark:bg-slate-950/40">
         <DashboardEChart
           :height="chartHeightWide"
@@ -304,49 +524,79 @@
           :aria-label="t('dashboard_analytics.chart_hour_line')"
         />
       </div>
-    </div>
+    </DashboardChartSection>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <Card :title="t('dashboard_analytics.chart_costs_bar')">
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_costs_bar')"
+        :hint="t('dashboard_analytics.chart_hint_costs_bar')"
+        persist-key="bar-cost-type"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeight"
           :option="optCostBar"
           :aria-label="t('dashboard_analytics.chart_costs_bar')"
         />
-      </Card>
-      <Card :title="t('dashboard_analytics.chart_costs_pipeline')">
+      </DashboardChartSection>
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_costs_pipeline')"
+        :hint="t('dashboard_analytics.chart_hint_cost_pipeline')"
+        persist-key="bar-cost-pipeline"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeight"
           :option="optCostPipeline"
           :aria-label="t('dashboard_analytics.chart_costs_pipeline')"
         />
-      </Card>
+      </DashboardChartSection>
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <Card :title="t('dashboard_analytics.chart_providers')">
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_providers')"
+        :hint="t('dashboard_analytics.chart_hint_providers')"
+        persist-key="bar-providers"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeight"
           :option="optProviders"
           :aria-label="t('dashboard_analytics.chart_providers')"
         />
-      </Card>
-      <Card :title="t('dashboard_analytics.chart_top_requesters')">
+      </DashboardChartSection>
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_top_requesters')"
+        :hint="t('dashboard_analytics.chart_hint_requesters')"
+        persist-key="bar-requesters"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
         <DashboardEChart
           :height="chartHeightTall"
           :option="optRequesters"
           :aria-label="t('dashboard_analytics.chart_top_requesters')"
         />
-      </Card>
+      </DashboardChartSection>
     </div>
 
-    <Card :title="t('dashboard_analytics.chart_trips_by_plate')">
+    <DashboardChartSection
+      :title="t('dashboard_analytics.chart_trips_by_plate')"
+      :hint="t('dashboard_analytics.chart_hint_plates')"
+      persist-key="bar-plates"
+      :expand-label="t('dashboard_analytics.chart_expand')"
+      :collapse-label="t('dashboard_analytics.chart_collapse')"
+    >
       <DashboardEChart
         :height="chartHeightTall"
         :option="optPlates"
         :aria-label="t('dashboard_analytics.chart_trips_by_plate')"
       />
-    </Card>
+    </DashboardChartSection>
   </div>
 </template>
 
@@ -356,6 +606,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   BanknotesIcon,
+  CalendarDaysIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
   CubeIcon,
@@ -371,7 +622,10 @@ import {
 import Card from '../components/ui/Card.vue'
 import AppFilterBar from '../components/filters/AppFilterBar.vue'
 import DashboardEChart from '../components/dashboard/DashboardEChart.vue'
+import DashboardChartSection from '../components/dashboard/DashboardChartSection.vue'
 import { getSummary } from '../api/reports'
+import { listTrips } from '../api/trips'
+import { listRequests, normalizeRequestListParams } from '../api/requests'
 import { labelTripStatus, labelTripType, labelRequestStatus } from '../util/labels'
 import {
   sumTrips,
@@ -388,7 +642,21 @@ import {
   tripsByTripTypeBarOption,
 } from '../util/transportDashboardCharts'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+function formatDisplayDate(ymdStr) {
+  if (!ymdStr || typeof ymdStr !== 'string') return '—'
+  const p = ymdStr.split('-').map((x) => Number(x))
+  if (p.length !== 3 || Number.isNaN(p[0])) return ymdStr
+  const tag = locale.value === 'vi' ? 'vi-VN' : 'en-GB'
+  try {
+    return new Intl.DateTimeFormat(tag, { day: '2-digit', month: 'short', year: 'numeric' }).format(
+      new Date(p[0], p[1] - 1, p[2]),
+    )
+  } catch {
+    return ymdStr
+  }
+}
 
 function ymd(d) {
   const x = new Date(d)
@@ -415,9 +683,31 @@ const rangeFrom = ref(ymd(new Date(today.getFullYear(), today.getMonth(), 1)))
 const rangeTo = ref(ymd(today))
 const preset = ref('month')
 
+const filterTripType = ref('')
+const filterSourceChannel = ref('')
+const filterPaperStatus = ref('')
+const filterIsUrgent = ref(false)
+const filterTripRunStatus = ref('')
+const filterFleetMode = ref('')
+
 const loading = ref(false)
 const loadError = ref('')
 const summary = ref(null)
+
+const recentTrips = ref([])
+const recentRequests = ref([])
+const recentLoading = ref(false)
+
+const TRIP_RUN_STATUS_KEYS = [
+  'pending',
+  'approved',
+  'assigned',
+  'driver_confirmed',
+  'in_progress',
+  'completed',
+  'cancelled',
+  'incident',
+]
 
 const chartHeight = ref('260px')
 const chartHeightWide = ref('280px')
@@ -454,10 +744,219 @@ const quickLinks = computed(() => [
 
 const emptyChartLabel = computed(() => t('dashboard_analytics.chart_empty'))
 
+const summaryFilters = computed(() => {
+  const o = {
+    from: rangeFrom.value,
+    to: rangeTo.value,
+  }
+  if (filterTripType.value) o.trip_type = filterTripType.value
+  if (filterSourceChannel.value) o.source_channel = filterSourceChannel.value
+  if (filterPaperStatus.value) o.paper_status = filterPaperStatus.value
+  if (filterIsUrgent.value) o.is_urgent = 1
+  if (filterTripRunStatus.value) o.trip_status = filterTripRunStatus.value
+  if (filterFleetMode.value) o.fleet_mode = filterFleetMode.value
+  return o
+})
+
+const tripListQuery = computed(() => {
+  const o = { ...summaryFilters.value }
+  if (o.trip_status) {
+    o.status = o.trip_status
+    delete o.trip_status
+  }
+  return o
+})
+
+const requestListQuery = computed(() => {
+  const o = { ...summaryFilters.value }
+  delete o.fleet_mode
+  return o
+})
+
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (filterTripType.value) n++
+  if (filterSourceChannel.value) n++
+  if (filterPaperStatus.value) n++
+  if (filterIsUrgent.value) n++
+  if (filterTripRunStatus.value) n++
+  if (filterFleetMode.value) n++
+  return n
+})
+
+const activeFilterLines = computed(() => {
+  const rows = []
+  if (filterTripType.value) {
+    rows.push({ label: t('dashboard_analytics.filter_trip_type'), value: labelTripType(filterTripType.value) })
+  }
+  if (filterSourceChannel.value) {
+    rows.push({
+      label: t('dashboard_analytics.filter_channel'),
+      value: t(`labels.source_channel.${filterSourceChannel.value}`),
+    })
+  }
+  if (filterPaperStatus.value) {
+    rows.push({
+      label: t('dashboard_analytics.filter_paper'),
+      value: t(`labels.paper_status.${filterPaperStatus.value}`),
+    })
+  }
+  if (filterIsUrgent.value) {
+    rows.push({ label: t('dashboard_analytics.filter_urgent'), value: t('dashboard_analytics.filter_urgent_only') })
+  }
+  if (filterTripRunStatus.value) {
+    rows.push({
+      label: t('dashboard_analytics.filter_trip_run_status'),
+      value: labelTripStatus(filterTripRunStatus.value),
+    })
+  }
+  if (filterFleetMode.value) {
+    const map = {
+      internal: t('dashboard_analytics.fleet_internal'),
+      vendor_hire: t('dashboard_analytics.fleet_vendor_hire'),
+      taxi: t('dashboard_analytics.fleet_taxi'),
+      unspecified: t('dashboard_analytics.fleet_unspecified'),
+    }
+    rows.push({ label: t('dashboard_analytics.filter_fleet'), value: map[filterFleetMode.value] ?? filterFleetMode.value })
+  }
+  return rows
+})
+
+const dimensionFilters = computed(() => {
+  const fa = t('dashboard_analytics.filter_all')
+  const tripTypeOpts = [
+    { value: '', label: fa },
+    { value: 'door_to_door', label: labelTripType('door_to_door') },
+    { value: 'point_to_point', label: labelTripType('point_to_point') },
+    { value: 'business', label: labelTripType('business') },
+    { value: 'cargo', label: labelTripType('cargo') },
+  ]
+  const channelOpts = [
+    { value: '', label: fa },
+    { value: 'portal', label: t('labels.source_channel.portal') },
+    { value: 'zalo', label: t('labels.source_channel.zalo') },
+    { value: 'paper', label: t('labels.source_channel.paper') },
+  ]
+  const paperOpts = [
+    { value: '', label: fa },
+    { value: 'pending', label: t('labels.paper_status.pending') },
+    { value: 'received', label: t('labels.paper_status.received') },
+    { value: 'digitally_signed', label: t('labels.paper_status.digitally_signed') },
+  ]
+  const urgentOpts = [
+    { value: '', label: fa },
+    { value: '1', label: t('dashboard_analytics.filter_urgent_only') },
+  ]
+  const runStatusOpts = [{ value: '', label: fa }].concat(
+    TRIP_RUN_STATUS_KEYS.map((k) => ({ value: k, label: labelTripStatus(k) })),
+  )
+  const fleetOpts = [
+    { value: '', label: fa },
+    { value: 'internal', label: t('dashboard_analytics.fleet_internal') },
+    { value: 'vendor_hire', label: t('dashboard_analytics.fleet_vendor_hire') },
+    { value: 'taxi', label: t('dashboard_analytics.fleet_taxi') },
+    { value: 'unspecified', label: t('dashboard_analytics.fleet_unspecified') },
+  ]
+
+  return [
+    {
+      id: 'trip_type',
+      label: t('dashboard_analytics.filter_trip_type'),
+      summary: filterTripType.value ? labelTripType(filterTripType.value) : fa,
+      options: tripTypeOpts,
+      isSelected: (v) => (v === '' ? !filterTripType.value : filterTripType.value === v),
+      pick: (v) => {
+        filterTripType.value = v || ''
+        reloadSummary()
+      },
+    },
+    {
+      id: 'channel',
+      label: t('dashboard_analytics.filter_channel'),
+      summary: filterSourceChannel.value ? t(`labels.source_channel.${filterSourceChannel.value}`) : fa,
+      options: channelOpts,
+      isSelected: (v) => (v === '' ? !filterSourceChannel.value : filterSourceChannel.value === v),
+      pick: (v) => {
+        filterSourceChannel.value = v || ''
+        reloadSummary()
+      },
+    },
+    {
+      id: 'paper',
+      label: t('dashboard_analytics.filter_paper'),
+      summary: filterPaperStatus.value ? t(`labels.paper_status.${filterPaperStatus.value}`) : fa,
+      options: paperOpts,
+      isSelected: (v) => (v === '' ? !filterPaperStatus.value : filterPaperStatus.value === v),
+      pick: (v) => {
+        filterPaperStatus.value = v || ''
+        reloadSummary()
+      },
+    },
+    {
+      id: 'urgent',
+      label: t('dashboard_analytics.filter_urgent'),
+      summary: filterIsUrgent.value ? t('dashboard_analytics.filter_urgent_only') : fa,
+      options: urgentOpts,
+      isSelected: (v) => (v === '' ? !filterIsUrgent.value : filterIsUrgent.value),
+      pick: (v) => {
+        filterIsUrgent.value = v === '1'
+        reloadSummary()
+      },
+    },
+    {
+      id: 'trip_run',
+      label: t('dashboard_analytics.filter_trip_run_status'),
+      summary: filterTripRunStatus.value ? labelTripStatus(filterTripRunStatus.value) : fa,
+      options: runStatusOpts,
+      isSelected: (v) => (v === '' ? !filterTripRunStatus.value : filterTripRunStatus.value === v),
+      pick: (v) => {
+        filterTripRunStatus.value = v || ''
+        reloadSummary()
+      },
+    },
+    {
+      id: 'fleet',
+      label: t('dashboard_analytics.filter_fleet'),
+      summary: filterFleetMode.value
+        ? {
+            internal: t('dashboard_analytics.fleet_internal'),
+            vendor_hire: t('dashboard_analytics.fleet_vendor_hire'),
+            taxi: t('dashboard_analytics.fleet_taxi'),
+            unspecified: t('dashboard_analytics.fleet_unspecified'),
+          }[filterFleetMode.value] ?? filterFleetMode.value
+        : fa,
+      options: fleetOpts,
+      isSelected: (v) => (v === '' ? !filterFleetMode.value : filterFleetMode.value === v),
+      pick: (v) => {
+        filterFleetMode.value = v || ''
+        reloadSummary()
+      },
+    },
+  ]
+})
+
 const rangeValid = computed(() => {
   if (!rangeFrom.value || !rangeTo.value) return false
   return rangeFrom.value <= rangeTo.value
 })
+
+const rangeDisplayFormatted = computed(
+  () => `${formatDisplayDate(rangeFrom.value)} — ${formatDisplayDate(rangeTo.value)}`,
+)
+
+const rangeDaySpan = computed(() => {
+  if (!rangeFrom.value || !rangeTo.value || rangeFrom.value > rangeTo.value) return 0
+  const a = new Date(`${rangeFrom.value}T12:00:00`)
+  const b = new Date(`${rangeTo.value}T12:00:00`)
+  return Math.floor((b.getTime() - a.getTime()) / 86400000) + 1
+})
+
+const dateQuickChips = computed(() => [
+  { kind: 'today', label: t('dashboard_analytics.date_range_quick_today') },
+  { kind: 'yesterday', label: t('dashboard_analytics.date_range_quick_yesterday') },
+  { kind: 'last7', label: t('dashboard_analytics.date_range_quick_last7') },
+  { kind: 'month', label: t('dashboard_analytics.date_range_quick_month') },
+])
 
 function syncRangeForPreset(id) {
   const now = new Date()
@@ -486,11 +985,74 @@ function applyPreset(id) {
 }
 
 function resetFilters() {
+  filterTripType.value = ''
+  filterSourceChannel.value = ''
+  filterPaperStatus.value = ''
+  filterIsUrgent.value = false
+  filterTripRunStatus.value = ''
+  filterFleetMode.value = ''
   applyPreset('month')
+}
+
+function formatDepartShort(s) {
+  if (s == null || s === '') return '—'
+  return String(s).replace('T', ' ').slice(0, 16)
+}
+
+async function loadRecentLists() {
+  if (!rangeValid.value) return
+  recentLoading.value = true
+  try {
+    const tRes = await listTrips({ ...tripListQuery.value, per_page: 10, page: 1 })
+    const rRes = await listRequests(normalizeRequestListParams({ ...requestListQuery.value, per_page: 10, page: 1 }))
+    recentTrips.value = tRes.items ?? []
+    recentRequests.value = rRes.items ?? []
+  } catch {
+    recentTrips.value = []
+    recentRequests.value = []
+  } finally {
+    recentLoading.value = false
+  }
 }
 
 function onManualDateChange() {
   preset.value = 'custom'
+}
+
+function onRangeFromChange() {
+  if (rangeFrom.value && rangeTo.value && rangeFrom.value > rangeTo.value) {
+    rangeTo.value = rangeFrom.value
+  }
+  onManualDateChange()
+}
+
+function onRangeToChange() {
+  if (rangeFrom.value && rangeTo.value && rangeTo.value < rangeFrom.value) {
+    rangeFrom.value = rangeTo.value
+  }
+  onManualDateChange()
+}
+
+function applyQuickDateRange(kind) {
+  if (kind === 'month') {
+    applyPreset('month')
+    return
+  }
+  const now = new Date()
+  if (kind === 'today') {
+    const d = ymd(now)
+    rangeFrom.value = d
+    rangeTo.value = d
+  } else if (kind === 'yesterday') {
+    const d = ymd(subDays(now, 1))
+    rangeFrom.value = d
+    rangeTo.value = d
+  } else if (kind === 'last7') {
+    rangeFrom.value = ymd(subDays(now, 6))
+    rangeTo.value = ymd(now)
+  }
+  preset.value = 'custom'
+  reloadSummary()
 }
 
 function formatMoney(v) {
@@ -546,6 +1108,8 @@ const costPipelineLabelMap = computed(() => ({
 }))
 
 const totalTrips = computed(() => sumTrips(summary.value?.trips_by_status))
+
+const chartBadgeTripsTotal = computed(() => (totalTrips.value > 0 ? String(totalTrips.value) : ''))
 
 const totalTripsInRange = computed(() => Number(summary.value?.trip_completion?.total ?? totalTrips.value))
 
@@ -735,7 +1299,8 @@ async function reloadSummary() {
   loading.value = true
   loadError.value = ''
   try {
-    summary.value = await getSummary({ from: rangeFrom.value, to: rangeTo.value })
+    summary.value = await getSummary(summaryFilters.value)
+    await loadRecentLists()
   } catch {
     loadError.value = t('dashboard_analytics.load_error')
   } finally {
@@ -753,3 +1318,16 @@ onUnmounted(() => {
   window.removeEventListener('resize', updateChartHeights)
 })
 </script>
+
+<style scoped>
+.dash-date-input {
+  color-scheme: light dark;
+}
+.dash-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+}
+.dash-date-input:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+</style>

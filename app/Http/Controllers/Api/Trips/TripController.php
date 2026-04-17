@@ -39,6 +39,27 @@ class TripController extends Controller
         $q->when(isset($data['from']), fn (Builder $b) => $b->where('depart_at', '>=', Carbon::parse($data['from'])->startOfDay()));
         $q->when(isset($data['to']), fn (Builder $b) => $b->where('depart_at', '<=', Carbon::parse($data['to'])->endOfDay()));
 
+        $q->when(isset($data['trip_type']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('trip_type', $data['trip_type'])));
+        $q->when(isset($data['source_channel']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('source_channel', $data['source_channel'])));
+        $q->when(isset($data['paper_status']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('paper_status', $data['paper_status'])));
+        $q->when(! empty($data['is_urgent']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('is_urgent', true)));
+
+        $q->when(! empty($data['fleet_mode']), function (Builder $b) use ($data) {
+            match ($data['fleet_mode']) {
+                'internal' => $b->whereNull('transport_provider_id')->whereNotNull('vehicle_id'),
+                'vendor_hire' => $b->whereNotNull('transport_provider_id')
+                    ->whereHas('transportProvider', function (Builder $p) {
+                        $p->where(function (Builder $inner) {
+                            $inner->whereNull('type')->orWhere('type', '!=', 'taxi');
+                        });
+                    }),
+                'taxi' => $b->whereNotNull('transport_provider_id')
+                    ->whereHas('transportProvider', fn (Builder $p) => $p->where('type', 'taxi')),
+                'unspecified' => $b->whereNull('transport_provider_id')->whereNull('vehicle_id'),
+                default => null,
+            };
+        });
+
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
 

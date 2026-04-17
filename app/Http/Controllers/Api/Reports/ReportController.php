@@ -10,6 +10,7 @@ use App\Models\DispatchRequest;
 use App\Models\Trip;
 use App\Models\TripCost;
 use App\Models\Vehicle;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +29,65 @@ class ReportController extends Controller
         };
     }
 
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    protected function applyTripSummaryFilters(Builder $q, array $filters): void
+    {
+        if (! empty($filters['trip_status'])) {
+            $q->where('trips.status', $filters['trip_status']);
+        }
+
+        $fleet = $filters['fleet_mode'] ?? null;
+        if ($fleet === 'internal') {
+            $q->whereNull('trips.transport_provider_id')->whereNotNull('trips.vehicle_id');
+        } elseif ($fleet === 'vendor_hire') {
+            $q->whereNotNull('trips.transport_provider_id')
+                ->whereHas('transportProvider', function (Builder $p) {
+                    $p->where(function (Builder $inner) {
+                        $inner->whereNull('type')->orWhere('type', '!=', 'taxi');
+                    });
+                });
+        } elseif ($fleet === 'taxi') {
+            $q->whereNotNull('trips.transport_provider_id')
+                ->whereHas('transportProvider', fn (Builder $p) => $p->where('type', 'taxi'));
+        } elseif ($fleet === 'unspecified') {
+            $q->whereNull('trips.transport_provider_id')->whereNull('trips.vehicle_id');
+        }
+
+        if (! empty($filters['trip_type'])) {
+            $q->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('trip_type', $filters['trip_type']));
+        }
+        if (! empty($filters['source_channel'])) {
+            $q->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('source_channel', $filters['source_channel']));
+        }
+        if (! empty($filters['paper_status'])) {
+            $q->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('paper_status', $filters['paper_status']));
+        }
+        if (! empty($filters['is_urgent'])) {
+            $q->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('is_urgent', true));
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    protected function applyDispatchSummaryFilters(Builder $q, array $filters): void
+    {
+        if (! empty($filters['trip_type'])) {
+            $q->where('trip_type', $filters['trip_type']);
+        }
+        if (! empty($filters['source_channel'])) {
+            $q->where('source_channel', $filters['source_channel']);
+        }
+        if (! empty($filters['paper_status'])) {
+            $q->where('paper_status', $filters['paper_status']);
+        }
+        if (! empty($filters['is_urgent'])) {
+            $q->where('is_urgent', true);
+        }
+    }
+
     public function summary(ReportSummaryRequest $request)
     {
         $data = $request->validated();
@@ -36,7 +96,13 @@ class ReportController extends Controller
         $to = isset($data['to']) ? Carbon::parse($data['to'])->endOfDay() : now()->endOfDay();
 
         $tripBase = Trip::query()->whereBetween('trips.depart_at', [$from, $to]);
-        $costBase = TripCost::query()->whereBetween('created_at', [$from, $to]);
+        $this->applyTripSummaryFilters($tripBase, $data);
+
+        $costBase = TripCost::query()
+            ->whereBetween('trip_costs.created_at', [$from, $to])
+            ->whereHas('trip', function (Builder $t) use ($data) {
+                $this->applyTripSummaryFilters($t, $data);
+            });
 
         $tripsByStatus = $tripBase
             ->clone()
@@ -68,9 +134,9 @@ class ReportController extends Controller
 
         $costsByType = $costBase
             ->clone()
-            ->where('status', 'confirmed')
-            ->select('type', DB::raw('SUM(amount) as total_amount'))
-            ->groupBy('type')
+            ->where('trip_costs.status', 'confirmed')
+            ->select('trip_costs.type', DB::raw('SUM(trip_costs.amount) as total_amount'))
+            ->groupBy('trip_costs.type')
             ->pluck('total_amount', 'type');
 
         $providerSpend = TripCost::query()
@@ -78,6 +144,9 @@ class ReportController extends Controller
             ->leftJoin('transport_providers', 'transport_providers.id', '=', 'trips.transport_provider_id')
             ->where('trip_costs.status', 'confirmed')
             ->whereBetween('trip_costs.created_at', [$from, $to])
+            ->whereHas('trip', function (Builder $t) use ($data) {
+                $this->applyTripSummaryFilters($t, $data);
+            })
             ->selectRaw("COALESCE(transport_providers.name, 'INTERNAL') as provider, SUM(trip_costs.amount) as total_amount")
             ->groupByRaw("COALESCE(transport_providers.name, 'INTERNAL')")
             ->orderByDesc('total_amount')
@@ -90,14 +159,14 @@ class ReportController extends Controller
             ->where('sla_due_at', '<', now())
             ->count();
 
-        $fleetAgg = DB::table('trips as t')
-            ->leftJoin('transport_providers as tp', 'tp.id', '=', 't.transport_provider_id')
-            ->whereBetween('t.depart_at', [$from, $to])
+        $fleetAgg = $tripBase
+            ->clone()
+            ->leftJoin('transport_providers as tp', 'tp.id', '=', 'trips.transport_provider_id')
             ->selectRaw(
                 'SUM(CASE WHEN tp.type = ? THEN 1 ELSE 0 END) as taxi,'.
-                'SUM(CASE WHEN t.transport_provider_id IS NOT NULL AND (tp.type IS NULL OR tp.type != ?) THEN 1 ELSE 0 END) as vendor_hire,'.
-                'SUM(CASE WHEN t.transport_provider_id IS NULL AND t.vehicle_id IS NOT NULL THEN 1 ELSE 0 END) as internal,'.
-                'SUM(CASE WHEN t.transport_provider_id IS NULL AND t.vehicle_id IS NULL THEN 1 ELSE 0 END) as unspecified',
+                'SUM(CASE WHEN trips.transport_provider_id IS NOT NULL AND (tp.type IS NULL OR tp.type != ?) THEN 1 ELSE 0 END) as vendor_hire,'.
+                'SUM(CASE WHEN trips.transport_provider_id IS NULL AND trips.vehicle_id IS NOT NULL THEN 1 ELSE 0 END) as internal,'.
+                'SUM(CASE WHEN trips.transport_provider_id IS NULL AND trips.vehicle_id IS NULL THEN 1 ELSE 0 END) as unspecified',
                 ['taxi', 'taxi'],
             )
             ->first();
@@ -127,12 +196,15 @@ class ReportController extends Controller
 
         $costsByPipelineStatus = $costBase
             ->clone()
-            ->select('status', DB::raw('SUM(amount) as total_amount'))
-            ->groupBy('status')
+            ->select('trip_costs.status', DB::raw('SUM(trip_costs.amount) as total_amount'))
+            ->groupBy('trip_costs.status')
             ->pluck('total_amount', 'status');
 
-        $dispatchRequestsByStatus = DispatchRequest::query()
-            ->whereBetween('depart_at', [$from, $to])
+        $dispatchBase = DispatchRequest::query()->whereBetween('depart_at', [$from, $to]);
+        $this->applyDispatchSummaryFilters($dispatchBase, $data);
+
+        $dispatchRequestsByStatus = $dispatchBase
+            ->clone()
             ->select('status', DB::raw('COUNT(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -148,11 +220,11 @@ class ReportController extends Controller
             ->limit(12)
             ->pluck('c', 'license_plate');
 
+        $tripIdSub = $tripBase->clone()->select('trips.id');
         $tripRecordsDistanceKm = (float) DB::table('trip_records')
-            ->join('trips', 'trips.id', '=', 'trip_records.trip_id')
-            ->whereBetween('trips.depart_at', [$from, $to])
-            ->whereNotNull('trip_records.distance_km')
-            ->sum('trip_records.distance_km');
+            ->whereIn('trip_id', $tripIdSub)
+            ->whereNotNull('distance_km')
+            ->sum('distance_km');
 
         $startToday = now()->startOfDay();
         $endComplianceWindow = now()->copy()->addDays(30)->endOfDay();

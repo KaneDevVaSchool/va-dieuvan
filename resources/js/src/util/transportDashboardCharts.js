@@ -12,6 +12,85 @@ const AXIS = {
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899']
 
+const TOOLBOX_COMPACT = {
+  right: 2,
+  top: 2,
+  itemSize: 11,
+  feature: {
+    saveAsImage: { type: 'png', name: 'chart', pixelRatio: 2 },
+    restore: {},
+  },
+}
+
+function enhancePieOption(option) {
+  if (!option?.series?.length) return option
+  return {
+    ...option,
+    toolbox: TOOLBOX_COMPACT,
+    series: option.series.map((s) =>
+      s.type === 'pie'
+        ? {
+            ...s,
+            emphasis: {
+              scale: true,
+              scaleSize: 10,
+              itemStyle: { shadowBlur: 16, shadowColor: 'rgba(15,23,42,0.18)' },
+            },
+            selectedMode: 'single',
+          }
+        : s,
+    ),
+  }
+}
+
+function enhanceBarOption(option, { horizontal = false, categoryCount = 0 } = {}) {
+  const zoom =
+    categoryCount > 6
+      ? horizontal
+        ? [
+            { type: 'inside', yAxisIndex: 0, filterMode: 'filter' },
+            { type: 'slider', yAxisIndex: 0, width: 12, right: 2 },
+          ]
+        : [
+            { type: 'inside', xAxisIndex: 0, filterMode: 'filter' },
+            { type: 'slider', xAxisIndex: 0, height: 14, bottom: 4 },
+          ]
+      : undefined
+  const tt = option.tooltip || {}
+  const gridPatch =
+    zoom && option.grid
+      ? horizontal
+        ? { ...option.grid, right: Math.max(Number(option.grid.right) || 8, 28) }
+        : { ...option.grid, bottom: (option.grid.bottom ?? 28) + 22 }
+      : option.grid
+  return {
+    ...option,
+    ...(gridPatch ? { grid: gridPatch } : {}),
+    toolbox: TOOLBOX_COMPACT,
+    ...(zoom ? { dataZoom: zoom } : {}),
+    tooltip: {
+      ...tt,
+      confine: true,
+      axisPointer:
+        tt.trigger === 'axis'
+          ? { type: 'shadow', shadowStyle: { color: 'rgba(99,102,241,0.12)' } }
+          : tt.axisPointer,
+    },
+  }
+}
+
+function enhanceLineOption(option) {
+  return {
+    ...option,
+    toolbox: TOOLBOX_COMPACT,
+    tooltip: {
+      ...option.tooltip,
+      confine: true,
+      axisPointer: { type: 'line', lineStyle: { color: '#818cf8', width: 1 } },
+    },
+  }
+}
+
 /** Centered empty state so chart areas never look blank. */
 export function emptyDashboardChartOption(message) {
   return {
@@ -74,7 +153,7 @@ export function tripsStatusDonutOption({ tripsByStatus, labelMap, emptyText }) {
   if (!data.length) {
     return emptyDashboardChartOption(emptyText ?? '—')
   }
-  return {
+  return enhancePieOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0, textStyle: { color: AXIS.label, fontSize: 11 } },
     series: [
@@ -88,7 +167,7 @@ export function tripsStatusDonutOption({ tripsByStatus, labelMap, emptyText }) {
         data,
       },
     ],
-  }
+  })
 }
 
 export function costsByTypeBarOption({ costsByType, formatMoney, emptyText }) {
@@ -100,47 +179,50 @@ export function costsByTypeBarOption({ costsByType, formatMoney, emptyText }) {
   if (!cats.length) {
     return emptyDashboardChartOption(emptyText ?? '—')
   }
-  return {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter(params) {
-        const p = params[0]
-        return `${p.name}<br/>${formatMoney(p.value)}`
-      },
-    },
-    grid: { left: 12, right: 8, top: 28, bottom: 28, containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: cats,
-      axisLabel: { color: AXIS.label, rotate: cats.some((c) => c.length > 10) ? 28 : 0, fontSize: 10 },
-      axisLine: { lineStyle: { color: AXIS.line } },
-    },
-    yAxis: {
-      type: 'value',
-      axisLabel: {
-        color: AXIS.label,
-        fontSize: 10,
-        formatter(v) {
-          if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`
-          if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`
-          if (v >= 1e3) return `${(v / 1e3).toFixed(0)}k`
-          return String(v)
+  return enhanceBarOption(
+    {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter(params) {
+          const p = params[0]
+          return `${p.name}<br/>${formatMoney(p.value)}`
         },
       },
-      splitLine: { lineStyle: { color: AXIS.split } },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: vals.map((v, i) => ({
-          value: v,
-          itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [4, 4, 0, 0] },
-        })),
-        barMaxWidth: 36,
+      grid: { left: 12, right: 8, top: 28, bottom: 28, containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: cats,
+        axisLabel: { color: AXIS.label, rotate: cats.some((c) => c.length > 10) ? 28 : 0, fontSize: 10 },
+        axisLine: { lineStyle: { color: AXIS.line } },
       },
-    ],
-  }
+      yAxis: {
+        type: 'value',
+        axisLabel: {
+          color: AXIS.label,
+          fontSize: 10,
+          formatter(v) {
+            if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`
+            if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`
+            if (v >= 1e3) return `${(v / 1e3).toFixed(0)}k`
+            return String(v)
+          },
+        },
+        splitLine: { lineStyle: { color: AXIS.split } },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: vals.map((v, i) => ({
+            value: v,
+            itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [4, 4, 0, 0] },
+          })),
+          barMaxWidth: 36,
+        },
+      ],
+    },
+    { horizontal: false, categoryCount: cats.length },
+  )
 }
 
 export function providersHorizontalBarOption({ rows, formatMoney, maxItems = 12, emptyText }) {
@@ -150,38 +232,41 @@ export function providersHorizontalBarOption({ rows, formatMoney, maxItems = 12,
   }
   const names = list.map((r) => r.provider ?? '—').reverse()
   const vals = list.map((r) => Number(r.total_amount ?? 0)).reverse()
-  return {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter(params) {
-        const p = params[0]
-        return `${p.name}<br/>${formatMoney(p.value)}`
+  return enhanceBarOption(
+    {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter(params) {
+          const p = params[0]
+          return `${p.name}<br/>${formatMoney(p.value)}`
+        },
       },
-    },
-    grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
-    xAxis: {
-      type: 'value',
-      axisLabel: { color: AXIS.label, fontSize: 10 },
-      splitLine: { lineStyle: { color: AXIS.split } },
-    },
-    yAxis: {
-      type: 'category',
-      data: names,
-      axisLabel: { color: AXIS.label, fontSize: 10, width: 120, overflow: 'truncate' },
-      axisLine: { lineStyle: { color: AXIS.line } },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: vals.map((v, i) => ({
-          value: v,
-          itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
-        })),
-        barMaxWidth: 20,
+      grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
+      xAxis: {
+        type: 'value',
+        axisLabel: { color: AXIS.label, fontSize: 10 },
+        splitLine: { lineStyle: { color: AXIS.split } },
       },
-    ],
-  }
+      yAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: { color: AXIS.label, fontSize: 10, width: 120, overflow: 'truncate' },
+        axisLine: { lineStyle: { color: AXIS.line } },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: vals.map((v, i) => ({
+            value: v,
+            itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
+          })),
+          barMaxWidth: 20,
+        },
+      ],
+    },
+    { horizontal: true, categoryCount: names.length },
+  )
 }
 
 export function tripsByHourLineOption({ counts24, t, emptyText }) {
@@ -192,7 +277,7 @@ export function tripsByHourLineOption({ counts24, t, emptyText }) {
   const labels = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`)
   const maxV = Math.max(...counts24, 1)
   const showLabels = maxV <= 30
-  return {
+  return enhanceLineOption({
     tooltip: { trigger: 'axis' },
     grid: { left: 8, right: 12, top: 32, bottom: 24, containLabel: true },
     xAxis: {
@@ -234,7 +319,7 @@ export function tripsByHourLineOption({ counts24, t, emptyText }) {
         data: counts24,
       },
     ],
-  }
+  })
 }
 
 export function fleetModeDonutOption({ tripsByFleetMode, labelMap, emptyText }) {
@@ -249,7 +334,7 @@ export function fleetModeDonutOption({ tripsByFleetMode, labelMap, emptyText }) 
   if (!data.length) {
     return emptyDashboardChartOption(emptyText ?? '—')
   }
-  return {
+  return enhancePieOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0, textStyle: { color: AXIS.label, fontSize: 11 } },
     series: [
@@ -262,7 +347,7 @@ export function fleetModeDonutOption({ tripsByFleetMode, labelMap, emptyText }) 
         data,
       },
     ],
-  }
+  })
 }
 
 export function statusDonutOption({ countsByStatus, labelMap, emptyText }) {
@@ -275,7 +360,7 @@ export function statusDonutOption({ countsByStatus, labelMap, emptyText }) {
   if (!data.length) {
     return emptyDashboardChartOption(emptyText ?? '—')
   }
-  return {
+  return enhancePieOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     legend: { bottom: 0, textStyle: { color: AXIS.label, fontSize: 11 } },
     series: [
@@ -288,7 +373,7 @@ export function statusDonutOption({ countsByStatus, labelMap, emptyText }) {
         data,
       },
     ],
-  }
+  })
 }
 
 export function costsPipelineBarOption({ costsByPipelineStatus, labelMap, formatMoney, emptyText }) {
@@ -301,47 +386,50 @@ export function costsPipelineBarOption({ costsByPipelineStatus, labelMap, format
   }
   const cats = entries.map(([k]) => labelMap[k] ?? k)
   const vals = entries.map(([, v]) => v)
-  return {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter(params) {
-        const p = params[0]
-        return `${p.name}<br/>${formatMoney(p.value)}`
-      },
-    },
-    grid: { left: 8, right: 8, top: 20, bottom: entries.length > 3 ? 40 : 28, containLabel: true },
-    xAxis: {
-      type: 'value',
-      axisLabel: {
-        color: AXIS.label,
-        fontSize: 10,
-        formatter(v) {
-          if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`
-          if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`
-          if (v >= 1e3) return `${(v / 1e3).toFixed(0)}k`
-          return String(v)
+  return enhanceBarOption(
+    {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter(params) {
+          const p = params[0]
+          return `${p.name}<br/>${formatMoney(p.value)}`
         },
       },
-      splitLine: { lineStyle: { color: AXIS.split } },
-    },
-    yAxis: {
-      type: 'category',
-      data: cats,
-      axisLabel: { color: AXIS.label, fontSize: 10, width: 90, overflow: 'truncate' },
-      axisLine: { lineStyle: { color: AXIS.line } },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: vals.map((v, i) => ({
-          value: v,
-          itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
-        })),
-        barMaxWidth: 22,
+      grid: { left: 8, right: 8, top: 20, bottom: entries.length > 3 ? 40 : 28, containLabel: true },
+      xAxis: {
+        type: 'value',
+        axisLabel: {
+          color: AXIS.label,
+          fontSize: 10,
+          formatter(v) {
+            if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`
+            if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`
+            if (v >= 1e3) return `${(v / 1e3).toFixed(0)}k`
+            return String(v)
+          },
+        },
+        splitLine: { lineStyle: { color: AXIS.split } },
       },
-    ],
-  }
+      yAxis: {
+        type: 'category',
+        data: cats,
+        axisLabel: { color: AXIS.label, fontSize: 10, width: 90, overflow: 'truncate' },
+        axisLine: { lineStyle: { color: AXIS.line } },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: vals.map((v, i) => ({
+            value: v,
+            itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
+          })),
+          barMaxWidth: 22,
+        },
+      ],
+    },
+    { horizontal: true, categoryCount: cats.length },
+  )
 }
 
 export function topRequestersBarOption({ rows, tripsSuffix, emptyText }) {
@@ -351,39 +439,42 @@ export function topRequestersBarOption({ rows, tripsSuffix, emptyText }) {
   }
   const names = list.map((r) => r.requester_label ?? '—').reverse()
   const vals = list.map((r) => Number(r.trip_count ?? 0)).reverse()
-  return {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter(params) {
-        const p = params[0]
-        return `${p.name}<br/>${p.value} ${tripsSuffix}`
+  return enhanceBarOption(
+    {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter(params) {
+          const p = params[0]
+          return `${p.name}<br/>${p.value} ${tripsSuffix}`
+        },
       },
-    },
-    grid: { left: 8, right: 12, top: 8, bottom: 8, containLabel: true },
-    xAxis: {
-      type: 'value',
-      minInterval: 1,
-      axisLabel: { color: AXIS.label, fontSize: 10 },
-      splitLine: { lineStyle: { color: AXIS.split } },
-    },
-    yAxis: {
-      type: 'category',
-      data: names,
-      axisLabel: { color: AXIS.label, fontSize: 10, width: 100, overflow: 'truncate' },
-      axisLine: { lineStyle: { color: AXIS.line } },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: vals.map((v, i) => ({
-          value: v,
-          itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
-        })),
-        barMaxWidth: 18,
+      grid: { left: 8, right: 12, top: 8, bottom: 8, containLabel: true },
+      xAxis: {
+        type: 'value',
+        minInterval: 1,
+        axisLabel: { color: AXIS.label, fontSize: 10 },
+        splitLine: { lineStyle: { color: AXIS.split } },
       },
-    ],
-  }
+      yAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: { color: AXIS.label, fontSize: 10, width: 100, overflow: 'truncate' },
+        axisLine: { lineStyle: { color: AXIS.line } },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: vals.map((v, i) => ({
+            value: v,
+            itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
+          })),
+          barMaxWidth: 18,
+        },
+      ],
+    },
+    { horizontal: true, categoryCount: names.length },
+  )
 }
 
 export function licensePlateTripsBarOption({ tripsByPlate, plateSuffix, emptyText }) {
@@ -396,39 +487,42 @@ export function licensePlateTripsBarOption({ tripsByPlate, plateSuffix, emptyTex
   }
   const names = entries.map(([p]) => p).reverse()
   const vals = entries.map(([, v]) => v).reverse()
-  return {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter(params) {
-        const p = params[0]
-        return `${p.name}<br/>${p.value} ${plateSuffix}`
+  return enhanceBarOption(
+    {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter(params) {
+          const p = params[0]
+          return `${p.name}<br/>${p.value} ${plateSuffix}`
+        },
       },
-    },
-    grid: { left: 8, right: 12, top: 8, bottom: 8, containLabel: true },
-    xAxis: {
-      type: 'value',
-      minInterval: 1,
-      axisLabel: { color: AXIS.label, fontSize: 10 },
-      splitLine: { lineStyle: { color: AXIS.split } },
-    },
-    yAxis: {
-      type: 'category',
-      data: names,
-      axisLabel: { color: AXIS.label, fontSize: 10, width: 88, overflow: 'truncate' },
-      axisLine: { lineStyle: { color: AXIS.line } },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: vals.map((v, i) => ({
-          value: v,
-          itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
-        })),
-        barMaxWidth: 18,
+      grid: { left: 8, right: 12, top: 8, bottom: 8, containLabel: true },
+      xAxis: {
+        type: 'value',
+        minInterval: 1,
+        axisLabel: { color: AXIS.label, fontSize: 10 },
+        splitLine: { lineStyle: { color: AXIS.split } },
       },
-    ],
-  }
+      yAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: { color: AXIS.label, fontSize: 10, width: 88, overflow: 'truncate' },
+        axisLine: { lineStyle: { color: AXIS.line } },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: vals.map((v, i) => ({
+            value: v,
+            itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [0, 4, 4, 0] },
+          })),
+          barMaxWidth: 18,
+        },
+      ],
+    },
+    { horizontal: true, categoryCount: names.length },
+  )
 }
 
 export function tripsByTripTypeBarOption({ tripsByTripType, labelMap, emptyText }) {
@@ -441,30 +535,33 @@ export function tripsByTripTypeBarOption({ tripsByTripType, labelMap, emptyText 
   }
   const cats = entries.map(([k]) => labelMap[k] ?? k)
   const vals = entries.map(([, v]) => v)
-  return {
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    grid: { left: 8, right: 8, top: 16, bottom: 48, containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: cats,
-      axisLabel: { color: AXIS.label, fontSize: 10, interval: 0, rotate: 22 },
-      axisLine: { lineStyle: { color: AXIS.line } },
-    },
-    yAxis: {
-      type: 'value',
-      minInterval: 1,
-      axisLabel: { color: AXIS.label, fontSize: 10 },
-      splitLine: { lineStyle: { color: AXIS.split } },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: vals.map((v, i) => ({
-          value: v,
-          itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [4, 4, 0, 0] },
-        })),
-        barMaxWidth: 40,
+  return enhanceBarOption(
+    {
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: 8, right: 8, top: 16, bottom: 48, containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: cats,
+        axisLabel: { color: AXIS.label, fontSize: 10, interval: 0, rotate: 22 },
+        axisLine: { lineStyle: { color: AXIS.line } },
       },
-    ],
-  }
+      yAxis: {
+        type: 'value',
+        minInterval: 1,
+        axisLabel: { color: AXIS.label, fontSize: 10 },
+        splitLine: { lineStyle: { color: AXIS.split } },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: vals.map((v, i) => ({
+            value: v,
+            itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [4, 4, 0, 0] },
+          })),
+          barMaxWidth: 40,
+        },
+      ],
+    },
+    { horizontal: false, categoryCount: cats.length },
+  )
 }
