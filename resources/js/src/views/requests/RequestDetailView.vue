@@ -1,16 +1,14 @@
 <template>
-  <div class="min-h-screen bg-[#F8F9FA] print:bg-white">
+  <div class="min-h-screen bg-[#F8F9FA]">
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">Đang tải…</div>
 
     <template v-else-if="req">
-      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-10 print:pt-0">
-        <div
-          class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-center sm:justify-between print:border-0 print:pb-3"
-        >
+      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-10">
+        <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex min-w-0 flex-1 items-start gap-3">
             <RouterLink
               to="/requests"
-              class="no-print mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+              class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
               aria-label="Quay lại danh sách"
             >
               <ArrowLeftIcon class="h-5 w-5" />
@@ -37,7 +35,7 @@
               </p>
             </div>
           </div>
-          <div class="no-print flex flex-wrap items-center gap-2 sm:justify-end">
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
             <RouterLink
               to="/notifications"
               class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50"
@@ -46,14 +44,6 @@
               <BellIcon class="h-5 w-5" />
               <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" aria-hidden="true" />
             </RouterLink>
-            <button
-              type="button"
-              class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-              @click="doPrint"
-            >
-              <PrinterIcon class="h-5 w-5 text-slate-500" />
-              In
-            </button>
             <button
               type="button"
               class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-400 shadow-sm"
@@ -67,7 +57,7 @@
         </div>
 
         <!-- Stepper -->
-        <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm print:border print:shadow-none">
+        <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">Tiến trình yêu cầu</h2>
           <div class="mt-6 overflow-x-auto pb-2">
             <div class="flex min-w-[640px] items-start">
@@ -126,20 +116,50 @@
         <!-- Pending actions -->
         <section
           v-if="req.status === 'pending' && canApprove"
-          class="no-print rounded-2xl border border-amber-200/80 bg-amber-50/50 p-5 shadow-sm"
+          class="overflow-hidden rounded-2xl border border-teal-200/90 bg-gradient-to-br from-teal-50/90 via-white to-white p-5 shadow-md shadow-teal-900/5 ring-1 ring-teal-600/10"
         >
-          <h2 class="text-sm font-semibold text-slate-900">Thao tác duyệt</h2>
-          <div class="mt-3 flex flex-col gap-3 sm:flex-row">
-            <Button :loading="acting" class="bg-teal-600 hover:bg-teal-700" @click="decide('approve')">Duyệt</Button>
-            <Button variant="danger" :loading="acting" @click="decide('reject')">Từ chối</Button>
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-lg shadow-teal-900/20"
+            >
+              <ClipboardDocumentCheckIcon class="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-base font-semibold tracking-tight text-slate-900">Thao tác duyệt</h2>
+              <p class="mt-1 text-sm leading-snug text-slate-600">
+                Phê duyệt để tạo chuyến, hoặc từ chối nếu không đáp ứng.
+              </p>
+              <div class="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+                <Button
+                  :loading="acting"
+                  class="min-h-[2.75rem] w-full justify-center !bg-teal-600 !py-2.5 text-[15px] font-semibold shadow-sm hover:!bg-teal-700"
+                  @click="decide('approve')"
+                >
+                  Duyệt yêu cầu
+                </Button>
+                <Button
+                  variant="danger"
+                  :loading="acting"
+                  class="min-h-[2.75rem] w-full justify-center !border-rose-200 !bg-white !py-2.5 text-[15px] font-semibold !text-rose-700 shadow-sm hover:!bg-rose-50"
+                  @click="decide('reject')"
+                >
+                  Từ chối
+                </Button>
+              </div>
+              <p
+                v-if="msg"
+                class="mt-4 rounded-lg border border-slate-200/80 bg-white/90 px-3 py-2 text-sm font-medium text-slate-800"
+              >
+                {{ msg }}
+              </p>
+            </div>
           </div>
-          <p v-if="msg" class="mt-2 text-sm text-slate-600">{{ msg }}</p>
         </section>
 
         <div class="grid gap-6 lg:grid-cols-3">
           <!-- Trip info -->
           <section class="space-y-6 lg:col-span-2">
-            <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm print:border print:shadow-none">
+            <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-4">
                 <div class="flex items-center gap-2 text-teal-600">
                   <InformationCircleIcon class="h-6 w-6 shrink-0" />
@@ -220,7 +240,7 @@
                 <div v-if="hasUserNotes" class="min-w-0">
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Ghi chú</p>
                   <div
-                    class="mt-2 max-h-[min(28rem,55vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere] print:max-h-none md:max-h-[min(36rem,65vh)]"
+                    class="mt-2 max-h-[min(28rem,55vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere] md:max-h-[min(36rem,65vh)]"
                   >
                     {{ userNotesFormatted }}
                   </div>
@@ -230,7 +250,7 @@
                   <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Nội dung đơn điện tử (BM.03)</p>
                   <p class="mt-1 text-xs text-slate-500">Tự động từ biểu mẫu tạo yêu cầu; không dùng cột ghi chú.</p>
                   <div
-                    class="mt-2 max-h-[min(32rem,70vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere] print:max-h-none"
+                    class="mt-2 max-h-[min(32rem,70vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere]"
                   >
                     {{ bm03Display }}
                   </div>
@@ -238,127 +258,87 @@
 
                 <!-- Attached documents -->
                 <div class="min-w-0 md:col-span-2">
-                  <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tài liệu đính kèm</p>
-                  <p class="mt-1 text-xs text-slate-500">Tải thêm chứng từ, ảnh hoặc file liên quan (tối đa 10MB). Kéo thả hoặc chọn tệp.</p>
-
-                  <ul v-if="generalAttachments.length" class="mt-3 divide-y divide-slate-100 rounded-lg border border-slate-100 bg-slate-50/50">
-                    <li
-                      v-for="a in generalAttachments"
-                      :key="a.id"
-                      class="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm"
-                    >
-                      <span class="min-w-0 font-medium text-slate-800">{{ a.original_name || `File #${a.id}` }}</span>
-                      <div class="flex items-center gap-2">
-                        <button
-                          type="button"
-                          class="text-xs font-medium text-teal-700 underline underline-offset-2 hover:text-teal-800"
-                          @click="downloadFile(a)"
-                        >
-                          Tải xuống
-                        </button>
-                        <button
-                          v-if="canDeleteAttachment"
-                          type="button"
-                          class="text-xs font-medium text-rose-600 underline underline-offset-2 hover:text-rose-700"
-                          :disabled="deletingId === a.id"
-                          @click="removeAttachment(a)"
-                        >
-                          {{ deletingId === a.id ? '…' : 'Xóa' }}
-                        </button>
+                  <div
+                    class="rounded-xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/40 p-4 shadow-sm ring-1 ring-slate-900/[0.04]"
+                  >
+                    <div class="flex items-start gap-3">
+                      <div
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600 ring-1 ring-teal-600/10"
+                      >
+                        <PaperClipIcon class="h-5 w-5" aria-hidden="true" />
                       </div>
-                    </li>
-                  </ul>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Tài liệu đính kèm</p>
+                        <p class="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+                          Chứng từ, ảnh hoặc file liên quan · tối đa 10&nbsp;MB · kéo thả hoặc chọn tệp.
+                        </p>
+                      </div>
+                    </div>
 
-                  <div v-if="attachErr" class="mt-2 text-sm text-rose-600">{{ attachErr }}</div>
+                    <ul
+                      v-if="generalAttachments.length"
+                      class="mt-3 space-y-1.5"
+                    >
+                      <li
+                        v-for="a in generalAttachments"
+                        :key="a.id"
+                        class="flex items-center justify-between gap-2 rounded-lg border border-slate-100/90 bg-white/90 px-2.5 py-2 text-sm shadow-sm transition hover:border-teal-200/60 hover:bg-teal-50/20"
+                      >
+                        <span class="flex min-w-0 flex-1 items-center gap-2">
+                          <DocumentIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                          <span class="truncate font-medium text-slate-800" :title="a.original_name || `File #${a.id}`">
+                            {{ a.original_name || `File #${a.id}` }}
+                          </span>
+                        </span>
+                        <div class="flex shrink-0 items-center gap-0.5">
+                          <button
+                            type="button"
+                            class="rounded-md px-2 py-1 text-[11px] font-semibold text-teal-700 transition hover:bg-teal-100/80 hover:text-teal-900"
+                            @click="downloadFile(a)"
+                          >
+                            Tải
+                          </button>
+                          <button
+                            v-if="canDeleteAttachment"
+                            type="button"
+                            class="rounded-md px-2 py-1 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                            :disabled="deletingId === a.id"
+                            @click="removeAttachment(a)"
+                          >
+                            {{ deletingId === a.id ? '…' : 'Xóa' }}
+                          </button>
+                        </div>
+                      </li>
+                    </ul>
 
-                  <div class="no-print mt-3">
-                    <FileUpload
-                      v-if="canUploadAttachment"
-                      :key="`doc-${route.params.id}-${generalAttachments.length}`"
-                      label="Thêm tài liệu"
-                      hint=""
-                      drag-drop
-                      :upload-fn="uploadRequestDocument"
-                      @uploaded="onDocUploaded"
-                    />
-                    <p v-else class="text-xs text-slate-500">Bạn không có quyền tải file đính kèm.</p>
+                    <div v-if="attachErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">
+                      {{ attachErr }}
+                    </div>
+
+                    <div class="mt-3">
+                      <FileUpload
+                        v-if="canUploadAttachment"
+                        :key="`doc-${route.params.id}-${generalAttachments.length}`"
+                        label="Thêm tài liệu"
+                        hint="Ảnh, PDF, Word…"
+                        drag-drop
+                        compact
+                        :upload-fn="uploadRequestDocument"
+                        @uploaded="onDocUploaded"
+                      />
+                      <p v-else class="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-3 py-2 text-xs text-slate-500">
+                        Bạn không có quyền tải file đính kèm.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <!-- Paper scan / OCR (administrative) -->
-            <div
-              v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending'"
-              class="no-print rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
-            >
-              <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
-              <p v-if="paperScans.length" class="mt-1 text-xs text-slate-500">
-                OCR (stub): chỉ áp dụng cho file loại <code class="rounded bg-slate-100 px-1">paper_scan</code>.
-              </p>
-              <ul v-if="paperScans.length" class="mt-3 space-y-3 text-sm">
-                <li
-                  v-for="a in paperScans"
-                  :key="a.id"
-                  class="rounded-lg border border-slate-100 bg-slate-50/50 p-3"
-                >
-                  <div class="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      class="font-medium text-teal-700 underline"
-                      @click="downloadFile(a)"
-                    >
-                      {{ a.original_name || 'Tải file' }}
-                    </button>
-                    <span v-if="a.mime_type" class="text-xs text-slate-400">{{ a.mime_type }}</span>
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      class="text-xs"
-                      :loading="ocrBusy === a.id"
-                      @click="runOcr(a.id)"
-                    >
-                      Chạy OCR (demo)
-                    </Button>
-                  </div>
-                  <p v-if="a.ocr_processed_at" class="mt-1 text-xs text-slate-500">OCR lúc: {{ fmt(a.ocr_processed_at) }}</p>
-                  <pre
-                    v-if="a.ocr_text"
-                    class="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-white p-2 text-xs text-slate-800"
-                  >{{ a.ocr_text }}</pre>
-                </li>
-              </ul>
-
-              <div v-if="ocrErr" class="mt-2 text-sm text-rose-600">{{ ocrErr }}</div>
-
-              <div v-if="canUploadAttachment" class="mt-4">
-                <FileUpload
-                  :key="`paper-${route.params.id}`"
-                  label="Đính kèm phiếu giấy / scan"
-                  hint="Ảnh hoặc PDF (tối đa 10MB). Loại tệp: paper_scan."
-                  :upload-fn="uploadPaperScan"
-                  @uploaded="load"
-                />
-              </div>
-
-              <div v-if="req.paper_status === 'pending' && canManagePaper" class="mt-6 border-t border-slate-100 pt-4">
-                <h3 class="text-sm font-medium text-slate-900">Đánh dấu đã nhận phiếu giấy</h3>
-                <p class="mt-1 text-xs text-slate-500">Cần quyền request.paper.manage.</p>
-                <form class="mt-3 grid gap-3 md:grid-cols-2" @submit.prevent="doMarkPaper">
-                  <Input v-model="paperForm.paper_reference" label="Số tham chiếu / mã phiếu" placeholder="Tùy chọn" />
-                  <Input v-model="paperForm.paper_received_at" label="Thời điểm nhận" type="datetime-local" />
-                  <div class="md:col-span-2 flex items-center gap-2">
-                    <Button :loading="paperActing" type="submit">Đánh dấu đã nhận</Button>
-                    <span v-if="paperMsg" class="text-sm text-slate-600">{{ paperMsg }}</span>
-                  </div>
-                </form>
-              </div>
-            </div>
           </section>
 
-          <!-- Cost estimate -->
-          <section class="lg:col-span-1">
-            <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm print:border print:shadow-none">
+          <!-- Cost estimate + Phiếu giấy (cột phải) -->
+          <section class="space-y-6 lg:col-span-1">
+            <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div class="flex items-center gap-2 text-teal-600">
                 <CalculatorIcon class="h-6 w-6 shrink-0" />
                 <h2 class="text-base font-semibold text-slate-900">Ước tính chi phí</h2>
@@ -393,6 +373,95 @@
                 </p>
               </div>
             </div>
+
+            <!-- Paper scan / OCR — dưới ước tính chi phí -->
+            <div
+              v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending'"
+              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/50 p-4 shadow-sm ring-1 ring-slate-900/[0.04]"
+            >
+              <div class="flex items-start gap-3 border-b border-slate-100/90 pb-3">
+                <div
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 ring-1 ring-slate-200/80"
+                >
+                  <DocumentTextIcon class="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
+                  <p v-if="paperScans.length" class="mt-1 text-[11px] leading-snug text-slate-500">
+                    OCR (demo): chỉ cho loại
+                    <code class="rounded bg-slate-100 px-1 py-0.5 text-[10px] font-medium text-slate-700">paper_scan</code>
+                  </p>
+                </div>
+              </div>
+
+              <ul v-if="paperScans.length" class="mt-3 space-y-2 text-sm">
+                <li
+                  v-for="a in paperScans"
+                  :key="a.id"
+                  class="rounded-lg border border-slate-100 bg-white/90 p-3 shadow-sm ring-1 ring-slate-900/[0.02]"
+                >
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      class="max-w-full truncate text-left text-xs font-semibold text-teal-700 hover:underline"
+                      :title="a.original_name || 'Tải file'"
+                      @click="downloadFile(a)"
+                    >
+                      {{ a.original_name || 'Tải file' }}
+                    </button>
+                    <span v-if="a.mime_type" class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                      {{ a.mime_type }}
+                    </span>
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      class="!border-slate-200 !px-2 !py-1 !text-[11px] !font-semibold"
+                      :loading="ocrBusy === a.id"
+                      @click="runOcr(a.id)"
+                    >
+                      OCR
+                    </Button>
+                  </div>
+                  <p v-if="a.ocr_processed_at" class="mt-1.5 text-[11px] text-slate-500">
+                    OCR: {{ fmt(a.ocr_processed_at) }}
+                  </p>
+                  <pre
+                    v-if="a.ocr_text"
+                    class="mt-2 max-h-36 overflow-auto whitespace-pre-wrap rounded-md border border-slate-100 bg-slate-50/80 p-2 text-[11px] leading-relaxed text-slate-800"
+                  >{{ a.ocr_text }}</pre>
+                </li>
+              </ul>
+
+              <div v-if="ocrErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">{{ ocrErr }}</div>
+
+              <div v-if="canUploadAttachment" class="mt-3">
+                <FileUpload
+                  :key="`paper-${route.params.id}`"
+                  label="Đính kèm phiếu / scan"
+                  hint="Ảnh hoặc PDF · loại paper_scan"
+                  drag-drop
+                  compact
+                  :upload-fn="uploadPaperScan"
+                  @uploaded="load"
+                />
+              </div>
+
+              <div
+                v-if="req.paper_status === 'pending' && canManagePaper"
+                class="mt-4 border-t border-slate-100 pt-3"
+              >
+                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Đánh dấu đã nhận phiếu</h3>
+                <p class="mt-1 text-[11px] text-slate-500">Quyền: <span class="font-medium">request.paper.manage</span></p>
+                <form class="mt-3 grid gap-2.5" @submit.prevent="doMarkPaper">
+                  <Input v-model="paperForm.paper_reference" label="Số tham chiếu / mã phiếu" placeholder="Tùy chọn" />
+                  <Input v-model="paperForm.paper_received_at" label="Thời điểm nhận" type="datetime-local" />
+                  <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                    <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Đánh dấu đã nhận</Button>
+                    <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                  </div>
+                </form>
+              </div>
+            </div>
           </section>
         </div>
       </div>
@@ -408,13 +477,16 @@ import {
   BellIcon,
   CalculatorIcon,
   CalendarDaysIcon,
+  ClipboardDocumentCheckIcon,
   ClockIcon,
   CubeIcon,
+  DocumentTextIcon,
+  DocumentIcon,
   FlagIcon,
   HandThumbUpIcon,
   InformationCircleIcon,
+  PaperClipIcon,
   PencilSquareIcon,
-  PrinterIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
 import { CheckIcon } from '@heroicons/vue/24/solid'
@@ -672,10 +744,6 @@ function formatVndCurrency(n) {
   return `${new Intl.NumberFormat('vi-VN').format(Number(n))} VNĐ`
 }
 
-function doPrint() {
-  window.print()
-}
-
 async function load() {
   loading.value = true
   try {
@@ -791,11 +859,3 @@ async function decide(d) {
 onMounted(load)
 watch(() => route.params.id, load)
 </script>
-
-<style scoped>
-@media print {
-  .no-print {
-    display: none !important;
-  }
-}
-</style>
