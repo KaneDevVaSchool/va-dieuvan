@@ -11,11 +11,10 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfMpdfWriter;
 
 /**
  * Điền mẫu Excel BM.02/MH.QT.04 (P2P) từ wizard_snapshot.
- * PDF: xuất từ chính workbook đã điền (scripts/P2P.xlsx) qua PhpSpreadsheet Writer\Pdf\Mpdf — bám layout in của mẫu.
+ * PDF: xuất từ workbook đã điền qua {@see Bm02P2pSpreadsheetPdfWriter} (mPDF, DPI/cỡ chữ ổn định hơn mặc định PhpSpreadsheet).
  * Excel/PDF: checkbox dùng ký tự ☑/☐ để khung hiển thị rõ trong cả file và bản in.
  */
 class Bm02P2pFormGenerator
@@ -147,7 +146,7 @@ class Bm02P2pFormGenerator
             'A' => 8,
             'B' => 42,
             'C' => 18,
-            'D' => 16,
+            'D' => 19,
             'E' => 40,
             'F' => 12,
             'G' => 22,
@@ -157,7 +156,7 @@ class Bm02P2pFormGenerator
             'K' => 12,
             'L' => 12,
             'M' => 14,
-            'N' => 22,
+            'N' => 26,
         ];
         foreach ($widths as $col => $w) {
             $dim = $sheet->getColumnDimension($col);
@@ -204,20 +203,71 @@ class Bm02P2pFormGenerator
         $margins->setRight(0.25);
         $margins->setTop(0.25);
         $margins->setBottom(0.25);
+
+        $this->applyPassengerTablePolish($sheet);
+    }
+
+    /**
+     * Bảng chuyến (điểm đón/điểm trả) và ghi chú: tăng chiều cao dòng + căn số để Excel/PDF in đọc được rõ.
+     */
+    private function applyPassengerTablePolish(Worksheet $sheet): void
+    {
+        $sheet->getPageSetup()->setPrintArea('A1:N56');
+
+        for ($r = 40; $r <= 45; $r++) {
+            $rd = $sheet->getRowDimension($r);
+            $h = $rd->getRowHeight();
+            if ($h === -1 || $h < 36) {
+                $rd->setRowHeight(36);
+            }
+        }
+
+        $sheet->getStyle('C40:N45')->getAlignment()
+            ->setVertical(Alignment::VERTICAL_TOP)
+            ->setWrapText(true);
+
+        $sheet->getStyle('I40:I45')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_TOP)
+            ->setWrapText(true);
+
+        $sheet->getStyle('K40:M45')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
+            ->setVertical(Alignment::VERTICAL_TOP)
+            ->setWrapText(true);
+
+        $sheet->getStyle('C40:H45')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+            ->setVertical(Alignment::VERTICAL_TOP)
+            ->setWrapText(true);
+
+        $sheet->getStyle('J40:J45')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+            ->setVertical(Alignment::VERTICAL_TOP)
+            ->setWrapText(true);
+
+        $sheet->getStyle('N40:N45')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+            ->setVertical(Alignment::VERTICAL_TOP)
+            ->setWrapText(true);
+
+        $sheet->getStyle('L45')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
+            ->setVertical(Alignment::VERTICAL_CENTER);
     }
 
     private function applyPdfSafeFont(Spreadsheet $spreadsheet): void
     {
         $spreadsheet->getDefaultStyle()->getFont()
             ->setName('DejaVu Sans')
-            ->setSize(10);
+            ->setSize(11);
 
         foreach ($spreadsheet->getAllSheets() as $sheet) {
             $dim = $sheet->calculateWorksheetDimension();
-            $sheet->getStyle($dim)->getFont()->setName('DejaVu Sans')->setSize(10);
+            $sheet->getStyle($dim)->getFont()->setName('DejaVu Sans')->setSize(11);
 
             // Vùng D (đối tượng phân bổ): giảm cỡ và wrap để không bị mất chữ khi render PDF.
-            $sheet->getStyle('B25:M32')->getFont()->setSize(9.5);
+            $sheet->getStyle('B25:M32')->getFont()->setSize(9.75);
             $sheet->getStyle('C25:D32')->getAlignment()->setWrapText(true);
             $sheet->getStyle('F25:G32')->getAlignment()->setWrapText(true);
             $sheet->getStyle('I25:J32')->getAlignment()->setWrapText(true);
@@ -225,8 +275,10 @@ class Bm02P2pFormGenerator
 
             // Giữ các ô nhập chính nhỉnh hơn để dễ đọc.
             foreach (['E7:E10', 'D13:D14', 'E17:E21', 'E33', 'C40:N45', 'E55'] as $range) {
-                $sheet->getStyle($range)->getFont()->setSize(11);
+                $sheet->getStyle($range)->getFont()->setSize(11.5);
             }
+
+            $sheet->getStyle('B21')->getFont()->setBold(true)->setSize(12);
         }
     }
 
@@ -596,9 +648,6 @@ class Bm02P2pFormGenerator
     }
 
     /**
-     * @param  array<string, mixed>  $vm
-     */
-    /**
      * @param  array<string, true>  $selectedNorm
      * @return list<bool>
      */
@@ -626,7 +675,7 @@ class Bm02P2pFormGenerator
             mkdir($tempDir, 0755, true);
         }
 
-        $writer = new PdfMpdfWriter($spreadsheet);
+        $writer = new Bm02P2pSpreadsheetPdfWriter($spreadsheet);
         $writer->setTempDir($tempDir);
         $writer->setFont('dejavusans');
 
