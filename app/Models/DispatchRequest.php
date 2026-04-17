@@ -61,6 +61,11 @@ class DispatchRequest extends Model
         return $this->hasOne(Trip::class);
     }
 
+    public function cargoShipment(): HasOne
+    {
+        return $this->hasOne(CargoShipment::class);
+    }
+
     public function attachments(): MorphMany
     {
         return $this->morphMany(Attachment::class, 'attachable');

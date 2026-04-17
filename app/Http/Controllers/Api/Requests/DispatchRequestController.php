@@ -15,6 +15,7 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
+use App\Support\DispatchCargoShipmentProvisioner;
 use App\Support\Messages;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
@@ -225,6 +226,8 @@ class DispatchRequestController extends Controller
                 'arrive_by' => $dispatchRequest->arrive_by,
                 'lock_version' => 0,
             ]);
+
+            DispatchCargoShipmentProvisioner::provision($dispatchRequest, $trip);
 
             app(AuditLogger::class)->log(
                 actorId: $user->id,

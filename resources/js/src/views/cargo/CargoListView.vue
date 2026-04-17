@@ -489,48 +489,6 @@
           <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.chart_fleet_sub') }}</p>
           <DashboardEChart class="mt-2" height="220px" :option="fleetChartOption" :aria-label="t('cargo_page.chart_fleet_title')" />
         </div>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.popular_routes_title') }}</h3>
-            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.popular_routes_sub') }}</p>
-            <ul v-if="popularRoutes.length" class="mt-4 space-y-3">
-              <li v-for="r in popularRoutes" :key="r.route" class="flex items-center gap-3 text-sm">
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-slate-800 dark:text-slate-200">{{ r.route }}</div>
-                  <div class="mt-1 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div class="h-full rounded-full bg-teal-500 transition-all" :style="{ width: r.pct + '%' }" />
-                  </div>
-                </div>
-                <span class="shrink-0 tabular-nums text-xs font-medium text-slate-600 dark:text-slate-400">{{ r.n }}</span>
-              </li>
-            </ul>
-            <p v-else class="mt-4 text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.popular_routes_empty') }}</p>
-          </div>
-          <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.upgrade_panel_title') }}</h3>
-            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.upgrade_panel_sub') }}</p>
-            <ul v-if="upgradeSuggestions.length" class="mt-4 space-y-3">
-              <li
-                v-for="(u, i) in upgradeSuggestions"
-                :key="i"
-                class="flex gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-800/40"
-              >
-                <span
-                  class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
-                  :class="u.badgeClass"
-                >
-                  {{ i + 1 }}
-                </span>
-                <div class="min-w-0">
-                  <p class="font-medium text-slate-900 dark:text-slate-100">{{ u.title }}</p>
-                  <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ u.body }}</p>
-                </div>
-              </li>
-            </ul>
-            <p v-else class="mt-4 text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.upgrade_empty') }}</p>
-          </div>
-        </div>
       </div>
 
       <aside class="min-w-0 space-y-4 lg:col-span-1">
@@ -923,8 +881,6 @@ const fleetChartOption = computed(() => ({
   ],
 }))
 
-const popularRoutes = ref([])
-
 function fmtInt(n) {
   return new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(n ?? 0)
 }
@@ -994,42 +950,6 @@ async function loadChartSeries() {
   }
 }
 
-async function loadPopularRoutes() {
-  if (!rangeValid.value) {
-    popularRoutes.value = []
-    return
-  }
-  try {
-    const p = {
-      from: filters.from || undefined,
-      to: filters.to || undefined,
-      q: filters.q?.trim() || undefined,
-      per_page: 80,
-      page: 1,
-    }
-    Object.keys(p).forEach((k) => {
-      if (p[k] === '' || p[k] === undefined || p[k] === null) delete p[k]
-    })
-    const res = await listCargoShipments(p)
-    const map = {}
-    for (const s of res.items ?? []) {
-      const a = (s.pickup_address || '').trim() || '—'
-      const b = (s.delivery_address || '').trim() || '—'
-      const k = `${a} → ${b}`
-      map[k] = (map[k] || 0) + 1
-    }
-    const entries = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5)
-    const maxN = entries.length ? Math.max(...entries.map(([, n]) => n)) : 1
-    popularRoutes.value = entries.map(([route, n]) => ({
-      route,
-      n,
-      pct: Math.round((n / maxN) * 100),
-    }))
-  } catch {
-    popularRoutes.value = []
-  }
-}
-
 function fmt(v) {
   return v ? new Date(v).toLocaleString(locale.value === 'en' ? 'en-GB' : 'vi-VN') : ''
 }
@@ -1091,37 +1011,6 @@ async function toggleTimeline(id) {
   }
 }
 
-const upgradeSuggestions = computed(() => {
-  const out = []
-  const now = Date.now()
-  for (const s of items.value) {
-    if (!s.sla_due_at || s.status === 'delivered' || s.status === 'cancelled') continue
-    const due = new Date(s.sla_due_at).getTime()
-    if (due < now) {
-      out.push({
-        title: t('cargo_page.suggest_sla_title'),
-        body: t('cargo_page.suggest_sla_body', { code: s.tracking_code || '#' + s.id }),
-        badgeClass: 'bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200',
-      })
-    }
-  }
-  if (kpi.value.pending > 0 && kpi.value.pending >= (kpi.value.inTransit || 0) + 3) {
-    out.push({
-      title: t('cargo_page.suggest_backlog_title'),
-      body: t('cargo_page.suggest_backlog_body'),
-      badgeClass: 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100',
-    })
-  }
-  if ((kpi.value.issues ?? 0) > 0) {
-    out.push({
-      title: t('cargo_page.suggest_issues_title'),
-      body: t('cargo_page.suggest_issues_body', { n: kpi.value.issues }),
-      badgeClass: 'bg-violet-100 text-violet-900 dark:bg-violet-950/40 dark:text-violet-100',
-    })
-  }
-  return out.slice(0, 8)
-})
-
 const sidebarAlerts = computed(() => {
   const alerts = []
   const now = Date.now()
@@ -1146,7 +1035,6 @@ function onFilterChange() {
   filters.page = 1
   reloadKpis()
   loadChartSeries()
-  loadPopularRoutes()
   reload()
 }
 
@@ -1162,7 +1050,6 @@ function resetFilters() {
   if (funnelDetailsRef.value) funnelDetailsRef.value.open = false
   reloadKpis()
   loadChartSeries()
-  loadPopularRoutes()
   reload()
 }
 
@@ -1206,7 +1093,6 @@ onMounted(() => {
   searchInput.value = filters.q
   reloadKpis()
   loadChartSeries()
-  loadPopularRoutes()
   reload()
 })
 </script>
