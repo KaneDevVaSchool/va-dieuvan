@@ -16,21 +16,23 @@
       <div
         v-for="box in kpiBoxes"
         :key="box.key"
-        class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
+        class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:p-4"
       >
-        <div class="flex items-start justify-between gap-2">
+        <div class="flex min-w-0 items-center gap-3">
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-xl"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
             :class="box.iconWrap"
           >
             <component :is="box.icon" class="h-5 w-5" :class="box.iconClass" aria-hidden="true" />
           </div>
-        </div>
-        <div class="mt-3 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
-          {{ statsLoading ? '…' : box.value }}
-        </div>
-        <div class="mt-0.5 text-xs font-medium text-slate-600 dark:text-slate-400">
-          {{ box.label }}
+          <div class="min-w-0 flex-1">
+            <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white sm:text-2xl">
+              {{ statsLoading ? '…' : box.value }}
+            </div>
+            <div class="mt-0.5 text-xs font-medium leading-snug text-slate-600 dark:text-slate-400">
+              {{ box.label }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -299,7 +301,7 @@
     <div class="relative z-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
       <div class="border-b border-slate-200/90 dark:border-slate-700">
         <nav
-          class="flex gap-0 overflow-x-auto overscroll-x-contain scroll-smooth [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600"
+          class="flex flex-nowrap gap-0 overflow-x-auto overscroll-x-contain scroll-smooth [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600"
           role="tablist"
           :aria-label="t('trips_page.tabs_aria_label')"
         >
@@ -309,7 +311,7 @@
             type="button"
             role="tab"
             :aria-selected="filters.trip_type === tab.value"
-            class="relative min-h-[48px] shrink-0 border-b-2 px-3 py-3 text-left text-sm font-medium transition sm:min-h-[52px] sm:px-5 sm:text-base"
+            class="relative flex min-h-[48px] shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-left text-sm font-medium transition sm:min-h-[52px] sm:gap-2.5 sm:px-5 sm:py-3 sm:text-base"
             :class="
               filters.trip_type === tab.value
                 ? 'border-teal-600 text-teal-800 dark:border-teal-400 dark:text-teal-200'
@@ -317,9 +319,9 @@
             "
             @click="setTripTypeTab(tab.value)"
           >
-            <span class="block whitespace-nowrap">{{ tab.label }}</span>
+            <span class="whitespace-nowrap">{{ tab.label }}</span>
             <span
-              class="mt-0.5 block text-xs font-semibold tabular-nums opacity-90 sm:text-sm"
+              class="text-sm font-semibold tabular-nums opacity-90 sm:text-base"
               :class="filters.trip_type === tab.value ? 'text-teal-600 dark:text-teal-300' : 'text-slate-500 dark:text-slate-500'"
             >
               {{ tab.count }}
@@ -368,7 +370,7 @@
       >
         <div class="border-b border-slate-100 px-3 py-3 sm:px-4 sm:py-3.5 dark:border-slate-800">
           <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex min-w-0 items-start gap-2.5 sm:gap-3">
+            <div class="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
               <div
                 class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11"
                 :class="tripTypeIconWrap(trip.dispatch_request?.trip_type)"
@@ -378,45 +380,40 @@
                 <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-5 w-5 text-amber-600 dark:text-amber-400 sm:h-6 sm:w-6" />
                 <CubeIcon v-else class="h-5 w-5 text-violet-600 dark:text-violet-400 sm:h-6 sm:w-6" />
               </div>
-              <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <span class="font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-base">{{ tripCode(trip.id) }}</span>
+              <div class="min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div class="flex flex-nowrap items-center gap-x-2 gap-y-1 py-0.5 text-xs sm:gap-x-2.5 sm:text-sm">
+                  <span class="shrink-0 font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-base">{{ tripCode(trip.id) }}</span>
                   <span
-                    class="rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs"
+                    class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs"
                     :class="tripTypeBadgeClass(trip.dispatch_request?.trip_type)"
                   >
                     {{ tripTypeShort(trip.dispatch_request?.trip_type) }}
                   </span>
-                </div>
-                <div class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400 sm:text-sm">
-                  <span class="font-medium text-slate-700 dark:text-slate-300">{{ t('trips_page.created_at_label') }}</span>
-                  {{ fmtDateTimeFull(trip.created_at) }}
-                </div>
-                <div
-                  v-if="trip.dispatch_request?.is_urgent || trip.dispatch_request?.source_channel || trip.dispatch_request?.paper_status || trip.dispatch_request?.status"
-                  class="mt-2 flex flex-wrap gap-1.5"
-                >
+                  <span class="shrink-0 whitespace-nowrap text-slate-600 dark:text-slate-400">
+                    <span class="font-medium text-slate-700 dark:text-slate-300">{{ t('trips_page.created_at_label') }}</span>
+                    {{ fmtDateTimeFull(trip.created_at) }}
+                  </span>
                   <span
                     v-if="trip.dispatch_request?.is_urgent"
-                    class="rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200"
+                    class="shrink-0 rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200"
                   >
                     {{ t('trips_page.badge_urgent') }}
                   </span>
                   <span
                     v-if="trip.dispatch_request?.source_channel"
-                    class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    class="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                   >
                     {{ labelSourceChannel(trip.dispatch_request.source_channel) }}
                   </span>
                   <span
                     v-if="trip.dispatch_request?.paper_status"
-                    class="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
+                    class="shrink-0 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
                   >
                     {{ labelPaperStatus(trip.dispatch_request.paper_status) }}
                   </span>
                   <span
                     v-if="trip.dispatch_request?.status"
-                    class="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200"
+                    class="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200"
                   >
                     {{ t('trips_page.request_status_prefix') }} {{ labelRequestStatus(trip.dispatch_request.status) }}
                   </span>
