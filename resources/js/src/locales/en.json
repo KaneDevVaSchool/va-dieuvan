@@ -1018,16 +1018,11 @@
       "upload_ok": "Upload complete."
     },
     "actions": {
-      "refresh": "Reload",
-      "print": "Print",
-      "copy_link": "Copy link",
-      "export": "Export"
+      "refresh": "Reload"
     },
     "messages": {
       "ok": "OK",
       "error": "Error",
-      "copied": "Copied",
-      "copy_failed": "Copy failed",
       "rate_limited": "Too many attempts. Please wait a few seconds and try again."
     },
     "current_location": {
@@ -1121,6 +1116,8 @@
     "notes": {
       "title": "Dispatcher notes",
       "from_request": "Notes from request",
+      "bm03_title": "Electronic form content (BM.03)",
+      "bm03_hint": "Generated from the request wizard; not stored in the notes field.",
       "empty": "No notes yet.",
       "add_title": "+ Add new note",
       "placeholder": "Add a note for dispatcher/ops…",

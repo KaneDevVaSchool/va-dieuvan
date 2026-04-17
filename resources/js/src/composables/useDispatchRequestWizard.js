@@ -627,116 +627,6 @@ export function useDispatchRequestWizard() {
     return !canSubmitApi.value
   })
 
-  function buildNotesBody() {
-    const f = form.value
-    const lines = []
-    lines.push('=== ĐỀ NGHỊ ĐIỀU VẬN (BM.03/MH.QT.04 — bản điện tử) ===')
-    lines.push('')
-    lines.push('Người đề nghị')
-    lines.push(`- Họ tên: ${f.requester_name || '—'}`)
-    lines.push(`- Email: ${f.requester_email || '—'}`)
-    lines.push(`- Điện thoại: ${f.requester_phone || '—'}`)
-    lines.push(`- Đơn vị: ${f.requester_unit || '—'}`)
-    lines.push('')
-    lines.push('Mục đích sử dụng')
-    lines.push(`- Mục đích: ${f.purpose || '—'}`)
-    if (f.trip_type === 'point_to_point') {
-      const pk =
-        f.point_purpose_kind === 'extracurricular' ? 'Hoạt động ngoại khóa' : 'Điểm — Điểm'
-      lines.push(`- Phân loại mục đích: ${pk}`)
-    }
-    if (basisFile.value) {
-      lines.push(`- Căn cứ đề xuất: đính kèm tệp «${basisFile.value.name}»`)
-    } else {
-      lines.push('- Căn cứ đề xuất: (chưa đính kèm tệp)')
-    }
-    lines.push('')
-    lines.push('Thời gian')
-    lines.push(`- Ngày đề xuất: ${f.proposed_date || '—'}`)
-    lines.push(`- Ngày cần sử dụng xe: ${f.date_needed || '—'}`)
-    if (f.is_urgent) lines.push(`- GẤP — Lý do: ${f.urgent_reason || '—'}`)
-    lines.push('')
-    lines.push('Đối tượng / điều phối')
-    lines.push(`- Đối tượng: ${f.targets?.length ? f.targets.join(', ') : '—'}`)
-    lines.push(
-      `- Điều phối: ${f.coordinator_name || '—'} | ${f.coordinator_email || '—'} | ${f.coordinator_phone || '—'}`,
-    )
-    lines.push('')
-
-    if (isCargo.value) {
-      lines.push('Nội dung đề nghị vận chuyển')
-      lines.push('Nội dung chi tiết')
-      cargoRows.value.forEach((r, i) => {
-        if (!r.name?.trim()) return
-        lines.push(
-          `${i + 1}. ${r.name} | SL ${r.qty || '—'} | ${r.dimensions || '—'} | ${r.weight || '—'} | ${r.item_notes || ''}`,
-        )
-        lines.push(
-          `   Lấy: ${r.pickup_at || '—'} @ ${r.pickup_place || '—'} — ${r.pickup_contact || '—'}`,
-        )
-        lines.push(
-          `   Giao: ${r.delivery_at || '—'} @ ${r.delivery_place || '—'} — ${r.delivery_contact || '—'}`,
-        )
-        lines.push(`   Vận chuyển: ${r.transport_note || '—'} | Chi phí: ${r.cost || '0'}`)
-      })
-      lines.push(`Tổng hàng: ${formatCurrency(cargoTotal.value)}`)
-      if (f.cargo_extra_notes?.trim()) lines.push(`Ghi chú khác: ${f.cargo_extra_notes}`)
-      if (f.need_porters) {
-        lines.push(`- Bốc xếp: SL ${f.porter_qty || '—'} — phát sinh ${f.porter_cost || '0'} VNĐ`)
-      }
-      if (f.interprovincial) {
-        lines.push(`- Chành xe tỉnh — phát sinh ${f.interprovincial_cost || '0'} VNĐ`)
-      }
-      lines.push(`Tổng cộng (ước tính): ${formatCurrency(cargoTotal.value + extraCosts.value)}`)
-    } else {
-      lines.push('Nội dung đề nghị vận chuyển')
-      lines.push('Nội dung đề xuất cho chương trình / sự kiện ngoại khóa')
-      if (f.multi_day) lines.push('(Dùng nhiều ngày — chi tiết bổ sung khi điều phối.)')
-      passengerRows.value.forEach((r, i) => {
-        if (!isPassengerRowFilled(r)) return
-        lines.push(
-          `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | NV: ${r.person_in_charge || '—'} | ĐG ${r.unit_price || '0'} + PS ${r.extra_fee || '0'} | ${r.notes || ''}`,
-        )
-      })
-      lines.push(`Tổng (ước tính): ${formatCurrency(passengerE1Total.value)}`)
-      if (f.trip_type !== 'point_to_point') {
-        const wd = f.e1_weekdays || {}
-        const wdLabels = []
-        if (wd.mon) wdLabels.push('T2')
-        if (wd.tue) wdLabels.push('T3')
-        if (wd.wed) wdLabels.push('T4')
-        if (wd.thu) wdLabels.push('T5')
-        if (wd.fri) wdLabels.push('T6')
-        if (wd.sat) wdLabels.push('T7')
-        if (wd.sun) wdLabels.push('CN')
-        lines.push('e.1.1 Ghi chú khác đề xuất')
-        if (f.e1_use_3plus_days) {
-          lines.push(
-            `- Xe từ 3 ngày trở lên: ${f.e1_from_date || '—'} → ${f.e1_to_date || '—'} | Tổng ngày: ${f.e1_days_total || '—'} | Phát sinh: ${f.e1_extra_cost || '0'}`,
-          )
-        }
-        if (wdLabels.length) lines.push(`- Các thứ trong tuần: ${wdLabels.join(', ')}`)
-        lines.push('Nội dung đề xuất cho nhân sự đi công tác')
-        businessRows.value.forEach((r, i) => {
-          if (!isBusinessRowFilled(r)) return
-          lines.push(
-            `${i + 1}. Đi: ${r.depart_at || '—'} ${r.pickup || '—'} | Dừng: ${r.waypoint || '—'} | Về: ${r.return_at || '—'} ${r.dropoff || '—'} | ${r.guests || '0'} khách | ĐG+PS: ${formatCurrency(rowLineTotal(r))} | ${r.notes || ''}`,
-          )
-        })
-        lines.push(`Tổng e.2 (ước tính): ${formatCurrency(passengerE2Total.value)}`)
-        lines.push('Ghi chú khác (công tác)')
-        if (f.e2_door_pickup) lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || '0'}`)
-        if (f.e2_driver_self) lines.push(`- Tài xế tự túc: ${f.e2_driver_self_cost || '0'}`)
-        if (f.e2_after_21h) lines.push(`- Xe sau 21h: ${f.e2_after_21h_cost || '0'}`)
-        lines.push(`Tổng (ước tính): ${formatCurrency(passengerTotal.value)}`)
-      }
-    }
-
-    lines.push('')
-    lines.push('--- Hệ thống: các trường trên được gửi kèm để bộ phận Điều vận xử lý.')
-    return lines.join('\n')
-  }
-
   function computeApiOriginDestination() {
     if (isCargo.value) {
       const r = cargoRows.value.find((x) => x.name?.trim())
@@ -839,8 +729,6 @@ export function useDispatchRequestWizard() {
     try {
       const { origin, destination } = computeApiOriginDestination()
       const freeNotes = form.value.free_notes?.trim() || ''
-      const snapshot = buildWizardSnapshot()
-      snapshot.bm03_body = buildNotesBody()
       const payload = {
         trip_type: form.value.trip_type,
         source_channel: form.value.source_channel,
@@ -855,7 +743,6 @@ export function useDispatchRequestWizard() {
             : null,
         notes: freeNotes || undefined,
         is_urgent: !!form.value.is_urgent,
-        wizard_snapshot: snapshot,
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
       created.value = await createDispatchRequest(payload, { idempotencyKey })
@@ -901,15 +788,6 @@ export function useDispatchRequestWizard() {
     } finally {
       loading.value = false
       submitInFlight = false
-    }
-  }
-
-  function buildWizardSnapshot() {
-    return {
-      form: { ...form.value, basisFileName: basisFile.value?.name ?? '' },
-      passengerRows: passengerRows.value.map((r) => ({ ...r })),
-      businessRows: businessRows.value.map((r) => ({ ...r })),
-      cargoRows: cargoRows.value.map((r) => ({ ...r })),
     }
   }
 

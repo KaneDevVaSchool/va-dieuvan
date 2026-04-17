@@ -72,11 +72,7 @@
             >
               <BellIcon class="h-5 w-5" />
             </RouterLink>
-            <Button variant="secondary" class="!px-3" @click="printPage">{{ t('trip_detail.actions.print') }}</Button>
-            <Button variant="secondary" class="!px-3" @click="copyLink">{{ t('trip_detail.actions.copy_link') }}</Button>
-            <Button variant="secondary" class="!px-3" @click="exportJson">{{ t('trip_detail.actions.export') }}</Button>
           </div>
-          <p v-if="linkMsg" class="w-full text-right text-xs text-slate-600 sm:order-last">{{ linkMsg }}</p>
           <p v-if="silentLoadError" class="w-full rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-900 sm:order-last">
             {{ silentLoadError }}
           </p>
@@ -713,9 +709,16 @@
             <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.title') }}</h2>
               <div class="mt-3 space-y-3">
-                <div v-if="trip.dispatch_request?.notes" class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950">
+                <div v-if="tripRequestNotesFromUser" class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950">
                   <div class="text-xs font-medium text-amber-800">{{ t('trip_detail.notes.from_request') }}</div>
-                  <div class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">{{ trip.dispatch_request.notes }}</div>
+                  <div class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">{{ tripRequestNotesFromUser }}</div>
+                </div>
+                <div v-if="tripBm03Display" class="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
+                  <div class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.bm03_title') }}</div>
+                  <p class="mt-1 text-xs text-slate-500">{{ t('trip_detail.notes.bm03_hint') }}</p>
+                  <div class="mt-2 max-h-[min(28rem,55vh)] overflow-y-auto whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere]">
+                    {{ tripBm03Display }}
+                  </div>
                 </div>
                 <div v-for="n in noteEvents" :key="n.id" class="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
                   <div class="flex items-baseline justify-between gap-2">
@@ -724,7 +727,7 @@
                   </div>
                   <div class="mt-1 whitespace-pre-wrap text-sm text-slate-800">{{ n.message }}</div>
                 </div>
-                <div v-if="!noteEvents.length && !trip.dispatch_request?.notes" class="text-sm text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
+                <div v-if="!noteEvents.length && !tripRequestNotesFromUser && !tripBm03Display" class="text-sm text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
                 <div class="pt-1">
                   <div class="text-sm font-semibold text-slate-900">{{ t('trip_detail.notes.add_title') }}</div>
                   <textarea
@@ -858,6 +861,8 @@ import { listVehicles, listDrivers, listTransportProviders, createTransportProvi
 import { uploadAttachment, deleteAttachment } from '../../api/attachments'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripStatus, labelTripType } from '../../util/labels'
+import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
+import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd } from '../../util/money'
 import {
   isPassengerRowFilled,
@@ -923,7 +928,6 @@ const resourceHint = ref('')
 const vehicleChoice = ref('')
 const driverChoice = ref('')
 const attachInputRef = ref(null)
-const linkMsg = ref('')
 const mapExpanded = ref(false)
 const hireExternal = ref(false)
 const externalVehicleRef = ref('')
@@ -1032,6 +1036,26 @@ const requestRefCode = computed(() => {
 })
 
 const snap = computed(() => trip.value?.dispatch_request?.wizard_snapshot ?? null)
+
+const drNotesRaw = computed(() => trip.value?.dispatch_request?.notes?.trim() ?? '')
+
+const tripRequestNotesFromUser = computed(() => {
+  const n = drNotesRaw.value
+  if (!n) return ''
+  if (isLegacyBm03NotesBlock(n)) return ''
+  return formatDispatchRequestNotesForDisplay(n)
+})
+
+const tripBm03Display = computed(() => {
+  const s = trip.value?.dispatch_request?.wizard_snapshot
+  if (s?.form) {
+    const b = buildBm03BodyFromWizardSnapshot(s)?.trim()
+    if (b) return formatDispatchRequestNotesForDisplay(b)
+  }
+  const n = drNotesRaw.value
+  if (n && isLegacyBm03NotesBlock(n)) return formatDispatchRequestNotesForDisplay(n)
+  return ''
+})
 
 const originLabel = computed(() => trip.value?.dispatch_request?.origin ?? '—')
 const destinationLabel = computed(() => trip.value?.dispatch_request?.destination ?? '—')
@@ -1435,7 +1459,7 @@ const specialNeedsSummary = computed(() => {
   }
   const uniq = [...new Set(parts)]
   if (uniq.length) return uniq.join(' ')
-  const free = trip.value?.dispatch_request?.notes?.trim()
+  const free = tripRequestNotesFromUser.value?.trim()
   if (free && free.length < 400) return free
   return ''
 })
@@ -1512,10 +1536,6 @@ const timeline = computed(() => {
     .filter((x) => x.at)
     .sort((a, b) => new Date(b.at) - new Date(a.at))
 })
-
-function printPage() {
-  if (typeof window !== 'undefined') window.print()
-}
 
 async function doReschedule() {
   rescheduleMsg.value = ''
@@ -1663,26 +1683,6 @@ async function onAttachmentFile(ev) {
   } finally {
     attachUploading.value = false
   }
-}
-
-async function copyLink() {
-  linkMsg.value = ''
-  try {
-    await navigator.clipboard.writeText(window.location.href)
-    linkMsg.value = t('trip_detail.messages.copied')
-  } catch {
-    linkMsg.value = t('trip_detail.messages.copy_failed')
-  }
-}
-
-function exportJson() {
-  const blob = new Blob([JSON.stringify(trip.value, null, 2)], { type: 'application/json;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${tripCode.value}.json`
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 async function loadResources() {

@@ -1018,16 +1018,11 @@
       "upload_ok": "Đã tải lên."
     },
     "actions": {
-      "refresh": "Tải lại",
-      "print": "In",
-      "copy_link": "Sao chép link",
-      "export": "Xuất"
+      "refresh": "Tải lại"
     },
     "messages": {
       "ok": "OK",
       "error": "Lỗi",
-      "copied": "Đã sao chép",
-      "copy_failed": "Không sao chép được",
       "rate_limited": "Quá nhiều thao tác. Vui lòng đợi vài giây rồi thử lại."
     },
     "current_location": {
@@ -1121,6 +1116,8 @@
     "notes": {
       "title": "Ghi chú điều vận",
       "from_request": "Ghi chú từ yêu cầu",
+      "bm03_title": "Nội dung đơn điện tử (BM.03)",
+      "bm03_hint": "Tự động từ biểu mẫu tạo yêu cầu; không dùng cột ghi chú.",
       "empty": "Chưa có note.",
       "add_title": "+ Thêm note mới",
       "placeholder": "Ghi chú cho dispatcher/ops…",

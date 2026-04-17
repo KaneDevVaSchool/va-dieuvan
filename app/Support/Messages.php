@@ -8,6 +8,8 @@ final class Messages
 
     public const REQUEST_NOT_PENDING = 'Yêu cầu không ở trạng thái chờ duyệt.';
 
+    public const REQUEST_PAPER_NOT_RECEIVED = 'Phiếu giấy chưa ở trạng thái đã nhận; không thể hoàn tác.';
+
     public const RESOURCE_VEHICLE_OVERLAP = 'Xe bị trùng lịch trong khung giờ này.';
 
     public const RESOURCE_DRIVER_OVERLAP = 'Tài xế bị trùng lịch trong khung giờ này.';

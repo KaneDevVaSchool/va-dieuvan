@@ -368,21 +368,35 @@
 
             <!-- Paper scan / OCR — dưới ước tính chi phí -->
             <div
-              v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending'"
+              v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending' || req.paper_status === 'received'"
               class="overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/50 p-4 shadow-sm ring-1 ring-slate-900/[0.04]"
             >
-              <div class="flex items-start gap-3 border-b border-slate-100/90 pb-3">
-                <div
-                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 ring-1 ring-slate-200/80"
+              <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100/90 pb-3">
+                <div class="flex items-start gap-3">
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 ring-1 ring-slate-200/80"
+                  >
+                    <DocumentTextIcon class="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
+                    <p v-if="paperScans.length" class="mt-1 text-[11px] leading-snug text-slate-500">
+                      Đọc chữ từ ảnh/PDF phiếu giấy (chỉ áp dụng cho tệp loại phiếu đã quét). Có thể xóa scan sai hoặc chạy OCR lại.
+                    </p>
+                  </div>
+                </div>
+                <span
+                  v-if="req.paper_status === 'received'"
+                  class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-800 ring-1 ring-teal-600/20"
                 >
-                  <DocumentTextIcon class="h-5 w-5" aria-hidden="true" />
-                </div>
-                <div class="min-w-0 flex-1">
-                  <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
-                  <p v-if="paperScans.length" class="mt-1 text-[11px] leading-snug text-slate-500">
-                    Đọc chữ từ ảnh/PDF phiếu giấy (chỉ áp dụng cho tệp loại phiếu đã quét).
-                  </p>
-                </div>
+                  Đã nhận phiếu
+                </span>
+                <span
+                  v-else-if="req.paper_status === 'pending'"
+                  class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 ring-1 ring-amber-600/20"
+                >
+                  Chưa nhận phiếu
+                </span>
               </div>
 
               <ul v-if="paperScans.length" class="mt-3 space-y-2 text-sm">
@@ -410,8 +424,17 @@
                       :loading="ocrBusy === a.id"
                       @click="runOcr(a.id)"
                     >
-                      OCR
+                      {{ a.ocr_processed_at ? 'OCR lại' : 'Chạy OCR' }}
                     </Button>
+                    <button
+                      v-if="canDeleteAttachment"
+                      type="button"
+                      class="ml-auto text-[11px] font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50"
+                      :disabled="deletingId === a.id"
+                      @click="removeAttachment(a)"
+                    >
+                      {{ deletingId === a.id ? '…' : 'Xóa scan' }}
+                    </button>
                   </div>
                   <p v-if="a.ocr_processed_at" class="mt-1.5 text-[11px] text-slate-500">
                     OCR: {{ fmt(a.ocr_processed_at) }}
@@ -427,7 +450,7 @@
 
               <div v-if="canUploadAttachment" class="mt-3">
                 <FileUpload
-                  :key="`paper-${route.params.id}`"
+                  :key="`paper-${route.params.id}-${paperScans.length}`"
                   label="Đính kèm phiếu / scan"
                   hint="Ảnh hoặc PDF · loại paper_scan"
                   drag-drop
@@ -435,6 +458,20 @@
                   :upload-fn="uploadPaperScan"
                   @uploaded="load"
                 />
+              </div>
+
+              <div
+                v-if="req.paper_status === 'received' && !canManagePaper"
+                class="mt-4 border-t border-slate-100 pt-3 text-[11px] text-slate-600"
+              >
+                <p v-if="req.paper_reference">
+                  <span class="font-medium text-slate-500">Số phiếu / tham chiếu:</span>
+                  {{ req.paper_reference }}
+                </p>
+                <p v-if="req.paper_received_at" class="mt-1">
+                  <span class="font-medium text-slate-500">Thời điểm nhận:</span>
+                  {{ fmt(req.paper_received_at) }}
+                </p>
               </div>
 
               <div
@@ -460,6 +497,43 @@
                   />
                   <div class="flex flex-wrap items-center gap-2 pt-0.5">
                     <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Đánh dấu đã nhận</Button>
+                    <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                  </div>
+                </form>
+              </div>
+
+              <div
+                v-else-if="req.paper_status === 'received' && canManagePaper"
+                class="mt-4 border-t border-slate-100 pt-3"
+              >
+                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Cập nhật / hoàn tác phiếu giấy</h3>
+                <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
+                  Sửa số phiếu hoặc thời điểm nhận nếu nhập sai. Hoàn tác để trả trạng thái về «chưa nhận phiếu» (file scan và OCR giữ nguyên).
+                </p>
+                <form class="mt-3 grid gap-2.5" @submit.prevent="doMarkPaper">
+                  <Input
+                    v-model="paperForm.paper_reference"
+                    label="Số phiếu / mã tham chiếu"
+                    placeholder="Ví dụ: PG-2026-00123 (nếu có)"
+                    hint="Để trống nếu không có mã."
+                  />
+                  <Input
+                    v-model="paperForm.paper_received_at"
+                    label="Thời điểm nhận phiếu"
+                    type="datetime-local"
+                    hint="Đổi nếu cần chỉnh lại thời điểm ghi nhận."
+                  />
+                  <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                    <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Lưu thay đổi</Button>
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
+                      :disabled="paperActing || paperRevertActing"
+                      @click="doRevertPaper"
+                    >
+                      Hoàn tác (chưa nhận phiếu)
+                    </Button>
                     <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
                   </div>
                 </form>
@@ -496,12 +570,14 @@ import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
-import { decideDispatchRequest, getDispatchRequest, markPaperReceived } from '../../api/requests'
+import { decideDispatchRequest, getDispatchRequest, markPaperReceived, revertPaperReceived } from '../../api/requests'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelRequestStatus, labelTripType } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
+import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
+import { toDatetimeLocalValue } from '../../util/datetime'
 import { useAuthStore } from '../../store'
 import { confirmAction } from '../../composables/useConfirm'
 import { showAppSuccess } from '../../composables/appMessage'
@@ -516,6 +592,7 @@ const msg = ref('')
 
 const paperForm = ref({ paper_reference: '', paper_received_at: '' })
 const paperActing = ref(false)
+const paperRevertActing = ref(false)
 const paperMsg = ref('')
 const ocrBusy = ref(null)
 const ocrErr = ref('')
@@ -537,8 +614,11 @@ const userNotesFormatted = computed(() => {
 
 const bm03Display = computed(() => {
   const r = req.value
-  const fromSnap = r?.wizard_snapshot?.bm03_body?.trim()
-  if (fromSnap) return formatDispatchRequestNotesForDisplay(fromSnap)
+  const snap = r?.wizard_snapshot
+  if (snap?.form) {
+    const built = buildBm03BodyFromWizardSnapshot(snap)?.trim()
+    if (built) return formatDispatchRequestNotesForDisplay(built)
+  }
   const n = r?.notes?.trim()
   if (n && isLegacyBm03NotesBlock(n)) return formatDispatchRequestNotesForDisplay(n)
   return ''
@@ -752,9 +832,10 @@ async function load() {
   loading.value = true
   try {
     req.value = await getDispatchRequest(route.params.id)
-    if (req.value?.paper_status === 'pending') {
-      paperForm.value.paper_reference = req.value.paper_reference ?? ''
-    }
+    paperForm.value.paper_reference = req.value?.paper_reference ?? ''
+    paperForm.value.paper_received_at = req.value?.paper_received_at
+      ? toDatetimeLocalValue(new Date(req.value.paper_received_at))
+      : ''
   } finally {
     loading.value = false
   }
@@ -832,21 +913,50 @@ async function removeAttachment(a) {
 async function doMarkPaper() {
   paperMsg.value = ''
   paperActing.value = true
+  const wasReceived = req.value?.paper_status === 'received'
   try {
     const payload = {}
-    if (paperForm.value.paper_reference?.trim()) {
+    if (wasReceived) {
+      const ref = paperForm.value.paper_reference?.trim() ?? ''
+      payload.paper_reference = ref === '' ? null : ref
+    } else if (paperForm.value.paper_reference?.trim()) {
       payload.paper_reference = paperForm.value.paper_reference.trim()
     }
     if (paperForm.value.paper_received_at) {
       payload.paper_received_at = new Date(paperForm.value.paper_received_at).toISOString()
     }
     await markPaperReceived(route.params.id, payload)
-    paperMsg.value = 'Đã đánh dấu đã nhận phiếu'
+    if (wasReceived) {
+      showAppSuccess('Đã lưu thay đổi thông tin phiếu.', 'Đã xử lý')
+    } else {
+      showAppSuccess('Đã đánh dấu đã nhận phiếu.', 'Đã xử lý')
+    }
     await load()
   } catch (e) {
     paperMsg.value = e?.response?.data?.message ?? 'Lỗi'
   } finally {
     paperActing.value = false
+  }
+}
+
+async function doRevertPaper() {
+  const ok = await confirmAction({
+    title: 'Hoàn tác trạng thái phiếu?',
+    message: 'Yêu cầu sẽ chuyển về chưa nhận phiếu giấy. Bạn có chắc?',
+    confirmLabel: 'Hoàn tác',
+    danger: true,
+  })
+  if (!ok) return
+  paperMsg.value = ''
+  paperRevertActing.value = true
+  try {
+    await revertPaperReceived(route.params.id)
+    showAppSuccess('Đã hoàn tác trạng thái phiếu.', 'Đã xử lý')
+    await load()
+  } catch (e) {
+    paperMsg.value = e?.response?.data?.message ?? 'Lỗi'
+  } finally {
+    paperRevertActing.value = false
   }
 }
 

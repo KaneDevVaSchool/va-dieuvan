@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Requests\CreateDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DecideDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
+use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
 use App\Models\DispatchRequest;
 use App\Models\Role;
@@ -44,6 +45,7 @@ class DispatchRequestController extends Controller
     public function store(CreateDispatchRequestRequest $request)
     {
         $data = $request->validated();
+        unset($data['wizard_snapshot']);
 
         $departAt = Carbon::parse($data['depart_at']);
         $isUrgent = (bool) ($data['is_urgent'] ?? false);
@@ -102,6 +104,31 @@ class DispatchRequestController extends Controller
         $user = $request->user();
         $before = $dispatchRequest->toArray();
 
+        if ($dispatchRequest->paper_status === 'received') {
+            $updates = [];
+            if (array_key_exists('paper_reference', $data)) {
+                $ref = $data['paper_reference'];
+                $updates['paper_reference'] = ($ref !== null && trim((string) $ref) !== '')
+                    ? trim((string) $ref)
+                    : null;
+            }
+            if (! empty($data['paper_received_at'])) {
+                $updates['paper_received_at'] = Carbon::parse($data['paper_received_at']);
+            }
+            if ($updates !== []) {
+                $dispatchRequest->update($updates);
+                app(AuditLogger::class)->log(
+                    actorId: $user->id,
+                    event: 'request.paper_meta_updated',
+                    auditable: $dispatchRequest,
+                    before: $before,
+                    after: $dispatchRequest->fresh()->toArray(),
+                );
+            }
+
+            return $this->ok($dispatchRequest->fresh());
+        }
+
         $dispatchRequest->update([
             'paper_status' => 'received',
             'paper_received_at' => isset($data['paper_received_at']) ? Carbon::parse($data['paper_received_at']) : now(),
@@ -111,6 +138,35 @@ class DispatchRequestController extends Controller
         app(AuditLogger::class)->log(
             actorId: $user->id,
             event: 'request.paper_received',
+            auditable: $dispatchRequest,
+            before: $before,
+            after: $dispatchRequest->toArray(),
+        );
+
+        return $this->ok($dispatchRequest);
+    }
+
+    public function revertPaperReceived(RevertDispatchRequestPaperRequest $request, DispatchRequest $dispatchRequest)
+    {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        if ($dispatchRequest->paper_status !== 'received') {
+            abort(422, Messages::REQUEST_PAPER_NOT_RECEIVED);
+        }
+
+        $user = $request->user();
+        $before = $dispatchRequest->toArray();
+
+        $dispatchRequest->update([
+            'paper_status' => 'pending',
+            'paper_received_at' => null,
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.paper_reverted',
             auditable: $dispatchRequest,
             before: $before,
             after: $dispatchRequest->toArray(),

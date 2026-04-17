@@ -68,6 +68,11 @@ export async function markPaperReceived(dispatchRequestId, payload) {
   return data.data
 }
 
+export async function revertPaperReceived(dispatchRequestId) {
+  const { data } = await http.post(`/dispatch-requests/${dispatchRequestId}/paper-revert`)
+  return data.data
+}
+
 export async function decideDispatchRequest(dispatchRequestId, payload, { idempotencyKey } = {}) {
   const headers = {}
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
