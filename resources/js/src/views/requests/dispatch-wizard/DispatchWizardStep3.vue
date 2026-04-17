@@ -212,7 +212,7 @@
                                     colspan="9"
                                     class="px-3 py-2 text-right text-xs font-medium text-slate-700"
                                 >
-                                    Tổng e.1 (ước tính)
+                                    Tổng (ước tính)
                                 </td>
                                 <td
                                     class="px-2 py-2 text-sm font-semibold text-va-800"
@@ -244,9 +244,9 @@
                 </div>
             </section>
 
-            <!-- e.1.1 (ẩn với loại Điểm — Điểm) -->
+            <!-- e.1.1 (ẩn P2P thường; hiện khi P2P + hoạt động ngoại khóa) -->
             <section
-                v-if="!isPointToPointTrip"
+                v-if="showPassengerTripExtras"
                 class="dw-e-panel dw-e-panel--e11"
                 aria-labelledby="dw-e11-heading"
             >
@@ -255,6 +255,14 @@
                         <h3 id="dw-e11-heading" class="dw-e-panel__title">
                             Ghi chú khác đề xuất (nếu có)
                         </h3>
+                        <p
+                            v-if="isP2PExtracurricular"
+                            class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
+                        >
+                            Thời gian sử dụng xe từ 03 ngày trở lên — gợi ý chi phí biểu mẫu
+                            <strong class="font-medium">5.000.000&nbsp;₫</strong>. Vui lòng liên hệ
+                            NV Điều vận để điền / xác nhận chi phí.
+                        </p>
                     </div>
                 </header>
 
@@ -594,7 +602,7 @@
 
             <!-- e.2.1 -->
             <section
-                v-if="!isPointToPointTrip"
+                v-if="showPassengerTripExtras"
                 class="dw-e-panel dw-e-panel--e21"
                 aria-labelledby="dw-e21-heading"
             >
@@ -603,6 +611,12 @@
                         <h3 id="dw-e21-heading" class="dw-e-panel__title">
                             Ghi chú khác đề xuất (nếu có)
                         </h3>
+                        <p
+                            v-if="isP2PExtracurricular"
+                            class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
+                        >
+                            Gợi ý theo biểu mẫu; vui lòng liên hệ NV Điều vận để điền thông tin chi phí.
+                        </p>
                     </div>
                 </header>
                 <div class="dw-e21-rows">
@@ -614,7 +628,18 @@
                                 class="dw-e21-row__check"
                             />
                             <span class="dw-e21-row__label"
-                                >Xe đưa đón tận nhà</span
+                                >Xe đưa đón tận nhà<span
+                                    v-if="isP2PExtracurricular"
+                                    class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
+                                    >(
+                                    <span class="italic"
+                                        >Ghi rõ địa chỉ đón trả ở bảng phía trên</span
+                                    >
+                                    — gợi ý
+                                    <strong class="font-medium"
+                                        >200.000&nbsp;đ/người</strong
+                                    >)</span
+                                ></span
                             >
                         </label>
                         <div class="dw-e21-row__cost">
@@ -640,7 +665,14 @@
                                 class="dw-e21-row__check"
                             />
                             <span class="dw-e21-row__label"
-                                >Tài xế tự túc (ăn uống, khách sạn…)</span
+                                >Tài xế tự túc (ăn uống, khách sạn…)<span
+                                    v-if="isP2PExtracurricular"
+                                    class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
+                                    >(gợi ý
+                                    <strong class="font-medium"
+                                        >500.000&nbsp;₫</strong
+                                    >)</span
+                                ></span
                             >
                         </label>
                         <div class="dw-e21-row__cost">
@@ -666,7 +698,14 @@
                                 class="dw-e21-row__check"
                             />
                             <span class="dw-e21-row__label"
-                                >Có nhu cầu sử dụng xe sau 21h trong ngày</span
+                                >Có nhu cầu sử dụng xe sau 21h trong ngày<span
+                                    v-if="isP2PExtracurricular"
+                                    class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
+                                    >(gợi ý
+                                    <strong class="font-medium"
+                                        >1.000.000&nbsp;₫</strong
+                                    >)</span
+                                ></span
                             >
                         </label>
                         <div class="dw-e21-row__cost">
@@ -1088,4 +1127,13 @@ const {
 // inject trả về object thường: ref/computed lồng (w.x) không unwrap trong template → v-if / v-for sai.
 const isCargo = computed(() => unref(w.isCargo));
 const isPointToPointTrip = computed(() => unref(w.isPointToPointTrip));
+/** P2P + mục đích tab 2: hoạt động ngoại khóa → hiện e.1.1 & e.2.1 */
+const isP2PExtracurricular = computed(
+    () =>
+        isPointToPointTrip.value &&
+        form.value.point_purpose_kind === "extracurricular",
+);
+const showPassengerTripExtras = computed(
+    () => !isPointToPointTrip.value || isP2PExtracurricular.value,
+);
 </script>
