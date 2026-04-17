@@ -1236,7 +1236,7 @@
 <script setup>
 import { computed, inject, unref } from "vue";
 import { PlusIcon, TrashIcon } from "@heroicons/vue/24/outline";
-import { formatVndWhileTyping } from "../../util/money";
+import { formatVndWhileTyping } from "../../../util/money";
 import { DISPATCH_WIZARD_KEY } from "./injectionKeys";
 
 const w = inject(DISPATCH_WIZARD_KEY);
