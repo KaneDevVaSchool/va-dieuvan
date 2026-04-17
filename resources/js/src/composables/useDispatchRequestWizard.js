@@ -11,6 +11,7 @@ import { uploadAttachment } from '../api/attachments'
 import { createDispatchRequest } from '../api/requests'
 import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
+import { parseMoneyVnd } from '../util/money'
 import { newIdempotencyKey } from '../util/idempotency'
 import { toDatetimeLocalValue } from '../util/datetime'
 import {
@@ -493,7 +494,11 @@ export function useDispatchRequestWizard() {
   })
 
   function parseMoney(v) {
-    const n = Number(String(v).replace(/\s/g, ''))
+    return parseMoneyVnd(v)
+  }
+
+  function parseGuests(v) {
+    const n = Number(String(v ?? '').trim().replace(/\s/g, ''))
     return Number.isFinite(n) ? n : 0
   }
 
@@ -513,8 +518,8 @@ export function useDispatchRequestWizard() {
 
   const passengerGuestTotal = computed(
     () =>
-      passengerRows.value.reduce((s, r) => s + parseMoney(r.guests), 0) +
-      businessRows.value.reduce((s, r) => s + parseMoney(r.guests), 0),
+      passengerRows.value.reduce((s, r) => s + parseGuests(r.guests), 0) +
+      businessRows.value.reduce((s, r) => s + parseGuests(r.guests), 0),
   )
 
   const cargoTotal = computed(() => cargoRows.value.reduce((s, r) => s + parseMoney(r.cost), 0))

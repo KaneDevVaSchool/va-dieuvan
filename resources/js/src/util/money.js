@@ -7,3 +7,10 @@ export function parseMoneyVnd(v) {
   const n = Number(s)
   return Number.isFinite(n) ? n : 0
 }
+
+/** Chỉ giữ chữ số rồi format nhóm nghìn kiểu vi-VN (vd. 1000000 → 1.000.000). */
+export function formatVndWhileTyping(raw) {
+  const digits = String(raw ?? '').replace(/\D/g, '')
+  if (!digits) return ''
+  return Number(digits).toLocaleString('vi-VN')
+}
