@@ -11,8 +11,8 @@
       </div>
     </div>
 
-    <!-- KPI -->
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
+    <!-- KPI: mobile 2 cột, tablet 3, desktop 5 -->
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
       <div
         v-for="box in kpiBoxes"
         :key="box.key"
@@ -35,9 +35,10 @@
       </div>
     </div>
 
-    <!-- Filters (cùng phong cách tổng quan) — isolate + z-index để panel không bị chồng bởi nội dung phía dưới -->
-    <AppFilterBar>
-      <div class="relative z-30 isolate flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+    <!-- Filters: wrapper z-index so dropdowns stack above the search card (sibling below in DOM) -->
+    <div class="relative z-40">
+      <AppFilterBar>
+      <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
         <details ref="funnelDetailsRef" class="group relative">
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -291,29 +292,43 @@
           </template>
         </div>
       </div>
-    </AppFilterBar>
+      </AppFilterBar>
+    </div>
 
-    <!-- Tabs + search -->
-    <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="tab in typeTabs"
-          :key="tab.value === '' ? 'all' : tab.value"
-          type="button"
-          :class="[
-            'rounded-full px-3 py-1.5 text-sm font-medium transition',
-            filters.trip_type === tab.value
-              ? 'bg-teal-600 text-white shadow-sm shadow-teal-600/25'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
-          ]"
-          @click="setTripTypeTab(tab.value)"
+    <!-- Tabs (dạng tab bar) + tìm kiếm — z-0 để popover filter vẫn trên -->
+    <div class="relative z-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+      <div class="border-b border-slate-200/90 dark:border-slate-700">
+        <nav
+          class="flex gap-0 overflow-x-auto overscroll-x-contain scroll-smooth [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-600"
+          role="tablist"
+          :aria-label="t('trips_page.tabs_aria_label')"
         >
-          {{ tab.label }}
-          <span class="tabular-nums opacity-90">({{ tab.count }})</span>
-        </button>
+          <button
+            v-for="tab in typeTabs"
+            :key="tab.value === '' ? 'all' : tab.value"
+            type="button"
+            role="tab"
+            :aria-selected="filters.trip_type === tab.value"
+            class="relative min-h-[48px] shrink-0 border-b-2 px-3 py-3 text-left text-sm font-medium transition sm:min-h-[52px] sm:px-5 sm:text-base"
+            :class="
+              filters.trip_type === tab.value
+                ? 'border-teal-600 text-teal-800 dark:border-teal-400 dark:text-teal-200'
+                : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100'
+            "
+            @click="setTripTypeTab(tab.value)"
+          >
+            <span class="block whitespace-nowrap">{{ tab.label }}</span>
+            <span
+              class="mt-0.5 block text-xs font-semibold tabular-nums opacity-90 sm:text-sm"
+              :class="filters.trip_type === tab.value ? 'text-teal-600 dark:text-teal-300' : 'text-slate-500 dark:text-slate-500'"
+            >
+              {{ tab.count }}
+            </span>
+          </button>
+        </nav>
       </div>
-      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="relative min-w-0 flex-1">
+      <div class="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+        <div class="relative min-w-0 flex-1 md:min-w-[12rem]">
           <MagnifyingGlassIcon
             class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
             aria-hidden="true"
@@ -322,16 +337,16 @@
             v-model="searchInput"
             type="search"
             autocomplete="off"
-            class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-3 text-sm text-slate-900 shadow-inner focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
+            class="h-11 w-full min-h-[44px] rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-3 text-base text-slate-900 shadow-inner focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 sm:h-10 sm:min-h-0 sm:text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
             :placeholder="t('trips_page.search_placeholder')"
             @keydown.enter.prevent="flushSearch"
           />
         </div>
-        <label class="flex shrink-0 items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-          <span>{{ t('filter_bar.per_page') }}</span>
+        <label class="flex min-h-[44px] shrink-0 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-600 sm:min-h-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-400 sm:dark:bg-transparent">
+          <span class="whitespace-nowrap sm:text-sm">{{ t('filter_bar.per_page') }}</span>
           <select
             v-model.number="filters.per_page"
-            class="h-11 rounded-xl border border-slate-200 bg-white px-2 text-sm font-medium dark:border-slate-600 dark:bg-slate-900"
+            class="h-10 min-h-[44px] rounded-lg border border-slate-200 bg-white px-2 text-base font-medium sm:min-h-0 sm:h-9 sm:text-sm dark:border-slate-600 dark:bg-slate-900"
             @change="onFilterChange"
           >
             <option :value="10">10</option>
@@ -345,124 +360,221 @@
 
     <!-- List -->
     <div v-if="loading" class="text-sm text-slate-500 dark:text-slate-400">{{ t('trips_page.loading') }}</div>
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-3 md:space-y-4">
       <article
         v-for="trip in items"
         :key="trip.id"
         class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50"
       >
-        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+        <div class="border-b border-slate-100 px-3 py-3 sm:px-4 sm:py-3.5 dark:border-slate-800">
           <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex min-w-0 items-start gap-3">
+            <div class="flex min-w-0 items-start gap-2.5 sm:gap-3">
               <div
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11"
                 :class="tripTypeIconWrap(trip.dispatch_request?.trip_type)"
               >
-                <TruckIcon v-if="trip.dispatch_request?.trip_type === 'door_to_door'" class="h-6 w-6 text-sky-600 dark:text-sky-400" />
-                <MapPinIcon v-else-if="trip.dispatch_request?.trip_type === 'point_to_point'" class="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                <CubeIcon v-else class="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                <TruckIcon v-if="trip.dispatch_request?.trip_type === 'door_to_door'" class="h-5 w-5 text-sky-600 dark:text-sky-400 sm:h-6 sm:w-6" />
+                <MapPinIcon v-else-if="trip.dispatch_request?.trip_type === 'point_to_point'" class="h-5 w-5 text-emerald-600 dark:text-emerald-400 sm:h-6 sm:w-6" />
+                <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-5 w-5 text-amber-600 dark:text-amber-400 sm:h-6 sm:w-6" />
+                <CubeIcon v-else class="h-5 w-5 text-violet-600 dark:text-violet-400 sm:h-6 sm:w-6" />
               </div>
               <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="font-mono text-sm font-bold text-slate-900 dark:text-slate-100">{{ tripCode(trip.id) }}</span>
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span class="font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-base">{{ tripCode(trip.id) }}</span>
                   <span
-                    class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                    class="rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs"
                     :class="tripTypeBadgeClass(trip.dispatch_request?.trip_type)"
                   >
                     {{ tripTypeShort(trip.dispatch_request?.trip_type) }}
                   </span>
                 </div>
-                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {{ t('trips_page.created_at', { time: fmtCreated(trip.created_at) }) }}
+                <div class="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400 sm:text-sm">
+                  <span class="font-medium text-slate-700 dark:text-slate-300">{{ t('trips_page.created_at_label') }}</span>
+                  {{ fmtDateTimeFull(trip.created_at) }}
+                </div>
+                <div
+                  v-if="trip.dispatch_request?.is_urgent || trip.dispatch_request?.source_channel || trip.dispatch_request?.paper_status || trip.dispatch_request?.status"
+                  class="mt-2 flex flex-wrap gap-1.5"
+                >
+                  <span
+                    v-if="trip.dispatch_request?.is_urgent"
+                    class="rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200"
+                  >
+                    {{ t('trips_page.badge_urgent') }}
+                  </span>
+                  <span
+                    v-if="trip.dispatch_request?.source_channel"
+                    class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  >
+                    {{ labelSourceChannel(trip.dispatch_request.source_channel) }}
+                  </span>
+                  <span
+                    v-if="trip.dispatch_request?.paper_status"
+                    class="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
+                  >
+                    {{ labelPaperStatus(trip.dispatch_request.paper_status) }}
+                  </span>
+                  <span
+                    v-if="trip.dispatch_request?.status"
+                    class="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200"
+                  >
+                    {{ t('trips_page.request_status_prefix') }} {{ labelRequestStatus(trip.dispatch_request.status) }}
+                  </span>
                 </div>
               </div>
             </div>
-            <div class="flex flex-wrap items-center justify-end gap-2">
-              <span :class="['rounded-full px-2.5 py-1 text-xs font-semibold', statusPillClass(trip.status)]">
+            <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+              <span :class="['rounded-full px-2.5 py-1 text-xs font-semibold sm:text-sm', statusPillClass(trip.status)]">
                 {{ labelTripStatus(trip.status) }}
+              </span>
+              <span
+                v-if="trip.payment_status && trip.payment_status !== 'unpaid'"
+                class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              >
+                {{ paymentLabel(trip.payment_status) }}
               </span>
             </div>
           </div>
         </div>
 
-        <div class="grid gap-4 px-4 py-4 sm:grid-cols-3">
-          <div>
+        <div class="grid grid-cols-1 gap-4 px-3 py-4 sm:px-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+          <div class="min-w-0">
             <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-              <MapPinIcon class="h-4 w-4" aria-hidden="true" />
+              <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
               {{ t('trips_page.col_origin') }}
             </div>
-            <div class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
               {{ trip.dispatch_request?.origin || '—' }}
-            </div>
-            <div class="mt-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
-              {{ fmtShort(trip.depart_at) }}
+            </p>
+            <div class="trip-time-block mt-2">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('trips_page.depart_at_label') }}
+              </p>
+              <template v-if="dateTimeParts(trip.depart_at)">
+                <p class="mt-0.5 text-xl font-bold tabular-nums leading-tight text-teal-700 dark:text-teal-400 sm:text-2xl">
+                  {{ dateTimeParts(trip.depart_at).time }}
+                </p>
+                <p class="text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-200">
+                  {{ dateTimeParts(trip.depart_at).date }}
+                  <span class="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">({{ dateTimeParts(trip.depart_at).weekday }})</span>
+                </p>
+              </template>
+              <p v-else class="mt-1 text-sm text-slate-500">—</p>
             </div>
           </div>
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-400">
-              <MapPinIcon class="h-4 w-4" aria-hidden="true" />
+              <MapPinIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
               {{ t('trips_page.col_destination') }}
             </div>
-            <div class="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <p class="mt-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100 sm:text-base">
               {{ trip.dispatch_request?.destination || '—' }}
-            </div>
-            <div class="mt-0.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
-              <template v-if="trip.dispatch_request?.arrive_by || trip.arrive_by">
-                {{ t('trips_page.eta_prefix') }} {{ fmtShort(trip.arrive_by || trip.dispatch_request?.arrive_by) }}
+            </p>
+            <div class="trip-time-block mt-2">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('trips_page.arrive_by_label') }}
+              </p>
+              <template v-if="dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by)">
+                <p class="mt-0.5 text-xl font-bold tabular-nums leading-tight text-rose-700 dark:text-rose-400 sm:text-2xl">
+                  {{ dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by).time }}
+                </p>
+                <p class="text-sm font-semibold tabular-nums text-slate-800 dark:text-slate-200">
+                  {{ dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by).date }}
+                  <span class="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">
+                    ({{ dateTimeParts(trip.arrive_by || trip.dispatch_request?.arrive_by).weekday }})
+                  </span>
+                </p>
               </template>
-              <template v-else>—</template>
+              <p v-else class="mt-1 text-sm text-slate-500">{{ t('trips_page.no_eta') }}</p>
             </div>
           </div>
-          <div>
-            <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {{ t('trips_page.col_driver') }}
-            </div>
-            <div v-if="trip.driver" class="mt-1 flex items-center gap-2">
-              <div class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-200">
+          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('trips_page.col_driver') }} · {{ t('trips_page.col_vehicle') }}
+            </p>
+            <div v-if="trip.driver" class="mt-2 flex items-start gap-2">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 dark:bg-teal-950 dark:text-teal-200">
                 {{ driverInitials(trip.driver.full_name) }}
               </div>
               <div class="min-w-0">
-                <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {{ trip.driver.full_name }}
-                </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">
-                  <span v-if="trip.vehicle">{{ trip.vehicle.license_plate }}</span>
-                  <span v-if="trip.vehicle && trip.external_driver_ref"> · </span>
-                  <span v-if="trip.external_driver_ref" class="truncate">{{ trip.external_driver_ref }}</span>
-                </div>
+                </p>
+                <p v-if="trip.driver.phone" class="mt-0.5 text-xs tabular-nums text-slate-600 dark:text-slate-400">
+                  {{ trip.driver.phone }}
+                </p>
+                <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                  <span v-if="trip.vehicle" class="font-medium">{{ trip.vehicle.license_plate }}</span>
+                  <span v-if="trip.external_vehicle_ref" class="block truncate">{{ trip.external_vehicle_ref }}</span>
+                  <span v-if="trip.external_driver_ref" class="block truncate">{{ trip.external_driver_ref }}</span>
+                </p>
               </div>
             </div>
-            <div v-else class="mt-1 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-              <div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+            <div v-else class="mt-2 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
                 ?
               </div>
               <span>{{ t('trips_page.unassigned') }}</span>
             </div>
+            <div v-if="trip.transport_provider" class="mt-3 border-t border-slate-200/80 pt-2 text-xs dark:border-slate-700">
+              <span class="font-semibold text-slate-600 dark:text-slate-300">{{ t('trips_page.col_provider') }}:</span>
+              <span class="ml-1 text-slate-800 dark:text-slate-200">{{ trip.transport_provider.name }}</span>
+            </div>
+          </div>
+          <div class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('trips_page.col_ops_meta') }}
+            </p>
+            <ul class="mt-2 space-y-2 text-xs text-slate-700 dark:text-slate-300 sm:text-sm">
+              <li v-if="trip.dispatcher">
+                <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.col_dispatcher') }}</span>
+                {{ trip.dispatcher.name }}
+              </li>
+              <li>
+                <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.payment_label') }}</span>
+                {{ paymentLabel(trip.payment_status) }}
+              </li>
+              <li v-if="trip.started_at">
+                <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.started_at_label') }}</span>
+                {{ fmtDateTimeFull(trip.started_at) }}
+              </li>
+              <li v-if="trip.completed_at">
+                <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.completed_at_label') }}</span>
+                {{ fmtDateTimeFull(trip.completed_at) }}
+              </li>
+            </ul>
+            <p
+              v-if="trip.dispatch_request?.notes && String(trip.dispatch_request.notes).trim()"
+              class="mt-3 line-clamp-3 border-t border-slate-200/80 pt-2 text-xs leading-relaxed text-slate-600 dark:border-slate-700 dark:text-slate-400"
+              :title="String(trip.dispatch_request.notes).trim()"
+            >
+              <span class="font-semibold text-slate-700 dark:text-slate-300">{{ t('trips_page.notes_label') }}</span>
+              {{ trip.dispatch_request.notes }}
+            </p>
           </div>
         </div>
 
-        <div class="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-slate-400">
+        <div class="flex flex-col gap-3 border-t border-slate-100 px-3 py-3 dark:border-slate-800 sm:px-4 sm:py-3.5 md:flex-row md:items-center md:justify-between">
+          <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
             <span class="inline-flex items-center gap-1.5">
-              <CubeIcon class="h-4 w-4 text-slate-400" />
+              <CubeIcon class="h-4 w-4 shrink-0 text-slate-400" />
               {{ cargoSummary(trip) }}
             </span>
             <span class="inline-flex items-center gap-1.5">
-              <ArrowsRightLeftIcon class="h-4 w-4 text-slate-400" />
+              <ArrowsRightLeftIcon class="h-4 w-4 shrink-0 text-slate-400" />
               {{ distanceSummary(trip) }}
             </span>
             <span class="inline-flex items-center gap-1.5">
-              <ClockIcon class="h-4 w-4 text-slate-400" />
+              <ClockIcon class="h-4 w-4 shrink-0 text-slate-400" />
               {{ durationSummary(trip) }}
             </span>
           </div>
-          <div class="flex flex-wrap justify-end gap-2">
+          <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
             <RouterLink
               :to="`/trips/${trip.id}`"
-              class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 sm:min-h-0 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
             >
-              <EyeIcon class="h-4 w-4" />
+              <EyeIcon class="h-4 w-4 shrink-0" />
               {{ t('trips_page.action_detail') }}
             </RouterLink>
             <a
@@ -470,25 +582,25 @@
               :href="mapsHref(trip)"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-900 hover:bg-teal-100 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-100"
+              class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-900 hover:bg-teal-100 sm:min-h-0 dark:border-teal-900 dark:bg-teal-950/60 dark:text-teal-100"
             >
-              <ArrowTopRightOnSquareIcon class="h-4 w-4" />
+              <ArrowTopRightOnSquareIcon class="h-4 w-4 shrink-0" />
               {{ t('trips_page.action_track') }}
             </a>
             <RouterLink
               v-if="canAssignTrip && needsAssign(trip)"
               :to="`/trips/${trip.id}`"
-              class="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-600"
+              class="col-span-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-600 sm:col-span-1 sm:min-h-0"
             >
-              <UserPlusIcon class="h-4 w-4" />
+              <UserPlusIcon class="h-4 w-4 shrink-0" />
               {{ t('trips_page.action_assign') }}
             </RouterLink>
             <a
               v-else-if="trip.driver?.phone"
               :href="`tel:${trip.driver.phone}`"
-              class="inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700"
+              class="col-span-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-violet-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 sm:col-span-1 sm:min-h-0"
             >
-              <PhoneIcon class="h-4 w-4" />
+              <PhoneIcon class="h-4 w-4 shrink-0" />
               {{ t('trips_page.action_contact') }}
             </a>
           </div>
@@ -571,7 +683,13 @@ import {
 } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import { getTripStats, listTrips } from '../../api/trips'
-import { labelTripStatus, labelTripType } from '../../util/labels'
+import {
+  labelPaperStatus,
+  labelRequestStatus,
+  labelSourceChannel,
+  labelTripStatus,
+  labelTripType,
+} from '../../util/labels'
 import { useAuthStore } from '../../store'
 
 const { t, locale } = useI18n()
@@ -1053,16 +1171,39 @@ function statusPillClass(s) {
   return map[s] ?? 'bg-slate-100 text-slate-800'
 }
 
-function fmtCreated(v) {
-  if (!v) return '—'
-  const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
-  return new Date(v).toLocaleString(loc, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+/** Hiển thị ngày + giờ đầy đủ (danh sách / meta vận hành) */
+function fmtDateTimeFull(v) {
+  if (v == null || v === '') return '—'
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return '—'
+  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  return d.toLocaleString(loc, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: locale.value === 'en',
+  })
 }
 
-function fmtShort(v) {
-  if (!v) return '—'
-  const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
-  return new Date(v).toLocaleString(loc, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+/** Khối giờ lớn + ngày + thứ cho điểm đi/đến */
+function dateTimeParts(v) {
+  if (v == null || v === '') return null
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return null
+  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  const hour12 = locale.value === 'en'
+  return {
+    date: d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    time: d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', hour12 }),
+    weekday: d.toLocaleDateString(loc, { weekday: 'short' }),
+  }
+}
+
+function paymentLabel(ps) {
+  const k = ps && ['unpaid', 'pending', 'paid'].includes(ps) ? ps : 'unpaid'
+  return t(`trips_page.payment_${k}`)
 }
 
 function driverInitials(name) {

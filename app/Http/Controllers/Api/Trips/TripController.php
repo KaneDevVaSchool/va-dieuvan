@@ -83,7 +83,7 @@ class TripController extends Controller
                 'driver:id,full_name,phone',
                 'transportProvider:id,name',
                 'record:id,trip_id,distance_km',
-                'dispatchRequest:id,status,trip_type,origin,destination,arrive_by,passenger_count',
+                'dispatchRequest:id,status,trip_type,origin,destination,arrive_by,passenger_count,source_channel,paper_status,is_urgent,depart_at,notes',
             ])
             ->orderByDesc('trips.depart_at')
             ->orderByDesc('trips.id');
