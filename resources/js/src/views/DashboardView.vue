@@ -35,10 +35,10 @@
               v-for="item in quickLinks"
               :key="item.to"
               :to="item.to"
-              class="snap-center flex w-[4.75rem] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-slate-200/90 bg-white/90 px-2 py-3 text-center shadow-sm transition hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-800 sm:w-[5.25rem]"
+              class="snap-center flex w-[6.5rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200/90 bg-white/90 px-2.5 py-3.5 text-center shadow-sm transition hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-800 sm:w-32 md:w-36"
             >
-              <component :is="item.icon" class="h-6 w-6 shrink-0 text-teal-600 dark:text-teal-400" aria-hidden="true" />
-              <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight text-slate-800 dark:text-slate-100">
+              <component :is="item.icon" class="h-7 w-7 shrink-0 text-teal-600 dark:text-teal-400 sm:h-8 sm:w-8" aria-hidden="true" />
+              <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight text-slate-800 dark:text-slate-100 sm:text-xs">
                 {{ item.title }}
               </span>
             </RouterLink>
@@ -240,42 +240,72 @@
                 </div>
               </div>
             </details>
-            <details v-for="fd in dimensionFilters" :key="fd.id" class="group relative min-w-0">
-              <summary
-                class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-              >
-                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
-                <span class="max-w-[9rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">
-                  {{ fd.summary }}
-                </span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
-              >
-                <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                  <li v-for="opt in fd.options" :key="String(opt.value) + opt.label">
-                    <button
-                      type="button"
-                      :class="[
-                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                        fd.isSelected(opt.value)
-                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
-                      ]"
-                      @click="fd.pick(opt.value)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </details>
+            <template v-if="showOptionalFilters">
+              <details v-for="fd in dimensionFilters" :key="fd.id" class="group relative min-w-0">
+                <summary
+                  class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+                >
+                  <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
+                  <span class="max-w-[9rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">
+                    {{ fd.summary }}
+                  </span>
+                  <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                </summary>
+                <div
+                  class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+                >
+                  <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+                    <li v-for="opt in fd.options" :key="String(opt.value) + opt.label">
+                      <button
+                        type="button"
+                        :class="[
+                          'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
+                          fd.isSelected(opt.value)
+                            ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                            : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
+                        ]"
+                        @click="fd.pick(opt.value)"
+                      >
+                        {{ opt.label }}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </details>
+            </template>
           </div>
-          <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          <div
+            class="ml-auto flex w-full shrink-0 flex-col gap-2 border-t border-violet-200/50 pt-2 sm:ml-0 sm:w-auto sm:flex-row sm:items-center sm:border-l sm:border-t-0 sm:pl-3 sm:pt-0 dark:border-violet-800/40"
+          >
+            <div
+              class="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 shadow-sm ring-1 ring-violet-200/40 dark:border-slate-700 dark:bg-slate-900/95 dark:ring-violet-900/30 sm:min-w-[10.5rem] sm:flex-col sm:items-stretch sm:justify-center sm:py-2.5"
+              :title="t('dashboard_analytics.filter_optional_hint')"
+            >
+              <div class="min-w-0 sm:text-center">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('dashboard_analytics.filter_optional_title') }}
+                </p>
+                <p class="hidden text-[10px] leading-snug text-slate-500 dark:text-slate-400 sm:mt-0.5 sm:block">
+                  {{ t('dashboard_analytics.filter_optional_hint') }}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                :aria-checked="showOptionalFilters"
+                class="relative inline-flex h-7 w-12 shrink-0 rounded-full border border-slate-200/90 transition focus:outline-none focus:ring-2 focus:ring-teal-500/35 dark:border-slate-600"
+                :class="showOptionalFilters ? 'bg-teal-500 dark:bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
+                @click="showOptionalFilters = !showOptionalFilters"
+              >
+                <span
+                  class="pointer-events-none absolute top-0.5 inline-block h-6 w-6 rounded-full bg-white shadow-md ring-1 ring-slate-200/80 transition-transform dark:ring-slate-600/50"
+                  :class="showOptionalFilters ? 'translate-x-[1.375rem]' : 'translate-x-0.5'"
+                />
+              </button>
+            </div>
             <button
               type="button"
-              class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+              class="inline-flex items-center justify-center gap-1 rounded-xl px-2.5 py-2 text-slate-500 ring-1 ring-slate-200/50 transition hover:bg-white/80 hover:text-slate-800 dark:text-slate-400 dark:ring-slate-700 dark:hover:bg-white/10 dark:hover:text-slate-200"
               :title="t('dashboard_analytics.filter_clear_all')"
               @click="resetFilters"
             >
@@ -601,7 +631,7 @@
 </template>
 
 <script setup>
-import { computed, markRaw, onMounted, onUnmounted, ref } from 'vue'
+import { computed, markRaw, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -689,6 +719,9 @@ const filterPaperStatus = ref('')
 const filterIsUrgent = ref(false)
 const filterTripRunStatus = ref('')
 const filterFleetMode = ref('')
+
+const OPTIONAL_FILTERS_VISIBLE_KEY = 'dash-optional-filters-visible'
+const showOptionalFilters = ref(true)
 
 const loading = ref(false)
 const loadError = ref('')
@@ -1308,7 +1341,23 @@ async function reloadSummary() {
   }
 }
 
+watch(showOptionalFilters, (visible) => {
+  try {
+    sessionStorage.setItem(OPTIONAL_FILTERS_VISIBLE_KEY, visible ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+})
+
 onMounted(() => {
+  try {
+    const raw = sessionStorage.getItem(OPTIONAL_FILTERS_VISIBLE_KEY)
+    if (raw !== null) {
+      showOptionalFilters.value = raw === '1' || raw === 'true'
+    }
+  } catch {
+    /* ignore */
+  }
   updateChartHeights()
   window.addEventListener('resize', updateChartHeights)
   reloadSummary()

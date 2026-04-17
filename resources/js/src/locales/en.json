@@ -1037,6 +1037,8 @@
     "chart_top_requesters": "Top requesters",
     "chart_trips_by_plate": "Trips by license plate",
     "filter_all": "All",
+    "filter_optional_title": "Optional filters",
+    "filter_optional_hint": "Hide when you do not need them to keep the layout compact.",
     "filter_trip_type": "Trip type",
     "filter_channel": "Channel",
     "filter_paper": "Paper slip",
