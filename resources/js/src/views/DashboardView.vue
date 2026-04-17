@@ -22,27 +22,49 @@
         </RouterLink>
       </div>
 
-      <!-- Truy cập nhanh: một hàng, cuộn ngang -->
+      <!-- Truy cập nhanh: mũi tên hai bên, ẩn thanh cuộn -->
       <div>
         <h2 class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {{ t('dashboard_analytics.quick_title') }}
         </h2>
-        <div class="relative -mx-1 mt-2 flex justify-center">
-          <div
-            class="flex max-w-full snap-x snap-mandatory justify-center gap-2 overflow-x-auto overscroll-x-contain px-2 pb-1 pt-0.5 [-webkit-overflow-scrolling:touch] scroll-smooth sm:gap-3"
+        <div class="relative -mx-0.5 mt-2 flex items-stretch gap-1 sm:-mx-1 sm:gap-2">
+          <button
+            type="button"
+            class="flex h-auto min-h-[5.5rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-teal-200/70 hover:bg-white hover:text-teal-700 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-teal-800 dark:hover:text-teal-400 sm:w-9"
+            :disabled="!quickCanScrollLeft"
+            :aria-label="t('dashboard_analytics.quick_scroll_prev')"
+            @click="scrollQuickLinks(-1)"
           >
-            <RouterLink
-              v-for="item in quickLinks"
-              :key="item.to"
-              :to="item.to"
-              class="snap-center flex w-[6.5rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200/90 bg-white/90 px-2.5 py-3.5 text-center shadow-sm transition hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-800 sm:w-32 md:w-36"
-            >
-              <component :is="item.icon" class="h-7 w-7 shrink-0 text-teal-600 dark:text-teal-400 sm:h-8 sm:w-8" aria-hidden="true" />
-              <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight text-slate-800 dark:text-slate-100 sm:text-xs">
-                {{ item.title }}
-              </span>
-            </RouterLink>
+            <ChevronLeftIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+          </button>
+          <div
+            ref="quickScrollRef"
+            class="dash-quick-scroll min-h-[5.5rem] min-w-0 flex-1 overflow-x-auto overflow-y-hidden scroll-smooth"
+            @scroll.passive="updateQuickScrollState"
+          >
+            <div class="flex h-full flex-nowrap items-stretch gap-2 px-0.5 py-0.5 sm:gap-3">
+              <RouterLink
+                v-for="item in quickLinks"
+                :key="item.to"
+                :to="item.to"
+                class="flex w-[6.5rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200/90 bg-white/90 px-2.5 py-3.5 text-center shadow-sm transition hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-800 sm:w-32 md:w-36"
+              >
+                <component :is="item.icon" class="h-7 w-7 shrink-0 text-teal-600 dark:text-teal-400 sm:h-8 sm:w-8" aria-hidden="true" />
+                <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight text-slate-800 dark:text-slate-100 sm:text-xs">
+                  {{ item.title }}
+                </span>
+              </RouterLink>
+            </div>
           </div>
+          <button
+            type="button"
+            class="flex h-auto min-h-[5.5rem] w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white/90 text-slate-600 shadow-sm transition hover:border-teal-200/70 hover:bg-white hover:text-teal-700 disabled:pointer-events-none disabled:opacity-25 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-teal-800 dark:hover:text-teal-400 sm:w-9"
+            :disabled="!quickCanScrollRight"
+            :aria-label="t('dashboard_analytics.quick_scroll_next')"
+            @click="scrollQuickLinks(1)"
+          >
+            <ChevronRightIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+          </button>
         </div>
       </div>
 
@@ -86,6 +108,30 @@
                   <span class="font-medium text-slate-800 dark:text-slate-200">{{ row.value }}</span>
                 </li>
               </ul>
+              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('dashboard_analytics.filter_optional_title') }}
+                </p>
+                <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                  {{ t('dashboard_analytics.filter_optional_hint') }}
+                </p>
+                <ul class="mt-2 max-h-[min(50vh,240px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="fd in dimensionFilters" :key="fd.id" class="flex items-start gap-2">
+                    <input
+                      :id="'dash-bar-vis-' + fd.id"
+                      v-model="dimensionFilterBarVisible[fd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                    />
+                    <label
+                      :for="'dash-bar-vis-' + fd.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ fd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
               <button
                 type="button"
                 class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -240,8 +286,8 @@
                 </div>
               </div>
             </details>
-            <template v-if="showOptionalFilters">
-              <details v-for="fd in dimensionFilters" :key="fd.id" class="group relative min-w-0">
+            <template v-for="fd in visibleDimensionFilters" :key="fd.id">
+              <details class="group relative min-w-0">
                 <summary
                   class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
                 >
@@ -273,50 +319,6 @@
                 </div>
               </details>
             </template>
-          </div>
-          <div
-            class="ml-auto flex w-full shrink-0 flex-col gap-2 border-t border-violet-200/50 pt-2 sm:ml-0 sm:w-auto sm:flex-row sm:items-center sm:border-l sm:border-t-0 sm:pl-3 sm:pt-0 dark:border-violet-800/40"
-          >
-            <div
-              class="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 shadow-sm ring-1 ring-violet-200/40 dark:border-slate-700 dark:bg-slate-900/95 dark:ring-violet-900/30 sm:min-w-[10.5rem] sm:flex-col sm:items-stretch sm:justify-center sm:py-2.5"
-              :title="t('dashboard_analytics.filter_optional_hint')"
-            >
-              <div class="min-w-0 sm:text-center">
-                <p class="text-[10px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                  {{ t('dashboard_analytics.filter_optional_title') }}
-                </p>
-                <p class="hidden text-[10px] leading-snug text-slate-500 dark:text-slate-400 sm:mt-0.5 sm:block">
-                  {{ t('dashboard_analytics.filter_optional_hint') }}
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                :aria-checked="showOptionalFilters"
-                class="relative inline-flex h-7 w-12 shrink-0 rounded-full border border-slate-200/90 transition focus:outline-none focus:ring-2 focus:ring-teal-500/35 dark:border-slate-600"
-                :class="showOptionalFilters ? 'bg-teal-500 dark:bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
-                @click="showOptionalFilters = !showOptionalFilters"
-              >
-                <span
-                  class="pointer-events-none absolute top-0.5 inline-block h-6 w-6 rounded-full bg-white shadow-md ring-1 ring-slate-200/80 transition-transform dark:ring-slate-600/50"
-                  :class="showOptionalFilters ? 'translate-x-[1.375rem]' : 'translate-x-0.5'"
-                />
-              </button>
-            </div>
-            <button
-              type="button"
-              class="inline-flex items-center justify-center gap-1 rounded-xl px-2.5 py-2 text-slate-500 ring-1 ring-slate-200/50 transition hover:bg-white/80 hover:text-slate-800 dark:text-slate-400 dark:ring-slate-700 dark:hover:bg-white/10 dark:hover:text-slate-200"
-              :title="t('dashboard_analytics.filter_clear_all')"
-              @click="resetFilters"
-            >
-              <span class="relative inline-flex">
-                <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-                <XMarkIcon
-                  class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-                  aria-hidden="true"
-                />
-              </span>
-            </button>
           </div>
         </div>
       </AppFilterBar>
@@ -631,13 +633,15 @@
 </template>
 
 <script setup>
-import { computed, markRaw, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, markRaw, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   BanknotesIcon,
   CalendarDaysIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ClipboardDocumentListIcon,
   CubeIcon,
   DocumentMagnifyingGlassIcon,
@@ -647,7 +651,6 @@ import {
   TableCellsIcon,
   TruckIcon,
   UserGroupIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import Card from '../components/ui/Card.vue'
 import AppFilterBar from '../components/filters/AppFilterBar.vue'
@@ -720,8 +723,18 @@ const filterIsUrgent = ref(false)
 const filterTripRunStatus = ref('')
 const filterFleetMode = ref('')
 
-const OPTIONAL_FILTERS_VISIBLE_KEY = 'dash-optional-filters-visible'
-const showOptionalFilters = ref(true)
+const DIMENSION_BAR_VISIBLE_KEY = 'dash-dimension-bar-visible'
+const DIMENSION_FILTER_IDS = ['trip_type', 'channel', 'paper', 'urgent', 'trip_run', 'fleet']
+
+function defaultDimensionBarVisibility() {
+  return Object.fromEntries(DIMENSION_FILTER_IDS.map((id) => [id, true]))
+}
+
+const dimensionFilterBarVisible = ref(defaultDimensionBarVisibility())
+
+const quickScrollRef = ref(null)
+const quickCanScrollLeft = ref(false)
+const quickCanScrollRight = ref(false)
 
 const loading = ref(false)
 const loadError = ref('')
@@ -751,6 +764,41 @@ function updateChartHeights() {
   chartHeight.value = narrow ? '220px' : '260px'
   chartHeightWide.value = narrow ? '240px' : '300px'
   chartHeightTall.value = narrow ? '260px' : '320px'
+}
+
+function updateQuickScrollState() {
+  const el = quickScrollRef.value
+  if (!el) {
+    quickCanScrollLeft.value = false
+    quickCanScrollRight.value = false
+    return
+  }
+  const { scrollLeft, scrollWidth, clientWidth } = el
+  quickCanScrollLeft.value = scrollLeft > 2
+  quickCanScrollRight.value = scrollLeft + clientWidth < scrollWidth - 2
+}
+
+function scrollQuickLinks(direction) {
+  const el = quickScrollRef.value
+  if (!el) return
+  const step = Math.max(160, Math.floor(el.clientWidth * 0.82))
+  el.scrollBy({ left: direction * step, behavior: 'smooth' })
+}
+
+function loadDimensionBarVisibility() {
+  try {
+    const raw = sessionStorage.getItem(DIMENSION_BAR_VISIBLE_KEY)
+    if (!raw) return
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return
+    const next = defaultDimensionBarVisibility()
+    for (const id of DIMENSION_FILTER_IDS) {
+      if (typeof parsed[id] === 'boolean') next[id] = parsed[id]
+    }
+    dimensionFilterBarVisible.value = next
+  } catch {
+    /* ignore */
+  }
 }
 
 const presetDefs = computed(() => [
@@ -967,6 +1015,10 @@ const dimensionFilters = computed(() => {
     },
   ]
 })
+
+const visibleDimensionFilters = computed(() =>
+  dimensionFilters.value.filter((fd) => dimensionFilterBarVisible.value[fd.id] !== false),
+)
 
 const rangeValid = computed(() => {
   if (!rangeFrom.value || !rangeTo.value) return false
@@ -1341,30 +1393,33 @@ async function reloadSummary() {
   }
 }
 
-watch(showOptionalFilters, (visible) => {
-  try {
-    sessionStorage.setItem(OPTIONAL_FILTERS_VISIBLE_KEY, visible ? '1' : '0')
-  } catch {
-    /* ignore */
-  }
-})
+watch(
+  dimensionFilterBarVisible,
+  (vis) => {
+    try {
+      sessionStorage.setItem(DIMENSION_BAR_VISIBLE_KEY, JSON.stringify(vis))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+function onWindowResize() {
+  updateChartHeights()
+  updateQuickScrollState()
+}
 
 onMounted(() => {
-  try {
-    const raw = sessionStorage.getItem(OPTIONAL_FILTERS_VISIBLE_KEY)
-    if (raw !== null) {
-      showOptionalFilters.value = raw === '1' || raw === 'true'
-    }
-  } catch {
-    /* ignore */
-  }
+  loadDimensionBarVisibility()
   updateChartHeights()
-  window.addEventListener('resize', updateChartHeights)
+  window.addEventListener('resize', onWindowResize)
   reloadSummary()
+  nextTick(() => updateQuickScrollState())
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', updateChartHeights)
+  window.removeEventListener('resize', onWindowResize)
 })
 </script>
 
@@ -1378,5 +1433,12 @@ onUnmounted(() => {
 }
 .dash-date-input:hover::-webkit-calendar-picker-indicator {
   opacity: 1;
+}
+.dash-quick-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.dash-quick-scroll::-webkit-scrollbar {
+  display: none;
 }
 </style>
