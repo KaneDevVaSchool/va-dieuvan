@@ -632,6 +632,9 @@
         "kpi_d2d": "D2D (đưa đón)",
         "kpi_p2p": "P2P (điểm — điểm)",
         "kpi_business": "Công tác",
+        "kpi_awaiting_dispatch": "Chờ điều phối",
+        "kpi_running": "Đang chạy",
+        "kpi_completed": "Hoàn thành",
         "kpi_issues": "Chuyến có vấn đề",
         "created_at": "Tạo lúc: {time}",
         "created_at_label": "Tạo chuyến:",
@@ -948,11 +951,22 @@
     },
     "passengers": {
       "title": "Hành khách ({n})",
-      "edit_hint": "Chỉnh sửa danh sách (yêu cầu gốc)",
+      "edit_inline": "Chỉnh sửa danh sách",
+      "save": "Lưu",
+      "cancel_edit": "Hủy",
+      "add_row": "Thêm dòng",
+      "remove_row": "Xóa dòng",
+      "save_confirm_title": "Lưu danh sách?",
+      "save_confirm_body": "Thay đổi sẽ cập nhật vào yêu cầu điều vận gắn với chuyến này.",
+      "validation_need_one": "Cần ít nhất một dòng có dữ liệu.",
       "col_name": "Họ tên",
       "col_role": "Vai trò",
+      "col_guests": "Số người",
+      "col_qty": "SL",
       "col_contact": "Liên hệ",
       "col_notes": "Ghi chú",
+      "ph_pickup_contact": "Liên hệ lấy hàng",
+      "ph_delivery_contact": "Liên hệ giao hàng",
       "empty": "Chưa có danh sách chi tiết từ biểu mẫu.",
       "special_summary_title": "Lưu ý đặc biệt",
       "role_cargo": "Hàng hóa",
@@ -968,9 +982,13 @@
       "summary_wheelchair": "Xe cần hỗ trợ lên xuống cho xe lăn.",
       "summary_allergy": "Cần thông báo tài xế về dị ứng / thực phẩm."
     },
-    "more_section": {
-      "title": "Chi phí & cập nhật trạng thái nâng cao",
-      "subtitle": "Ghi nhận chi phí và đổi trạng thái chuyến (xác nhận tài xế, đang chạy, hoàn thành, hủy)."
+    "costs_block": {
+      "title": "Chi phí phát sinh",
+      "subtitle": "Ghi nhận nhanh và theo dõi các khoản đã khai báo (tối đa 50 bản ghi mới nhất)."
+    },
+    "status_block": {
+      "title": "Trạng thái",
+      "subtitle": "Cập nhật bước vận hành: tài xế xác nhận, đang chạy, hoàn thành hoặc hủy."
     },
     "coordination": {
       "title": "Hành động điều phối",

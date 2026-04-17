@@ -311,53 +311,194 @@
                 <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">
                   {{ t('trip_detail.passengers.title', { n: passengerRowsDisplay.length }) }}
                 </h2>
-                <RouterLink
-                  v-if="trip.dispatch_request?.id"
-                  :to="`/requests/${trip.dispatch_request.id}`"
-                  class="text-sm font-semibold text-sky-700 hover:text-sky-800 hover:underline"
-                >
-                  {{ t('trip_detail.passengers.edit_hint') }}
-                </RouterLink>
-              </div>
-              <div class="mt-4 overflow-x-auto rounded-xl border border-slate-100">
-                <table class="min-w-full divide-y divide-slate-100 text-sm">
-                  <thead class="bg-slate-50/80">
-                    <tr>
-                      <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_name') }}</th>
-                      <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_role') }}</th>
-                      <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_contact') }}</th>
-                      <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_notes') }}</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 bg-white">
-                    <tr v-for="(row, idx) in passengerRowsDisplay" :key="idx">
-                      <td class="px-3 py-2.5 font-medium text-slate-900">{{ row.name }}</td>
-                      <td class="px-3 py-2.5">
-                        <span
-                          class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                          :class="rolePillClass(row.roleKind)"
-                        >
-                          {{ row.roleLabel }}
-                        </span>
-                      </td>
-                      <td class="max-w-[140px] truncate px-3 py-2.5 text-slate-600">{{ row.contact || '—' }}</td>
-                      <td class="px-3 py-2.5">
-                        <div class="flex flex-wrap items-center gap-1.5">
-                          <span v-if="row.flagWheelchair" :title="t('trip_detail.passengers.flag_wheelchair')">
-                            <WheelchairIcon class="h-5 w-5 text-rose-600" />
-                          </span>
-                          <span v-if="row.flagAllergy" :title="t('trip_detail.passengers.flag_allergy')">
-                            <ExclamationTriangleIcon class="h-5 w-5 text-amber-500" />
-                          </span>
-                          <span class="text-slate-600">{{ row.notes || '—' }}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div v-if="!passengerRowsDisplay.length" class="px-3 py-6 text-center text-sm text-slate-500">
-                  {{ t('trip_detail.passengers.empty') }}
+                <div v-if="canEditPassengerList" class="flex flex-wrap items-center gap-2">
+                  <template v-if="!passengersEditMode">
+                    <button
+                      type="button"
+                      class="rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 py-1.5 text-sm font-semibold text-sky-800 transition hover:bg-sky-100 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
+                      @click="startPassengersEdit"
+                    >
+                      {{ t('trip_detail.passengers.edit_inline') }}
+                    </button>
+                  </template>
+                  <template v-else>
+                    <button
+                      type="button"
+                      class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                      @click="addPassengerListRow"
+                    >
+                      {{ t('trip_detail.passengers.add_row') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      @click="cancelPassengersEdit"
+                    >
+                      {{ t('trip_detail.passengers.cancel_edit') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
+                      :disabled="passengersSaving"
+                      @click="submitPassengersEdit"
+                    >
+                      {{ t('trip_detail.passengers.save') }}
+                    </button>
+                  </template>
                 </div>
+              </div>
+              <p v-if="passengersEditMsg" class="mt-2 text-sm text-rose-600 dark:text-rose-400">{{ passengersEditMsg }}</p>
+              <div class="mt-4 overflow-x-auto rounded-xl border border-slate-100">
+                <template v-if="passengersEditMode && passengersEditDraft">
+                  <!-- D2D / P2P -->
+                  <table v-if="passengersEditDraft.kind === 'passenger'" class="min-w-full divide-y divide-slate-100 text-sm">
+                    <thead class="bg-slate-50/80">
+                      <tr>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_name') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_guests') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_notes') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600" />
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                      <tr v-for="(row, idx) in passengersEditDraft.passengerRows" :key="'pe-' + idx">
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.person_in_charge" type="text" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.guests" type="number" min="1" step="1" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.notes" type="text" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <button
+                            v-if="passengersEditDraft.passengerRows.length > 1"
+                            type="button"
+                            class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            :aria-label="t('trip_detail.passengers.remove_row')"
+                            @click="removePassengerListRow(idx)"
+                          >
+                            <TrashIcon class="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <!-- Business -->
+                  <table v-else-if="passengersEditDraft.kind === 'business'" class="min-w-full divide-y divide-slate-100 text-sm">
+                    <thead class="bg-slate-50/80">
+                      <tr>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_guests') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_notes') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600" />
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                      <tr v-for="(row, idx) in passengersEditDraft.businessRows" :key="'be-' + idx">
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.guests" type="number" min="1" step="1" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.notes" type="text" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <button
+                            v-if="passengersEditDraft.businessRows.length > 1"
+                            type="button"
+                            class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            :aria-label="t('trip_detail.passengers.remove_row')"
+                            @click="removePassengerListRow(idx)"
+                          >
+                            <TrashIcon class="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <!-- Cargo -->
+                  <table v-else class="min-w-full divide-y divide-slate-100 text-sm">
+                    <thead class="bg-slate-50/80">
+                      <tr>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_name') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_qty') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_notes') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_contact') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600" />
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                      <tr v-for="(row, idx) in passengersEditDraft.cargoRows" :key="'ce-' + idx">
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.name" type="text" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.qty" type="number" min="1" step="1" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <input v-model="row.item_notes" type="text" :class="paxEditInputClass" />
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <div class="flex min-w-[10rem] flex-col gap-1">
+                            <input v-model="row.pickup_contact" type="text" :placeholder="t('trip_detail.passengers.ph_pickup_contact')" :class="paxEditInputClass" />
+                            <input v-model="row.delivery_contact" type="text" :placeholder="t('trip_detail.passengers.ph_delivery_contact')" :class="paxEditInputClass" />
+                          </div>
+                        </td>
+                        <td class="px-3 py-2 align-top">
+                          <button
+                            v-if="passengersEditDraft.cargoRows.length > 1"
+                            type="button"
+                            class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            :aria-label="t('trip_detail.passengers.remove_row')"
+                            @click="removePassengerListRow(idx)"
+                          >
+                            <TrashIcon class="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </template>
+                <template v-else>
+                  <table class="min-w-full divide-y divide-slate-100 text-sm">
+                    <thead class="bg-slate-50/80">
+                      <tr>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_name') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_role') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_contact') }}</th>
+                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_notes') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                      <tr v-for="(row, idx) in passengerRowsDisplay" :key="idx">
+                        <td class="px-3 py-2.5 font-medium text-slate-900">{{ row.name }}</td>
+                        <td class="px-3 py-2.5">
+                          <span
+                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                            :class="rolePillClass(row.roleKind)"
+                          >
+                            {{ row.roleLabel }}
+                          </span>
+                        </td>
+                        <td class="max-w-[140px] truncate px-3 py-2.5 text-slate-600">{{ row.contact || '—' }}</td>
+                        <td class="px-3 py-2.5">
+                          <div class="flex flex-wrap items-center gap-1.5">
+                            <span v-if="row.flagWheelchair" :title="t('trip_detail.passengers.flag_wheelchair')">
+                              <WheelchairIcon class="h-5 w-5 text-rose-600" />
+                            </span>
+                            <span v-if="row.flagAllergy" :title="t('trip_detail.passengers.flag_allergy')">
+                              <ExclamationTriangleIcon class="h-5 w-5 text-amber-500" />
+                            </span>
+                            <span class="text-slate-600">{{ row.notes || '—' }}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div v-if="!passengerRowsDisplay.length" class="px-3 py-6 text-center text-sm text-slate-500">
+                    {{ t('trip_detail.passengers.empty') }}
+                  </div>
+                </template>
               </div>
               <div
                 v-if="specialNeedsSummary"
@@ -368,28 +509,41 @@
               </div>
             </section>
 
-            <!-- Costs & advanced status (always visible) -->
+            <!-- Chi phí phát sinh -->
             <section
-              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/90 print:break-inside-avoid"
-              :aria-label="t('trip_detail.more_section.title')"
+              class="overflow-hidden rounded-2xl border border-amber-200/85 bg-white shadow-lg shadow-amber-500/[0.06] ring-1 ring-amber-100/50 print:break-inside-avoid dark:border-amber-900/45 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
+              :aria-label="t('trip_detail.costs_block.title')"
             >
               <div
-                class="border-b border-slate-100/90 bg-gradient-to-r from-sky-50/90 via-white to-violet-50/70 px-5 py-4 sm:px-6"
+                class="border-b border-amber-100/90 bg-gradient-to-br from-amber-50/95 via-white to-orange-50/55 px-5 py-4 sm:px-6 dark:from-amber-950/35 dark:via-slate-900 dark:to-orange-950/25 dark:border-amber-900/40"
               >
-                <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.more_section.title') }}</h2>
-                <p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-600">{{ t('trip_detail.more_section.subtitle') }}</p>
+                <div class="flex flex-wrap items-start gap-4">
+                  <div
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 shadow-sm dark:bg-amber-950/70 dark:text-amber-200"
+                  >
+                    <BanknotesIcon class="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">{{ t('trip_detail.costs_block.title') }}</h2>
+                    <p class="mt-1 max-w-2xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                      {{ t('trip_detail.costs_block.subtitle') }}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div class="grid gap-6 p-5 sm:p-6 lg:grid-cols-2 lg:gap-8">
-                <div class="rounded-xl border border-slate-200/80 bg-gradient-to-b from-slate-50/60 to-white p-4 shadow-sm">
+              <div class="p-5 sm:p-6">
+                <div
+                  class="rounded-xl border border-slate-200/75 bg-gradient-to-b from-slate-50/70 to-white p-4 shadow-sm dark:border-slate-700/80 dark:from-slate-950/40 dark:to-slate-900/60"
+                >
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ t('trip_detail.costs.title') }}</div>
+                    <div class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">{{ t('trip_detail.costs.title') }}</div>
                     <div class="flex flex-wrap items-center gap-2">
-                      <div v-if="(trip.costs ?? []).length" class="text-sm font-semibold tabular-nums text-slate-900">
+                      <div v-if="(trip.costs ?? []).length" class="text-sm font-semibold tabular-nums text-slate-900 dark:text-white">
                         {{ t('trip_detail.costs.total', { amount: costsTotalFormatted }) }}
                       </div>
                       <RouterLink
                         to="/costs"
-                        class="text-xs font-semibold text-sky-700 hover:text-sky-800 hover:underline"
+                        class="rounded-lg px-2 py-1 text-xs font-semibold text-amber-800 underline decoration-amber-300/80 underline-offset-2 hover:bg-amber-50 hover:text-amber-950 dark:text-amber-300 dark:hover:bg-amber-950/40"
                       >
                         {{ t('trip_detail.costs.open_list') }}
                       </RouterLink>
@@ -397,9 +551,9 @@
                   </div>
                   <div
                     v-if="canSubmitQuickCost"
-                    class="mt-4 rounded-lg border border-dashed border-slate-200/90 bg-white/90 p-3"
+                    class="mt-4 rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 p-3 dark:border-amber-900/50 dark:bg-amber-950/25"
                   >
-                    <div class="text-xs font-semibold text-slate-700">{{ t('trip_detail.costs.quick_title') }}</div>
+                    <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ t('trip_detail.costs.quick_title') }}</div>
                     <div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                       <Select v-model="costQuickForm.type" :label="t('trip_detail.costs.quick_type')">
                         <option value="fuel">{{ t('trip_detail.costs.type_fuel') }}</option>
@@ -422,38 +576,65 @@
                     </div>
                     <div class="mt-2 flex flex-wrap items-center gap-2">
                       <Button type="button" variant="secondary" class="!py-1.5 !text-xs" :loading="costSubmitting" @click="submitQuickCost">{{ t('trip_detail.costs.quick_submit') }}</Button>
-                      <span v-if="costFormMsg" class="text-xs text-slate-600">{{ costFormMsg }}</span>
+                      <span v-if="costFormMsg" class="text-xs text-slate-600 dark:text-slate-400">{{ costFormMsg }}</span>
                     </div>
                   </div>
-                  <div class="mt-3 space-y-2">
+                  <div class="mt-4 space-y-2">
                     <div
                       v-for="c in trip.costs ?? []"
                       :key="c.id"
-                      class="flex flex-col gap-1 rounded-lg border border-slate-100 bg-white px-3 py-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                      class="flex flex-col gap-1 rounded-xl border border-slate-100/90 bg-white px-3 py-2.5 shadow-sm transition hover:border-amber-100 hover:shadow-md dark:border-slate-700/80 dark:bg-slate-950/40 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
-                          <span class="text-sm font-medium text-slate-900">{{ costTypeLabel(c.type) }}</span>
+                          <span class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ costTypeLabel(c.type) }}</span>
                           <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide" :class="costStatusClass(c.status)">
                             {{ c.status }}
                           </span>
                         </div>
-                        <p v-if="c.description?.trim()" class="mt-0.5 text-xs text-slate-600">{{ c.description.trim() }}</p>
+                        <p v-if="c.description?.trim()" class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ c.description.trim() }}</p>
                       </div>
-                      <div class="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{{ formatCostAmount(c.amount, c.currency) }}</div>
+                      <div class="shrink-0 text-sm font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatCostAmount(c.amount, c.currency) }}</div>
                     </div>
-                    <div v-if="!(trip.costs ?? []).length" class="rounded-lg border border-dashed border-slate-200 py-6 text-center text-sm text-slate-500">
+                    <div
+                      v-if="!(trip.costs ?? []).length"
+                      class="rounded-xl border border-dashed border-slate-200/90 bg-slate-50/50 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/30 dark:text-slate-400"
+                    >
                       {{ t('trip_detail.costs.empty') }}
                     </div>
                   </div>
                 </div>
+              </div>
+            </section>
+
+            <!-- Trạng thái chuyến -->
+            <section
+              class="overflow-hidden rounded-2xl border border-teal-200/85 bg-white shadow-lg shadow-teal-500/[0.06] ring-1 ring-teal-100/50 print:break-inside-avoid dark:border-teal-900/45 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
+              :aria-label="t('trip_detail.status_block.title')"
+            >
+              <div
+                class="border-b border-teal-100/90 bg-gradient-to-br from-teal-50/95 via-white to-cyan-50/50 px-5 py-4 sm:px-6 dark:from-teal-950/35 dark:via-slate-900 dark:to-cyan-950/25 dark:border-teal-900/40"
+              >
+                <div class="flex flex-wrap items-start gap-4">
+                  <div
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-100 text-teal-800 shadow-sm dark:bg-teal-950/70 dark:text-teal-200"
+                  >
+                    <ArrowPathIcon class="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">{{ t('trip_detail.status_block.title') }}</h2>
+                    <p class="mt-1 max-w-2xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                      {{ t('trip_detail.status_block.subtitle') }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="p-5 sm:p-6">
                 <form
-                  class="flex flex-col rounded-xl border border-sky-200/70 bg-gradient-to-br from-sky-50/50 to-white p-4 shadow-sm ring-1 ring-sky-100/40"
+                  class="rounded-xl border border-teal-100/90 bg-gradient-to-br from-teal-50/35 via-white to-white p-5 shadow-sm ring-1 ring-teal-100/35 dark:border-teal-900/50 dark:from-teal-950/20 dark:via-slate-900/80 dark:to-slate-900/50 dark:ring-teal-900/30"
                   @submit.prevent="doStatus"
                 >
-                  <div class="text-xs font-bold uppercase tracking-wide text-sky-900/80">{{ t('trip_detail.status_update.title') }}</div>
-                  <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.status_update.subtitle') }}</p>
-                  <div class="mt-4 grid flex-1 gap-3 sm:grid-cols-3">
+                  <div class="grid gap-3 sm:grid-cols-3">
                     <Select v-model="statusForm.status" :label="t('trip_detail.status_update.status')" :placeholder="t('trip_detail.status_update.pick')">
                       <option value="driver_confirmed">{{ labelTripStatus('driver_confirmed') }}</option>
                       <option value="in_progress">{{ labelTripStatus('in_progress') }}</option>
@@ -463,9 +644,9 @@
                     <div class="sm:col-span-2">
                       <Input v-model="statusForm.message" :label="t('trip_detail.status_update.note')" :placeholder="t('trip_detail.status_update.note_ph')" />
                     </div>
-                    <div class="sm:col-span-3 flex items-center gap-3 border-t border-sky-100/80 pt-4">
+                    <div class="sm:col-span-3 flex flex-wrap items-center gap-3 border-t border-teal-100/80 pt-4 dark:border-teal-900/40">
                       <Button v-if="canUpdateStatus" :loading="statusing" type="submit">{{ t('trip_detail.status_update.update') }}</Button>
-                      <span v-else class="text-xs text-slate-500">{{ t('trip_detail.coordination.no_permission_status') }}</span>
+                      <span v-else class="text-xs text-slate-500 dark:text-slate-400">{{ t('trip_detail.coordination.no_permission_status') }}</span>
                     </div>
                   </div>
                 </form>
@@ -681,27 +862,62 @@
               <p v-if="!attachmentsList.length" class="mt-2 text-sm text-slate-500">{{ t('trip_detail.attachments.empty') }}</p>
             </section>
 
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.timeline.title') }}</h2>
-              <div class="mt-4 space-y-4">
-                <div v-for="e in timeline" :key="e.key" class="flex gap-3">
+            <section
+              class="overflow-hidden rounded-2xl border border-slate-200/85 bg-white shadow-md shadow-slate-500/5 ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
+            >
+              <div
+                class="flex items-center gap-3 border-b border-slate-100/90 bg-gradient-to-r from-indigo-50/90 via-white to-violet-50/50 px-5 py-3.5 dark:from-indigo-950/40 dark:via-slate-900 dark:to-violet-950/30 dark:border-slate-700/80"
+              >
+                <div
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-950/70 dark:text-indigo-200"
+                >
+                  <CalendarDaysIcon class="h-5 w-5" aria-hidden="true" />
+                </div>
+                <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">{{ t('trip_detail.timeline.title') }}</h2>
+              </div>
+              <div class="p-5 sm:p-6">
+                <div v-if="timeline.length" class="relative">
                   <div
-                    class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600"
-                  >
-                    {{ e.icon }}
-                  </div>
-                  <div class="min-w-0 flex-1 border-b border-slate-50 pb-4 last:border-0">
-                    <div class="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between">
-                      <div class="text-sm font-medium text-slate-900">
-                        {{ e.title }}
-                        <span v-if="e.actor" class="text-xs font-normal text-slate-500">· {{ e.actor }}</span>
-                      </div>
-                      <div class="text-xs text-slate-500">{{ fmt(e.at) }}</div>
+                    v-if="timeline.length > 1"
+                    class="pointer-events-none absolute left-[1.125rem] top-11 bottom-11 w-px bg-gradient-to-b from-indigo-200/90 via-slate-200 to-slate-100 dark:from-indigo-800/80 dark:via-slate-600 dark:to-slate-800"
+                    aria-hidden="true"
+                  />
+                  <div v-for="e in timeline" :key="e.key" class="relative z-[1] flex gap-4 pb-6 last:pb-0">
+                    <div
+                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-semibold shadow-sm ring-4 ring-white dark:ring-slate-900"
+                      :class="timelineToneClass(e.tone)"
+                    >
+                      <span class="leading-none">{{ e.icon }}</span>
                     </div>
-                    <div v-if="e.subtitle" class="mt-1 text-sm text-slate-600">{{ e.subtitle }}</div>
+                    <div
+                      class="min-w-0 flex-1 rounded-xl border border-slate-100/90 bg-gradient-to-br from-white to-slate-50/90 px-4 py-3 shadow-sm dark:border-slate-700/80 dark:from-slate-950/40 dark:to-slate-900/60"
+                    >
+                      <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                        <div class="min-w-0">
+                          <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {{ e.title }}
+                            <span v-if="e.actor" class="text-xs font-normal text-slate-500 dark:text-slate-400"> · {{ e.actor }}</span>
+                          </div>
+                        </div>
+                        <time
+                          class="shrink-0 rounded-lg bg-slate-100/90 px-2 py-0.5 text-xs tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                          :datetime="e.at"
+                        >
+                          {{ fmt(e.at) }}
+                        </time>
+                      </div>
+                      <p v-if="e.subtitle" class="mt-2 border-t border-slate-100/80 pt-2 text-sm leading-relaxed text-slate-600 dark:border-slate-700/80 dark:text-slate-400">
+                        {{ e.subtitle }}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div v-if="!timeline.length" class="text-sm text-slate-500">{{ t('trip_detail.timeline.empty') }}</div>
+                <div
+                  v-else
+                  class="rounded-xl border border-dashed border-slate-200/90 bg-slate-50/50 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/30 dark:text-slate-400"
+                >
+                  {{ t('trip_detail.timeline.empty') }}
+                </div>
               </div>
             </section>
 
@@ -846,6 +1062,7 @@ import {
   ArrowDownTrayIcon,
   ArrowLeftIcon,
   ArrowPathIcon,
+  BanknotesIcon,
   BellIcon,
   CalendarDaysIcon,
   TrashIcon,
@@ -855,7 +1072,7 @@ import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
-import { addTripEvent, assignTrip, getTrip, rescheduleTrip, updateTripStatus } from '../../api/trips'
+import { addTripEvent, assignTrip, getTrip, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
 import { submitTripCost } from '../../api/costs'
 import { listVehicles, listDrivers, listTransportProviders, createTransportProvider } from '../../api/operational'
 import { uploadAttachment, deleteAttachment } from '../../api/attachments'
@@ -865,6 +1082,9 @@ import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '..
 import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd } from '../../util/money'
 import {
+  emptyPassengerRow,
+  emptyBusinessRow,
+  emptyCargoRow,
   isPassengerRowFilled,
   isBusinessRowFilled,
   isCargoRowFilled,
@@ -965,6 +1185,117 @@ const canRescheduleTrip = computed(() => {
   if (s === 'cancelled' || s === 'completed') return false
   return true
 })
+
+const passengersEditMode = ref(false)
+const passengersEditDraft = ref(null)
+const passengersSaving = ref(false)
+const passengersEditMsg = ref('')
+
+const canEditPassengerList = computed(
+  () => canAssign.value && trip.value?.dispatch_request?.id != null && (trip.value?.payment_status ?? 'unpaid') !== 'paid',
+)
+
+const paxEditInputClass =
+  'w-full min-w-[6rem] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400/30 dark:border-slate-600 dark:bg-slate-900 dark:text-white'
+
+function startPassengersEdit() {
+  passengersEditMsg.value = ''
+  const dr = trip.value?.dispatch_request
+  if (!dr) return
+  const tt = dr.trip_type
+  const s = dr.wizard_snapshot
+  if (tt === 'cargo') {
+    const src = Array.isArray(s?.cargoRows) && s.cargoRows.length ? s.cargoRows : [emptyCargoRow()]
+    passengersEditDraft.value = { kind: 'cargo', cargoRows: src.map((r) => ({ ...emptyCargoRow(), ...r })) }
+  } else if (tt === 'business') {
+    const src = Array.isArray(s?.businessRows) && s.businessRows.length ? s.businessRows : [emptyBusinessRow()]
+    passengersEditDraft.value = { kind: 'business', businessRows: src.map((r) => ({ ...emptyBusinessRow(), ...r })) }
+  } else {
+    const src = Array.isArray(s?.passengerRows) && s.passengerRows.length ? s.passengerRows : [emptyPassengerRow()]
+    passengersEditDraft.value = { kind: 'passenger', passengerRows: src.map((r) => ({ ...emptyPassengerRow(), ...r })) }
+  }
+  passengersEditMode.value = true
+}
+
+function cancelPassengersEdit() {
+  passengersEditMode.value = false
+  passengersEditDraft.value = null
+  passengersEditMsg.value = ''
+}
+
+function addPassengerListRow() {
+  const d = passengersEditDraft.value
+  if (!d) return
+  if (d.kind === 'passenger') d.passengerRows.push(emptyPassengerRow())
+  else if (d.kind === 'business') d.businessRows.push(emptyBusinessRow())
+  else d.cargoRows.push(emptyCargoRow())
+}
+
+function removePassengerListRow(idx) {
+  const d = passengersEditDraft.value
+  if (!d) return
+  if (d.kind === 'passenger') {
+    d.passengerRows.splice(idx, 1)
+    if (!d.passengerRows.length) d.passengerRows.push(emptyPassengerRow())
+  } else if (d.kind === 'business') {
+    d.businessRows.splice(idx, 1)
+    if (!d.businessRows.length) d.businessRows.push(emptyBusinessRow())
+  } else {
+    d.cargoRows.splice(idx, 1)
+    if (!d.cargoRows.length) d.cargoRows.push(emptyCargoRow())
+  }
+}
+
+async function submitPassengersEdit() {
+  passengersEditMsg.value = ''
+  const d = passengersEditDraft.value
+  const tid = trip.value?.id
+  if (!d || tid == null) return
+
+  let payload = {}
+  if (d.kind === 'passenger') {
+    const filled = d.passengerRows.filter(isPassengerRowFilled)
+    if (!filled.length) {
+      passengersEditMsg.value = t('trip_detail.passengers.validation_need_one')
+      return
+    }
+    payload = { passenger_rows: filled }
+  } else if (d.kind === 'business') {
+    const filled = d.businessRows.filter(isBusinessRowFilled)
+    if (!filled.length) {
+      passengersEditMsg.value = t('trip_detail.passengers.validation_need_one')
+      return
+    }
+    payload = { business_rows: filled }
+  } else {
+    const filled = d.cargoRows.filter(isCargoRowFilled)
+    if (!filled.length) {
+      passengersEditMsg.value = t('trip_detail.passengers.validation_need_one')
+      return
+    }
+    payload = { cargo_rows: filled }
+  }
+
+  const ok = await confirmAction({
+    title: t('trip_detail.passengers.save_confirm_title'),
+    message: t('trip_detail.passengers.save_confirm_body'),
+    confirmLabel: t('trip_detail.passengers.save'),
+    cancelLabel: t('trip_detail.passengers.cancel_edit'),
+  })
+  if (!ok) return
+
+  passengersSaving.value = true
+  try {
+    await updateTripPassengerList(tid, payload)
+    await load({ silent: true })
+    passengersEditMode.value = false
+    passengersEditDraft.value = null
+  } catch (e) {
+    passengersEditMsg.value = formatApiMessage(e)
+  } finally {
+    passengersSaving.value = false
+  }
+}
 
 const slaBanner = computed(() => {
   const tr = trip.value
@@ -1498,6 +1829,27 @@ function eventIcon(type) {
   return '•'
 }
 
+function eventTimelineTone(type) {
+  if (type === 'status_change') return 'status'
+  if (type === 'note') return 'note'
+  if (type === 'assign') return 'assign'
+  return 'other'
+}
+
+function timelineToneClass(tone) {
+  const map = {
+    create:
+      'border-indigo-200/90 bg-indigo-50 text-indigo-800 dark:border-indigo-800/80 dark:bg-indigo-950/60 dark:text-indigo-200',
+    status:
+      'border-teal-200/90 bg-teal-50 text-teal-900 dark:border-teal-800/80 dark:bg-teal-950/60 dark:text-teal-200',
+    note: 'border-violet-200/90 bg-violet-50 text-violet-900 dark:border-violet-800/80 dark:bg-violet-950/60 dark:text-violet-200',
+    assign:
+      'border-amber-200/90 bg-amber-50 text-amber-950 dark:border-amber-800/80 dark:bg-amber-950/60 dark:text-amber-100',
+    other: 'border-slate-200/90 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200',
+  }
+  return map[tone] ?? map.other
+}
+
 function eventTitle(e) {
   if (e.type === 'status_change') {
     const from = e?.data?.from
@@ -1515,6 +1867,7 @@ const timeline = computed(() => {
     items.push({
       key: `trip_created_${trip.value.id}`,
       icon: '+',
+      tone: 'create',
       title: t('trip_detail.timeline.trip_created'),
       subtitle: trip.value?.dispatch_request?.trip_type ? t('trip_detail.timeline.trip_created_subtitle', { type: tripTypeLabel.value }) : '',
       actor: t('trip_detail.timeline.system'),
@@ -1526,6 +1879,7 @@ const timeline = computed(() => {
     items.push({
       key: `ev_${e.id}`,
       icon: eventIcon(e.type),
+      tone: eventTimelineTone(e.type),
       title: eventTitle(e),
       subtitle: (e.message ?? '').trim(),
       actor: e.creator?.name ?? '',
@@ -1897,5 +2251,13 @@ watch(vehicles, () => {
 })
 
 onMounted(load)
-watch(() => route.params.id, load)
+watch(
+  () => route.params.id,
+  () => {
+    passengersEditMode.value = false
+    passengersEditDraft.value = null
+    passengersEditMsg.value = ''
+    load()
+  },
+)
 </script>

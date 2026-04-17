@@ -632,6 +632,9 @@
     "kpi_d2d": "D2D (door-to-door)",
     "kpi_p2p": "P2P (point-to-point)",
     "kpi_business": "Business",
+    "kpi_awaiting_dispatch": "Awaiting dispatch",
+    "kpi_running": "In progress",
+    "kpi_completed": "Completed",
     "kpi_issues": "Trips with issues",
     "created_at": "Created: {time}",
     "created_at_label": "Trip created:",
@@ -948,11 +951,22 @@
     },
     "passengers": {
       "title": "Passengers ({n})",
-      "edit_hint": "Edit list (source request)",
+      "edit_inline": "Edit list",
+      "save": "Save",
+      "cancel_edit": "Cancel",
+      "add_row": "Add row",
+      "remove_row": "Remove row",
+      "save_confirm_title": "Save passenger list?",
+      "save_confirm_body": "Changes will be saved to the dispatch request linked to this trip.",
+      "validation_need_one": "At least one row with data is required.",
       "col_name": "Name",
       "col_role": "Role",
+      "col_guests": "Guests",
+      "col_qty": "Qty",
       "col_contact": "Contact",
       "col_notes": "Notes",
+      "ph_pickup_contact": "Pickup contact",
+      "ph_delivery_contact": "Delivery contact",
       "empty": "No passenger rows from the submitted form.",
       "special_summary_title": "Special considerations",
       "role_cargo": "Cargo",
@@ -968,9 +982,13 @@
       "summary_wheelchair": "Vehicle should support wheelchair boarding.",
       "summary_allergy": "Driver should be informed about allergies / food restrictions."
     },
-    "more_section": {
-      "title": "Costs & advanced status",
-      "subtitle": "Record costs and change trip status (driver confirmed, in progress, completed, cancelled)."
+    "costs_block": {
+      "title": "Trip costs",
+      "subtitle": "Quick entry and your latest cost lines (up to 50 records)."
+    },
+    "status_block": {
+      "title": "Status",
+      "subtitle": "Update the operational step: driver confirmed, in progress, completed, or cancelled."
     },
     "coordination": {
       "title": "Coordination",

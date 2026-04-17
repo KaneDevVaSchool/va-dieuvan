@@ -140,30 +140,30 @@
 
         <!-- Timeline -->
         <section
-          class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white shadow-sm"
+          class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80"
         >
-          <div class="space-y-3 border-b border-slate-200 p-3">
+          <div class="space-y-3 border-b border-slate-100/90 bg-gradient-to-r from-teal-50/80 via-white to-sky-50/45 p-3.5 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80">
             <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:bg-slate-50"
+                class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                 @click="shiftDay(-1)"
               >
                 ‹
               </button>
-              <span class="min-w-[10rem] text-center text-sm font-medium text-slate-900">
+              <span class="min-w-[10rem] text-center text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
                 {{ dayTitle }}
               </span>
               <button
                 type="button"
-                class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:bg-slate-50"
+                class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                 @click="shiftDay(1)"
               >
                 ›
               </button>
               <button
                 type="button"
-                class="rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-800 hover:bg-teal-100"
+                class="rounded-lg border border-teal-200/90 bg-teal-50 px-2.5 py-1.5 text-xs font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/60 dark:text-teal-100 dark:hover:bg-teal-900/50"
                 @click="goToday"
               >
                 {{ t('dispatcher_board.today') }}
@@ -171,26 +171,26 @@
             </div>
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div
-                class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-600"
+                class="flex flex-wrap items-center gap-2"
                 role="list"
                 :aria-label="t('dispatcher_board.legend_aria')"
               >
-                <span role="listitem" class="inline-flex items-center gap-1.5">
-                  <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                <span role="listitem" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-2.5 py-1 text-[11px] font-medium text-emerald-900 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100">
+                  <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-sm shadow-emerald-600/40" />
                   {{ t('dispatcher_board.legend_assigned') }}
                 </span>
-                <span role="listitem" class="inline-flex items-center gap-1.5">
-                  <span class="h-2 w-2 shrink-0 rounded-full bg-sky-500" />
+                <span role="listitem" class="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-sky-50/90 px-2.5 py-1 text-[11px] font-medium text-sky-900 shadow-sm dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-100">
+                  <span class="h-2 w-2 shrink-0 rounded-full bg-sky-500 shadow-sm shadow-sky-600/40" />
                   {{ t('dispatcher_board.legend_progress') }}
                 </span>
-                <span role="listitem" class="inline-flex items-center gap-1.5">
-                  <span class="h-2 w-2 shrink-0 rounded-full bg-rose-500" />
+                <span role="listitem" class="inline-flex items-center gap-1.5 rounded-full border border-rose-200/80 bg-rose-50/90 px-2.5 py-1 text-[11px] font-medium text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-100">
+                  <span class="h-2 w-2 shrink-0 rounded-full bg-rose-500 shadow-sm shadow-rose-600/40" />
                   {{ t('dispatcher_board.legend_conflict') }}
                 </span>
               </div>
               <button
                 type="button"
-                class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:border-teal-200 hover:bg-teal-50/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                 :title="t('dispatcher_board.bulk_assign_hint')"
                 @click="goBulkAssign"
               >
@@ -200,16 +200,16 @@
             </div>
           </div>
 
-          <div class="overflow-x-auto">
-            <div class="min-w-[720px] p-3">
+          <div class="overflow-x-auto [scrollbar-width:thin]">
+            <div class="min-w-[720px] bg-gradient-to-b from-slate-50/40 to-white p-3 dark:from-slate-950/50 dark:to-slate-900/30">
               <!-- Hour labels -->
-              <div class="mb-1 flex text-[10px] text-slate-500">
+              <div class="mb-1.5 flex text-[10px] font-medium text-slate-500 dark:text-slate-400">
                 <div class="w-[140px] shrink-0" />
                 <div class="grid min-w-0 flex-1" :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }">
                   <div
                     v-for="h in hourSlots"
                     :key="h"
-                    class="border-l border-slate-200 pl-1 text-left tabular-nums"
+                    class="border-l border-slate-200/90 pl-1.5 text-left tabular-nums first:border-l-0 dark:border-slate-600/80"
                   >
                     {{ String(h).padStart(2, '0') }}:00
                   </div>
@@ -219,14 +219,14 @@
               <div
                 v-for="(row, rowIdx) in timelineRows"
                 :key="row.key"
-                class="flex border-b border-slate-100"
+                class="flex border-b border-slate-100/90 last:border-b-0 dark:border-slate-700/60"
               >
-                <div class="flex w-[140px] shrink-0 flex-col justify-center border-r border-slate-200 py-2 pr-2 text-xs">
-                  <span class="truncate font-medium text-slate-800">{{ row.label }}</span>
+                <div class="flex w-[140px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/60 py-2.5 pr-2.5 text-xs dark:border-slate-700/80 dark:bg-slate-900/30">
+                  <span class="truncate font-medium text-slate-800 dark:text-slate-100">{{ row.label }}</span>
                   <span v-if="row.sub" class="truncate text-[10px] text-rose-600">{{ row.sub }}</span>
-                  <span v-else-if="row.meta" class="truncate text-[10px] text-slate-500">{{ row.meta }}</span>
+                  <span v-else-if="row.meta" class="truncate text-[10px] text-slate-500 dark:text-slate-400">{{ row.meta }}</span>
                 </div>
-                <div class="relative min-h-[52px] min-w-0 flex-1 bg-slate-50/50">
+                <div class="relative min-h-[64px] min-w-0 flex-1 bg-slate-50/60 dark:bg-slate-950/20">
                   <div
                     class="pointer-events-none absolute inset-0 grid"
                     :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }"
@@ -234,7 +234,7 @@
                     <div
                       v-for="h in hourSlots"
                       :key="`g-${row.key}-${h}`"
-                      class="border-l border-slate-200/90"
+                      class="border-l border-slate-200/70 first:border-l-0 dark:border-slate-700/50"
                     />
                   </div>
                   <!-- now line (once per scroll area — duplicate on each row for alignment) -->
@@ -245,22 +245,28 @@
                   >
                     <span
                       v-if="rowIdx === 0"
-                      class="absolute -top-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded border border-slate-200 bg-white px-1 py-0.5 text-[9px] font-medium text-slate-700 shadow-sm"
+                      class="absolute -top-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-200/90 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
                     >{{ nowLabel }}</span>
                   </div>
                   <RouterLink
                     v-for="bar in row.bars"
                     :key="bar.trip.id"
                     :to="`/trips/${bar.trip.id}`"
-                    class="absolute top-1.5 z-[5] flex h-9 items-center overflow-hidden rounded border px-1.5 text-[10px] font-medium leading-tight shadow-sm transition hover:opacity-95"
+                    class="absolute top-2 z-[5] flex min-h-[2.75rem] items-start gap-1 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-md transition hover:brightness-[0.98] hover:shadow-lg dark:hover:brightness-110"
                     :class="bar.toneClass"
-                    :style="{ left: `${bar.left}%`, width: `max(${bar.width}%, 2%)` }"
-                    :title="`#${bar.trip.id} · ${labelTripStatus(bar.trip.status)}`"
+                    :style="{ left: `${bar.left}%`, width: `max(${bar.width}%, ${MIN_TIMELINE_BAR_PCT}%)` }"
+                    :title="`${tripTitle(bar.trip)} · ${fmtTime(bar.trip.depart_at)} · ${labelTripStatus(bar.trip.status)}`"
                   >
-                    <span class="truncate">#{{ bar.trip.id }}</span>
+                    <span class="min-w-0 flex-1">
+                      <span class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
+                        <span class="font-semibold tabular-nums">#{{ bar.trip.id }}</span>
+                        <span class="text-[9px] font-normal opacity-85">{{ fmtTime(bar.trip.depart_at) }}</span>
+                      </span>
+                      <span class="mt-0.5 block truncate text-[9px] font-normal leading-snug opacity-90">{{ tripTitle(bar.trip) }}</span>
+                    </span>
                     <span
                       v-if="bar.conflict"
-                      class="ml-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-rose-600 text-[8px] text-white"
+                      class="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-sm"
                     >!</span>
                   </RouterLink>
                 </div>
@@ -415,13 +421,16 @@ function tripEnd(trip) {
   return new Date(s.getTime() + 60 * 60 * 1000)
 }
 
+/** Đủ rộng để hiển thị mã chuyến, giờ và tuyến */
+const MIN_TIMELINE_BAR_PCT = 12
+
 function pctRange(trip) {
   const start = hourValue(trip.depart_at)
   const end = hourValue(tripEnd(trip))
   const span = GRID_END - GRID_START
   const left = ((Math.max(GRID_START, start) - GRID_START) / span) * 100
   const right = ((Math.min(GRID_END, end) - GRID_START) / span) * 100
-  const width = Math.max(right - left, 1.5)
+  const width = Math.max(right - left, MIN_TIMELINE_BAR_PCT)
   return { left, width: Math.min(width, 100 - left) }
 }
 

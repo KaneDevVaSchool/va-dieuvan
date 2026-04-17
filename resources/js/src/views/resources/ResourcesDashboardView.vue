@@ -744,56 +744,62 @@
 
                 <!-- Center: timeline — cố định min-width xl, không co khi cột chi tiết render -->
                 <section
-                    class="w-full shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm min-w-[min(100%,520px)] xl:min-w-[990px] xl:w-[990px] xl:max-w-[990px]"
+                    class="w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] xl:min-w-[990px] xl:w-[990px] xl:max-w-[990px] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80"
                 >
                     <div
-                        class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 p-3"
+                        class="border-b border-slate-100/90 bg-gradient-to-r from-teal-50/85 via-white to-sky-50/55 px-4 py-3 dark:from-teal-950/35 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80"
                     >
                         <div
-                            class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-600"
-                            role="list"
-                            :aria-label="t('dispatcher_board.legend_aria')"
+                            class="flex flex-wrap items-center justify-between gap-2"
                         >
-                            <span
-                                role="listitem"
-                                class="inline-flex items-center gap-1.5"
+                            <div
+                                class="flex flex-wrap items-center gap-2"
+                                role="list"
+                                :aria-label="t('dispatcher_board.legend_aria')"
                             >
                                 <span
-                                    class="h-2 w-2 shrink-0 rounded-sm bg-emerald-500"
-                                />
-                                {{ t("dispatcher_board.legend_assigned") }}
-                            </span>
-                            <span
-                                role="listitem"
-                                class="inline-flex items-center gap-1.5"
-                            >
+                                    role="listitem"
+                                    class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-2.5 py-1 text-[11px] font-medium text-emerald-900 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100"
+                                >
+                                    <span
+                                        class="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-sm shadow-emerald-600/40"
+                                    />
+                                    {{ t("dispatcher_board.legend_assigned") }}
+                                </span>
                                 <span
-                                    class="h-2 w-2 shrink-0 rounded-sm bg-sky-500"
-                                />
-                                {{ t("dispatcher_board.legend_progress") }}
-                            </span>
-                            <span
-                                role="listitem"
-                                class="inline-flex items-center gap-1.5"
-                            >
+                                    role="listitem"
+                                    class="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-sky-50/90 px-2.5 py-1 text-[11px] font-medium text-sky-900 shadow-sm dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-100"
+                                >
+                                    <span
+                                        class="h-2 w-2 shrink-0 rounded-full bg-sky-500 shadow-sm shadow-sky-600/40"
+                                    />
+                                    {{ t("dispatcher_board.legend_progress") }}
+                                </span>
                                 <span
-                                    class="h-2 w-2 shrink-0 rounded-sm bg-rose-500"
-                                />
-                                {{ t("dispatcher_board.legend_conflict") }}
-                            </span>
-                            <span v-if="canAssignTrip" class="text-slate-400"
-                                >·
-                                {{
-                                    t("resources_dashboard.timeline_drag_hint")
-                                }}</span
+                                    role="listitem"
+                                    class="inline-flex items-center gap-1.5 rounded-full border border-rose-200/80 bg-rose-50/90 px-2.5 py-1 text-[11px] font-medium text-rose-900 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-100"
+                                >
+                                    <span
+                                        class="h-2 w-2 shrink-0 rounded-full bg-rose-500 shadow-sm shadow-rose-600/40"
+                                    />
+                                    {{ t("dispatcher_board.legend_conflict") }}
+                                </span>
+                            </div>
+                            <p
+                                v-if="canAssignTrip"
+                                class="max-w-md text-[11px] leading-snug text-slate-500 dark:text-slate-400"
                             >
+                                {{ t("resources_dashboard.timeline_drag_hint") }}
+                            </p>
                         </div>
                     </div>
                     <div
                         class="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                     >
-                        <div class="min-w-[990px] p-3">
-                            <div class="mb-1 flex text-[10px] text-slate-500">
+                        <div class="min-w-[990px] bg-gradient-to-b from-slate-50/40 to-white p-3 dark:from-slate-950/50 dark:to-slate-900/30">
+                            <div
+                                class="mb-1.5 flex text-[10px] font-medium text-slate-500 dark:text-slate-400"
+                            >
                                 <div class="w-[160px] shrink-0" />
                                 <div
                                     class="grid min-w-0 flex-1"
@@ -804,7 +810,7 @@
                                     <div
                                         v-for="h in hourSlots"
                                         :key="h"
-                                        class="border-l border-slate-200 pl-1 text-left tabular-nums"
+                                        class="border-l border-slate-200/90 pl-1.5 text-left tabular-nums first:border-l-0 dark:border-slate-600/80"
                                     >
                                         {{ String(h).padStart(2, "0") }}:00
                                     </div>
@@ -820,10 +826,10 @@
                                 <div
                                     v-for="(row, rowIdx) in timelineRows"
                                     :key="row.key"
-                                    class="flex border-b border-slate-100"
+                                    class="flex border-b border-slate-100/90 last:border-b-0 dark:border-slate-700/60"
                                 >
                                     <div
-                                        class="flex w-[160px] shrink-0 flex-col justify-center border-r border-slate-200 py-2 pr-2 text-xs"
+                                        class="flex w-[160px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/60 py-2.5 pr-2.5 text-xs dark:border-slate-700/80 dark:bg-slate-900/30"
                                     >
                                         <span
                                             class="truncate font-medium text-slate-800"
@@ -842,7 +848,7 @@
                                     </div>
                                     <div
                                         data-timeline-track
-                                        class="relative min-h-[52px] min-w-0 flex-1 bg-slate-50/50"
+                                        class="relative min-h-[64px] min-w-0 flex-1 bg-slate-50/60 dark:bg-slate-950/20"
                                     >
                                         <div
                                             class="pointer-events-none absolute inset-0 grid"
@@ -853,7 +859,7 @@
                                             <div
                                                 v-for="h in hourSlots"
                                                 :key="`g-${row.key}-${h}`"
-                                                class="border-l border-slate-200/90"
+                                                class="border-l border-slate-200/70 first:border-l-0 dark:border-slate-700/50"
                                             />
                                         </div>
                                         <div
@@ -872,18 +878,18 @@
                                             v-for="bar in row.bars"
                                             :key="bar.trip.id"
                                             type="button"
-                                            class="absolute top-1.5 z-[5] flex h-9 items-center overflow-hidden rounded border px-1.5 text-left text-[10px] font-medium leading-tight shadow-sm transition hover:opacity-95"
+                                            class="absolute top-2 z-[5] flex min-h-[2.75rem] items-start gap-1 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-md transition hover:brightness-[0.98] hover:shadow-lg dark:hover:brightness-110"
                                             :class="[
                                                 bar.toneClass,
                                                 isPanelTrip(bar.trip)
-                                                    ? 'ring-2 ring-teal-500 ring-offset-1'
+                                                    ? 'ring-2 ring-teal-500 ring-offset-2 dark:ring-offset-slate-900'
                                                     : '',
                                                 canAssignTrip
                                                     ? 'cursor-grab active:cursor-grabbing touch-none'
                                                     : '',
                                             ]"
                                             :style="tripBarStyle(bar)"
-                                            :title="`#${bar.trip.id}`"
+                                            :title="`${tripTitle(bar.trip)} · ${fmtTime(bar.trip.depart_at)}`"
                                             @pointerdown="
                                                 onTripBarPointerDown(
                                                     $event,
@@ -891,12 +897,38 @@
                                                 )
                                             "
                                         >
-                                            <span class="truncate"
-                                                >#{{ bar.trip.id }}</span
+                                            <span
+                                                class="min-w-0 flex-1 select-none"
                                             >
+                                                <span
+                                                    class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0"
+                                                >
+                                                    <span
+                                                        class="font-semibold tabular-nums"
+                                                        >#{{
+                                                            bar.trip.id
+                                                        }}</span
+                                                    >
+                                                    <span
+                                                        class="text-[9px] font-normal opacity-85"
+                                                        >{{
+                                                            fmtTime(
+                                                                bar.trip
+                                                                    .depart_at,
+                                                            )
+                                                        }}</span
+                                                    >
+                                                </span>
+                                                <span
+                                                    class="mt-0.5 block truncate text-[9px] font-normal leading-snug opacity-90"
+                                                    >{{
+                                                        tripTitle(bar.trip)
+                                                    }}</span
+                                                >
+                                            </span>
                                             <span
                                                 v-if="bar.conflict"
-                                                class="ml-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-rose-600 text-[8px] text-white"
+                                                class="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-sm"
                                             >
                                                 !
                                             </span>
@@ -2443,13 +2475,16 @@ function tripEndAt(trip) {
     return new Date(s.getTime() + 60 * 60 * 1000);
 }
 
+/** Tỉ lệ tối thiểu trên lưới giờ — đủ rộng để hiển thị mã + giờ + tuyến */
+const MIN_TIMELINE_BAR_PCT = 12;
+
 function pctRange(trip) {
     const start = hourValue(trip.depart_at);
     const end = hourValue(tripEndAt(trip));
     const span = GRID_END - GRID_START;
     const left = ((Math.max(GRID_START, start) - GRID_START) / span) * 100;
     const right = ((Math.min(GRID_END, end) - GRID_START) / span) * 100;
-    const width = Math.max(right - left, 1.5);
+    const width = Math.max(right - left, MIN_TIMELINE_BAR_PCT);
     return { left, width: Math.min(width, 100 - left) };
 }
 
@@ -2560,7 +2595,10 @@ function scrollToSuggestedCoverage() {
 
 function tripBarStyle(bar) {
     const { left, width } = pctRange(bar.trip);
-    const base = { left: `${left}%`, width: `max(${width}%, 2%)` };
+    const base = {
+        left: `${left}%`,
+        width: `max(${width}%, ${MIN_TIMELINE_BAR_PCT}%)`,
+    };
     const tid = bar.trip.id;
     if (dragState.value?.trip?.id === tid && dragOffsetPx.value) {
         return { ...base, transform: `translateX(${dragOffsetPx.value}px)` };

@@ -40,103 +40,107 @@
       </div>
     </div>
 
-    <!-- KPI cards -->
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-      <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
-        <div class="flex items-start justify-between gap-2">
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+    <!-- KPI: 4 thẻ gọn + thẻ xu hướng rộng -->
+    <div
+      class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-[minmax(0,9rem)_minmax(0,9rem)_minmax(0,9rem)_minmax(0,9rem)_minmax(14rem,1fr)]"
+    >
+      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
+        <div class="flex items-start justify-between gap-1.5">
+          <div class="min-w-0">
+            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
               {{ t('requests_page.kpi_total') }}
             </p>
-            <p class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
+            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
               {{ formatInt(stats.total) }}
             </p>
-            <p v-if="stats.month_trend_pct != null" class="mt-1 text-xs text-teal-700">
+            <p v-if="stats.month_trend_pct != null" class="mt-0.5 text-[10px] text-teal-700 leading-snug">
               {{ trendLabel(stats.month_trend_pct) }}
             </p>
-            <p v-else class="mt-1 text-xs text-slate-400">{{ t('requests_page.kpi_no_trend') }}</p>
+            <p v-else class="mt-0.5 text-[10px] leading-snug text-slate-400">{{ t('requests_page.kpi_no_trend') }}</p>
           </div>
-          <div class="rounded-lg bg-slate-100 p-2 text-slate-600">
-            <RectangleStackIcon class="h-6 w-6" aria-hidden="true" />
+          <div class="shrink-0 rounded-md bg-slate-100 p-1.5 text-slate-600">
+            <RectangleStackIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
           </div>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
-        <div class="flex items-start justify-between gap-2">
+      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
+        <div class="flex items-start justify-between gap-1.5">
           <div class="min-w-0 flex-1">
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
               {{ t('requests_page.tab_pending') }}
             </p>
-            <p class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
+            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
               {{ formatInt(approvalPendingCount) }}
             </p>
-            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
               <div
                 class="h-full rounded-full bg-amber-400 transition-all"
                 :style="{ width: pendingShareOfTotalPct + '%' }"
               />
             </div>
           </div>
-          <div class="rounded-lg bg-amber-50 p-2 text-amber-700">
-            <ClockIcon class="h-6 w-6" aria-hidden="true" />
+          <div class="shrink-0 rounded-md bg-amber-50 p-1.5 text-amber-700">
+            <ClockIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
           </div>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
-        <div class="flex items-start justify-between gap-2">
+      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
+        <div class="flex items-start justify-between gap-1.5">
           <div class="min-w-0 flex-1">
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
               {{ t('requests_page.tab_approved') }}
             </p>
-            <p class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
+            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
               {{ formatInt(approvalApprovedCount) }}
             </p>
-            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
               <div
                 class="h-full rounded-full bg-teal-500 transition-all"
                 :style="{ width: approvedShareOfTotalPct + '%' }"
               />
             </div>
           </div>
-          <div class="rounded-lg bg-teal-50 p-2 text-teal-700">
-            <ClipboardDocumentCheckIcon class="h-6 w-6" aria-hidden="true" />
+          <div class="shrink-0 rounded-md bg-teal-50 p-1.5 text-teal-700">
+            <ClipboardDocumentCheckIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
           </div>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
-        <div class="flex items-start justify-between gap-2">
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div class="rounded-lg border border-slate-200/80 bg-white p-2.5 shadow-sm sm:p-3">
+        <div class="flex items-start justify-between gap-1.5">
+          <div class="min-w-0">
+            <p class="text-[10px] font-medium uppercase leading-tight tracking-wide text-slate-500">
               {{ t('requests_page.kpi_sla_risk') }}
             </p>
-            <p class="mt-2 text-3xl font-semibold tabular-nums text-slate-900">
+            <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
               {{ formatInt(stats.sla_risk) }}
             </p>
             <span
               v-if="stats.sla_risk > 0"
-              class="mt-2 inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-amber-200"
+              class="mt-1 inline-flex max-w-full items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-amber-800 ring-1 ring-amber-200"
             >
               {{ t('requests_page.kpi_action_required') }}
             </span>
-            <span v-else class="mt-2 inline-flex text-xs text-emerald-700">{{ t('requests_page.kpi_sla_ok') }}</span>
+            <span v-else class="mt-1 inline-flex text-[10px] text-emerald-700">{{ t('requests_page.kpi_sla_ok') }}</span>
           </div>
-          <div class="rounded-lg bg-amber-50 p-2 text-amber-700">
-            <ExclamationTriangleIcon class="h-6 w-6" aria-hidden="true" />
+          <div class="shrink-0 rounded-md bg-amber-50 p-1.5 text-amber-700">
+            <ExclamationTriangleIcon class="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
           </div>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm">
+      <div
+        class="col-span-2 rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm md:col-span-4 lg:col-span-1 lg:min-w-0"
+      >
         <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
           {{ t('requests_page.kpi_volume') }}
         </p>
-        <div class="mt-3 h-16 w-full">
+        <div class="mt-2 h-20 w-full sm:h-24">
           <svg
             class="h-full w-full text-teal-600"
-            viewBox="0 0 120 48"
+            viewBox="0 0 200 48"
             preserveAspectRatio="none"
             aria-hidden="true"
           >
@@ -1116,9 +1120,9 @@ const approvedShareOfTotalPct = computed(() => {
 
 const sparklinePoints = computed(() => {
   const pts = stats.value.volume_trend
-  if (!pts?.length) return '0,40 120,40'
+  if (!pts?.length) return '0,40 200,40'
   const max = Math.max(...pts, 1)
-  const w = 120
+  const w = 200
   const h = 40
   return pts
     .map((v, i) => {

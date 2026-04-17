@@ -11,26 +11,52 @@
       </div>
     </div>
 
-    <!-- KPI: mobile 2 cột, tablet 3, desktop 5 -->
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-      <div
-        v-for="box in kpiBoxes"
-        :key="box.key"
-        class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:p-4"
-      >
-        <div class="flex min-w-0 items-center gap-3">
-          <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-            :class="box.iconWrap"
-          >
-            <component :is="box.icon" class="h-5 w-5" :class="box.iconClass" aria-hidden="true" />
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white sm:text-2xl">
-              {{ statsLoading ? '…' : box.value }}
+    <!-- KPI: 2 hàng × 4 card (loại chuyến / trạng thái vận hành) -->
+    <div class="space-y-3 sm:space-y-4">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <div
+          v-for="box in kpiBoxesRow1"
+          :key="box.key"
+          class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:p-4"
+        >
+          <div class="flex min-w-0 items-center gap-3">
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              :class="box.iconWrap"
+            >
+              <component :is="box.icon" class="h-5 w-5" :class="box.iconClass" aria-hidden="true" />
             </div>
-            <div class="mt-0.5 text-xs font-medium leading-snug text-slate-600 dark:text-slate-400">
-              {{ box.label }}
+            <div class="min-w-0 flex-1">
+              <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white sm:text-2xl">
+                {{ statsLoading ? '…' : box.value }}
+              </div>
+              <div class="mt-0.5 text-xs font-medium leading-snug text-slate-600 dark:text-slate-400">
+                {{ box.label }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <div
+          v-for="box in kpiBoxesRow2"
+          :key="box.key"
+          class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/50 sm:p-4"
+        >
+          <div class="flex min-w-0 items-center gap-3">
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              :class="box.iconWrap"
+            >
+              <component :is="box.icon" class="h-5 w-5" :class="box.iconClass" aria-hidden="true" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white sm:text-2xl">
+                {{ statsLoading ? '…' : box.value }}
+              </div>
+              <div class="mt-0.5 text-xs font-medium leading-snug text-slate-600 dark:text-slate-400">
+                {{ box.label }}
+              </div>
             </div>
           </div>
         </div>
@@ -656,8 +682,10 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowTopRightOnSquareIcon,
   ArrowsRightLeftIcon,
+  BoltIcon,
   BriefcaseIcon,
   CalendarDaysIcon,
+  CheckCircleIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -692,7 +720,12 @@ const loading = ref(false)
 const statsLoading = ref(false)
 const items = ref([])
 const meta = ref({})
-const stats = ref({ total: 0, by_trip_type: {}, incident: 0 })
+const stats = ref({
+  total: 0,
+  by_trip_type: {},
+  incident: 0,
+  by_run: { awaiting_dispatch: 0, in_progress: 0, completed: 0, incident: 0 },
+})
 
 const searchInput = ref('')
 const searchDebounce = ref(null)
@@ -1047,7 +1080,7 @@ const typeTabs = computed(() => {
   ]
 })
 
-const kpiBoxes = computed(() => {
+const kpiBoxesRow1 = computed(() => {
   const bt = byType.value
   return [
     {
@@ -1082,10 +1115,40 @@ const kpiBoxes = computed(() => {
       iconWrap: 'bg-amber-100 dark:bg-amber-950/50',
       iconClass: 'text-amber-600 dark:text-amber-400',
     },
+  ]
+})
+
+const kpiBoxesRow2 = computed(() => {
+  const br = stats.value.by_run ?? {}
+  return [
+    {
+      key: 'awaiting',
+      label: t('trips_page.kpi_awaiting_dispatch'),
+      value: br.awaiting_dispatch ?? 0,
+      icon: ClockIcon,
+      iconWrap: 'bg-violet-100 dark:bg-violet-950/50',
+      iconClass: 'text-violet-600 dark:text-violet-400',
+    },
+    {
+      key: 'running',
+      label: t('trips_page.kpi_running'),
+      value: br.in_progress ?? 0,
+      icon: BoltIcon,
+      iconWrap: 'bg-teal-100 dark:bg-teal-950/50',
+      iconClass: 'text-teal-600 dark:text-teal-400',
+    },
+    {
+      key: 'done',
+      label: t('trips_page.kpi_completed'),
+      value: br.completed ?? 0,
+      icon: CheckCircleIcon,
+      iconWrap: 'bg-emerald-100 dark:bg-emerald-950/50',
+      iconClass: 'text-emerald-600 dark:text-emerald-400',
+    },
     {
       key: 'issue',
       label: t('trips_page.kpi_issues'),
-      value: stats.value.incident ?? 0,
+      value: br.incident ?? stats.value.incident ?? 0,
       icon: ExclamationTriangleIcon,
       iconWrap: 'bg-rose-100 dark:bg-rose-950/50',
       iconClass: 'text-rose-600 dark:text-rose-400',
@@ -1294,7 +1357,12 @@ async function reloadStats() {
   try {
     stats.value = await getTripStats(statsParams())
   } catch {
-    stats.value = { total: 0, by_trip_type: {}, incident: 0 }
+    stats.value = {
+      total: 0,
+      by_trip_type: {},
+      incident: 0,
+      by_run: { awaiting_dispatch: 0, in_progress: 0, completed: 0, incident: 0 },
+    }
   } finally {
     statsLoading.value = false
   }

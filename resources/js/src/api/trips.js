@@ -36,3 +36,8 @@ export async function addTripEvent(tripId, payload) {
   const { data } = await http.post(`/trips/${tripId}/events`, payload)
   return data.data
 }
+
+export async function updateTripPassengerList(tripId, payload) {
+  const { data } = await http.patch(`/trips/${tripId}/passenger-list`, payload)
+  return data.data
+}
