@@ -39,6 +39,14 @@ class TripController extends Controller
         $q->when(isset($data['to']), fn (Builder $b) => $b->where('trips.depart_at', '<=', Carbon::parse($data['to'])->endOfDay()));
 
         $q->when(isset($data['trip_type']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('trip_type', $data['trip_type'])));
+        $q->when(isset($data['exclude_trip_type']), function (Builder $b) use ($data) {
+            $ex = $data['exclude_trip_type'];
+            $b->whereHas('dispatchRequest', function (Builder $dr) use ($ex) {
+                $dr->where(function (Builder $w) use ($ex) {
+                    $w->whereNull('trip_type')->orWhere('trip_type', '!=', $ex);
+                });
+            });
+        });
         $q->when(isset($data['source_channel']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('source_channel', $data['source_channel'])));
         $q->when(isset($data['paper_status']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('paper_status', $data['paper_status'])));
         $q->when(! empty($data['is_urgent']), fn (Builder $b) => $b->whereHas('dispatchRequest', fn (Builder $dr) => $dr->where('is_urgent', true)));

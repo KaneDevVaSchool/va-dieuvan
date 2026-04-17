@@ -11,9 +11,9 @@
       </div>
     </div>
 
-    <!-- KPI: hàng 1 loại chuyến (gồm hàng hóa), hàng 2 trạng thái vận hành -->
+    <!-- KPI: 2 hàng × 4 card (loại chuyến / trạng thái vận hành) — không gồm hàng hóa -->
     <div class="space-y-3 sm:space-y-4">
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <div
           v-for="box in kpiBoxesRow1"
           :key="box.key"
@@ -404,7 +404,7 @@
                 <TruckIcon v-if="trip.dispatch_request?.trip_type === 'door_to_door'" class="h-5 w-5 text-sky-600 dark:text-sky-400 sm:h-6 sm:w-6" />
                 <MapPinIcon v-else-if="trip.dispatch_request?.trip_type === 'point_to_point'" class="h-5 w-5 text-emerald-600 dark:text-emerald-400 sm:h-6 sm:w-6" />
                 <BriefcaseIcon v-else-if="trip.dispatch_request?.trip_type === 'business'" class="h-5 w-5 text-amber-600 dark:text-amber-400 sm:h-6 sm:w-6" />
-                <CubeIcon v-else class="h-5 w-5 text-violet-600 dark:text-violet-400 sm:h-6 sm:w-6" />
+                <QueueListIcon v-else class="h-5 w-5 text-slate-600 dark:text-slate-400 sm:h-6 sm:w-6" />
               </div>
               <div class="min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <div class="flex flex-nowrap items-center gap-x-2 gap-y-1 py-0.5 text-xs sm:gap-x-2.5 sm:text-sm">
@@ -575,8 +575,8 @@
         <div class="flex flex-col gap-3 border-t border-slate-100 px-3 py-3 dark:border-slate-800 sm:px-4 sm:py-3.5 md:flex-row md:items-center md:justify-between">
           <div class="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
             <span class="inline-flex items-center gap-1.5">
-              <CubeIcon class="h-4 w-4 shrink-0 text-slate-400" />
-              {{ cargoSummary(trip) }}
+              <UserPlusIcon class="h-4 w-4 shrink-0 text-slate-400" />
+              {{ passengerMetaSummary(trip) }}
             </span>
             <span class="inline-flex items-center gap-1.5">
               <ArrowsRightLeftIcon class="h-4 w-4 shrink-0 text-slate-400" />
@@ -690,7 +690,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
-  CubeIcon,
   ExclamationTriangleIcon,
   EyeIcon,
   FunnelIcon,
@@ -1077,7 +1076,6 @@ const typeTabs = computed(() => {
     { value: 'door_to_door', label: t('trips_page.tab_d2d'), count: bt.door_to_door ?? 0 },
     { value: 'point_to_point', label: t('trips_page.tab_p2p'), count: bt.point_to_point ?? 0 },
     { value: 'business', label: t('trips_page.tab_business'), count: bt.business ?? 0 },
-    { value: 'cargo', label: t('trips_page.tab_cargo'), count: bt.cargo ?? 0 },
   ]
 })
 
@@ -1115,14 +1113,6 @@ const kpiBoxesRow1 = computed(() => {
       icon: BriefcaseIcon,
       iconWrap: 'bg-amber-100 dark:bg-amber-950/50',
       iconClass: 'text-amber-600 dark:text-amber-400',
-    },
-    {
-      key: 'cargo',
-      label: t('trips_page.kpi_cargo'),
-      value: bt.cargo ?? 0,
-      icon: CubeIcon,
-      iconWrap: 'bg-violet-100 dark:bg-violet-950/50',
-      iconClass: 'text-violet-600 dark:text-violet-400',
     },
   ]
 })
@@ -1202,7 +1192,6 @@ function tripTypeShort(tt) {
   if (tt === 'door_to_door') return 'D2D'
   if (tt === 'point_to_point') return 'P2P'
   if (tt === 'business') return t('trips_page.badge_business_short')
-  if (tt === 'cargo') return t('trips_page.badge_cargo_short')
   return '—'
 }
 
@@ -1210,7 +1199,6 @@ function tripTypeBadgeClass(tt) {
   if (tt === 'door_to_door') return 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200'
   if (tt === 'point_to_point') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200'
   if (tt === 'business') return 'bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100'
-  if (tt === 'cargo') return 'bg-violet-100 text-violet-800 dark:bg-violet-950/50 dark:text-violet-200'
   return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
 }
 
@@ -1218,7 +1206,7 @@ function tripTypeIconWrap(tt) {
   if (tt === 'door_to_door') return 'bg-sky-100 dark:bg-sky-950/40'
   if (tt === 'point_to_point') return 'bg-emerald-100 dark:bg-emerald-950/40'
   if (tt === 'business') return 'bg-amber-100 dark:bg-amber-950/40'
-  return 'bg-violet-100 dark:bg-violet-950/40'
+  return 'bg-slate-100 dark:bg-slate-800/60'
 }
 
 function statusPillClass(s) {
@@ -1277,7 +1265,7 @@ function driverInitials(name) {
   return (p[0][0] + p[p.length - 1][0]).toUpperCase()
 }
 
-function cargoSummary(trip) {
+function passengerMetaSummary(trip) {
   const pc = trip.dispatch_request?.passenger_count
   if (pc != null && pc !== '') {
     return t('trips_page.meta_passengers', { n: pc })
@@ -1326,25 +1314,15 @@ function setTripTypeTab(v) {
   onFilterChange()
 }
 
-const TRIP_TYPE_TAB_VALUES = ['door_to_door', 'point_to_point', 'business', 'cargo']
-
 function applyStatusFromRoute() {
   const s = route.query.status
   filters.status = typeof s === 'string' && s ? s : ''
 }
 
-function applyTripTypeFromRoute() {
-  const tt = route.query.trip_type
-  if (typeof tt === 'string' && TRIP_TYPE_TAB_VALUES.includes(tt)) {
-    filters.trip_type = tt
-  } else {
-    filters.trip_type = ''
-  }
-}
-
 function listParams() {
   syncFiltersFromRange()
   const p = {
+    exclude_trip_type: 'cargo',
     trip_type: filters.trip_type || undefined,
     status: filters.status || undefined,
     source_channel: filters.source_channel || undefined,
@@ -1421,7 +1399,6 @@ function resetFilters() {
   syncRangeForPreset('month')
   syncFiltersFromRange()
   applyStatusFromRoute()
-  applyTripTypeFromRoute()
   if (funnelDetailsRef.value) funnelDetailsRef.value.open = false
   reloadStats()
   reload()
@@ -1460,22 +1437,11 @@ watch(
   },
 )
 
-watch(
-  () => route.query.trip_type,
-  () => {
-    applyTripTypeFromRoute()
-    filters.page = 1
-    reloadStats()
-    reload()
-  },
-)
-
 onMounted(() => {
   loadFilterDropdownVisibility()
   syncRangeForPreset('month')
   syncFiltersFromRange()
   applyStatusFromRoute()
-  applyTripTypeFromRoute()
   reloadStats()
   reload()
 })
