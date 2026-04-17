@@ -1130,7 +1130,9 @@
       "call_driver": "Gọi tài xế",
       "open_request": "Mở yêu cầu gốc",
       "costs_section": "Chi phí & cập nhật nâng cao",
-      "reassign": "Phân công / cập nhật"
+      "reassign": "Phân công / cập nhật",
+      "scroll_prev": "Cuộn trái",
+      "scroll_next": "Cuộn phải"
     },
     "step": {
       "pending": "Đang chờ",

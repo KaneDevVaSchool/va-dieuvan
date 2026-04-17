@@ -102,78 +102,100 @@
         >
           <h2 class="text-center text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.quick.title') }}</h2>
           <p class="mt-1 text-center text-xs text-slate-500">{{ t('trip_detail.quick.subtitle') }}</p>
-          <div
-            class="trip-quick-scroll mx-auto mt-3 max-w-full snap-x snap-mandatory overflow-x-auto overflow-y-visible text-center [-webkit-overflow-scrolling:touch] scroll-smooth"
-          >
-            <div class="inline-flex min-h-[2.75rem] flex-nowrap items-center justify-start gap-2 px-1 py-0.5 text-left sm:gap-2.5">
-              <a
-                v-if="mapsHref"
-                :href="mapsHref"
-                target="_blank"
-                rel="noopener"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-xs font-semibold text-emerald-900 shadow-sm hover:bg-emerald-100 sm:text-sm"
-              >
-                <MapIcon class="h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.open_directions') }}</span>
-              </a>
-              <a
-                v-if="requesterPhone"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl bg-sky-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-sky-700 sm:text-sm"
-                :href="`tel:${requesterPhone}`"
-              >
-                <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.call_requester') }}</span>
-              </a>
-              <a
-                v-if="requesterEmail"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:text-sm"
-                :href="`mailto:${requesterEmail}`"
-              >
-                <EnvelopeIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.email_requester') }}</span>
-              </a>
-              <button
-                v-if="requesterPhone"
-                type="button"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:text-sm"
-                @click="copyPhone(requesterPhone)"
-              >
-                <ClipboardDocumentIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.copy_requester_phone') }}</span>
-              </button>
-              <a
-                v-if="trip.driver?.phone"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:text-sm"
-                :href="`tel:${trip.driver.phone}`"
-              >
-                <UserIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.call_driver') }}</span>
-              </a>
-              <RouterLink
-                v-if="trip.dispatch_request?.id"
-                :to="`/requests/${trip.dispatch_request.id}`"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:text-sm"
-              >
-                <DocumentTextIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.open_request') }}</span>
-              </RouterLink>
-              <button
-                type="button"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border border-violet-200 bg-violet-50/90 px-3 py-2 text-xs font-semibold text-violet-900 shadow-sm hover:bg-violet-100 sm:text-sm"
-                @click="scrollToCostsSection"
-              >
-                <BanknotesIcon class="h-4 w-4 shrink-0 text-violet-700" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.costs_section') }}</span>
-              </button>
-              <button
-                type="button"
-                class="inline-flex shrink-0 snap-start items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 sm:text-sm"
-                @click="scrollToCoordination"
-              >
-                <TruckIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                <span class="whitespace-nowrap">{{ t('trip_detail.quick.reassign') }}</span>
-              </button>
+          <div class="mx-auto mt-3 flex max-w-full items-stretch justify-center gap-1 sm:gap-2">
+            <button
+              type="button"
+              class="flex h-14 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 sm:h-16 sm:w-10"
+              :disabled="!canScrollQuickLeft"
+              :aria-label="t('trip_detail.quick.scroll_prev')"
+              @click="scrollQuick(-1)"
+            >
+              <ChevronLeftIcon class="h-5 w-5 sm:h-6 sm:w-6" />
+            </button>
+            <div
+              ref="quickScrollRef"
+              class="quick-strip min-h-14 min-w-0 max-w-full flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] scroll-smooth [&::-webkit-scrollbar]:hidden"
+              @scroll.passive="updateQuickScrollArrows"
+            >
+              <div class="mx-auto flex h-full w-max flex-nowrap items-center gap-2 px-0.5 py-0.5 sm:gap-2.5">
+                <a
+                  v-if="mapsHref"
+                  :href="mapsHref"
+                  target="_blank"
+                  rel="noopener"
+                  class="quick-action-card border-emerald-200 bg-emerald-50/90 text-emerald-900 hover:bg-emerald-100"
+                >
+                  <MapIcon class="h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.open_directions') }}</span>
+                </a>
+                <a
+                  v-if="requesterPhone"
+                  class="quick-action-card border-sky-500 bg-sky-600 text-white hover:bg-sky-700"
+                  :href="`tel:${requesterPhone}`"
+                >
+                  <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.call_requester') }}</span>
+                </a>
+                <a
+                  v-if="requesterEmail"
+                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                  :href="`mailto:${requesterEmail}`"
+                >
+                  <EnvelopeIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.email_requester') }}</span>
+                </a>
+                <button
+                  v-if="requesterPhone"
+                  type="button"
+                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                  @click="copyPhone(requesterPhone)"
+                >
+                  <ClipboardDocumentIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.copy_requester_phone') }}</span>
+                </button>
+                <a
+                  v-if="trip.driver?.phone"
+                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                  :href="`tel:${trip.driver.phone}`"
+                >
+                  <UserIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.call_driver') }}</span>
+                </a>
+                <RouterLink
+                  v-if="trip.dispatch_request?.id"
+                  :to="`/requests/${trip.dispatch_request.id}`"
+                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                >
+                  <DocumentTextIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.open_request') }}</span>
+                </RouterLink>
+                <button
+                  type="button"
+                  class="quick-action-card border-violet-200 bg-violet-50/90 text-violet-900 hover:bg-violet-100"
+                  @click="scrollToCostsSection"
+                >
+                  <BanknotesIcon class="h-4 w-4 shrink-0 text-violet-700" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.costs_section') }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="quick-action-card border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                  @click="scrollToCoordination"
+                >
+                  <TruckIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  <span class="line-clamp-2 text-center leading-tight">{{ t('trip_detail.quick.reassign') }}</span>
+                </button>
+              </div>
             </div>
+            <button
+              type="button"
+              class="flex h-14 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-35 sm:h-16 sm:w-10"
+              :disabled="!canScrollQuickRight"
+              :aria-label="t('trip_detail.quick.scroll_next')"
+              @click="scrollQuick(1)"
+            >
+              <ChevronRightIcon class="h-5 w-5 sm:h-6 sm:w-6" />
+            </button>
           </div>
           <p v-if="quickCopyMsg" class="mt-2 text-center text-xs text-slate-600">{{ quickCopyMsg }}</p>
         </section>
@@ -873,7 +895,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -884,6 +906,8 @@ import {
   BellIcon,
   CalendarDaysIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ClipboardDocumentIcon,
   DocumentTextIcon,
   EnvelopeIcon,
@@ -965,6 +989,9 @@ const attachDeletingId = ref(null)
 const attachMsg = ref('')
 const attachMsgIsError = ref(false)
 const quickCopyMsg = ref('')
+const quickScrollRef = ref(null)
+const canScrollQuickLeft = ref(false)
+const canScrollQuickRight = ref(false)
 
 const newNote = ref('')
 const noting = ref(false)
@@ -1608,6 +1635,26 @@ async function submitQuickCost() {
 }
 
 let quickCopyTimer = null
+
+function updateQuickScrollArrows() {
+  const el = quickScrollRef.value
+  if (!el) {
+    canScrollQuickLeft.value = false
+    canScrollQuickRight.value = false
+    return
+  }
+  const { scrollLeft, scrollWidth, clientWidth } = el
+  canScrollQuickLeft.value = scrollLeft > 2
+  canScrollQuickRight.value = scrollLeft + clientWidth < scrollWidth - 2
+}
+
+function scrollQuick(dir) {
+  const el = quickScrollRef.value
+  if (!el) return
+  const step = Math.max(140, Math.round(el.clientWidth * 0.6))
+  el.scrollBy({ left: step * dir, behavior: 'smooth' })
+}
+
 async function scrollToCostsSection() {
   const el = moreDetailsRef.value
   if (!el) return
@@ -1904,6 +1951,49 @@ watch(hireExternal, (on) => {
   if (!on) providerChoice.value = ''
 })
 
-onMounted(load)
+watch([trip, loading], async () => {
+  if (!loading.value && trip.value) {
+    await nextTick()
+    updateQuickScrollArrows()
+  }
+})
+
+onMounted(() => {
+  window.addEventListener('resize', updateQuickScrollArrows)
+  load()
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', updateQuickScrollArrows)
+})
 watch(() => route.params.id, load)
 </script>
+
+<style scoped>
+.quick-action-card {
+  display: flex;
+  height: 3.5rem;
+  width: 7.5rem;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 0.5rem;
+  border-width: 1px;
+  padding: 0.375rem 0.5rem;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+@media (min-width: 640px) {
+  .quick-action-card {
+    height: 4rem;
+    width: 8.75rem;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    padding: 0.5rem 0.5rem;
+  }
+}
+</style>

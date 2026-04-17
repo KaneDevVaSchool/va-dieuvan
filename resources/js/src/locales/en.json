@@ -1130,7 +1130,9 @@
       "call_driver": "Call driver",
       "open_request": "Open source request",
       "costs_section": "Costs & advanced status",
-      "reassign": "Reassign / update"
+      "reassign": "Reassign / update",
+      "scroll_prev": "Scroll left",
+      "scroll_next": "Scroll right"
     },
     "status_update": {
       "title": "Update status",
