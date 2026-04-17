@@ -136,7 +136,7 @@ export function buildBm03BodyFromWizardSnapshot(snapshot) {
                     `${i + 1}. Đi: ${r.depart_at || "—"} ${r.pickup || "—"} | Dừng: ${r.waypoint || "—"} | Về: ${r.return_at || "—"} ${r.dropoff || "—"} | ${r.guests || "0"} khách | ĐG+PS: ${formatCurrency(rowLineTotal(r))} | ${r.notes || ""}`,
                 );
             });
-            lines.push(`Tổng e.2 (ước tính): ${formatCurrency(e2Total)}`);
+            lines.push(`Tổng (ước tính): ${formatCurrency(e2Total)}`);
             lines.push("Ghi chú khác (công tác)");
             if (f.e2_door_pickup)
                 lines.push(`- Đưa đón tận nhà: ${f.e2_door_cost || "0"}`);

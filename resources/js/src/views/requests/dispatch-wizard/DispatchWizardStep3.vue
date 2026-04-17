@@ -455,7 +455,7 @@
             >
                 <header class="dw-sec-intro">
                     <h3 id="dw-e2-heading" class="dw-sec-intro__title">
-                        Nội dung đề xuất cho nhân sự đi công tác (e.2)
+                        Nội dung đề xuất cho nhân sự đi công tác
                     </h3>
                     <p class="dw-sec-intro__meta">
                         Ghi đủ thời gian — địa điểm giúp lập lộ trình. Cột «Điểm
