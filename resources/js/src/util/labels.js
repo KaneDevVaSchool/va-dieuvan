@@ -63,6 +63,21 @@ export function labelPaperStatus(v) {
 }
 
 /** @param {string|undefined|null} v */
+export function labelCargoStatus(v) {
+  const key = v ? `labels.cargo_status.${v}` : ''
+  const m = {
+    pending: 'Chờ xử lý',
+    picked_up: 'Đã lấy hàng',
+    in_transit: 'Đang vận chuyển',
+    delivered: 'Đã giao',
+    failed: 'Thất bại',
+    cancelled: 'Đã huỷ',
+  }
+  const fb = m[v] ?? v ?? '—'
+  return key ? tOrFallback(key, fb) : fb
+}
+
+/** @param {string|undefined|null} v */
 export function labelTripStatus(v) {
   const key = v ? `labels.trip_status.${v}` : ''
   const m = {

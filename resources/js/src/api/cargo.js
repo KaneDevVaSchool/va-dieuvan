@@ -10,6 +10,11 @@ export async function getCargoShipment(id) {
   return data.data
 }
 
+export async function getCargoShipmentTimeline(id) {
+  const { data } = await http.get(`/cargo-shipments/${id}/timeline`)
+  return data.data
+}
+
 export async function createCargoShipment(payload) {
   const { data } = await http.post('/cargo-shipments', payload)
   return data.data

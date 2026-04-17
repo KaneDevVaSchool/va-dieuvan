@@ -13,7 +13,7 @@
         "new_request": "Tạo yêu cầu",
         "trips": "Chuyến đi",
         "costs": "Chi phí",
-        "cargo": "Hàng hóa (cargo)",
+        "cargo": "Hàng hóa",
         "routes": "Tuyến D2D",
         "resources": "Quản lý nguồn lực",
         "resources_overview": "Nguồn lực",
@@ -928,6 +928,26 @@
       "pending": "Chưa nhận",
       "received": "Đã nhận",
       "digitally_signed": "Đã ký số"
+    },
+    "cargo_status": {
+      "pending": "Chờ xử lý",
+      "picked_up": "Đã lấy hàng",
+      "in_transit": "Đang vận chuyển",
+      "delivered": "Đã giao",
+      "failed": "Thất bại",
+      "cancelled": "Đã huỷ"
+    },
+    "cargo_timeline": {
+      "created": "Ghi nhận / tạo shipment",
+      "sla_due": "Hạn SLA",
+      "picked_up": "Lấy hàng (tương đương ngày đi)",
+      "delivered": "Giao hàng (tương đương ngày về)"
+    },
+    "cargo_audit": {
+      "cargo.create": "Tạo shipment",
+      "cargo.status_change": "Cập nhật trạng thái",
+      "cargo.pod.upload": "Tải lên POD",
+      "cargo.sla_breached": "Cảnh báo trễ SLA"
     }
   }
 }

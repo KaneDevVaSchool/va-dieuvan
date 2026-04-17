@@ -927,6 +927,26 @@
       "pending": "Pending",
       "received": "Received",
       "digitally_signed": "Digitally signed"
+    },
+    "cargo_status": {
+      "pending": "Pending",
+      "picked_up": "Picked up",
+      "in_transit": "In transit",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "cargo_timeline": {
+      "created": "Recorded / shipment created",
+      "sla_due": "SLA deadline",
+      "picked_up": "Pickup (departure)",
+      "delivered": "Delivery (return)"
+    },
+    "cargo_audit": {
+      "cargo.create": "Shipment created",
+      "cargo.status_change": "Status updated",
+      "cargo.pod.upload": "POD uploaded",
+      "cargo.sla_breached": "SLA breach alert"
     }
   }
 }

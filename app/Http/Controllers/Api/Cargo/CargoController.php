@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Cargo\ShowCargoShipmentRequest;
 use App\Http\Requests\Api\Cargo\UpdateCargoShipmentStatusRequest;
 use App\Http\Requests\Api\Cargo\UploadCargoPodRequest;
 use App\Models\Attachment;
+use App\Models\AuditLog;
 use App\Models\CargoShipment;
 use App\Services\Auditing\AuditLogger;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,6 +36,32 @@ class CargoController extends Controller
 
         $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
 
+        $q->when(isset($data['from']), fn (Builder $b) => $b->where(
+            'created_at',
+            '>=',
+            Carbon::parse($data['from'])->startOfDay(),
+        ));
+        $q->when(isset($data['to']), fn (Builder $b) => $b->where(
+            'created_at',
+            '<=',
+            Carbon::parse($data['to'])->endOfDay(),
+        ));
+
+        $q->when(isset($data['q']), function (Builder $b) use ($data) {
+            $raw = trim((string) $data['q']);
+            if ($raw === '') {
+                return;
+            }
+            $term = '%'.addcslashes($raw, '%_\\').'%';
+            $b->where(function (Builder $inner) use ($term) {
+                $inner->where('tracking_code', 'like', $term)
+                    ->orWhere('pickup_address', 'like', $term)
+                    ->orWhere('delivery_address', 'like', $term)
+                    ->orWhere('sender_name', 'like', $term)
+                    ->orWhere('receiver_name', 'like', $term);
+            });
+        });
+
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
 
@@ -54,6 +81,85 @@ class CargoController extends Controller
         $cargoShipment->load(['trip', 'dispatchRequest', 'attachments']);
 
         return $this->ok($cargoShipment);
+    }
+
+    /**
+     * Dòng thời gian: mốc từ shipment + nhật ký audit (tương thích quy trình phiếu / trạng thái xử lý).
+     */
+    public function timeline(ShowCargoShipmentRequest $request, CargoShipment $cargoShipment)
+    {
+        $items = [];
+
+        $push = function (Carbon $at, string $kind, string $code, ?string $detail = null) use (&$items) {
+            $items[] = [
+                'at' => $at->toIso8601String(),
+                'kind' => $kind,
+                'code' => $code,
+                'detail' => $detail,
+            ];
+        };
+
+        if ($cargoShipment->created_at) {
+            $push(
+                Carbon::parse($cargoShipment->created_at),
+                'milestone',
+                'created',
+                $cargoShipment->tracking_code,
+            );
+        }
+        if ($cargoShipment->sla_due_at) {
+            $push(
+                Carbon::parse($cargoShipment->sla_due_at),
+                'milestone',
+                'sla_due',
+                null,
+            );
+        }
+        if ($cargoShipment->picked_up_at) {
+            $push(
+                Carbon::parse($cargoShipment->picked_up_at),
+                'milestone',
+                'picked_up',
+                null,
+            );
+        }
+        if ($cargoShipment->delivered_at) {
+            $push(
+                Carbon::parse($cargoShipment->delivered_at),
+                'milestone',
+                'delivered',
+                null,
+            );
+        }
+
+        $logs = AuditLog::query()
+            ->where('auditable_type', $cargoShipment->getMorphClass())
+            ->where('auditable_id', $cargoShipment->getKey())
+            ->with(['actor:id,name,email'])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($logs as $log) {
+            $items[] = [
+                'at' => Carbon::parse($log->created_at)->toIso8601String(),
+                'kind' => 'audit',
+                'code' => $log->event,
+                'detail' => null,
+                'actor' => $log->actor ? [
+                    'id' => $log->actor->id,
+                    'name' => $log->actor->name,
+                    'email' => $log->actor->email,
+                ] : null,
+                'before' => $log->before,
+                'after' => $log->after,
+            ];
+        }
+
+        usort($items, function (array $a, array $b) {
+            return strcmp($a['at'], $b['at']);
+        });
+
+        return $this->ok(['items' => array_values($items)]);
     }
 
     public function store(CreateCargoShipmentRequest $request)

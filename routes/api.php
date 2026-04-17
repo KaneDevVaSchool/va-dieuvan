@@ -81,6 +81,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::controller(CargoController::class)->group(function () {
             Route::get('/cargo-shipments', 'index');
+            Route::get('/cargo-shipments/{cargoShipment}/timeline', 'timeline');
             Route::get('/cargo-shipments/{cargoShipment}', 'show');
         });
 
