@@ -17,22 +17,24 @@ class ListTransportProvidersRequest extends ApiFormRequest
      */
     protected function prepareForValidation(): void
     {
-        if (! $this->has('only_trashed')) {
-            return;
-        }
+        foreach (['only_trashed', 'is_active'] as $key) {
+            if (! $this->has($key)) {
+                continue;
+            }
 
-        $raw = $this->input('only_trashed');
-        if ($raw === null || $raw === '') {
-            return;
-        }
+            $raw = $this->input($key);
+            if ($raw === null || $raw === '') {
+                continue;
+            }
 
-        if (is_bool($raw)) {
-            return;
-        }
+            if (is_bool($raw)) {
+                continue;
+            }
 
-        $parsed = filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-        if ($parsed !== null) {
-            $this->merge(['only_trashed' => $parsed]);
+            $parsed = filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($parsed !== null) {
+                $this->merge([$key => $parsed]);
+            }
         }
     }
 

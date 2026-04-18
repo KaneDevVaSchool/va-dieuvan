@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen bg-[#F8F9FA]">
-    <div v-if="loading && !trip" class="mx-auto max-w-6xl space-y-6 px-4 py-10">
+    <div v-if="loading && !trip" class="mx-auto max-w-7xl space-y-6 px-4 py-10">
       <div class="animate-pulse space-y-4">
         <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
-        <div class="grid gap-6 lg:grid-cols-3">
-          <div class="space-y-4 lg:col-span-2">
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(14rem,18rem)]">
+          <div class="min-w-0 space-y-4">
             <div class="h-64 rounded-2xl bg-slate-200/80" />
             <div class="h-48 rounded-2xl bg-slate-200/70" />
             <div class="h-56 rounded-2xl bg-slate-200/70" />
@@ -24,7 +24,7 @@
     </div>
 
     <template v-else-if="trip">
-      <div class="mx-auto max-w-6xl space-y-6 px-4 pb-12">
+      <div class="mx-auto max-w-7xl space-y-6 px-4 pb-12">
         <!-- Header -->
         <header class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-start sm:justify-between">
           <div class="flex min-w-0 flex-1 items-start gap-3">
@@ -92,9 +92,9 @@
           </RouterLink>
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-3">
+        <div class="grid gap-6 lg:grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,30rem)] 2xl:grid-cols-[minmax(0,1fr)_32rem]">
           <!-- Main column -->
-          <div class="space-y-6 lg:col-span-2">
+          <div class="min-w-0 space-y-6">
             <!-- Overview -->
             <section class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div class="absolute right-4 top-4">
@@ -655,17 +655,32 @@
           </div>
 
           <!-- Sidebar -->
-          <div class="space-y-6">
+          <div class="min-w-0 space-y-6 xl:max-w-none">
             <section
               class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden"
               :aria-label="t('trip_detail.coordination.title')"
             >
               <div class="border-b border-slate-100/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/60 px-5 py-4 sm:px-6">
-                <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.coordination.title') }}</h2>
-                <p class="mt-1 text-xs leading-relaxed text-slate-600">{{ t('trip_detail.coordination.subtitle') }}</p>
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.coordination.title') }}</h2>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-600">{{ t('trip_detail.coordination.subtitle') }}</p>
+                  </div>
+                  <Button
+                    v-if="canAssign"
+                    type="button"
+                    variant="secondary"
+                    class="!shrink-0 !px-2.5 !py-1.5 !text-xs"
+                    :loading="sameDayTripsLoading || refreshing"
+                    :disabled="sameDayTripsLoading"
+                    @click="refreshCoordinationData"
+                  >
+                    {{ t('trip_detail.coordination.refresh_schedule') }}
+                  </Button>
+                </div>
               </div>
 
-              <div class="space-y-5 p-5 sm:p-6">
+              <div class="space-y-5 p-5 sm:p-6 xl:px-6">
                 <div
                   v-if="canRescheduleTrip"
                   class="rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 to-white p-4 shadow-sm"
@@ -690,43 +705,96 @@
                   </div>
                 </div>
 
-                <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 shadow-sm">
+                <div
+                  class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 shadow-sm"
+                  :class="hireExternal ? 'pointer-events-none opacity-45' : ''"
+                >
                   <div class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ t('trip_detail.coordination.assign_pair_title') }}</div>
                   <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.coordination.driver_default_vehicle_hint') }}</p>
-                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                  <p v-if="coordinationScheduleHint" class="mt-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-slate-700">
+                    {{ coordinationScheduleHint }}
+                  </p>
+                  <p
+                    v-if="schedulePreviewDirty"
+                    class="mt-2 rounded-lg border border-sky-200/90 bg-sky-50/90 px-2.5 py-1.5 text-[11px] font-medium text-sky-900"
+                  >
+                    {{ t('trip_detail.coordination.preview_window_hint') }}
+                  </p>
+                  <p v-if="sameDayTripsLoading" class="mt-2 text-[11px] text-slate-500">{{ t('trip_detail.coordination.schedule_loading') }}</p>
+                  <p v-if="sameDayTripsError" class="mt-2 text-[11px] text-rose-700">{{ sameDayTripsError }}</p>
+                  <p v-if="readyVehiclesSummary" class="mt-2 text-[11px] font-medium text-slate-600">{{ readyVehiclesSummary }}</p>
+                  <p v-if="busyResourcesHint && !hireExternal" class="mt-2 text-[11px] text-amber-800">{{ busyResourcesHint }}</p>
+                  <div class="mt-4 grid gap-4 sm:grid-cols-1">
                     <Select
                       v-model="vehicleChoice"
+                      :disabled="hireExternal"
                       :label="t('trip_detail.coordination.assign_vehicle')"
                       :placeholder="t('trip_detail.ops.form.pick_vehicle')"
                     >
                       <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                      <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">
-                        {{ v.license_plate }} · {{ v.type ?? '—' }} {{ v.seat_count ? `(${v.seat_count})` : '' }}
+                      <option
+                        v-for="v in sortedVehicles"
+                        :key="v.id"
+                        :value="String(v.id)"
+                        :disabled="isVehicleBusy(v.id)"
+                        :title="vehicleOptionTitle(v.id)"
+                      >
+                        {{ vehicleOptionLabel(v) }}
                       </option>
                     </Select>
                     <Select
                       v-model="driverChoice"
+                      :disabled="hireExternal"
                       :label="t('trip_detail.coordination.assign_driver')"
                       :placeholder="t('trip_detail.ops.form.pick_driver')"
                     >
                       <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                      <option v-for="d in drivers" :key="d.id" :value="String(d.id)">
-                        {{ d.full_name }} {{ d.phone ? `· ${d.phone}` : '' }}
+                      <option
+                        v-for="d in sortedDrivers"
+                        :key="d.id"
+                        :value="String(d.id)"
+                        :disabled="isDriverBusy(d.id)"
+                        :title="driverOptionTitle(d.id)"
+                      >
+                        {{ driverOptionLabel(d) }}
                       </option>
                     </Select>
                   </div>
                   <p v-if="suitableVehiclesHint" class="mt-3 text-xs font-medium text-emerald-800">{{ suitableVehiclesHint }}</p>
+                  <p v-if="selectedVehicleSeatsWarning" class="mt-2 text-xs font-medium text-rose-700">{{ selectedVehicleSeatsWarning }}</p>
+                </div>
+
+                <div
+                  v-if="canAssign && overlappingOtherTrips.length"
+                  class="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm"
+                >
+                  <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.coordination.overlap_section_title') }}</div>
+                  <ul class="mt-2 max-h-40 space-y-1.5 overflow-y-auto text-[11px]">
+                    <li v-for="row in overlappingOtherTrips" :key="row.id" class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <RouterLink :to="`/trips/${row.id}`" class="font-semibold text-sky-700 underline-offset-2 hover:underline">
+                        #{{ row.id }}
+                      </RouterLink>
+                      <span class="tabular-nums text-slate-600">{{ fmtTime(row.depart_at) }}</span>
+                      <span class="min-w-0 text-slate-700">{{ row.label }}</span>
+                      <span v-if="row.driverName || row.vehiclePlate" class="text-slate-500">
+                        <template v-if="row.driverName">{{ row.driverName }}</template>
+                        <template v-if="row.driverName && row.vehiclePlate"> · </template>
+                        <template v-if="row.vehiclePlate">{{ row.vehiclePlate }}</template>
+                      </span>
+                    </li>
+                  </ul>
                 </div>
 
                 <label
-                  class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm"
+                  class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-slate-300"
                 >
                   <input v-model="hireExternal" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                   {{ t('trip_detail.coordination.hire_external') }}
                 </label>
+                <p v-if="hireExternal" class="-mt-2 text-[11px] leading-snug text-slate-500">{{ t('trip_detail.coordination.external_mode_hint') }}</p>
 
-                <div v-if="hireExternal" class="grid gap-3 rounded-xl border border-amber-200/80 bg-amber-50/60 p-4">
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div v-if="hireExternal" class="grid max-w-full gap-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-4 sm:grid-cols-1">
+                  <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
                     <div class="min-w-0 flex-1">
                       <Select
                         v-model="providerChoice"
@@ -735,7 +803,7 @@
                       >
                         <option value="">{{ t('trip_detail.coordination.provider_placeholder') }}</option>
                         <option v-for="p in transportProviders" :key="p.id" :value="String(p.id)">
-                          {{ p.name }}<template v-if="p.type"> ({{ p.type }})</template>
+                          {{ p.name }}<template v-if="p.type"> · {{ providerTypeLabel(p.type) }}</template>
                         </option>
                       </Select>
                     </div>
@@ -743,7 +811,7 @@
                       v-if="canQuickCreateProvider"
                       type="button"
                       variant="secondary"
-                      class="shrink-0 !px-3"
+                      class="h-10 w-full shrink-0 whitespace-nowrap sm:h-auto sm:w-auto sm:self-end sm:!px-3"
                       @click="openProviderModal"
                     >
                       {{ t('trip_detail.coordination.provider_quick_add') }}
@@ -802,9 +870,11 @@
                   </Button>
                   <Button
                     v-if="canAssign"
-                    class="min-h-[2.75rem] w-full justify-center !bg-sky-600 !py-2.5 text-[15px] font-semibold hover:!bg-sky-700"
+                    class="min-h-[2.75rem] w-full justify-center !bg-sky-600 !py-2.5 text-[15px] font-semibold hover:!bg-sky-700 disabled:!cursor-not-allowed disabled:!opacity-60"
                     :loading="assigning"
                     type="button"
+                    :disabled="assigning || !assignReady"
+                    :title="!assignReady ? t('trip_detail.coordination.assign_disabled_hint') : ''"
                     @click="onApproveTransfer"
                   >
                     {{ t('trip_detail.coordination.approve_transfer') }}
@@ -1038,8 +1108,8 @@
             <div class="mt-4 space-y-3">
               <Input v-model="newProviderName" :label="t('trip_detail.coordination.provider_modal_name')" :placeholder="t('trip_detail.coordination.provider_modal_name_ph')" />
               <Select v-model="newProviderType" :label="t('trip_detail.coordination.provider_modal_type')">
-                <option value="taxi">taxi</option>
-                <option value="vendor">vendor</option>
+                <option value="taxi">{{ t('resources.provider_form_type_taxi') }}</option>
+                <option value="vendor">{{ t('resources.provider_form_type_vendor') }}</option>
               </Select>
               <p v-if="providerModalError" class="text-xs text-rose-600">{{ providerModalError }}</p>
             </div>
@@ -1072,7 +1142,7 @@ import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
-import { addTripEvent, assignTrip, getTrip, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
+import { addTripEvent, assignTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
 import { submitTripCost } from '../../api/costs'
 import { listVehicles, listDrivers, listTransportProviders, createTransportProvider } from '../../api/operational'
 import { uploadAttachment, deleteAttachment } from '../../api/attachments'
@@ -1144,6 +1214,11 @@ const needsVehicleResync = ref(false)
 const statusing = ref(false)
 const vehicles = ref([])
 const drivers = ref([])
+const sameDayTrips = ref([])
+const sameDayTripsLoading = ref(false)
+const sameDayTripsError = ref('')
+
+const TRIP_ASSIGN_CONFLICT_STATUSES = ['assigned', 'driver_confirmed', 'in_progress']
 const resourceHint = ref('')
 const vehicleChoice = ref('')
 const driverChoice = ref('')
@@ -1808,9 +1883,276 @@ const suitableVehiclesCount = computed(() => {
 })
 
 const suitableVehiclesHint = computed(() => {
-  if (!vehicles.value.length) return ''
-  return t('trip_detail.coordination.suitable_vehicles', { n: suitableVehiclesCount.value })
+  const n = suitableVehiclesCount.value
+  if (!vehicles.value.length || n < 1) return ''
+  return t('trip_detail.coordination.suitable_vehicles', { n })
 })
+
+function toLocalDateKey(iso) {
+  if (!iso) return ''
+  const x = new Date(iso)
+  if (Number.isNaN(x.getTime())) return ''
+  const y = x.getFullYear()
+  const m = String(x.getMonth() + 1).padStart(2, '0')
+  const day = String(x.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/** Cùng logic backend DispatchingService: kết thúc kế hoạch = arrive_by hoặc depart + 2h */
+function tripPlannedEnd(t) {
+  const dr = t?.dispatch_request
+  const endIso = t?.arrive_by ?? dr?.arrive_by
+  if (endIso) return new Date(endIso)
+  const s = new Date(t.depart_at)
+  return new Date(s.getTime() + 2 * 60 * 60 * 1000)
+}
+
+function tripIntervalsOverlap(aStart, aEnd, bStart, bEnd) {
+  return aStart < bEnd && bStart < aEnd
+}
+
+function getActiveScheduleDateKey() {
+  const raw = rescheduleDepartLocal.value?.trim()
+  if (raw) {
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) return toLocalDateKey(d)
+  }
+  return toLocalDateKey(trip.value?.depart_at)
+}
+
+const scheduleDateKeyForList = computed(() => {
+  if (!trip.value?.depart_at) return ''
+  return getActiveScheduleDateKey()
+})
+
+const scheduleWindowForConflicts = computed(() => {
+  const tr = trip.value
+  if (!tr?.depart_at) return null
+  const origStart = new Date(tr.depart_at).getTime()
+  const origEnd = tripPlannedEnd(tr).getTime()
+  const duration = Math.max(30 * 60 * 1000, origEnd - origStart)
+  let startMs = origStart
+  const raw = rescheduleDepartLocal.value?.trim()
+  if (raw) {
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) startMs = d.getTime()
+  }
+  const endMs = startMs + duration
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) return null
+  return { start: startMs, end: endMs }
+})
+
+const schedulePreviewDirty = computed(() => {
+  const tr = trip.value
+  if (!tr?.depart_at || !rescheduleDepartLocal.value?.trim()) return false
+  return toDatetimeLocalValue(tr.depart_at) !== rescheduleDepartLocal.value.trim()
+})
+
+const busyDriverIds = computed(() => {
+  const w = scheduleWindowForConflicts.value
+  const cur = trip.value
+  if (!w || !cur?.id) return new Set()
+  const busy = new Set()
+  for (const o of sameDayTrips.value) {
+    if (!o?.id || o.id === cur.id) continue
+    if (!o.driver_id) continue
+    if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue
+    const oStart = new Date(o.depart_at).getTime()
+    const oEnd = tripPlannedEnd(o).getTime()
+    if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) busy.add(o.driver_id)
+  }
+  return busy
+})
+
+const busyVehicleIds = computed(() => {
+  const w = scheduleWindowForConflicts.value
+  const cur = trip.value
+  if (!w || !cur?.id) return new Set()
+  const busy = new Set()
+  for (const o of sameDayTrips.value) {
+    if (!o?.id || o.id === cur.id) continue
+    if (!o.vehicle_id) continue
+    if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue
+    const oStart = new Date(o.depart_at).getTime()
+    const oEnd = tripPlannedEnd(o).getTime()
+    if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) busy.add(o.vehicle_id)
+  }
+  return busy
+})
+
+const overlappingOtherTrips = computed(() => {
+  const w = scheduleWindowForConflicts.value
+  const cur = trip.value
+  if (!w || !cur?.id) return []
+  const out = []
+  for (const o of sameDayTrips.value) {
+    if (!o?.id || o.id === cur.id) continue
+    if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue
+    const oStart = new Date(o.depart_at).getTime()
+    const oEnd = tripPlannedEnd(o).getTime()
+    if (!tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) continue
+    const dr = o.dispatch_request
+    const label = dr ? `${dr.origin || '—'} → ${dr.destination || '—'}` : '—'
+    out.push({
+      id: o.id,
+      depart_at: o.depart_at,
+      label,
+      driverName: o.driver?.full_name ?? '',
+      vehiclePlate: o.vehicle?.license_plate ?? '',
+    })
+  }
+  out.sort((a, b) => new Date(a.depart_at) - new Date(b.depart_at))
+  return out
+})
+
+const sortedDrivers = computed(() => {
+  const list = [...drivers.value]
+  const busy = busyDriverIds.value
+  const loc = locale.value === 'en' ? 'en' : 'vi'
+  list.sort((a, b) => {
+    const ab = busy.has(a.id) ? 1 : 0
+    const bb = busy.has(b.id) ? 1 : 0
+    if (ab !== bb) return ab - bb
+    return (a.full_name || '').localeCompare(b.full_name || '', loc, { sensitivity: 'base' })
+  })
+  return list
+})
+
+const sortedVehicles = computed(() => {
+  const list = [...vehicles.value]
+  const busy = busyVehicleIds.value
+  const need = neededSeats.value
+  const score = (v) => {
+    const seats = v.seat_count ?? 0
+    const fit = seats >= need ? 2 : 0
+    const free = busy.has(v.id) ? 0 : 1
+    return fit + free
+  }
+  list.sort((a, b) => {
+    const diff = score(b) - score(a)
+    if (diff !== 0) return diff
+    return (a.license_plate || '').localeCompare(b.license_plate || '', undefined, { numeric: true })
+  })
+  return list
+})
+
+const selectedVehicleSeatsWarning = computed(() => {
+  if (hireExternal.value || !vehicleChoice.value) return ''
+  const v = vehicles.value.find((x) => String(x.id) === String(vehicleChoice.value))
+  if (!v) return ''
+  const n = v.seat_count ?? 0
+  if (n >= neededSeats.value) return ''
+  return t('trip_detail.coordination.vehicle_seats_warning', { n, need: neededSeats.value })
+})
+
+const assignReady = computed(() => {
+  if (!canAssign.value) return false
+  const hasExternal = hireExternal.value && providerChoice.value && String(providerChoice.value).trim() !== ''
+  const hasInternal = vehicleChoice.value && driverChoice.value
+  if (!hasInternal && !hasExternal) return false
+  if (hireExternal.value && !hasExternal) return false
+  if (!hireExternal.value && !hasInternal) return false
+  if (!hireExternal.value) {
+    if (driverChoice.value && busyDriverIds.value.has(Number(driverChoice.value))) return false
+    if (vehicleChoice.value && busyVehicleIds.value.has(Number(vehicleChoice.value))) return false
+    const v = vehicles.value.find((x) => String(x.id) === String(vehicleChoice.value))
+    if (v && (v.seat_count ?? 0) < neededSeats.value) return false
+  }
+  return true
+})
+
+const coordinationScheduleHint = computed(() => {
+  if (!trip.value?.depart_at) return ''
+  const r = scheduleTimeRange.value
+  const d = scheduleDateLong.value
+  if (!r || r === '—') return d ? `${d}` : ''
+  return t('trip_detail.coordination.schedule_window_hint', { date: d, range: r })
+})
+
+const readyVehiclesSummary = computed(() => {
+  if (!trip.value) return ''
+  const total = vehicles.value.length
+  const fit = suitableVehiclesCount.value
+  const need = neededSeats.value
+  return t('trip_detail.coordination.ready_vehicles_summary', { total, fit, need })
+})
+
+const busyResourcesHint = computed(() => {
+  if (!busyDriverIds.value.size && !busyVehicleIds.value.size) return ''
+  return t('trip_detail.coordination.busy_resources_hint')
+})
+
+function isDriverBusy(id) {
+  return busyDriverIds.value.has(id)
+}
+
+function isVehicleBusy(id) {
+  return busyVehicleIds.value.has(id)
+}
+
+function driverOptionLabel(d) {
+  const base = `${d.full_name}${d.phone ? ` · ${d.phone}` : ''}`
+  return isDriverBusy(d.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
+}
+
+function driverOptionTitle(id) {
+  return isDriverBusy(id) ? t('trip_detail.coordination.option_busy_title_driver') : ''
+}
+
+function vehicleOptionLabel(v) {
+  const base = `${v.license_plate} · ${v.type ?? '—'}${v.seat_count ? ` (${v.seat_count})` : ''}`
+  return isVehicleBusy(v.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
+}
+
+function vehicleOptionTitle(id) {
+  return isVehicleBusy(id) ? t('trip_detail.coordination.option_busy_title_vehicle') : ''
+}
+
+function providerTypeLabel(type) {
+  const t0 = String(type ?? '').toLowerCase()
+  if (t0 === 'taxi') return t('resources.provider_form_type_taxi')
+  if (t0 === 'vendor') return t('resources.provider_form_type_vendor')
+  return type ?? '—'
+}
+
+async function loadSameDayTrips() {
+  const key = scheduleDateKeyForList.value
+  if (!trip.value?.id || !key) {
+    sameDayTrips.value = []
+    sameDayTripsError.value = ''
+    return
+  }
+  sameDayTripsLoading.value = true
+  sameDayTripsError.value = ''
+  try {
+    const merged = []
+    const seen = new Set()
+    let page = 1
+    let lastPage = 1
+    do {
+      const res = await listTrips({ from: key, to: key, per_page: 100, page })
+      const items = res.items ?? []
+      for (const x of items) {
+        if (x?.id != null && !seen.has(x.id)) {
+          seen.add(x.id)
+          merged.push(x)
+        }
+      }
+      lastPage = Number(res.meta?.last_page ?? 1)
+      page += 1
+    } while (page <= lastPage && page <= 30)
+    sameDayTrips.value = merged
+  } catch (e) {
+    sameDayTrips.value = []
+    sameDayTripsError.value = formatApiMessage(e)
+  } finally {
+    sameDayTripsLoading.value = false
+  }
+}
+
+async function refreshCoordinationData() {
+  await Promise.all([loadResources(), loadSameDayTrips()])
+}
 
 const attachmentsList = computed(() => trip.value?.dispatch_request?.attachments ?? [])
 
@@ -2131,18 +2473,35 @@ async function onApproveTransfer() {
     return
   }
 
+  if (!hireExternal.value) {
+    if (driverChoice.value && isDriverBusy(Number(driverChoice.value))) {
+      assignFeedbackKind.value = 'error'
+      assignMsg.value = t('trip_detail.coordination.validation_busy_driver')
+      return
+    }
+    if (vehicleChoice.value && isVehicleBusy(Number(vehicleChoice.value))) {
+      assignFeedbackKind.value = 'error'
+      assignMsg.value = t('trip_detail.coordination.validation_busy_vehicle')
+      return
+    }
+  }
+
   assigning.value = true
   try {
     const payload = { lock_version: assign.value.lock_version }
-    if (vehicleChoice.value) payload.vehicle_id = Number(vehicleChoice.value)
-    if (driverChoice.value) payload.driver_id = Number(driverChoice.value)
-    if (hireExternal.value && providerChoice.value) {
+    if (hireExternal.value && hasExternal) {
       payload.transport_provider_id = Number(providerChoice.value)
+      payload.vehicle_id = null
+      payload.driver_id = null
     } else {
       payload.transport_provider_id = null
+      if (vehicleChoice.value) payload.vehicle_id = Number(vehicleChoice.value)
+      if (driverChoice.value) payload.driver_id = Number(driverChoice.value)
     }
     if (externalVehicleRef.value?.trim()) payload.external_vehicle_ref = externalVehicleRef.value.trim()
+    else payload.external_vehicle_ref = null
     if (externalDriverRef.value?.trim()) payload.external_driver_ref = externalDriverRef.value.trim()
+    else payload.external_driver_ref = null
 
     await assignTrip(route.params.id, payload, { idempotencyKey: newIdempotencyKey() })
 
@@ -2249,6 +2608,19 @@ watch(vehicles, () => {
   if (!needsVehicleResync.value) return
   syncVehicleToDriver()
 })
+
+watch(
+  () => [trip.value?.id, scheduleDateKeyForList.value],
+  async ([id, key]) => {
+    if (!id || !key) {
+      sameDayTrips.value = []
+      sameDayTripsError.value = ''
+      return
+    }
+    await loadSameDayTrips()
+  },
+  { flush: 'post' },
+)
 
 onMounted(load)
 watch(
