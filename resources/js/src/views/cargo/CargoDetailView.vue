@@ -57,22 +57,6 @@
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2 print:hidden">
-            <button
-              type="button"
-              class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-              @click="copyTrackingCode"
-            >
-              <ClipboardDocumentIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-              {{ copyFeedback ? t('cargo_detail.copied') : t('cargo_detail.copy_code') }}
-            </button>
-            <button
-              type="button"
-              class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-              @click="printPage"
-            >
-              <PrinterIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-              {{ t('cargo_detail.print') }}
-            </button>
             <RouterLink
               v-if="requestId"
               :to="'/requests/' + requestId"
@@ -161,6 +145,41 @@
             {{ t('cargo_detail.sla_breached') }}
           </p>
         </div>
+      </div>
+
+      <!-- Quick status: one horizontal row -->
+      <div
+        v-if="quickStatusActions.length"
+        class="print:hidden overflow-hidden rounded-2xl border border-violet-200/80 bg-gradient-to-r from-violet-50/90 via-white to-slate-50/80 shadow-sm dark:border-violet-900/40 dark:from-violet-950/30 dark:via-slate-900/50 dark:to-slate-900/40"
+      >
+        <div class="flex flex-col gap-2 border-b border-violet-100/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-violet-900/30">
+          <div class="min-w-0 shrink-0">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-violet-800 dark:text-violet-300">{{ t('cargo_detail.quick_status_title') }}</p>
+            <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ t('cargo_detail.quick_status_hint') }}</p>
+          </div>
+          <div
+            class="flex min-w-0 flex-1 items-stretch justify-start gap-2 sm:justify-end overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-[70%] [&::-webkit-scrollbar]:hidden"
+          >
+            <button
+              v-for="act in quickStatusActions"
+              :key="act.status"
+              type="button"
+              :disabled="statusSaving"
+              :class="[
+                'shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold shadow-sm transition disabled:opacity-50',
+                act.danger
+                  ? 'border border-rose-200/90 bg-white text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-950/80'
+                  : 'border border-teal-200/90 bg-teal-600 text-white hover:bg-teal-700 dark:border-teal-700 dark:bg-teal-600 dark:hover:bg-teal-500',
+              ]"
+              @click="applyQuickStatus(act.status, act.danger)"
+            >
+              {{ quickStatusLabel(act.status) }}
+            </button>
+          </div>
+        </div>
+        <p v-if="statusError" class="border-t border-violet-100/60 px-4 py-2.5 text-sm font-medium text-rose-600 dark:border-violet-900/25 dark:text-rose-400">
+          {{ statusError }}
+        </p>
       </div>
 
       <div class="grid gap-5 lg:grid-cols-5">
@@ -321,20 +340,6 @@
         </div>
 
         <aside class="min-w-0 space-y-5 lg:col-span-2">
-          <div
-            v-if="qrSrc"
-            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 print:hidden"
-          >
-            <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
-              <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_detail.share_title') }}</h2>
-              <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_detail.share_hint') }}</p>
-            </div>
-            <div class="flex flex-col items-center gap-3 px-4 py-4 sm:flex-row sm:justify-center">
-              <img :src="qrSrc" alt="" width="128" height="128" class="rounded-lg border border-slate-100 bg-white p-1 dark:border-slate-700" />
-              <p class="max-w-[14rem] text-center text-[11px] leading-snug text-slate-500 dark:text-slate-400">{{ publicPageUrl }}</p>
-            </div>
-          </div>
-
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
             <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
               <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -375,34 +380,139 @@
           </div>
 
           <div
-            v-if="quickStatusActions.length"
-            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 print:hidden"
+            v-if="canAssignResources"
+            class="overflow-hidden rounded-2xl border border-sky-200/80 bg-gradient-to-b from-sky-50/40 to-white shadow-sm dark:border-sky-900/40 dark:from-sky-950/20 dark:to-slate-900/40"
           >
-            <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
-              <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_detail.quick_status_title') }}</h2>
-              <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_detail.quick_status_hint') }}</p>
+            <div class="border-b border-sky-100/90 px-4 py-3 dark:border-sky-900/40">
+              <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_detail.assign_title') }}</h2>
+              <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ t('cargo_detail.assign_hint') }}</p>
+              <p v-if="assignScheduleHint" class="mt-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-800/60 dark:text-slate-200">
+                {{ assignScheduleHint }}
+              </p>
+              <p v-if="assignReadySummary" class="mt-1 text-[11px] text-slate-600 dark:text-slate-400">{{ assignReadySummary }}</p>
+              <p v-if="assignBusyHint && !hireExternal" class="mt-1 text-[11px] text-amber-800 dark:text-amber-200/90">{{ assignBusyHint }}</p>
+              <p v-if="sameDayTripsLoading" class="mt-1 text-[11px] text-slate-500">{{ t('trip_detail.coordination.schedule_loading') }}</p>
+              <p v-if="sameDayTripsError" class="mt-1 text-[11px] text-rose-600">{{ sameDayTripsError }}</p>
             </div>
-            <div class="px-4 py-4">
-              <p v-if="statusError" class="mb-3 text-sm text-rose-600 dark:text-rose-400">{{ statusError }}</p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="act in quickStatusActions"
-                  :key="act.status"
-                  type="button"
-                  :disabled="statusSaving"
-                  :class="[
-                    'rounded-xl px-3 py-2 text-sm font-medium transition disabled:opacity-50',
-                    act.danger
-                      ? 'border border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70'
-                      : 'border border-teal-200 bg-teal-50 text-teal-900 hover:bg-teal-100 dark:border-teal-900/40 dark:bg-teal-950/40 dark:text-teal-100 dark:hover:bg-teal-950/70',
-                  ]"
-                  @click="applyQuickStatus(act.status, act.danger)"
-                >
-                  {{ quickStatusLabel(act.status) }}
-                </button>
+            <div class="space-y-4 px-4 py-4">
+              <div
+                class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 dark:border-slate-600 dark:bg-slate-800/30"
+                :class="hireExternal ? 'pointer-events-none opacity-45' : ''"
+              >
+                <div class="grid gap-3">
+                  <Select
+                    v-model="vehicleChoice"
+                    :disabled="hireExternal"
+                    :label="t('trip_detail.coordination.assign_vehicle')"
+                    :placeholder="t('trip_detail.ops.form.pick_vehicle')"
+                  >
+                    <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
+                    <option
+                      v-for="v in sortedAssignVehicles"
+                      :key="v.id"
+                      :value="String(v.id)"
+                      :disabled="isAssignVehicleBusy(v.id)"
+                      :title="assignVehicleOptionTitle(v.id)"
+                    >
+                      {{ assignVehicleOptionLabel(v) }}
+                    </option>
+                  </Select>
+                  <Select
+                    v-model="driverChoice"
+                    :disabled="hireExternal"
+                    :label="t('trip_detail.coordination.assign_driver')"
+                    :placeholder="t('trip_detail.ops.form.pick_driver')"
+                  >
+                    <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
+                    <option
+                      v-for="d in sortedAssignDrivers"
+                      :key="d.id"
+                      :value="String(d.id)"
+                      :disabled="isAssignDriverBusy(d.id)"
+                      :title="assignDriverOptionTitle(d.id)"
+                    >
+                      {{ assignDriverOptionLabel(d) }}
+                    </option>
+                  </Select>
+                </div>
+                <p v-if="assignSuitableHint" class="mt-2 text-xs font-medium text-emerald-800 dark:text-emerald-300">{{ assignSuitableHint }}</p>
+                <p v-if="assignVehicleSeatsWarning" class="mt-2 text-xs font-medium text-rose-700 dark:text-rose-400">{{ assignVehicleSeatsWarning }}</p>
               </div>
+
+              <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900">
+                <input v-model="hireExternal" type="checkbox" class="rounded border-slate-300 text-sky-600" />
+                {{ t('trip_detail.coordination.hire_external') }}
+              </label>
+              <p v-if="hireExternal" class="-mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ t('trip_detail.coordination.external_mode_hint') }}</p>
+
+              <div v-if="hireExternal" class="grid gap-3 rounded-xl border border-amber-200/80 bg-amber-50/50 p-3 dark:border-amber-900/40 dark:bg-amber-950/20">
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div class="min-w-0 flex-1">
+                    <Select v-model="providerChoice" :label="t('trip_detail.coordination.provider_select')" :placeholder="t('trip_detail.coordination.provider_placeholder')">
+                      <option value="">{{ t('trip_detail.coordination.provider_placeholder') }}</option>
+                      <option v-for="p in transportProviders" :key="p.id" :value="String(p.id)">
+                        {{ p.name }}<template v-if="p.type"> · {{ assignProviderTypeLabel(p.type) }}</template>
+                      </option>
+                    </Select>
+                  </div>
+                  <Button
+                    v-if="canQuickCreateProvider"
+                    type="button"
+                    variant="secondary"
+                    class="h-10 w-full shrink-0 sm:h-auto sm:w-auto sm:self-end"
+                    @click="openAssignProviderModal"
+                  >
+                    {{ t('trip_detail.coordination.provider_quick_add') }}
+                  </Button>
+                </div>
+                <Input v-model="externalVehicleRef" :label="t('trip_detail.coordination.external_vehicle')" :placeholder="t('trip_detail.coordination.external_vehicle_ph')" />
+                <Input v-model="externalDriverRef" :label="t('trip_detail.coordination.external_driver')" :placeholder="t('trip_detail.coordination.external_driver_ph')" />
+              </div>
+
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-300">{{ t('trip_detail.coordination.internal_notes') }}</label>
+                <textarea
+                  v-model="assignCoordinationNotes"
+                  rows="2"
+                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  :placeholder="t('trip_detail.coordination.internal_notes_ph')"
+                />
+              </div>
+
+              <p v-if="assignResourceHint" class="text-xs text-amber-900 dark:text-amber-200/90">{{ assignResourceHint }}</p>
+              <div
+                v-if="assignMsg"
+                class="rounded-lg border px-3 py-2 text-sm font-medium"
+                :class="
+                  assignFeedbackKind === 'success'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100'
+                    : 'border-rose-200 bg-rose-50 text-rose-950 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-100'
+                "
+              >
+                {{ assignMsg }}
+              </div>
+
+              <Button
+                type="button"
+                class="w-full !bg-sky-600 font-semibold hover:!bg-sky-700 disabled:opacity-60"
+                :loading="assignSaving"
+                :disabled="assignSaving || !assignFormReady"
+                :title="!assignFormReady ? t('trip_detail.coordination.assign_disabled_hint') : ''"
+                @click="submitCargoTripAssign"
+              >
+                {{ t('cargo_detail.assign_submit') }}
+              </Button>
             </div>
           </div>
+          <p v-else-if="shipment.trip_id && !tripForAssign && assignLoadError" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
+            {{ assignLoadError }}
+          </p>
+          <p v-else-if="shipment.trip_id && !canAssignTrip" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
+            {{ t('cargo_detail.assign_no_permission') }}
+          </p>
+          <p v-else-if="!shipment.trip_id" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+            {{ t('cargo_detail.assign_no_trip') }}
+          </p>
 
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
             <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
@@ -534,11 +644,38 @@
         </div>
       </div>
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="assignProviderModalOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        @click.self="assignProviderModalOpen = false"
+      >
+        <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-600 dark:bg-slate-900">
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('trip_detail.coordination.provider_modal_title') }}</h3>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('trip_detail.coordination.provider_modal_hint') }}</p>
+          <div class="mt-4 space-y-3">
+            <Input v-model="newAssignProviderName" :label="t('trip_detail.coordination.provider_modal_name')" :placeholder="t('trip_detail.coordination.provider_modal_name_ph')" />
+            <Select v-model="newAssignProviderType" :label="t('trip_detail.coordination.provider_modal_type')">
+              <option value="taxi">{{ t('resources.provider_form_type_taxi') }}</option>
+              <option value="vendor">{{ t('resources.provider_form_type_vendor') }}</option>
+            </Select>
+            <p v-if="assignProviderModalError" class="text-xs text-rose-600">{{ assignProviderModalError }}</p>
+          </div>
+          <div class="mt-5 flex justify-end gap-2">
+            <Button type="button" variant="secondary" @click="assignProviderModalOpen = false">{{ t('trip_detail.coordination.provider_modal_cancel') }}</Button>
+            <Button type="button" :loading="assignProviderCreating" @click="submitQuickAssignProvider">{{ t('trip_detail.coordination.provider_modal_save') }}</Button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -546,7 +683,6 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   ChevronLeftIcon,
-  ClipboardDocumentIcon,
   ClockIcon,
   CurrencyDollarIcon,
   DocumentIcon,
@@ -555,14 +691,19 @@ import {
   FolderIcon,
   MapIcon,
   MapPinIcon,
-  PrinterIcon,
   TruckIcon,
   UserIcon,
 } from '@heroicons/vue/24/outline'
 import FileUpload from '../../components/ui/FileUpload.vue'
+import Button from '../../components/ui/Button.vue'
+import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
 import { uploadCargoPod } from '../../api/attachments'
 import { listCostsForTrip } from '../../api/costs'
 import { getCargoShipment, getCargoShipmentTimeline, updateCargoStatus } from '../../api/cargo'
+import { addTripEvent, assignTrip, getTrip, listTrips } from '../../api/trips'
+import { listVehicles, listDrivers, listTransportProviders, createTransportProvider } from '../../api/operational'
+import { newIdempotencyKey } from '../../util/idempotency'
 import { labelCargoStatus } from '../../util/labels'
 import { useAuthStore } from '../../store'
 import { i18n } from '../../i18n'
@@ -581,10 +722,39 @@ const costItems = ref([])
 const costsLoading = ref(false)
 const costsForbidden = ref(false)
 const mapExpanded = ref(false)
-const publicPageUrl = ref('')
-const copyFeedback = ref(false)
 const statusSaving = ref(false)
 const statusError = ref('')
+
+const TRIP_ASSIGN_CONFLICT_STATUSES = ['assigned', 'driver_confirmed', 'in_progress']
+const canAssignTrip = computed(() => auth.hasPermission('trip.assign'))
+const canQuickCreateProvider = computed(() => auth.hasPermission('resource.provider.manage'))
+
+const tripForAssign = ref(null)
+const assignLoadError = ref('')
+const assignVehicles = ref([])
+const assignDrivers = ref([])
+const transportProviders = ref([])
+const sameDayTrips = ref([])
+const sameDayTripsLoading = ref(false)
+const sameDayTripsError = ref('')
+const assignResourceHint = ref('')
+const vehicleChoice = ref('')
+const driverChoice = ref('')
+const hireExternal = ref(false)
+const providerChoice = ref('')
+const externalVehicleRef = ref('')
+const externalDriverRef = ref('')
+const assignCoordinationNotes = ref('')
+const suppressAssignSync = ref(false)
+const needsAssignVehicleResync = ref(false)
+const assignSaving = ref(false)
+const assignMsg = ref('')
+const assignFeedbackKind = ref('')
+const assignProviderModalOpen = ref(false)
+const newAssignProviderName = ref('')
+const newAssignProviderType = ref('vendor')
+const assignProviderModalError = ref('')
+const assignProviderCreating = ref(false)
 
 const displayCode = computed(() => shipment.value?.tracking_code || '#' + shipment.value?.id)
 const requestId = computed(() => shipment.value?.dispatch_request_id ?? shipment.value?.dispatch_request?.id ?? null)
@@ -634,12 +804,6 @@ const embedMapSrc = computed(() => {
   return ''
 })
 
-const qrSrc = computed(() => {
-  const url = publicPageUrl.value
-  if (!url) return ''
-  return `https://api.qrserver.com/v1/create-qr-code/?size=132x132&margin=1&data=${encodeURIComponent(url)}`
-})
-
 const weightLabel = computed(() => {
   const g = shipment.value?.weight_grams
   if (g == null || g === '') return '—'
@@ -674,6 +838,433 @@ const slaBreached = computed(() => {
 
 const canUploadPod = computed(() => auth.hasPermission('cargo.manage'))
 const canManageCargo = computed(() => auth.hasPermission('cargo.manage'))
+
+const neededSeatsAssign = computed(() => 1)
+
+const canAssignResources = computed(() => {
+  if (!canAssignTrip.value || !shipment.value?.trip_id || !tripForAssign.value) return false
+  const tr = tripForAssign.value
+  if (['cancelled', 'completed'].includes(tr.status)) return false
+  if ((tr.payment_status ?? 'unpaid') === 'paid') return false
+  return true
+})
+
+function formatApiMessage(e) {
+  const d = e?.response?.data
+  if (typeof d?.message === 'string' && d.message.trim()) return d.message.trim()
+  if (d?.errors && typeof d.errors === 'object') {
+    const vals = Object.values(d.errors)
+      .flat()
+      .filter(Boolean)
+    if (vals.length) return String(vals[0])
+  }
+  return t('cargo_detail.quick_status_error')
+}
+
+function toLocalDateKey(iso) {
+  if (!iso) return ''
+  const x = new Date(iso)
+  if (Number.isNaN(x.getTime())) return ''
+  const y = x.getFullYear()
+  const m = String(x.getMonth() + 1).padStart(2, '0')
+  const day = String(x.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function tripPlannedEndForCargo(t) {
+  const dr = t?.dispatch_request
+  const endIso = t?.arrive_by ?? dr?.arrive_by
+  if (endIso) return new Date(endIso)
+  const s = new Date(t.depart_at)
+  return new Date(s.getTime() + 2 * 60 * 60 * 1000)
+}
+
+function tripIntervalsOverlap(aStart, aEnd, bStart, bEnd) {
+  return aStart < bEnd && bStart < aEnd
+}
+
+const scheduleDateKeyForAssign = computed(() => {
+  if (!tripForAssign.value?.depart_at) return ''
+  return toLocalDateKey(tripForAssign.value.depart_at)
+})
+
+const assignScheduleWindow = computed(() => {
+  const tr = tripForAssign.value
+  if (!tr?.depart_at) return null
+  const start = new Date(tr.depart_at).getTime()
+  const end = tripPlannedEndForCargo(tr).getTime()
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null
+  return { start, end }
+})
+
+const assignBusyDriverIds = computed(() => {
+  const w = assignScheduleWindow.value
+  const cur = tripForAssign.value
+  if (!w || !cur?.id) return new Set()
+  const busy = new Set()
+  for (const o of sameDayTrips.value) {
+    if (!o?.id || o.id === cur.id) continue
+    if (!o.driver_id) continue
+    if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue
+    const oStart = new Date(o.depart_at).getTime()
+    const oEnd = tripPlannedEndForCargo(o).getTime()
+    if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) busy.add(o.driver_id)
+  }
+  return busy
+})
+
+const assignBusyVehicleIds = computed(() => {
+  const w = assignScheduleWindow.value
+  const cur = tripForAssign.value
+  if (!w || !cur?.id) return new Set()
+  const busy = new Set()
+  for (const o of sameDayTrips.value) {
+    if (!o?.id || o.id === cur.id) continue
+    if (!o.vehicle_id) continue
+    if (!TRIP_ASSIGN_CONFLICT_STATUSES.includes(o.status)) continue
+    const oStart = new Date(o.depart_at).getTime()
+    const oEnd = tripPlannedEndForCargo(o).getTime()
+    if (tripIntervalsOverlap(w.start, w.end, oStart, oEnd)) busy.add(o.vehicle_id)
+  }
+  return busy
+})
+
+function assignScheduleTimeRange(tr) {
+  const a = tr?.depart_at
+  const b = tr?.arrive_by ?? tr?.dispatch_request?.arrive_by
+  if (!a) return '—'
+  const l = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  const tStr = (iso) => (iso ? new Date(iso).toLocaleTimeString(l, { hour: '2-digit', minute: '2-digit' }) : '')
+  if (!b) return tStr(a)
+  return `${tStr(a)} – ${tStr(b)}`
+}
+
+const assignScheduleHint = computed(() => {
+  const tr = tripForAssign.value
+  if (!tr?.depart_at) return ''
+  const l = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  const d = new Date(tr.depart_at).toLocaleDateString(l, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const r = assignScheduleTimeRange(tr)
+  if (!r || r === '—') return d
+  return t('trip_detail.coordination.schedule_window_hint', { date: d, range: r })
+})
+
+const assignSuitableCount = computed(() => assignVehicles.value.filter((v) => (v.seat_count ?? 0) >= neededSeatsAssign.value).length)
+
+const assignSuitableHint = computed(() => {
+  const n = assignSuitableCount.value
+  if (!assignVehicles.value.length || n < 1) return ''
+  return t('trip_detail.coordination.suitable_vehicles', { n })
+})
+
+const assignReadySummary = computed(() => {
+  if (!tripForAssign.value) return ''
+  return t('trip_detail.coordination.ready_vehicles_summary', {
+    total: assignVehicles.value.length,
+    fit: assignSuitableCount.value,
+    need: neededSeatsAssign.value,
+  })
+})
+
+const assignBusyHint = computed(() => {
+  if (!assignBusyDriverIds.value.size && !assignBusyVehicleIds.value.size) return ''
+  return t('trip_detail.coordination.busy_resources_hint')
+})
+
+function isAssignDriverBusy(id) {
+  return assignBusyDriverIds.value.has(id)
+}
+
+function isAssignVehicleBusy(id) {
+  return assignBusyVehicleIds.value.has(id)
+}
+
+function assignDriverOptionLabel(d) {
+  const base = `${d.full_name}${d.phone ? ` · ${d.phone}` : ''}`
+  return isAssignDriverBusy(d.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
+}
+
+function assignDriverOptionTitle(id) {
+  return isAssignDriverBusy(id) ? t('trip_detail.coordination.option_busy_title_driver') : ''
+}
+
+function assignVehicleOptionLabel(v) {
+  const base = `${v.license_plate} · ${v.type ?? '—'}${v.seat_count ? ` (${v.seat_count})` : ''}`
+  return isAssignVehicleBusy(v.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
+}
+
+function assignVehicleOptionTitle(id) {
+  return isAssignVehicleBusy(id) ? t('trip_detail.coordination.option_busy_title_vehicle') : ''
+}
+
+function assignProviderTypeLabel(type) {
+  const t0 = String(type ?? '').toLowerCase()
+  if (t0 === 'taxi') return t('resources.provider_form_type_taxi')
+  if (t0 === 'vendor') return t('resources.provider_form_type_vendor')
+  return type ?? '—'
+}
+
+const sortedAssignDrivers = computed(() => {
+  const list = [...assignDrivers.value]
+  const busy = assignBusyDriverIds.value
+  const loc = locale.value === 'en' ? 'en' : 'vi'
+  list.sort((a, b) => {
+    const ab = busy.has(a.id) ? 1 : 0
+    const bb = busy.has(b.id) ? 1 : 0
+    if (ab !== bb) return ab - bb
+    return (a.full_name || '').localeCompare(b.full_name || '', loc, { sensitivity: 'base' })
+  })
+  return list
+})
+
+const sortedAssignVehicles = computed(() => {
+  const list = [...assignVehicles.value]
+  const busy = assignBusyVehicleIds.value
+  const need = neededSeatsAssign.value
+  const score = (v) => {
+    const seats = v.seat_count ?? 0
+    const fit = seats >= need ? 2 : 0
+    const free = busy.has(v.id) ? 0 : 1
+    return fit + free
+  }
+  list.sort((a, b) => {
+    const diff = score(b) - score(a)
+    if (diff !== 0) return diff
+    return (a.license_plate || '').localeCompare(b.license_plate || '', undefined, { numeric: true })
+  })
+  return list
+})
+
+const assignVehicleSeatsWarning = computed(() => {
+  if (hireExternal.value || !vehicleChoice.value) return ''
+  const v = assignVehicles.value.find((x) => String(x.id) === String(vehicleChoice.value))
+  if (!v) return ''
+  const n = v.seat_count ?? 0
+  if (n >= neededSeatsAssign.value) return ''
+  return t('trip_detail.coordination.vehicle_seats_warning', { n, need: neededSeatsAssign.value })
+})
+
+const assignFormReady = computed(() => {
+  if (!canAssignResources.value) return false
+  const hasExternal = hireExternal.value && providerChoice.value && String(providerChoice.value).trim() !== ''
+  const hasInternal = vehicleChoice.value && driverChoice.value
+  if (!hasInternal && !hasExternal) return false
+  if (hireExternal.value && !hasExternal) return false
+  if (!hireExternal.value && !hasInternal) return false
+  if (!hireExternal.value) {
+    if (driverChoice.value && assignBusyDriverIds.value.has(Number(driverChoice.value))) return false
+    if (vehicleChoice.value && assignBusyVehicleIds.value.has(Number(vehicleChoice.value))) return false
+    const v = assignVehicles.value.find((x) => String(x.id) === String(vehicleChoice.value))
+    if (v && (v.seat_count ?? 0) < neededSeatsAssign.value) return false
+  }
+  return true
+})
+
+function defaultVehicleIdForAssign(driverId) {
+  if (driverId == null || String(driverId).trim() === '') return null
+  const v = assignVehicles.value.find((x) => x.default_driver && String(x.default_driver.id) === String(driverId))
+  return v ? String(v.id) : null
+}
+
+function syncAssignVehicleToDriver() {
+  if (suppressAssignSync.value || hireExternal.value) return
+  const id = driverChoice.value
+  if (!id) {
+    needsAssignVehicleResync.value = false
+    return
+  }
+  const vid = defaultVehicleIdForAssign(id)
+  if (vid) {
+    vehicleChoice.value = vid
+    needsAssignVehicleResync.value = false
+  } else {
+    needsAssignVehicleResync.value = true
+  }
+}
+
+async function loadAssignResources() {
+  assignResourceHint.value = ''
+  try {
+    const [vr, dr, pr] = await Promise.allSettled([
+      listVehicles({ status: 'ready', per_page: 150 }),
+      listDrivers({ employment_status: 'active', availability_status: 'available', per_page: 150 }),
+      listTransportProviders({ is_active: true, per_page: 200 }),
+    ])
+    if (vr.status === 'fulfilled') assignVehicles.value = vr.value.items ?? []
+    else assignResourceHint.value = t('trip_detail.ops.messages.vehicles_load_failed')
+    if (dr.status === 'fulfilled') assignDrivers.value = dr.value.items ?? []
+    else assignResourceHint.value = assignResourceHint.value || t('trip_detail.ops.messages.drivers_load_failed')
+    if (pr.status === 'fulfilled') transportProviders.value = pr.value.items ?? []
+  } catch {
+    assignResourceHint.value = t('trip_detail.ops.messages.resources_load_failed')
+  }
+}
+
+async function loadSameDayTripsForCargo() {
+  const key = scheduleDateKeyForAssign.value
+  if (!tripForAssign.value?.id || !key) {
+    sameDayTrips.value = []
+    sameDayTripsError.value = ''
+    return
+  }
+  sameDayTripsLoading.value = true
+  sameDayTripsError.value = ''
+  try {
+    const merged = []
+    const seen = new Set()
+    let page = 1
+    let lastPage = 1
+    do {
+      const res = await listTrips({ from: key, to: key, per_page: 100, page })
+      const items = res.items ?? []
+      for (const x of items) {
+        if (x?.id != null && !seen.has(x.id)) {
+          seen.add(x.id)
+          merged.push(x)
+        }
+      }
+      lastPage = Number(res.meta?.last_page ?? 1)
+      page += 1
+    } while (page <= lastPage && page <= 30)
+    sameDayTrips.value = merged
+  } catch (e) {
+    sameDayTrips.value = []
+    sameDayTripsError.value = formatApiMessage(e)
+  } finally {
+    sameDayTripsLoading.value = false
+  }
+}
+
+async function loadTripForAssign() {
+  tripForAssign.value = null
+  assignLoadError.value = ''
+  assignMsg.value = ''
+  const tid = shipment.value?.trip_id
+  if (!tid || !canAssignTrip.value) return
+  try {
+    const data = await getTrip(tid)
+    tripForAssign.value = data
+    suppressAssignSync.value = true
+    try {
+      vehicleChoice.value = data.vehicle_id ? String(data.vehicle_id) : ''
+      driverChoice.value = data.driver_id ? String(data.driver_id) : ''
+      hireExternal.value = !!data.transport_provider_id
+      providerChoice.value = data.transport_provider_id ? String(data.transport_provider_id) : ''
+      externalVehicleRef.value = data.external_vehicle_ref ?? ''
+      externalDriverRef.value = data.external_driver_ref ?? ''
+      assignCoordinationNotes.value = ''
+      await nextTick()
+    } finally {
+      suppressAssignSync.value = false
+    }
+  } catch (e) {
+    assignLoadError.value = formatApiMessage(e)
+    tripForAssign.value = null
+  }
+}
+
+function openAssignProviderModal() {
+  assignProviderModalError.value = ''
+  newAssignProviderName.value = ''
+  newAssignProviderType.value = 'vendor'
+  assignProviderModalOpen.value = true
+}
+
+async function submitQuickAssignProvider() {
+  assignProviderModalError.value = ''
+  const name = newAssignProviderName.value.trim()
+  if (!name) {
+    assignProviderModalError.value = t('trip_detail.coordination.provider_modal_name_required')
+    return
+  }
+  assignProviderCreating.value = true
+  try {
+    const created = await createTransportProvider({ name, type: newAssignProviderType.value, is_active: true })
+    const pr = await listTransportProviders({ is_active: true, per_page: 200 })
+    transportProviders.value = pr.items ?? []
+    if (created?.id != null) providerChoice.value = String(created.id)
+    assignProviderModalOpen.value = false
+  } catch (e) {
+    assignProviderModalError.value = formatApiMessage(e)
+  } finally {
+    assignProviderCreating.value = false
+  }
+}
+
+async function submitCargoTripAssign() {
+  if (!tripForAssign.value || !shipment.value?.trip_id) return
+  assignMsg.value = ''
+  assignFeedbackKind.value = ''
+  const hasInternal = vehicleChoice.value && driverChoice.value
+  const hasExternal = hireExternal.value && providerChoice.value && String(providerChoice.value).trim() !== ''
+  if (!hasInternal && !hasExternal) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = t('trip_detail.coordination.validation_assign')
+    return
+  }
+  if (hireExternal.value && !hasExternal) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = t('trip_detail.coordination.validation_provider')
+    return
+  }
+  if (!hireExternal.value && !hasInternal) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = t('trip_detail.coordination.validation_assign')
+    return
+  }
+  if (!hireExternal.value) {
+    if (driverChoice.value && isAssignDriverBusy(Number(driverChoice.value))) {
+      assignFeedbackKind.value = 'error'
+      assignMsg.value = t('trip_detail.coordination.validation_busy_driver')
+      return
+    }
+    if (vehicleChoice.value && isAssignVehicleBusy(Number(vehicleChoice.value))) {
+      assignFeedbackKind.value = 'error'
+      assignMsg.value = t('trip_detail.coordination.validation_busy_vehicle')
+      return
+    }
+  }
+
+  assignSaving.value = true
+  try {
+    const lockVersion = tripForAssign.value.lock_version ?? 0
+    const payload = { lock_version: lockVersion }
+    if (hireExternal.value && hasExternal) {
+      payload.transport_provider_id = Number(providerChoice.value)
+      payload.vehicle_id = null
+      payload.driver_id = null
+    } else {
+      payload.transport_provider_id = null
+      if (vehicleChoice.value) payload.vehicle_id = Number(vehicleChoice.value)
+      if (driverChoice.value) payload.driver_id = Number(driverChoice.value)
+    }
+    if (externalVehicleRef.value?.trim()) payload.external_vehicle_ref = externalVehicleRef.value.trim()
+    else payload.external_vehicle_ref = null
+    if (externalDriverRef.value?.trim()) payload.external_driver_ref = externalDriverRef.value.trim()
+    else payload.external_driver_ref = null
+
+    await assignTrip(shipment.value.trip_id, payload, { idempotencyKey: newIdempotencyKey() })
+
+    const note = assignCoordinationNotes.value.trim()
+    if (note) {
+      try {
+        await addTripEvent(shipment.value.trip_id, { type: 'note', message: note })
+      } catch {
+        /* non-fatal */
+      }
+    }
+
+    assignFeedbackKind.value = 'success'
+    assignMsg.value = t('trip_detail.coordination.assign_success')
+    await reloadShipment()
+    await loadSameDayTripsForCargo()
+  } catch (e) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = formatApiMessage(e)
+  } finally {
+    assignSaving.value = false
+  }
+}
 
 const quickStatusActions = computed(() => {
   if (!canManageCargo.value || !shipment.value) return []
@@ -721,6 +1312,8 @@ async function applyQuickStatus(status, danger) {
     const next = res?.shipment
     if (next && typeof next === 'object') {
       shipment.value = { ...shipment.value, ...next }
+      await loadTripForAssign()
+      await loadAssignResources()
     } else {
       await reloadShipment()
     }
@@ -799,29 +1392,6 @@ function setDocumentTitle() {
   }
 }
 
-function setPublicPageUrl() {
-  if (typeof window === 'undefined') return
-  publicPageUrl.value = window.location.href
-}
-
-async function copyTrackingCode() {
-  const text = String(shipment.value?.tracking_code || shipment.value?.id || '')
-  if (!text) return
-  try {
-    await navigator.clipboard.writeText(text)
-    copyFeedback.value = true
-    window.setTimeout(() => {
-      copyFeedback.value = false
-    }, 2000)
-  } catch {
-    copyFeedback.value = false
-  }
-}
-
-function printPage() {
-  if (typeof window !== 'undefined') window.print()
-}
-
 async function loadCosts(tripId) {
   costsLoading.value = true
   costsForbidden.value = false
@@ -843,6 +1413,10 @@ async function reloadShipment() {
   const id = route.params.id
   const data = await getCargoShipment(id)
   shipment.value = data
+  const tid = shipment.value?.trip_id
+  if (tid) await loadCosts(tid)
+  await loadTripForAssign()
+  await loadAssignResources()
 }
 
 async function load() {
@@ -850,7 +1424,6 @@ async function load() {
   loadError.value = ''
   shipment.value = null
   timelineItems.value = []
-  setPublicPageUrl()
   try {
     await reloadShipment()
     const id = route.params.id
@@ -865,11 +1438,6 @@ async function load() {
       .finally(() => {
         timelineLoading.value = false
       })
-
-    const tid = shipment.value?.trip_id
-    if (tid) {
-      loadCosts(tid)
-    }
   } catch (e) {
     loadError.value = e?.response?.data?.message || t('cargo_detail.load_error')
   } finally {
@@ -883,8 +1451,32 @@ watch(
   { flush: 'post' },
 )
 
+watch(
+  () => [tripForAssign.value?.id, scheduleDateKeyForAssign.value],
+  async ([id, key]) => {
+    if (!id || !key) {
+      sameDayTrips.value = []
+      sameDayTripsError.value = ''
+      return
+    }
+    await loadSameDayTripsForCargo()
+  },
+  { flush: 'post' },
+)
+
+watch(hireExternal, (on) => {
+  if (!on) providerChoice.value = ''
+  if (on) needsAssignVehicleResync.value = false
+})
+
+watch(driverChoice, () => syncAssignVehicleToDriver(), { flush: 'sync' })
+
+watch(assignVehicles, () => {
+  if (!needsAssignVehicleResync.value) return
+  syncAssignVehicleToDriver()
+})
+
 onMounted(() => {
-  setPublicPageUrl()
   load()
 })
 

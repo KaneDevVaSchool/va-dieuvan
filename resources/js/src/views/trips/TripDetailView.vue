@@ -92,7 +92,7 @@
           </RouterLink>
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,30rem)] 2xl:grid-cols-[minmax(0,1fr)_32rem]">
+        <div class="grid gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,34rem)] 2xl:grid-cols-[minmax(0,1fr)_36rem]">
           <!-- Main column -->
           <div class="min-w-0 space-y-6">
             <!-- Overview -->
@@ -655,12 +655,12 @@
           </div>
 
           <!-- Sidebar -->
-          <div class="min-w-0 space-y-6 xl:max-w-none">
+          <div class="min-w-0 space-y-4 xl:max-w-none">
             <section
               class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden"
               :aria-label="t('trip_detail.coordination.title')"
             >
-              <div class="border-b border-slate-100/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/60 px-5 py-4 sm:px-6">
+              <div class="border-b border-slate-100/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/60 px-4 py-3 sm:px-4">
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="min-w-0">
                     <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.coordination.title') }}</h2>
@@ -680,10 +680,10 @@
                 </div>
               </div>
 
-              <div class="space-y-5 p-5 sm:p-6 xl:px-6">
+              <div class="space-y-4 p-4 sm:p-4">
                 <div
                   v-if="canRescheduleTrip"
-                  class="rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 to-white p-4 shadow-sm"
+                  class="rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 to-white p-3 shadow-sm"
                 >
                   <div class="text-xs font-bold uppercase tracking-wide text-indigo-900">{{ t('trip_detail.reschedule.title') }}</div>
                   <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.reschedule.hint') }}</p>
@@ -706,7 +706,7 @@
                 </div>
 
                 <div
-                  class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 shadow-sm"
+                  class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 shadow-sm"
                   :class="hireExternal ? 'pointer-events-none opacity-45' : ''"
                 >
                   <div class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ t('trip_detail.coordination.assign_pair_title') }}</div>
@@ -722,7 +722,6 @@
                   </p>
                   <p v-if="sameDayTripsLoading" class="mt-2 text-[11px] text-slate-500">{{ t('trip_detail.coordination.schedule_loading') }}</p>
                   <p v-if="sameDayTripsError" class="mt-2 text-[11px] text-rose-700">{{ sameDayTripsError }}</p>
-                  <p v-if="readyVehiclesSummary" class="mt-2 text-[11px] font-medium text-slate-600">{{ readyVehiclesSummary }}</p>
                   <p v-if="busyResourcesHint && !hireExternal" class="mt-2 text-[11px] text-amber-800">{{ busyResourcesHint }}</p>
                   <div class="mt-4 grid gap-4 sm:grid-cols-1">
                     <Select
@@ -760,7 +759,7 @@
                       </option>
                     </Select>
                   </div>
-                  <p v-if="suitableVehiclesHint" class="mt-3 text-xs font-medium text-emerald-800">{{ suitableVehiclesHint }}</p>
+                  <p v-if="suitableVehiclesHint" class="mt-2 text-xs font-medium text-emerald-800">{{ suitableVehiclesHint }}</p>
                   <p v-if="selectedVehicleSeatsWarning" class="mt-2 text-xs font-medium text-rose-700">{{ selectedVehicleSeatsWarning }}</p>
                 </div>
 
@@ -884,7 +883,7 @@
               </div>
             </section>
 
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.attachments.title') }}</h2>
                 <div v-if="canManageAttachments && trip.dispatch_request?.id" class="flex flex-wrap items-center gap-2">
@@ -936,7 +935,7 @@
               class="overflow-hidden rounded-2xl border border-slate-200/85 bg-white shadow-md shadow-slate-500/5 ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
             >
               <div
-                class="flex items-center gap-3 border-b border-slate-100/90 bg-gradient-to-r from-indigo-50/90 via-white to-violet-50/50 px-5 py-3.5 dark:from-indigo-950/40 dark:via-slate-900 dark:to-violet-950/30 dark:border-slate-700/80"
+                class="flex items-center gap-3 border-b border-slate-100/90 bg-gradient-to-r from-indigo-50/90 via-white to-violet-50/50 px-4 py-3 dark:from-indigo-950/40 dark:via-slate-900 dark:to-violet-950/30 dark:border-slate-700/80"
               >
                 <div
                   class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-950/70 dark:text-indigo-200"
@@ -945,7 +944,7 @@
                 </div>
                 <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">{{ t('trip_detail.timeline.title') }}</h2>
               </div>
-              <div class="p-5 sm:p-6">
+              <div class="p-4 sm:p-4">
                 <div v-if="timeline.length" class="relative">
                   <div
                     v-if="timeline.length > 1"
@@ -992,7 +991,7 @@
             </section>
 
             <!-- Dispatcher notes -->
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
               <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.title') }}</h2>
               <div class="mt-3 space-y-3">
                 <div v-if="tripRequestNotesFromUser" class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950">
@@ -2067,14 +2066,6 @@ const coordinationScheduleHint = computed(() => {
   const d = scheduleDateLong.value
   if (!r || r === '—') return d ? `${d}` : ''
   return t('trip_detail.coordination.schedule_window_hint', { date: d, range: r })
-})
-
-const readyVehiclesSummary = computed(() => {
-  if (!trip.value) return ''
-  const total = vehicles.value.length
-  const fit = suitableVehiclesCount.value
-  const need = neededSeats.value
-  return t('trip_detail.coordination.ready_vehicles_summary', { total, fit, need })
 })
 
 const busyResourcesHint = computed(() => {

@@ -939,6 +939,11 @@
         "card_docs": "Tài liệu đính kèm (POD)",
         "doc_download": "Tải xuống",
         "depart_prefix": "Khởi hành dự kiến:",
+        "assign_title": "Phân công tài xế & xe (chuyến)",
+        "assign_hint": "Cùng quy tắc như chi tiết chuyến: trùng lịch, thuà NCC, kiểm tra chỗ.",
+        "assign_submit": "Lưu phân công",
+        "assign_no_permission": "Cần quyền trip.assign để đổi phân công.",
+        "assign_no_trip": "Chưa có chuyến liên kết với đơn này.",
         "load_error": "Không tải được đơn hàng."
     },
     "requests_page": {
@@ -1257,7 +1262,7 @@
             "approve_transfer": "Phê duyệt & chuyển giao",
             "no_permission_status": "Bạn không có quyền đổi trạng thái chuyến.",
             "no_permission_assign": "Bạn không có quyền gán nguồn lực hoặc hủy chuyến.",
-            "suitable_vehicles": "{n} xe phù hợp sức chỗ trong danh sách sẵn sàng.",
+            "suitable_vehicles": "{n} chiếc xe phù hợp đã sẵn sàng.",
             "schedule_window_hint": "Khung giờ chuyến: {date} · {range}",
             "ready_vehicles_summary": "Xe sẵn sàng (danh sách): {total} · đủ chỗ chuyến này: {fit} xe (cần ≥{need} ghế).",
             "busy_resources_hint": "Một số tài xế/xe không chọn được: đã có chuyến trùng khung giờ (đã gán / đang chạy).",

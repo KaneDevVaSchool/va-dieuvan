@@ -966,6 +966,11 @@
         "card_docs": "Attachments (POD)",
         "doc_download": "Download",
         "depart_prefix": "Scheduled departure:",
+        "assign_title": "Assign driver & vehicle (trip)",
+        "assign_hint": "Same rules as trip detail: schedule conflicts, taxi/NCC hire, seat capacity.",
+        "assign_submit": "Save assignment",
+        "assign_no_permission": "You need trip.assign to change assignment.",
+        "assign_no_trip": "No trip is linked to this shipment yet.",
         "load_error": "Could not load shipment."
     },
     "requests_page": {
@@ -1284,7 +1289,7 @@
             "approve_transfer": "Approve & hand off",
             "no_permission_status": "You cannot change trip status.",
             "no_permission_assign": "You cannot assign resources or cancel this trip.",
-            "suitable_vehicles": "{n} vehicles in the ready list meet seat capacity.",
+            "suitable_vehicles": "{n} suitable vehicles ready.",
             "schedule_window_hint": "Trip window: {date} · {range}",
             "ready_vehicles_summary": "Ready fleet (this list): {total} · enough seats for this trip: {fit} (need ≥{need} seats).",
             "busy_resources_hint": "Some drivers/vehicles are unavailable: they already have an overlapping trip (assigned / in progress).",
