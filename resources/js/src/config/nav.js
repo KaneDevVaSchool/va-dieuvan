@@ -160,3 +160,47 @@ export function flattenNavLeaves() {
   }
   return out
 }
+
+/**
+ * Cụm sidebar ↔ khóa công tắc (màn /system/feature-toggles).
+ * @returns {{ sectionKey: string|null, headingKey: string, features: { featureKey: string, links: { to: string, labelKey: string }[] }[] }[]}
+ */
+export function getFeatureToggleNavClusters() {
+  const clusters = []
+  for (const sec of NAV_SECTIONS) {
+    /** @type {string[]} */
+    const order = []
+    /** @type {Map<string, { to: string, labelKey: string }[]>} */
+    const byKey = new Map()
+
+    function pushLeaf(node) {
+      if (node.to && node.featureKey) {
+        const k = node.featureKey
+        if (!byKey.has(k)) {
+          byKey.set(k, [])
+          order.push(k)
+        }
+        byKey.get(k).push({ to: node.to, labelKey: node.labelKey })
+      }
+      if (node.children?.length) {
+        for (const c of node.children) pushLeaf(c)
+      }
+    }
+
+    for (const item of sec.items ?? []) {
+      pushLeaf(item)
+    }
+
+    if (order.length === 0) continue
+
+    clusters.push({
+      sectionKey: sec.sectionKey ?? null,
+      headingKey: sec.headingKey ?? 'nav.group_overview',
+      features: order.map((featureKey) => ({
+        featureKey,
+        links: byKey.get(featureKey) ?? [],
+      })),
+    })
+  }
+  return clusters
+}

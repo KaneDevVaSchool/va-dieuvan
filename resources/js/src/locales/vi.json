@@ -182,6 +182,8 @@
         "filter_label": "Lọc danh sách",
         "filter_ph": "Tên, mã hoặc nhóm…",
         "empty_filtered": "Không có mục khớp bộ lọc.",
+        "cluster_title": "Cụm trên menu (tham chiếu)",
+        "cluster_intro": "Theo từng khối sidebar: một mã công tắc có thể gắn nhiều đường dẫn.",
         "loading": "Đang tải…",
         "table_title": "Công tắc",
         "col_name": "Tên",

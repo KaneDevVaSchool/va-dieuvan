@@ -167,6 +167,45 @@
         </div>
       </template>
     </Card>
+
+    <Card :title="t('feature_toggles.cluster_title')">
+      <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">
+        {{ t('feature_toggles.cluster_intro') }}
+      </p>
+      <div class="space-y-4">
+        <section
+          v-for="(cl, ci) in navClusters"
+          :key="'cl' + ci"
+          class="overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900/30"
+        >
+          <h3 class="border-b border-slate-200/80 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-900 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100">
+            {{ t(cl.headingKey) }}
+          </h3>
+          <div class="divide-y divide-slate-200/80 dark:divide-slate-700">
+            <div
+              v-for="feat in cl.features"
+              :key="feat.featureKey + cl.headingKey"
+              class="px-3 py-2.5 sm:px-4"
+            >
+              <div class="font-mono text-[11px] font-medium text-teal-800 dark:text-teal-200/95">
+                {{ feat.featureKey }}
+              </div>
+              <ul class="mt-1.5 space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <li
+                  v-for="(ln, li) in feat.links"
+                  :key="li + ln.to"
+                  class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
+                >
+                  <span>{{ t(ln.labelKey) }}</span>
+                  <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+                  <code class="rounded bg-slate-200/60 px-1 py-px text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ ln.to }}</code>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </Card>
   </div>
 </template>
 
@@ -177,6 +216,7 @@ import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
+import { getFeatureToggleNavClusters } from '../../config/nav'
 import { SEED_FEATURE_TOGGLE_PRESETS } from '../../config/systemSeedOptions'
 import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
@@ -186,6 +226,8 @@ import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
 const auth = useAuthStore()
+
+const navClusters = getFeatureToggleNavClusters()
 
 async function syncSessionFromServer() {
   if (!auth.isLoggedIn) return
