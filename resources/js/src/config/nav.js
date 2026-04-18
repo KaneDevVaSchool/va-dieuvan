@@ -48,7 +48,7 @@ export const NAV_SECTIONS = [
         badgeKey: 'cargo_sla_breaches',
         featureKey: 'module.operations',
       },
-      { to: '/routes', labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.operations' },
+      { to: '/routes', labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.d2d_routes' },
       {
         to: '/resources/list',
         labelKey: 'nav.resources',

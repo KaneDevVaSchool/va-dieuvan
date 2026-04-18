@@ -163,7 +163,7 @@ const router = createRouter({
             meta: {
                 title: "Tuyến D2D",
                 subtitle: "Door-to-door",
-                featureKey: "module.operations",
+                featureKey: "module.d2d_routes",
             },
         },
         {

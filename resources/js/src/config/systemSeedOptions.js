@@ -49,7 +49,8 @@ export const SEED_PERMISSION_PRESETS = [
 
 export const SEED_FEATURE_TOGGLE_PRESETS = [
     { key: 'module.overview', name: 'Tổng quan & lịch', module: 'overview' },
-    { key: 'module.operations', name: 'Điều vận (yêu cầu, chuyến, D2D…)', module: 'operations' },
+    { key: 'module.operations', name: 'Điều vận (yêu cầu, chuyến, chi phí…)', module: 'operations' },
+    { key: 'module.d2d_routes', name: 'Tuyến D2D (/routes)', module: 'operations' },
     { key: 'module.finance', name: 'Kế toán / đối soát', module: 'finance' },
     { key: 'module.reports', name: 'Báo cáo', module: 'reports' },
     { key: 'module.pricing', name: 'Bảng giá tham chiếu', module: 'reports' },
