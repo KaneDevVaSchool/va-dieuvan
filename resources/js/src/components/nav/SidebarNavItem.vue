@@ -13,6 +13,13 @@
     />
     <span v-if="showLabel" :class="labelClass">{{ label }}</span>
     <span
+      v-if="statusPill"
+      :class="statusPillClass"
+      :title="statusPill"
+    >
+      {{ statusPill }}
+    </span>
+    <span
       v-if="badgeCount > 0"
       :class="badgeClass"
     >
@@ -33,6 +40,8 @@ const props = defineProps({
   fullLabel: { type: String, default: null },
   icon: { type: String, default: 'home' },
   badgeCount: { type: Number, default: 0 },
+  /** Mục đang bảo trì / đang phát triển (sidebar) */
+  statusPill: { type: String, default: '' },
   /** vertical-full | vertical-compact | horizontal | bottom */
   variant: {
     type: String,
@@ -72,6 +81,15 @@ const showTitle = computed(
 const linkTitle = computed(() => {
   if (!showTitle.value) return undefined
   return props.fullLabel || props.label
+})
+
+const statusPillClass = computed(() => {
+  const base =
+    'max-w-[6.5rem] shrink-0 truncate rounded border px-1 py-px text-[8px] font-semibold leading-tight sm:max-w-[7rem] sm:text-[9px]'
+  if (props.tone === 'brand') {
+    return `${base} border-amber-400/50 bg-amber-400/15 text-amber-100 dark:border-amber-300/40 dark:bg-amber-500/20 dark:text-amber-50`
+  }
+  return `${base} border-amber-300/70 bg-amber-50 text-amber-900 dark:border-amber-600/50 dark:bg-amber-950/50 dark:text-amber-100`
 })
 
 const iconClass = computed(() => {

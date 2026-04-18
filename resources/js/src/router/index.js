@@ -296,15 +296,8 @@ router.beforeEach(async (to) => {
         return { name: "login", query: { redirect: to.fullPath } };
     }
     if (to.meta.featureKey) {
-        const ft = auth.user?.feature_toggles;
         const k = to.meta.featureKey;
-        if (
-            !auth.user?.is_superadmin &&
-            ft &&
-            typeof ft === "object" &&
-            Object.prototype.hasOwnProperty.call(ft, k) &&
-            ft[k] !== true
-        ) {
+        if (!auth.isNavFeatureVisible(k)) {
             return { name: "dashboard" };
         }
     }

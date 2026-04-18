@@ -11,7 +11,7 @@ export function useNavSections() {
   const badges = ref({})
 
   function itemVisible(item) {
-    if (!auth.isFeatureEnabled(item.featureKey)) return false
+    if (!auth.isNavFeatureVisible(item.featureKey)) return false
     if (item.permissionKey && !auth.hasPermission(item.permissionKey)) return false
     return true
   }

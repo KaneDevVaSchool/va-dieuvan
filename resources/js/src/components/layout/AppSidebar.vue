@@ -65,6 +65,7 @@
                   :icon="item.icon"
                   :children="item.children"
                   :badge-count="badgeCount"
+                  :developing-label-for="navStatusPill"
                   tone="brand"
                   :open="flyoutOpenKey === subGroupKey(si, ii)"
                   @toggle="toggleFlyout(subGroupKey(si, ii))"
@@ -98,6 +99,7 @@
                       :label="t(c.labelKey)"
                       :icon="c.icon"
                       :badge-count="badgeCount(c)"
+                      :status-pill="navStatusPill(c)"
                       :variant="navVariant"
                       tone="brand"
                     />
@@ -110,6 +112,7 @@
                 :label="t(item.labelKey)"
                 :icon="item.icon"
                 :badge-count="badgeCount(item)"
+                :status-pill="navStatusPill(item)"
                 :variant="navVariant"
                 tone="brand"
               />
@@ -143,6 +146,7 @@
                     :icon="item.icon"
                     :children="item.children"
                     :badge-count="badgeCount"
+                    :developing-label-for="navStatusPill"
                     tone="brand"
                     :open="flyoutOpenKey === subGroupKey(si, ii)"
                     @toggle="toggleFlyout(subGroupKey(si, ii))"
@@ -160,6 +164,7 @@
                       :label="t(c.labelKey)"
                       :icon="c.icon"
                       :badge-count="badgeCount(c)"
+                      :status-pill="navStatusPill(c)"
                       :variant="navVariant"
                       tone="brand"
                     />
@@ -191,6 +196,7 @@
                         :label="t(c.labelKey)"
                         :icon="c.icon"
                         :badge-count="badgeCount(c)"
+                        :status-pill="navStatusPill(c)"
                         :variant="navVariant"
                         tone="brand"
                       />
@@ -203,6 +209,7 @@
                   :label="t(item.labelKey)"
                   :icon="item.icon"
                   :badge-count="badgeCount(item)"
+                  :status-pill="navStatusPill(item)"
                   :variant="navVariant"
                   tone="brand"
                 />
@@ -252,6 +259,7 @@
                 :full-label="t(item.labelKey)"
                 :items="item.children"
                 :badge-count="badgeCount"
+                :developing-label-for="navStatusPill"
                 :t="t"
               />
               <SidebarNavItem
@@ -261,6 +269,7 @@
                 :full-label="t(item.labelKey)"
                 :icon="item.icon"
                 :badge-count="badgeCount(item)"
+                :status-pill="navStatusPill(item)"
                 variant="horizontal"
               />
             </template>
@@ -273,6 +282,7 @@
               :full-label="t(section.headingKey)"
               :items="section.items"
               :badge-count="badgeCount"
+              :developing-label-for="navStatusPill"
               :t="t"
             />
             <HorizontalNavGroup
@@ -281,6 +291,7 @@
               :full-label="t(section.headingKey)"
               :items="section.items[0].children"
               :badge-count="badgeCount"
+              :developing-label-for="navStatusPill"
               :t="t"
             />
             <SidebarNavItem
@@ -291,6 +302,7 @@
               :full-label="t(section.items[0].labelKey)"
               :icon="section.items[0].icon"
               :badge-count="badgeCount(section.items[0])"
+              :status-pill="navStatusPill(section.items[0])"
               variant="horizontal"
             />
           </template>
@@ -318,9 +330,17 @@ import { useNavSections } from '../../composables/useNavSections'
 import { useNavBarLabel } from '../../composables/useNavBarLabel'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'
 import { useUiStore } from '../../store/ui'
+import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
 const route = useRoute()
+const auth = useAuthStore()
+
+function navStatusPill(navItem) {
+  if (!navItem?.featureKey) return ''
+  const st = auth.featureToggleRuntimeState(navItem.featureKey)
+  return st?.maintenance_mode ? t('nav.badge_developing') : ''
+}
 const navBarLabel = useNavBarLabel()
 const { sections, badgeCount } = useNavSections()
 const { axis, preferenceLabelKey } = useSidebarLayout()

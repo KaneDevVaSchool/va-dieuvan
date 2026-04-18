@@ -50,6 +50,12 @@
           />
           <span class="min-w-0 flex-1 truncate">{{ t(c.labelKey) }}</span>
           <span
+            v-if="developingLabelFor?.(c)"
+            class="max-w-[4.5rem] shrink-0 truncate rounded border border-amber-300/80 bg-amber-50 px-1 text-[9px] font-semibold text-amber-900 dark:border-amber-600/50 dark:bg-amber-950/50 dark:text-amber-100"
+          >
+            {{ developingLabelFor(c) }}
+          </span>
+          <span
             v-if="badgeCount(c) > 0"
             class="inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-rose-100 px-1 text-[10px] font-bold leading-none text-rose-800 dark:bg-rose-900/50 dark:text-rose-100"
           >
@@ -74,6 +80,8 @@ const props = defineProps({
   badgeCount: { type: Function, required: true },
   open: { type: Boolean, default: false },
   tone: { type: String, default: 'default', validator: (v) => ['default', 'brand'].includes(v) },
+  /** (navItem) => string */
+  developingLabelFor: { type: Function, default: null },
 })
 
 const emit = defineEmits(['toggle', 'close'])

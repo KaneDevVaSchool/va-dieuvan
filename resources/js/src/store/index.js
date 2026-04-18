@@ -89,5 +89,14 @@ export const useAuthStore = defineStore('auth', {
       if (!Object.prototype.hasOwnProperty.call(ft, featureKey)) return true
       return ft[featureKey] === true
     },
+    /** Menu + route: hiện khi bật tính năng hoặc đang đánh dấu bảo trì (đang phát triển). */
+    isNavFeatureVisible(featureKey) {
+      if (!featureKey) return true
+      if (!this.user) return false
+      if (this.user.is_superadmin) return true
+      const st = this.featureToggleRuntimeState(featureKey)
+      if (st?.maintenance_mode) return true
+      return this.isFeatureEnabled(featureKey)
+    },
   },
 })
