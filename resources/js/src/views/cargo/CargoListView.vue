@@ -339,6 +339,7 @@
             <div>
               <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.list_title') }}</h2>
               <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.list_live_hint') }}</p>
+              <p class="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">{{ t('cargo_page.list_live_hint_detail') }}</p>
             </div>
           </div>
           <div v-if="loading" class="p-6 text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.loading') }}</div>
@@ -354,119 +355,62 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-for="s in items" :key="s.id">
-                  <tr class="border-b border-slate-100 transition hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/30">
-                    <td class="px-4 py-3 font-mono text-xs text-slate-800 dark:text-slate-200">
+                <tr
+                  v-for="s in items"
+                  :key="s.id"
+                  class="border-b border-slate-100 transition hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/30"
+                >
+                  <td class="px-4 py-3 font-mono text-xs text-slate-800 dark:text-slate-200">
+                    <RouterLink
+                      :to="'/cargo/' + s.id"
+                      class="font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                    >
                       {{ s.tracking_code || '#' + s.id }}
-                    </td>
-                    <td class="max-w-[240px] px-4 py-3 text-slate-700 dark:text-slate-300">
+                    </RouterLink>
+                  </td>
+                  <td class="max-w-[240px] px-4 py-3 text-slate-700 dark:text-slate-300">
+                    <RouterLink :to="'/cargo/' + s.id" class="block hover:opacity-90">
                       <div class="truncate font-medium">{{ s.pickup_address || '—' }}</div>
                       <div class="truncate text-xs text-slate-500 dark:text-slate-400">→ {{ s.delivery_address || '—' }}</div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium" :class="cargoStatusPillClass(s.status)">
-                        {{ labelCargoStatus(s.status) }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 tabular-nums text-xs text-slate-600 dark:text-slate-400">
-                      {{ fmt(s.created_at) }}
-                      <div v-if="s.sla_due_at" class="mt-0.5 text-[11px] text-slate-500">
-                        {{ t('cargo_page.sla_prefix') }} {{ fmt(s.sla_due_at) }}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex flex-wrap gap-2">
-                        <RouterLink
-                          v-if="dispatchRequestId(s)"
-                          :to="'/requests/' + dispatchRequestId(s)"
-                          class="text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
-                        >
-                          {{ t('cargo_page.link_request') }}
-                        </RouterLink>
-                        <RouterLink
-                          v-if="s.trip_id"
-                          :to="'/trips/' + s.trip_id"
-                          class="text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
-                        >
-                          {{ t('cargo_page.link_trip') }}
-                        </RouterLink>
-                        <span v-if="!dispatchRequestId(s) && !s.trip_id" class="text-xs text-slate-400">—</span>
-                        <button
-                          type="button"
-                          class="text-xs font-medium text-slate-600 underline hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                          @click="toggleTimeline(s.id)"
-                        >
-                          {{ expandedId === s.id ? t('cargo_page.hide_timeline') : t('cargo_page.show_timeline') }}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr v-if="expandedId === s.id" class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30">
-                    <td colspan="5" class="px-4 py-4">
-                      <div v-if="timelineLoading[s.id]" class="text-xs text-slate-500 dark:text-slate-400">
-                        {{ t('cargo_page.timeline_loading') }}
-                      </div>
-                      <ul
-                        v-else-if="(timelineCache[s.id] ?? []).length"
-                        class="relative ml-2 space-y-4 border-l-2 border-slate-200 pl-4 dark:border-slate-600"
+                    </RouterLink>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium" :class="cargoStatusPillClass(s.status)">
+                      {{ labelCargoStatus(s.status) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 tabular-nums text-xs text-slate-600 dark:text-slate-400">
+                    {{ fmt(s.created_at) }}
+                    <div v-if="s.sla_due_at" class="mt-0.5 text-[11px] text-slate-500">
+                      {{ t('cargo_page.sla_prefix') }} {{ fmt(s.sla_due_at) }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex flex-wrap gap-2">
+                      <RouterLink
+                        :to="'/cargo/' + s.id"
+                        class="text-xs font-semibold text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
                       >
-                        <li v-for="(ev, idx) in timelineCache[s.id]" :key="`${s.id}-${idx}-${ev.at}`" class="relative">
-                          <span
-                            class="absolute -left-[calc(0.5rem+5px)] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-teal-600 dark:border-slate-900"
-                          />
-                          <div class="flex flex-wrap justify-between gap-2 text-xs">
-                            <span class="font-medium text-slate-800 dark:text-slate-200">{{ timelineTitle(ev) }}</span>
-                            <span class="text-slate-500 dark:text-slate-400">{{ fmt(ev.at) }}</span>
-                          </div>
-                          <div v-if="timelineSubtitle(ev)" class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                            {{ timelineSubtitle(ev) }}
-                          </div>
-                        </li>
-                      </ul>
-                      <p v-else class="text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.timeline_empty') }}</p>
-
-                      <div v-if="(s.attachments ?? []).length" class="mt-4 rounded-lg bg-white p-3 dark:bg-slate-800/40">
-                        <div class="text-xs font-medium text-slate-600 dark:text-slate-300">
-                          {{ t('cargo_page.pod_count', { n: s.attachments.length }) }}
-                        </div>
-                        <ul class="mt-2 space-y-3">
-                          <li
-                            v-for="pod in s.attachments"
-                            :key="pod.id"
-                            class="flex flex-wrap items-start gap-3 border-b border-slate-200 pb-3 last:border-0 last:pb-0 dark:border-slate-600"
-                          >
-                            <div class="min-w-0 flex-1">
-                              <a
-                                v-if="pod.url"
-                                :href="pod.url"
-                                target="_blank"
-                                rel="noopener"
-                                class="break-all text-sm font-medium text-slate-900 underline dark:text-slate-100"
-                              >
-                                {{ pod.original_name || t('cargo_page.open_pod') }}
-                              </a>
-                            </div>
-                            <img
-                              v-if="pod.mime_type?.startsWith('image/') && pod.url"
-                              :src="pod.url"
-                              alt=""
-                              class="max-h-28 max-w-[200px] rounded border object-cover"
-                            />
-                          </li>
-                        </ul>
-                      </div>
-                      <div v-else class="mt-4 text-xs text-slate-400 dark:text-slate-500">{{ t('cargo_page.no_pod') }}</div>
-                      <FileUpload
-                        :key="`pod-${s.id}`"
-                        class="mt-3"
-                        :label="t('cargo_page.upload_pod')"
-                        :hint="t('cargo_page.upload_pod_hint')"
-                        :upload-fn="(file, onProgress) => uploadCargoPod(s.id, file, onProgress)"
-                        @uploaded="reload"
-                      />
-                    </td>
-                  </tr>
-                </template>
+                        {{ t('cargo_page.link_detail') }}
+                      </RouterLink>
+                      <RouterLink
+                        v-if="dispatchRequestId(s)"
+                        :to="'/requests/' + dispatchRequestId(s)"
+                        class="text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                      >
+                        {{ t('cargo_page.link_request') }}
+                      </RouterLink>
+                      <RouterLink
+                        v-if="s.trip_id"
+                        :to="'/trips/' + s.trip_id"
+                        class="text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                      >
+                        {{ t('cargo_page.link_trip') }}
+                      </RouterLink>
+                      <span v-if="!dispatchRequestId(s) && !s.trip_id" class="text-xs text-slate-400">—</span>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
             <div v-if="!items.length" class="p-8 text-center text-slate-500 dark:text-slate-400">{{ t('cargo_page.empty') }}</div>
@@ -549,14 +493,12 @@ import {
   TruckIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
-import FileUpload from '../../components/ui/FileUpload.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
-import { uploadCargoPod } from '../../api/attachments'
-import { getCargoShipmentTimeline, listCargoShipments } from '../../api/cargo'
+import { listCargoShipments } from '../../api/cargo'
 import { labelCargoStatus } from '../../util/labels'
 
-const { t, te, locale } = useI18n()
+const { t, locale } = useI18n()
 
 const loading = ref(false)
 const kpiLoading = ref(false)
@@ -968,47 +910,6 @@ function cargoStatusPillClass(st) {
 
 function dispatchRequestId(s) {
   return s.dispatch_request_id ?? s.dispatch_request?.id ?? null
-}
-
-function timelineTitle(ev) {
-  if (ev.kind === 'milestone') {
-    const key = `labels.cargo_timeline.${ev.code}`
-    return te(key) ? t(key) : ev.code
-  }
-  const key = `labels.cargo_audit.${ev.code}`
-  return te(key) ? t(key) : ev.code
-}
-
-function timelineSubtitle(ev) {
-  if (ev.kind === 'milestone' && ev.detail) return ev.detail
-  if (ev.kind === 'audit' && ev.code === 'cargo.status_change' && ev.after?.status) {
-    const st = ev.after.status
-    const key = `labels.cargo_status.${st}`
-    return te(key) ? t(key) : st
-  }
-  return ''
-}
-
-const expandedId = ref(null)
-const timelineCache = reactive({})
-const timelineLoading = reactive({})
-
-async function toggleTimeline(id) {
-  if (expandedId.value === id) {
-    expandedId.value = null
-    return
-  }
-  expandedId.value = id
-  if (timelineCache[id]) return
-  timelineLoading[id] = true
-  try {
-    const data = await getCargoShipmentTimeline(id)
-    timelineCache[id] = data.items ?? []
-  } catch {
-    timelineCache[id] = []
-  } finally {
-    timelineLoading[id] = false
-  }
 }
 
 const sidebarAlerts = computed(() => {

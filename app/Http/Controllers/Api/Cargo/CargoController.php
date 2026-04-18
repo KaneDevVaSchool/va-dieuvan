@@ -78,7 +78,14 @@ class CargoController extends Controller
 
     public function show(ShowCargoShipmentRequest $request, CargoShipment $cargoShipment)
     {
-        $cargoShipment->load(['trip', 'dispatchRequest', 'attachments']);
+        $cargoShipment->load([
+            'trip.dispatcher:id,name,email',
+            'trip.driver:id,full_name,phone',
+            'trip.vehicle:id,license_plate,status',
+            'trip.transportProvider:id,name',
+            'dispatchRequest:id,status,trip_type,origin,destination,depart_at,arrive_by,notes,requester_id',
+            'attachments' => fn ($q) => $q->orderByDesc('id'),
+        ]);
 
         return $this->ok($cargoShipment);
     }

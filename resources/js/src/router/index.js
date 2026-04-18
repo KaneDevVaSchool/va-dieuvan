@@ -137,6 +137,16 @@ const router = createRouter({
             },
         },
         {
+            path: "/cargo/:id(\\d+)",
+            name: "cargoDetail",
+            component: () => import("../views/cargo/CargoDetailView.vue"),
+            meta: {
+                title: "Chi tiết đơn hàng",
+                subtitle: "Cargo",
+                featureKey: "module.operations",
+            },
+        },
+        {
             path: "/cargo",
             name: "cargo",
             component: () => import("../views/cargo/CargoListView.vue"),
