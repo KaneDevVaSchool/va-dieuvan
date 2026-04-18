@@ -16,10 +16,23 @@
             "sun": "Chủ nhật"
         },
         "trip_type": {
-            "door_to_door": { "label": "Đưa đón (Door-to-door)", "hint": "" },
-            "point_to_point": { "label": "Điểm — Điểm", "hint": "" },
-            "business": { "label": "Công tác", "hint": "" },
-            "cargo": { "label": "Hàng hóa", "hint": "", "badge": "SLA 3h" }
+            "door_to_door": {
+                "label": "Đưa đón (Door-to-door)",
+                "hint": "Xe chạy tuyến hoặc thuê theo lịch, đón trả tại địa chỉ cụ thể (học sinh, khách, sự kiện)."
+            },
+            "point_to_point": {
+                "label": "Điểm — Điểm",
+                "hint": "Chuyến giữa các điểm (dã ngoại, ngoại khóa): bảng hành khách, phân bổ mục tiêu, đính kèm căn cứ."
+            },
+            "business": {
+                "label": "Công tác",
+                "hint": "Đi công tác của cán bộ: lộ trình, giờ giấc và chi phí để bộ phận điều vận / thanh toán xử lý."
+            },
+            "cargo": {
+                "label": "Hàng hóa",
+                "hint": "Vận chuyển hàng hoá, thiết bị: kích thước, khối lượng, giờ lấy — giao; ưu tiên xử lý khi gấp.",
+                "badge": "SLA 3h"
+            }
         },
         "trip_short": {
             "door_to_door": "Đưa đón",

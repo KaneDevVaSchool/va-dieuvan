@@ -16,10 +16,23 @@
             "sun": "Sun"
         },
         "trip_type": {
-            "door_to_door": { "label": "Door-to-door (D2D)", "hint": "" },
-            "point_to_point": { "label": "Point — point", "hint": "" },
-            "business": { "label": "Business trip", "hint": "" },
-            "cargo": { "label": "Cargo", "hint": "", "badge": "SLA 3h" }
+            "door_to_door": {
+                "label": "Door-to-door (D2D)",
+                "hint": "Scheduled shuttles or charters with fixed pickup and drop-off addresses (students, guests, events)."
+            },
+            "point_to_point": {
+                "label": "Point — point",
+                "hint": "Trips between places (field trips, extracurriculars): passenger table, allocation targets, and attachments as needed."
+            },
+            "business": {
+                "label": "Business trip",
+                "hint": "Official travel for staff: routes, times, and cost lines for reimbursement / dispatch planning."
+            },
+            "cargo": {
+                "label": "Cargo",
+                "hint": "Moving goods or equipment: dimensions, pickup and delivery windows; priority handling for urgent requests.",
+                "badge": "SLA 3h"
+            }
         },
         "trip_short": {
             "door_to_door": "D2D",
