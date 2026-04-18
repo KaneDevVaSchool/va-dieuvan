@@ -216,6 +216,10 @@
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_paper') }}</span>
               <span class="font-medium">{{ labelPaperStatus(filters.paper_status) }}</span>
             </li>
+            <li v-if="filters.sort && filters.sort !== 'created_desc'" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.sort_label') }}</span>
+              <span class="font-medium">{{ sortLabel(filters.sort) }}</span>
+            </li>
             <li v-if="filters.priority === 'urgent'" class="flex justify-between gap-2">
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_priority') }}</span>
               <span class="font-medium">{{ t('requests_page.filter_priority_urgent') }}</span>
@@ -494,7 +498,43 @@
             </button>
           </template>
         </div>
-        <details ref="columnPickerRef" class="relative ml-auto shrink-0">
+        <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <label class="flex items-center gap-1.5 text-xs text-slate-600">
+            <span class="hidden sm:inline">{{ t('requests_page.sort_label') }}</span>
+            <select
+              :value="filters.sort"
+              class="h-9 max-w-[11rem] rounded-md border-0 bg-white px-2 text-xs font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              @change="onSortChange($event.target.value)"
+            >
+              <option v-for="opt in sortSelectOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </label>
+          <button
+            type="button"
+            class="inline-flex h-9 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+            :disabled="!items.length || loading"
+            @click="exportRequestsCsv"
+          >
+            <ArrowDownTrayIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
+            <span class="hidden sm:inline">{{ t('requests_page.export_csv') }}</span>
+          </button>
+          <button
+            type="button"
+            class="hidden h-9 items-center rounded-md border border-violet-200 bg-violet-50 px-2 text-xs font-medium text-violet-900 hover:bg-violet-100 sm:inline-flex"
+            @click="saveFilterPreset"
+          >
+            {{ t('requests_page.save_filter_preset') }}
+          </button>
+          <button
+            type="button"
+            class="hidden h-9 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:inline-flex"
+            @click="loadFilterPreset"
+          >
+            {{ t('requests_page.load_filter_preset') }}
+          </button>
+        <details ref="columnPickerRef" class="relative shrink-0">
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 [&::-webkit-details-marker]:hidden"
           >
@@ -523,13 +563,33 @@
             </ul>
           </div>
         </details>
+        </div>
       </div>
 
-      <div v-if="loading" class="p-8 text-center text-sm text-slate-500">{{ t('requests_page.loading') }}</div>
-      <div v-else-if="!items.length" class="p-8 text-center text-sm text-slate-500">
-        {{ isTrashTab ? t('requests_page.empty_trash') : t('requests_page.empty') }}
+      <div v-if="loading" class="border-t border-slate-100 px-4 py-5">
+        <div class="mb-3 h-4 w-40 animate-pulse rounded bg-slate-100" />
+        <div class="space-y-2">
+          <div v-for="n in 7" :key="n" class="h-11 animate-pulse rounded-lg bg-slate-100" />
+        </div>
       </div>
-      <div v-else class="overflow-x-auto">
+      <div v-else-if="!items.length" class="border-t border-slate-100 px-4 py-10 text-center">
+        <p class="text-sm text-slate-500">
+          {{ isTrashTab ? t('requests_page.empty_trash') : t('requests_page.empty') }}
+        </p>
+        <p v-if="emptyStateShowReset" class="mt-2 text-xs text-slate-400">
+          {{ t('requests_page.empty_reset_hint') }}
+        </p>
+        <button
+          v-if="emptyStateShowReset"
+          type="button"
+          class="mt-4 inline-flex items-center justify-center rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-900 hover:bg-teal-100"
+          @click="resetFilters"
+        >
+          {{ t('requests_page.empty_clear_filters') }}
+        </button>
+      </div>
+      <div v-else>
+        <div class="hidden overflow-x-auto md:block">
         <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead class="bg-slate-50/80">
             <tr>
@@ -582,11 +642,7 @@
               v-for="r in items"
               :key="r.id"
               class="transition"
-              :class="
-                isTrashTab
-                  ? 'border-l-2 border-l-slate-300 bg-slate-50/90 text-slate-500'
-                  : 'hover:bg-slate-50/80'
-              "
+              :class="requestRowClass(r)"
             >
               <td v-if="canBulkTrash" class="px-3 py-3 align-top" :class="isTrashTab ? 'text-slate-700' : ''">
                 <input
@@ -603,8 +659,13 @@
                   class="group block max-w-fit rounded-md outline-none ring-teal-500/40 focus-visible:ring-2"
                 >
                   <div
-                    class="font-semibold text-slate-900 decoration-teal-600/80 underline-offset-2 group-hover:text-teal-700 group-hover:underline"
+                    class="flex items-center gap-1.5 font-semibold text-slate-900 decoration-teal-600/80 underline-offset-2 group-hover:text-teal-700 group-hover:underline"
                   >
+                    <ExclamationTriangleIcon
+                      v-if="r.is_urgent"
+                      class="h-4 w-4 shrink-0 text-amber-600"
+                      aria-hidden="true"
+                    />
                     REQ-{{ r.id }}
                   </div>
                   <div class="text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
@@ -730,9 +791,40 @@
             </tr>
           </tbody>
         </table>
+        </div>
+
+        <ul class="divide-y divide-slate-100 md:hidden" role="list">
+          <li v-for="r in items" :key="`m-${r.id}`" class="px-4 py-3" :class="requestRowClass(r)">
+            <RouterLink :to="`/requests/${r.id}`" class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 font-semibold text-slate-900">
+                  <ExclamationTriangleIcon
+                    v-if="r.is_urgent"
+                    class="h-4 w-4 shrink-0 text-amber-600"
+                    aria-hidden="true"
+                  />
+                  REQ-{{ r.id }}
+                </div>
+                <div class="mt-0.5 text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
+                <div class="mt-1 truncate text-sm text-slate-800">
+                  {{ (r.origin ?? '—') + ' → ' + (r.destination ?? '—') }}
+                </div>
+              </div>
+              <span
+                class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                :class="badgeClass(r.status)"
+              >
+                {{ labelRequestStatus(r.status) }}
+              </span>
+            </RouterLink>
+          </li>
+        </ul>
       </div>
 
-      <div class="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        v-if="!loading && items.length"
+        class="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-slate-200/90 bg-white/95 px-4 py-3 shadow-[0_-4px_12px_-4px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+      >
         <p class="text-sm text-slate-500">
           {{
             t('requests_page.pagination_summary', {
@@ -873,6 +965,7 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  ArrowDownTrayIcon,
   ArrowPathIcon,
   ArrowTrendingUpIcon,
   TrashIcon,
@@ -905,7 +998,7 @@ import {
   bulkSoftDeleteRequests,
   listRequests,
 } from '../../api/requests'
-import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import {
   labelPaperStatus,
@@ -1036,6 +1129,20 @@ function canDeleteRow(r) {
 
 const isTrashTab = computed(() => activeTab.value === 'trash')
 
+/** Hàng gấp: viền trái + nền cảnh báo (cột Gấp có thể tắt). */
+function requestRowClass(r) {
+  if (isTrashTab.value) {
+    if (r.is_urgent) {
+      return 'border-l-4 border-l-amber-500 bg-amber-50/60 text-slate-700'
+    }
+    return 'border-l-2 border-l-slate-300 bg-slate-50/90 text-slate-500'
+  }
+  if (r.is_urgent) {
+    return 'border-l-4 border-l-amber-500 bg-amber-50/60 hover:bg-amber-50/90'
+  }
+  return 'hover:bg-slate-50/80'
+}
+
 const selectableIdsOnPage = computed(() => {
   if (!canBulkTrash.value) return []
   if (isTrashTab.value) return items.value.map((r) => r.id)
@@ -1069,6 +1176,8 @@ watch(items, () => {
   selectedIds.value = selectedIds.value.filter((id) => items.value.some((r) => r.id === id))
 })
 
+const REQUEST_SORT_VALUES = ['created_desc', 'created_asc', 'depart_desc', 'depart_asc', 'id_desc']
+
 const filters = reactive({
   q: '',
   trip_type: '',
@@ -1080,7 +1189,10 @@ const filters = reactive({
   sla_risk_only: false,
   per_page: 10,
   page: 1,
+  sort: 'created_desc',
 })
+
+const FILTER_PRESET_STORAGE_KEY = 'va-requests-filter-preset-v1'
 
 const activeFilterCount = computed(() => {
   let n = 0
@@ -1091,8 +1203,135 @@ const activeFilterCount = computed(() => {
   if (filters.priority === 'urgent') n++
   if (filters.sla_risk_only) n++
   if (filters.per_page !== 10) n++
+  if (filters.sort && filters.sort !== 'created_desc') n++
   return n
 })
+
+const emptyStateShowReset = computed(
+  () =>
+    !loading.value &&
+    !items.value.length &&
+    (activeFilterCount.value > 0 ||
+      searchInput.value.trim() !== '' ||
+      activeTab.value !== 'all' ||
+      (filters.sort && filters.sort !== 'created_desc')),
+)
+
+const sortSelectOptions = computed(() =>
+  REQUEST_SORT_VALUES.map((value) => ({
+    value,
+    label: sortLabel(value),
+  })),
+)
+
+function sortLabel(sortVal) {
+  const k = {
+    created_desc: 'requests_page.sort_created_desc',
+    created_asc: 'requests_page.sort_created_asc',
+    depart_desc: 'requests_page.sort_depart_desc',
+    depart_asc: 'requests_page.sort_depart_asc',
+    id_desc: 'requests_page.sort_id_desc',
+  }[sortVal]
+  return k ? t(k) : sortVal
+}
+
+function onSortChange(val) {
+  if (!REQUEST_SORT_VALUES.includes(val)) return
+  filters.sort = val
+  filters.page = 1
+  const q = { ...route.query }
+  if (val !== 'created_desc') q.sort = val
+  else delete q.sort
+  delete q.page
+  router.replace({ query: q })
+}
+
+function csvEscapeCell(val) {
+  const s = String(val ?? '')
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`
+  return s
+}
+
+function exportRequestsCsv() {
+  if (!items.value.length) return
+  const headers = [
+    t('requests_page.col_id'),
+    t('requests_page.col_trip'),
+    t('requests_page.col_timeline'),
+    t('requests_page.col_depart_at'),
+    t('requests_page.col_urgent'),
+    t('requests_page.col_type_channel'),
+  ]
+  const lines = [
+    headers.map(csvEscapeCell).join(','),
+    ...items.value.map((r) =>
+      [
+        csvEscapeCell(`REQ-${r.id}`),
+        csvEscapeCell(`${r.origin ?? '—'} → ${r.destination ?? '—'}`),
+        csvEscapeCell(labelRequestStatus(r.status)),
+        csvEscapeCell(formatDepartDate(r.depart_at)),
+        r.is_urgent ? '1' : '',
+        csvEscapeCell(`${labelTripType(r.trip_type)} / ${labelSourceChannel(r.source_channel)}`),
+      ].join(','),
+    ),
+  ]
+  const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `requests-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function saveFilterPreset() {
+  try {
+    const payload = {
+      trip_type: filters.trip_type,
+      source_channel: filters.source_channel,
+      paper_status: filters.paper_status,
+      from: filters.from,
+      to: filters.to,
+      priority: filters.priority,
+      sla_risk_only: filters.sla_risk_only,
+      per_page: filters.per_page,
+      sort: filters.sort,
+    }
+    localStorage.setItem(FILTER_PRESET_STORAGE_KEY, JSON.stringify(payload))
+    showAppSuccess(t('requests_page.preset_saved'))
+  } catch {
+    showAppError(t('requests_page.preset_save_failed'))
+  }
+}
+
+function loadFilterPreset() {
+  try {
+    const raw = localStorage.getItem(FILTER_PRESET_STORAGE_KEY)
+    if (!raw) {
+      showAppInfo(t('requests_page.preset_none'))
+      return
+    }
+    const o = JSON.parse(raw)
+    if (typeof o.trip_type === 'string') filters.trip_type = o.trip_type
+    if (typeof o.source_channel === 'string') filters.source_channel = o.source_channel
+    if (typeof o.paper_status === 'string') filters.paper_status = o.paper_status
+    if (typeof o.from === 'string') filters.from = o.from
+    if (typeof o.to === 'string') filters.to = o.to
+    if (typeof o.priority === 'string') filters.priority = o.priority
+    if (typeof o.sla_risk_only === 'boolean') filters.sla_risk_only = o.sla_risk_only
+    if (typeof o.per_page === 'number' && [10, 20, 50, 100].includes(o.per_page)) filters.per_page = o.per_page
+    if (typeof o.sort === 'string' && REQUEST_SORT_VALUES.includes(o.sort)) filters.sort = o.sort
+    filters.page = 1
+    const q = { ...route.query }
+    delete q.page
+    if (filters.sort !== 'created_desc') q.sort = filters.sort
+    else delete q.sort
+    router.replace({ query: q })
+    showAppSuccess(t('requests_page.preset_loaded'))
+  } catch {
+    showAppError(t('requests_page.preset_load_failed'))
+  }
+}
 
 const filterDepartSummary = computed(() => {
   if (!filters.from && !filters.to) return t('requests_page.all')
@@ -1343,13 +1582,23 @@ function buildListParams() {
   })
   if (params.sla_risk_only === false) delete params.sla_risk_only
   if (params.only_trashed === false) delete params.only_trashed
+  if (params.sort === 'created_desc') delete params.sort
 
   return params
 }
 
+function syncRoutePageAfterReset() {
+  if (!route.query.page) return
+  const q = { ...route.query }
+  delete q.page
+  router.replace({ query: q })
+}
+
 function onFilterChange() {
   filters.page = 1
-  reload()
+  const hadPage = !!route.query.page
+  syncRoutePageAfterReset()
+  if (!hadPage) reload()
 }
 
 function closeParentDetails(ev) {
@@ -1447,14 +1696,17 @@ async function submitBulkConfirm() {
 }
 
 function goPage(p) {
-  filters.page = p
-  reload()
+  const q = { ...route.query }
+  if (p <= 1) delete q.page
+  else q.page = String(p)
+  router.replace({ query: q })
 }
 
 function setTab(id) {
   activeTab.value = id
   filters.page = 1
   const q = { ...route.query }
+  delete q.page
   delete q.status
   delete q.trip_status
   delete q.trash
@@ -1469,7 +1721,9 @@ function setTab(id) {
 function toggleSla() {
   filters.sla_risk_only = !filters.sla_risk_only
   filters.page = 1
-  reload()
+  const hadPage = !!route.query.page
+  syncRoutePageAfterReset()
+  if (!hadPage) reload()
 }
 
 function resetFilters() {
@@ -1483,18 +1737,19 @@ function resetFilters() {
   filters.sla_risk_only = false
   filters.per_page = 10
   filters.page = 1
+  filters.sort = 'created_desc'
   searchInput.value = ''
   const hadQuery = Object.keys(route.query).length > 0
   router.replace({ query: {} })
-  if (!hadQuery) {
-    reload()
-  }
+  if (!hadQuery) reload()
 }
 
 function applySearchNow() {
   if (searchDebounce) clearTimeout(searchDebounce)
   filters.page = 1
-  reload()
+  const hadPage = !!route.query.page
+  syncRoutePageAfterReset()
+  if (!hadPage) reload()
 }
 
 function applyRouteQuery() {
@@ -1515,13 +1770,22 @@ function applyRouteQuery() {
   if (typeof q.q === 'string') {
     searchInput.value = q.q
   }
+  if (typeof q.sort === 'string' && REQUEST_SORT_VALUES.includes(q.sort)) {
+    filters.sort = q.sort
+  } else {
+    filters.sort = 'created_desc'
+  }
+  const pg = parseInt(q.page, 10)
+  filters.page = Number.isFinite(pg) && pg >= 1 ? pg : 1
 }
 
 function onSearchInput() {
   if (searchDebounce) clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => {
     filters.page = 1
-    reload()
+    const hadPage = !!route.query.page
+    syncRoutePageAfterReset()
+    if (!hadPage) reload()
   }, 400)
 }
 

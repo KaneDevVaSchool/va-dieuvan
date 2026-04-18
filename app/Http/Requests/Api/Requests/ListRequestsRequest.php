@@ -65,6 +65,13 @@ class ListRequestsRequest extends ApiFormRequest
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
             'only_trashed' => ['nullable', 'boolean'],
+            'sort' => ['nullable', 'string', Rule::in([
+                'created_desc',
+                'created_asc',
+                'depart_desc',
+                'depart_asc',
+                'id_desc',
+            ])],
         ];
     }
 }

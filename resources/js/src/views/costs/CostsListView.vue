@@ -1,128 +1,153 @@
 <template>
-  <div class="costs-page space-y-6 pb-12 text-slate-900">
-    <!-- KPI -->
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03]">
-        <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500">Tổng bản ghi</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{{ meta.total ?? 0 }}</p>
-        <p class="mt-0.5 text-[10px] text-slate-400">Theo bộ lọc và quyền truy cập</p>
-      </div>
-      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03]">
-        <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500">Đã gửi</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums text-amber-800">{{ countOnPage('submitted') }}</p>
-        <p class="mt-0.5 text-[10px] text-slate-400">Trang hiện tại</p>
-      </div>
-      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03]">
-        <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500">Đã xác nhận</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-800">{{ countOnPage('confirmed') }}</p>
-        <p class="mt-0.5 text-[10px] text-slate-400">Trang hiện tại</p>
-      </div>
-      <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03]">
-        <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500">Từ chối</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums text-rose-800">{{ countOnPage('rejected') }}</p>
-        <p class="mt-0.5 text-[10px] text-slate-400">Trang hiện tại</p>
+  <div class="costs-page space-y-4 pb-12 text-slate-900 md:space-y-5 dark:text-slate-100">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+          {{ t('costs_page.hero_title') }}
+        </h1>
+        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+          {{ t('costs_page.hero_subtitle') }}
+        </p>
       </div>
     </div>
 
-    <!-- Filters: shared AppFilter* components -->
+    <section class="space-y-3" aria-labelledby="costs-section-kpis">
+      <h2 id="costs-section-kpis" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('costs_page.section_kpis') }}
+      </h2>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
+        >
+          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_total') }}</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-white">{{ meta.total ?? 0 }}</p>
+          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_total_hint') }}</p>
+        </div>
+        <div
+          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
+        >
+          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_submitted') }}</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums text-amber-800 dark:text-amber-300">{{ countOnPage('submitted') }}</p>
+          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_page_hint') }}</p>
+        </div>
+        <div
+          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
+        >
+          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_confirmed') }}</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-800 dark:text-emerald-300">{{ countOnPage('confirmed') }}</p>
+          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_page_hint') }}</p>
+        </div>
+        <div
+          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
+        >
+          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_rejected') }}</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums text-rose-800 dark:text-rose-300">{{ countOnPage('rejected') }}</p>
+          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_page_hint') }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-3" aria-labelledby="costs-section-filters">
+      <h2 id="costs-section-filters" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('costs_page.section_filters') }}
+      </h2>
+      <div class="relative z-40">
     <AppFilterBar>
-      <div class="flex flex-col gap-2">
-        <div class="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-2">
-          <div class="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-            <AppFilterFunnelMenu ref="filterMenuRef" class="shrink-0" :badge-count="activeFilterCount">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Bộ lọc đang áp dụng
-              </p>
+      <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <details ref="funnelDetailsRef" class="group relative">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+              <span
+                v-if="activeFilterCount > 0"
+                class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
+              >
+                {{ activeFilterCount }}
+              </span>
+            </span>
+            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
+          >
+            <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
+              {{ t('dashboard_analytics.filter_applied_title') }}
+            </p>
+            <div class="p-3 pt-2">
               <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                 <li v-if="filters.status" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">Trạng thái</span>
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
                   <span class="font-medium">{{ statusLabel(filters.status) }}</span>
                 </li>
                 <li v-if="filters.type" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">Loại chi phí</span>
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_cost_type') }}</span>
                   <span class="font-medium">{{ typeLabel(filters.type) }}</span>
                 </li>
                 <li v-if="filters.trip_id" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">Chuyến</span>
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip') }}</span>
                   <span class="max-w-[12rem] truncate text-right font-medium" :title="tripFilterSummaryFull">{{
                     tripFilterSummaryFull
                   }}</span>
                 </li>
                 <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">Ngày ghi nhận</span>
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_recorded_date') }}</span>
                   <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
                 </li>
                 <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">Số dòng/trang</span>
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}</span>
                   <span class="font-medium">{{ filters.per_page }}</span>
                 </li>
                 <li v-if="searchQ.trim()" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">Tìm nhanh</span>
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_search_page') }}</span>
                   <span class="max-w-[10rem] truncate font-medium" :title="searchQ">{{ searchQ }}</span>
                 </li>
-                <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">Chưa chọn điều kiện lọc.</li>
+                <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">{{ t('filter_bar.empty') }}</li>
               </ul>
+              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('trips_page.filter_show_controls_title') }}
+                </p>
+                <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                  {{ t('trips_page.filter_show_controls_hint') }}
+                </p>
+                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="fd in filterControlDefs" :key="'costs-vis-' + fd.id" class="flex items-start gap-2">
+                    <input
+                      :id="'costs-filter-vis-' + fd.id"
+                      v-model="filterControlVisible[fd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                    />
+                    <label
+                      :for="'costs-filter-vis-' + fd.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ fd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
               <button
                 type="button"
-                class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                @click="resetFilters(); closeFilterMenu()"
+                class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                @click="resetFilters()"
               >
-                Xóa tất cả bộ lọc
+                {{ t('dashboard_analytics.filter_clear_all') }}
               </button>
-            </AppFilterFunnelMenu>
-
-            <div class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-        <button
-          type="button"
-          class="shrink-0 rounded-lg border border-white/80 bg-white/90 px-2.5 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800"
-          :aria-expanded="costsFiltersExpanded"
-          :aria-controls="costsFiltersPanelId"
-          @click="costsFiltersExpanded = !costsFiltersExpanded"
-        >
-          {{ costsFiltersExpanded ? 'Ẩn bộ lọc' : 'Hiện bộ lọc' }}
-        </button>
+            </div>
           </div>
+        </details>
 
-        <div
-          class="flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
-        >
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            title="Xóa bộ lọc"
-            aria-label="Xóa bộ lọc"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon
-                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-              />
-            </span>
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35"
-            @click="openAddCostModal"
-          >
-            Thêm chi phí
-          </button>
-        </div>
-      </div>
+        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
-        <div
-          :id="costsFiltersPanelId"
-          v-show="costsFiltersExpanded"
-          class="flex min-w-0 flex-col gap-2 border-t border-violet-200/50 pt-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-2 sm:pt-2 dark:border-violet-900/30"
-        >
-        <div
-          class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:gap-2"
-        >
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
           <AppFilterDropdown
+            v-if="filterControlVisible.status"
             root-class="shrink-0"
-            label="Trạng thái"
-            :summary-text="filters.status ? statusLabel(filters.status) : 'Tất cả'"
+            :label="t('filter_bar.status')"
+            :summary-text="filters.status ? statusLabel(filters.status) : t('filter_bar.all')"
             summary-text-class="max-w-[10rem]"
             panel-class="min-w-[220px] py-1"
           >
@@ -145,9 +170,10 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
+            v-if="filterControlVisible.type"
             root-class="shrink-0"
-            label="Loại chi phí"
-            :summary-text="filters.type ? typeLabel(filters.type) : 'Tất cả'"
+            :label="t('costs_page.filter_cost_type')"
+            :summary-text="filters.type ? typeLabel(filters.type) : t('filter_bar.all')"
             summary-text-class="max-w-[10rem]"
             panel-class="min-w-[220px] py-1"
           >
@@ -170,8 +196,9 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
+            v-if="filterControlVisible.date"
             root-class="shrink-0"
-            label="Ngày ghi nhận"
+            :label="t('costs_page.filter_recorded_date')"
             :summary-text="filterDateSummary"
             full-width-summary
             panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
@@ -194,8 +221,9 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
+            v-if="filterControlVisible.trip"
             root-class="shrink-0"
-            label="Chuyến"
+            :label="t('costs_page.filter_trip')"
             :summary-text="tripFilterSummaryShort"
             :summary-title="tripFilterSummaryFull"
             summary-text-class="max-w-[11rem]"
@@ -205,7 +233,7 @@
               v-model="filterTripSearch"
               type="search"
               class="costs-input mb-2 h-9 w-full text-sm"
-              placeholder="Tìm mã trip, điểm đi hoặc điểm đến…"
+              :placeholder="t('costs_page.trip_search_ph')"
               autocomplete="off"
               @click.stop
             />
@@ -221,7 +249,7 @@
                   "
                   @click="applyFilterPatch($event, { trip_id: '' })"
                 >
-                  Tất cả chuyến
+                  {{ t('costs_page.trip_all') }}
                 </button>
               </li>
               <li v-for="tripRow in filteredTripsForFilter" :key="tripRow.id">
@@ -243,31 +271,32 @@
               v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForFilter.length"
               class="mt-2 text-[11px] text-amber-800 dark:text-amber-200"
             >
-              Không có chuyến khớp — xóa ô tìm hoặc chọn “Tất cả chuyến”.
+              {{ t('costs_page.trip_no_match') }}
             </p>
             <p v-else-if="tripsForModalLoading" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-              Đang tải danh sách chuyến…
+              {{ t('costs_page.trip_loading') }}
             </p>
             <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-              Không có chuyến trong phạm vi quyền.
+              {{ t('costs_page.trip_empty_scope') }}
             </p>
           </AppFilterDropdown>
 
           <input
+            v-if="filterControlVisible.search"
             v-model="searchQ"
             type="search"
-            aria-label="Tìm trong trang hiện tại"
-            placeholder="Tìm trong trang…"
-            title="Tìm trong trang hiện tại"
+            :aria-label="t('costs_page.filter_search_page')"
+            :placeholder="t('costs_page.filter_search_page') + '…'"
+            :title="t('costs_page.filter_search_page')"
             class="costs-input h-9 w-[9.5rem] shrink-0 text-sm sm:w-44"
           />
 
-          <label class="inline-flex shrink-0 items-center gap-1.5">
-            <span class="sr-only">Số dòng mỗi trang</span>
+          <label v-if="filterControlVisible.per_page" class="inline-flex shrink-0 items-center gap-1.5">
+            <span class="sr-only">{{ t('filter_bar.per_page') }}</span>
             <select
               v-model.number="filters.per_page"
               class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              aria-label="Số dòng mỗi trang"
+              :aria-label="t('filter_bar.per_page')"
               @change="onPerPageChange"
             >
               <option :value="10">10</option>
@@ -276,12 +305,40 @@
               <option :value="50">50</option>
               <option :value="100">100</option>
             </select>
-            <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline" aria-hidden="true">dòng</span>
+            <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('costs_page.per_page_unit') }}</span>
           </label>
         </div>
+
+        <div
+          class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
+        >
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+            :title="t('filter_bar.clear_icon')"
+            :aria-label="t('filter_bar.clear_icon')"
+            @click="resetFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon
+                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+              />
+            </span>
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
+            @click="openAddCostModal"
+          >
+            {{ t('costs_page.add_cost') }}
+          </button>
         </div>
       </div>
     </AppFilterBar>
+      </div>
+    </section>
+
 
     <!-- Bảng -->
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05]">
@@ -577,35 +634,43 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import { listTripCosts, submitTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd, formatVndDigitsInput } from '../../util/labels'
+
+const { t, te } = useI18n()
 
 const DEFAULT_PER_PAGE = 25
 
 const UNIT_LABEL = 'Chi phí vận hành'
 const LEGAL_ENTITY_PLACEHOLDER = '—'
 
-const TYPE_LABELS = {
-  fuel: 'Xăng / dầu',
-  toll: 'Phí cầu đường',
-  parking: 'Bãi xe',
-  other: 'Khác',
-}
-
 const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
 const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
-const COSTS_FILTERS_BAR_VISIBLE_KEY = 'va.costs.filters_bar_visible_v1'
+const COSTS_FILTER_CONTROL_VISIBILITY_KEY = 'va.costs.filter_control_visibility_v1'
+const FILTER_CONTROL_IDS = ['status', 'type', 'date', 'trip', 'search', 'per_page']
+
+function defaultFilterControlVisibility() {
+  return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, true]))
+}
 
 const extraCostTypes = ref([])
 
+function typeLabel(slug) {
+  if (!slug) return '—'
+  const key = `trip_detail.costs.type_${slug}`
+  if (te(key)) return t(key)
+  const hit = extraCostTypes.value.find((x) => x.slug === slug)
+  return hit?.label ?? slug
+}
+
 const modalCostTypeOptions = computed(() => {
-  const rows = BUILTIN_COST_TYPES.map((value) => ({ value, label: TYPE_LABELS[value] }))
+  const rows = BUILTIN_COST_TYPES.map((value) => ({ value, label: typeLabel(value) }))
   for (const x of extraCostTypes.value) {
     if (!rows.some((r) => r.value === x.slug)) {
       rows.push({ value: x.slug, label: x.label })
@@ -614,20 +679,22 @@ const modalCostTypeOptions = computed(() => {
   return rows
 })
 
-const STATUS_LABELS = {
-  draft: 'Nháp',
-  submitted: 'Đã gửi',
-  confirmed: 'Đã xác nhận',
-  rejected: 'Từ chối',
-}
-
 const loading = ref(false)
 const items = ref([])
 const meta = ref({})
 const searchQ = ref('')
-const filterMenuRef = ref(null)
-const costsFiltersPanelId = 'costs-filters-panel'
-const costsFiltersExpanded = ref(true)
+const funnelDetailsRef = ref(null)
+
+const filterControlVisible = reactive(defaultFilterControlVisibility())
+
+const filterControlDefs = computed(() => [
+  { id: 'status', label: t('filter_bar.status') },
+  { id: 'type', label: t('costs_page.filter_cost_type') },
+  { id: 'date', label: t('costs_page.filter_recorded_date') },
+  { id: 'trip', label: t('costs_page.filter_trip') },
+  { id: 'search', label: t('costs_page.filter_search_page') },
+  { id: 'per_page', label: t('filter_bar.per_page') },
+])
 
 const addCostModalOpen = ref(false)
 const tripPickerSearch = ref('')
@@ -665,30 +732,35 @@ watch(extraCostTypes, (v) => {
   }
 }, { deep: true })
 
-watch(costsFiltersExpanded, (v) => {
-  try {
-    localStorage.setItem(COSTS_FILTERS_BAR_VISIBLE_KEY, v ? '1' : '0')
-  } catch {
-    /* ignore */
-  }
+watch(
+  filterControlVisible,
+  (v) => {
+    try {
+      localStorage.setItem(COSTS_FILTER_CONTROL_VISIBILITY_KEY, JSON.stringify({ ...v }))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+const statusFilterOptions = computed(() => {
+  const fa = t('filter_bar.all')
+  const keys = ['draft', 'submitted', 'confirmed', 'rejected']
+  return [
+    { value: '', label: fa },
+    ...keys.map((value) => ({
+      value,
+      label: te(`dashboard_analytics.cost_status_${value}`) ? t(`dashboard_analytics.cost_status_${value}`) : value,
+    })),
+  ]
 })
 
-const statusFilterOptions = [
-  { value: '', label: 'Tất cả' },
-  { value: 'draft', label: STATUS_LABELS.draft },
-  { value: 'submitted', label: STATUS_LABELS.submitted },
-  { value: 'confirmed', label: STATUS_LABELS.confirmed },
-  { value: 'rejected', label: STATUS_LABELS.rejected },
-]
-
 const typeFilterOptions = computed(() => {
-  const rows = [
-    { value: '', label: 'Tất cả' },
-    { value: 'fuel', label: TYPE_LABELS.fuel },
-    { value: 'toll', label: TYPE_LABELS.toll },
-    { value: 'parking', label: TYPE_LABELS.parking },
-    { value: 'other', label: TYPE_LABELS.other },
-  ]
+  const rows = [{ value: '', label: t('filter_bar.all') }]
+  for (const value of BUILTIN_COST_TYPES) {
+    rows.push({ value, label: typeLabel(value) })
+  }
   for (const x of extraCostTypes.value) {
     if (!rows.some((r) => r.value === x.slug)) {
       rows.push({ value: x.slug, label: x.label })
@@ -709,15 +781,15 @@ const activeFilterCount = computed(() => {
 })
 
 const filterDateSummary = computed(() => {
-  if (!filters.from && !filters.to) return 'Tất cả'
+  if (!filters.from && !filters.to) return t('filter_bar.all')
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
-function tripMatchesSearch(t, qRaw) {
+function tripMatchesSearch(tripRow, qRaw) {
   const q = qRaw.trim().toLowerCase()
   if (!q) return true
-  const dr = t.dispatch_request ?? t.dispatchRequest
-  const id = String(t.id)
+  const dr = tripRow.dispatch_request ?? tripRow.dispatchRequest
+  const id = String(tripRow.id)
   const o = String(dr?.origin ?? '').toLowerCase()
   const d = String(dr?.destination ?? '').toLowerCase()
   return id.includes(q) || o.includes(q) || d.includes(q)
@@ -727,37 +799,37 @@ const filteredTripsForPicker = computed(() => {
   const q = tripPickerSearch.value
   const list = tripOptionsRaw.value
   if (!q.trim()) return list
-  return list.filter((t) => tripMatchesSearch(t, q))
+  return list.filter((tripRow) => tripMatchesSearch(tripRow, q))
 })
 
 const filteredTripsForFilter = computed(() => {
   const q = filterTripSearch.value
   const list = tripOptionsRaw.value
   if (!q.trim()) return list
-  return list.filter((t) => tripMatchesSearch(t, q))
+  return list.filter((tripRow) => tripMatchesSearch(tripRow, q))
 })
 
 const selectedFilterTrip = computed(() => {
   if (!filters.trip_id) return null
   const id = Number(filters.trip_id)
   if (!Number.isFinite(id)) return null
-  return tripOptionsRaw.value.find((t) => Number(t.id) === id) ?? null
+  return tripOptionsRaw.value.find((tripRow) => Number(tripRow.id) === id) ?? null
 })
 
 const tripFilterSummaryFull = computed(() => {
-  if (!filters.trip_id) return 'Tất cả chuyến'
-  const t = selectedFilterTrip.value
-  return t ? formatTripPickerLabel(t) : `Chuyến #${filters.trip_id}`
+  if (!filters.trip_id) return t('costs_page.trip_all')
+  const tr = selectedFilterTrip.value
+  return tr ? formatTripPickerLabel(tr) : `Chuyến #${filters.trip_id}`
 })
 
 const tripFilterSummaryShort = computed(() => {
-  if (!filters.trip_id) return 'Tất cả'
-  const t = selectedFilterTrip.value
-  if (t) {
-    const dr = t.dispatch_request ?? t.dispatchRequest
+  if (!filters.trip_id) return t('filter_bar.all')
+  const tr = selectedFilterTrip.value
+  if (tr) {
+    const dr = tr.dispatch_request ?? tr.dispatchRequest
     const o = (dr?.origin ?? '—').trim().slice(0, 22)
     const d = (dr?.destination ?? '—').trim().slice(0, 22)
-    return `#${t.id} · ${o} → ${d}`
+    return `#${tr.id} · ${o} → ${d}`
   }
   return `#${filters.trip_id}`
 })
@@ -782,13 +854,6 @@ function rowIndex(idx) {
 
 function countOnPage(status) {
   return items.value.filter((c) => c.status === status).length
-}
-
-function typeLabel(t) {
-  if (!t) return '—'
-  if (TYPE_LABELS[t]) return TYPE_LABELS[t]
-  const hit = extraCostTypes.value.find((x) => x.slug === t)
-  return hit?.label ?? t
 }
 
 function loadExtraCostTypesFromStorage() {
@@ -854,7 +919,9 @@ function onCostAmountInput(e) {
 }
 
 function statusLabel(s) {
-  return STATUS_LABELS[s] ?? s ?? '—'
+  if (!s) return '—'
+  const key = `dashboard_analytics.cost_status_${s}`
+  return te(key) ? t(key) : s
 }
 
 function formatDateDMY(iso) {
@@ -937,8 +1004,9 @@ function closeParentDetails(ev) {
   if (d) d.open = false
 }
 
-function closeFilterMenu() {
-  filterMenuRef.value?.close?.()
+function closeFunnelMenu() {
+  const el = funnelDetailsRef.value
+  if (el && 'open' in el) el.open = false
 }
 
 function applyFilterPatch(ev, patch) {
@@ -969,6 +1037,7 @@ function resetFilters() {
   filters.per_page = DEFAULT_PER_PAGE
   searchQ.value = ''
   filterTripSearch.value = ''
+  closeFunnelMenu()
   reload()
 }
 
@@ -1026,14 +1095,23 @@ async function submitCost() {
   }
 }
 
-onMounted(async () => {
+function loadFilterControlVisibility() {
   try {
-    const v = localStorage.getItem(COSTS_FILTERS_BAR_VISIBLE_KEY)
-    if (v === '0') costsFiltersExpanded.value = false
-    else if (v === '1') costsFiltersExpanded.value = true
+    const raw = localStorage.getItem(COSTS_FILTER_CONTROL_VISIBILITY_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    const base = defaultFilterControlVisibility()
+    for (const id of FILTER_CONTROL_IDS) {
+      if (typeof o[id] === 'boolean') base[id] = o[id]
+    }
+    Object.assign(filterControlVisible, base)
   } catch {
     /* ignore */
   }
+}
+
+onMounted(async () => {
+  loadFilterControlVisibility()
   loadExtraCostTypesFromStorage()
   await loadTripPickerOptions()
   await reload()

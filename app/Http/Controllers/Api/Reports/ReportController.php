@@ -92,17 +92,33 @@ class ReportController extends Controller
     {
         $data = $request->validated();
 
-        $from = isset($data['from']) ? Carbon::parse($data['from'])->startOfDay() : now()->startOfMonth();
-        $to = isset($data['to']) ? Carbon::parse($data['to'])->endOfDay() : now()->endOfDay();
+        $fromRaw = $data['from'] ?? null;
+        $toRaw = $data['to'] ?? null;
+        $hasFrom = $fromRaw !== null && $fromRaw !== '';
+        $hasTo = $toRaw !== null && $toRaw !== '';
+        $dateBounded = $hasFrom || $hasTo;
 
-        $tripBase = Trip::query()->whereBetween('trips.depart_at', [$from, $to]);
+        if ($dateBounded) {
+            $from = $hasFrom ? Carbon::parse($fromRaw)->startOfDay() : now()->startOfMonth();
+            $to = $hasTo ? Carbon::parse($toRaw)->endOfDay() : now()->endOfDay();
+        } else {
+            $from = null;
+            $to = null;
+        }
+
+        $tripBase = Trip::query();
+        if ($dateBounded) {
+            $tripBase->whereBetween('trips.depart_at', [$from, $to]);
+        }
         $this->applyTripSummaryFilters($tripBase, $data);
 
         $costBase = TripCost::query()
-            ->whereBetween('trip_costs.created_at', [$from, $to])
             ->whereHas('trip', function (Builder $t) use ($data) {
                 $this->applyTripSummaryFilters($t, $data);
             });
+        if ($dateBounded) {
+            $costBase->whereBetween('trip_costs.created_at', [$from, $to]);
+        }
 
         $tripsByStatus = $tripBase
             ->clone()
@@ -143,7 +159,7 @@ class ReportController extends Controller
             ->join('trips', 'trips.id', '=', 'trip_costs.trip_id')
             ->leftJoin('transport_providers', 'transport_providers.id', '=', 'trips.transport_provider_id')
             ->where('trip_costs.status', 'confirmed')
-            ->whereBetween('trip_costs.created_at', [$from, $to])
+            ->when($dateBounded, fn (Builder $q) => $q->whereBetween('trip_costs.created_at', [$from, $to]))
             ->whereHas('trip', function (Builder $t) use ($data) {
                 $this->applyTripSummaryFilters($t, $data);
             })
@@ -200,7 +216,10 @@ class ReportController extends Controller
             ->groupBy('trip_costs.status')
             ->pluck('total_amount', 'status');
 
-        $dispatchBase = DispatchRequest::query()->whereBetween('depart_at', [$from, $to]);
+        $dispatchBase = DispatchRequest::query();
+        if ($dateBounded) {
+            $dispatchBase->whereBetween('depart_at', [$from, $to]);
+        }
         $this->applyDispatchSummaryFilters($dispatchBase, $data);
 
         $dispatchRequestsByStatus = $dispatchBase
@@ -271,10 +290,16 @@ class ReportController extends Controller
             : null;
 
         return $this->ok([
-            'range' => [
-                'from' => $from->toIso8601String(),
-                'to' => $to->toIso8601String(),
-            ],
+            'range' => $dateBounded
+                ? [
+                    'from' => $from->toIso8601String(),
+                    'to' => $to->toIso8601String(),
+                ]
+                : [
+                    'from' => null,
+                    'to' => null,
+                    'all_time' => true,
+                ],
             'trips_by_status' => $tripsByStatus,
             'trips_by_hour' => $tripsByHour,
             'trips_by_trip_type' => $tripsByTripType,

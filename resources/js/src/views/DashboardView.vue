@@ -721,10 +721,9 @@ function startOfQuarter(d) {
   return new Date(d.getFullYear(), q0, 1)
 }
 
-const today = new Date()
-const rangeFrom = ref(ymd(new Date(today.getFullYear(), today.getMonth(), 1)))
-const rangeTo = ref(ymd(today))
-const preset = ref('month')
+const rangeFrom = ref('')
+const rangeTo = ref('')
+const preset = ref('all')
 
 const filterTripType = ref('')
 const filterSourceChannel = ref('')
@@ -812,6 +811,7 @@ function loadDimensionBarVisibility() {
 }
 
 const presetDefs = computed(() => [
+  { id: 'all', label: t('dashboard_analytics.preset_all_time') },
   { id: 'month', label: t('dashboard_analytics.preset_month') },
   { id: 'last30', label: t('dashboard_analytics.preset_last30') },
   { id: 'last7', label: t('dashboard_analytics.preset_last7') },
@@ -836,9 +836,10 @@ const quickLinks = computed(() => [
 const emptyChartLabel = computed(() => t('dashboard_analytics.chart_empty'))
 
 const summaryFilters = computed(() => {
-  const o = {
-    from: rangeFrom.value,
-    to: rangeTo.value,
+  const o = {}
+  if (rangeFrom.value && rangeTo.value) {
+    o.from = rangeFrom.value
+    o.to = rangeTo.value
   }
   if (filterTripType.value) o.trip_type = filterTripType.value
   if (filterSourceChannel.value) o.source_channel = filterSourceChannel.value
@@ -1031,13 +1032,17 @@ const visibleDimensionFilters = computed(() =>
 )
 
 const rangeValid = computed(() => {
+  if (preset.value === 'all') return true
   if (!rangeFrom.value || !rangeTo.value) return false
   return rangeFrom.value <= rangeTo.value
 })
 
-const rangeDisplayFormatted = computed(
-  () => `${formatDisplayDate(rangeFrom.value)} — ${formatDisplayDate(rangeTo.value)}`,
-)
+const rangeDisplayFormatted = computed(() => {
+  if (preset.value === 'all' || (!rangeFrom.value && !rangeTo.value)) {
+    return t('dashboard_analytics.preset_all_time')
+  }
+  return `${formatDisplayDate(rangeFrom.value)} — ${formatDisplayDate(rangeTo.value)}`
+})
 
 const rangeDaySpan = computed(() => {
   if (!rangeFrom.value || !rangeTo.value || rangeFrom.value > rangeTo.value) return 0
@@ -1086,7 +1091,7 @@ function resetFilters() {
   filterIsUrgent.value = false
   filterTripRunStatus.value = ''
   filterFleetMode.value = ''
-  applyPreset('month')
+  applyPreset('all')
 }
 
 function formatDepartShort(s) {

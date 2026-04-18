@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-4 text-slate-900">
-    <div class="mx-auto max-w-[1920px] space-y-4">
+  <div class="w-full space-y-4 text-slate-900">
+    <div class="w-full max-w-none space-y-4 px-1 sm:px-0">
       <!-- Header -->
       <header class="flex flex-col gap-3 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -40,7 +40,7 @@
         <!-- Trip queue -->
         <aside
           id="dispatcher-trip-queue"
-          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:w-[min(100%,430px)]"
+          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:w-[min(100%,480px)]"
         >
           <div class="border-b border-slate-200 p-3">
             <div class="flex items-start justify-between gap-2">
@@ -60,24 +60,49 @@
                 {{ t('dispatcher_board.open_requests') }}
               </RouterLink>
             </div>
-            <div class="mt-3 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
+            <div class="mt-3 flex items-stretch gap-1.5">
               <button
-                v-for="tab in queueTabs"
-                :key="tab.id"
                 type="button"
-                class="rounded-full px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-3 sm:text-xs"
-                :class="
-                  queueFilter === tab.id
-                    ? 'bg-teal-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-                "
-                @click="queueFilter = tab.id"
+                class="flex h-[3.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                :aria-label="t('dispatcher_board.filter_scroll_prev')"
+                @click="scrollQueueFilters(-1)"
               >
-                {{ tab.label }}
-                <span
-                  class="tabular-nums"
-                  :class="queueFilter === tab.id ? 'text-teal-100' : 'text-slate-500'"
-                >({{ tab.count }})</span>
+                <ChevronLeftIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+              </button>
+              <div
+                ref="queueFilterScrollRef"
+                role="tablist"
+                :aria-label="t('dispatcher_board.queue_filters_aria')"
+                class="flex min-w-0 flex-1 items-stretch gap-2 overflow-x-auto scroll-smooth py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              >
+                <button
+                  v-for="tab in queueTabs"
+                  :key="tab.id"
+                  type="button"
+                  role="tab"
+                  :aria-selected="queueFilter === tab.id"
+                  class="flex min-w-[7.25rem] max-w-[10rem] shrink-0 flex-col justify-center rounded-xl border px-2.5 py-2 text-left text-[11px] font-semibold shadow-sm transition sm:min-w-[7.75rem] sm:px-3 sm:text-xs"
+                  :class="
+                    queueFilter === tab.id
+                      ? 'border-teal-500 bg-teal-600 text-white ring-2 ring-teal-500/25'
+                      : 'border-slate-200/90 bg-white text-slate-800 hover:border-teal-200/80 hover:bg-teal-50/40 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100 dark:hover:border-teal-900/50 dark:hover:bg-slate-800'
+                  "
+                  @click="queueFilter = tab.id"
+                >
+                  <span class="line-clamp-2 leading-snug">{{ tab.label }}</span>
+                  <span
+                    class="mt-0.5 tabular-nums text-[10px] font-bold"
+                    :class="queueFilter === tab.id ? 'text-teal-100' : 'text-slate-500 dark:text-slate-400'"
+                  >({{ tab.count }})</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                class="flex h-[3.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                :aria-label="t('dispatcher_board.filter_scroll_next')"
+                @click="scrollQueueFilters(1)"
+              >
+                <ChevronRightIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
               </button>
             </div>
             <label class="mt-3 block">
@@ -225,10 +250,12 @@
           </div>
 
           <div class="overflow-x-auto [scrollbar-width:thin]">
-            <div class="min-w-[1180px] bg-gradient-to-b from-slate-50/40 to-white p-4 dark:from-slate-950/50 dark:to-slate-900/30 lg:min-w-[1280px]">
+            <div
+              class="min-w-[1280px] bg-gradient-to-b from-slate-50/40 to-white p-4 dark:from-slate-950/50 dark:to-slate-900/30 lg:min-w-[1480px] xl:min-w-[1680px]"
+            >
               <!-- Hour labels -->
               <div class="mb-2 flex text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                <div class="w-[200px] shrink-0 lg:w-[220px]" />
+                <div class="w-[200px] shrink-0 lg:w-[240px] xl:w-[260px]" />
                 <div class="grid min-w-0 flex-1" :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }">
                   <div
                     v-for="h in hourSlots"
@@ -246,7 +273,7 @@
                 class="flex border-b border-slate-100/90 last:border-b-0 dark:border-slate-700/60"
               >
                 <div
-                  class="flex w-[200px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/70 py-3 pr-3 text-xs dark:border-slate-700/80 dark:bg-slate-900/40 lg:w-[220px]"
+                  class="flex w-[200px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/70 py-3 pr-3 text-xs dark:border-slate-700/80 dark:bg-slate-900/40 lg:w-[240px] xl:w-[260px]"
                 >
                   <span class="truncate font-medium text-slate-800 dark:text-slate-100">{{ row.label }}</span>
                   <span v-if="row.sub" class="truncate text-[10px] text-rose-600">{{ row.sub }}</span>
@@ -321,7 +348,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Square2StackIcon } from '@heroicons/vue/24/outline'
+import { ChevronLeftIcon, ChevronRightIcon, Square2StackIcon } from '@heroicons/vue/24/outline'
 import { listTrips } from '../../api/trips'
 import { listRequests } from '../../api/requests'
 import { labelTripStatus, labelTripType } from '../../util/labels'
@@ -345,6 +372,14 @@ const pendingRequestsCount = ref(0)
 const selectedDate = ref(new Date())
 const queueFilter = ref('all')
 const queueSearch = ref('')
+const queueFilterScrollRef = ref(null)
+
+function scrollQueueFilters(direction) {
+  const el = queueFilterScrollRef.value
+  if (!el) return
+  const step = Math.min(Math.max(el.clientWidth * 0.72, 200), 360)
+  el.scrollBy({ left: direction * step, behavior: 'smooth' })
+}
 
 const queueTabs = computed(() => {
   const q = queueTrips.value

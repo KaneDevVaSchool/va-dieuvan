@@ -36,9 +36,16 @@ class RequestController extends Controller
             'requester:id,name,email,employee_code',
             'approver:id,name,email,employee_code',
             'trip',
-        ])
-            ->orderByDesc('depart_at')
-            ->orderByDesc('id');
+        ]);
+
+        $sort = $data['sort'] ?? 'created_desc';
+        match ($sort) {
+            'created_asc' => $q->orderBy('created_at')->orderBy('id'),
+            'depart_desc' => $q->orderByDesc('depart_at')->orderByDesc('id'),
+            'depart_asc' => $q->orderBy('depart_at')->orderBy('id'),
+            'id_desc' => $q->orderByDesc('id'),
+            default => $q->orderByDesc('created_at')->orderByDesc('id'),
+        };
 
         $q->when(isset($data['q']) && $data['q'] !== '', function (Builder $b) use ($data) {
             $term = trim($data['q']);
