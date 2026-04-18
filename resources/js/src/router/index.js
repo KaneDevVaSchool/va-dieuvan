@@ -217,7 +217,7 @@ const router = createRouter({
             meta: {
                 title: "Bảng giá tham chiếu",
                 subtitle: "Xe khách & hàng hóa",
-                featureKey: "module.reports",
+                featureKey: "module.pricing",
             },
         },
 
