@@ -1,103 +1,170 @@
 <template>
-  <div class="space-y-5 pb-10">
-    <div v-if="loadError" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200">
-      {{ loadError }}
+  <div class="space-y-5 pb-10 print:pb-0">
+    <div
+      v-if="loadError"
+      role="alert"
+      aria-live="assertive"
+      class="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <span>{{ loadError }}</span>
+      <button
+        type="button"
+        class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-rose-300 bg-white px-3 py-2 text-sm font-medium text-rose-900 shadow-sm transition hover:bg-rose-50 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-100 dark:hover:bg-rose-900"
+        @click="load"
+      >
+        <ArrowPathIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+        {{ t('cargo_detail.retry') }}
+      </button>
+    </div>
+
+    <div v-else-if="loading" class="space-y-5 animate-pulse" aria-busy="true">
+      <div class="h-10 w-48 rounded-lg bg-slate-200 dark:bg-slate-700" />
+      <div class="h-36 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+      <div class="grid gap-5 lg:grid-cols-5">
+        <div class="space-y-5 lg:col-span-3">
+          <div class="h-64 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+          <div class="h-56 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+          <div class="h-48 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+        </div>
+        <div class="space-y-5 lg:col-span-2">
+          <div class="h-40 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+          <div class="h-32 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+          <div class="h-44 rounded-2xl bg-slate-200 dark:bg-slate-700" />
+        </div>
+      </div>
     </div>
 
     <template v-else-if="shipment">
       <!-- Header -->
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div class="min-w-0">
-          <RouterLink
-            to="/cargo"
-            class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
-          >
-            <ChevronLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ t('cargo_detail.back_list') }}
-          </RouterLink>
-          <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
-            {{ t('cargo_detail.hero_title', { code: displayCode }) }}
-          </h1>
-          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            <span class="font-medium text-slate-800 dark:text-slate-200">{{ routeSummary }}</span>
-            <span v-if="departHint" class="text-slate-500"> · {{ departHint }}</span>
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <RouterLink
-            v-if="requestId"
-            :to="'/requests/' + requestId"
-            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-          >
-            <DocumentTextIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-            {{ t('cargo_detail.btn_request') }}
-          </RouterLink>
-          <RouterLink
-            v-if="shipment.trip_id"
-            :to="'/trips/' + shipment.trip_id"
-            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-          >
-            <TruckIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-            {{ t('cargo_detail.btn_trip') }}
-          </RouterLink>
-          <a
-            v-if="mapsHref"
-            :href="mapsHref"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700"
-          >
-            <MapPinIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-            {{ t('cargo_detail.btn_maps') }}
-          </a>
+      <div
+        class="sticky top-0 z-30 -mx-1 flex flex-col gap-3 border-b border-slate-200/80 bg-slate-50/95 px-1 py-3 backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none print:static print:border-0 print:bg-transparent"
+      >
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div class="min-w-0">
+            <RouterLink
+              to="/cargo"
+              class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200 print:hidden"
+            >
+              <ChevronLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ t('cargo_detail.back_list') }}
+            </RouterLink>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+              {{ t('cargo_detail.hero_title', { code: displayCode }) }}
+            </h1>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ routeSummary }}</span>
+              <span v-if="departHint" class="text-slate-500"> · {{ departHint }}</span>
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 print:hidden">
+            <button
+              type="button"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              @click="copyTrackingCode"
+            >
+              <ClipboardDocumentIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+              {{ copyFeedback ? t('cargo_detail.copied') : t('cargo_detail.copy_code') }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              @click="printPage"
+            >
+              <PrinterIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+              {{ t('cargo_detail.print') }}
+            </button>
+            <RouterLink
+              v-if="requestId"
+              :to="'/requests/' + requestId"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            >
+              <DocumentTextIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+              {{ t('cargo_detail.btn_request') }}
+            </RouterLink>
+            <RouterLink
+              v-if="shipment.trip_id"
+              :to="'/trips/' + shipment.trip_id"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            >
+              <TruckIcon class="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+              {{ t('cargo_detail.btn_trip') }}
+            </RouterLink>
+            <a
+              v-if="mapsHref"
+              :href="mapsHref"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700"
+            >
+              <MapPinIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+              {{ t('cargo_detail.btn_maps') }}
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- Hero status -->
+      <!-- Status summary -->
       <div
-        class="overflow-hidden rounded-2xl bg-gradient-to-br from-sky-600 via-teal-600 to-teal-700 px-4 py-5 text-white shadow-lg shadow-teal-900/20 sm:px-6 sm:py-6"
+        class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40"
       >
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 lg:flex-row lg:items-center lg:justify-between">
           <div class="flex items-start gap-3">
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
-              <TruckIcon class="h-7 w-7" aria-hidden="true" />
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-950/80"
+            >
+              <TruckIcon class="h-7 w-7 text-teal-700 dark:text-teal-300" aria-hidden="true" />
             </div>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-teal-100/90">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {{ t('cargo_detail.status_label') }}
               </p>
-              <p class="mt-0.5 text-xl font-bold sm:text-2xl">{{ labelCargoStatus(shipment.status) }}</p>
-              <p v-if="slaLine" class="mt-1 text-sm text-teal-100/95">{{ slaLine }}</p>
+              <p class="mt-0.5 text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                {{ labelCargoStatus(shipment.status) }}
+              </p>
+              <p v-if="slaLine" class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ slaLine }}</p>
             </div>
           </div>
-          <div class="grid grid-cols-3 gap-3 sm:gap-6 lg:min-w-[320px]">
-            <div class="rounded-xl bg-white/10 px-3 py-2 text-center backdrop-blur sm:px-4">
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-teal-100/80">{{ t('cargo_detail.hero_qty') }}</p>
-              <p class="mt-0.5 text-lg font-bold tabular-nums sm:text-xl">{{ shipment.quantity ?? '—' }}</p>
+          <div class="grid grid-cols-3 gap-3 sm:gap-4 lg:min-w-[300px]">
+            <div class="rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2 text-center dark:border-slate-700 dark:bg-slate-800/50 sm:px-4">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('cargo_detail.hero_qty') }}
+              </p>
+              <p class="mt-0.5 text-lg font-bold tabular-nums text-slate-900 dark:text-white sm:text-xl">
+                {{ shipment.quantity ?? '—' }}
+              </p>
             </div>
-            <div class="rounded-xl bg-white/10 px-3 py-2 text-center backdrop-blur sm:px-4">
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-teal-100/80">{{ t('cargo_detail.hero_weight') }}</p>
-              <p class="mt-0.5 text-lg font-bold tabular-nums sm:text-xl">{{ weightLabel }}</p>
+            <div class="rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2 text-center dark:border-slate-700 dark:bg-slate-800/50 sm:px-4">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('cargo_detail.hero_weight') }}
+              </p>
+              <p class="mt-0.5 text-lg font-bold tabular-nums text-slate-900 dark:text-white sm:text-xl">
+                {{ weightLabel }}
+              </p>
             </div>
-            <div class="rounded-xl bg-white/10 px-3 py-2 text-center backdrop-blur sm:px-4">
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-teal-100/80">{{ t('cargo_detail.hero_progress') }}</p>
-              <p class="mt-0.5 text-lg font-bold tabular-nums sm:text-xl">{{ progressPct }}%</p>
+            <div class="rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2 text-center dark:border-slate-700 dark:bg-slate-800/50 sm:px-4">
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {{ t('cargo_detail.hero_progress') }}
+              </p>
+              <p class="mt-0.5 text-lg font-bold tabular-nums text-slate-900 dark:text-white sm:text-xl">{{ progressPct }}%</p>
             </div>
           </div>
         </div>
-        <div class="mt-4 h-2 overflow-hidden rounded-full bg-black/20">
-          <div class="h-full rounded-full bg-white/90 transition-all" :style="{ width: progressPct + '%' }" />
+        <div class="border-t border-slate-100 px-4 pb-4 dark:border-slate-800 sm:px-6 sm:pb-5">
+          <div class="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <div
+              class="h-full rounded-full bg-teal-500 transition-all dark:bg-teal-600"
+              :style="{ width: progressPct + '%' }"
+            />
+          </div>
+          <p v-if="slaBreached" class="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
+            <ExclamationTriangleIcon class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            {{ t('cargo_detail.sla_breached') }}
+          </p>
         </div>
-        <p v-if="slaBreached" class="mt-3 flex items-center gap-2 rounded-lg bg-amber-400/20 px-3 py-2 text-sm font-medium text-amber-50">
-          <ExclamationTriangleIcon class="h-5 w-5 shrink-0 text-amber-200" aria-hidden="true" />
-          {{ t('cargo_detail.sla_breached') }}
-        </p>
       </div>
 
       <div class="grid gap-5 lg:grid-cols-5">
-        <!-- Main column -->
         <div class="min-w-0 space-y-5 lg:col-span-3">
-          <!-- Route timeline -->
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
             <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:px-5">
               <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -107,7 +174,7 @@
             </div>
             <div class="px-4 py-5 sm:px-5">
               <div class="relative space-y-6 pl-2">
-                <div class="absolute left-[15px] top-3 bottom-3 w-0.5 bg-slate-200 dark:bg-slate-600" aria-hidden="true" />
+                <div class="absolute bottom-3 left-[15px] top-3 w-0.5 bg-slate-200 dark:bg-slate-600" aria-hidden="true" />
                 <div class="relative flex gap-4">
                   <div
                     class="relative z-[1] flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-white shadow dark:border-slate-900"
@@ -126,7 +193,10 @@
                       >
                         {{ t('cargo_detail.route_done') }}
                       </span>
-                      <span v-else class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      <span
+                        v-else
+                        class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      >
                         {{ t('cargo_detail.route_pending') }}
                       </span>
                     </div>
@@ -160,7 +230,10 @@
                       >
                         {{ t('cargo_detail.route_moving') }}
                       </span>
-                      <span v-else class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      <span
+                        v-else
+                        class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      >
                         {{ t('cargo_detail.route_awaiting') }}
                       </span>
                     </div>
@@ -173,27 +246,64 @@
             </div>
           </div>
 
-          <!-- Map placeholder -->
-          <div class="overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/50">
-            <div class="flex min-h-[180px] flex-col items-center justify-center gap-2 px-4 py-10 text-center sm:min-h-[220px]">
-              <MapIcon class="h-10 w-10 text-slate-400 dark:text-slate-500" aria-hidden="true" />
-              <p class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('cargo_detail.map_placeholder_title') }}</p>
-              <p class="max-w-md text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_detail.map_placeholder_hint') }}</p>
-            </div>
-          </div>
-
-          <!-- Audit timeline -->
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
             <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:px-5">
+              <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <MapIcon class="h-5 w-5 text-sky-600 dark:text-sky-400" aria-hidden="true" />
+                {{ t('cargo_detail.map_section_title') }}
+              </h2>
+            </div>
+            <div class="relative w-full overflow-hidden bg-slate-50 dark:bg-slate-800/40">
+              <div class="relative aspect-[16/10] w-full min-h-[200px] bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 sm:aspect-[21/9]">
+                <iframe
+                  v-if="embedMapSrc"
+                  :src="embedMapSrc"
+                  class="absolute inset-0 h-full w-full border-0"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  :title="t('cargo_detail.map_iframe_title')"
+                />
+                <div
+                  v-else
+                  class="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-500 dark:text-slate-400"
+                >
+                  <MapPinIcon class="h-10 w-10 opacity-50" aria-hidden="true" />
+                  {{ t('cargo_detail.map_no_embed') }}
+                </div>
+              </div>
+              <button
+                v-if="embedMapSrc"
+                type="button"
+                class="absolute right-2 top-2 rounded-lg border border-slate-200/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white print:hidden dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-200 dark:hover:bg-slate-800"
+                @click="mapExpanded = true"
+              >
+                {{ t('cargo_detail.map_expand') }}
+              </button>
+            </div>
+            <p class="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              {{ t('cargo_detail.map_hint') }}
+            </p>
+          </div>
+
+          <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+            <div class="flex flex-col gap-3 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-5">
               <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
                 <ClockIcon class="h-5 w-5 text-violet-600 dark:text-violet-400" aria-hidden="true" />
                 {{ t('cargo_detail.card_timeline') }}
               </h2>
+              <select
+                v-model="timelineFilter"
+                class="max-w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 shadow-sm outline-none ring-teal-500/30 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              >
+                <option value="all">{{ t('cargo_detail.timeline_filter_all') }}</option>
+                <option value="milestone">{{ t('cargo_detail.timeline_filter_milestone') }}</option>
+                <option value="audit">{{ t('cargo_detail.timeline_filter_audit') }}</option>
+              </select>
             </div>
             <div class="px-4 py-4 sm:px-5">
               <div v-if="timelineLoading" class="text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.timeline_loading') }}</div>
-              <ul v-else-if="timelineItems.length" class="relative ml-1 space-y-4 border-l-2 border-slate-200 pl-5 dark:border-slate-600">
-                <li v-for="(ev, idx) in timelineItems" :key="idx + ev.at" class="relative">
+              <ul v-else-if="timelineFiltered.length" class="relative ml-1 space-y-4 border-l-2 border-slate-200 pl-5 dark:border-slate-600">
+                <li v-for="(ev, idx) in timelineFiltered" :key="idx + '-' + (ev.at || '') + '-' + (ev.kind || '') + '-' + (ev.code || '')" class="relative">
                   <span
                     class="absolute -left-[calc(1.25rem+5px)] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-teal-600 dark:border-slate-900"
                   />
@@ -210,8 +320,21 @@
           </div>
         </div>
 
-        <!-- Sidebar -->
         <aside class="min-w-0 space-y-5 lg:col-span-2">
+          <div
+            v-if="qrSrc"
+            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 print:hidden"
+          >
+            <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
+              <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_detail.share_title') }}</h2>
+              <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_detail.share_hint') }}</p>
+            </div>
+            <div class="flex flex-col items-center gap-3 px-4 py-4 sm:flex-row sm:justify-center">
+              <img :src="qrSrc" alt="" width="128" height="128" class="rounded-lg border border-slate-100 bg-white p-1 dark:border-slate-700" />
+              <p class="max-w-[14rem] text-center text-[11px] leading-snug text-slate-500 dark:text-slate-400">{{ publicPageUrl }}</p>
+            </div>
+          </div>
+
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
             <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
               <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -251,7 +374,36 @@
             </div>
           </div>
 
-          <!-- Costs -->
+          <div
+            v-if="quickStatusActions.length"
+            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 print:hidden"
+          >
+            <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
+              <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_detail.quick_status_title') }}</h2>
+              <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_detail.quick_status_hint') }}</p>
+            </div>
+            <div class="px-4 py-4">
+              <p v-if="statusError" class="mb-3 text-sm text-rose-600 dark:text-rose-400">{{ statusError }}</p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="act in quickStatusActions"
+                  :key="act.status"
+                  type="button"
+                  :disabled="statusSaving"
+                  :class="[
+                    'rounded-xl px-3 py-2 text-sm font-medium transition disabled:opacity-50',
+                    act.danger
+                      ? 'border border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70'
+                      : 'border border-teal-200 bg-teal-50 text-teal-900 hover:bg-teal-100 dark:border-teal-900/40 dark:bg-teal-950/40 dark:text-teal-100 dark:hover:bg-teal-950/70',
+                  ]"
+                  @click="applyQuickStatus(act.status, act.danger)"
+                >
+                  {{ quickStatusLabel(act.status) }}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
             <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
               <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -283,7 +435,6 @@
             </div>
           </div>
 
-          <!-- Documents -->
           <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
             <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
               <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -336,26 +487,53 @@
               />
             </div>
           </div>
-
-          <!-- Roadmap / suggestions -->
-          <div class="rounded-2xl border border-amber-200/80 bg-amber-50/50 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
-            <h3 class="flex items-center gap-2 text-sm font-semibold text-amber-900 dark:text-amber-100">
-              <LightBulbIcon class="h-5 w-5" aria-hidden="true" />
-              {{ t('cargo_detail.roadmap_title') }}
-            </h3>
-            <ul class="mt-3 list-inside list-disc space-y-1.5 text-xs leading-relaxed text-amber-950/90 dark:text-amber-100/90">
-              <li>{{ t('cargo_detail.roadmap_1') }}</li>
-              <li>{{ t('cargo_detail.roadmap_2') }}</li>
-              <li>{{ t('cargo_detail.roadmap_3') }}</li>
-            </ul>
-          </div>
         </aside>
       </div>
     </template>
 
-    <div v-else-if="loading" class="py-16 text-center text-sm text-slate-500 dark:text-slate-400">
-      {{ t('cargo_page.loading') }}
-    </div>
+    <Teleport to="body">
+      <div
+        v-if="mapExpanded"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm print:hidden"
+        role="dialog"
+        aria-modal="true"
+        @click.self="mapExpanded = false"
+      >
+        <div class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-900">
+          <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+            <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_detail.map_modal_title') }}</span>
+            <button
+              type="button"
+              class="rounded-lg px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              @click="mapExpanded = false"
+            >
+              {{ t('cargo_detail.map_modal_close') }}
+            </button>
+          </div>
+          <div class="relative min-h-[60vh] flex-1 bg-slate-100 dark:bg-slate-800">
+            <iframe
+              v-if="embedMapSrc"
+              :src="embedMapSrc"
+              class="absolute inset-0 h-full w-full border-0"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              :title="t('cargo_detail.map_iframe_title')"
+            />
+          </div>
+          <div class="border-t border-slate-100 px-4 py-3 dark:border-slate-700">
+            <a
+              v-if="mapsHref"
+              :href="mapsHref"
+              target="_blank"
+              rel="noopener"
+              class="text-sm font-semibold text-teal-700 hover:underline dark:text-teal-400"
+            >
+              {{ t('cargo_detail.open_in_google_maps') }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -365,24 +543,26 @@ import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
+  ArrowPathIcon,
   CheckCircleIcon,
   ChevronLeftIcon,
+  ClipboardDocumentIcon,
   ClockIcon,
   CurrencyDollarIcon,
   DocumentIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
   FolderIcon,
-  LightBulbIcon,
   MapIcon,
   MapPinIcon,
+  PrinterIcon,
   TruckIcon,
   UserIcon,
 } from '@heroicons/vue/24/outline'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import { uploadCargoPod } from '../../api/attachments'
 import { listCostsForTrip } from '../../api/costs'
-import { getCargoShipment, getCargoShipmentTimeline } from '../../api/cargo'
+import { getCargoShipment, getCargoShipmentTimeline, updateCargoStatus } from '../../api/cargo'
 import { labelCargoStatus } from '../../util/labels'
 import { useAuthStore } from '../../store'
 import { i18n } from '../../i18n'
@@ -396,9 +576,15 @@ const loadError = ref('')
 const shipment = ref(null)
 const timelineItems = ref([])
 const timelineLoading = ref(true)
+const timelineFilter = ref('all')
 const costItems = ref([])
 const costsLoading = ref(false)
 const costsForbidden = ref(false)
+const mapExpanded = ref(false)
+const publicPageUrl = ref('')
+const copyFeedback = ref(false)
+const statusSaving = ref(false)
+const statusError = ref('')
 
 const displayCode = computed(() => shipment.value?.tracking_code || '#' + shipment.value?.id)
 const requestId = computed(() => shipment.value?.dispatch_request_id ?? shipment.value?.dispatch_request?.id ?? null)
@@ -431,6 +617,29 @@ const mapsHref = computed(() => {
   return u.toString()
 })
 
+const embedMapSrc = computed(() => {
+  const s = shipment.value
+  if (!s) return ''
+  const o = (s.pickup_address || s.dispatch_request?.origin || '').trim()
+  const d = (s.delivery_address || s.dispatch_request?.destination || '').trim()
+  if (o && d) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(`${o} → ${d}`)}&output=embed`
+  }
+  if (o) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(o)}&output=embed`
+  }
+  if (d) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(d)}&output=embed`
+  }
+  return ''
+})
+
+const qrSrc = computed(() => {
+  const url = publicPageUrl.value
+  if (!url) return ''
+  return `https://api.qrserver.com/v1/create-qr-code/?size=132x132&margin=1&data=${encodeURIComponent(url)}`
+})
+
 const weightLabel = computed(() => {
   const g = shipment.value?.weight_grams
   if (g == null || g === '') return '—'
@@ -441,8 +650,12 @@ const weightLabel = computed(() => {
 
 const progressPct = computed(() => {
   const st = shipment.value?.status
-  const map = { pending: 12, picked_up: 40, in_transit: 72, delivered: 100, failed: 0, cancelled: 0 }
-  return map[st] ?? 15
+  if (st === 'delivered') return 100
+  if (st === 'in_transit') return 72
+  if (st === 'picked_up') return 40
+  if (st === 'pending') return 15
+  if (st === 'failed' || st === 'cancelled') return 0
+  return 12
 })
 
 const pickupDone = computed(() => ['picked_up', 'in_transit', 'delivered'].includes(shipment.value?.status))
@@ -460,6 +673,68 @@ const slaBreached = computed(() => {
 })
 
 const canUploadPod = computed(() => auth.hasPermission('cargo.manage'))
+const canManageCargo = computed(() => auth.hasPermission('cargo.manage'))
+
+const quickStatusActions = computed(() => {
+  if (!canManageCargo.value || !shipment.value) return []
+  const st = shipment.value.status
+  if (st === 'delivered' || st === 'failed' || st === 'cancelled') return []
+  const out = []
+  if (st === 'pending') {
+    out.push({ status: 'picked_up', danger: false })
+    out.push({ status: 'in_transit', danger: false })
+  }
+  if (st === 'picked_up') {
+    out.push({ status: 'in_transit', danger: false })
+    out.push({ status: 'delivered', danger: false })
+  }
+  if (st === 'in_transit') {
+    out.push({ status: 'delivered', danger: false })
+  }
+  out.push({ status: 'failed', danger: true })
+  out.push({ status: 'cancelled', danger: true })
+  return out
+})
+
+const timelineFiltered = computed(() => {
+  const items = timelineItems.value
+  const f = timelineFilter.value
+  if (f === 'all') return items
+  return items.filter((ev) => ev.kind === f)
+})
+
+function quickStatusLabel(status) {
+  const key = `cargo_detail.quick_${status}`
+  return te(key) ? t(key) : status
+}
+
+async function applyQuickStatus(status, danger) {
+  if (!shipment.value) return
+  if (danger) {
+    const ok = window.confirm(t('cargo_detail.quick_confirm_danger'))
+    if (!ok) return
+  }
+  statusError.value = ''
+  statusSaving.value = true
+  try {
+    const res = await updateCargoStatus(shipment.value.id, { status })
+    const next = res?.shipment
+    if (next && typeof next === 'object') {
+      shipment.value = { ...shipment.value, ...next }
+    } else {
+      await reloadShipment()
+    }
+    getCargoShipmentTimeline(shipment.value.id)
+      .then((d) => {
+        timelineItems.value = d.items ?? []
+      })
+      .catch(() => {})
+  } catch (e) {
+    statusError.value = e?.response?.data?.message || t('cargo_detail.quick_status_error')
+  } finally {
+    statusSaving.value = false
+  }
+}
 
 function fmt(v) {
   return v ? new Date(v).toLocaleString(locale.value === 'en' ? 'en-GB' : 'vi-VN') : ''
@@ -524,6 +799,29 @@ function setDocumentTitle() {
   }
 }
 
+function setPublicPageUrl() {
+  if (typeof window === 'undefined') return
+  publicPageUrl.value = window.location.href
+}
+
+async function copyTrackingCode() {
+  const text = String(shipment.value?.tracking_code || shipment.value?.id || '')
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+    copyFeedback.value = true
+    window.setTimeout(() => {
+      copyFeedback.value = false
+    }, 2000)
+  } catch {
+    copyFeedback.value = false
+  }
+}
+
+function printPage() {
+  if (typeof window !== 'undefined') window.print()
+}
+
 async function loadCosts(tripId) {
   costsLoading.value = true
   costsForbidden.value = false
@@ -552,6 +850,7 @@ async function load() {
   loadError.value = ''
   shipment.value = null
   timelineItems.value = []
+  setPublicPageUrl()
   try {
     await reloadShipment()
     const id = route.params.id
@@ -584,7 +883,10 @@ watch(
   { flush: 'post' },
 )
 
-onMounted(load)
+onMounted(() => {
+  setPublicPageUrl()
+  load()
+})
 
 watch(
   () => route.params.id,

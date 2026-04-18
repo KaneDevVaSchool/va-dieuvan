@@ -55,30 +55,102 @@
         }
     },
     "routes_meta": {
-        "login": { "title": "Đăng nhập", "subtitle": "Đăng nhập Google" },
-        "dashboard": { "title": "Tổng quan", "subtitle": "Tình trạng vận hành" },
-        "dispatcherBoard": { "title": "Bảng điều vận", "subtitle": "Hàng đợi & lịch phân công" },
-        "profile": { "title": "Hồ sơ", "subtitle": "Tài khoản" },
-        "requests": { "title": "Yêu cầu điều xe", "subtitle": "Danh sách & trạng thái" },
-        "requestDetail": { "title": "Chi tiết yêu cầu", "subtitle": "" },
-        "dispatchRequestNew": { "title": "Tạo yêu cầu điều vận", "subtitle": "BM.03 — luồng 4 bước" },
-        "trips": { "title": "Chuyến đi", "subtitle": "Danh sách" },
-        "tripDetail": { "title": "Chi tiết chuyến", "subtitle": "" },
-        "costs": { "title": "Chi phí", "subtitle": "Danh sách & nhập nhanh" },
-        "payments": { "title": "Đối soát", "subtitle": "Kỳ & thanh toán" },
-        "cargo": { "title": "Hàng hóa", "subtitle": "Đơn hàng & SLA" },
-        "cargoDetail": { "title": "Chi tiết đơn hàng", "subtitle": "Theo dõi & tài liệu" },
-        "routes": { "title": "Tuyến D2D", "subtitle": "Door-to-door" },
-        "resourcesList": { "title": "Quản lý nguồn lực", "subtitle": "Xe, tài xế, nhà cung cấp" },
-        "resources": { "title": "Dashboard nguồn lực", "subtitle": "Lịch & tổng quan" },
-        "driverDetail": { "title": "Chi tiết tài xế", "subtitle": "Hồ sơ & giấy tờ" },
-        "reports": { "title": "Báo cáo", "subtitle": "Theo khoảng thời gian" },
-        "pricing": { "title": "Bảng giá tham chiếu", "subtitle": "Xe khách & hàng hóa" },
-        "auditLogs": { "title": "Nhật ký hoạt động", "subtitle": "Quản trị" },
-        "systemRoles": { "title": "Vai trò người dùng", "subtitle": "Quản trị" },
-        "systemPermissions": { "title": "Quyền thao tác", "subtitle": "Quản trị" },
-        "systemUserRoles": { "title": "Gán vai trò tài khoản", "subtitle": "Quản trị" },
-        "systemFeatureToggles": { "title": "Bật tắt tính năng menu", "subtitle": "Quản trị" }
+        "login": {
+            "title": "Đăng nhập",
+            "subtitle": "Đăng nhập Google"
+        },
+        "dashboard": {
+            "title": "Tổng quan",
+            "subtitle": "Tình trạng vận hành"
+        },
+        "dispatcherBoard": {
+            "title": "Bảng điều vận",
+            "subtitle": "Hàng đợi & lịch phân công"
+        },
+        "profile": {
+            "title": "Hồ sơ",
+            "subtitle": "Tài khoản"
+        },
+        "requests": {
+            "title": "Yêu cầu điều xe",
+            "subtitle": "Danh sách & trạng thái"
+        },
+        "requestDetail": {
+            "title": "Chi tiết yêu cầu",
+            "subtitle": ""
+        },
+        "dispatchRequestNew": {
+            "title": "Tạo yêu cầu điều vận",
+            "subtitle": "BM.03 — luồng 4 bước"
+        },
+        "trips": {
+            "title": "Chuyến đi",
+            "subtitle": "Danh sách"
+        },
+        "tripDetail": {
+            "title": "Chi tiết chuyến",
+            "subtitle": ""
+        },
+        "costs": {
+            "title": "Chi phí",
+            "subtitle": "Danh sách & nhập nhanh"
+        },
+        "payments": {
+            "title": "Đối soát",
+            "subtitle": "Kỳ & thanh toán"
+        },
+        "cargo": {
+            "title": "Hàng hóa",
+            "subtitle": "Đơn hàng & SLA"
+        },
+        "cargoDetail": {
+            "title": "Chi tiết đơn hàng",
+            "subtitle": "Theo dõi & tài liệu"
+        },
+        "routes": {
+            "title": "Tuyến D2D",
+            "subtitle": "Door-to-door"
+        },
+        "resourcesList": {
+            "title": "Quản lý nguồn lực",
+            "subtitle": "Xe, tài xế, nhà cung cấp"
+        },
+        "resources": {
+            "title": "Dashboard nguồn lực",
+            "subtitle": "Lịch & tổng quan"
+        },
+        "driverDetail": {
+            "title": "Chi tiết tài xế",
+            "subtitle": "Hồ sơ & giấy tờ"
+        },
+        "reports": {
+            "title": "Báo cáo",
+            "subtitle": "Theo khoảng thời gian"
+        },
+        "pricing": {
+            "title": "Bảng giá tham chiếu",
+            "subtitle": "Xe khách & hàng hóa"
+        },
+        "auditLogs": {
+            "title": "Nhật ký hoạt động",
+            "subtitle": "Quản trị"
+        },
+        "systemRoles": {
+            "title": "Vai trò người dùng",
+            "subtitle": "Quản trị"
+        },
+        "systemPermissions": {
+            "title": "Quyền thao tác",
+            "subtitle": "Quản trị"
+        },
+        "systemUserRoles": {
+            "title": "Gán vai trò tài khoản",
+            "subtitle": "Quản trị"
+        },
+        "systemFeatureToggles": {
+            "title": "Bật tắt tính năng menu",
+            "subtitle": "Quản trị"
+        }
     },
     "notifications_hub": {
         "card_inbox_title": "Hộp thông báo",
@@ -155,8 +227,13 @@
         "loading": "Đang tải…",
         "tab_all": "Tất cả",
         "tab_urgent": "Gấp",
-        "tab_cargo": "Hàng",
+        "tab_cargo": "Hàng hóa",
         "tab_d2d": "Đưa đón",
+        "tab_p2p": "Điểm — điểm",
+        "tab_business": "Công tác",
+        "service_types": "Bốn loại dịch vụ",
+        "stripe_hint": "Vạch trái trên lịch và hàng đợi = loại chuyến · Màu nền thanh = trạng thái xử lý.",
+        "ui_upgrade_hint": "Gợi ý giao diện: xem toàn màn hình để lịch rộng hơn; sau này có thể thêm kéo–thả gán tài xế, zoom khung giờ và làm mới theo thời gian thực.",
         "cargo": "Cargo",
         "today": "Hôm nay",
         "legend_assigned": "Đã phân công",
@@ -802,7 +879,7 @@
         "status_label": "Trạng thái xử lý",
         "hero_qty": "Số kiện",
         "hero_weight": "Trọng lượng",
-        "hero_progress": "Tiến độ ước lượng",
+        "hero_progress": "Tiến độ (theo trạng thái)",
         "sla_due_line": "Hạn SLA: {at}",
         "sla_breached": "Đã quá hạn SLA — ưu tiên xử lý / cập nhật trạng thái.",
         "card_route": "Tuyến & mốc lấy / giao",
@@ -813,8 +890,32 @@
         "route_delivered": "Đã giao",
         "route_moving": "Đang vận chuyển",
         "route_awaiting": "Chờ giao",
-        "map_placeholder_title": "Theo dõi trên bản đồ",
-        "map_placeholder_hint": "Tích hợp GPS / bản đồ thật có thể bổ sung sau (API vị trí xe hoặc đối tác vận tải).",
+        "retry": "Thử lại",
+        "copy_code": "Sao chép mã",
+        "copied": "Đã sao chép",
+        "print": "In / PDF",
+        "map_section_title": "Sơ đồ tuyến (Google)",
+        "map_iframe_title": "Bản đồ điểm lấy và giao",
+        "map_no_embed": "Chưa đủ địa chỉ để hiển thị bản đồ nhúng.",
+        "map_expand": "Phóng to",
+        "map_hint": "Định tuyến theo địa chỉ; dùng «Chỉ đường» để mở Google Maps đầy đủ.",
+        "map_modal_title": "Bản đồ tuyến",
+        "map_modal_close": "Đóng",
+        "open_in_google_maps": "Mở trong Google Maps",
+        "timeline_filter_all": "Tất cả",
+        "timeline_filter_milestone": "Mốc vận hành",
+        "timeline_filter_audit": "Nhật ký thay đổi",
+        "share_title": "Chia sẻ & QR",
+        "share_hint": "Quét để mở lại trang này.",
+        "quick_status_title": "Cập nhật trạng thái nhanh",
+        "quick_status_hint": "Cần quyền cargo.manage. Thao tác được ghi nhật ký kiểm toán.",
+        "quick_picked_up": "Đã lấy hàng",
+        "quick_in_transit": "Đang vận chuyển",
+        "quick_delivered": "Đã giao",
+        "quick_failed": "Ghi nhận lỗi",
+        "quick_cancelled": "Hủy đơn",
+        "quick_confirm_danger": "Xác nhận thao tác này? Trạng thái sẽ cập nhật ngay.",
+        "quick_status_error": "Không cập nhật được trạng thái.",
         "card_timeline": "Dòng thời gian & nhật ký",
         "card_fleet": "Tài xế & phương tiện",
         "fleet_unassigned": "Chưa phân công tài xế / xe.",
@@ -830,11 +931,7 @@
         "card_docs": "Tài liệu đính kèm (POD)",
         "doc_download": "Tải xuống",
         "depart_prefix": "Khởi hành dự kiến:",
-        "load_error": "Không tải được đơn hàng.",
-        "roadmap_title": "Gợi ý nâng cấp",
-        "roadmap_1": "Nối vị trí thời gian thực từ thiết bị hoặc đơn vị vận chuyển; hiển thị trên bản đồ và push cảnh báo SLA.",
-        "roadmap_2": "Đồng bộ loại hàng / giá trị từ wizard yêu cầu (snapshot) xuống phiếu khi duyệt — bảng thông tin hàng chi tiết hơn.",
-        "roadmap_3": "Cho phép cập nhật trạng thái nhanh (lấy hàng / đang chạy / đã giao) ngay trên trang này nếu có quyền cargo.manage."
+        "load_error": "Không tải được đơn hàng."
     },
     "requests_page": {
         "title": "Danh sách & trạng thái yêu cầu",
@@ -980,8 +1077,8 @@
         "sidebar_pref_vertical": "Sidebar: luôn dọc",
         "sidebar_pref_horizontal": "Sidebar: luôn ngang",
         "sidebar_cycle_layout": "Chuyển chế độ sidebar",
-    "sidebar_rail_actions": "Thanh bên",
-    "sidebar_cycle_short": "Chuyển chế độ",
+        "sidebar_rail_actions": "Thanh bên",
+        "sidebar_cycle_short": "Chuyển chế độ",
         "sidebar_collapse": "Thu gọn menu",
         "sidebar_expand": "Mở rộng menu",
         "cancel": "Hủy",
@@ -995,481 +1092,490 @@
         "logout_confirm_title": "Đăng xuất?",
         "logout_confirm_body": "Bạn sẽ cần đăng nhập lại để tiếp tục.",
         "logout_confirm_action": "Đăng xuất"
+    },
+    "trip_detail": {
+        "loading": "Đang tải…",
+        "load_error": "Không tải được chuyến.",
+        "retry": "Thử lại",
+        "meta": {
+            "dispatcher": "Điều vận: {name}",
+            "source": "Kênh: {ch}",
+            "paper": "Giấy tờ: {st}",
+            "paid": "Đã thanh toán"
+        },
+        "reschedule": {
+            "title": "Đổi giờ khởi hành",
+            "hint": "Hệ thống giữ độ dài chuyến và kiểm tra trùng xe/tài xế. Cần quyền gán chuyến.",
+            "save": "Cập nhật lịch",
+            "invalid": "Giờ không hợp lệ.",
+            "success": "Đã cập nhật lịch khởi hành."
+        },
+        "title": "Chi tiết chuyến & timeline",
+        "created_at": "Tạo {time}",
+        "high_priority": "Ưu tiên cao",
+        "header": {
+            "back_trips": "Quay lại danh sách chuyến",
+            "page_title": "Chi tiết chuyến đi & điều phối",
+            "request_ref": "Yêu cầu #{code}",
+            "trip_ref": "Chuyến {code}",
+            "notifications": "Thông báo"
+        },
+        "banner": {
+            "request_pending": "Yêu cầu gốc vẫn đang chờ duyệt.",
+            "open_request": "Mở chi tiết yêu cầu"
+        },
+        "overview": {
+            "title": "Tổng quan chuyến",
+            "schedule": "Lịch trình",
+            "est_distance": "Quãng đường ước tính",
+            "est_cost": "Chi phí ước tính",
+            "duration_hours": "{n} giờ",
+            "employee_code": "Mã NV: {code}",
+            "pax_count": "Số khách theo yêu cầu: {n}",
+            "arrive_deadline": "Hạn đến nơi (chuyến): {time}",
+            "depart_vs_request": "Khởi hành khác YC gốc: yêu cầu {req} · chuyến {trip}",
+            "arrive_vs_request": "Hạn đến khác YC gốc: yêu cầu {req} · chuyến {trip}",
+            "distance_from_record": "Theo bản ghi hành trình (trip record).",
+            "distance_not_recorded": "Chưa có km ghi nhận — cập nhật sau khi hoàn thành hoặc nhập tay ở hồ sơ chuyến.",
+            "cost_from_wizard": "Ước tính từ biểu mẫu / wizard khi tạo yêu cầu.",
+            "cost_no_estimate": "Không có dòng giá trong snapshot — xem mục chi phí thực tế bên dưới."
+        },
+        "route": {
+            "section_title": "Chi tiết tuyến đường",
+            "no_stops": "Chưa có điểm dừng chi tiết.",
+            "map_title": "Bản đồ tuyến",
+            "map_placeholder": "Thêm điểm đón/trả để xem bản đồ gợi ý.",
+            "expand_map": "Mở rộng",
+            "map_modal_title": "Xem bản đồ",
+            "close_map": "Đóng",
+            "open_in_google_maps": "Mở chỉ đường đầy đủ trên Google Maps",
+            "stop_pickup": "Điểm đón",
+            "stop_waypoint": "Điểm dừng",
+            "stop_dropoff": "Điểm trả",
+            "stop_count": "{n} điểm",
+            "recorded_km": "Đã ghi {km} km",
+            "contact": "Liên hệ: {c}",
+            "ctx_passenger": "Hành khách: {name}"
+        },
+        "passengers": {
+            "title": "Hành khách ({n})",
+            "edit_inline": "Chỉnh sửa danh sách",
+            "save": "Lưu",
+            "cancel_edit": "Hủy",
+            "add_row": "Thêm dòng",
+            "remove_row": "Xóa dòng",
+            "save_confirm_title": "Lưu danh sách?",
+            "save_confirm_body": "Thay đổi sẽ cập nhật vào yêu cầu điều vận gắn với chuyến này.",
+            "validation_need_one": "Cần ít nhất một dòng có dữ liệu.",
+            "col_name": "Họ tên",
+            "col_role": "Vai trò",
+            "col_guests": "Số người",
+            "col_qty": "SL",
+            "col_contact": "Liên hệ",
+            "col_notes": "Ghi chú",
+            "ph_pickup_contact": "Liên hệ lấy hàng",
+            "ph_delivery_contact": "Liên hệ giao hàng",
+            "empty": "Chưa có danh sách chi tiết từ biểu mẫu.",
+            "special_summary_title": "Lưu ý đặc biệt",
+            "role_cargo": "Hàng hóa",
+            "role_student": "Học sinh",
+            "role_staff": "Nhân viên",
+            "role_guest": "Khách",
+            "cargo_item": "Hàng {n}",
+            "guest": "Khách {n}",
+            "business_party": "Đoàn công tác {n}",
+            "unlisted": "{n} người (theo yêu cầu)",
+            "flag_wheelchair": "Hỗ trợ xe lăn",
+            "flag_allergy": "Dị ứng / chế độ ăn",
+            "summary_wheelchair": "Xe cần hỗ trợ lên xuống cho xe lăn.",
+            "summary_allergy": "Cần thông báo tài xế về dị ứng / thực phẩm."
+        },
+        "costs_block": {
+            "title": "Chi phí phát sinh",
+            "subtitle": "Ghi nhận nhanh và theo dõi các khoản đã khai báo (tối đa 50 bản ghi mới nhất)."
+        },
+        "status_block": {
+            "title": "Trạng thái",
+            "subtitle": "Cập nhật bước vận hành: tài xế xác nhận, đang chạy, hoàn thành hoặc hủy."
+        },
+        "coordination": {
+            "title": "Hành động điều phối",
+            "subtitle": "Gán nguồn lực và ghi nhận quyết định.",
+            "assign_vehicle": "Gán xe",
+            "assign_driver": "Gán tài xế",
+            "assign_pair_title": "Xe & tài xế nội bộ",
+            "driver_default_vehicle_hint": "Chọn tài xế sẽ tự chọn xe mặc định gắn với tài xế đó (nếu có trong danh sách).",
+            "assign_success": "Đã gán nguồn lực thành công.",
+            "reject_success": "Đã hủy chuyến.",
+            "hire_external": "Thuê ngoài taxi / NCC",
+            "provider_id": "ID nhà cung cấp (transport_provider_id)",
+            "provider_select": "Nhà cung cấp vận chuyển",
+            "provider_placeholder": "Chọn taxi / NCC…",
+            "provider_quick_add": "Tạo NCC nhanh",
+            "provider_modal_title": "Tạo nhà cung cấp nhanh",
+            "provider_modal_hint": "Tên hiển thị khi điều phối. Loại: taxi hoặc đối tác (vendor).",
+            "provider_modal_name": "Tên NCC",
+            "provider_modal_name_ph": "VD: Taxi Mai Linh, NCC ABC…",
+            "provider_modal_type": "Loại",
+            "provider_modal_cancel": "Hủy",
+            "provider_modal_save": "Tạo & chọn",
+            "provider_modal_name_required": "Nhập tên nhà cung cấp.",
+            "external_vehicle": "Tham chiếu xe ngoài",
+            "external_vehicle_ph": "Biển số / mã xe đối tác…",
+            "external_driver": "Tham chiếu tài xế ngoài",
+            "external_driver_ph": "Tên / SĐT tài xế đối tác…",
+            "internal_notes": "Ghi chú nội bộ / lý do",
+            "internal_notes_ph": "Ghi chú cho điều vận, đính kèm khi gán hoặc hủy…",
+            "reject": "Từ chối / Hủy chuyến",
+            "approve_transfer": "Phê duyệt & chuyển giao",
+            "no_permission_status": "Bạn không có quyền đổi trạng thái chuyến.",
+            "no_permission_assign": "Bạn không có quyền gán nguồn lực hoặc hủy chuyến.",
+            "suitable_vehicles": "{n} xe phù hợp sức chỗ trong danh sách sẵn sàng.",
+            "validation_assign": "Chọn đủ xe và tài xế nội bộ, hoặc chọn thuê ngoài kèm NCC.",
+            "validation_provider": "Khi thuê ngoài, chọn nhà cung cấp trong danh sách.",
+            "reject_confirm_title": "Hủy chuyến này?",
+            "reject_confirm_body": "Trạng thái chuyến sẽ chuyển sang đã hủy. Ghi chú nội bộ (nếu có) sẽ lưu vào nhật ký trạng thái.",
+            "reject_cancel": "Không"
+        },
+        "attachments": {
+            "title": "Tệp đính kèm",
+            "unnamed": "Tệp không tên",
+            "empty": "Không có tệp trên yêu cầu gốc.",
+            "upload": "Tải lên",
+            "delete": "Xóa",
+            "delete_confirm_title": "Xóa tệp đính kèm?",
+            "delete_confirm_body": "Xóa «{name}»? Không hoàn tác.",
+            "deleted_ok": "Đã xóa tệp.",
+            "upload_ok": "Đã tải lên."
+        },
+        "actions": {
+            "refresh": "Tải lại"
+        },
+        "messages": {
+            "ok": "OK",
+            "error": "Lỗi",
+            "rate_limited": "Quá nhiều thao tác. Vui lòng đợi vài giây rồi thử lại."
+        },
+        "current_location": {
+            "en_route": "Đang di chuyển"
+        },
+        "trip_status": {
+            "title": "Trạng thái chuyến",
+            "pickup": "ĐIỂM ĐÓN",
+            "current": "VỊ TRÍ HIỆN TẠI",
+            "dropoff": "ĐIỂM TRẢ"
+        },
+        "timeline": {
+            "title": "Dòng thời gian",
+            "empty": "Chưa có hoạt động.",
+            "trip_created": "Tạo chuyến",
+            "trip_created_subtitle": "Loại: {type}",
+            "system": "Hệ thống",
+            "status_change": "Trạng thái: {from} → {to}",
+            "status_change_short": "Thay đổi trạng thái",
+            "dispatcher_note": "Ghi chú điều vận",
+            "event": "Sự kiện"
+        },
+        "route_tracking": {
+            "title": "Theo dõi tuyến đường",
+            "route": "Tuyến đường",
+            "open_map": "Mở bản đồ",
+            "hint_no_gps": "Gợi ý: hiện chưa có GPS tracking, nút “Mở bản đồ” sẽ mở chỉ đường theo điểm đón/trả."
+        },
+        "ops": {
+            "title": "Thao tác điều vận",
+            "subtitle": "Quản lý và điều chỉnh chuyến đi",
+            "hint": "",
+            "active": "Đang hoạt động",
+            "change": "Thay đổi",
+            "close": "Đóng",
+            "adjust_vehicle": {
+                "title": "Điều chỉnh xe",
+                "current": "Xe hiện tại",
+                "type": "Loại xe",
+                "assign_other": "Gán xe khác"
+            },
+            "adjust_driver": {
+                "title": "Điều chỉnh tài xế",
+                "driver": "Tài xế",
+                "rating": "Đánh giá",
+                "assign_other": "Gán tài xế khác"
+            },
+            "tiles": {
+                "time": {
+                    "title": "Điều chỉnh thời gian",
+                    "subtitle": "Thay đổi giờ đón/trả"
+                },
+                "route": {
+                    "title": "Thay đổi tuyến đường",
+                    "subtitle": "Cập nhật điểm đón/trả"
+                },
+                "passengers": {
+                    "title": "Điều chỉnh hành khách",
+                    "subtitle": "Thêm/bớt số người"
+                }
+            },
+            "form": {
+                "driver": "Tài xế",
+                "vehicle": "Xe",
+                "pick_driver": "Chọn tài xế",
+                "pick_vehicle": "Chọn biển số",
+                "pick_driver_first": "Chọn tài xế trước để mở danh sách xe.",
+                "keep_or_clear": "— Không đổi / bỏ chọn —",
+                "provider_id_optional": "transport_provider_id (tùy chọn)",
+                "assign": "Gán"
+            },
+            "panels": {
+                "vehicle": "Điều chỉnh xe / tài xế",
+                "driver": "Điều chỉnh xe / tài xế",
+                "time": "Điều chỉnh thời gian",
+                "route": "Thay đổi tuyến đường",
+                "passengers": "Điều chỉnh hành khách",
+                "coming_soon": "Sắp có."
+            },
+            "messages": {
+                "vehicles_load_failed": "Không tải được danh sách xe.",
+                "drivers_load_failed": "Không tải được danh sách tài xế.",
+                "resources_load_failed": "Lỗi tải danh sách xe/tài xế."
+            }
+        },
+        "info": {
+            "title": "Thông tin chuyến",
+            "trip_id": "Trip ID",
+            "passengers": "Hành khách",
+            "trip_type": "Loại chuyến",
+            "requested_by": "Người yêu cầu",
+            "sla": "Service Level Agreement"
+        },
+        "assigned": {
+            "title": "Nguồn lực được gán",
+            "vehicle": "Xe",
+            "driver": "Tài xế",
+            "provider": "Nhà cung cấp"
+        },
+        "notes": {
+            "title": "Ghi chú điều vận",
+            "from_request": "Ghi chú từ yêu cầu",
+            "bm03_title": "Nội dung đơn điện tử (BM.03)",
+            "bm03_hint": "Tự động từ biểu mẫu tạo yêu cầu; không dùng cột ghi chú.",
+            "empty": "Chưa có note.",
+            "add_title": "+ Thêm note mới",
+            "placeholder": "Ghi chú cho dispatcher/ops…",
+            "add_action": "Thêm note"
+        },
+        "step": {
+            "pending": "Đang chờ",
+            "waiting": "Đang chờ",
+            "en_route": "Đang di chuyển",
+            "arrived": "Đã đến",
+            "completed": "Hoàn thành",
+            "cancelled": "Đã huỷ"
+        },
+        "sla": {
+            "overdue": "Quá hạn",
+            "overdue_detail": "Quá hạn đến nơi {n} phút",
+            "remaining_minutes": "Còn lại {n} phút tới hạn đến nơi"
+        },
+        "status_update": {
+            "title": "Cập nhật trạng thái",
+            "subtitle": "Ghi nhật ký trạng thái chuyến (kèm ghi chú tùy chọn).",
+            "status": "Trạng thái",
+            "pick": "Chọn",
+            "note": "Ghi chú",
+            "note_ph": "Lý do / bàn giao…",
+            "update": "Cập nhật"
+        },
+        "costs": {
+            "title": "Chi phí (50 mới nhất)",
+            "empty": "Chưa có.",
+            "total": "Tổng: {amount}",
+            "open_list": "Mở trang chi phí",
+            "quick_title": "Ghi nhận chi phí nhanh",
+            "quick_type": "Loại",
+            "quick_amount": "Số tiền (VND)",
+            "quick_amount_ph": "VD: 150000",
+            "quick_desc": "Mô tả (tuỳ chọn)",
+            "quick_desc_ph": "Ghi chú chứng từ…",
+            "quick_submit": "Gửi chi phí",
+            "quick_invalid": "Chọn loại và nhập số tiền hợp lệ.",
+            "type_fuel": "Xăng dầu",
+            "type_toll": "Phí cầu đường",
+            "type_parking": "Gửi xe / bãi",
+            "type_labor": "Nhân công / phụ cấp",
+            "type_other": "Khác"
+        }
+    },
+    "dashboard_analytics": {
+        "title": "Tổng quan",
+        "subtitle": "Chuyến & chi phí đã xác nhận theo khoảng ngày.",
+        "filter_applied_title": "Bộ lọc đang áp dụng",
+        "filter_period_label": "Kỳ báo cáo",
+        "filter_dates_label": "Khoảng ngày",
+        "date_range_title": "Chọn khoảng ngày",
+        "date_range_hint": "Bắt đầu không sau ngày kết thúc. Nhấn «Áp dụng» khi kỳ là Tùy chọn.",
+        "date_range_quick_today": "Hôm nay",
+        "date_range_quick_yesterday": "Hôm qua",
+        "date_range_quick_last7": "7 ngày qua",
+        "date_range_quick_month": "Tháng này",
+        "date_range_span": "{n} ngày",
+        "filter_clear_all": "Xóa tất cả bộ lọc",
+        "filter_applied_range": "{from} → {to}",
+        "chart_empty": "Chưa có dữ liệu trong kỳ này.",
+        "filter_period": "Kỳ",
+        "preset_month": "Tháng này",
+        "preset_last30": "30 ngày",
+        "preset_last7": "7 ngày",
+        "preset_quarter": "Quý này",
+        "preset_custom": "Tùy chọn",
+        "range_from": "Từ",
+        "range_to": "Đến",
+        "apply_range": "Áp dụng",
+        "range_invalid": "Ngày bắt đầu phải ≤ ngày kết thúc.",
+        "loading": "Đang tải…",
+        "load_error": "Không tải được dữ liệu.",
+        "empty_period": "Không có dữ liệu trong kỳ đã chọn.",
+        "kpi_trips_title": "Chuyến",
+        "kpi_trips_sub": "Theo depart_at",
+        "kpi_cost_title": "Chi phí",
+        "kpi_cost_sub": "Đã xác nhận",
+        "kpi_sla_title": "Cargo trễ SLA",
+        "kpi_sla_sub": "Toàn hệ thống",
+        "kpi_providers_title": "NCC hàng đầu",
+        "kpi_providers_sub": "Trong kỳ",
+        "chart_trips_donut": "Trạng thái chuyến",
+        "chart_hour_line": "Giờ khởi hành (0–23h)",
+        "chart_hour_hint": "Giờ local của depart_at, bỏ qua chuyến chưa có giờ đi.",
+        "hour_y": "Chuyến",
+        "chart_costs_bar": "Chi phí theo loại",
+        "chart_providers": "Chi phí theo NCC",
+        "quick_title": "Truy cập nhanh",
+        "quick_dispatcher": "Điều vận",
+        "quick_trips": "Chuyến",
+        "quick_new_request": "Tạo YC",
+        "quick_requests": "Yêu cầu",
+        "quick_resources": "Xe & TX",
+        "quick_cargo": "Hàng hóa",
+        "quick_costs": "Chi phí",
+        "quick_pricing": "Bảng giá",
+        "quick_audit": "Nhật ký",
+        "reports_link": "Báo cáo & CSV",
+        "kpi_completion_title": "Hoàn thành",
+        "kpi_completion_sub": "Chuyến completed / tổng trong kỳ",
+        "kpi_distance_title": "Quãng đường",
+        "kpi_distance_sub": "Tổng km (trip_records)",
+        "fleet_internal": "Xe nội bộ",
+        "fleet_vendor_hire": "Thuê NCC",
+        "fleet_taxi": "Taxi / thuê taxi",
+        "fleet_unspecified": "Chưa phân loại",
+        "chart_fleet_mode": "Nguồn lực chuyến (nội bộ / thuê / taxi)",
+        "chart_dispatch_status": "Yêu cầu điều xe trong kỳ",
+        "chart_costs_pipeline": "Chi phí chuyến theo trạng thái (tất cả)",
+        "chart_top_requesters": "Người yêu cầu (top)",
+        "chart_trips_by_plate": "Chuyến theo biển số (xe nội bộ)",
+        "filter_all": "Tất cả",
+        "filter_optional_title": "Hiển thị trên thanh lọc",
+        "filter_optional_hint": "Bỏ chọn để ẩn ô bộ lọc; giá trị đang chọn vẫn áp dụng cho báo cáo.",
+        "quick_scroll_prev": "Cuộn trái",
+        "quick_scroll_next": "Cuộn phải",
+        "filter_trip_type": "Loại chuyến",
+        "filter_channel": "Kênh",
+        "filter_paper": "Phiếu giấy",
+        "filter_urgent": "Ưu tiên",
+        "filter_urgent_only": "Gấp / ưu tiên",
+        "filter_trip_run_status": "Trạng thái chuyến",
+        "filter_fleet": "Nguồn lực",
+        "filter_active_count": "{n} lọc",
+        "section_kpis": "Chỉ số trong kỳ",
+        "section_recent_activity": "Hoạt động gần đây",
+        "section_charts_trips_requests": "Biểu đồ chuyến & yêu cầu",
+        "section_charts_timing": "Phân bố giờ khởi hành",
+        "section_charts_costs": "Chi phí & nhà cung cấp",
+        "section_recent_trips": "Chuyến gần đây",
+        "section_recent_requests": "Yêu cầu gần đây",
+        "recent_see_all": "Xem tất cả",
+        "recent_empty": "Không có bản ghi.",
+        "recent_col_when": "Thời gian",
+        "recent_col_route": "Tuyến",
+        "recent_col_status": "Trạng thái",
+        "chart_collapse": "Thu gọn biểu đồ",
+        "chart_expand": "Mở rộng biểu đồ",
+        "chart_toolbar_hint": "Góc phải: xuất PNG, khôi phục zoom.",
+        "chart_hint_trips_donut": "Hover xem %; click chọn một phần để làm nổi bật.",
+        "chart_hint_fleet": "Nguồn lực (nội bộ / thuê / taxi) theo bộ lọc hiện tại.",
+        "chart_hint_dispatch": "Trạng thái yêu cầu điều xe trong khoảng ngày (đã lọc kênh/loại/…).",
+        "chart_hint_hour": "Peak giờ khởi hành; trục có đường chỉ báo khi hover.",
+        "chart_hint_costs_bar": "Chi phí đã xác nhận; zoom khi nhiều loại.",
+        "chart_hint_cost_pipeline": "Tổng tiền theo trạng thái pipeline (nháp → xác nhận).",
+        "chart_hint_providers": "Top nhà cung cấp; kéo slider khi danh sách dài.",
+        "chart_hint_requesters": "Người yêu cầu có nhiều chuyến gắn trong kỳ. Nhiều cột: dùng thanh trượt hoặc cuộn trong khung để zoom.",
+        "chart_hint_plates": "Biển số xe nội bộ (đã lọc). Nhiều cột: dùng thanh trượt hoặc cuộn trong khung để zoom.",
+        "tooltip_trips_unit": "chuyến",
+        "cost_status_draft": "Nháp",
+        "cost_status_submitted": "Đã gửi",
+        "cost_status_confirmed": "Đã xác nhận",
+        "cost_status_rejected": "Từ chối",
+        "section_compliance": "Tuân thủ & bảo trì xe",
+        "compliance_inspection": "Đăng kiểm",
+        "compliance_insurance": "Bảo hiểm",
+        "compliance_road_fee": "Phí đường bộ",
+        "compliance_maintenance": "Bảo dưỡng",
+        "compliance_overdue": "Quá hạn",
+        "compliance_due_30d": "≤ 30 ngày",
+        "compliance_maint_stale": "Không BH trong 180 ngày hoặc chưa có ngày"
+    },
+    "labels": {
+        "trip_status": {
+            "pending": "Chờ xử lý",
+            "approved": "Đã duyệt",
+            "assigned": "Đã phân công",
+            "driver_confirmed": "TX xác nhận",
+            "in_progress": "Đang chạy",
+            "completed": "Hoàn thành",
+            "cancelled": "Đã huỷ",
+            "incident": "Sự cố"
+        },
+        "trip_type": {
+            "door_to_door": "Đưa đón (D2D)",
+            "point_to_point": "Điểm — điểm",
+            "business": "Công tác",
+            "cargo": "Hàng hóa"
+        },
+        "request_status": {
+            "draft": "Nháp",
+            "pending": "Chờ duyệt",
+            "approved": "Đã duyệt",
+            "rejected": "Từ chối",
+            "cancelled": "Đã huỷ"
+        },
+        "source_channel": {
+            "portal": "Portal",
+            "zalo": "Zalo",
+            "paper": "Phiếu giấy"
+        },
+        "paper_status": {
+            "pending": "Chưa nhận",
+            "received": "Đã nhận",
+            "digitally_signed": "Đã ký số"
+        },
+        "cargo_status": {
+            "pending": "Chờ xử lý",
+            "picked_up": "Đã lấy hàng",
+            "in_transit": "Đang vận chuyển",
+            "delivered": "Đã giao",
+            "failed": "Thất bại",
+            "cancelled": "Đã huỷ"
+        },
+        "cargo_timeline": {
+            "created": "Ghi nhận / tạo Đơn hàng",
+            "sla_due": "Hạn SLA",
+            "picked_up": "Lấy hàng (tương đương ngày đi)",
+            "delivered": "Giao hàng (tương đương ngày về)"
+        },
+        "cargo_audit": {
+            "cargo.create": "Tạo Đơn hàng",
+            "cargo.status_change": "Cập nhật trạng thái",
+            "cargo.pod.upload": "Tải lên POD",
+            "cargo.sla_breached": "Cảnh báo trễ SLA"
+        }
     }
-  ,
-  "trip_detail": {
-    "loading": "Đang tải…",
-    "load_error": "Không tải được chuyến.",
-    "retry": "Thử lại",
-    "meta": {
-      "dispatcher": "Điều vận: {name}",
-      "source": "Kênh: {ch}",
-      "paper": "Giấy tờ: {st}",
-      "paid": "Đã thanh toán"
-    },
-    "reschedule": {
-      "title": "Đổi giờ khởi hành",
-      "hint": "Hệ thống giữ độ dài chuyến và kiểm tra trùng xe/tài xế. Cần quyền gán chuyến.",
-      "save": "Cập nhật lịch",
-      "invalid": "Giờ không hợp lệ.",
-      "success": "Đã cập nhật lịch khởi hành."
-    },
-    "title": "Chi tiết chuyến & timeline",
-    "created_at": "Tạo {time}",
-    "high_priority": "Ưu tiên cao",
-    "header": {
-      "back_trips": "Quay lại danh sách chuyến",
-      "page_title": "Chi tiết chuyến đi & điều phối",
-      "request_ref": "Yêu cầu #{code}",
-      "trip_ref": "Chuyến {code}",
-      "notifications": "Thông báo"
-    },
-    "banner": {
-      "request_pending": "Yêu cầu gốc vẫn đang chờ duyệt.",
-      "open_request": "Mở chi tiết yêu cầu"
-    },
-    "overview": {
-      "title": "Tổng quan chuyến",
-      "schedule": "Lịch trình",
-      "est_distance": "Quãng đường ước tính",
-      "est_cost": "Chi phí ước tính",
-      "duration_hours": "{n} giờ",
-      "employee_code": "Mã NV: {code}",
-      "pax_count": "Số khách theo yêu cầu: {n}",
-      "arrive_deadline": "Hạn đến nơi (chuyến): {time}",
-      "depart_vs_request": "Khởi hành khác YC gốc: yêu cầu {req} · chuyến {trip}",
-      "arrive_vs_request": "Hạn đến khác YC gốc: yêu cầu {req} · chuyến {trip}",
-      "distance_from_record": "Theo bản ghi hành trình (trip record).",
-      "distance_not_recorded": "Chưa có km ghi nhận — cập nhật sau khi hoàn thành hoặc nhập tay ở hồ sơ chuyến.",
-      "cost_from_wizard": "Ước tính từ biểu mẫu / wizard khi tạo yêu cầu.",
-      "cost_no_estimate": "Không có dòng giá trong snapshot — xem mục chi phí thực tế bên dưới."
-    },
-    "route": {
-      "section_title": "Chi tiết tuyến đường",
-      "no_stops": "Chưa có điểm dừng chi tiết.",
-      "map_title": "Bản đồ tuyến",
-      "map_placeholder": "Thêm điểm đón/trả để xem bản đồ gợi ý.",
-      "expand_map": "Mở rộng",
-      "map_modal_title": "Xem bản đồ",
-      "close_map": "Đóng",
-      "open_in_google_maps": "Mở chỉ đường đầy đủ trên Google Maps",
-      "stop_pickup": "Điểm đón",
-      "stop_waypoint": "Điểm dừng",
-      "stop_dropoff": "Điểm trả",
-      "stop_count": "{n} điểm",
-      "recorded_km": "Đã ghi {km} km",
-      "contact": "Liên hệ: {c}",
-      "ctx_passenger": "Hành khách: {name}"
-    },
-    "passengers": {
-      "title": "Hành khách ({n})",
-      "edit_inline": "Chỉnh sửa danh sách",
-      "save": "Lưu",
-      "cancel_edit": "Hủy",
-      "add_row": "Thêm dòng",
-      "remove_row": "Xóa dòng",
-      "save_confirm_title": "Lưu danh sách?",
-      "save_confirm_body": "Thay đổi sẽ cập nhật vào yêu cầu điều vận gắn với chuyến này.",
-      "validation_need_one": "Cần ít nhất một dòng có dữ liệu.",
-      "col_name": "Họ tên",
-      "col_role": "Vai trò",
-      "col_guests": "Số người",
-      "col_qty": "SL",
-      "col_contact": "Liên hệ",
-      "col_notes": "Ghi chú",
-      "ph_pickup_contact": "Liên hệ lấy hàng",
-      "ph_delivery_contact": "Liên hệ giao hàng",
-      "empty": "Chưa có danh sách chi tiết từ biểu mẫu.",
-      "special_summary_title": "Lưu ý đặc biệt",
-      "role_cargo": "Hàng hóa",
-      "role_student": "Học sinh",
-      "role_staff": "Nhân viên",
-      "role_guest": "Khách",
-      "cargo_item": "Hàng {n}",
-      "guest": "Khách {n}",
-      "business_party": "Đoàn công tác {n}",
-      "unlisted": "{n} người (theo yêu cầu)",
-      "flag_wheelchair": "Hỗ trợ xe lăn",
-      "flag_allergy": "Dị ứng / chế độ ăn",
-      "summary_wheelchair": "Xe cần hỗ trợ lên xuống cho xe lăn.",
-      "summary_allergy": "Cần thông báo tài xế về dị ứng / thực phẩm."
-    },
-    "costs_block": {
-      "title": "Chi phí phát sinh",
-      "subtitle": "Ghi nhận nhanh và theo dõi các khoản đã khai báo (tối đa 50 bản ghi mới nhất)."
-    },
-    "status_block": {
-      "title": "Trạng thái",
-      "subtitle": "Cập nhật bước vận hành: tài xế xác nhận, đang chạy, hoàn thành hoặc hủy."
-    },
-    "coordination": {
-      "title": "Hành động điều phối",
-      "subtitle": "Gán nguồn lực và ghi nhận quyết định.",
-      "assign_vehicle": "Gán xe",
-      "assign_driver": "Gán tài xế",
-      "assign_pair_title": "Xe & tài xế nội bộ",
-      "driver_default_vehicle_hint": "Chọn tài xế sẽ tự chọn xe mặc định gắn với tài xế đó (nếu có trong danh sách).",
-      "assign_success": "Đã gán nguồn lực thành công.",
-      "reject_success": "Đã hủy chuyến.",
-      "hire_external": "Thuê ngoài taxi / NCC",
-      "provider_id": "ID nhà cung cấp (transport_provider_id)",
-      "provider_select": "Nhà cung cấp vận chuyển",
-      "provider_placeholder": "Chọn taxi / NCC…",
-      "provider_quick_add": "Tạo NCC nhanh",
-      "provider_modal_title": "Tạo nhà cung cấp nhanh",
-      "provider_modal_hint": "Tên hiển thị khi điều phối. Loại: taxi hoặc đối tác (vendor).",
-      "provider_modal_name": "Tên NCC",
-      "provider_modal_name_ph": "VD: Taxi Mai Linh, NCC ABC…",
-      "provider_modal_type": "Loại",
-      "provider_modal_cancel": "Hủy",
-      "provider_modal_save": "Tạo & chọn",
-      "provider_modal_name_required": "Nhập tên nhà cung cấp.",
-      "external_vehicle": "Tham chiếu xe ngoài",
-      "external_vehicle_ph": "Biển số / mã xe đối tác…",
-      "external_driver": "Tham chiếu tài xế ngoài",
-      "external_driver_ph": "Tên / SĐT tài xế đối tác…",
-      "internal_notes": "Ghi chú nội bộ / lý do",
-      "internal_notes_ph": "Ghi chú cho điều vận, đính kèm khi gán hoặc hủy…",
-      "reject": "Từ chối / Hủy chuyến",
-      "approve_transfer": "Phê duyệt & chuyển giao",
-      "no_permission_status": "Bạn không có quyền đổi trạng thái chuyến.",
-      "no_permission_assign": "Bạn không có quyền gán nguồn lực hoặc hủy chuyến.",
-      "suitable_vehicles": "{n} xe phù hợp sức chỗ trong danh sách sẵn sàng.",
-      "validation_assign": "Chọn đủ xe và tài xế nội bộ, hoặc chọn thuê ngoài kèm NCC.",
-      "validation_provider": "Khi thuê ngoài, chọn nhà cung cấp trong danh sách.",
-      "reject_confirm_title": "Hủy chuyến này?",
-      "reject_confirm_body": "Trạng thái chuyến sẽ chuyển sang đã hủy. Ghi chú nội bộ (nếu có) sẽ lưu vào nhật ký trạng thái.",
-      "reject_cancel": "Không"
-    },
-    "attachments": {
-      "title": "Tệp đính kèm",
-      "unnamed": "Tệp không tên",
-      "empty": "Không có tệp trên yêu cầu gốc.",
-      "upload": "Tải lên",
-      "delete": "Xóa",
-      "delete_confirm_title": "Xóa tệp đính kèm?",
-      "delete_confirm_body": "Xóa «{name}»? Không hoàn tác.",
-      "deleted_ok": "Đã xóa tệp.",
-      "upload_ok": "Đã tải lên."
-    },
-    "actions": {
-      "refresh": "Tải lại"
-    },
-    "messages": {
-      "ok": "OK",
-      "error": "Lỗi",
-      "rate_limited": "Quá nhiều thao tác. Vui lòng đợi vài giây rồi thử lại."
-    },
-    "current_location": {
-      "en_route": "Đang di chuyển"
-    },
-    "trip_status": {
-      "title": "Trạng thái chuyến",
-      "pickup": "ĐIỂM ĐÓN",
-      "current": "VỊ TRÍ HIỆN TẠI",
-      "dropoff": "ĐIỂM TRẢ"
-    },
-    "timeline": {
-      "title": "Dòng thời gian",
-      "empty": "Chưa có hoạt động.",
-      "trip_created": "Tạo chuyến",
-      "trip_created_subtitle": "Loại: {type}",
-      "system": "Hệ thống",
-      "status_change": "Trạng thái: {from} → {to}",
-      "status_change_short": "Thay đổi trạng thái",
-      "dispatcher_note": "Ghi chú điều vận",
-      "event": "Sự kiện"
-    },
-    "route_tracking": {
-      "title": "Theo dõi tuyến đường",
-      "route": "Tuyến đường",
-      "open_map": "Mở bản đồ",
-      "hint_no_gps": "Gợi ý: hiện chưa có GPS tracking, nút “Mở bản đồ” sẽ mở chỉ đường theo điểm đón/trả."
-    },
-    "ops": {
-      "title": "Thao tác điều vận",
-      "subtitle": "Quản lý và điều chỉnh chuyến đi",
-      "hint": "",
-      "active": "Đang hoạt động",
-      "change": "Thay đổi",
-      "close": "Đóng",
-      "adjust_vehicle": {
-        "title": "Điều chỉnh xe",
-        "current": "Xe hiện tại",
-        "type": "Loại xe",
-        "assign_other": "Gán xe khác"
-      },
-      "adjust_driver": {
-        "title": "Điều chỉnh tài xế",
-        "driver": "Tài xế",
-        "rating": "Đánh giá",
-        "assign_other": "Gán tài xế khác"
-      },
-      "tiles": {
-        "time": { "title": "Điều chỉnh thời gian", "subtitle": "Thay đổi giờ đón/trả" },
-        "route": { "title": "Thay đổi tuyến đường", "subtitle": "Cập nhật điểm đón/trả" },
-        "passengers": { "title": "Điều chỉnh hành khách", "subtitle": "Thêm/bớt số người" }
-      },
-      "form": {
-        "driver": "Tài xế",
-        "vehicle": "Xe",
-        "pick_driver": "Chọn tài xế",
-        "pick_vehicle": "Chọn biển số",
-        "pick_driver_first": "Chọn tài xế trước để mở danh sách xe.",
-        "keep_or_clear": "— Không đổi / bỏ chọn —",
-        "provider_id_optional": "transport_provider_id (tùy chọn)",
-        "assign": "Gán"
-      },
-      "panels": {
-        "vehicle": "Điều chỉnh xe / tài xế",
-        "driver": "Điều chỉnh xe / tài xế",
-        "time": "Điều chỉnh thời gian",
-        "route": "Thay đổi tuyến đường",
-        "passengers": "Điều chỉnh hành khách",
-        "coming_soon": "Sắp có."
-      },
-      "messages": {
-        "vehicles_load_failed": "Không tải được danh sách xe.",
-        "drivers_load_failed": "Không tải được danh sách tài xế.",
-        "resources_load_failed": "Lỗi tải danh sách xe/tài xế."
-      }
-    },
-    "info": {
-      "title": "Thông tin chuyến",
-      "trip_id": "Trip ID",
-      "passengers": "Hành khách",
-      "trip_type": "Loại chuyến",
-      "requested_by": "Người yêu cầu",
-      "sla": "Service Level Agreement"
-    },
-    "assigned": {
-      "title": "Nguồn lực được gán",
-      "vehicle": "Xe",
-      "driver": "Tài xế",
-      "provider": "Nhà cung cấp"
-    },
-    "notes": {
-      "title": "Ghi chú điều vận",
-      "from_request": "Ghi chú từ yêu cầu",
-      "bm03_title": "Nội dung đơn điện tử (BM.03)",
-      "bm03_hint": "Tự động từ biểu mẫu tạo yêu cầu; không dùng cột ghi chú.",
-      "empty": "Chưa có note.",
-      "add_title": "+ Thêm note mới",
-      "placeholder": "Ghi chú cho dispatcher/ops…",
-      "add_action": "Thêm note"
-    },
-    "step": {
-      "pending": "Đang chờ",
-      "waiting": "Đang chờ",
-      "en_route": "Đang di chuyển",
-      "arrived": "Đã đến",
-      "completed": "Hoàn thành",
-      "cancelled": "Đã huỷ"
-    },
-    "sla": {
-      "overdue": "Quá hạn",
-      "overdue_detail": "Quá hạn đến nơi {n} phút",
-      "remaining_minutes": "Còn lại {n} phút tới hạn đến nơi"
-    }
-    ,
-    "status_update": {
-      "title": "Cập nhật trạng thái",
-      "subtitle": "Ghi nhật ký trạng thái chuyến (kèm ghi chú tùy chọn).",
-      "status": "Trạng thái",
-      "pick": "Chọn",
-      "note": "Ghi chú",
-      "note_ph": "Lý do / bàn giao…",
-      "update": "Cập nhật"
-    },
-    "costs": {
-      "title": "Chi phí (50 mới nhất)",
-      "empty": "Chưa có.",
-      "total": "Tổng: {amount}",
-      "open_list": "Mở trang chi phí",
-      "quick_title": "Ghi nhận chi phí nhanh",
-      "quick_type": "Loại",
-      "quick_amount": "Số tiền (VND)",
-      "quick_amount_ph": "VD: 150000",
-      "quick_desc": "Mô tả (tuỳ chọn)",
-      "quick_desc_ph": "Ghi chú chứng từ…",
-      "quick_submit": "Gửi chi phí",
-      "quick_invalid": "Chọn loại và nhập số tiền hợp lệ.",
-      "type_fuel": "Xăng dầu",
-      "type_toll": "Phí cầu đường",
-      "type_parking": "Gửi xe / bãi",
-      "type_labor": "Nhân công / phụ cấp",
-      "type_other": "Khác"
-    }
-  },
-  "dashboard_analytics": {
-    "title": "Tổng quan",
-    "subtitle": "Chuyến & chi phí đã xác nhận theo khoảng ngày.",
-    "filter_applied_title": "Bộ lọc đang áp dụng",
-    "filter_period_label": "Kỳ báo cáo",
-    "filter_dates_label": "Khoảng ngày",
-    "date_range_title": "Chọn khoảng ngày",
-    "date_range_hint": "Bắt đầu không sau ngày kết thúc. Nhấn «Áp dụng» khi kỳ là Tùy chọn.",
-    "date_range_quick_today": "Hôm nay",
-    "date_range_quick_yesterday": "Hôm qua",
-    "date_range_quick_last7": "7 ngày qua",
-    "date_range_quick_month": "Tháng này",
-    "date_range_span": "{n} ngày",
-    "filter_clear_all": "Xóa tất cả bộ lọc",
-    "filter_applied_range": "{from} → {to}",
-    "chart_empty": "Chưa có dữ liệu trong kỳ này.",
-    "filter_period": "Kỳ",
-    "preset_month": "Tháng này",
-    "preset_last30": "30 ngày",
-    "preset_last7": "7 ngày",
-    "preset_quarter": "Quý này",
-    "preset_custom": "Tùy chọn",
-    "range_from": "Từ",
-    "range_to": "Đến",
-    "apply_range": "Áp dụng",
-    "range_invalid": "Ngày bắt đầu phải ≤ ngày kết thúc.",
-    "loading": "Đang tải…",
-    "load_error": "Không tải được dữ liệu.",
-    "empty_period": "Không có dữ liệu trong kỳ đã chọn.",
-    "kpi_trips_title": "Chuyến",
-    "kpi_trips_sub": "Theo depart_at",
-    "kpi_cost_title": "Chi phí",
-    "kpi_cost_sub": "Đã xác nhận",
-    "kpi_sla_title": "Cargo trễ SLA",
-    "kpi_sla_sub": "Toàn hệ thống",
-    "kpi_providers_title": "NCC hàng đầu",
-    "kpi_providers_sub": "Trong kỳ",
-    "chart_trips_donut": "Trạng thái chuyến",
-    "chart_trip_type": "Loại yêu cầu",
-    "trip_type_unspecified": "Chưa gắn yêu cầu",
-    "chart_hour_line": "Giờ khởi hành (0–23h)",
-    "chart_hour_hint": "Giờ local của depart_at, bỏ qua chuyến chưa có giờ đi.",
-    "hour_y": "Chuyến",
-    "chart_costs_bar": "Chi phí theo loại",
-    "chart_providers": "Chi phí theo NCC",
-    "quick_title": "Truy cập nhanh",
-    "quick_dispatcher": "Điều vận",
-    "quick_trips": "Chuyến",
-    "quick_new_request": "Tạo YC",
-    "quick_requests": "Yêu cầu",
-    "quick_resources": "Xe & TX",
-    "quick_cargo": "Hàng hóa",
-    "quick_costs": "Chi phí",
-    "quick_pricing": "Bảng giá",
-    "quick_audit": "Nhật ký",
-    "reports_link": "Báo cáo & CSV",
-    "kpi_completion_title": "Hoàn thành",
-    "kpi_completion_sub": "Chuyến completed / tổng trong kỳ",
-    "kpi_distance_title": "Quãng đường",
-    "kpi_distance_sub": "Tổng km (trip_records)",
-    "fleet_internal": "Xe nội bộ",
-    "fleet_vendor_hire": "Thuê NCC",
-    "fleet_taxi": "Taxi / thuê taxi",
-    "fleet_unspecified": "Chưa phân loại",
-    "chart_fleet_mode": "Nguồn lực chuyến (nội bộ / thuê / taxi)",
-    "chart_dispatch_status": "Yêu cầu điều xe trong kỳ",
-    "chart_costs_pipeline": "Chi phí chuyến theo trạng thái (tất cả)",
-    "chart_top_requesters": "Người yêu cầu (top)",
-    "chart_trips_by_plate": "Chuyến theo biển số (xe nội bộ)",
-    "filter_all": "Tất cả",
-    "filter_optional_title": "Hiển thị trên thanh lọc",
-    "filter_optional_hint": "Bỏ chọn để ẩn ô bộ lọc; giá trị đang chọn vẫn áp dụng cho báo cáo.",
-    "quick_scroll_prev": "Cuộn trái",
-    "quick_scroll_next": "Cuộn phải",
-    "filter_trip_type": "Loại chuyến",
-    "filter_channel": "Kênh",
-    "filter_paper": "Phiếu giấy",
-    "filter_urgent": "Ưu tiên",
-    "filter_urgent_only": "Gấp / ưu tiên",
-    "filter_trip_run_status": "Trạng thái chuyến",
-    "filter_fleet": "Nguồn lực",
-    "filter_active_count": "{n} lọc",
-    "section_recent_trips": "Chuyến gần đây",
-    "section_recent_requests": "Yêu cầu gần đây",
-    "recent_see_all": "Xem tất cả",
-    "recent_empty": "Không có bản ghi.",
-    "recent_col_when": "Thời gian",
-    "recent_col_route": "Tuyến",
-    "recent_col_status": "Trạng thái",
-    "chart_collapse": "Thu gọn biểu đồ",
-    "chart_expand": "Mở rộng biểu đồ",
-    "chart_toolbar_hint": "Góc phải: xuất PNG, khôi phục zoom.",
-    "chart_hint_trips_donut": "Hover xem %; click chọn một phần để làm nổi bật.",
-    "chart_hint_fleet": "Nguồn lực (nội bộ / thuê / taxi) theo bộ lọc hiện tại.",
-    "chart_hint_trip_type": "Nhiều cột: dùng thanh trượt hoặc cuộn trong khung để zoom.",
-    "chart_hint_dispatch": "Trạng thái yêu cầu điều xe trong khoảng ngày (đã lọc kênh/loại/…).",
-    "chart_hint_hour": "Peak giờ khởi hành; trục có đường chỉ báo khi hover.",
-    "chart_hint_costs_bar": "Chi phí đã xác nhận; zoom khi nhiều loại.",
-    "chart_hint_cost_pipeline": "Tổng tiền theo trạng thái pipeline (nháp → xác nhận).",
-    "chart_hint_providers": "Top nhà cung cấp; kéo slider khi danh sách dài.",
-    "chart_hint_requesters": "Người yêu cầu có nhiều chuyến gắn trong kỳ.",
-    "chart_hint_plates": "Biển số xe nội bộ (đã lọc).",
-    "tooltip_trips_unit": "chuyến",
-    "cost_status_draft": "Nháp",
-    "cost_status_submitted": "Đã gửi",
-    "cost_status_confirmed": "Đã xác nhận",
-    "cost_status_rejected": "Từ chối",
-    "section_compliance": "Tuân thủ & bảo trì xe",
-    "compliance_inspection": "Đăng kiểm",
-    "compliance_insurance": "Bảo hiểm",
-    "compliance_road_fee": "Phí đường bộ",
-    "compliance_maintenance": "Bảo dưỡng",
-    "compliance_overdue": "Quá hạn",
-    "compliance_due_30d": "≤ 30 ngày",
-    "compliance_maint_stale": "Không BH trong 180 ngày hoặc chưa có ngày"
-  },
-  "labels": {
-    "trip_status": {
-      "pending": "Chờ xử lý",
-      "approved": "Đã duyệt",
-      "assigned": "Đã phân công",
-      "driver_confirmed": "TX xác nhận",
-      "in_progress": "Đang chạy",
-      "completed": "Hoàn thành",
-      "cancelled": "Đã huỷ",
-      "incident": "Sự cố"
-    },
-    "trip_type": {
-      "door_to_door": "Đưa đón (D2D)",
-      "point_to_point": "Điểm — điểm",
-      "business": "Công tác",
-      "cargo": "Hàng hóa"
-    },
-    "request_status": {
-      "draft": "Nháp",
-      "pending": "Chờ duyệt",
-      "approved": "Đã duyệt",
-      "rejected": "Từ chối",
-      "cancelled": "Đã huỷ"
-    },
-    "source_channel": {
-      "portal": "Portal",
-      "zalo": "Zalo",
-      "paper": "Phiếu giấy"
-    },
-    "paper_status": {
-      "pending": "Chưa nhận",
-      "received": "Đã nhận",
-      "digitally_signed": "Đã ký số"
-    },
-    "cargo_status": {
-      "pending": "Chờ xử lý",
-      "picked_up": "Đã lấy hàng",
-      "in_transit": "Đang vận chuyển",
-      "delivered": "Đã giao",
-      "failed": "Thất bại",
-      "cancelled": "Đã huỷ"
-    },
-    "cargo_timeline": {
-      "created": "Ghi nhận / tạo Đơn hàng",
-      "sla_due": "Hạn SLA",
-      "picked_up": "Lấy hàng (tương đương ngày đi)",
-      "delivered": "Giao hàng (tương đương ngày về)"
-    },
-    "cargo_audit": {
-      "cargo.create": "Tạo Đơn hàng",
-      "cargo.status_change": "Cập nhật trạng thái",
-      "cargo.pod.upload": "Tải lên POD",
-      "cargo.sla_breached": "Cảnh báo trễ SLA"
-    }
-  }
 }

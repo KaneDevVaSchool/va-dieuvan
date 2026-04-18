@@ -36,11 +36,11 @@
         {{ loadError }}
       </div>
 
-      <div class="flex flex-col gap-4 xl:flex-row xl:items-stretch">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-stretch xl:gap-6">
         <!-- Trip queue -->
         <aside
           id="dispatcher-trip-queue"
-          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm xl:w-[min(100%,380px)]"
+          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:w-[min(100%,430px)]"
         >
           <div class="border-b border-slate-200 p-3">
             <div class="flex items-start justify-between gap-2">
@@ -60,16 +60,16 @@
                 {{ t('dispatcher_board.open_requests') }}
               </RouterLink>
             </div>
-            <div class="mt-3 flex flex-wrap gap-1.5">
+            <div class="mt-3 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
               <button
                 v-for="tab in queueTabs"
                 :key="tab.id"
                 type="button"
-                class="rounded-full px-2.5 py-1 text-xs font-medium transition-colors"
+                class="rounded-full px-2.5 py-1.5 text-[11px] font-medium transition-colors sm:px-3 sm:text-xs"
                 :class="
                   queueFilter === tab.id
                     ? 'bg-teal-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                 "
                 @click="queueFilter = tab.id"
               >
@@ -99,7 +99,8 @@
                 v-for="trip in filteredQueueTrips"
                 :key="trip.id"
                 :to="`/trips/${trip.id}`"
-                class="block rounded-lg border border-slate-200 bg-slate-50/80 p-3 transition-colors hover:border-slate-300 hover:bg-white"
+                class="block rounded-lg border border-slate-200 border-l-[3px] bg-slate-50/80 p-3 pl-[0.7rem] transition-colors hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/40 dark:hover:bg-slate-800/80"
+                :class="tripTypeBorderClass(trip)"
               >
                 <div class="flex items-start justify-between gap-2">
                   <span class="font-mono text-xs font-semibold text-teal-700">#{{ trip.id }}</span>
@@ -114,10 +115,8 @@
                 <div class="mt-1 text-sm font-medium text-slate-900">
                   {{ tripTitle(trip) }}
                 </div>
-                <div class="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-500">
-                  <span>{{ labelTripType(tripType(trip)) }}</span>
-                  <span v-if="tripType(trip) === 'cargo'" class="text-slate-400">·</span>
-                  <span v-if="tripType(trip) === 'cargo'">{{ t('dispatcher_board.cargo') }}</span>
+                <div class="mt-1 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                  {{ labelTripType(tripType(trip)) }}
                 </div>
                 <div class="mt-2 flex gap-2 border-l-2 border-slate-300 pl-2 text-[11px] leading-snug text-slate-600">
                   <div class="min-w-0 flex-1">
@@ -142,7 +141,7 @@
         <section
           class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80"
         >
-          <div class="space-y-3 border-b border-slate-100/90 bg-gradient-to-r from-teal-50/80 via-white to-sky-50/45 p-3.5 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80">
+          <div class="space-y-3 border-b border-slate-100/90 bg-gradient-to-r from-teal-50/80 via-white to-sky-50/45 p-4 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80 sm:p-4 sm:pb-3.5">
             <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -198,13 +197,38 @@
                 {{ t('dispatcher_board.bulk_assign') }}
               </button>
             </div>
+            <div
+              class="flex flex-col gap-2 border-t border-slate-200/80 pt-3 dark:border-slate-700/70"
+              role="group"
+              :aria-label="t('dispatcher_board.service_types')"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ t('dispatcher_board.service_types') }}
+                </span>
+                <span
+                  v-for="item in tripTypeLegend"
+                  :key="item.type"
+                  class="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/90 px-2 py-0.5 text-[10px] font-medium text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-100"
+                >
+                  <span class="h-2 w-2 shrink-0 rounded-full shadow-sm" :class="item.dot" />
+                  {{ item.label }}
+                </span>
+              </div>
+              <p class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
+                {{ t('dispatcher_board.stripe_hint') }}
+              </p>
+              <p class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
+                {{ t('dispatcher_board.ui_upgrade_hint') }}
+              </p>
+            </div>
           </div>
 
           <div class="overflow-x-auto [scrollbar-width:thin]">
-            <div class="min-w-[720px] bg-gradient-to-b from-slate-50/40 to-white p-3 dark:from-slate-950/50 dark:to-slate-900/30">
+            <div class="min-w-[1180px] bg-gradient-to-b from-slate-50/40 to-white p-4 dark:from-slate-950/50 dark:to-slate-900/30 lg:min-w-[1280px]">
               <!-- Hour labels -->
-              <div class="mb-1.5 flex text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                <div class="w-[140px] shrink-0" />
+              <div class="mb-2 flex text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                <div class="w-[200px] shrink-0 lg:w-[220px]" />
                 <div class="grid min-w-0 flex-1" :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }">
                   <div
                     v-for="h in hourSlots"
@@ -221,12 +245,14 @@
                 :key="row.key"
                 class="flex border-b border-slate-100/90 last:border-b-0 dark:border-slate-700/60"
               >
-                <div class="flex w-[140px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/60 py-2.5 pr-2.5 text-xs dark:border-slate-700/80 dark:bg-slate-900/30">
+                <div
+                  class="flex w-[200px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/70 py-3 pr-3 text-xs dark:border-slate-700/80 dark:bg-slate-900/40 lg:w-[220px]"
+                >
                   <span class="truncate font-medium text-slate-800 dark:text-slate-100">{{ row.label }}</span>
                   <span v-if="row.sub" class="truncate text-[10px] text-rose-600">{{ row.sub }}</span>
                   <span v-else-if="row.meta" class="truncate text-[10px] text-slate-500 dark:text-slate-400">{{ row.meta }}</span>
                 </div>
-                <div class="relative min-h-[64px] min-w-0 flex-1 bg-slate-50/60 dark:bg-slate-950/20">
+                <div class="relative min-h-[76px] min-w-0 flex-1 bg-slate-50/70 dark:bg-slate-950/25">
                   <div
                     class="pointer-events-none absolute inset-0 grid"
                     :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }"
@@ -252,17 +278,25 @@
                     v-for="bar in row.bars"
                     :key="bar.trip.id"
                     :to="`/trips/${bar.trip.id}`"
-                    class="absolute top-2 z-[5] flex min-h-[2.75rem] items-start gap-1 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-md transition hover:brightness-[0.98] hover:shadow-lg dark:hover:brightness-110"
+                    class="absolute top-2.5 z-[5] flex min-h-[3.25rem] items-start gap-1 overflow-hidden rounded-xl border px-2.5 py-2 pl-3 text-left shadow-md ring-1 ring-black/[0.04] transition hover:brightness-[0.98] hover:shadow-lg dark:ring-white/10 dark:hover:brightness-110"
                     :class="bar.toneClass"
                     :style="{ left: `${bar.left}%`, width: `max(${bar.width}%, ${MIN_TIMELINE_BAR_PCT}%)` }"
-                    :title="`${tripTitle(bar.trip)} · ${fmtTime(bar.trip.depart_at)} · ${labelTripStatus(bar.trip.status)}`"
+                    :title="`${labelTripType(tripType(bar.trip))} · ${tripTitle(bar.trip)} · ${fmtTime(bar.trip.depart_at)} · ${labelTripStatus(bar.trip.status)}`"
                   >
-                    <span class="min-w-0 flex-1">
-                      <span class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
+                    <span
+                      class="pointer-events-none absolute bottom-0 left-0 top-0 w-[3px] rounded-l-xl"
+                      :class="tripTypeStripeClass(bar.trip)"
+                      aria-hidden="true"
+                    />
+                    <span class="min-w-0 flex-1 pl-0.5">
+                      <span class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
                         <span class="font-semibold tabular-nums">#{{ bar.trip.id }}</span>
-                        <span class="text-[9px] font-normal opacity-85">{{ fmtTime(bar.trip.depart_at) }}</span>
+                        <span
+                          class="max-w-[9rem] truncate rounded-md bg-white/55 px-1 py-px text-[9px] font-semibold text-slate-800 ring-1 ring-slate-200/80 dark:bg-slate-900/50 dark:text-slate-100 dark:ring-slate-600/80"
+                        >{{ labelTripType(tripType(bar.trip)) }}</span>
+                        <span class="text-[9px] font-normal tabular-nums opacity-85">{{ fmtTime(bar.trip.depart_at) }}</span>
                       </span>
-                      <span class="mt-0.5 block truncate text-[9px] font-normal leading-snug opacity-90">{{ tripTitle(bar.trip) }}</span>
+                      <span class="mt-1 block line-clamp-2 text-[10px] font-medium leading-snug opacity-92">{{ tripTitle(bar.trip) }}</span>
                     </span>
                     <span
                       v-if="bar.conflict"
@@ -322,17 +356,34 @@ const queueTabs = computed(() => {
       count: q.filter((x) => dr(x)?.is_urgent).length,
     },
     {
+      id: 'door_to_door',
+      label: t('dispatcher_board.tab_d2d'),
+      count: q.filter((x) => tripType(x) === 'door_to_door').length,
+    },
+    {
+      id: 'point_to_point',
+      label: t('dispatcher_board.tab_p2p'),
+      count: q.filter((x) => tripType(x) === 'point_to_point').length,
+    },
+    {
+      id: 'business',
+      label: t('dispatcher_board.tab_business'),
+      count: q.filter((x) => tripType(x) === 'business').length,
+    },
+    {
       id: 'cargo',
       label: t('dispatcher_board.tab_cargo'),
       count: q.filter((x) => tripType(x) === 'cargo').length,
     },
-    {
-      id: 'd2d',
-      label: t('dispatcher_board.tab_d2d'),
-      count: q.filter((x) => tripType(x) === 'door_to_door').length,
-    },
   ]
 })
+
+const tripTypeLegend = computed(() => [
+  { type: 'door_to_door', label: labelTripType('door_to_door'), dot: 'bg-violet-500 shadow-sm shadow-violet-600/35' },
+  { type: 'point_to_point', label: labelTripType('point_to_point'), dot: 'bg-cyan-500 shadow-sm shadow-cyan-600/35' },
+  { type: 'business', label: labelTripType('business'), dot: 'bg-amber-500 shadow-sm shadow-amber-600/35' },
+  { type: 'cargo', label: labelTripType('cargo'), dot: 'bg-teal-600 shadow-sm shadow-teal-600/35' },
+])
 
 const dayKey = computed(() => toLocalDateKey(selectedDate.value))
 
@@ -349,6 +400,26 @@ function dr(trip) {
 
 function tripType(trip) {
   return dr(trip)?.trip_type ?? ''
+}
+
+function tripTypeStripeClass(trip) {
+  const m = {
+    door_to_door: 'bg-violet-500',
+    point_to_point: 'bg-cyan-500',
+    business: 'bg-amber-500',
+    cargo: 'bg-teal-600',
+  }
+  return m[tripType(trip)] ?? 'bg-slate-400'
+}
+
+function tripTypeBorderClass(trip) {
+  const m = {
+    door_to_door: 'border-l-violet-500',
+    point_to_point: 'border-l-cyan-500',
+    business: 'border-l-amber-500',
+    cargo: 'border-l-teal-600',
+  }
+  return m[tripType(trip)] ?? 'border-l-slate-400'
 }
 
 function origin(trip) {
@@ -422,7 +493,7 @@ function tripEnd(trip) {
 }
 
 /** Đủ rộng để hiển thị mã chuyến, giờ và tuyến */
-const MIN_TIMELINE_BAR_PCT = 12
+const MIN_TIMELINE_BAR_PCT = 15
 
 function pctRange(trip) {
   const start = hourValue(trip.depart_at)

@@ -329,7 +329,10 @@
       {{ t('dashboard_analytics.loading') }}
     </div>
 
-    <!-- KPI hàng 1 -->
+    <section class="space-y-3" aria-labelledby="dash-section-kpis">
+      <h2 id="dash-section-kpis" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_kpis') }}
+      </h2>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Card :title="t('dashboard_analytics.kpi_trips_title')">
         <div class="text-2xl font-bold tabular-nums text-slate-900 dark:text-white md:text-3xl">{{ totalTrips }}</div>
@@ -380,10 +383,12 @@
         <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.kpi_distance_sub') }}</p>
       </Card>
     </div>
+    </section>
 
+    <section class="border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-compliance">
     <!-- Tuân thủ xe -->
     <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-4">
-      <h2 class="text-sm font-semibold text-slate-900 dark:text-white">
+      <h2 id="dash-section-compliance" class="text-sm font-semibold text-slate-900 dark:text-white">
         {{ t('dashboard_analytics.section_compliance') }}
       </h2>
       <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -401,13 +406,18 @@
         </div>
       </div>
     </div>
+    </section>
 
+    <section class="border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-recent">
+      <h2 id="dash-section-recent" class="mb-3 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_recent_activity') }}
+      </h2>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-white">
             {{ t('dashboard_analytics.section_recent_trips') }}
-          </h2>
+          </h3>
           <RouterLink
             class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
             to="/trips"
@@ -442,9 +452,9 @@
       </div>
       <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-slate-900 dark:text-white">
+          <h3 class="text-sm font-semibold text-slate-900 dark:text-white">
             {{ t('dashboard_analytics.section_recent_requests') }}
-          </h2>
+          </h3>
           <RouterLink
             class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
             to="/requests"
@@ -478,7 +488,12 @@
         <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
       </div>
     </div>
+    </section>
 
+    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-charts-ops">
+      <h2 id="dash-section-charts-ops" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_charts_trips_requests') }}
+      </h2>
     <p class="text-center text-[11px] text-slate-400 dark:text-slate-500">
       {{ t('dashboard_analytics.chart_toolbar_hint') }}
     </p>
@@ -513,35 +528,54 @@
       </DashboardChartSection>
     </div>
 
+    <DashboardChartSection
+      :title="t('dashboard_analytics.chart_dispatch_status')"
+      :hint="t('dashboard_analytics.chart_hint_dispatch')"
+      persist-key="donut-dispatch"
+      :expand-label="t('dashboard_analytics.chart_expand')"
+      :collapse-label="t('dashboard_analytics.chart_collapse')"
+    >
+      <DashboardEChart
+        :height="chartHeight"
+        :option="optDispatchDonut"
+        :aria-label="t('dashboard_analytics.chart_dispatch_status')"
+      />
+    </DashboardChartSection>
+
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <DashboardChartSection
-        :title="t('dashboard_analytics.chart_trip_type')"
-        :hint="t('dashboard_analytics.chart_hint_trip_type')"
-        persist-key="bar-trip-type"
+        :title="t('dashboard_analytics.chart_trips_by_plate')"
+        :hint="t('dashboard_analytics.chart_hint_plates')"
+        persist-key="bar-plates"
         :expand-label="t('dashboard_analytics.chart_expand')"
         :collapse-label="t('dashboard_analytics.chart_collapse')"
       >
         <DashboardEChart
-          :height="chartHeight"
-          :option="optTripType"
-          :aria-label="t('dashboard_analytics.chart_trip_type')"
+          :height="chartHeightTall"
+          :option="optPlates"
+          :aria-label="t('dashboard_analytics.chart_trips_by_plate')"
         />
       </DashboardChartSection>
       <DashboardChartSection
-        :title="t('dashboard_analytics.chart_dispatch_status')"
-        :hint="t('dashboard_analytics.chart_hint_dispatch')"
-        persist-key="donut-dispatch"
+        :title="t('dashboard_analytics.chart_top_requesters')"
+        :hint="t('dashboard_analytics.chart_hint_requesters')"
+        persist-key="bar-requesters"
         :expand-label="t('dashboard_analytics.chart_expand')"
         :collapse-label="t('dashboard_analytics.chart_collapse')"
       >
         <DashboardEChart
-          :height="chartHeight"
-          :option="optDispatchDonut"
-          :aria-label="t('dashboard_analytics.chart_dispatch_status')"
+          :height="chartHeightTall"
+          :option="optRequesters"
+          :aria-label="t('dashboard_analytics.chart_top_requesters')"
         />
       </DashboardChartSection>
     </div>
+    </section>
 
+    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-charts-time">
+      <h2 id="dash-section-charts-time" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_charts_timing') }}
+      </h2>
     <DashboardChartSection
       :title="t('dashboard_analytics.chart_hour_line')"
       :hint="`${t('dashboard_analytics.chart_hint_hour')} ${t('dashboard_analytics.chart_hour_hint')}`"
@@ -557,7 +591,12 @@
         />
       </div>
     </DashboardChartSection>
+    </section>
 
+    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-charts-costs">
+      <h2 id="dash-section-charts-costs" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_charts_costs') }}
+      </h2>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <DashboardChartSection
         :title="t('dashboard_analytics.chart_costs_bar')"
@@ -587,48 +626,20 @@
       </DashboardChartSection>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <DashboardChartSection
-        :title="t('dashboard_analytics.chart_providers')"
-        :hint="t('dashboard_analytics.chart_hint_providers')"
-        persist-key="bar-providers"
-        :expand-label="t('dashboard_analytics.chart_expand')"
-        :collapse-label="t('dashboard_analytics.chart_collapse')"
-      >
-        <DashboardEChart
-          :height="chartHeight"
-          :option="optProviders"
-          :aria-label="t('dashboard_analytics.chart_providers')"
-        />
-      </DashboardChartSection>
-      <DashboardChartSection
-        :title="t('dashboard_analytics.chart_top_requesters')"
-        :hint="t('dashboard_analytics.chart_hint_requesters')"
-        persist-key="bar-requesters"
-        :expand-label="t('dashboard_analytics.chart_expand')"
-        :collapse-label="t('dashboard_analytics.chart_collapse')"
-      >
-        <DashboardEChart
-          :height="chartHeightTall"
-          :option="optRequesters"
-          :aria-label="t('dashboard_analytics.chart_top_requesters')"
-        />
-      </DashboardChartSection>
-    </div>
-
     <DashboardChartSection
-      :title="t('dashboard_analytics.chart_trips_by_plate')"
-      :hint="t('dashboard_analytics.chart_hint_plates')"
-      persist-key="bar-plates"
+      :title="t('dashboard_analytics.chart_providers')"
+      :hint="t('dashboard_analytics.chart_hint_providers')"
+      persist-key="bar-providers"
       :expand-label="t('dashboard_analytics.chart_expand')"
       :collapse-label="t('dashboard_analytics.chart_collapse')"
     >
       <DashboardEChart
-        :height="chartHeightTall"
-        :option="optPlates"
-        :aria-label="t('dashboard_analytics.chart_trips_by_plate')"
+        :height="chartHeight"
+        :option="optProviders"
+        :aria-label="t('dashboard_analytics.chart_providers')"
       />
     </DashboardChartSection>
+    </section>
   </div>
 </template>
 
@@ -672,7 +683,6 @@ import {
   topRequestersBarOption,
   licensePlateTripsBarOption,
   tripsByHourLineOption,
-  tripsByTripTypeBarOption,
 } from '../util/transportDashboardCharts'
 
 const { t, locale } = useI18n()
@@ -1160,15 +1170,6 @@ const tripLabelMap = computed(() => {
   return map
 })
 
-const tripTypeLabelMap = computed(() => {
-  const o = summary.value?.trips_by_trip_type ?? {}
-  const map = {}
-  for (const k of Object.keys(o)) {
-    map[k] = k === 'unspecified' ? t('dashboard_analytics.trip_type_unspecified') : labelTripType(k)
-  }
-  return map
-})
-
 const fleetLabelMap = computed(() => ({
   internal: t('dashboard_analytics.fleet_internal'),
   vendor_hire: t('dashboard_analytics.fleet_vendor_hire'),
@@ -1287,14 +1288,6 @@ const optFleet = computed(() =>
   fleetModeDonutOption({
     tripsByFleetMode: summary.value?.trips_by_fleet_mode,
     labelMap: fleetLabelMap.value,
-    emptyText: emptyChartLabel.value,
-  }),
-)
-
-const optTripType = computed(() =>
-  tripsByTripTypeBarOption({
-    tripsByTripType: summary.value?.trips_by_trip_type,
-    labelMap: tripTypeLabelMap.value,
     emptyText: emptyChartLabel.value,
   }),
 )
