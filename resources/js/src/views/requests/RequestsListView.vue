@@ -200,6 +200,14 @@
             {{ t('requests_page.filter_menu_title') }}
           </p>
           <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+            <li v-if="activeTab !== 'all'" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_tab') }}</span>
+              <span class="max-w-[11rem] truncate text-right font-medium">{{ activeTabSummaryLabel }}</span>
+            </li>
+            <li v-if="searchInput.trim()" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_search_keyword') }}</span>
+              <span class="max-w-[11rem] truncate text-right font-medium" :title="searchInput">{{ searchInput }}</span>
+            </li>
             <li v-if="filters.trip_type" class="flex justify-between gap-2">
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_trip_type') }}</span>
               <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
@@ -522,14 +530,14 @@
           </button>
           <button
             type="button"
-            class="hidden h-9 items-center rounded-md border border-violet-200 bg-violet-50 px-2 text-xs font-medium text-violet-900 hover:bg-violet-100 sm:inline-flex"
+            class="inline-flex h-9 items-center rounded-md border border-violet-200 bg-violet-50 px-2 text-xs font-medium text-violet-900 hover:bg-violet-100"
             @click="saveFilterPreset"
           >
             {{ t('requests_page.save_filter_preset') }}
           </button>
           <button
             type="button"
-            class="hidden h-9 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:inline-flex"
+            class="inline-flex h-9 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
             @click="loadFilterPreset"
           >
             {{ t('requests_page.load_filter_preset') }}
@@ -1178,6 +1186,18 @@ watch(items, () => {
 
 const REQUEST_SORT_VALUES = ['created_desc', 'created_asc', 'depart_desc', 'depart_asc', 'id_desc']
 
+const REQUEST_TAB_IDS = [
+  'all',
+  'draft',
+  'pending',
+  'approved',
+  'rejected',
+  'cancelled',
+  'trip_in_progress',
+  'trip_completed',
+  'trash',
+]
+
 const filters = reactive({
   q: '',
   trip_type: '',
@@ -1196,6 +1216,8 @@ const FILTER_PRESET_STORAGE_KEY = 'va-requests-filter-preset-v1'
 
 const activeFilterCount = computed(() => {
   let n = 0
+  if (activeTab.value !== 'all') n++
+  if (searchInput.value.trim()) n++
   if (filters.trip_type) n++
   if (filters.from || filters.to) n++
   if (filters.source_channel) n++
@@ -1208,13 +1230,7 @@ const activeFilterCount = computed(() => {
 })
 
 const emptyStateShowReset = computed(
-  () =>
-    !loading.value &&
-    !items.value.length &&
-    (activeFilterCount.value > 0 ||
-      searchInput.value.trim() !== '' ||
-      activeTab.value !== 'all' ||
-      (filters.sort && filters.sort !== 'created_desc')),
+  () => !loading.value && !items.value.length && activeFilterCount.value > 0,
 )
 
 const sortSelectOptions = computed(() =>
@@ -1296,9 +1312,11 @@ function saveFilterPreset() {
       sla_risk_only: filters.sla_risk_only,
       per_page: filters.per_page,
       sort: filters.sort,
+      q: searchInput.value.trim(),
+      tab: activeTab.value,
     }
     localStorage.setItem(FILTER_PRESET_STORAGE_KEY, JSON.stringify(payload))
-    showAppSuccess(t('requests_page.preset_saved'))
+    showAppSuccess(t('requests_page.preset_saved'), t('requests_page.preset_toast_title'))
   } catch {
     showAppError(t('requests_page.preset_save_failed'))
   }
@@ -1321,13 +1339,11 @@ function loadFilterPreset() {
     if (typeof o.sla_risk_only === 'boolean') filters.sla_risk_only = o.sla_risk_only
     if (typeof o.per_page === 'number' && [10, 20, 50, 100].includes(o.per_page)) filters.per_page = o.per_page
     if (typeof o.sort === 'string' && REQUEST_SORT_VALUES.includes(o.sort)) filters.sort = o.sort
+    if ('q' in o) searchInput.value = typeof o.q === 'string' ? o.q : ''
+    if ('tab' in o && REQUEST_TAB_IDS.includes(o.tab)) activeTab.value = o.tab
     filters.page = 1
-    const q = { ...route.query }
-    delete q.page
-    if (filters.sort !== 'created_desc') q.sort = filters.sort
-    else delete q.sort
-    router.replace({ query: q })
-    showAppSuccess(t('requests_page.preset_loaded'))
+    router.replace({ query: buildRouteQueryFromState() })
+    showAppSuccess(t('requests_page.preset_loaded'), t('requests_page.preset_toast_title'))
   } catch {
     showAppError(t('requests_page.preset_load_failed'))
   }
@@ -1376,6 +1392,33 @@ const tabDefs = computed(() => [
   { id: 'trip_completed', label: t('requests_page.tab_trip_done') },
   { id: 'trash', label: t('requests_page.tab_trash') },
 ])
+
+const activeTabSummaryLabel = computed(() => {
+  const d = tabDefs.value.find((x) => x.id === activeTab.value)
+  return d ? d.label : activeTab.value
+})
+
+/** Query đồng bộ tab, ô tìm & filter có trong URL — tránh applyRouteQuery ghi đè tab sau tải preset. */
+function buildRouteQueryFromState() {
+  const out = {}
+  const id = activeTab.value
+  if (id === 'trash') out.trash = '1'
+  else if (id === 'trip_in_progress') out.trip_status = 'in_progress'
+  else if (id === 'trip_completed') out.trip_status = 'completed'
+  else if (id !== 'all') out.status = id
+
+  if (filters.trip_type) out.trip_type = filters.trip_type
+  if (filters.source_channel) out.source_channel = filters.source_channel
+  if (filters.paper_status) out.paper_status = filters.paper_status
+
+  const sq = searchInput.value.trim()
+  if (sq) out.q = sq
+
+  if (filters.sort && filters.sort !== 'created_desc') out.sort = filters.sort
+  if (filters.page > 1) out.page = String(filters.page)
+
+  return out
+}
 
 const approvalPendingCount = computed(() => Number(stats.value.by_status?.pending ?? 0))
 const approvalApprovedCount = computed(() => Number(stats.value.by_status?.approved ?? 0))

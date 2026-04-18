@@ -425,29 +425,118 @@
             {{ t('dashboard_analytics.recent_see_all') }} →
           </RouterLink>
         </div>
-        <div v-if="recentLoading" class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.loading') }}</div>
-        <ul v-else-if="recentTrips.length" class="divide-y divide-slate-100 dark:divide-slate-800">
-          <li v-for="tr in recentTrips" :key="tr.id" class="py-2 first:pt-0">
-            <RouterLink
-              :to="`/trips/${tr.id}`"
-              class="group flex flex-col gap-0.5 rounded-lg py-0.5 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:justify-between"
+        <div v-if="recentTripsBusy && !recentTrips.length" class="space-y-2" aria-busy="true">
+          <div
+            v-for="s in 5"
+            :key="'tskel-' + s"
+            class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80"
+          />
+        </div>
+        <div v-else-if="recentTrips.length" class="space-y-2">
+          <RouterLink
+            v-for="tr in recentTrips"
+            :key="tr.id"
+            :to="`/trips/${tr.id}`"
+            :class="[
+              'group flex gap-3 rounded-xl border p-3 transition',
+              'border-slate-100 bg-gradient-to-br from-white to-slate-50/90 shadow-sm ring-1 ring-slate-900/[0.03]',
+              'hover:border-teal-200/90 hover:shadow-md hover:ring-teal-500/10',
+              'dark:border-slate-700/90 dark:from-slate-900 dark:to-slate-900/80 dark:ring-white/[0.04]',
+              'dark:hover:border-teal-800/60',
+              recentTripsBusy ? 'pointer-events-none opacity-55' : '',
+            ]"
+          >
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-100/95 text-teal-700 shadow-inner dark:bg-teal-950/55 dark:text-teal-300"
+              aria-hidden="true"
             >
-              <div class="min-w-0">
-                <div class="truncate text-sm font-medium text-slate-900 group-hover:text-teal-700 dark:text-slate-100 dark:group-hover:text-teal-400">
-                  {{ tr.dispatch_request?.origin ?? '—' }}
-                  <span class="text-slate-400">→</span>
-                  {{ tr.dispatch_request?.destination ?? '—' }}
+              <TruckIcon class="h-5 w-5" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
+                      TRP-{{ String(tr.id).padStart(4, '0') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      {{ t('dashboard_analytics.recent_col_route') }}
+                    </span>
+                  </div>
+                  <p
+                    class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 group-hover:text-teal-800 dark:text-slate-50 dark:group-hover:text-teal-300"
+                  >
+                    <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.origin ?? '—' }}</span>
+                    <span class="mx-1 text-teal-500 dark:text-teal-500/90">→</span>
+                    <span class="text-slate-800 dark:text-slate-100">{{ tr.dispatch_request?.destination ?? '—' }}</span>
+                  </p>
+                  <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                    <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
+                    <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(tr.depart_at) }}</span>
+                  </p>
                 </div>
-                <div class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                  {{ formatDepartShort(tr.depart_at) }}
-                </div>
+                <span
+                  :class="[
+                    'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none',
+                    tripStatusPillClass(tr.status),
+                  ]"
+                >
+                  {{ labelTripStatus(tr.status) }}
+                </span>
               </div>
-              <span class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">
-                {{ labelTripStatus(tr.status) }}
-              </span>
-            </RouterLink>
-          </li>
-        </ul>
+            </div>
+          </RouterLink>
+          <div
+            v-if="(recentTripsMeta.last_page ?? 1) > 1"
+            class="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p class="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+              {{
+                t('dashboard_analytics.recent_page_range', {
+                  from: recentTripsPageFrom,
+                  to: recentTripsPageTo,
+                  total: recentTripsMeta.total ?? 0,
+                })
+              }}
+            </p>
+            <div class="flex flex-wrap items-center justify-end gap-1">
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
+                :disabled="recentTripsBusy || (recentTripsMeta.current_page ?? 1) <= 1"
+                :aria-label="t('trips_page.prev')"
+                @click="goRecentTripsPage((recentTripsMeta.current_page ?? 1) - 1)"
+              >
+                <ChevronLeftIcon class="h-4 w-4" />
+              </button>
+              <button
+                v-for="n in recentTripsPageNumbers"
+                :key="'rtp-' + n"
+                type="button"
+                :class="[
+                  'h-8 min-w-[2rem] rounded-lg px-2 text-xs font-semibold tabular-nums transition',
+                  n === (recentTripsMeta.current_page ?? 1)
+                    ? 'bg-teal-600 text-white shadow-sm dark:bg-teal-600'
+                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
+                ]"
+                :disabled="recentTripsBusy"
+                @click="goRecentTripsPage(n)"
+              >
+                {{ n }}
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
+                :disabled="recentTripsBusy || (recentTripsMeta.current_page ?? 1) >= (recentTripsMeta.last_page ?? 1)"
+                :aria-label="t('trips_page.next')"
+                @click="goRecentTripsPage((recentTripsMeta.current_page ?? 1) + 1)"
+              >
+                <ChevronRightIcon class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
         <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
       </div>
       <div class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-4">
@@ -462,29 +551,118 @@
             {{ t('dashboard_analytics.recent_see_all') }} →
           </RouterLink>
         </div>
-        <div v-if="recentLoading" class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.loading') }}</div>
-        <ul v-else-if="recentRequests.length" class="divide-y divide-slate-100 dark:divide-slate-800">
-          <li v-for="rq in recentRequests" :key="rq.id" class="py-2 first:pt-0">
-            <RouterLink
-              :to="`/requests/${rq.id}`"
-              class="group flex flex-col gap-0.5 rounded-lg py-0.5 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:justify-between"
+        <div v-if="recentRequestsBusy && !recentRequests.length" class="space-y-2" aria-busy="true">
+          <div
+            v-for="s in 5"
+            :key="'rskel-' + s"
+            class="h-[4.25rem] animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/80"
+          />
+        </div>
+        <div v-else-if="recentRequests.length" class="space-y-2">
+          <RouterLink
+            v-for="rq in recentRequests"
+            :key="rq.id"
+            :to="`/requests/${rq.id}`"
+            :class="[
+              'group flex gap-3 rounded-xl border p-3 transition',
+              'border-slate-100 bg-gradient-to-br from-white to-violet-50/40 shadow-sm ring-1 ring-slate-900/[0.03]',
+              'hover:border-violet-200/90 hover:shadow-md hover:ring-violet-500/10',
+              'dark:border-slate-700/90 dark:from-slate-900 dark:to-violet-950/25 dark:ring-white/[0.04]',
+              'dark:hover:border-violet-800/50',
+              recentRequestsBusy ? 'pointer-events-none opacity-55' : '',
+            ]"
+          >
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100/95 text-violet-700 shadow-inner dark:bg-violet-950/50 dark:text-violet-300"
+              aria-hidden="true"
             >
-              <div class="min-w-0">
-                <div class="truncate text-sm font-medium text-slate-900 group-hover:text-teal-700 dark:text-slate-100 dark:group-hover:text-teal-400">
-                  #{{ rq.id }} · {{ rq.origin ?? '—' }}
-                  <span class="text-slate-400">→</span>
-                  {{ rq.destination ?? '—' }}
+              <ClipboardDocumentListIcon class="h-5 w-5" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span class="font-mono text-[11px] font-semibold tabular-nums text-slate-400 dark:text-slate-500">
+                      #{{ rq.id }}
+                    </span>
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      <ArrowsRightLeftIcon class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                      {{ t('dashboard_analytics.recent_col_route') }}
+                    </span>
+                  </div>
+                  <p
+                    class="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 group-hover:text-violet-800 dark:text-slate-50 dark:group-hover:text-violet-300"
+                  >
+                    <span class="text-slate-800 dark:text-slate-100">{{ rq.origin ?? '—' }}</span>
+                    <span class="mx-1 text-violet-500 dark:text-violet-400">→</span>
+                    <span class="text-slate-800 dark:text-slate-100">{{ rq.destination ?? '—' }}</span>
+                  </p>
+                  <p class="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                    <ClockIcon class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
+                    <span>{{ t('dashboard_analytics.recent_col_when') }}: {{ formatDepartShort(rq.depart_at) }}</span>
+                  </p>
                 </div>
-                <div class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                  {{ formatDepartShort(rq.depart_at) }}
-                </div>
+                <span
+                  :class="[
+                    'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none',
+                    requestStatusPillClass(rq.status),
+                  ]"
+                >
+                  {{ labelRequestStatus(rq.status) }}
+                </span>
               </div>
-              <span class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">
-                {{ labelRequestStatus(rq.status) }}
-              </span>
-            </RouterLink>
-          </li>
-        </ul>
+            </div>
+          </RouterLink>
+          <div
+            v-if="(recentRequestsMeta.last_page ?? 1) > 1"
+            class="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p class="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+              {{
+                t('dashboard_analytics.recent_page_range', {
+                  from: recentRequestsPageFrom,
+                  to: recentRequestsPageTo,
+                  total: recentRequestsMeta.total ?? 0,
+                })
+              }}
+            </p>
+            <div class="flex flex-wrap items-center justify-end gap-1">
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
+                :disabled="recentRequestsBusy || (recentRequestsMeta.current_page ?? 1) <= 1"
+                :aria-label="t('trips_page.prev')"
+                @click="goRecentRequestsPage((recentRequestsMeta.current_page ?? 1) - 1)"
+              >
+                <ChevronLeftIcon class="h-4 w-4" />
+              </button>
+              <button
+                v-for="n in recentRequestsPageNumbers"
+                :key="'rrp-' + n"
+                type="button"
+                :class="[
+                  'h-8 min-w-[2rem] rounded-lg px-2 text-xs font-semibold tabular-nums transition',
+                  n === (recentRequestsMeta.current_page ?? 1)
+                    ? 'bg-violet-600 text-white shadow-sm dark:bg-violet-600'
+                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
+                ]"
+                :disabled="recentRequestsBusy"
+                @click="goRecentRequestsPage(n)"
+              >
+                {{ n }}
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-35 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300"
+                :disabled="recentRequestsBusy || (recentRequestsMeta.current_page ?? 1) >= (recentRequestsMeta.last_page ?? 1)"
+                :aria-label="t('trips_page.next')"
+                @click="goRecentRequestsPage((recentRequestsMeta.current_page ?? 1) + 1)"
+              >
+                <ChevronRightIcon class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
         <p v-else class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.recent_empty') }}</p>
       </div>
     </div>
@@ -648,12 +826,14 @@ import { computed, markRaw, nextTick, onMounted, onUnmounted, ref, watch } from 
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  ArrowsRightLeftIcon,
   BanknotesIcon,
   CalendarDaysIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClipboardDocumentListIcon,
+  ClockIcon,
   CubeIcon,
   DocumentMagnifyingGlassIcon,
   FunnelIcon,
@@ -749,9 +929,16 @@ const loading = ref(false)
 const loadError = ref('')
 const summary = ref(null)
 
+const RECENT_PAGE_SIZE = 5
+
 const recentTrips = ref([])
 const recentRequests = ref([])
-const recentLoading = ref(false)
+const recentTripsPage = ref(1)
+const recentRequestsPage = ref(1)
+const recentTripsMeta = ref({})
+const recentRequestsMeta = ref({})
+const recentTripsBusy = ref(false)
+const recentRequestsBusy = ref(false)
 
 const TRIP_RUN_STATUS_KEYS = [
   'pending',
@@ -1099,20 +1286,150 @@ function formatDepartShort(s) {
   return String(s).replace('T', ' ').slice(0, 16)
 }
 
-async function loadRecentLists() {
+function tripStatusPillClass(s) {
+  const map = {
+    pending: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100',
+    approved: 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-200',
+    assigned: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200',
+    driver_confirmed: 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100',
+    in_progress: 'bg-teal-100 text-teal-900 dark:bg-teal-950/40 dark:text-teal-100',
+    completed: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100',
+    cancelled: 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-100',
+    incident: 'bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100',
+  }
+  return map[s] ?? 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
+}
+
+function requestStatusPillClass(s) {
+  const map = {
+    draft: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+    pending: 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100',
+    approved: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100',
+    rejected: 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-100',
+    cancelled: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+  }
+  return map[s] ?? 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
+}
+
+const recentTripsPageFrom = computed(() => {
+  const m = recentTripsMeta.value
+  const total = m.total ?? 0
+  if (total <= 0) return 0
+  const cur = m.current_page ?? 1
+  const pp = m.per_page ?? RECENT_PAGE_SIZE
+  return (cur - 1) * pp + 1
+})
+
+const recentTripsPageTo = computed(() => {
+  const m = recentTripsMeta.value
+  const total = m.total ?? 0
+  if (total <= 0) return 0
+  const cur = m.current_page ?? 1
+  const pp = m.per_page ?? RECENT_PAGE_SIZE
+  return Math.min(cur * pp, total)
+})
+
+const recentTripsPageNumbers = computed(() => {
+  const m = recentTripsMeta.value
+  const last = m.last_page ?? 1
+  const cur = m.current_page ?? 1
+  const delta = 1
+  const start = Math.max(1, cur - delta)
+  const end = Math.min(last, cur + delta)
+  const pages = []
+  for (let i = start; i <= end; i++) pages.push(i)
+  return pages
+})
+
+const recentRequestsPageFrom = computed(() => {
+  const m = recentRequestsMeta.value
+  const total = m.total ?? 0
+  if (total <= 0) return 0
+  const cur = m.current_page ?? 1
+  const pp = m.per_page ?? RECENT_PAGE_SIZE
+  return (cur - 1) * pp + 1
+})
+
+const recentRequestsPageTo = computed(() => {
+  const m = recentRequestsMeta.value
+  const total = m.total ?? 0
+  if (total <= 0) return 0
+  const cur = m.current_page ?? 1
+  const pp = m.per_page ?? RECENT_PAGE_SIZE
+  return Math.min(cur * pp, total)
+})
+
+const recentRequestsPageNumbers = computed(() => {
+  const m = recentRequestsMeta.value
+  const last = m.last_page ?? 1
+  const cur = m.current_page ?? 1
+  const delta = 1
+  const start = Math.max(1, cur - delta)
+  const end = Math.min(last, cur + delta)
+  const pages = []
+  for (let i = start; i <= end; i++) pages.push(i)
+  return pages
+})
+
+async function fetchRecentTrips() {
   if (!rangeValid.value) return
-  recentLoading.value = true
+  recentTripsBusy.value = true
   try {
-    const tRes = await listTrips({ ...tripListQuery.value, per_page: 10, page: 1 })
-    const rRes = await listRequests(normalizeRequestListParams({ ...requestListQuery.value, per_page: 10, page: 1 }))
-    recentTrips.value = tRes.items ?? []
-    recentRequests.value = rRes.items ?? []
+    const res = await listTrips({
+      ...tripListQuery.value,
+      per_page: RECENT_PAGE_SIZE,
+      page: recentTripsPage.value,
+    })
+    recentTrips.value = res.items ?? []
+    recentTripsMeta.value = res.meta ?? {}
   } catch {
     recentTrips.value = []
-    recentRequests.value = []
+    recentTripsMeta.value = {}
   } finally {
-    recentLoading.value = false
+    recentTripsBusy.value = false
   }
+}
+
+async function fetchRecentRequests() {
+  if (!rangeValid.value) return
+  recentRequestsBusy.value = true
+  try {
+    const res = await listRequests(
+      normalizeRequestListParams({
+        ...requestListQuery.value,
+        per_page: RECENT_PAGE_SIZE,
+        page: recentRequestsPage.value,
+      }),
+    )
+    recentRequests.value = res.items ?? []
+    recentRequestsMeta.value = res.meta ?? {}
+  } catch {
+    recentRequests.value = []
+    recentRequestsMeta.value = {}
+  } finally {
+    recentRequestsBusy.value = false
+  }
+}
+
+async function goRecentTripsPage(n) {
+  const last = recentTripsMeta.value.last_page ?? 1
+  if (n < 1 || n > last) return
+  recentTripsPage.value = n
+  await fetchRecentTrips()
+}
+
+async function goRecentRequestsPage(n) {
+  const last = recentRequestsMeta.value.last_page ?? 1
+  if (n < 1 || n > last) return
+  recentRequestsPage.value = n
+  await fetchRecentRequests()
+}
+
+async function loadRecentLists() {
+  if (!rangeValid.value) return
+  recentTripsPage.value = 1
+  recentRequestsPage.value = 1
+  await Promise.all([fetchRecentTrips(), fetchRecentRequests()])
 }
 
 function onManualDateChange() {
