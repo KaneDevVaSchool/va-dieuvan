@@ -1,5 +1,6 @@
 import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   AcademicCapIcon,
   BriefcaseIcon,
@@ -16,9 +17,8 @@ import { newIdempotencyKey } from '../util/idempotency'
 import { toDatetimeLocalValue } from '../util/datetime'
 import {
   LEGACY_DRAFT_KEY,
-  WIZARD_STEPS,
   TARGET_OPTIONS,
-  E1_WEEKDAY_OPTIONS,
+  E1_WEEKDAY_KEYS,
   createInitialForm,
   emptyPassengerRow,
   emptyBusinessRow,
@@ -30,16 +30,23 @@ import {
   draftItemStorageKey,
   draftActiveStorageKey,
   MAX_SAVED_DRAFTS,
-  TRIP_TYPE_LABEL_VI,
 } from './dispatchWizardConstants'
 
 export function useDispatchRequestWizard() {
   const router = useRouter()
   const auth = useAuthStore()
+  const { t, locale } = useI18n()
 
-  const steps = WIZARD_STEPS
+  const steps = computed(() => [
+    { id: 'type', title: t('dispatch_wizard.steps.type') },
+    { id: 'info', title: t('dispatch_wizard.steps.info') },
+    { id: 'detail', title: t('dispatch_wizard.steps.detail') },
+    { id: 'confirm', title: t('dispatch_wizard.steps.confirm') },
+  ])
   const targetOptions = TARGET_OPTIONS
-  const e1WeekdayOptions = E1_WEEKDAY_OPTIONS
+  const e1WeekdayOptions = computed(() =>
+    E1_WEEKDAY_KEYS.map((k) => ({ k, label: t(`dispatch_wizard.weekday.${k}`) })),
+  )
 
   function draftKeyForUser(userId) {
     return userId != null ? `${LEGACY_DRAFT_KEY}-u${userId}` : LEGACY_DRAFT_KEY
@@ -56,7 +63,7 @@ export function useDispatchRequestWizard() {
   function buildDraftMeta(draftId, data) {
     const f = data.form || {}
     const trip = f.trip_type || ''
-    const tripLabel = TRIP_TYPE_LABEL_VI[trip] || trip || '—'
+    const tripLabel = t(`dispatch_wizard.trip_short.${trip}`) || trip || '—'
     const rawLine = (f.purpose || '').trim().split(/\r?\n/)[0] || '—'
     const purposeLine = rawLine.length > 72 ? `${rawLine.slice(0, 69)}…` : rawLine
     return {
@@ -178,41 +185,41 @@ export function useDispatchRequestWizard() {
   const businessRows = ref([emptyBusinessRow()])
   const cargoRows = ref([emptyCargoRow()])
 
-  const tripTypeOptions = [
+  const tripTypeOptions = computed(() => [
     {
       value: 'door_to_door',
-      label: 'Đưa đón (Door-to-door)',
-      hint: '',
+      label: t('dispatch_wizard.trip_type.door_to_door.label'),
+      hint: t('dispatch_wizard.trip_type.door_to_door.hint'),
       icon: AcademicCapIcon,
       iconClass: 'text-violet-600',
       selectedClass: 'border-violet-500 bg-violet-50 shadow-sm ring-1 ring-violet-200',
     },
     {
       value: 'point_to_point',
-      label: 'Điểm — Điểm',
-      hint: '',
+      label: t('dispatch_wizard.trip_type.point_to_point.label'),
+      hint: t('dispatch_wizard.trip_type.point_to_point.hint'),
       icon: BuildingOffice2Icon,
       iconClass: 'text-sky-600',
       selectedClass: 'border-sky-500 bg-sky-50 shadow-sm ring-1 ring-sky-200',
     },
     {
       value: 'business',
-      label: 'Công tác',
-      hint: '',
+      label: t('dispatch_wizard.trip_type.business.label'),
+      hint: t('dispatch_wizard.trip_type.business.hint'),
       icon: BriefcaseIcon,
       iconClass: 'text-emerald-600',
       selectedClass: 'border-emerald-500 bg-emerald-50 shadow-sm ring-1 ring-emerald-200',
     },
     {
       value: 'cargo',
-      label: 'Hàng hóa',
-      hint: '',
+      label: t('dispatch_wizard.trip_type.cargo.label'),
+      hint: t('dispatch_wizard.trip_type.cargo.hint'),
       icon: CubeIcon,
       iconClass: 'text-orange-600',
       selectedClass: 'border-orange-500 bg-orange-50 shadow-sm ring-1 ring-orange-200',
-      badge: 'SLA 3h',
+      badge: t('dispatch_wizard.trip_type.cargo.badge'),
     },
-  ]
+  ])
 
   const isCargo = computed(() => form.value.trip_type === 'cargo')
   const isPointToPointTrip = computed(() => form.value.trip_type === 'point_to_point')
@@ -265,7 +272,7 @@ export function useDispatchRequestWizard() {
   function formatOrgUnitFromUser(u) {
     const parts = [u.unit_name, u.department_name].filter(Boolean)
     if (parts.length) return parts.join(' — ')
-    if (u.employee_code) return `Mã NV: ${u.employee_code}`
+    if (u.employee_code) return t('dispatch_wizard.emp_code', { code: u.employee_code })
     return ''
   }
 
@@ -330,7 +337,7 @@ export function useDispatchRequestWizard() {
       requesterDropdownOpen.value = true
     } catch (e) {
       requesterSearchResults.value = []
-      requesterSearchError.value = formatApiError(e, 'Không tìm kiếm được nhân sự.')
+      requesterSearchError.value = formatApiError(e, t('dispatch_wizard.search_staff_fail'))
       requesterDropdownOpen.value = true
     } finally {
       requesterSearchLoading.value = false
@@ -381,7 +388,7 @@ export function useDispatchRequestWizard() {
       coordinatorDropdownOpen.value = true
     } catch (e) {
       coordinatorSearchResults.value = []
-      coordinatorSearchError.value = formatApiError(e, 'Không tìm kiếm được nhân sự.')
+      coordinatorSearchError.value = formatApiError(e, t('dispatch_wizard.search_staff_fail'))
       coordinatorDropdownOpen.value = true
     } finally {
       coordinatorSearchLoading.value = false
@@ -415,7 +422,7 @@ export function useDispatchRequestWizard() {
     if (!f) return
     if (f.size > 10 * 1024 * 1024) {
       basisFile.value = null
-      basisFileError.value = 'Tệp vượt quá 10MB.'
+      basisFileError.value = t('dispatch_wizard.file_too_large')
       if (basisFileInput.value) basisFileInput.value.value = ''
       return
     }
@@ -428,7 +435,7 @@ export function useDispatchRequestWizard() {
     const f = e?.dataTransfer?.files?.[0]
     if (!f) return
     if (f.size > 10 * 1024 * 1024) {
-      basisFileError.value = 'Tệp vượt quá 10MB.'
+      basisFileError.value = t('dispatch_wizard.file_too_large')
       return
     }
     basisFile.value = f
@@ -441,25 +448,31 @@ export function useDispatchRequestWizard() {
   }
 
   const draftLabel = computed(() => {
-    if (created.value) return 'Đã gửi'
+    const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
+    if (created.value) return t('dispatch_wizard.draft.submitted')
     if (activeDraftId.value && savedDraftsList.value.length) {
       const m = savedDraftsList.value.find((x) => x.id === activeDraftId.value)
       if (m) {
         try {
-          return `Bản nháp • ${m.tripLabel} • ${new Date(m.savedAt).toLocaleString('vi-VN')}`
+          return t('dispatch_wizard.draft.label_with_trip', {
+            trip: m.tripLabel,
+            time: new Date(m.savedAt).toLocaleString(loc),
+          })
         } catch {
-          return 'Bản nháp'
+          return t('dispatch_wizard.draft.draft')
         }
       }
     }
     if (draftSavedAt.value) {
       try {
-        return `Bản nháp • Lưu ${new Date(draftSavedAt.value).toLocaleString('vi-VN')}`
+        return t('dispatch_wizard.draft.label_saved', {
+          time: new Date(draftSavedAt.value).toLocaleString(loc),
+        })
       } catch {
-        return 'Bản nháp'
+        return t('dispatch_wizard.draft.draft')
       }
     }
-    return 'Phiên mới (chưa lưu)'
+    return t('dispatch_wizard.draft.new_session')
   })
 
   function minDatetimeLocalFromValues(values) {
@@ -534,7 +547,8 @@ export function useDispatchRequestWizard() {
   function formatCurrency(n) {
     if (n == null || Number.isNaN(Number(n))) return '—'
     try {
-      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(n))
+      const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
+      return new Intl.NumberFormat(loc, { style: 'currency', currency: 'VND' }).format(Number(n))
     } catch {
       return `${n} ₫`
     }
@@ -621,9 +635,9 @@ export function useDispatchRequestWizard() {
   const canSubmitApi = computed(() => !!computedDepartAt.value?.trim())
 
   const headerPrimaryLabel = computed(() => {
-    if (loading.value) return 'Đang gửi…'
-    if (step.value < 3) return 'Tiếp tới xác nhận'
-    return 'Gửi yêu cầu'
+    if (loading.value) return t('dispatch_wizard.header.sending')
+    if (step.value < 3) return t('dispatch_wizard.header.to_confirm')
+    return t('dispatch_wizard.header.submit')
   })
 
   const headerPrimaryDisabled = computed(() => {
@@ -670,7 +684,7 @@ export function useDispatchRequestWizard() {
   function validateBeforeApi() {
     if (!form.value.trip_type) {
       step.value = 0
-      return 'Chọn loại dịch vụ.'
+      return t('dispatch_wizard.validate.pick_type')
     }
     if (
       !form.value.requester_name?.trim() ||
@@ -681,40 +695,40 @@ export function useDispatchRequestWizard() {
       !form.value.date_needed
     ) {
       step.value = 1
-      return 'Điền đủ thông tin bước 2 (A–C, mục đích).'
+      return t('dispatch_wizard.validate.step2')
     }
     if (step2CoordinatorEmailInvalid.value) {
       step.value = 1
-      return 'Email nhân sự điều phối không hợp lệ.'
+      return t('dispatch_wizard.validate.coord_email')
     }
     if (isDateNeededBeforeProposed(form.value.proposed_date, form.value.date_needed)) {
       step.value = 1
-      return 'Ngày cần sử dụng xe không được sớm hơn ngày đề xuất.'
+      return t('dispatch_wizard.validate.date_order')
     }
     if (form.value.is_urgent && !form.value.urgent_reason?.trim()) {
       step.value = 1
-      return 'Ghi lý do khi chọn Gấp.'
+      return t('dispatch_wizard.validate.urgent_reason')
     }
     if (isCargo.value) {
       if (!cargoRows.value.some((r) => r.name?.trim())) {
         step.value = 2
-        return 'Thêm ít nhất một dòng hàng hóa (tên hàng).'
+        return t('dispatch_wizard.validate.cargo_row')
       }
     } else if (form.value.trip_type === 'point_to_point') {
       if (!passengerRows.value.some(isPassengerRowFilled)) {
         step.value = 2
-        return 'Thêm ít nhất một dòng chi tiết (e.1) hoặc nhập thời gian chuyến.'
+        return t('dispatch_wizard.validate.p2p_row')
       }
     } else if (
       !passengerRows.value.some(isPassengerRowFilled) &&
       !businessRows.value.some(isBusinessRowFilled)
     ) {
       step.value = 2
-      return 'Thêm ít nhất một dòng chi tiết hoặc nhập thời gian chuyến.'
+      return t('dispatch_wizard.validate.detail_row')
     }
     if (!computedDepartAt.value?.trim()) {
       step.value = 2
-      return 'Nhập thời gian chuyến đi (ít nhất một ô thời gian trong bảng chi tiết).'
+      return t('dispatch_wizard.validate.depart_time')
     }
     return ''
   }
@@ -760,10 +774,7 @@ export function useDispatchRequestWizard() {
             file: basisFile.value,
           })
         } catch (attachErr) {
-          error.value = formatApiError(
-            attachErr,
-            'Đã tạo yêu cầu nhưng không tải được file căn cứ. Bạn có thể thử lại từ chi tiết yêu cầu (nếu được phép).',
-          )
+          error.value = formatApiError(attachErr, t('dispatch_wizard.validate.attach_fail'))
         }
       }
       try {
@@ -789,7 +800,7 @@ export function useDispatchRequestWizard() {
         hasDraftSnapshot.value = u != null && readDraftList(u).items.length > 0
       }
     } catch (e) {
-      error.value = formatApiError(e, 'Tạo yêu cầu thất bại.')
+      error.value = formatApiError(e, t('dispatch_wizard.validate.create_fail'))
     } finally {
       loading.value = false
       submitInFlight = false

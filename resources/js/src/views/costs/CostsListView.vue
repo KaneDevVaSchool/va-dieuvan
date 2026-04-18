@@ -343,26 +343,26 @@
     <!-- Bảng -->
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05]">
       <div class="border-b border-slate-200 bg-slate-100 px-4 py-3 sm:px-5">
-        <h2 class="text-sm font-semibold text-slate-800">Danh sách chi phí</h2>
+        <h2 class="text-sm font-semibold text-slate-800">{{ t('costs_page.table_title') }}</h2>
       </div>
-      <div class="costs-table-wrap overflow-x-auto">
+      <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         <table class="costs-sheet min-w-[1100px] w-full border-collapse text-left text-xs sm:text-sm">
           <thead>
             <tr class="bg-slate-100 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:text-[11px]">
-              <th class="costs-th w-10 text-center">STT</th>
-              <th class="costs-th min-w-[7rem]">Đơn vị</th>
-              <th class="costs-th min-w-[7rem]">Phân loại</th>
-              <th class="costs-th min-w-[8rem]">Người đề xuất</th>
-              <th class="costs-th min-w-[14rem]">Nội dung</th>
-              <th class="costs-th min-w-[8rem]">Nhà cung cấp</th>
-              <th class="costs-th costs-th--money min-w-[7rem] text-right">Tạm ứng</th>
-              <th class="costs-th costs-th--money min-w-[8rem] text-right">Thanh toán</th>
-              <th class="costs-th min-w-[6.5rem] whitespace-nowrap">Thời gian</th>
-              <th class="costs-th min-w-[8rem]">Người phụ trách</th>
-              <th class="costs-th min-w-[6rem]">Chứng từ</th>
-              <th class="costs-th min-w-[7rem]">Pháp nhân TT</th>
-              <th class="costs-th min-w-[6rem]">Ghi chú</th>
-              <th class="costs-th min-w-[5rem]">Trip</th>
+              <th class="costs-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
+              <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
+              <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
+              <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_submitter') }}</th>
+              <th class="costs-th min-w-[14rem]">{{ t('costs_page.col_description') }}</th>
+              <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_provider') }}</th>
+              <th class="costs-th costs-th--money min-w-[7rem] text-right">{{ t('costs_page.col_advance') }}</th>
+              <th class="costs-th costs-th--money min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
+              <th class="costs-th min-w-[6.5rem] whitespace-nowrap">{{ t('costs_page.col_time') }}</th>
+              <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_owner') }}</th>
+              <th class="costs-th min-w-[6rem]">{{ t('costs_page.col_receipt') }}</th>
+              <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_legal_entity') }}</th>
+              <th class="costs-th min-w-[6rem]">{{ t('costs_page.col_notes') }}</th>
+              <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -374,7 +374,7 @@
             >
               <td class="costs-td text-center text-slate-500">{{ rowIndex(idx) }}</td>
               <td class="costs-td">
-                <span class="costs-pill">{{ UNIT_LABEL }}</span>
+                <span class="costs-pill">{{ unitLabel }}</span>
               </td>
               <td class="costs-td">
                 <span class="costs-pill costs-pill--type">{{ typeLabel(c.type) }}</span>
@@ -400,7 +400,7 @@
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900"
-                  >Xem</a
+                  >{{ t('costs_page.view_receipt') }}</a
                 >
                 <span v-else class="text-slate-400">—</span>
               </td>
@@ -424,32 +424,36 @@
           </tbody>
         </table>
         <div v-if="!loading && !displayedItems.length" class="px-4 py-12 text-center text-sm text-slate-500">
-          Không có bản ghi phù hợp.
+          {{ t('costs_page.empty_table') }}
         </div>
         <div v-if="loading" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
           <span
             class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700"
             aria-hidden="true"
           />
-          Đang tải…
+          {{ t('costs_page.loading_table') }}
         </div>
       </div>
 
       <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <span class="text-sm text-slate-600">
-          Trang <strong class="font-semibold text-slate-900">{{ meta.current_page ?? 1 }}</strong> /
-          {{ meta.last_page ?? 1 }}
+          {{
+            t('costs_page.pagination_of', {
+              current: meta.current_page ?? 1,
+              last: meta.last_page ?? 1,
+            })
+          }}
           <span class="text-slate-400"> · </span>
-          {{ meta.total ?? 0 }} bản ghi
+          {{ meta.total ?? 0 }} {{ t('costs_page.pagination_records_suffix') }}
         </span>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <button
             type="button"
             class="costs-btn-ghost"
             :disabled="loading || (meta.current_page ?? 1) <= 1"
             @click="page(-1)"
           >
-            Trước
+            {{ t('costs_page.prev') }}
           </button>
           <button
             type="button"
@@ -457,7 +461,7 @@
             :disabled="loading || (meta.current_page ?? 1) >= (meta.last_page ?? 1)"
             @click="page(1)"
           >
-            Sau
+            {{ t('costs_page.next') }}
           </button>
         </div>
       </div>
@@ -466,25 +470,25 @@
     <Teleport to="body">
       <div
         v-if="addCostModalOpen"
-        class="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center"
+        class="fixed inset-0 z-[100] flex items-end justify-center p-3 sm:items-center sm:p-4"
         role="dialog"
         aria-modal="true"
         aria-labelledby="costs-add-title"
       >
         <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeAddCostModal" />
         <div
-          class="relative z-10 flex max-h-[min(92vh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10"
+          class="relative z-10 flex max-h-[min(92vh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
         >
           <div class="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <div>
-              <h2 id="costs-add-title" class="text-base font-semibold text-slate-900">Thêm chi phí</h2>
-              <p class="mt-0.5 text-xs text-slate-500">Chọn chuyến và nhập khoản phát sinh (gửi để đối soát).</p>
+              <h2 id="costs-add-title" class="text-base font-semibold text-slate-900">{{ t('costs_page.modal_add_title') }}</h2>
+              <p class="mt-0.5 text-xs text-slate-500">{{ t('costs_page.modal_add_subtitle') }}</p>
             </div>
             <button
               type="button"
               class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Đóng"
+              :aria-label="t('costs_page.modal_close_aria')"
               @click="closeAddCostModal"
             >
               <XMarkIcon class="h-5 w-5" />
@@ -494,12 +498,14 @@
           <form class="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4" @submit.prevent="submitCost">
             <div class="grid gap-4">
               <div>
-                <label class="mb-1 block text-xs font-medium text-slate-700">Chuyến <span class="text-rose-600">*</span></label>
+                <label class="mb-1 block text-xs font-medium text-slate-700"
+                  >{{ t('costs_page.modal_trip_label') }} <span class="text-rose-600">*</span></label
+                >
                 <input
                   v-model="tripPickerSearch"
                   type="search"
                   class="costs-input mb-2 w-full"
-                  placeholder="Gõ để lọc theo mã trip, điểm đi hoặc điểm đến…"
+                  :placeholder="t('costs_page.modal_trip_search_ph')"
                   autocomplete="off"
                 />
                 <select
@@ -509,11 +515,7 @@
                   :disabled="tripsForModalLoading"
                 >
                   <option disabled value="">
-                    {{
-                      tripsForModalLoading
-                        ? 'Đang tải danh sách chuyến…'
-                        : '— Chọn một chuyến —'
-                    }}
+                    {{ tripsForModalLoading ? t('costs_page.modal_trip_loading') : t('costs_page.modal_trip_pick') }}
                   </option>
                   <option v-for="t in filteredTripsForPicker" :key="t.id" :value="String(t.id)">
                     {{ formatTripPickerLabel(t) }}
@@ -523,25 +525,25 @@
                   v-if="!tripsForModalLoading && tripOptionsRaw.length && !filteredTripsForPicker.length"
                   class="mt-1 text-[11px] text-amber-800"
                 >
-                  Không có chuyến khớp từ khóa — xóa ô tìm hoặc thử từ khác.
+                  {{ t('costs_page.modal_trip_no_keyword') }}
                 </p>
                 <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-1 text-[11px] text-slate-500">
-                  Không có chuyến khả dụng trong phạm vi quyền.
+                  {{ t('costs_page.modal_trip_empty_scope') }}
                 </p>
                 <p v-else-if="!tripsForModalLoading && tripOptionsRaw.length" class="mt-1 text-[11px] text-slate-500">
-                  Danh sách theo quyền xem chuyến (tối đa 100 chuyến gần nhất).
+                  {{ t('costs_page.modal_trip_scope_hint') }}
                 </p>
               </div>
               <div>
                 <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-                  <label class="block text-xs font-medium text-slate-700">Loại chi phí</label>
+                  <label class="block text-xs font-medium text-slate-700">{{ t('costs_page.modal_cost_type') }}</label>
                   <button
                     type="button"
                     class="inline-flex items-center gap-1 rounded-md border border-teal-200 bg-teal-50 px-2 py-1 text-[11px] font-medium text-teal-900 hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-200 dark:hover:bg-teal-900/60"
                     @click="openQuickAddType"
                   >
                     <PlusCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                    Thêm loại nhanh
+                    {{ t('costs_page.modal_add_type_quick') }}
                   </button>
                 </div>
                 <select v-model="costForm.type" class="costs-input w-full">
@@ -551,7 +553,9 @@
                 </select>
               </div>
               <div>
-                <label class="mb-1 block text-xs font-medium text-slate-700">Số tiền ({{ costForm.currency }})</label>
+                <label class="mb-1 block text-xs font-medium text-slate-700">{{
+                  t('costs_page.modal_amount_label', { currency: costForm.currency })
+                }}</label>
                 <input
                   :value="costAmountDisplay"
                   type="text"
@@ -559,18 +563,18 @@
                   autocomplete="off"
                   required
                   class="costs-input w-full"
-                  placeholder="1.000.000"
+                  :placeholder="t('costs_page.modal_amount_ph')"
                   @input="onCostAmountInput"
                 />
-                <p class="mt-1 text-[11px] text-slate-500">Nhập số — tự phân tách hàng nghìn (vd. 1.000.000).</p>
+                <p class="mt-1 text-[11px] text-slate-500">{{ t('costs_page.modal_amount_hint') }}</p>
               </div>
               <div>
-                <label class="mb-1 block text-xs font-medium text-slate-700">Mô tả</label>
+                <label class="mb-1 block text-xs font-medium text-slate-700">{{ t('costs_page.modal_desc_label') }}</label>
                 <input
                   v-model="costForm.description"
                   type="text"
                   class="costs-input w-full"
-                  placeholder="Ví dụ: Phí gửi xe tháng 1/2025 — bãi X"
+                  :placeholder="t('costs_page.modal_desc_ph')"
                 />
               </div>
             </div>
@@ -578,13 +582,15 @@
               {{ costMsg }}
             </p>
             <div class="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4">
-              <button type="button" class="costs-btn-ghost" :disabled="submitting" @click="closeAddCostModal">Hủy</button>
+              <button type="button" class="costs-btn-ghost" :disabled="submitting" @click="closeAddCostModal">{{
+                t('app.cancel')
+              }}</button>
               <button type="submit" class="costs-btn-primary" :disabled="submitting || tripsForModalLoading">
                 <span
                   v-if="submitting"
                   class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
                 />
-                Gửi chi phí
+                {{ t('costs_page.modal_submit') }}
               </button>
             </div>
           </form>
@@ -606,23 +612,25 @@
           @click.stop
         >
           <div class="border-b border-slate-100 px-4 py-3">
-            <h2 id="costs-quick-type-title" class="text-sm font-semibold text-slate-900">Thêm loại chi phí mới</h2>
-            <p class="mt-0.5 text-xs text-slate-500">Tên hiển thị (vd. Sửa xe, Ăn ca). Mã lưu tự tạo từ tên.</p>
+            <h2 id="costs-quick-type-title" class="text-sm font-semibold text-slate-900">{{ t('costs_page.quick_type_title') }}</h2>
+            <p class="mt-0.5 text-xs text-slate-500">{{ t('costs_page.quick_type_subtitle') }}</p>
           </div>
           <div class="space-y-3 p-4">
-            <label class="block text-xs font-medium text-slate-700">Tên loại</label>
+            <label class="block text-xs font-medium text-slate-700">{{ t('costs_page.quick_type_name') }}</label>
             <input
               v-model="quickAddTypeLabel"
               type="text"
               class="costs-input w-full"
-              placeholder="Ví dụ: Phí cầu BOT"
+              :placeholder="t('costs_page.quick_type_ph')"
               maxlength="80"
               @keydown.enter.prevent="submitQuickAddType"
             />
             <p v-if="quickAddTypeError" class="text-xs text-rose-600">{{ quickAddTypeError }}</p>
             <div class="flex justify-end gap-2 pt-1">
-              <button type="button" class="costs-btn-ghost text-sm" @click="quickAddTypeOpen = false">Hủy</button>
-              <button type="button" class="costs-btn-primary text-sm" @click="submitQuickAddType">Lưu & chọn</button>
+              <button type="button" class="costs-btn-ghost text-sm" @click="quickAddTypeOpen = false">{{ t('app.cancel') }}</button>
+              <button type="button" class="costs-btn-primary text-sm" @click="submitQuickAddType">{{
+                t('costs_page.quick_type_save')
+              }}</button>
             </div>
           </div>
         </div>
@@ -643,11 +651,11 @@ import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd, formatVndDigitsInput } from '../../util/labels'
 
-const { t, te } = useI18n()
+const { t, te, locale } = useI18n()
 
 const DEFAULT_PER_PAGE = 25
 
-const UNIT_LABEL = 'Chi phí vận hành'
+const unitLabel = computed(() => t('costs_page.unit_label_const'))
 const LEGAL_ENTITY_PLACEHOLDER = '—'
 
 const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
@@ -819,7 +827,7 @@ const selectedFilterTrip = computed(() => {
 const tripFilterSummaryFull = computed(() => {
   if (!filters.trip_id) return t('costs_page.trip_all')
   const tr = selectedFilterTrip.value
-  return tr ? formatTripPickerLabel(tr) : `Chuyến #${filters.trip_id}`
+  return tr ? formatTripPickerLabel(tr) : t('costs_page.trip_filter_chip', { id: filters.trip_id })
 })
 
 const tripFilterSummaryShort = computed(() => {
@@ -888,7 +896,7 @@ function submitQuickAddType() {
   quickAddTypeError.value = ''
   const label = quickAddTypeLabel.value.trim()
   if (!label) {
-    quickAddTypeError.value = 'Nhập tên loại chi phí.'
+    quickAddTypeError.value = t('costs_page.err_type_name')
     return
   }
   let slug = slugifyCostTypeLabel(label)
@@ -927,7 +935,8 @@ function statusLabel(s) {
 function formatDateDMY(iso) {
   if (!iso) return '—'
   try {
-    return new Date(iso).toLocaleDateString('vi-VN', {
+    const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
+    return new Date(iso).toLocaleDateString(loc, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -937,12 +946,12 @@ function formatDateDMY(iso) {
   }
 }
 
-function formatTripPickerLabel(t) {
-  const dr = t.dispatch_request ?? t.dispatchRequest
+function formatTripPickerLabel(tripRow) {
+  const dr = tripRow.dispatch_request ?? tripRow.dispatchRequest
   const o = (dr?.origin ?? '—').trim().slice(0, 48)
   const d = (dr?.destination ?? '—').trim().slice(0, 48)
-  const dep = formatDateDMY(t.depart_at)
-  return `#${t.id} · ${o} → ${d} · ${dep}`
+  const dep = formatDateDMY(tripRow.depart_at)
+  return `#${tripRow.id} · ${o} → ${d} · ${dep}`
 }
 
 async function loadTripPickerOptions() {
@@ -1064,13 +1073,13 @@ async function submitCost() {
   costMsgIsError.value = false
   const tid = Number(costForm.value.trip_id)
   if (!tid) {
-    costMsg.value = 'Vui lòng chọn chuyến.'
+    costMsg.value = t('costs_page.err_pick_trip')
     costMsgIsError.value = true
     return
   }
   const amt = Number(costAmountDigits.value)
   if (!costAmountDigits.value || !Number.isFinite(amt) || amt <= 0) {
-    costMsg.value = 'Nhập số tiền hợp lệ (lớn hơn 0).'
+    costMsg.value = t('costs_page.err_amount')
     costMsgIsError.value = true
     return
   }
@@ -1089,7 +1098,7 @@ async function submitCost() {
     await reload()
   } catch (e) {
     costMsgIsError.value = true
-    costMsg.value = e?.response?.data?.message ?? 'Không gửi được chi phí.'
+    costMsg.value = e?.response?.data?.message ?? t('costs_page.err_submit')
   } finally {
     submitting.value = false
   }

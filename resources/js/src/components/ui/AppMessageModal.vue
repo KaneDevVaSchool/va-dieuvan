@@ -20,7 +20,7 @@
             :class="closeBtnClass"
             @click="dismissModal"
           >
-            Đóng
+            {{ t('message_modal.close') }}
           </button>
         </div>
         <div class="max-h-[min(22rem,75vh)] overflow-y-auto px-4 py-3 sm:px-5">
@@ -49,35 +49,35 @@
             v-if="state.variant === 'error' && state.apiDetails"
             class="mt-4 rounded-lg border border-slate-200/90 bg-slate-50 p-3 text-left dark:border-slate-600 dark:bg-slate-800/80"
           >
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Chi tiết kỹ thuật</p>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('message_modal.tech_details') }}</p>
             <dl class="mt-2 space-y-1.5 font-mono text-[11px] text-slate-700 dark:text-slate-300">
               <div v-if="state.apiDetails.status != null" class="flex flex-wrap gap-x-2 gap-y-0.5">
-                <dt class="shrink-0 text-slate-500 dark:text-slate-500">HTTP</dt>
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">{{ t('message_modal.http') }}</dt>
                 <dd>{{ state.apiDetails.status }}</dd>
               </div>
               <div class="flex flex-wrap gap-x-2 gap-y-0.5 break-all">
-                <dt class="shrink-0 text-slate-500 dark:text-slate-500">Yêu cầu</dt>
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">{{ t('message_modal.request') }}</dt>
                 <dd>{{ state.apiDetails.method }} {{ state.apiDetails.path }}</dd>
               </div>
               <div v-if="state.apiDetails.configMissing" class="text-slate-600 dark:text-slate-400">
-                Không đọc được cấu hình request (axios). URL phía trên là mặc định /api — dùng để kiểm tra domain có đúng không.
+                {{ t('message_modal.config_missing') }}
               </div>
               <div v-if="state.apiDetails.axiosCode" class="flex flex-wrap gap-x-2 gap-y-0.5">
-                <dt class="shrink-0 text-slate-500 dark:text-slate-500">Mã lỗi</dt>
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">{{ t('message_modal.error_code') }}</dt>
                 <dd>{{ state.apiDetails.axiosCode }}</dd>
               </div>
               <div v-if="state.apiDetails.axiosMessage" class="pt-1">
-                <dt class="text-slate-500 dark:text-slate-500">Thông báo trình duyệt / Axios</dt>
+                <dt class="text-slate-500 dark:text-slate-500">{{ t('message_modal.axios_msg') }}</dt>
                 <dd class="mt-0.5 whitespace-pre-wrap break-words text-slate-800 dark:text-slate-200">
                   {{ state.apiDetails.axiosMessage }}
                 </dd>
               </div>
               <div v-if="state.apiDetails.retryAfter" class="flex flex-wrap gap-x-2 gap-y-0.5">
-                <dt class="shrink-0 text-slate-500 dark:text-slate-500">Retry-After</dt>
-                <dd>{{ state.apiDetails.retryAfter }} (giây hoặc ngày theo máy chủ)</dd>
+                <dt class="shrink-0 text-slate-500 dark:text-slate-500">{{ t('message_modal.retry_after') }}</dt>
+                <dd>{{ state.apiDetails.retryAfter }} {{ t('message_modal.retry_after_hint') }}</dd>
               </div>
               <div v-if="state.apiDetails.serverRaw" class="pt-1">
-                <dt class="text-slate-500 dark:text-slate-500">Phản hồi máy chủ</dt>
+                <dt class="text-slate-500 dark:text-slate-500">{{ t('message_modal.server_raw') }}</dt>
                 <dd class="mt-0.5 whitespace-pre-wrap break-words text-slate-800 dark:text-slate-200">{{ state.apiDetails.serverRaw }}</dd>
               </div>
               <div v-if="state.apiDetails.networkHint" class="text-slate-600 dark:text-slate-400">
@@ -88,7 +88,7 @@
               v-if="state.apiDetails?.status === 429"
               class="mt-2 text-[10px] leading-relaxed text-slate-500 dark:text-slate-500"
             >
-              Mã 429: máy chủ giới hạn số yêu cầu trong một phút. Đợi vài giây rồi thử lại; tránh bấm lặp liên tục.
+              {{ t('message_modal.rate_limit_hint') }}
             </p>
           </div>
         </div>
@@ -110,13 +110,15 @@
 <script setup>
 import { computed, onUnmounted, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { CheckCircleIcon } from '@heroicons/vue/24/solid'
 import { appMessageState as state, closeAppMessage } from '../../composables/appMessage'
 
 const router = useRouter()
+const { t } = useI18n()
 const titleId = 'app-message-modal-title'
 
-const primaryButtonLabel = computed(() => state.primaryLabel || 'OK')
+const primaryButtonLabel = computed(() => state.primaryLabel || t('app.close'))
 
 function dismissModal() {
   const to = state.navigateTo

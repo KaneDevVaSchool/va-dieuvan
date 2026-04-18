@@ -3,9 +3,9 @@
     <!-- Header -->
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 class="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Tạo yêu cầu điều vận</h1>
+        <h1 class="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{{ t('dispatch_wizard.create.title') }}</h1>
         <p class="mt-1 text-sm text-slate-600">
-          <span class="font-medium text-va-800">Yêu cầu mới</span>
+          <span class="font-medium text-va-800">{{ t('dispatch_wizard.create.badge_new') }}</span>
           <span class="text-slate-400"> • </span>
           {{ draftLabel }}
         </p>
@@ -17,7 +17,7 @@
           class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
           @click="onCancel"
         >
-          Hủy
+          {{ t('dispatch_wizard.create.cancel') }}
         </button>
         <button
           type="button"
@@ -25,25 +25,25 @@
           @click="saveDraft"
         >
           <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
-          Lưu nháp
+          {{ t('dispatch_wizard.create.save_draft') }}
         </button>
         <button
           type="button"
           class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-          title="Xem và mở các bản nháp đã lưu trên trình duyệt"
+          :title="t('dispatch_wizard.create.drafts_tooltip')"
           @click="openDraftsModal"
         >
           <ClipboardDocumentListIcon class="h-4 w-4 text-slate-500" />
-          Bản nháp đã lưu
+          {{ t('dispatch_wizard.create.drafts_title') }}
         </button>
         <button
           v-if="activeDraftId"
           type="button"
           class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
-          title="Xóa bản nháp đang mở (không xóa các bản khác trong danh sách)"
+          :title="t('dispatch_wizard.create.clear_draft_tooltip')"
           @click="openClearDraftModal"
         >
-          Xóa nháp
+          {{ t('dispatch_wizard.create.clear_draft') }}
         </button>
         <button
           type="button"
@@ -61,7 +61,7 @@
     <!-- Stepper — timeline -->
     <nav
       class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3"
-      aria-label="Các bước"
+      :aria-label="t('dispatch_wizard.create.steps_nav_aria')"
     >
       <ol
         class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden"
@@ -123,8 +123,8 @@
       <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
         <!-- Step 1 -->
         <div v-show="step === 0">
-          <h2 class="text-lg font-semibold text-slate-900">1. Chọn loại dịch vụ</h2>
-          <p class="mt-1 text-sm text-slate-600">Chọn đúng loại để form bước sau hiển thị đúng (hành khách / hàng hóa).</p>
+          <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step1_title') }}</h2>
+          <p class="mt-1 text-sm text-slate-600">{{ t('dispatch_wizard.create.step1_hint') }}</p>
           <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <button
               v-for="opt in tripTypeOptions"
@@ -154,22 +154,22 @@
         <!-- Step 2 -->
         <div v-show="step === 1" class="space-y-5 sm:space-y-6">
           <div>
-            <h2 class="text-lg font-semibold text-slate-900">2. Thông tin người đề nghị &amp; thời gian</h2>
+            <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
             <p class="mt-1 text-sm leading-relaxed text-slate-600">
-              Điền người đề nghị và lịch trước, sau đó bổ sung mục đích và phối hợp.
+              {{ t('dispatch_wizard.create.step2_lead') }}
             </p>
           </div>
 
           <!-- Người đề nghị + Thời gian: cạnh nhau desktop, xếp dọc mobile -->
           <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
             <div class="dw-fieldset">
-              <h3 class="dw-section-title">Người đề nghị</h3>
+              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
               <div class="relative">
                 <label class="dw-label">
-                  <span>Tìm theo tên <span class="dw-req" aria-hidden="true">*</span></span>
+                  <span>{{ t('dispatch_wizard.create.search_by_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
                   <span
                     class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
-                    title="Tối thiểu 2 ký tự. Chọn một kết quả để điền email, SĐT, đơn vị / phòng ban."
+                    :title="t('dispatch_wizard.create.search_name_hint')"
                   >
                     <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
                   </span>
@@ -178,7 +178,7 @@
                   v-model="requesterSearchQ"
                   type="search"
                   autocomplete="off"
-                  placeholder="Ví dụ: Nguyễn Văn…"
+                  :placeholder="t('dispatch_wizard.create.search_ph')"
                   class="dw-input"
                   @input="scheduleRequesterSearch"
                   @focus="onRequesterSearchFocus"
@@ -193,7 +193,7 @@
                   class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
                   role="listbox"
                 >
-                  <li v-if="requesterSearchLoading" class="px-3 py-2.5 text-slate-500">Đang tìm…</li>
+                  <li v-if="requesterSearchLoading" class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.searching') }}</li>
                   <template v-else-if="requesterSearchResults.length">
                     <li v-for="u in requesterSearchResults" :key="u.id">
                       <button
@@ -206,32 +206,32 @@
                       </button>
                     </li>
                   </template>
-                  <li v-else class="px-3 py-2.5 text-slate-500">Không tìm thấy nhân sự phù hợp.</li>
+                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.no_staff') }}</li>
                 </ul>
                 <p v-if="requesterSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ requesterSearchError }}</p>
               </div>
               <div class="mt-4 grid gap-3 sm:grid-cols-2">
                 <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">Họ và tên <span class="dw-req" aria-hidden="true">*</span></span>
-                  <input v-model="form.requester_name" type="text" class="dw-input" placeholder="Điền hoặc chọn từ tìm kiếm" />
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
+                  <input v-model="form.requester_name" type="text" class="dw-input" :placeholder="t('dispatch_wizard.create.full_name_ph')" />
                 </label>
                 <label class="block min-w-0">
-                  <span class="dw-label-text">Email VA <span class="dw-req" aria-hidden="true">*</span></span>
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.requester_email_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
                   <input
                     v-model="form.requester_email"
                     type="email"
-                    placeholder="ten@va.edu.vn"
+                    :placeholder="t('dispatch_wizard.create.requester_email_ph')"
                     :class="['dw-input', step2RequesterEmailInvalid ? 'ring-1 ring-rose-300' : '']"
                   />
                 </label>
                 <label class="block min-w-0">
-                  <span class="dw-label-text">Số điện thoại</span>
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.phone') }}</span>
                   <input
                     v-model="form.requester_phone"
                     type="text"
                     inputmode="numeric"
                     autocomplete="tel"
-                    placeholder="Ví dụ: 0901234567"
+                    :placeholder="t('dispatch_wizard.create.phone_ph')"
                     class="dw-input"
                     maxlength="11"
                     @input="onRequesterPhoneInput"
@@ -241,21 +241,21 @@
                   v-if="step2RequesterEmailInvalid"
                   class="text-xs text-rose-600 sm:col-span-2"
                 >
-                  Nhập đúng định dạng email.
+                  {{ t('dispatch_wizard.create.email_invalid') }}
                 </p>
                 <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">Đơn vị / phòng ban</span>
-                  <input v-model="form.requester_unit" type="text" placeholder="Tự điền khi chọn nhân sự" class="dw-input" />
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.unit') }}</span>
+                  <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input" />
                 </label>
               </div>
             </div>
 
             <div class="dw-fieldset">
-              <h3 class="dw-section-title">Thời gian</h3>
+              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
               <div class="grid gap-3 sm:grid-cols-2">
                 <label class="block min-w-0">
-                  <span class="dw-label-text" title="Ngày lập đề xuất thực tế. Bấm vào ô để mở lịch.">
-                    Ngày đề xuất <span class="dw-req" aria-hidden="true">*</span>
+                  <span class="dw-label-text" :title="t('dispatch_wizard.create.proposed_date_title')">
+                    {{ t('dispatch_wizard.create.proposed_date') }} <span class="dw-req" aria-hidden="true">*</span>
                   </span>
                   <input
                     v-model="form.proposed_date"
@@ -266,8 +266,8 @@
                   />
                 </label>
                 <label class="block min-w-0">
-                  <span class="dw-label-text" title="Tự điền theo ngày đề xuất; có thể chỉnh lại nếu khác.">
-                    Ngày cần sử dụng xe <span class="dw-req" aria-hidden="true">*</span>
+                  <span class="dw-label-text" :title="t('dispatch_wizard.create.date_needed_title')">
+                    {{ t('dispatch_wizard.create.date_needed') }} <span class="dw-req" aria-hidden="true">*</span>
                   </span>
                   <input
                     v-model="form.date_needed"
@@ -279,16 +279,16 @@
                 </label>
               </div>
               <p v-if="step2DateOrderInvalid" class="mt-2 text-xs font-medium text-rose-600">
-                Ngày cần sử dụng xe không được sớm hơn ngày đề xuất.
+                {{ t('dispatch_wizard.create.date_order_error') }}
               </p>
               <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
                   <div class="flex items-center justify-between gap-3 sm:min-w-[7.5rem] sm:flex-col sm:items-stretch sm:justify-start sm:pb-0.5">
                     <div class="flex items-center gap-2">
-                      <span class="text-sm font-semibold text-slate-900">Gấp</span>
+                      <span class="text-sm font-semibold text-slate-900">{{ t('dispatch_wizard.create.urgent') }}</span>
                       <span
                         class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
-                        title="Bật khi cần xử lý nhanh hơn quy định; ghi rõ lý do."
+                        :title="t('dispatch_wizard.create.urgent_title')"
                       >
                         <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
                       </span>
@@ -306,11 +306,11 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <label class="block">
-                      <span class="dw-label-text">Lý do <span v-if="form.is_urgent" class="dw-req" aria-hidden="true">*</span></span>
+                      <span class="dw-label-text">{{ t('dispatch_wizard.create.reason') }} <span v-if="form.is_urgent" class="dw-req" aria-hidden="true">*</span></span>
                       <input
                         v-model="form.urgent_reason"
                         type="text"
-                        placeholder="Bắt buộc khi bật Gấp"
+                        :placeholder="t('dispatch_wizard.create.reason_ph')"
                         :disabled="!form.is_urgent"
                         class="dw-input disabled:cursor-not-allowed disabled:opacity-45"
                       />
@@ -322,12 +322,12 @@
           </div>
 
           <div class="dw-fieldset">
-            <h3 class="dw-section-title">Mục đích sử dụng</h3>
+            <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
             <div
               v-if="form.trip_type === 'point_to_point'"
               class="mb-4 flex flex-wrap gap-2 sm:gap-3"
               role="radiogroup"
-              aria-label="Phân loại mục đích (Điểm — Điểm)"
+              :aria-label="t('dispatch_wizard.create.purpose_tab_aria')"
             >
               <label
                 class="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
@@ -338,7 +338,7 @@
                   value="point_to_point"
                   class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
                 />
-                <span>Điểm — Điểm</span>
+                <span>{{ t('dispatch_wizard.create.purpose_point') }}</span>
               </label>
               <label
                 class="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
@@ -349,24 +349,24 @@
                   value="extracurricular"
                   class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
                 />
-                <span>Hoạt động ngoại khóa</span>
+                <span>{{ t('dispatch_wizard.create.purpose_extra') }}</span>
               </label>
             </div>
             <label class="block">
-              <span class="dw-label-text">Mục đích sử dụng <span class="dw-req" aria-hidden="true">*</span></span>
+              <span class="dw-label-text">{{ t('dispatch_wizard.create.purpose_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
               <textarea
                 v-model="form.purpose"
                 rows="4"
                 class="dw-input min-h-[5.25rem] resize-y sm:min-h-[6rem]"
-                placeholder="Mô tả ngắn gọn mục đích sử dụng xe / chuyến…"
+                :placeholder="t('dispatch_wizard.create.purpose_ph')"
               />
             </label>
             <div class="mt-4">
               <span class="mb-2 flex flex-nowrap items-center gap-1.5">
-                <span class="text-xs font-medium text-slate-700">Căn cứ đề xuất — đính kèm</span>
+                <span class="text-xs font-medium text-slate-700">{{ t('dispatch_wizard.create.basis_label') }}</span>
                 <span
                   class="inline-flex shrink-0 cursor-help text-slate-400 hover:text-slate-600"
-                  title="Tải tờ trình, văn bản căn cứ (PDF, ảnh). Tối đa 10MB."
+                  :title="t('dispatch_wizard.create.basis_title')"
                 >
                   <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
                 </span>
@@ -384,8 +384,8 @@
                 @click="basisFileInput?.click()"
               >
                 <CloudArrowUpIcon class="h-9 w-9 text-slate-400 sm:h-10 sm:w-10" aria-hidden="true" />
-                <p class="mt-2 text-center text-sm font-medium text-slate-800">Kéo thả tệp vào đây hoặc bấm để chọn</p>
-                <p class="mt-1 text-center text-xs text-slate-500">PDF, ảnh (JPG, PNG) — tối đa 10MB</p>
+                <p class="mt-2 text-center text-sm font-medium text-slate-800">{{ t('dispatch_wizard.create.basis_drop') }}</p>
+                <p class="mt-1 text-center text-xs text-slate-500">{{ t('dispatch_wizard.create.basis_types') }}</p>
                 <input
                   ref="basisFileInput"
                   type="file"
@@ -409,7 +409,7 @@
                   class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
                   @click.stop="clearBasisFile"
                 >
-                  Gỡ
+                  {{ t('dispatch_wizard.create.remove_file') }}
                 </button>
               </div>
             </div>
@@ -417,34 +417,34 @@
 
           <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
             <div class="dw-fieldset">
-              <h3 class="dw-section-title">Đối tượng được phân bổ</h3>
+              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_targets') }}</h3>
               <div class="max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2 sm:max-h-48">
                 <label
-                  v-for="t in targetOptions"
-                  :key="t"
+                  v-for="target in targetOptions"
+                  :key="target"
                   class="flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-white sm:py-1.5"
                 >
-                  <input v-model="form.targets" type="checkbox" :value="t" class="h-4 w-4 shrink-0 rounded border-slate-300 text-va-800" />
-                  <span class="text-slate-800">{{ t }}</span>
+                  <input v-model="form.targets" type="checkbox" :value="target" class="h-4 w-4 shrink-0 rounded border-slate-300 text-va-800" />
+                  <span class="text-slate-800">{{ target }}</span>
                 </label>
               </div>
-              <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">Đã chọn {{ form.targets.length }} mục.</p>
+              <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">{{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}</p>
               <p
                 v-else-if="form.trip_type === 'point_to_point'"
                 class="mt-2 text-xs leading-relaxed text-amber-800/90"
               >
-                Nên chọn ít nhất một đối tượng để ghi rõ phân bổ nội bộ khi xử lý yêu cầu.
+                {{ t('dispatch_wizard.create.targets_warn') }}
               </p>
             </div>
 
             <div class="dw-fieldset">
-              <h3 class="dw-section-title">Nhân sự phụ trách điều phối</h3>
+              <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</h3>
               <div class="relative">
                 <label class="dw-label">
-                  <span>Tìm theo tên</span>
+                  <span>{{ t('dispatch_wizard.create.coord_search_label') }}</span>
                   <span
                     class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
-                    title="Giống mục A: chọn nhân sự để điền họ tên, email, SĐT."
+                    :title="t('dispatch_wizard.create.coord_search_title')"
                   >
                     <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
                   </span>
@@ -453,7 +453,7 @@
                   v-model="coordinatorSearchQ"
                   type="search"
                   autocomplete="off"
-                  placeholder="Gõ họ tên nhân sự điều phối…"
+                  :placeholder="t('dispatch_wizard.create.coord_search_ph')"
                   class="dw-input"
                   @input="scheduleCoordinatorSearch"
                   @focus="onCoordinatorSearchFocus"
@@ -468,7 +468,7 @@
                   class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
                   role="listbox"
                 >
-                  <li v-if="coordinatorSearchLoading" class="px-3 py-2.5 text-slate-500">Đang tìm…</li>
+                  <li v-if="coordinatorSearchLoading" class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.searching') }}</li>
                   <template v-else-if="coordinatorSearchResults.length">
                     <li v-for="u in coordinatorSearchResults" :key="u.id">
                       <button
@@ -481,44 +481,44 @@
                       </button>
                     </li>
                   </template>
-                  <li v-else class="px-3 py-2.5 text-slate-500">Không tìm thấy nhân sự phù hợp.</li>
+                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.no_staff') }}</li>
                 </ul>
                 <p v-if="coordinatorSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ coordinatorSearchError }}</p>
               </div>
               <div class="mt-4 grid gap-3 sm:grid-cols-2">
                 <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">Họ tên</span>
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }}</span>
                   <input
                     v-model="form.coordinator_name"
                     type="text"
                     class="dw-input"
-                    placeholder="Họ và tên người phụ trách"
+                    :placeholder="t('dispatch_wizard.create.coord_name_ph')"
                   />
                 </label>
                 <label class="block min-w-0">
-                  <span class="dw-label-text">Email nhân viên</span>
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_email_label') }}</span>
                   <input
                     v-model="form.coordinator_email"
                     type="email"
                     :class="['dw-input', step2CoordinatorEmailInvalid ? 'ring-1 ring-rose-300' : '']"
-                    placeholder="email@va.edu.vn"
+                    :placeholder="t('dispatch_wizard.create.coord_email_ph')"
                   />
                 </label>
                 <label class="block min-w-0">
-                  <span class="dw-label-text">SĐT</span>
+                  <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_phone') }}</span>
                   <input
                     v-model="form.coordinator_phone"
                     type="text"
                     inputmode="numeric"
                     autocomplete="tel"
-                    placeholder="Chỉ số, ví dụ 090…"
+                    :placeholder="t('dispatch_wizard.create.coord_phone_ph')"
                     class="dw-input"
                     maxlength="11"
                     @input="onCoordinatorPhoneInput"
                   />
                 </label>
                 <p v-if="step2CoordinatorEmailInvalid" class="text-xs text-rose-600 sm:col-span-2">
-                  Nhập đúng định dạng email hoặc để trống.
+                  {{ t('dispatch_wizard.create.coord_email_invalid') }}
                 </p>
               </div>
             </div>
@@ -528,17 +528,17 @@
             class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-3.5"
           >
             <div class="min-w-0">
-              <label for="dw-source-channel" class="text-xs font-semibold uppercase tracking-wide text-slate-600">Kênh gửi</label>
-              <p class="mt-0.5 text-xs text-slate-500 sm:hidden">Chọn nguồn gửi yêu cầu.</p>
+              <label for="dw-source-channel" class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ t('dispatch_wizard.create.channel_label') }}</label>
+              <p class="mt-0.5 text-xs text-slate-500 sm:hidden">{{ t('dispatch_wizard.create.channel_hint') }}</p>
             </div>
             <select
               id="dw-source-channel"
               v-model="form.source_channel"
               class="dw-input max-w-full bg-white sm:max-w-xs lg:max-w-sm"
             >
-              <option value="portal">Portal</option>
-              <option value="zalo">Zalo</option>
-              <option value="paper">Phiếu giấy</option>
+              <option value="portal">{{ t('dispatch_wizard.create.option_portal') }}</option>
+              <option value="zalo">{{ t('dispatch_wizard.create.option_zalo') }}</option>
+              <option value="paper">{{ t('dispatch_wizard.create.option_paper') }}</option>
             </select>
           </div>
         </div>
@@ -548,25 +548,25 @@
 
         <!-- Step 4 -->
         <div v-if="step === 3" class="space-y-6">
-          <h2 class="text-lg font-semibold text-slate-900">4. Xác nhận &amp; nộp</h2>
+          <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step4_title') }}</h2>
 
           <div
             v-if="isPointToPointTrip"
             class="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-relaxed text-slate-600"
           >
-            Loại <span class="font-medium text-slate-800">Điểm — Điểm</span>: toàn bộ dữ liệu biểu mẫu (kể cả phân bổ mục tiêu) được gửi kèm yêu cầu trong hệ thống.
+            {{ t('dispatch_wizard.create.step4_p2p', { type: t('dispatch_wizard.trip_type.point_to_point.label') }) }}
           </div>
           <p v-else class="text-sm text-slate-500">
-            Toàn bộ chi tiết biểu mẫu được lưu kèm yêu cầu trong hệ thống (không ghi vào cột ghi chú trừ khi bạn nhập bên dưới).
+            {{ t('dispatch_wizard.create.step4_other') }}
           </p>
 
           <label class="block">
-            <span class="mb-1 block text-sm font-medium text-slate-800">Ghi chú thêm <span class="font-normal text-slate-500">(tùy chọn)</span></span>
+            <span class="mb-1 block text-sm font-medium text-slate-800">{{ t('dispatch_wizard.create.notes_label') }} <span class="font-normal text-slate-500">{{ t('dispatch_wizard.create.notes_optional') }}</span></span>
             <textarea
               v-model="form.free_notes"
               rows="3"
               class="dw-input min-h-[4.5rem] w-full resize-y"
-              placeholder="Chỉ nội dung bạn nhập tại đây mới được lưu vào cột ghi chú trên hệ thống…"
+              :placeholder="t('dispatch_wizard.create.notes_ph')"
             />
           </label>
 
@@ -583,7 +583,7 @@
             :disabled="step === 0"
             @click="step--"
           >
-            ← Quay lại
+            {{ t('dispatch_wizard.create.back') }}
           </button>
           <div class="flex gap-2">
             <button
@@ -593,7 +593,7 @@
               :disabled="!canGoNext"
               @click="nextStep"
             >
-              Tiếp theo
+              {{ t('dispatch_wizard.create.next') }}
             </button>
           </div>
         </div>
@@ -601,13 +601,13 @@
 
       <aside v-if="created" class="mt-6">
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm shadow-sm">
-          <div class="font-semibold text-emerald-900">Đã tạo yêu cầu #{{ created.id }}</div>
-          <div class="mt-1 text-emerald-800">Trạng thái: {{ created.status }}</div>
+          <div class="font-semibold text-emerald-900">{{ t('dispatch_wizard.create.created', { id: created.id }) }}</div>
+          <div class="mt-1 text-emerald-800">{{ t('dispatch_wizard.create.status', { status: created.status }) }}</div>
           <RouterLink
             class="mt-3 inline-flex rounded-lg border border-emerald-300 bg-white px-3 py-2 text-emerald-900 shadow-sm hover:bg-emerald-100/80"
             to="/requests"
           >
-            Về danh sách
+            {{ t('dispatch_wizard.create.to_list') }}
           </RouterLink>
         </div>
       </aside>
@@ -644,11 +644,10 @@
               </div>
               <div class="min-w-0 pt-0.5">
                 <h3 id="clear-draft-modal-title" class="text-base font-semibold leading-snug text-slate-900">
-                  Xóa bản nháp đang mở?
+                  {{ t('dispatch_wizard.create.clear_modal_title') }}
                 </h3>
                 <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                  Xóa bản nháp hiện tại trên trình duyệt và làm mới form. Các bản nháp khác trong danh sách vẫn được giữ. Thao tác
-                  này không thể hoàn tác.
+                  {{ t('dispatch_wizard.create.clear_modal_body') }}
                 </p>
               </div>
             </div>
@@ -659,14 +658,14 @@
               class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
               @click="closeClearDraftModal"
             >
-              Hủy
+              {{ t('dispatch_wizard.create.cancel') }}
             </button>
             <button
               type="button"
               class="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-b from-rose-600 to-rose-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-900/20 transition hover:from-rose-500 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 sm:w-auto"
               @click="confirmClearDraft"
             >
-              Xóa nháp
+              {{ t('dispatch_wizard.create.clear_modal_delete') }}
             </button>
           </div>
         </div>
@@ -699,10 +698,10 @@
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="min-w-0">
                 <h3 id="drafts-library-title" class="text-base font-semibold leading-snug text-slate-900">
-                  Bản nháp đã lưu
+                  {{ t('dispatch_wizard.create.library_title') }}
                 </h3>
                 <p class="mt-1 text-xs leading-relaxed text-slate-600">
-                  Lưu trên trình duyệt theo tài khoản hiện tại (tối đa 25 bản). Chọn một bản để tiếp tục hoặc tạo form mới.
+                  {{ t('dispatch_wizard.create.library_hint') }}
                 </p>
               </div>
               <button
@@ -710,13 +709,13 @@
                 class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
                 @click="startNewDraftSession"
               >
-                Form mới
+                {{ t('dispatch_wizard.create.new_form') }}
               </button>
             </div>
           </div>
           <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
             <p v-if="!savedDraftsList.length" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-600">
-              Chưa có bản nháp. Dùng <span class="font-medium">Lưu nháp</span> để lưu tại đây.
+              {{ t('dispatch_wizard.create.library_empty', { action: t('dispatch_wizard.create.save_draft') }) }}
             </p>
             <ul v-else class="space-y-2">
               <li
@@ -732,7 +731,7 @@
                         v-if="activeDraftId === d.id"
                         class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-800"
                       >
-                        Đang mở
+                        {{ t('dispatch_wizard.create.library_active') }}
                       </span>
                     </div>
                     <p class="mt-1 line-clamp-2 text-sm text-slate-800">{{ d.purposeLine }}</p>
@@ -744,14 +743,14 @@
                       class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-800 hover:bg-slate-50"
                       @click="loadDraftById(d.id)"
                     >
-                      Mở
+                      {{ t('dispatch_wizard.create.library_open') }}
                     </button>
                     <button
                       type="button"
                       class="rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50"
                       @click="deleteDraftById(d.id)"
                     >
-                      Xóa
+                      {{ t('dispatch_wizard.create.library_delete') }}
                     </button>
                   </div>
                 </div>
@@ -764,7 +763,7 @@
               class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto"
               @click="closeDraftsModal"
             >
-              Đóng
+              {{ t('dispatch_wizard.create.library_close') }}
             </button>
           </div>
         </div>
@@ -776,6 +775,7 @@
 <script setup>
 import { defineAsyncComponent, provide } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
   CheckIcon,
@@ -789,6 +789,7 @@ import {
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from './dispatch-wizard/injectionKeys'
 
+const { t, locale } = useI18n()
 const wizard = useDispatchRequestWizard()
 provide(DISPATCH_WIZARD_KEY, wizard)
 
@@ -865,7 +866,8 @@ const {
 
 function formatDraftTime(ts) {
   try {
-    return new Date(ts).toLocaleString('vi-VN')
+    const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
+    return new Date(ts).toLocaleString(loc)
   } catch {
     return '—'
   }

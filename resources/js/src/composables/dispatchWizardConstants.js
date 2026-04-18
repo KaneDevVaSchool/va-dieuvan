@@ -14,20 +14,7 @@ export const draftActiveStorageKey = (userId) => `dispatch-request-wizard-draft-
 /** Giới hạn số bản nháp lưu trên trình duyệt / user. */
 export const MAX_SAVED_DRAFTS = 25
 
-/** Nhãn loại dịch vụ cho danh sách nháp. */
-export const TRIP_TYPE_LABEL_VI = {
-  door_to_door: 'Đưa đón',
-  point_to_point: 'Điểm — Điểm',
-  business: 'Công tác',
-  cargo: 'Hàng hóa',
-}
-
-export const WIZARD_STEPS = [
-  { id: 'type', title: 'Loại dịch vụ' },
-  { id: 'info', title: 'Người đề nghị & thời gian' },
-  { id: 'detail', title: 'Chi tiết' },
-  { id: 'confirm', title: 'Xác nhận' },
-]
+export const E1_WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 /** Danh sách đối tượng phân bổ (31 mục) — giữ thứ tự khớp backend khi có xuất biểu mẫu. */
 export const TARGET_OPTIONS = [
@@ -62,16 +49,6 @@ export const TARGET_OPTIONS = [
   'P.HCNS',
   'Tham vấn học đường',
   'Ban Pháp chế (P.CSVC)',
-]
-
-export const E1_WEEKDAY_OPTIONS = [
-  { k: 'mon', label: 'Thứ 2' },
-  { k: 'tue', label: 'Thứ 3' },
-  { k: 'wed', label: 'Thứ 4' },
-  { k: 'thu', label: 'Thứ 5' },
-  { k: 'fri', label: 'Thứ 6' },
-  { k: 'sat', label: 'Thứ 7' },
-  { k: 'sun', label: 'Chủ nhật' },
 ]
 
 export function todayISODate() {

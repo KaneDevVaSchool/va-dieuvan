@@ -2,31 +2,16 @@
     <div class="dw-step3-root">
         <div class="dw-step3-hero">
             <h2 class="text-lg font-semibold text-slate-900">
-                3. Chi tiết chuyến (Nội dung đề nghị chuyến đi)
+                {{ t('dispatch_wizard.s3.title') }}
             </h2>
             <div class="dw-step3-guide mt-3" role="note">
-                <p class="dw-step3-guide__title">Hướng dẫn điền</p>
+                <p class="dw-step3-guide__title">{{ t('dispatch_wizard.s3.guide_title') }}</p>
                 <div class="dw-step3-guide__body">
                     <p v-if="!isCargo">
-                        <span class="dw-req font-semibold">*</span>
-                        trên cột là trường cần ưu tiên. Để qua bước này: điền
-                        <strong class="text-slate-800"
-                            >ít nhất một ô thời gian</strong
-                        >
-                        (đi hoặc về) trong toàn bộ bảng và có
-                        <strong class="text-slate-800">ít nhất một dòng</strong>
-                        có lịch trình / địa điểm. Số khách, đơn giá, phí… có thể
-                        bổ sung sau nếu chưa rõ.
+                        {{ t('dispatch_wizard.s3.guide_pass') }}
                     </p>
                     <p v-else>
-                        <span class="dw-req font-semibold">*</span>
-                        <strong class="text-slate-800">Tên hàng hóa</strong>
-                        bắt buộc cho ít nhất một dòng; cần
-                        <strong class="text-slate-800"
-                            >ít nhất một thời gian</strong
-                        >
-                        (tập kết hoặc giao). Các cột khác giúp bộ phận điều vận
-                        ước lượng xe — điền càng đầy càng tốt.
+                        {{ t('dispatch_wizard.s3.guide_cargo') }}
                     </p>
                 </div>
             </div>
@@ -42,12 +27,10 @@
             >
                 <header class="dw-sec-intro">
                     <h3 id="dw-e1-heading" class="dw-sec-intro__title">
-                        Bảng chi tiết hành khách / chương trình (e.1)
+                        {{ t('dispatch_wizard.s3.e1_title') }}
                     </h3>
                     <p class="dw-sec-intro__meta">
-                        Mỗi dòng là một lượt hoặc một nhóm. Chọn ngày giờ bằng
-                        lịch trình duyệt; địa điểm ghi rõ địa chỉ hoặc tên điểm
-                        để tài xế chủ động.
+                        {{ t('dispatch_wizard.s3.e1_meta') }}
                     </p>
                 </header>
                 <div class="dw-table-wrap -mx-1 sm:mx-0">
@@ -63,55 +46,55 @@
                                         class="min-w-[2.5rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        STT
+                                        {{ t('dispatch_wizard.s3.col_no') }}
                                     </th>
                                     <th
                                         class="min-w-[13rem] px-1 py-2 text-center"
                                         colspan="2"
                                     >
-                                        Chuyến đi
+                                        {{ t('dispatch_wizard.s3.trip_out') }}
                                     </th>
                                     <th
                                         class="min-w-[13rem] px-1 py-2 text-center"
                                         colspan="2"
                                     >
-                                        Chuyến về
+                                        {{ t('dispatch_wizard.s3.trip_back') }}
                                     </th>
                                     <th
                                         class="min-w-[5rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Số khách
+                                        {{ t('dispatch_wizard.s3.guests') }}
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Người phụ trách
+                                        {{ t('dispatch_wizard.s3.owner') }}
                                     </th>
                                     <th
                                         class="min-w-[7rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Đơn giá
+                                        {{ t('dispatch_wizard.s3.unit_price') }}
                                     </th>
                                     <th
                                         class="min-w-[7rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Phí phát sinh
+                                        {{ t('dispatch_wizard.s3.extra_fee') }}
                                     </th>
                                     <th
                                         class="min-w-[6rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Tổng dòng
+                                        {{ t('dispatch_wizard.s3.row_total') }}
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Ghi chú
+                                        {{ t('dispatch_wizard.s3.notes') }}
                                     </th>
                                     <th class="w-8"></th>
                                 </tr>
@@ -121,32 +104,32 @@
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Thời gian
+                                        {{ t('dispatch_wizard.s3.time') }}
                                         <span
                                             class="dw-th-req"
-                                            title="Ưu tiên điền"
+                                            :title="t('dispatch_wizard.s3.priority_col')"
                                             >*</span
                                         >
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Địa điểm
+                                        {{ t('dispatch_wizard.s3.place') }}
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Thời gian
+                                        {{ t('dispatch_wizard.s3.time') }}
                                         <span
                                             class="dw-th-req"
-                                            title="Ưu tiên điền"
+                                            :title="t('dispatch_wizard.s3.priority_col')"
                                             >*</span
                                         >
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Địa điểm
+                                        {{ t('dispatch_wizard.s3.place') }}
                                     </th>
                                 </tr>
                             </thead>
@@ -164,16 +147,16 @@
                                             v-model="row.depart_at"
                                             type="datetime-local"
                                             class="dw-cell dw-cell--table dw-date-input"
-                                            title="Giờ xuất phát chuyến đi"
+                                            :title="t('dispatch_wizard.s3.depart_pickup_title')"
                                         />
                                     </td>
                                     <td class="min-w-[10rem] p-0.5">
                                         <input
                                             v-model="row.pickup"
                                             type="text"
-                                            placeholder="VD: cổng trường, địa chỉ đón"
+                                            :placeholder="t('dispatch_wizard.s3.pickup_ph')"
                                             class="dw-cell dw-cell--table"
-                                            title="Điểm đón chuyến đi"
+                                            :title="t('dispatch_wizard.s3.pickup_title')"
                                         />
                                     </td>
                                     <td class="min-w-[10rem] p-0.5">
@@ -181,16 +164,16 @@
                                             v-model="row.return_at"
                                             type="datetime-local"
                                             class="dw-cell dw-cell--table dw-date-input"
-                                            title="Giờ về / kết thúc chuyến về"
+                                            :title="t('dispatch_wizard.s3.return_title')"
                                         />
                                     </td>
                                     <td class="min-w-[10rem] p-0.5">
                                         <input
                                             v-model="row.dropoff"
                                             type="text"
-                                            placeholder="VD: điểm trả, địa chỉ"
+                                            :placeholder="t('dispatch_wizard.s3.dropoff_ph')"
                                             class="dw-cell dw-cell--table"
-                                            title="Điểm trả chuyến về"
+                                            :title="t('dispatch_wizard.s3.dropoff_title')"
                                         />
                                     </td>
                                     <td class="min-w-[5rem] p-0.5">
@@ -198,16 +181,16 @@
                                             v-model="row.guests"
                                             type="number"
                                             min="1"
-                                            placeholder="Số người"
+                                            :placeholder="t('dispatch_wizard.s3.guests_ph')"
                                             class="dw-cell dw-cell--table min-w-[4.5rem]"
-                                            title="Số hành khách (tối thiểu 1)"
+                                            :title="t('dispatch_wizard.s3.guests_title')"
                                         />
                                     </td>
                                     <td class="min-w-[10rem] p-0.5">
                                         <input
                                             v-model="row.person_in_charge"
                                             type="text"
-                                            placeholder="Họ và tên người phụ trách"
+                                            :placeholder="t('dispatch_wizard.s3.pic_ph')"
                                             class="dw-cell dw-cell--table"
                                         />
                                     </td>
@@ -217,9 +200,9 @@
                                             type="text"
                                             inputmode="numeric"
                                             autocomplete="off"
-                                            placeholder="VD: 1.500.000"
+                                            :placeholder="t('dispatch_wizard.s3.vnd_ph')"
                                             class="dw-cell dw-cell--table dw-cell--vnd"
-                                            title="Đơn giá ước tính — gõ số, tự thêm dấu ."
+                                            :title="t('dispatch_wizard.s3.unit_price_title')"
                                             @input="vndRow(row, 'unit_price', $event)"
                                         />
                                     </td>
@@ -229,9 +212,9 @@
                                             type="text"
                                             inputmode="numeric"
                                             autocomplete="off"
-                                            placeholder="VD: 200.000"
+                                            :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
                                             class="dw-cell dw-cell--table dw-cell--vnd"
-                                            title="Phí phát sinh — gõ số, tự thêm dấu ."
+                                            :title="t('dispatch_wizard.s3.extra_fee_title')"
                                             @input="vndRow(row, 'extra_fee', $event)"
                                         />
                                     </td>
@@ -244,7 +227,7 @@
                                         <input
                                             v-model="row.notes"
                                             type="text"
-                                            placeholder="Ghi chú cho dòng (tuỳ chọn)"
+                                            :placeholder="t('dispatch_wizard.s3.row_notes_ph')"
                                             class="dw-cell dw-cell--table"
                                         />
                                     </td>
@@ -253,7 +236,7 @@
                                             v-if="passengerRows.length > 1"
                                             type="button"
                                             class="rounded p-1 text-rose-600 hover:bg-rose-50"
-                                            title="Xóa dòng"
+                                            :title="t('dispatch_wizard.s3.delete_row')"
                                             @click="removePassengerRow(idx)"
                                         >
                                             <TrashIcon class="h-4 w-4" />
@@ -267,7 +250,7 @@
                                         colspan="9"
                                         class="px-3 py-2 text-right text-xs font-medium text-slate-700"
                                     >
-                                        Tổng (ước tính)
+                                        {{ t('dispatch_wizard.s3.sum_est') }}
                                     </td>
                                     <td
                                         class="px-2 py-2 text-sm font-semibold text-va-800"
@@ -287,7 +270,7 @@
                         @click="addPassengerRow"
                     >
                         <PlusIcon class="h-4 w-4" />
-                        Thêm dòng
+                        {{ t('dispatch_wizard.s3.add_row') }}
                     </button>
                     <label class="dw-table-toolbar__extra">
                         <input
@@ -295,8 +278,8 @@
                             type="checkbox"
                             class="dw-table-toolbar__extra-check"
                         />
-                        <span title="Đánh dấu khi lịch trình kéo dài nhiều ngày"
-                            >Dùng cho 3+ ngày (ghi chú trong tóm tắt)</span
+                        <span :title="t('dispatch_wizard.s3.multi_day_title')"
+                            >{{ t('dispatch_wizard.s3.multi_day') }}</span
                         >
                     </label>
                 </div>
@@ -311,17 +294,13 @@
                 <header class="dw-e-panel__head">
                     <div>
                         <h3 id="dw-e11-heading" class="dw-e-panel__title">
-                            Ghi chú khác đề xuất (nếu có)
+                            {{ t('dispatch_wizard.s3.e11_notes_title') }}
                         </h3>
                         <p
                             v-if="isP2PExtracurricular"
                             class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
                         >
-                            Thời gian sử dụng xe từ 03 ngày trở lên — gợi ý chi
-                            phí biểu mẫu
-                            <strong class="font-medium">5.000.000&nbsp;₫</strong
-                            >. Vui lòng liên hệ NV Điều vận để điền / xác nhận
-                            chi phí.
+                            {{ t('dispatch_wizard.s3.e11_extralead', { amount: formatCurrency(5000000) }) }}
                         </p>
                     </div>
                 </header>
@@ -334,7 +313,7 @@
                             class="dw-e11-flag__check"
                         />
                         <span class="dw-e11-flag__label"
-                            >Thời gian sử dụng xe từ 03 ngày trở lên</span
+                            >{{ t('dispatch_wizard.s3.e11_flag') }}</span
                         >
                     </label>
                 </div>
@@ -342,9 +321,9 @@
                 <div class="dw-e11-fields">
                     <div class="dw-e11-field">
                         <span class="dw-e11-field__label"
-                            >Từ ngày
+                            >{{ t('dispatch_wizard.s3.from_date') }}
                             <span class="font-normal text-slate-400"
-                                >(tuỳ chọn)</span
+                                >{{ t('dispatch_wizard.s3.optional') }}</span
                             ></span
                         >
                         <input
@@ -352,18 +331,18 @@
                             type="date"
                             lang="vi"
                             class="dw-input dw-input--e11 dw-date-input"
-                            title="Ngày bắt đầu dùng xe nhiều ngày"
+                            :title="t('dispatch_wizard.s3.e1_period_from_title')"
                             @click="openDatePickerFromInput($event)"
                         />
                         <span class="dw-e11-field__hint"
-                            >Chọn trên lịch — định dạng dd/mm/yyyy</span
+                            >{{ t('dispatch_wizard.s3.date_hint') }}</span
                         >
                     </div>
                     <div class="dw-e11-field">
                         <span class="dw-e11-field__label"
-                            >Đến ngày
+                            >{{ t('dispatch_wizard.s3.to_date') }}
                             <span class="font-normal text-slate-400"
-                                >(tuỳ chọn)</span
+                                >{{ t('dispatch_wizard.s3.optional') }}</span
                             ></span
                         >
                         <input
@@ -371,32 +350,32 @@
                             type="date"
                             lang="vi"
                             class="dw-input dw-input--e11 dw-date-input"
-                            title="Ngày kết thúc"
+                            :title="t('dispatch_wizard.s3.e1_period_to_title')"
                             @click="openDatePickerFromInput($event)"
                         />
                         <span class="dw-e11-field__hint"
-                            >Phải sau hoặc trùng «Từ ngày» nếu điền cả hai</span
+                            >{{ t('dispatch_wizard.s3.to_after_from', { from: t('dispatch_wizard.s3.from_date') }) }}</span
                         >
                     </div>
                     <div class="dw-e11-field">
                         <span class="dw-e11-field__label"
-                            >Tổng số ngày phát sinh</span
+                            >{{ t('dispatch_wizard.s3.days_total') }}</span
                         >
                         <input
                             v-model="form.e1_days_total"
                             type="text"
                             inputmode="numeric"
                             class="dw-input dw-input--e11"
-                            placeholder="VD: 3"
-                            title="Số ngày dự kiến dùng xe"
+                            :placeholder="t('dispatch_wizard.s3.days_ph')"
+                            :title="t('dispatch_wizard.s3.days_title')"
                         />
                         <span class="dw-e11-field__hint"
-                            >Có thể để trống — NV Điều vận sẽ xác nhận</span
+                            >{{ t('dispatch_wizard.s3.days_hint') }}</span
                         >
                     </div>
                     <div class="dw-e11-field">
                         <span class="dw-e11-field__label"
-                            >Chi phí phát sinh</span
+                            >{{ t('dispatch_wizard.s3.extra_cost') }}</span
                         >
                         <input
                             :value="form.e1_extra_cost"
@@ -404,12 +383,12 @@
                             inputmode="numeric"
                             autocomplete="off"
                             class="dw-input dw-input--e11 dw-cell--vnd"
-                            placeholder="VD: 5.000.000"
-                            title="Liên hệ NV Điều vận nếu chưa biết mức"
+                            :placeholder="t('dispatch_wizard.s3.extra_cost_ph')"
+                            :title="t('dispatch_wizard.s3.extra_cost_title')"
                             @input="vndForm('e1_extra_cost', $event)"
                         />
                         <span class="dw-e11-field__hint"
-                            >Ước tính, gồm VAT nếu có</span
+                            >{{ t('dispatch_wizard.s3.vat_hint') }}</span
                         >
                     </div>
                 </div>
@@ -419,9 +398,9 @@
                         id="dw-e11-weekdays-label"
                         class="dw-e11-weekwrap__title"
                     >
-                        Bao gồm các thứ trong tuần
+                        {{ t('dispatch_wizard.s3.weekdays_title') }}
                         <span class="font-normal text-slate-500"
-                            >(tuỳ chọn — bấm để chọn/bỏ)</span
+                            >{{ t('dispatch_wizard.s3.weekdays_sub') }}</span
                         >
                     </p>
                     <div
@@ -455,12 +434,10 @@
             >
                 <header class="dw-sec-intro">
                     <h3 id="dw-e2-heading" class="dw-sec-intro__title">
-                        Nội dung đề xuất cho nhân sự đi công tác
+                        {{ t('dispatch_wizard.s3.e2_title') }}
                     </h3>
                     <p class="dw-sec-intro__meta">
-                        Ghi đủ thời gian — địa điểm giúp lập lộ trình. Cột «Điểm
-                        dừng» dùng khi có điểm trung chuyển; để trống nếu đi
-                        thẳng.
+                        {{ t('dispatch_wizard.s3.e2_meta') }}
                     </p>
                 </header>
                 <div class="dw-table-wrap -mx-1 sm:mx-0">
@@ -476,55 +453,55 @@
                                         class="min-w-[2.5rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        STT
+                                        {{ t('dispatch_wizard.s3.col_no') }}
                                     </th>
                                     <th
                                         class="min-w-[13rem] px-1 py-2 text-center"
                                         colspan="2"
                                     >
-                                        Chuyến đi
+                                        {{ t('dispatch_wizard.s3.trip_out') }}
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Điểm dừng giữa lịch trình
+                                        {{ t('dispatch_wizard.s3.waypoint_col') }}
                                     </th>
                                     <th
                                         class="min-w-[13rem] px-1 py-2 text-center"
                                         colspan="2"
                                     >
-                                        Chuyến về
+                                        {{ t('dispatch_wizard.s3.trip_back') }}
                                     </th>
                                     <th
                                         class="min-w-[5rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Số khách
+                                        {{ t('dispatch_wizard.s3.guests') }}
                                     </th>
                                     <th
                                         class="min-w-[7rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Đơn giá
+                                        {{ t('dispatch_wizard.s3.unit_price') }}
                                     </th>
                                     <th
                                         class="min-w-[7rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Phí phát sinh
+                                        {{ t('dispatch_wizard.s3.extra_fee') }}
                                     </th>
                                     <th
                                         class="min-w-[6rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Tổng dòng
+                                        {{ t('dispatch_wizard.s3.row_total') }}
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-2"
                                         rowspan="2"
                                     >
-                                        Ghi chú
+                                        {{ t('dispatch_wizard.s3.notes') }}
                                     </th>
                                     <th class="w-8"></th>
                                 </tr>
@@ -534,32 +511,32 @@
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Thời gian
+                                        {{ t('dispatch_wizard.s3.time') }}
                                         <span
                                             class="dw-th-req"
-                                            title="Ưu tiên điền"
+                                            :title="t('dispatch_wizard.s3.priority_col')"
                                             >*</span
                                         >
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Địa điểm
+                                        {{ t('dispatch_wizard.s3.place') }}
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Thời gian
+                                        {{ t('dispatch_wizard.s3.time') }}
                                         <span
                                             class="dw-th-req"
-                                            title="Ưu tiên điền"
+                                            :title="t('dispatch_wizard.s3.priority_col')"
                                             >*</span
                                         >
                                     </th>
                                     <th
                                         class="min-w-[10rem] whitespace-normal px-1 py-1"
                                     >
-                                        Địa điểm
+                                        {{ t('dispatch_wizard.s3.place') }}
                                     </th>
                                 </tr>
                             </thead>
@@ -577,14 +554,14 @@
                                             v-model="row.depart_at"
                                             type="datetime-local"
                                             class="dw-cell dw-cell--table dw-date-input"
-                                            title="Giờ xuất phát công tác"
+                                            :title="t('dispatch_wizard.s3.biz_depart_title')"
                                         />
                                     </td>
                                     <td class="min-w-[10rem] p-0.5">
                                         <input
                                             v-model="row.pickup"
                                             type="text"
-                                            placeholder="VD: VP, sân bay, địa chỉ đón"
+                                            :placeholder="t('dispatch_wizard.s3.biz_pickup_ph')"
                                             class="dw-cell dw-cell--table"
                                         />
                                     </td>
@@ -592,9 +569,9 @@
                                         <input
                                             v-model="row.waypoint"
                                             type="text"
-                                            placeholder="Điểm dừng (tuỳ chọn)"
+                                            :placeholder="t('dispatch_wizard.s3.waypoint_ph')"
                                             class="dw-cell dw-cell--table"
-                                            title="Trung chuyển giữa chặng"
+                                            :title="t('dispatch_wizard.s3.waypoint_title')"
                                         />
                                     </td>
                                     <td class="min-w-[10rem] p-0.5">
@@ -602,14 +579,14 @@
                                             v-model="row.return_at"
                                             type="datetime-local"
                                             class="dw-cell dw-cell--table dw-date-input"
-                                            title="Giờ về"
+                                            :title="t('dispatch_wizard.s3.biz_return_title')"
                                         />
                                     </td>
                                     <td class="min-w-[10rem] p-0.5">
                                         <input
                                             v-model="row.dropoff"
                                             type="text"
-                                            placeholder="VD: khách sạn, điểm trả"
+                                            :placeholder="t('dispatch_wizard.s3.biz_drop_ph')"
                                             class="dw-cell dw-cell--table"
                                         />
                                     </td>
@@ -618,9 +595,9 @@
                                             v-model="row.guests"
                                             type="number"
                                             min="1"
-                                            placeholder="Số người"
+                                            :placeholder="t('dispatch_wizard.s3.guests_ph')"
                                             class="dw-cell dw-cell--table min-w-[4.5rem]"
-                                            title="Số nhân sự / khách trên dòng"
+                                            :title="t('dispatch_wizard.s3.biz_guests_title')"
                                         />
                                     </td>
                                     <td class="min-w-[7.5rem] p-0.5">
@@ -629,9 +606,9 @@
                                             type="text"
                                             inputmode="numeric"
                                             autocomplete="off"
-                                            placeholder="VD: 1.500.000"
+                                            :placeholder="t('dispatch_wizard.s3.vnd_ph')"
                                             class="dw-cell dw-cell--table dw-cell--vnd"
-                                            title="Đơn giá — gõ số, tự thêm dấu ."
+                                            :title="t('dispatch_wizard.s3.biz_unit_price_title')"
                                             @input="vndRow(row, 'unit_price', $event)"
                                         />
                                     </td>
@@ -641,9 +618,9 @@
                                             type="text"
                                             inputmode="numeric"
                                             autocomplete="off"
-                                            placeholder="VD: 200.000"
+                                            :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
                                             class="dw-cell dw-cell--table dw-cell--vnd"
-                                            title="Phụ phí — gõ số, tự thêm dấu ."
+                                            :title="t('dispatch_wizard.s3.biz_extra_fee_title')"
                                             @input="vndRow(row, 'extra_fee', $event)"
                                         />
                                     </td>
@@ -656,7 +633,7 @@
                                         <input
                                             v-model="row.notes"
                                             type="text"
-                                            placeholder="Ghi chú dòng (tuỳ chọn)"
+                                            :placeholder="t('dispatch_wizard.s3.row_notes_biz_ph')"
                                             class="dw-cell dw-cell--table"
                                         />
                                     </td>
@@ -665,7 +642,7 @@
                                             v-if="businessRows.length > 1"
                                             type="button"
                                             class="rounded p-1 text-rose-600 hover:bg-rose-50"
-                                            title="Xóa dòng"
+                                            :title="t('dispatch_wizard.s3.delete_row')"
                                             @click="removeBusinessRow(idx)"
                                         >
                                             <TrashIcon class="h-4 w-4" />
@@ -679,7 +656,7 @@
                                         colspan="9"
                                         class="px-3 py-2 text-right text-xs font-medium text-slate-700"
                                     >
-                                        Tổng e.2 (ước tính)
+                                        {{ t('dispatch_wizard.s3.sum_e2') }}
                                     </td>
                                     <td
                                         class="px-2 py-2 text-sm font-semibold text-va-800"
@@ -699,7 +676,7 @@
                         @click="addBusinessRow"
                     >
                         <PlusIcon class="h-4 w-4" />
-                        Thêm dòng
+                        {{ t('dispatch_wizard.s3.add_row') }}
                     </button>
                 </div>
             </section>
@@ -713,21 +690,19 @@
                 <header class="dw-e-panel__head">
                     <div>
                         <h3 id="dw-e21-heading" class="dw-e-panel__title">
-                            Ghi chú khác đề xuất (nếu có)
+                            {{ t('dispatch_wizard.s3.e21_title') }}
                         </h3>
                         <p
                             v-if="isP2PExtracurricular"
                             class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
                         >
-                            Gợi ý theo biểu mẫu; vui lòng liên hệ NV Điều vận để
-                            điền thông tin chi phí.
+                            {{ t('dispatch_wizard.s3.e21_lead_extra') }}
                         </p>
                         <p
                             v-else
                             class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
                         >
-                            Tick nếu áp dụng; nhập chi phí ước tính (VNĐ) hoặc
-                            để trống để NV Điều vận bổ sung.
+                            {{ t('dispatch_wizard.s3.e21_lead_default') }}
                         </p>
                     </div>
                 </header>
@@ -740,36 +715,28 @@
                                 class="dw-e21-row__check"
                             />
                             <span class="dw-e21-row__label"
-                                >Xe đưa đón tận nhà<span
+                                >{{ t('dispatch_wizard.s3.door_pickup') }}<span
                                     v-if="isP2PExtracurricular"
                                     class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
-                                    >(
-                                    <span class="italic"
-                                        >Ghi rõ địa chỉ đón trả ở bảng phía
-                                        trên</span
-                                    >
-                                    — gợi ý
-                                    <strong class="font-medium"
-                                        >200.000&nbsp;đ/người</strong
-                                    >)</span
+                                    >{{ t('dispatch_wizard.s3.door_pickup_extra', { amount: formatCurrency(200000) }) }}</span
                                 ></span
                             >
                         </label>
                         <div class="dw-e21-row__cost">
                             <span class="dw-e21-row__cost-label"
-                                >Chi phí phát sinh</span
+                                >{{ t('dispatch_wizard.s3.door_cost_lbl') }}</span
                             >
                             <input
                                 :value="form.e2_door_cost"
                                 type="text"
                                 inputmode="numeric"
                                 autocomplete="off"
-                                placeholder="VD: 200.000"
+                                :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
                                 class="dw-e21-row__input dw-cell--vnd"
-                                title="Chi phí đưa đón tận nhà (ước tính)"
+                                :title="t('dispatch_wizard.s3.door_cost_title')"
                                 @input="vndForm('e2_door_cost', $event)"
                             />
-                            <span class="dw-e21-row__unit">VNĐ</span>
+                            <span class="dw-e21-row__unit">{{ t('dispatch_wizard.s3.vnd') }}</span>
                         </div>
                     </div>
                     <div class="dw-e21-row">
@@ -780,31 +747,28 @@
                                 class="dw-e21-row__check"
                             />
                             <span class="dw-e21-row__label"
-                                >Tài xế tự túc (ăn uống, khách sạn…)<span
+                                >{{ t('dispatch_wizard.s3.driver_self') }}<span
                                     v-if="isP2PExtracurricular"
                                     class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
-                                    >(gợi ý
-                                    <strong class="font-medium"
-                                        >500.000&nbsp;₫</strong
-                                    >)</span
+                                    >{{ t('dispatch_wizard.s3.driver_self_extra', { amount: formatCurrency(500000) }) }}</span
                                 ></span
                             >
                         </label>
                         <div class="dw-e21-row__cost">
                             <span class="dw-e21-row__cost-label"
-                                >Chi phí phát sinh</span
+                                >{{ t('dispatch_wizard.s3.door_cost_lbl') }}</span
                             >
                             <input
                                 :value="form.e2_driver_self_cost"
                                 type="text"
                                 inputmode="numeric"
                                 autocomplete="off"
-                                placeholder="VD: 500.000"
+                                :placeholder="t('dispatch_wizard.s3.vnd_ph')"
                                 class="dw-e21-row__input dw-cell--vnd"
-                                title="Chi phí tài xế tự túc (ước tính)"
+                                :title="t('dispatch_wizard.s3.driver_cost_title')"
                                 @input="vndForm('e2_driver_self_cost', $event)"
                             />
-                            <span class="dw-e21-row__unit">VNĐ</span>
+                            <span class="dw-e21-row__unit">{{ t('dispatch_wizard.s3.vnd') }}</span>
                         </div>
                     </div>
                     <div class="dw-e21-row">
@@ -815,31 +779,28 @@
                                 class="dw-e21-row__check"
                             />
                             <span class="dw-e21-row__label"
-                                >Có nhu cầu sử dụng xe sau 21h trong ngày<span
+                                >{{ t('dispatch_wizard.s3.after21') }}<span
                                     v-if="isP2PExtracurricular"
                                     class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
-                                    >(gợi ý
-                                    <strong class="font-medium"
-                                        >1.000.000&nbsp;₫</strong
-                                    >)</span
+                                    >{{ t('dispatch_wizard.s3.after21_extra', { amount: formatCurrency(1000000) }) }}</span
                                 ></span
                             >
                         </label>
                         <div class="dw-e21-row__cost">
                             <span class="dw-e21-row__cost-label"
-                                >Chi phí phát sinh</span
+                                >{{ t('dispatch_wizard.s3.door_cost_lbl') }}</span
                             >
                             <input
                                 :value="form.e2_after_21h_cost"
                                 type="text"
                                 inputmode="numeric"
                                 autocomplete="off"
-                                placeholder="VD: 1.000.000"
+                                :placeholder="t('dispatch_wizard.s3.vnd_ph_large')"
                                 class="dw-e21-row__input dw-cell--vnd"
-                                title="Phụ phí sử dụng xe sau 21:00 (ước tính)"
+                                :title="t('dispatch_wizard.s3.after21_title')"
                                 @input="vndForm('e2_after_21h_cost', $event)"
                             />
-                            <span class="dw-e21-row__unit">VNĐ</span>
+                            <span class="dw-e21-row__unit">{{ t('dispatch_wizard.s3.vnd') }}</span>
                         </div>
                     </div>
                 </div>
@@ -851,13 +812,10 @@
             <article class="dw-step3-section">
                 <header class="dw-sec-intro">
                     <h3 class="dw-sec-intro__title">
-                        Nội dung đề nghị vận chuyển hàng hóa
+                        {{ t('dispatch_wizard.s3.cargo_title') }}
                     </h3>
                     <p class="dw-sec-intro__meta">
-                        Mỗi dòng một loại hàng hoặc một lô. Điền khối lượng /
-                        kích thước giúp chọn loại xe phù hợp. Cột có
-                        <span class="dw-th-req">*</span>
-                        cần ưu tiên để hệ thống xử lý đúng SLA.
+                        {{ t('dispatch_wizard.s3.cargo_meta') }}
                     </p>
                 </header>
                 <div class="dw-table-wrap">
@@ -872,54 +830,54 @@
                                 <th
                                     class="min-w-[2.5rem] whitespace-normal px-1 py-2"
                                 >
-                                    STT
+                                    {{ t('dispatch_wizard.s3.col_no') }}
                                 </th>
                                 <th
                                     class="min-w-[9rem] whitespace-normal px-1 py-2"
                                 >
-                                    Tên HH
+                                    {{ t('dispatch_wizard.s3.cargo_name') }}
                                 </th>
                                 <th
                                     class="min-w-[3.5rem] whitespace-normal px-1 py-2"
                                 >
-                                    SL
+                                    {{ t('dispatch_wizard.s3.qty') }}
                                 </th>
                                 <th
                                     class="min-w-[8rem] whitespace-normal px-1 py-2"
                                 >
-                                    Kích thước (1 kiện)
+                                    {{ t('dispatch_wizard.s3.dim') }}
                                 </th>
                                 <th
                                     class="min-w-[7rem] whitespace-normal px-1 py-2"
                                 >
-                                    KL (1 kiện)
+                                    {{ t('dispatch_wizard.s3.weight') }}
                                 </th>
                                 <th
                                     class="min-w-[9rem] whitespace-normal px-1 py-2"
                                 >
-                                    Ghi chú HH
+                                    {{ t('dispatch_wizard.s3.item_notes') }}
                                 </th>
                                 <th
                                     class="min-w-[20rem] border-l border-slate-200 px-1 py-2"
                                     colspan="3"
                                 >
-                                    Điểm tập kết
+                                    {{ t('dispatch_wizard.s3.pickup_group') }}
                                 </th>
                                 <th
                                     class="min-w-[20rem] border-l border-slate-200 px-1 py-2"
                                     colspan="3"
                                 >
-                                    Điểm giao
+                                    {{ t('dispatch_wizard.s3.delivery_group') }}
                                 </th>
                                 <th
                                     class="min-w-[10rem] whitespace-normal px-1 py-2"
                                 >
-                                    VC / ghi chú NV
+                                    {{ t('dispatch_wizard.s3.transport_note') }}
                                 </th>
                                 <th
                                     class="min-w-[7rem] whitespace-normal px-1 py-2"
                                 >
-                                    Chi phí
+                                    {{ t('dispatch_wizard.s3.cost') }}
                                 </th>
                                 <th class="w-8"></th>
                             </tr>
@@ -930,38 +888,38 @@
                                 <th
                                     class="min-w-[10rem] border-l border-slate-200 whitespace-normal px-1 py-1"
                                 >
-                                    Thời gian
-                                    <span class="dw-th-req" title="Ưu tiên điền"
+                                    {{ t('dispatch_wizard.s3.time') }}
+                                    <span class="dw-th-req" :title="t('dispatch_wizard.s3.priority_col')"
                                         >*</span
                                     >
                                 </th>
                                 <th
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
                                 >
-                                    Địa điểm
+                                    {{ t('dispatch_wizard.s3.place') }}
                                 </th>
                                 <th
                                     class="min-w-[9rem] whitespace-normal px-1 py-1"
                                 >
-                                    Người giao
+                                    {{ t('dispatch_wizard.s3.shipper_col') }}
                                 </th>
                                 <th
                                     class="min-w-[10rem] border-l border-slate-200 whitespace-normal px-1 py-1"
                                 >
-                                    Thời gian
-                                    <span class="dw-th-req" title="Ưu tiên điền"
+                                    {{ t('dispatch_wizard.s3.time') }}
+                                    <span class="dw-th-req" :title="t('dispatch_wizard.s3.priority_col')"
                                         >*</span
                                     >
                                 </th>
                                 <th
                                     class="min-w-[10rem] whitespace-normal px-1 py-1"
                                 >
-                                    Địa điểm
+                                    {{ t('dispatch_wizard.s3.place') }}
                                 </th>
                                 <th
                                     class="min-w-[9rem] whitespace-normal px-1 py-1"
                                 >
-                                    Người nhận
+                                    {{ t('dispatch_wizard.s3.receiver_col') }}
                                 </th>
                                 <th colspan="2"></th>
                             </tr>
@@ -979,16 +937,16 @@
                                     <input
                                         v-model="row.name"
                                         type="text"
-                                        placeholder="Tên hàng, quy cách đóng gói"
+                                        :placeholder="t('dispatch_wizard.s3.cargo_name_ph')"
                                         class="dw-cell dw-cell--table"
-                                        title="Tên hàng hóa — bắt buộc trên ít nhất một dòng"
+                                        :title="t('dispatch_wizard.s3.cargo_name_title')"
                                     />
                                 </td>
                                 <td class="min-w-[3.5rem] p-0.5">
                                     <input
                                         v-model="row.qty"
                                         type="text"
-                                        placeholder="Số lượng / kiện"
+                                        :placeholder="t('dispatch_wizard.s3.qty_ph')"
                                         class="dw-cell dw-cell--table min-w-[3.25rem]"
                                     />
                                 </td>
@@ -996,7 +954,7 @@
                                     <input
                                         v-model="row.dimensions"
                                         type="text"
-                                        placeholder="Dài × rộng × cao (cm)"
+                                        :placeholder="t('dispatch_wizard.s3.dim_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1004,7 +962,7 @@
                                     <input
                                         v-model="row.weight"
                                         type="text"
-                                        placeholder="kg / kiện"
+                                        :placeholder="t('dispatch_wizard.s3.weight_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1012,7 +970,7 @@
                                     <input
                                         v-model="row.item_notes"
                                         type="text"
-                                        placeholder="Mô tả thêm…"
+                                        :placeholder="t('dispatch_wizard.s3.item_notes_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1023,14 +981,14 @@
                                         v-model="row.pickup_at"
                                         type="datetime-local"
                                         class="dw-cell dw-cell--table dw-date-input"
-                                        title="Thời gian lấy / tập kết"
+                                        :title="t('dispatch_wizard.s3.pickup_at_title')"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.pickup_place"
                                         type="text"
-                                        placeholder="Địa chỉ, tên kho, tầng…"
+                                        :placeholder="t('dispatch_wizard.s3.pickup_place_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1038,7 +996,7 @@
                                     <input
                                         v-model="row.pickup_contact"
                                         type="text"
-                                        placeholder="Họ tên người giao"
+                                        :placeholder="t('dispatch_wizard.s3.pickup_contact_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1049,14 +1007,14 @@
                                         v-model="row.delivery_at"
                                         type="datetime-local"
                                         class="dw-cell dw-cell--table dw-date-input"
-                                        title="Thời gian giao hàng"
+                                        :title="t('dispatch_wizard.s3.delivery_at_title')"
                                     />
                                 </td>
                                 <td class="min-w-[10rem] p-0.5">
                                     <input
                                         v-model="row.delivery_place"
                                         type="text"
-                                        placeholder="Địa chỉ nhận, bộ phận…"
+                                        :placeholder="t('dispatch_wizard.s3.delivery_place_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1064,7 +1022,7 @@
                                     <input
                                         v-model="row.delivery_contact"
                                         type="text"
-                                        placeholder="Họ tên người nhận"
+                                        :placeholder="t('dispatch_wizard.s3.delivery_contact_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1072,7 +1030,7 @@
                                     <input
                                         v-model="row.transport_note"
                                         type="text"
-                                        placeholder="Loại xe, NCC, yêu cầu đặc biệt…"
+                                        :placeholder="t('dispatch_wizard.s3.trans_ph')"
                                         class="dw-cell dw-cell--table"
                                     />
                                 </td>
@@ -1082,9 +1040,9 @@
                                         type="text"
                                         inputmode="numeric"
                                         autocomplete="off"
-                                        placeholder="VD: 1.500.000"
+                                        :placeholder="t('dispatch_wizard.s3.vnd_ph')"
                                         class="dw-cell dw-cell--table dw-cell--vnd"
-                                        title="Chi phí — gõ số, tự thêm dấu ."
+                                        :title="t('dispatch_wizard.s3.cost_title')"
                                         @input="vndRow(row, 'cost', $event)"
                                     />
                                 </td>
@@ -1093,6 +1051,7 @@
                                         v-if="cargoRows.length > 1"
                                         type="button"
                                         class="rounded p-1 text-rose-600 hover:bg-rose-50"
+                                        :title="t('dispatch_wizard.s3.delete_row')"
                                         @click="removeCargoRow(idx)"
                                     >
                                         <TrashIcon class="h-4 w-4" />
@@ -1106,7 +1065,7 @@
                                     colspan="13"
                                     class="px-3 py-2 text-right font-medium text-slate-700"
                                 >
-                                    Tổng
+                                    {{ t('dispatch_wizard.s3.cargo_sum') }}
                                 </td>
                                 <td class="px-2 py-2 font-semibold text-va-800">
                                     {{ formatCurrency(cargoTotal) }}
@@ -1122,7 +1081,7 @@
                             @click="addCargoRow"
                         >
                             <PlusIcon class="h-4 w-4" />
-                            Thêm dòng hàng
+                            {{ t('dispatch_wizard.s3.add_cargo_row') }}
                         </button>
                     </div>
                 </div>
@@ -1133,20 +1092,20 @@
                 class="dw-step3-section space-y-3 bg-slate-50/40 p-4 sm:p-5"
             >
                 <div class="text-xs font-semibold uppercase text-slate-600">
-                    e.1.1 Ghi chú &amp; phát sinh
+                    {{ t('dispatch_wizard.s3.cargo_panel') }}
                 </div>
                 <label class="block">
                     <span class="mb-1 block text-xs font-medium text-slate-600"
-                        >Ghi chú khác
+                        >{{ t('dispatch_wizard.s3.cargo_notes_lbl') }}
                         <span class="font-normal text-slate-400"
-                            >(tuỳ chọn)</span
+                            >{{ t('dispatch_wizard.s3.optional') }}</span
                         ></span
                     >
                     <textarea
                         v-model="form.cargo_extra_notes"
                         rows="2"
                         class="dw-input min-h-[3.5rem] resize-y"
-                        placeholder="Yêu cầu đặc biệt, giờ cấm tải, hàng dễ vỡ…"
+                        :placeholder="t('dispatch_wizard.s3.cargo_notes_ph')"
                     />
                 </label>
                 <div
@@ -1164,7 +1123,7 @@
                                 class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0"
                             />
                             <span class="text-sm leading-snug text-slate-800"
-                                >Yêu cầu bốc xếp / nhân công hỗ trợ</span
+                                >{{ t('dispatch_wizard.s3.need_porters') }}</span
                             >
                         </label>
                         <div
@@ -1172,24 +1131,24 @@
                         >
                             <span
                                 class="shrink-0 text-xs font-medium text-slate-600"
-                                >Số lượng</span
+                                >{{ t('dispatch_wizard.s3.qty_lbl') }}</span
                             >
                             <input
                                 v-model="form.porter_qty"
                                 type="text"
-                                placeholder="VD: 2 người"
+                                :placeholder="t('dispatch_wizard.s3.porter_qty_ph')"
                                 class="dw-cell dw-cell--e21 min-w-[6rem] max-w-[10rem]"
                             />
                             <span
                                 class="shrink-0 text-xs font-medium text-slate-600"
-                                >Chi phí (VNĐ)</span
+                                >{{ t('dispatch_wizard.s3.cost_vnd') }}</span
                             >
                             <input
                                 :value="form.porter_cost"
                                 type="text"
                                 inputmode="numeric"
                                 autocomplete="off"
-                                placeholder="VD: 500.000"
+                                :placeholder="t('dispatch_wizard.s3.vnd_ph')"
                                 class="dw-cell dw-cell--e21 dw-cell--vnd min-w-[10rem] flex-1 sm:max-w-[14rem]"
                                 @input="vndForm('porter_cost', $event)"
                             />
@@ -1207,7 +1166,7 @@
                                 class="mt-0.5 shrink-0 rounded border-slate-300 text-va-800 sm:mt-0"
                             />
                             <span class="text-sm leading-snug text-slate-800"
-                                >Gửi chành xe đi tỉnh</span
+                                >{{ t('dispatch_wizard.s3.interprov') }}</span
                             >
                         </label>
                         <div
@@ -1215,14 +1174,14 @@
                         >
                             <span
                                 class="shrink-0 text-xs font-medium text-slate-600"
-                                >Chi phí phát sinh (VNĐ)</span
+                                >{{ t('dispatch_wizard.s3.interprov_cost') }}</span
                             >
                             <input
                                 :value="form.interprovincial_cost"
                                 type="text"
                                 inputmode="numeric"
                                 autocomplete="off"
-                                placeholder="VD: 300.000"
+                                :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
                                 class="dw-cell dw-cell--e21 dw-cell--vnd min-w-[10rem] flex-1 sm:max-w-[14rem]"
                                 @input="vndForm('interprovincial_cost', $event)"
                             />
@@ -1235,10 +1194,12 @@
 </template>
 <script setup>
 import { computed, inject, unref } from "vue";
+import { useI18n } from "vue-i18n";
 import { PlusIcon, TrashIcon } from "@heroicons/vue/24/outline";
 import { formatVndWhileTyping } from "../../../util/money";
 import { DISPATCH_WIZARD_KEY } from "./injectionKeys";
 
+const { t } = useI18n();
 const w = inject(DISPATCH_WIZARD_KEY);
 if (!w)
     throw new Error(

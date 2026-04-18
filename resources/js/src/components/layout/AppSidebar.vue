@@ -30,7 +30,7 @@
             {{ t('app.title') }}
           </div>
           <div class="mt-0.5 hidden text-[11px] leading-snug text-white/75 lg:block">
-            Điều vận xe · VA Schools
+            {{ t('app.sidebar_tagline') }}
           </div>
         </div>
         <button

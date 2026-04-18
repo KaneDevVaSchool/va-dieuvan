@@ -330,7 +330,6 @@
       </AppFilterBar>
     </div>
 
-    <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.date_filter_hint') }}</p>
 
     <div class="grid gap-5 lg:grid-cols-3">
       <div class="min-w-0 space-y-5 lg:col-span-2">
