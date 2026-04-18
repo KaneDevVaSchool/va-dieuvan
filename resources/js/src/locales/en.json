@@ -873,6 +873,7 @@
         "sla_prefix": "SLA:",
         "link_request": "Request",
         "link_trip": "Trip",
+        "links_only_detail": "No request or trip linked — open shipment detail above.",
         "kpi_in_transit": "In transit",
         "kpi_completed": "Delivered (in range)",
         "kpi_pending": "Pending",

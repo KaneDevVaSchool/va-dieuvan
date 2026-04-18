@@ -13,7 +13,7 @@
     />
     <span v-if="showLabel" :class="labelClass">{{ label }}</span>
     <span
-      v-if="statusPill"
+      v-if="statusPill && showLabel"
       :class="statusPillClass"
       :title="statusPill"
     >

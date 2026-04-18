@@ -338,20 +338,26 @@
           <div class="flex flex-col gap-2 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.list_title') }}</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.list_live_hint') }}</p>
-              <p class="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">{{ t('cargo_page.list_live_hint_detail') }}</p>
+        
             </div>
           </div>
           <div v-if="loading" class="p-6 text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.loading') }}</div>
           <div v-else class="overflow-x-auto">
-            <table class="min-w-[720px] w-full border-collapse text-left text-sm">
+            <table class="min-w-[800px] w-full border-collapse text-left text-sm">
               <thead>
                 <tr class="border-b border-slate-200/90 bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
                   <th class="px-4 py-3">{{ t('cargo_page.col_code') }}</th>
                   <th class="px-4 py-3">{{ t('cargo_page.col_route') }}</th>
                   <th class="px-4 py-3">{{ t('cargo_page.col_status') }}</th>
                   <th class="px-4 py-3">{{ t('cargo_page.col_time') }}</th>
-                  <th class="px-4 py-3">{{ t('cargo_page.col_links') }}</th>
+                  <th
+                    class="min-w-[14rem] border-l border-teal-100/90 bg-gradient-to-br from-teal-50/90 via-white to-slate-50/50 px-3 py-3 text-teal-900 dark:border-teal-900/40 dark:from-teal-950/40 dark:via-slate-900/80 dark:to-slate-900/60 dark:text-teal-200"
+                  >
+                    <span class="flex items-center gap-1.5">
+                      <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500 dark:bg-teal-400" aria-hidden="true" />
+                      {{ t('cargo_page.col_links') }}
+                    </span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -385,29 +391,49 @@
                       {{ t('cargo_page.sla_prefix') }} {{ fmt(s.sla_due_at) }}
                     </div>
                   </td>
-                  <td class="px-4 py-3">
-                    <div class="flex flex-wrap gap-2">
+                  <td class="border-l border-slate-100/90 bg-slate-50/30 align-top px-3 py-3 dark:border-slate-800 dark:bg-slate-900/20">
+                    <div class="flex min-w-[12.5rem] flex-col gap-1.5">
                       <RouterLink
                         :to="'/cargo/' + s.id"
-                        class="text-xs font-semibold text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                        class="group flex items-center gap-2 rounded-xl border border-teal-200/80 bg-white px-2.5 py-2 text-xs font-semibold text-teal-800 shadow-sm transition hover:border-teal-400 hover:bg-teal-50/90 hover:shadow dark:border-teal-800/60 dark:bg-slate-900/80 dark:text-teal-100 dark:hover:border-teal-600 dark:hover:bg-teal-950/50"
                       >
-                        {{ t('cargo_page.link_detail') }}
+                        <CubeIcon class="h-4 w-4 shrink-0 text-teal-600 opacity-90 group-hover:opacity-100 dark:text-teal-400" aria-hidden="true" />
+                        <span class="min-w-0 flex-1 leading-snug">{{ t('cargo_page.link_detail') }}</span>
+                        <ArrowTopRightOnSquareIcon
+                          class="h-3.5 w-3.5 shrink-0 text-teal-500/80 opacity-0 transition group-hover:opacity-100 dark:text-teal-400/90"
+                          aria-hidden="true"
+                        />
                       </RouterLink>
                       <RouterLink
                         v-if="dispatchRequestId(s)"
                         :to="'/requests/' + dispatchRequestId(s)"
-                        class="text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                        class="group flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2.5 py-2 text-xs font-medium text-slate-800 shadow-sm transition hover:border-violet-300 hover:bg-violet-50/80 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:border-violet-600 dark:hover:bg-violet-950/40"
                       >
-                        {{ t('cargo_page.link_request') }}
+                        <DocumentTextIcon class="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden="true" />
+                        <span class="min-w-0 flex-1 leading-snug">{{ t('cargo_page.link_request') }}</span>
+                        <span
+                          class="rounded-md bg-violet-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/80 dark:text-violet-200"
+                          >#{{ dispatchRequestId(s) }}</span
+                        >
                       </RouterLink>
                       <RouterLink
                         v-if="s.trip_id"
                         :to="'/trips/' + s.trip_id"
-                        class="text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
+                        class="group flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-2.5 py-2 text-xs font-medium text-slate-800 shadow-sm transition hover:border-sky-300 hover:bg-sky-50/80 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:border-sky-600 dark:hover:bg-sky-950/40"
                       >
-                        {{ t('cargo_page.link_trip') }}
+                        <TruckIcon class="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" aria-hidden="true" />
+                        <span class="min-w-0 flex-1 leading-snug">{{ t('cargo_page.link_trip') }}</span>
+                        <span
+                          class="rounded-md bg-sky-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-sky-900 dark:bg-sky-950/80 dark:text-sky-200"
+                          >#{{ s.trip_id }}</span
+                        >
                       </RouterLink>
-                      <span v-if="!dispatchRequestId(s) && !s.trip_id" class="text-xs text-slate-400">—</span>
+                      <div
+                        v-if="!dispatchRequestId(s) && !s.trip_id"
+                        class="rounded-xl border border-dashed border-slate-200/90 bg-slate-50/50 px-2.5 py-2 text-center text-[11px] text-slate-500 dark:border-slate-600 dark:bg-slate-800/30 dark:text-slate-400"
+                      >
+                        {{ t('cargo_page.links_only_detail') }}
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -483,10 +509,13 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  ArrowTopRightOnSquareIcon,
   CalendarDaysIcon,
   CheckCircleIcon,
   ChevronDownIcon,
   ClockIcon,
+  CubeIcon,
+  DocumentTextIcon,
   ExclamationTriangleIcon,
   FunnelIcon,
   PlusIcon,

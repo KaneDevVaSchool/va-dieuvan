@@ -846,6 +846,7 @@
         "sla_prefix": "SLA:",
         "link_request": "Yêu cầu",
         "link_trip": "Chuyến",
+        "links_only_detail": "Chưa liên kết phiếu / chuyến — m�� chi tiết đơn phía trên.",
         "kpi_in_transit": "Đang vận chuyển",
         "kpi_completed": "Đã giao (trong khoảng lọc)",
         "kpi_pending": "Chờ xử lý",
