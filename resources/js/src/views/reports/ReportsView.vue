@@ -1,46 +1,255 @@
 <template>
-  <div class="space-y-4">
-    <AppFilterBar>
-      <div class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {{ t('reports_page.filter_title') }}
-      </div>
-      <div class="grid gap-3 md:grid-cols-2">
-        <Input v-model="from" :label="t('reports_page.from')" type="date" />
-        <Input v-model="to" :label="t('reports_page.to')" type="date" />
-      </div>
-      <div class="mt-3 flex flex-wrap gap-2">
-        <Button variant="secondary" :loading="loading" @click="load">{{ t('reports_page.load') }}</Button>
-        <Button v-if="summary" variant="secondary" type="button" @click="downloadCsv">{{ t('reports_page.csv') }}</Button>
-      </div>
-      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-        {{ t('reports_page.csv_hint') }}
-      </p>
-    </AppFilterBar>
-
-    <div v-if="summary" class="grid gap-4 md:grid-cols-3">
-      <Card :title="t('reports_page.card_trips')">
-        <div
-          v-for="(v, k) in summary.trips_by_status ?? {}"
-          :key="k"
-          class="flex justify-between text-sm text-slate-800 dark:text-slate-200"
-        >
-          <span>{{ k }}</span><span class="font-semibold">{{ v }}</span>
-        </div>
-      </Card>
-      <Card :title="t('reports_page.card_costs')">
-        <div
-          v-for="(v, k) in summary.confirmed_costs_by_type ?? {}"
-          :key="k"
-          class="flex justify-between text-sm text-slate-800 dark:text-slate-200"
-        >
-          <span>{{ k }}</span><span class="font-semibold">{{ formatMoney(v) }}</span>
-        </div>
-      </Card>
-      <Card :title="t('reports_page.card_sla')">
-        <div class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ summary.cargo_sla_breaches ?? 0 }}</div>
-        <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('reports_page.card_sla_sub') }}</div>
-      </Card>
+  <div class="space-y-4 md:space-y-5">
+    <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100">
+      {{ loadError }}
     </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+          {{ t('reports_page.hero_title') }}
+        </h1>
+        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+          {{ t('reports_page.hero_subtitle') }}
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <RouterLink
+          class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          to="/"
+        >
+          {{ t('reports_page.link_dashboard') }}
+        </RouterLink>
+        <Button
+          v-if="summary"
+          variant="secondary"
+          type="button"
+          class="border-teal-200/80 bg-teal-50/80 text-teal-900 hover:bg-teal-50 dark:border-teal-900/50 dark:bg-teal-950/40 dark:text-teal-100 dark:hover:bg-teal-950/60"
+          @click="downloadCsv"
+        >
+          {{ t('reports_page.csv') }}
+        </Button>
+      </div>
+    </div>
+
+    <TransportReportFilters />
+
+    <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+      <span class="inline-block size-4 animate-pulse rounded-full bg-slate-300 dark:bg-slate-600" />
+      {{ t('dashboard_analytics.loading') }}
+    </div>
+
+    <section v-if="summary" class="space-y-2" aria-labelledby="rep-kpi">
+      <h2 id="rep-kpi" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('reports_page.section_kpi') }}
+      </h2>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div
+          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
+        >
+          <div class="text-[11px] font-medium uppercase tracking-wide text-teal-300/90">
+            {{ t('reports_page.kpi_on_time') }}
+          </div>
+          <div class="mt-1 text-2xl font-bold tabular-nums">
+            <template v-if="completionRate != null">{{ completionRate }}%</template>
+            <template v-else>—</template>
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">
+            {{ t('reports_page.kpi_on_time_hint') }}
+          </p>
+        </div>
+        <div
+          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
+        >
+          <div class="text-[11px] font-medium uppercase tracking-wide text-violet-300/90">
+            {{ t('reports_page.kpi_sla_breaches') }}
+          </div>
+          <div class="mt-1 text-2xl font-bold tabular-nums text-rose-300">
+            {{ summary?.cargo_sla_breaches ?? 0 }}
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">
+            {{ t('reports_page.kpi_sla_breaches_hint') }}
+          </p>
+        </div>
+        <div
+          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
+        >
+          <div class="text-[11px] font-medium uppercase tracking-wide text-amber-300/90">
+            {{ t('reports_page.kpi_avg_cost') }}
+          </div>
+          <div class="mt-1 text-xl font-bold tabular-nums">
+            {{ avgCostPerTripDisplay }}
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">
+            {{ t('reports_page.kpi_avg_cost_hint') }}
+          </p>
+        </div>
+        <div
+          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
+        >
+          <div class="text-[11px] font-medium uppercase tracking-wide text-emerald-300/90">
+            {{ t('reports_page.kpi_trips') }}
+          </div>
+          <div class="mt-1 text-2xl font-bold tabular-nums">
+            {{ totalTrips }}
+          </div>
+          <p class="mt-1 text-[11px] text-slate-400">
+            {{ t('reports_page.kpi_trips_hint') }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <p v-if="summary" class="text-center text-[11px] text-slate-400 dark:text-slate-500">
+      {{ t('dashboard_analytics.chart_toolbar_hint') }}
+    </p>
+
+    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="rep-section-charts-ops">
+      <h2 id="rep-section-charts-ops" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_charts_trips_requests') }}
+      </h2>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <DashboardChartSection
+          :title="t('dashboard_analytics.chart_trips_donut')"
+          :hint="t('dashboard_analytics.chart_hint_trips_donut')"
+          :badge="chartBadgeTripsTotal"
+          persist-key="donut-status"
+          :expand-label="t('dashboard_analytics.chart_expand')"
+          :collapse-label="t('dashboard_analytics.chart_collapse')"
+        >
+          <DashboardEChart
+            :height="chartHeight"
+            :option="optDonut"
+            :aria-label="t('dashboard_analytics.chart_trips_donut')"
+          />
+        </DashboardChartSection>
+        <DashboardChartSection
+          :title="t('dashboard_analytics.chart_fleet_mode')"
+          :hint="t('dashboard_analytics.chart_hint_fleet')"
+          persist-key="donut-fleet"
+          :expand-label="t('dashboard_analytics.chart_expand')"
+          :collapse-label="t('dashboard_analytics.chart_collapse')"
+        >
+          <DashboardEChart
+            :height="chartHeight"
+            :option="optFleet"
+            :aria-label="t('dashboard_analytics.chart_fleet_mode')"
+          />
+        </DashboardChartSection>
+      </div>
+
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_dispatch_status')"
+        :hint="t('dashboard_analytics.chart_hint_dispatch')"
+        persist-key="donut-dispatch"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
+        <DashboardEChart
+          :height="chartHeight"
+          :option="optDispatchDonut"
+          :aria-label="t('dashboard_analytics.chart_dispatch_status')"
+        />
+      </DashboardChartSection>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <DashboardChartSection
+          :title="t('dashboard_analytics.chart_trips_by_plate')"
+          :hint="t('dashboard_analytics.chart_hint_plates')"
+          persist-key="bar-plates"
+          :expand-label="t('dashboard_analytics.chart_expand')"
+          :collapse-label="t('dashboard_analytics.chart_collapse')"
+        >
+          <DashboardEChart
+            :height="chartHeightTall"
+            :option="optPlates"
+            :aria-label="t('dashboard_analytics.chart_trips_by_plate')"
+          />
+        </DashboardChartSection>
+        <DashboardChartSection
+          :title="t('dashboard_analytics.chart_top_requesters')"
+          :hint="t('dashboard_analytics.chart_hint_requesters')"
+          persist-key="bar-requesters"
+          :expand-label="t('dashboard_analytics.chart_expand')"
+          :collapse-label="t('dashboard_analytics.chart_collapse')"
+        >
+          <DashboardEChart
+            :height="chartHeightTall"
+            :option="optRequesters"
+            :aria-label="t('dashboard_analytics.chart_top_requesters')"
+          />
+        </DashboardChartSection>
+      </div>
+    </section>
+
+    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="rep-section-charts-time">
+      <h2 id="rep-section-charts-time" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_charts_timing') }}
+      </h2>
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_hour_line')"
+        :hint="`${t('dashboard_analytics.chart_hint_hour')} ${t('dashboard_analytics.chart_hour_hint')}`"
+        persist-key="line-hour"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
+        <div class="rounded-lg border border-slate-100 bg-slate-50/60 p-0.5 dark:border-slate-700 dark:bg-slate-950/40">
+          <DashboardEChart
+            :height="chartHeightWide"
+            :option="optHourLine"
+            :aria-label="t('dashboard_analytics.chart_hour_line')"
+          />
+        </div>
+      </DashboardChartSection>
+    </section>
+
+    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="rep-section-charts-costs">
+      <h2 id="rep-section-charts-costs" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {{ t('dashboard_analytics.section_charts_costs') }}
+      </h2>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <DashboardChartSection
+          :title="t('dashboard_analytics.chart_costs_bar')"
+          :hint="t('dashboard_analytics.chart_hint_costs_bar')"
+          persist-key="bar-cost-type"
+          :expand-label="t('dashboard_analytics.chart_expand')"
+          :collapse-label="t('dashboard_analytics.chart_collapse')"
+        >
+          <DashboardEChart
+            :height="chartHeight"
+            :option="optCostBar"
+            :aria-label="t('dashboard_analytics.chart_costs_bar')"
+          />
+        </DashboardChartSection>
+        <DashboardChartSection
+          :title="t('dashboard_analytics.chart_costs_pipeline')"
+          :hint="t('dashboard_analytics.chart_hint_cost_pipeline')"
+          persist-key="bar-cost-pipeline"
+          :expand-label="t('dashboard_analytics.chart_expand')"
+          :collapse-label="t('dashboard_analytics.chart_collapse')"
+        >
+          <DashboardEChart
+            :height="chartHeight"
+            :option="optCostPipeline"
+            :aria-label="t('dashboard_analytics.chart_costs_pipeline')"
+          />
+        </DashboardChartSection>
+      </div>
+
+      <DashboardChartSection
+        :title="t('dashboard_analytics.chart_providers')"
+        :hint="t('dashboard_analytics.chart_hint_providers')"
+        persist-key="bar-providers"
+        :expand-label="t('dashboard_analytics.chart_expand')"
+        :collapse-label="t('dashboard_analytics.chart_collapse')"
+      >
+        <DashboardEChart
+          :height="chartHeight"
+          :option="optProviders"
+          :aria-label="t('dashboard_analytics.chart_providers')"
+        />
+      </DashboardChartSection>
+    </section>
 
     <Card v-if="summary" :title="t('reports_page.card_providers')">
       <p class="mb-3 text-xs text-slate-500 dark:text-slate-400">
@@ -76,20 +285,41 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
-import Input from '../../components/ui/Input.vue'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import { getSummary } from '../../api/reports'
+import TransportReportFilters from '../../components/reports/TransportReportFilters.vue'
+import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
+import DashboardChartSection from '../../components/dashboard/DashboardChartSection.vue'
+import { useTransportReportSummary } from '../../composables/useTransportReportSummary'
 
 const { t } = useI18n()
 
-const loading = ref(false)
-const summary = ref(null)
-const from = ref('')
-const to = ref('')
+const {
+  loading,
+  loadError,
+  summary,
+  summaryFilters,
+  formatMoney,
+  totalTrips,
+  completionRate,
+  chartBadgeTripsTotal,
+  chartHeight,
+  chartHeightWide,
+  chartHeightTall,
+  optDonut,
+  optFleet,
+  optDispatchDonut,
+  optHourLine,
+  optCostBar,
+  optCostPipeline,
+  optProviders,
+  optRequesters,
+  optPlates,
+  reloadSummary,
+} = useTransportReportSummary()
 
 const providerRows = computed(() => {
   const raw = summary.value?.confirmed_costs_by_provider
@@ -97,10 +327,13 @@ const providerRows = computed(() => {
   return Array.isArray(raw) ? raw : []
 })
 
-function formatMoney(v) {
-  const n = Number(v ?? 0)
-  return new Intl.NumberFormat('vi-VN').format(n)
-}
+const avgCostPerTripDisplay = computed(() => {
+  const trips = Number(totalTrips.value ?? 0)
+  const raw = summary.value?.confirmed_costs_by_type ?? {}
+  const sum = Object.values(raw).reduce((a, b) => a + Number(b ?? 0), 0)
+  if (!trips || trips <= 0 || !sum) return '—'
+  return formatMoney(sum / trips)
+})
 
 function csvEscape(cell) {
   const s = String(cell ?? '')
@@ -134,21 +367,14 @@ function downloadCsv() {
 
   const blob = new Blob(['\ufeff', lines.join('\n')], { type: 'text/csv;charset=utf-8' })
   const a = document.createElement('a')
+  const sf = summaryFilters.value
   a.href = URL.createObjectURL(blob)
-  a.download = `bao-cao-dieu-van-${from.value || 'tu'}_${to.value || 'den'}.csv`
+  a.download = `bao-cao-dieu-van-${sf.from || 'tu'}_${sf.to || 'den'}.csv`
   a.click()
   URL.revokeObjectURL(a.href)
 }
 
-async function load() {
-  loading.value = true
-  try {
-    const params = {}
-    if (from.value) params.from = from.value
-    if (to.value) params.to = to.value
-    summary.value = await getSummary(params)
-  } finally {
-    loading.value = false
-  }
-}
+onMounted(() => {
+  reloadSummary()
+})
 </script>
