@@ -228,7 +228,7 @@
   <!-- Thanh ngang (navbar) -->
   <header
     v-else
-    class="sticky top-0 z-30 flex w-full max-w-full shrink-0 flex-col border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95"
+    class="print:hidden sticky top-0 z-30 flex w-full max-w-full shrink-0 flex-col border-b border-slate-200/90 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95"
   >
     <div
       class="flex w-full min-w-0 items-center gap-2 px-3 py-2.5 sm:min-h-14 sm:gap-3 sm:px-4 sm:py-2"
@@ -405,7 +405,7 @@ function toggleGroup(key) {
 
 const verticalAsideClass = computed(() => {
   const base = [
-    'flex flex-col border-r border-white/10 bg-[color:var(--va-brand)] text-white shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.08)]',
+    'print:hidden flex flex-col border-r border-white/10 bg-[color:var(--va-brand)] text-white shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.08)]',
   ]
   if (ui.sidebarCollapsed) {
     /** Rail cố định ~4.25rem — tránh sm:w-14 quá hẹp làm vỡ logo + nút */

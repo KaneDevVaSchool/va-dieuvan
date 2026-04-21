@@ -7,7 +7,7 @@
     >
       <button
         type="button"
-        class="mt-0.5 shrink-0 rounded-lg p-1 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+        class="mt-0.5 shrink-0 rounded-lg p-1 text-slate-500 transition hover:bg-slate-100 print:hidden dark:hover:bg-slate-800"
         :aria-expanded="open"
         :aria-label="open ? collapseLabel : expandLabel"
         @click="open = !open"

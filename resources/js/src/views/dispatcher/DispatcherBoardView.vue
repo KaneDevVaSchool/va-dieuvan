@@ -36,11 +36,11 @@
         {{ loadError }}
       </div>
 
-      <div class="flex flex-col gap-4 xl:flex-row xl:items-stretch xl:gap-6">
+      <div class="flex w-full min-w-0 flex-col gap-4 xl:flex-row xl:items-stretch xl:gap-6">
         <!-- Trip queue -->
         <aside
           id="dispatcher-trip-queue"
-          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:w-[min(100%,480px)]"
+          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:w-[min(100%,400px)]"
         >
           <div class="border-b border-slate-200 p-3">
             <div class="flex items-start justify-between gap-2">
@@ -60,20 +60,20 @@
                 {{ t('dispatcher_board.open_requests') }}
               </RouterLink>
             </div>
-            <div class="mt-3 flex items-stretch gap-1.5">
+            <div class="mt-3 flex items-center gap-1">
               <button
                 type="button"
-                class="flex h-[3.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 :aria-label="t('dispatcher_board.filter_scroll_prev')"
                 @click="scrollQueueFilters(-1)"
               >
-                <ChevronLeftIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                <ChevronLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
               </button>
               <div
                 ref="queueFilterScrollRef"
                 role="tablist"
                 :aria-label="t('dispatcher_board.queue_filters_aria')"
-                class="flex min-w-0 flex-1 items-stretch gap-2 overflow-x-auto scroll-smooth py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scroll-smooth py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
               >
                 <button
                   v-for="tab in queueTabs"
@@ -81,28 +81,33 @@
                   type="button"
                   role="tab"
                   :aria-selected="queueFilter === tab.id"
-                  class="flex min-w-[7.25rem] max-w-[10rem] shrink-0 flex-col justify-center rounded-xl border px-2.5 py-2 text-left text-[11px] font-semibold shadow-sm transition sm:min-w-[7.75rem] sm:px-3 sm:text-xs"
+                  class="inline-flex shrink-0 items-center gap-1 rounded-lg border px-1.5 py-1 text-left text-[10px] font-medium leading-tight shadow-sm transition sm:gap-1.5 sm:px-2 sm:text-[11px]"
                   :class="
                     queueFilter === tab.id
-                      ? 'border-teal-500 bg-teal-600 text-white ring-2 ring-teal-500/25'
-                      : 'border-slate-200/90 bg-white text-slate-800 hover:border-teal-200/80 hover:bg-teal-50/40 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100 dark:hover:border-teal-900/50 dark:hover:bg-slate-800'
+                      ? 'border-teal-500 bg-teal-600 text-white ring-1 ring-teal-500/30 dark:bg-teal-600'
+                      : 'border-slate-200/90 bg-white text-slate-700 hover:border-teal-200/80 hover:bg-teal-50/50 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-800/50 dark:hover:bg-slate-800'
                   "
                   @click="queueFilter = tab.id"
                 >
-                  <span class="line-clamp-2 leading-snug">{{ tab.label }}</span>
+                  <component
+                    :is="queueTabIcon(tab.id)"
+                    class="h-3.5 w-3.5 shrink-0 opacity-90 sm:h-4 sm:w-4"
+                    aria-hidden="true"
+                  />
+                  <span class="max-w-[5.5rem] truncate sm:max-w-[6.5rem]">{{ tab.label }}</span>
                   <span
-                    class="mt-0.5 tabular-nums text-[10px] font-bold"
+                    class="tabular-nums text-[9px] font-semibold opacity-90"
                     :class="queueFilter === tab.id ? 'text-teal-100' : 'text-slate-500 dark:text-slate-400'"
                   >({{ tab.count }})</span>
                 </button>
               </div>
               <button
                 type="button"
-                class="flex h-[3.25rem] w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/90 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 :aria-label="t('dispatcher_board.filter_scroll_next')"
                 @click="scrollQueueFilters(1)"
               >
-                <ChevronRightIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                <ChevronRightIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
               </button>
             </div>
             <label class="mt-3 block">
@@ -162,9 +167,9 @@
           </div>
         </aside>
 
-        <!-- Timeline -->
+        <!-- Timeline: w-full để khi thu gọn rail sidebar vùng lịch giãn đủ chiều ngang -->
         <section
-          class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80"
+          class="min-w-0 w-full flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80"
         >
           <div class="space-y-3 border-b border-slate-100/90 bg-gradient-to-r from-teal-50/80 via-white to-sky-50/45 p-4 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80 sm:p-4 sm:pb-3.5">
             <div class="flex flex-wrap items-center gap-2">
@@ -249,10 +254,8 @@
             </div>
           </div>
 
-          <div class="overflow-x-auto [scrollbar-width:thin]">
-            <div
-              class="min-w-[1280px] bg-gradient-to-b from-slate-50/40 to-white p-4 dark:from-slate-950/50 dark:to-slate-900/30 lg:min-w-[1480px] xl:min-w-[1680px]"
-            >
+          <div class="w-full min-w-0 overflow-x-auto [scrollbar-width:thin]">
+            <div :class="timelineScrollInnerClass">
               <!-- Hour labels -->
               <div class="mb-2 flex text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                 <div class="w-[200px] shrink-0 lg:w-[240px] xl:w-[260px]" />
@@ -346,16 +349,43 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronLeftIcon, ChevronRightIcon, Square2StackIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowsRightLeftIcon,
+  BoltIcon,
+  BriefcaseIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CubeIcon,
+  QueueListIcon,
+  Square2StackIcon,
+  UserGroupIcon,
+} from '@heroicons/vue/24/outline'
 import { listTrips } from '../../api/trips'
 import { listRequests } from '../../api/requests'
 import { labelTripStatus, labelTripType } from '../../util/labels'
 import { shortViDayLabel, toLocalDateKey } from '../../util/dates'
+import { useUiStore } from '../../store/ui'
+import { useSidebarLayout } from '../../composables/useSidebarLayout'
 
 const { t } = useI18n()
 const router = useRouter()
+
+const ui = useUiStore()
+const { sidebarCollapsed } = storeToRefs(ui)
+const { isVertical } = useSidebarLayout()
+
+/** Khi thu gọn rail: nội dung main rộng hơn — tăng nhẹ min-width lưới giờ để lịch “theo” chiều ngang */
+const timelineScrollInnerClass = computed(() => {
+  const base =
+    'w-full bg-gradient-to-b from-slate-50/40 to-white p-4 dark:from-slate-950/50 dark:to-slate-900/30'
+  if (isVertical.value && sidebarCollapsed.value) {
+    return `${base} min-w-[1280px] lg:min-w-[1560px] xl:min-w-[1800px]`
+  }
+  return `${base} min-w-[1280px] lg:min-w-[1480px] xl:min-w-[1680px]`
+})
 
 const GRID_START = 6
 const GRID_END = 22
@@ -379,6 +409,19 @@ function scrollQueueFilters(direction) {
   if (!el) return
   const step = Math.min(Math.max(el.clientWidth * 0.72, 200), 360)
   el.scrollBy({ left: direction * step, behavior: 'smooth' })
+}
+
+const QUEUE_TAB_ICONS = {
+  all: QueueListIcon,
+  urgent: BoltIcon,
+  door_to_door: UserGroupIcon,
+  point_to_point: ArrowsRightLeftIcon,
+  business: BriefcaseIcon,
+  cargo: CubeIcon,
+}
+
+function queueTabIcon(id) {
+  return QUEUE_TAB_ICONS[id] ?? QueueListIcon
 }
 
 const queueTabs = computed(() => {
@@ -490,9 +533,12 @@ const queueTrips = computed(() => {
 
 const filteredQueueTrips = computed(() => {
   let list = queueTrips.value
-  if (queueFilter.value === 'urgent') list = list.filter((x) => dr(x)?.is_urgent)
-  else if (queueFilter.value === 'cargo') list = list.filter((x) => tripType(x) === 'cargo')
-  else if (queueFilter.value === 'd2d') list = list.filter((x) => tripType(x) === 'door_to_door')
+  const f = queueFilter.value
+  if (f === 'urgent') list = list.filter((x) => dr(x)?.is_urgent)
+  else if (f === 'cargo') list = list.filter((x) => tripType(x) === 'cargo')
+  else if (f === 'door_to_door') list = list.filter((x) => tripType(x) === 'door_to_door')
+  else if (f === 'point_to_point') list = list.filter((x) => tripType(x) === 'point_to_point')
+  else if (f === 'business') list = list.filter((x) => tripType(x) === 'business')
 
   const q = queueSearch.value.trim().toLowerCase()
   if (!q) return list

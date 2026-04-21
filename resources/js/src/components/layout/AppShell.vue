@@ -14,13 +14,13 @@
         isHorizontalMobilePad,
       ]"
     >
-      <OperationalStatusBanner />
+      <OperationalStatusBanner class="print:hidden" />
       <slot />
     </main>
     <!-- Menu dưới: chỉ layout ngang + viewport &lt; md -->
     <div
       v-if="isHorizontal"
-      class="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden"
+      class="pointer-events-none fixed inset-x-0 bottom-0 z-40 print:hidden md:hidden"
     >
       <div class="pointer-events-auto pb-[env(safe-area-inset-bottom)]">
         <MobileBottomNav />

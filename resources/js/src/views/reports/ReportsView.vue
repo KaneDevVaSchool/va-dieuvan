@@ -1,10 +1,24 @@
 <template>
-  <div class="space-y-4 md:space-y-5">
-    <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+  <div class="reports-print space-y-4 md:space-y-5">
+    <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 print:hidden">
       {{ loadError }}
     </div>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div
+      class="hidden print:mb-6 print:block print:border-b print:border-slate-300 print:pb-4"
+    >
+      <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+        {{ t('reports_page.print_doc_label') }}
+      </p>
+      <h1 class="mt-1 text-xl font-bold text-slate-900">
+        {{ t('reports_page.hero_title') }}
+      </h1>
+      <p class="mt-1 text-sm tabular-nums text-slate-700">
+        {{ rangeDisplayFormatted }}
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between print:hidden">
       <div>
         <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl md:text-2xl">
           {{ t('reports_page.hero_title') }}
@@ -21,24 +35,27 @@
           >
             {{ t('reports_page.link_dashboard') }}
           </RouterLink>
-          <Button v-if="summary" variant="secondary" type="button" @click="downloadCsv">
-            {{ t('reports_page.csv') }}
+          <Button v-if="summary" variant="secondary" type="button" @click="downloadExcel">
+            {{ t('reports_page.export_excel') }}
+          </Button>
+          <Button v-if="summary" variant="secondary" type="button" @click="printReport">
+            {{ t('reports_page.export_pdf') }}
           </Button>
         </div>
         <p class="max-w-md text-xs text-slate-500">
-          {{ t('reports_page.csv_hint') }}
+          {{ t('reports_page.export_excel_hint') }}
         </p>
       </div>
     </div>
 
-    <TransportReportFilters />
+    <TransportReportFilters class="print:hidden" />
 
-    <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-600">
+    <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-600 print:hidden">
       <span class="inline-block size-4 animate-pulse rounded-full bg-slate-300" />
       {{ t('reports_page.loading') }}
     </div>
 
-    <section v-if="summary" class="space-y-2" aria-labelledby="rep-kpi">
+    <section v-if="summary" class="space-y-2 print:break-inside-avoid" aria-labelledby="rep-kpi">
       <h2 id="rep-kpi" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
         {{ t('reports_page.section_kpi') }}
       </h2>
@@ -51,7 +68,7 @@
             <template v-if="completionRate != null">{{ completionRate }}%</template>
             <template v-else>—</template>
           </div>
-          <p class="mt-1 text-xs text-slate-500">
+          <p class="mt-1 text-xs text-slate-500 print:hidden">
             {{ t('reports_page.kpi_on_time_hint') }}
           </p>
         </div>
@@ -62,7 +79,7 @@
           <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
             {{ summary?.cargo_sla_breaches ?? 0 }}
           </div>
-          <p class="mt-1 text-xs text-slate-500">
+          <p class="mt-1 text-xs text-slate-500 print:hidden">
             {{ t('reports_page.kpi_sla_breaches_hint') }}
           </p>
         </div>
@@ -73,7 +90,7 @@
           <div class="mt-1 text-xl font-bold tabular-nums text-slate-900">
             {{ avgCostPerTripDisplay }}
           </div>
-          <p class="mt-1 text-xs text-slate-500">
+          <p class="mt-1 text-xs text-slate-500 print:hidden">
             {{ t('reports_page.kpi_avg_cost_hint') }}
           </p>
         </div>
@@ -84,25 +101,20 @@
           <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
             {{ totalTrips }}
           </div>
-          <p class="mt-1 text-xs text-slate-500">
+          <p class="mt-1 text-xs text-slate-500 print:hidden">
             {{ t('reports_page.kpi_trips_hint') }}
           </p>
         </div>
       </div>
     </section>
 
-    <p v-if="summary" class="text-center text-xs text-slate-500">
-      {{ t('reports_page.chart_toolbar_hint') }}
-    </p>
-
-    <section class="space-y-3 border-t border-slate-200 pt-6 md:pt-7" aria-labelledby="rep-section-charts-ops">
+    <section class="space-y-3 border-t border-slate-200 pt-6 md:pt-7 print:border-slate-300" aria-labelledby="rep-section-charts-ops">
       <h2 id="rep-section-charts-ops" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
         {{ t('reports_page.section_charts_trips_requests') }}
       </h2>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardChartSection
           :title="t('reports_page.chart_trips_donut')"
-          :hint="t('reports_page.chart_hint_trips_donut')"
           :badge="chartBadgeTripsTotal"
           persist-key="donut-status"
           :expand-label="t('reports_page.chart_expand')"
@@ -116,7 +128,6 @@
         </DashboardChartSection>
         <DashboardChartSection
           :title="t('reports_page.chart_fleet_mode')"
-          :hint="t('reports_page.chart_hint_fleet')"
           persist-key="donut-fleet"
           :expand-label="t('reports_page.chart_expand')"
           :collapse-label="t('reports_page.chart_collapse')"
@@ -131,7 +142,6 @@
 
       <DashboardChartSection
         :title="t('reports_page.chart_dispatch_status')"
-        :hint="t('reports_page.chart_hint_dispatch')"
         persist-key="donut-dispatch"
         :expand-label="t('reports_page.chart_expand')"
         :collapse-label="t('reports_page.chart_collapse')"
@@ -146,7 +156,6 @@
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardChartSection
           :title="t('reports_page.chart_trips_by_plate')"
-          :hint="t('reports_page.chart_hint_plates')"
           persist-key="bar-plates"
           :expand-label="t('reports_page.chart_expand')"
           :collapse-label="t('reports_page.chart_collapse')"
@@ -159,7 +168,6 @@
         </DashboardChartSection>
         <DashboardChartSection
           :title="t('reports_page.chart_top_requesters')"
-          :hint="t('reports_page.chart_hint_requesters')"
           persist-key="bar-requesters"
           :expand-label="t('reports_page.chart_expand')"
           :collapse-label="t('reports_page.chart_collapse')"
@@ -201,7 +209,6 @@
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardChartSection
           :title="t('reports_page.chart_costs_bar')"
-          :hint="t('reports_page.chart_hint_costs_bar')"
           persist-key="bar-cost-type"
           :expand-label="t('reports_page.chart_expand')"
           :collapse-label="t('reports_page.chart_collapse')"
@@ -214,7 +221,6 @@
         </DashboardChartSection>
         <DashboardChartSection
           :title="t('reports_page.chart_costs_pipeline')"
-          :hint="t('reports_page.chart_hint_cost_pipeline')"
           persist-key="bar-cost-pipeline"
           :expand-label="t('reports_page.chart_expand')"
           :collapse-label="t('reports_page.chart_collapse')"
@@ -229,7 +235,6 @@
 
       <DashboardChartSection
         :title="t('reports_page.chart_providers')"
-        :hint="t('reports_page.chart_hint_providers')"
         persist-key="bar-providers"
         :expand-label="t('reports_page.chart_expand')"
         :collapse-label="t('reports_page.chart_collapse')"
@@ -243,9 +248,6 @@
     </section>
 
     <Card v-if="summary" :title="t('reports_page.card_providers')">
-      <p class="mb-3 text-xs text-slate-600">
-        {{ t('reports_page.providers_hint') }}
-      </p>
       <div v-if="!providerRows.length" class="text-sm text-slate-500">
         {{ t('reports_page.no_data') }}
       </div>
@@ -272,7 +274,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, nextTick, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
@@ -332,7 +334,16 @@ function csvEscape(cell) {
   return s
 }
 
-function downloadCsv() {
+function printReport() {
+  window.dispatchEvent(new Event('resize'))
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      window.print()
+    })
+  })
+}
+
+function downloadExcel() {
   const s = summary.value
   if (!s) return
 
@@ -499,3 +510,31 @@ onMounted(() => {
   reloadSummary()
 })
 </script>
+
+<style scoped>
+@media print {
+  .reports-print {
+    max-width: none;
+    color: #0f172a;
+    background: #fff;
+  }
+  .reports-print :deep(.overflow-hidden.rounded-xl) {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+  }
+  .reports-print :deep(table) {
+    border-collapse: collapse;
+  }
+  .reports-print :deep(th),
+  .reports-print :deep(td) {
+    border-bottom: 1px solid #e2e8f0;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+}
+@page {
+  margin: 14mm 12mm;
+  size: A4 portrait;
+}
+</style>

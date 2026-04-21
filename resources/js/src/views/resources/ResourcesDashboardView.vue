@@ -307,21 +307,21 @@
                             />
                         </label>
                         <div
-                            class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3"
+                            class="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4"
                         >
                             <!-- Loại xe -->
                             <details
                                 ref="vehicleTypeFilterEl"
-                                class="group relative min-w-0 w-full sm:w-auto"
+                                class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
+                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
                                         t("resources_dashboard.filter_vehicle_type")
                                     }}</span>
                                     <span
-                                        class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900"
+                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
                                         >{{ filterVehicleTypeLabel }}</span
                                     >
                                     <ChevronDownIcon
@@ -330,7 +330,7 @@
                                     />
                                 </summary>
                                 <div
-                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
                                     @click.stop
                                 >
                                     <ul
@@ -360,18 +360,18 @@
                             <!-- Trạng thái xe -->
                             <details
                                 ref="vehicleStatusFilterEl"
-                                class="group relative min-w-0 w-full sm:w-auto"
+                                class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
+                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
                                         t(
                                             "resources_dashboard.filter_vehicle_status",
                                         )
                                     }}</span>
                                     <span
-                                        class="min-w-0 truncate text-sm font-medium text-slate-900"
+                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
                                         >{{ filterVehicleStatusLabel }}</span
                                     >
                                     <ChevronDownIcon
@@ -380,7 +380,7 @@
                                     />
                                 </summary>
                                 <div
-                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
                                     @click.stop
                                 >
                                     <ul
@@ -412,18 +412,18 @@
                             <!-- Tài xế (availability) -->
                             <details
                                 ref="driverAvailFilterEl"
-                                class="group relative min-w-0 w-full sm:w-auto"
+                                class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
+                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
                                         t(
                                             "resources_dashboard.filter_driver_status",
                                         )
                                     }}</span>
                                     <span
-                                        class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900"
+                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
                                         >{{ filterDriverAvailLabel }}</span
                                     >
                                     <ChevronDownIcon
@@ -432,10 +432,12 @@
                                     />
                                 </summary>
                                 <div
-                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
                                     @click.stop
                                 >
-                                    <ul class="space-y-0.5 px-1 py-1">
+                                    <ul
+                                        class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1"
+                                    >
                                         <li
                                             v-for="opt in driverAvailFilterOptions"
                                             :key="opt.value"
@@ -460,16 +462,16 @@
                             <!-- Đối tác -->
                             <details
                                 ref="supplierFilterEl"
-                                class="group relative min-w-0 w-full sm:w-auto"
+                                class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="whitespace-nowrap text-sm text-slate-600">{{
+                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
                                         t("resources_dashboard.filter_supplier")
                                     }}</span>
                                     <span
-                                        class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900"
+                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
                                         >{{ filterSupplierLabel }}</span
                                     >
                                     <ChevronDownIcon
@@ -478,10 +480,12 @@
                                     />
                                 </summary>
                                 <div
-                                    class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[200px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
                                     @click.stop
                                 >
-                                    <ul class="space-y-0.5 px-1 py-1">
+                                    <ul
+                                        class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1"
+                                    >
                                         <li
                                             v-for="opt in supplierFilterOptions"
                                             :key="opt.value"
