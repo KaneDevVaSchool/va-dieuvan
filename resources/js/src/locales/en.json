@@ -255,6 +255,10 @@
         "badge_approved": "Request approved",
         "badge_urgent": "Urgent",
         "untitled_trip": "Trip",
+        "queue_label_pickup": "Pickup",
+        "queue_label_arrive": "Drop-off",
+        "queue_passengers": "{n} pax",
+        "queue_request_ref": "Req #{id}",
         "row_unassigned": "Unassigned driver",
         "load_error": "Could not load data. Try again later."
     },

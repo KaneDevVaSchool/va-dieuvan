@@ -255,6 +255,10 @@
         "badge_approved": "Đã duyệt YC",
         "badge_urgent": "Gấp",
         "untitled_trip": "Chuyến",
+        "queue_label_pickup": "Đón",
+        "queue_label_arrive": "Trả / đến",
+        "queue_passengers": "{n} khách",
+        "queue_request_ref": "YC #{id}",
         "row_unassigned": "Chưa gán tài xế",
         "load_error": "Không tải được dữ liệu. Thử lại sau."
     },

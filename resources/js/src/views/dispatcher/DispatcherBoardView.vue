@@ -120,7 +120,9 @@
               />
             </label>
           </div>
-          <div class="min-h-[280px] flex-1 space-y-2 overflow-y-auto p-3 xl:max-h-[calc(100dvh-14rem)]">
+          <div
+            class="min-h-[280px] flex-1 space-y-2.5 overflow-y-auto p-2.5 sm:p-3 xl:max-h-[calc(100dvh-14rem)]"
+          >
             <div v-if="loading && !trips.length" class="py-8 text-center text-sm text-slate-500">
               {{ t('dispatcher_board.loading') }}
             </div>
@@ -129,34 +131,103 @@
                 v-for="trip in filteredQueueTrips"
                 :key="trip.id"
                 :to="`/trips/${trip.id}`"
-                class="block rounded-lg border border-slate-200 border-l-[3px] bg-slate-50/80 p-3 pl-[0.7rem] transition-colors hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/40 dark:hover:bg-slate-800/80"
+                class="group block overflow-hidden rounded-xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/40 to-slate-100/25 p-3 shadow-sm ring-1 ring-slate-900/[0.03] transition-all duration-150 hover:border-teal-400/35 hover:shadow-md hover:ring-teal-500/15 dark:border-slate-600/90 dark:from-slate-900/70 dark:via-slate-900/45 dark:to-slate-950/70 dark:ring-white/[0.04] dark:hover:border-teal-700/50"
                 :class="tripTypeBorderClass(trip)"
               >
-                <div class="flex items-start justify-between gap-2">
-                  <span class="font-mono text-xs font-semibold text-teal-700">#{{ trip.id }}</span>
-                  <span
-                    v-if="queueBadge(trip)"
-                    class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                    :class="queueBadge(trip).class"
-                  >
-                    {{ queueBadge(trip).text }}
-                  </span>
-                </div>
-                <div class="mt-1 text-sm font-medium text-slate-900">
-                  {{ tripTitle(trip) }}
-                </div>
-                <div class="mt-1 text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                  {{ labelTripType(tripType(trip)) }}
-                </div>
-                <div class="mt-2 flex gap-2 border-l-2 border-slate-300 pl-2 text-[11px] leading-snug text-slate-600">
-                  <div class="min-w-0 flex-1">
-                    <div class="font-medium text-slate-800">{{ fmtTime(trip.depart_at) }}</div>
-                    <div class="truncate">{{ origin(trip) || '—' }}</div>
+                <div class="relative">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+                      <span
+                        class="font-mono text-[11px] font-bold tabular-nums tracking-tight text-teal-700 dark:text-teal-400"
+                        >#{{ trip.id }}</span>
+                      <span
+                        class="inline-flex max-w-full items-center truncate rounded-full border border-slate-200/80 bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-800/90 dark:text-slate-200"
+                      >
+                        {{ labelTripType(tripType(trip)) }}
+                      </span>
+                      <span
+                        v-if="
+                          dr(trip)?.is_urgent &&
+                          (!queueBadge(trip) ||
+                            queueBadge(trip).text !== t('dispatcher_board.badge_urgent'))
+                        "
+                        class="shrink-0 rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-rose-700 ring-1 ring-rose-500/25 dark:bg-rose-950/50 dark:text-rose-200"
+                      >
+                        {{ t('dispatcher_board.badge_urgent') }}
+                      </span>
+                    </div>
+                    <div class="flex shrink-0 flex-col items-end gap-1">
+                      <span
+                        v-if="queueBadge(trip)"
+                        class="rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                        :class="queueBadge(trip).class"
+                      >
+                        {{ queueBadge(trip).text }}
+                      </span>
+                      <span class="text-[9px] font-medium text-slate-500 dark:text-slate-400">{{
+                        labelTripStatus(trip.status)
+                      }}</span>
+                    </div>
                   </div>
-                  <div class="text-slate-400">→</div>
-                  <div class="min-w-0 flex-1">
-                    <div class="font-medium text-slate-800">{{ fmtArrive(trip) }}</div>
-                    <div class="truncate">{{ dest(trip) || '—' }}</div>
+
+                  <p
+                    class="mt-2 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100"
+                  >
+                    {{ tripTitle(trip) }}
+                  </p>
+
+                  <div
+                    class="mt-2.5 grid grid-cols-2 gap-2 rounded-lg border border-slate-200/70 bg-slate-50/80 px-2 py-1.5 dark:border-slate-600/60 dark:bg-slate-950/40"
+                  >
+                    <div class="min-w-0 border-r border-slate-200/70 pr-2 dark:border-slate-600/70">
+                      <div
+                        class="text-[9px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                      >
+                        {{ t('dispatcher_board.queue_label_pickup') }}
+                      </div>
+                      <div class="mt-0.5 font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                        {{ fmtTime(trip.depart_at) }}
+                      </div>
+                      <div class="truncate text-[11px] leading-snug text-slate-600 dark:text-slate-300">
+                        {{ origin(trip) || '—' }}
+                      </div>
+                    </div>
+                    <div class="min-w-0 pl-0.5">
+                      <div
+                        class="text-[9px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                      >
+                        {{ t('dispatcher_board.queue_label_arrive') }}
+                      </div>
+                      <div class="mt-0.5 font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                        {{ fmtArrive(trip) }}
+                      </div>
+                      <div class="truncate text-[11px] leading-snug text-slate-600 dark:text-slate-300">
+                        {{ dest(trip) || '—' }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-slate-200/70 pt-2 text-[10px] leading-snug text-slate-600 dark:border-slate-600/70 dark:text-slate-400"
+                  >
+                    <span v-if="queuePassengerCount(trip) != null" class="tabular-nums">
+                      {{ t('dispatcher_board.queue_passengers', { n: queuePassengerCount(trip) }) }}
+                    </span>
+                    <span
+                      v-if="queueRequestId(trip)"
+                      class="rounded bg-slate-200/80 px-1.5 py-px font-mono font-medium text-slate-800 dark:bg-slate-700/80 dark:text-slate-200"
+                    >
+                      {{ t('dispatcher_board.queue_request_ref', { id: queueRequestId(trip) }) }}
+                    </span>
+                    <span
+                      v-if="queueDriverLine(trip)"
+                      class="min-w-0 truncate font-medium text-slate-700 dark:text-slate-300"
+                      :title="queueDriverLine(trip)"
+                    >{{ queueDriverLine(trip) }}</span>
+                    <span
+                      v-else
+                      class="font-medium text-amber-800 dark:text-amber-300/90"
+                    >{{ t('dispatcher_board.row_unassigned') }}</span>
                   </div>
                 </div>
               </RouterLink>
@@ -496,12 +567,12 @@ function tripTypeStripeClass(trip) {
 
 function tripTypeBorderClass(trip) {
   const m = {
-    door_to_door: 'border-l-violet-500',
-    point_to_point: 'border-l-cyan-500',
-    business: 'border-l-amber-500',
-    cargo: 'border-l-teal-600',
+    door_to_door: 'border-l-4 border-l-violet-500',
+    point_to_point: 'border-l-4 border-l-cyan-500',
+    business: 'border-l-4 border-l-amber-500',
+    cargo: 'border-l-4 border-l-teal-600',
   }
-  return m[tripType(trip)] ?? 'border-l-slate-400'
+  return m[tripType(trip)] ?? 'border-l-4 border-l-slate-400'
 }
 
 function origin(trip) {
@@ -517,6 +588,27 @@ function tripTitle(trip) {
   const b = dest(trip)
   if (a && b) return `${a} → ${b}`
   return a || b || t('dispatcher_board.untitled_trip')
+}
+
+function queueRequestId(trip) {
+  const id = dr(trip)?.id
+  return id != null ? id : null
+}
+
+function queuePassengerCount(trip) {
+  const raw = dr(trip)?.passenger_count
+  if (raw == null || raw === '') return null
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+function queueDriverLine(trip) {
+  const name = trip.driver?.full_name?.trim()
+  const plate = trip.vehicle?.license_plate?.trim()
+  if (name && plate) return `${name} · ${plate}`
+  if (name) return name
+  if (plate) return plate
+  return ''
 }
 
 function fmtTime(v) {
