@@ -308,25 +308,29 @@
                     v-for="bar in row.bars"
                     :key="bar.trip.id"
                     :to="`/trips/${bar.trip.id}`"
-                    class="absolute top-2.5 z-[5] flex min-h-[3.25rem] items-start gap-1 overflow-hidden rounded-xl border px-2.5 py-2 pl-3 text-left shadow-md ring-1 ring-black/[0.04] transition hover:brightness-[0.98] hover:shadow-lg dark:ring-white/10 dark:hover:brightness-110"
+                    class="group absolute top-2.5 z-[5] flex min-h-[3.1rem] items-start gap-1 overflow-hidden rounded-lg border px-2 py-1.5 pl-2 text-left shadow-sm ring-1 ring-black/[0.04] transition-all duration-150 hover:z-[6] hover:-translate-y-px hover:shadow-md hover:ring-black/[0.08] focus-visible:z-[6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/45 dark:ring-white/[0.06] dark:hover:ring-white/12"
                     :class="bar.toneClass"
                     :style="{ left: `${bar.left}%`, width: `max(${bar.width}%, ${MIN_TIMELINE_BAR_PCT}%)` }"
                     :title="`${labelTripType(tripType(bar.trip))} · ${tripTitle(bar.trip)} · ${fmtTime(bar.trip.depart_at)} · ${labelTripStatus(bar.trip.status)}`"
                   >
                     <span
-                      class="pointer-events-none absolute bottom-0 left-0 top-0 w-[3px] rounded-l-xl"
+                      class="pointer-events-none absolute bottom-0 left-0 top-0 w-1 rounded-l-lg shadow-[2px_0_8px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_0_8px_-2px_rgba(0,0,0,0.4)]"
                       :class="tripTypeStripeClass(bar.trip)"
                       aria-hidden="true"
                     />
-                    <span class="min-w-0 flex-1 pl-0.5">
+                    <span class="min-w-0 flex-1 pl-1">
                       <span class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                        <span class="font-semibold tabular-nums">#{{ bar.trip.id }}</span>
+                        <span class="text-[11px] font-bold tabular-nums tracking-tight text-slate-900 dark:text-white">#{{ bar.trip.id }}</span>
                         <span
-                          class="max-w-[9rem] truncate rounded-md bg-white/55 px-1 py-px text-[9px] font-semibold text-slate-800 ring-1 ring-slate-200/80 dark:bg-slate-900/50 dark:text-slate-100 dark:ring-slate-600/80"
+                          class="max-w-[9rem] truncate rounded-full border border-black/[0.04] bg-white/75 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-slate-700 backdrop-blur-[2px] dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-100"
                         >{{ labelTripType(tripType(bar.trip)) }}</span>
-                        <span class="text-[9px] font-normal tabular-nums opacity-85">{{ fmtTime(bar.trip.depart_at) }}</span>
+                        <span
+                          class="text-[9px] font-medium tabular-nums text-slate-500 dark:text-slate-400"
+                        >{{ fmtTime(bar.trip.depart_at) }}</span>
                       </span>
-                      <span class="mt-1 block line-clamp-2 text-[10px] font-medium leading-snug opacity-92">{{ tripTitle(bar.trip) }}</span>
+                      <span
+                        class="mt-1 block line-clamp-2 text-[10px] font-medium leading-snug text-slate-600 dark:text-slate-300"
+                      >{{ tripTitle(bar.trip) }}</span>
                     </span>
                     <span
                       v-if="bar.conflict"
@@ -588,15 +592,31 @@ function pctRange(trip) {
 
 function barTone(trip, conflict) {
   if (conflict) {
-    return 'border-rose-400 bg-rose-100 text-rose-900'
+    return [
+      'border-rose-200/95',
+      'bg-gradient-to-br from-rose-50 via-white to-rose-100/70',
+      'text-rose-950 dark:border-rose-800/70 dark:from-rose-950/45 dark:via-rose-950/25 dark:to-rose-900/50 dark:text-rose-50',
+    ].join(' ')
   }
   if (trip.status === 'in_progress') {
-    return 'border-sky-400 bg-sky-100 text-sky-900'
+    return [
+      'border-sky-200/95',
+      'bg-gradient-to-br from-sky-50 via-white to-sky-100/60',
+      'text-sky-950 dark:border-sky-800/65 dark:from-sky-950/40 dark:via-slate-900/35 dark:to-sky-900/45 dark:text-sky-100',
+    ].join(' ')
   }
   if (['assigned', 'driver_confirmed'].includes(trip.status)) {
-    return 'border-emerald-400 bg-emerald-100 text-emerald-900'
+    return [
+      'border-emerald-200/95',
+      'bg-gradient-to-br from-emerald-50 via-white to-emerald-100/60',
+      'text-emerald-950 dark:border-emerald-800/65 dark:from-emerald-950/38 dark:via-slate-900/30 dark:to-emerald-900/42 dark:text-emerald-50',
+    ].join(' ')
   }
-  return 'border-slate-300 bg-slate-200 text-slate-800'
+  return [
+    'border-slate-200/90',
+    'bg-gradient-to-br from-white via-slate-50/90 to-slate-100/80',
+    'text-slate-800 dark:border-slate-600/75 dark:from-slate-800/80 dark:via-slate-900/55 dark:to-slate-900/85 dark:text-slate-100',
+  ].join(' ')
 }
 
 /** Cặp chuyến trùng giờ trên cùng tài xế */
