@@ -307,30 +307,36 @@
                             />
                         </label>
                         <div
-                            class="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4"
+                            class="rounded-xl border border-slate-200/75 bg-gradient-to-br from-slate-50/95 via-white to-slate-50/60 p-2.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.7)] dark:border-slate-700/75 dark:from-slate-900/60 dark:via-slate-900/45 dark:to-slate-950/70 dark:shadow-none"
                         >
+                            <div
+                                class="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-x-3 sm:gap-y-2.5"
+                            >
                             <!-- Loại xe -->
                             <details
                                 ref="vehicleTypeFilterEl"
                                 class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none flex-col gap-1 rounded-xl border border-slate-200/90 bg-white/95 px-2.5 py-2 text-left shadow-sm ring-1 ring-slate-900/[0.04] transition hover:border-teal-300/50 hover:bg-teal-50/40 hover:shadow dark:border-slate-600/90 dark:bg-slate-800/80 dark:ring-white/[0.04] dark:hover:border-teal-800/50 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
-                                        t("resources_dashboard.filter_vehicle_type")
-                                    }}</span>
                                     <span
-                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
-                                        >{{ filterVehicleTypeLabel }}</span
+                                        class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                                        >{{ t("resources_dashboard.filter_vehicle_type") }}</span
                                     >
-                                    <ChevronDownIcon
-                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
-                                        aria-hidden="true"
-                                    />
+                                    <span class="flex min-w-0 items-center gap-1.5">
+                                        <span
+                                            class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100"
+                                            >{{ filterVehicleTypeLabel }}</span
+                                        >
+                                        <ChevronDownIcon
+                                            class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 dark:text-slate-500"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
                                 </summary>
                                 <div
-                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1.5 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:shadow-black/40 dark:ring-slate-950/40"
                                     @click.stop
                                 >
                                     <ul
@@ -363,24 +369,27 @@
                                 class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none flex-col gap-1 rounded-xl border border-slate-200/90 bg-white/95 px-2.5 py-2 text-left shadow-sm ring-1 ring-slate-900/[0.04] transition hover:border-teal-300/50 hover:bg-teal-50/40 hover:shadow dark:border-slate-600/90 dark:bg-slate-800/80 dark:ring-white/[0.04] dark:hover:border-teal-800/50 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
-                                        t(
-                                            "resources_dashboard.filter_vehicle_status",
-                                        )
-                                    }}</span>
                                     <span
-                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
-                                        >{{ filterVehicleStatusLabel }}</span
+                                        class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                                        >{{
+                                            t("resources_dashboard.filter_vehicle_status")
+                                        }}</span
                                     >
-                                    <ChevronDownIcon
-                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
-                                        aria-hidden="true"
-                                    />
+                                    <span class="flex min-w-0 items-center gap-1.5">
+                                        <span
+                                            class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100"
+                                            >{{ filterVehicleStatusLabel }}</span
+                                        >
+                                        <ChevronDownIcon
+                                            class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 dark:text-slate-500"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
                                 </summary>
                                 <div
-                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1.5 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:shadow-black/40 dark:ring-slate-950/40"
                                     @click.stop
                                 >
                                     <ul
@@ -415,24 +424,27 @@
                                 class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none flex-col gap-1 rounded-xl border border-slate-200/90 bg-white/95 px-2.5 py-2 text-left shadow-sm ring-1 ring-slate-900/[0.04] transition hover:border-teal-300/50 hover:bg-teal-50/40 hover:shadow dark:border-slate-600/90 dark:bg-slate-800/80 dark:ring-white/[0.04] dark:hover:border-teal-800/50 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
-                                        t(
-                                            "resources_dashboard.filter_driver_status",
-                                        )
-                                    }}</span>
                                     <span
-                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
-                                        >{{ filterDriverAvailLabel }}</span
+                                        class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                                        >{{
+                                            t("resources_dashboard.filter_driver_status")
+                                        }}</span
                                     >
-                                    <ChevronDownIcon
-                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
-                                        aria-hidden="true"
-                                    />
+                                    <span class="flex min-w-0 items-center gap-1.5">
+                                        <span
+                                            class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100"
+                                            >{{ filterDriverAvailLabel }}</span
+                                        >
+                                        <ChevronDownIcon
+                                            class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 dark:text-slate-500"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
                                 </summary>
                                 <div
-                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1.5 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:shadow-black/40 dark:ring-slate-950/40"
                                     @click.stop
                                 >
                                     <ul
@@ -465,22 +477,25 @@
                                 class="group relative min-w-0 w-full"
                             >
                                 <summary
-                                    class="flex w-full min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white [&::-webkit-details-marker]:hidden"
+                                    class="flex w-full min-w-0 cursor-pointer list-none flex-col gap-1 rounded-xl border border-slate-200/90 bg-white/95 px-2.5 py-2 text-left shadow-sm ring-1 ring-slate-900/[0.04] transition hover:border-teal-300/50 hover:bg-teal-50/40 hover:shadow dark:border-slate-600/90 dark:bg-slate-800/80 dark:ring-white/[0.04] dark:hover:border-teal-800/50 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
                                 >
-                                    <span class="shrink-0 whitespace-nowrap text-sm text-slate-600">{{
-                                        t("resources_dashboard.filter_supplier")
-                                    }}</span>
                                     <span
-                                        class="min-w-0 flex-1 truncate text-right text-sm font-medium text-slate-900"
-                                        >{{ filterSupplierLabel }}</span
+                                        class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                                        >{{ t("resources_dashboard.filter_supplier") }}</span
                                     >
-                                    <ChevronDownIcon
-                                        class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180"
-                                        aria-hidden="true"
-                                    />
+                                    <span class="flex min-w-0 items-center gap-1.5">
+                                        <span
+                                            class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100"
+                                            >{{ filterSupplierLabel }}</span
+                                        >
+                                        <ChevronDownIcon
+                                            class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 dark:text-slate-500"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
                                 </summary>
                                 <div
-                                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5"
+                                    class="absolute left-0 right-0 top-[calc(100%+8px)] z-40 w-full min-w-0 rounded-xl border border-slate-200/90 bg-white py-1.5 shadow-xl shadow-slate-900/10 ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:shadow-black/40 dark:ring-slate-950/40"
                                     @click.stop
                                 >
                                     <ul
@@ -506,6 +521,7 @@
                                     </ul>
                                 </div>
                             </details>
+                            </div>
                         </div>
                     </div>
                     <div
