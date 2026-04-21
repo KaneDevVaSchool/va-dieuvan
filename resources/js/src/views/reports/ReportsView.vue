@@ -1,279 +1,266 @@
 <template>
   <div class="space-y-4 md:space-y-5">
-    <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100">
+    <div v-if="loadError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
       {{ loadError }}
     </div>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+        <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl md:text-2xl">
           {{ t('reports_page.hero_title') }}
         </h1>
-        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+        <p class="mt-0.5 text-xs text-slate-600 sm:text-sm">
           {{ t('reports_page.hero_subtitle') }}
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <RouterLink
-          class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-          to="/"
-        >
-          {{ t('reports_page.link_dashboard') }}
-        </RouterLink>
-        <Button
-          v-if="summary"
-          variant="secondary"
-          type="button"
-          class="border-teal-200/80 bg-teal-50/80 text-teal-900 hover:bg-teal-50 dark:border-teal-900/50 dark:bg-teal-950/40 dark:text-teal-100 dark:hover:bg-teal-950/60"
-          @click="downloadCsv"
-        >
-          {{ t('reports_page.csv') }}
-        </Button>
+      <div class="flex flex-col items-stretch gap-2 sm:items-end">
+        <div class="flex flex-wrap items-center gap-2">
+          <RouterLink
+            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            to="/"
+          >
+            {{ t('reports_page.link_dashboard') }}
+          </RouterLink>
+          <Button v-if="summary" variant="secondary" type="button" @click="downloadCsv">
+            {{ t('reports_page.csv') }}
+          </Button>
+        </div>
+        <p class="max-w-md text-xs text-slate-500">
+          {{ t('reports_page.csv_hint') }}
+        </p>
       </div>
     </div>
 
     <TransportReportFilters />
 
-    <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-      <span class="inline-block size-4 animate-pulse rounded-full bg-slate-300 dark:bg-slate-600" />
-      {{ t('dashboard_analytics.loading') }}
+    <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-600">
+      <span class="inline-block size-4 animate-pulse rounded-full bg-slate-300" />
+      {{ t('reports_page.loading') }}
     </div>
 
     <section v-if="summary" class="space-y-2" aria-labelledby="rep-kpi">
-      <h2 id="rep-kpi" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      <h2 id="rep-kpi" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
         {{ t('reports_page.section_kpi') }}
       </h2>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div
-          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
-        >
-          <div class="text-[11px] font-medium uppercase tracking-wide text-teal-300/90">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-medium text-slate-600">
             {{ t('reports_page.kpi_on_time') }}
           </div>
-          <div class="mt-1 text-2xl font-bold tabular-nums">
+          <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
             <template v-if="completionRate != null">{{ completionRate }}%</template>
             <template v-else>—</template>
           </div>
-          <p class="mt-1 text-[11px] text-slate-400">
+          <p class="mt-1 text-xs text-slate-500">
             {{ t('reports_page.kpi_on_time_hint') }}
           </p>
         </div>
-        <div
-          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
-        >
-          <div class="text-[11px] font-medium uppercase tracking-wide text-violet-300/90">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-medium text-slate-600">
             {{ t('reports_page.kpi_sla_breaches') }}
           </div>
-          <div class="mt-1 text-2xl font-bold tabular-nums text-rose-300">
+          <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
             {{ summary?.cargo_sla_breaches ?? 0 }}
           </div>
-          <p class="mt-1 text-[11px] text-slate-400">
+          <p class="mt-1 text-xs text-slate-500">
             {{ t('reports_page.kpi_sla_breaches_hint') }}
           </p>
         </div>
-        <div
-          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
-        >
-          <div class="text-[11px] font-medium uppercase tracking-wide text-amber-300/90">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-medium text-slate-600">
             {{ t('reports_page.kpi_avg_cost') }}
           </div>
-          <div class="mt-1 text-xl font-bold tabular-nums">
+          <div class="mt-1 text-xl font-bold tabular-nums text-slate-900">
             {{ avgCostPerTripDisplay }}
           </div>
-          <p class="mt-1 text-[11px] text-slate-400">
+          <p class="mt-1 text-xs text-slate-500">
             {{ t('reports_page.kpi_avg_cost_hint') }}
           </p>
         </div>
-        <div
-          class="rounded-xl border border-slate-200/90 bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-950 dark:to-slate-900 dark:border-slate-700"
-        >
-          <div class="text-[11px] font-medium uppercase tracking-wide text-emerald-300/90">
+        <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-medium text-slate-600">
             {{ t('reports_page.kpi_trips') }}
           </div>
-          <div class="mt-1 text-2xl font-bold tabular-nums">
+          <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
             {{ totalTrips }}
           </div>
-          <p class="mt-1 text-[11px] text-slate-400">
+          <p class="mt-1 text-xs text-slate-500">
             {{ t('reports_page.kpi_trips_hint') }}
           </p>
         </div>
       </div>
     </section>
 
-    <p v-if="summary" class="text-center text-[11px] text-slate-400 dark:text-slate-500">
-      {{ t('dashboard_analytics.chart_toolbar_hint') }}
+    <p v-if="summary" class="text-center text-xs text-slate-500">
+      {{ t('reports_page.chart_toolbar_hint') }}
     </p>
 
-    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="rep-section-charts-ops">
-      <h2 id="rep-section-charts-ops" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {{ t('dashboard_analytics.section_charts_trips_requests') }}
+    <section class="space-y-3 border-t border-slate-200 pt-6 md:pt-7" aria-labelledby="rep-section-charts-ops">
+      <h2 id="rep-section-charts-ops" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        {{ t('reports_page.section_charts_trips_requests') }}
       </h2>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardChartSection
-          :title="t('dashboard_analytics.chart_trips_donut')"
-          :hint="t('dashboard_analytics.chart_hint_trips_donut')"
+          :title="t('reports_page.chart_trips_donut')"
+          :hint="t('reports_page.chart_hint_trips_donut')"
           :badge="chartBadgeTripsTotal"
           persist-key="donut-status"
-          :expand-label="t('dashboard_analytics.chart_expand')"
-          :collapse-label="t('dashboard_analytics.chart_collapse')"
+          :expand-label="t('reports_page.chart_expand')"
+          :collapse-label="t('reports_page.chart_collapse')"
         >
           <DashboardEChart
             :height="chartHeight"
             :option="optDonut"
-            :aria-label="t('dashboard_analytics.chart_trips_donut')"
+            :aria-label="t('reports_page.chart_trips_donut')"
           />
         </DashboardChartSection>
         <DashboardChartSection
-          :title="t('dashboard_analytics.chart_fleet_mode')"
-          :hint="t('dashboard_analytics.chart_hint_fleet')"
+          :title="t('reports_page.chart_fleet_mode')"
+          :hint="t('reports_page.chart_hint_fleet')"
           persist-key="donut-fleet"
-          :expand-label="t('dashboard_analytics.chart_expand')"
-          :collapse-label="t('dashboard_analytics.chart_collapse')"
+          :expand-label="t('reports_page.chart_expand')"
+          :collapse-label="t('reports_page.chart_collapse')"
         >
           <DashboardEChart
             :height="chartHeight"
             :option="optFleet"
-            :aria-label="t('dashboard_analytics.chart_fleet_mode')"
+            :aria-label="t('reports_page.chart_fleet_mode')"
           />
         </DashboardChartSection>
       </div>
 
       <DashboardChartSection
-        :title="t('dashboard_analytics.chart_dispatch_status')"
-        :hint="t('dashboard_analytics.chart_hint_dispatch')"
+        :title="t('reports_page.chart_dispatch_status')"
+        :hint="t('reports_page.chart_hint_dispatch')"
         persist-key="donut-dispatch"
-        :expand-label="t('dashboard_analytics.chart_expand')"
-        :collapse-label="t('dashboard_analytics.chart_collapse')"
+        :expand-label="t('reports_page.chart_expand')"
+        :collapse-label="t('reports_page.chart_collapse')"
       >
         <DashboardEChart
           :height="chartHeight"
           :option="optDispatchDonut"
-          :aria-label="t('dashboard_analytics.chart_dispatch_status')"
+          :aria-label="t('reports_page.chart_dispatch_status')"
         />
       </DashboardChartSection>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardChartSection
-          :title="t('dashboard_analytics.chart_trips_by_plate')"
-          :hint="t('dashboard_analytics.chart_hint_plates')"
+          :title="t('reports_page.chart_trips_by_plate')"
+          :hint="t('reports_page.chart_hint_plates')"
           persist-key="bar-plates"
-          :expand-label="t('dashboard_analytics.chart_expand')"
-          :collapse-label="t('dashboard_analytics.chart_collapse')"
+          :expand-label="t('reports_page.chart_expand')"
+          :collapse-label="t('reports_page.chart_collapse')"
         >
           <DashboardEChart
             :height="chartHeightTall"
             :option="optPlates"
-            :aria-label="t('dashboard_analytics.chart_trips_by_plate')"
+            :aria-label="t('reports_page.chart_trips_by_plate')"
           />
         </DashboardChartSection>
         <DashboardChartSection
-          :title="t('dashboard_analytics.chart_top_requesters')"
-          :hint="t('dashboard_analytics.chart_hint_requesters')"
+          :title="t('reports_page.chart_top_requesters')"
+          :hint="t('reports_page.chart_hint_requesters')"
           persist-key="bar-requesters"
-          :expand-label="t('dashboard_analytics.chart_expand')"
-          :collapse-label="t('dashboard_analytics.chart_collapse')"
+          :expand-label="t('reports_page.chart_expand')"
+          :collapse-label="t('reports_page.chart_collapse')"
         >
           <DashboardEChart
             :height="chartHeightTall"
             :option="optRequesters"
-            :aria-label="t('dashboard_analytics.chart_top_requesters')"
+            :aria-label="t('reports_page.chart_top_requesters')"
           />
         </DashboardChartSection>
       </div>
     </section>
 
-    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="rep-section-charts-time">
-      <h2 id="rep-section-charts-time" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {{ t('dashboard_analytics.section_charts_timing') }}
+    <section class="space-y-3 border-t border-slate-200 pt-6 md:pt-7" aria-labelledby="rep-section-charts-time">
+      <h2 id="rep-section-charts-time" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        {{ t('reports_page.section_charts_timing') }}
       </h2>
       <DashboardChartSection
-        :title="t('dashboard_analytics.chart_hour_line')"
-        :hint="`${t('dashboard_analytics.chart_hint_hour')} ${t('dashboard_analytics.chart_hour_hint')}`"
+        :title="t('reports_page.chart_hour_line')"
+        :hint="`${t('reports_page.chart_hint_hour')} ${t('reports_page.chart_hour_hint')}`"
         persist-key="line-hour"
-        :expand-label="t('dashboard_analytics.chart_expand')"
-        :collapse-label="t('dashboard_analytics.chart_collapse')"
+        :expand-label="t('reports_page.chart_expand')"
+        :collapse-label="t('reports_page.chart_collapse')"
       >
-        <div class="rounded-lg border border-slate-100 bg-slate-50/60 p-0.5 dark:border-slate-700 dark:bg-slate-950/40">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-0.5">
           <DashboardEChart
             :height="chartHeightWide"
             :option="optHourLine"
-            :aria-label="t('dashboard_analytics.chart_hour_line')"
+            :aria-label="t('reports_page.chart_hour_line')"
           />
         </div>
       </DashboardChartSection>
     </section>
 
-    <section class="space-y-3 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="rep-section-charts-costs">
-      <h2 id="rep-section-charts-costs" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {{ t('dashboard_analytics.section_charts_costs') }}
+    <section class="space-y-3 border-t border-slate-200 pt-6 md:pt-7" aria-labelledby="rep-section-charts-costs">
+      <h2 id="rep-section-charts-costs" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        {{ t('reports_page.section_charts_costs') }}
       </h2>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DashboardChartSection
-          :title="t('dashboard_analytics.chart_costs_bar')"
-          :hint="t('dashboard_analytics.chart_hint_costs_bar')"
+          :title="t('reports_page.chart_costs_bar')"
+          :hint="t('reports_page.chart_hint_costs_bar')"
           persist-key="bar-cost-type"
-          :expand-label="t('dashboard_analytics.chart_expand')"
-          :collapse-label="t('dashboard_analytics.chart_collapse')"
+          :expand-label="t('reports_page.chart_expand')"
+          :collapse-label="t('reports_page.chart_collapse')"
         >
           <DashboardEChart
             :height="chartHeight"
             :option="optCostBar"
-            :aria-label="t('dashboard_analytics.chart_costs_bar')"
+            :aria-label="t('reports_page.chart_costs_bar')"
           />
         </DashboardChartSection>
         <DashboardChartSection
-          :title="t('dashboard_analytics.chart_costs_pipeline')"
-          :hint="t('dashboard_analytics.chart_hint_cost_pipeline')"
+          :title="t('reports_page.chart_costs_pipeline')"
+          :hint="t('reports_page.chart_hint_cost_pipeline')"
           persist-key="bar-cost-pipeline"
-          :expand-label="t('dashboard_analytics.chart_expand')"
-          :collapse-label="t('dashboard_analytics.chart_collapse')"
+          :expand-label="t('reports_page.chart_expand')"
+          :collapse-label="t('reports_page.chart_collapse')"
         >
           <DashboardEChart
             :height="chartHeight"
             :option="optCostPipeline"
-            :aria-label="t('dashboard_analytics.chart_costs_pipeline')"
+            :aria-label="t('reports_page.chart_costs_pipeline')"
           />
         </DashboardChartSection>
       </div>
 
       <DashboardChartSection
-        :title="t('dashboard_analytics.chart_providers')"
-        :hint="t('dashboard_analytics.chart_hint_providers')"
+        :title="t('reports_page.chart_providers')"
+        :hint="t('reports_page.chart_hint_providers')"
         persist-key="bar-providers"
-        :expand-label="t('dashboard_analytics.chart_expand')"
-        :collapse-label="t('dashboard_analytics.chart_collapse')"
+        :expand-label="t('reports_page.chart_expand')"
+        :collapse-label="t('reports_page.chart_collapse')"
       >
         <DashboardEChart
           :height="chartHeight"
           :option="optProviders"
-          :aria-label="t('dashboard_analytics.chart_providers')"
+          :aria-label="t('reports_page.chart_providers')"
         />
       </DashboardChartSection>
     </section>
 
     <Card v-if="summary" :title="t('reports_page.card_providers')">
-      <p class="mb-3 text-xs text-slate-500 dark:text-slate-400">
+      <p class="mb-3 text-xs text-slate-600">
         {{ t('reports_page.providers_hint') }}
       </p>
-      <div v-if="!providerRows.length" class="text-sm text-slate-500 dark:text-slate-400">
+      <div v-if="!providerRows.length" class="text-sm text-slate-500">
         {{ t('reports_page.no_data') }}
       </div>
       <div v-else class="overflow-x-auto">
         <table class="w-full border-collapse text-sm">
           <thead>
-            <tr class="border-b border-slate-200 text-left text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <tr class="border-b border-slate-200 text-left text-slate-600">
               <th class="py-2 pr-4 font-medium">{{ t('reports_page.col_provider') }}</th>
               <th class="py-2 font-medium tabular-nums">{{ t('reports_page.col_total') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(row, i) in providerRows"
-              :key="i"
-              class="border-b border-slate-100 dark:border-slate-800"
-            >
-              <td class="py-2 pr-4 text-slate-800 dark:text-slate-200">{{ row.provider }}</td>
-              <td class="py-2 tabular-nums font-medium text-slate-900 dark:text-slate-100">
+            <tr v-for="(row, i) in providerRows" :key="i" class="border-b border-slate-100">
+              <td class="py-2 pr-4 text-slate-800">{{ row.provider }}</td>
+              <td class="py-2 tabular-nums font-medium text-slate-900">
                 {{ formatMoney(row.total_amount) }}
               </td>
             </tr>
@@ -294,8 +281,9 @@ import TransportReportFilters from '../../components/reports/TransportReportFilt
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import DashboardChartSection from '../../components/dashboard/DashboardChartSection.vue'
 import { useTransportReportSummary } from '../../composables/useTransportReportSummary'
+import { labelTripStatus, labelTripType, labelRequestStatus } from '../../util/labels'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const {
   loading,
@@ -319,6 +307,9 @@ const {
   optRequesters,
   optPlates,
   reloadSummary,
+  activeFilterLines,
+  currentPresetLabel,
+  rangeDisplayFormatted,
 } = useTransportReportSummary()
 
 const providerRows = computed(() => {
@@ -342,34 +333,164 @@ function csvEscape(cell) {
 }
 
 function downloadCsv() {
-  if (!summary.value) return
+  const s = summary.value
+  if (!s) return
+
   const lines = []
-  const r = summary.value.range ?? {}
-  lines.push(['section', 'key', 'value'].map(csvEscape).join(','))
-  lines.push(['meta', 'from', r.from ?? ''].map(csvEscape).join(','))
-  lines.push(['meta', 'to', r.to ?? ''].map(csvEscape).join(','))
+  const pushRow = (cells) => lines.push(cells.map(csvEscape).join(','))
+  const section = (titleKey) => {
+    lines.push('')
+    lines.push(`# === ${t(titleKey)} ===`)
+  }
 
-  const trips = summary.value.trips_by_status ?? {}
-  Object.entries(trips).forEach(([k, v]) => {
-    lines.push(['trips_by_status', k, v].map(csvEscape).join(','))
+  section('reports_page.csv_sheet_meta')
+  pushRow([t('reports_page.csv_col_key'), t('reports_page.csv_col_value')])
+  pushRow(['generated_at', new Date().toISOString()])
+  pushRow(['locale', String(locale.value ?? '')])
+  const rng = s.range ?? {}
+  pushRow(['range_from', rng.from ?? ''])
+  pushRow(['range_to', rng.to ?? ''])
+  pushRow(['range_all_time', rng.all_time ? '1' : '0'])
+
+  section('reports_page.csv_sheet_filters')
+  pushRow([t('reports_page.csv_col_key'), t('reports_page.csv_col_value')])
+  pushRow(['preset_label', currentPresetLabel.value])
+  pushRow(['range_display', rangeDisplayFormatted.value])
+  const sf = summaryFilters.value
+  Object.entries(sf).forEach(([k, v]) => {
+    if (v === undefined || v === null || v === '') return
+    pushRow([k, String(v)])
+  })
+  activeFilterLines.value.forEach((row) => {
+    pushRow([row.label, row.value])
   })
 
-  const types = summary.value.confirmed_costs_by_type ?? {}
-  Object.entries(types).forEach(([k, v]) => {
-    lines.push(['confirmed_costs_by_type', k, v].map(csvEscape).join(','))
+  section('reports_page.csv_sheet_trips_status')
+  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
+  const tbs = s.trips_by_status ?? {}
+  Object.entries(tbs).forEach(([k, v]) => {
+    pushRow([labelTripStatus(k), String(v)])
   })
 
+  section('reports_page.csv_sheet_trips_fleet')
+  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
+  const tbf = s.trips_by_fleet_mode ?? {}
+  Object.entries(tbf).forEach(([k, v]) => {
+    const labMap = {
+      internal: t('reports_page.fleet_internal'),
+      vendor_hire: t('reports_page.fleet_vendor_hire'),
+      taxi: t('reports_page.fleet_taxi'),
+      unspecified: t('reports_page.fleet_unspecified'),
+    }
+    pushRow([labMap[k] ?? k, String(v)])
+  })
+
+  section('reports_page.csv_sheet_trips_type')
+  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
+  const tbt = s.trips_by_trip_type ?? {}
+  Object.entries(tbt).forEach(([k, v]) => {
+    const lab = k === 'unspecified' ? k : labelTripType(k)
+    pushRow([lab, String(v)])
+  })
+
+  section('reports_page.csv_sheet_trips_hour')
+  pushRow([t('reports_page.csv_col_hour'), t('reports_page.csv_col_count')])
+  const tbh = s.trips_by_hour
+  if (tbh && typeof tbh === 'object' && !Array.isArray(tbh)) {
+    for (let h = 0; h < 24; h++) {
+      pushRow([String(h), String(tbh[h] ?? 0)])
+    }
+  }
+
+  section('reports_page.csv_sheet_trip_completion')
+  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
+  const tc = s.trip_completion ?? {}
+  pushRow(['completed', String(tc.completed ?? '')])
+  pushRow(['total', String(tc.total ?? '')])
+  pushRow(['rate_pct', tc.rate_pct != null ? String(tc.rate_pct) : ''])
+
+  section('reports_page.csv_sheet_dispatch')
+  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
+  const dr = s.dispatch_requests_by_status ?? {}
+  Object.entries(dr).forEach(([k, v]) => {
+    pushRow([labelRequestStatus(k), String(v)])
+  })
+
+  section('reports_page.csv_sheet_costs_type')
+  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_amount')])
+  const cbt = s.confirmed_costs_by_type ?? {}
+  Object.entries(cbt).forEach(([k, v]) => {
+    pushRow([k, String(v)])
+  })
+
+  section('reports_page.csv_sheet_costs_pipeline')
+  pushRow([t('reports_page.csv_col_status'), t('reports_page.csv_col_amount')])
+  const cbp = s.costs_by_pipeline_status ?? {}
+  const costLab = (k) =>
+    ({
+      draft: t('reports_page.cost_status_draft'),
+      submitted: t('reports_page.cost_status_submitted'),
+      confirmed: t('reports_page.cost_status_confirmed'),
+      rejected: t('reports_page.cost_status_rejected'),
+    })[k] ?? k
+  Object.entries(cbp).forEach(([k, v]) => {
+    pushRow([costLab(k), String(v)])
+  })
+
+  section('reports_page.csv_sheet_providers')
+  pushRow([t('reports_page.csv_col_provider'), t('reports_page.csv_col_amount')])
   providerRows.value.forEach((row) => {
-    lines.push(['confirmed_costs_by_provider', row.provider, row.total_amount].map(csvEscape).join(','))
+    pushRow([row.provider, String(row.total_amount ?? '')])
   })
 
-  lines.push(['cargo_sla_breaches', 'count', summary.value.cargo_sla_breaches ?? 0].map(csvEscape).join(','))
+  section('reports_page.csv_sheet_requesters')
+  pushRow([t('reports_page.csv_col_requester'), t('reports_page.csv_col_trips')])
+  const tr = s.top_requesters ?? []
+  if (Array.isArray(tr)) {
+    tr.forEach((row) => {
+      pushRow([row.requester_label ?? '', String(row.trip_count ?? '')])
+    })
+  }
 
+  section('reports_page.csv_sheet_plates')
+  pushRow([t('reports_page.csv_col_plate'), t('reports_page.csv_col_count')])
+  const tbp = s.trips_by_license_plate ?? {}
+  if (tbp && typeof tbp === 'object') {
+    Object.entries(tbp).forEach(([plate, c]) => {
+      pushRow([plate, String(c)])
+    })
+  }
+
+  section('reports_page.csv_sheet_distance')
+  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
+  pushRow(['trip_records_distance_km', String(s.trip_records_distance_km ?? '')])
+
+  section('reports_page.csv_sheet_sla')
+  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
+  pushRow(['cargo_sla_breaches', String(s.cargo_sla_breaches ?? 0)])
+
+  section('reports_page.csv_sheet_compliance')
+  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
+  const vc = s.vehicle_compliance ?? {}
+  const flatten = (prefix, obj) => {
+    if (!obj || typeof obj !== 'object') return
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+        flatten(`${prefix}${k}.`, v)
+      } else {
+        pushRow([`${prefix}${k}`, String(v ?? '')])
+      }
+    })
+  }
+  flatten('', vc)
+
+  const tag = locale.value === 'vi' ? 'vi' : 'en'
+  const from = sf.from || 'all'
+  const to = sf.to || 'all'
   const blob = new Blob(['\ufeff', lines.join('\n')], { type: 'text/csv;charset=utf-8' })
   const a = document.createElement('a')
-  const sf = summaryFilters.value
   a.href = URL.createObjectURL(blob)
-  a.download = `bao-cao-dieu-van-${sf.from || 'tu'}_${sf.to || 'den'}.csv`
+  a.download = `${tag}-dispatch-report_${from}_${to}.csv`
   a.click()
   URL.revokeObjectURL(a.href)
 }

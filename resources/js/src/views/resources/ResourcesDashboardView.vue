@@ -742,9 +742,14 @@
                     </div>
                 </aside>
 
-                <!-- Center: timeline — cố định min-width xl, không co khi cột chi tiết render -->
+                <!-- Center: timeline — xl cố định 990px; khi thu gọn sidebar app thì flex-1 để rộng thêm -->
                 <section
-                    class="w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] xl:min-w-[990px] xl:w-[990px] xl:max-w-[990px] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80"
+                    :class="[
+                        'w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80',
+                        ui.sidebarCollapsed
+                            ? 'xl:flex-1 xl:min-w-[990px] xl:max-w-none'
+                            : 'xl:min-w-[990px] xl:w-[990px] xl:max-w-[990px]',
+                    ]"
                 >
                     <div
                         class="border-b border-slate-100/90 bg-gradient-to-r from-teal-50/85 via-white to-sky-50/55 px-4 py-3 dark:from-teal-950/35 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80"
@@ -796,7 +801,9 @@
                     <div
                         class="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                     >
-                        <div class="min-w-[990px] bg-gradient-to-b from-slate-50/40 to-white p-3 dark:from-slate-950/50 dark:to-slate-900/30">
+                        <div
+                            class="w-full min-w-[990px] bg-gradient-to-b from-slate-50/40 to-white p-3 dark:from-slate-950/50 dark:to-slate-900/30"
+                        >
                             <div
                                 class="mb-1.5 flex text-[10px] font-medium text-slate-500 dark:text-slate-400"
                             >
@@ -889,7 +896,7 @@
                                                     : '',
                                             ]"
                                             :style="tripBarStyle(bar)"
-                                            :title="`${tripTitle(bar.trip)} · ${fmtTime(bar.trip.depart_at)}`"
+                                            :title="tripBarTooltip(bar.trip)"
                                             @pointerdown="
                                                 onTripBarPointerDown(
                                                     $event,
@@ -912,9 +919,8 @@
                                                     <span
                                                         class="text-[9px] font-normal opacity-85"
                                                         >{{
-                                                            fmtTime(
-                                                                bar.trip
-                                                                    .depart_at,
+                                                            tripBarTimeRange(
+                                                                bar.trip,
                                                             )
                                                         }}</span
                                                     >
@@ -923,6 +929,14 @@
                                                     class="mt-0.5 block truncate text-[9px] font-normal leading-snug opacity-90"
                                                     >{{
                                                         tripTitle(bar.trip)
+                                                    }}</span
+                                                >
+                                                <span
+                                                    class="mt-0.5 block truncate text-[8px] font-normal leading-snug opacity-80"
+                                                    >{{
+                                                        tripBarMetaLine(
+                                                            bar.trip,
+                                                        )
                                                     }}</span
                                                 >
                                             </span>
@@ -1971,6 +1985,7 @@ import {
     showAppSuccess,
 } from "../../composables/appMessage";
 import { useAuthStore } from "../../store";
+import { useUiStore } from "../../store/ui";
 import { labelTripStatus, labelTripType } from "../../util/labels";
 import { shortViDayLabel, toLocalDateKey } from "../../util/dates";
 import {
@@ -1982,6 +1997,7 @@ const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const ui = useUiStore();
 const canAssignTrip = computed(() => auth.hasPermission("trip.assign"));
 
 const GRID_START = 6;
@@ -2462,6 +2478,22 @@ function fmtTime(v) {
     });
 }
 
+function tripBarTimeRange(trip) {
+    const end = tripEndAt(trip);
+    return `${fmtTime(trip.depart_at)}–${fmtTime(end)}`;
+}
+
+function tripBarMetaLine(trip) {
+    const type = tripTypeLine(trip);
+    const st = labelTripStatus(trip.status);
+    const parts = [type !== "—" ? type : null, st].filter(Boolean);
+    return parts.join(" · ") || "—";
+}
+
+function tripBarTooltip(trip) {
+    return `${tripTitle(trip)} · ${tripBarTimeRange(trip)} · ${tripBarMetaLine(trip)}`;
+}
+
 function hourValue(d) {
     const x = new Date(d);
     return x.getHours() + x.getMinutes() / 60 + x.getSeconds() / 3600;
@@ -2475,8 +2507,8 @@ function tripEndAt(trip) {
     return new Date(s.getTime() + 60 * 60 * 1000);
 }
 
-/** Tỉ lệ tối thiểu trên lưới giờ — đủ rộng để hiển thị mã + giờ + tuyến */
-const MIN_TIMELINE_BAR_PCT = 12;
+/** Tỉ lệ tối thiểu trên lưới giờ — đủ rộng để hiển thị mã + khung giờ + tuyến + meta */
+const MIN_TIMELINE_BAR_PCT = 17;
 
 function pctRange(trip) {
     const start = hourValue(trip.depart_at);

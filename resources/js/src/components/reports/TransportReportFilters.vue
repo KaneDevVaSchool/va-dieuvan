@@ -1,5 +1,13 @@
 <template>
   <AppFilterBar>
+    <div class="mb-3 border-b border-slate-200 pb-3">
+      <p class="text-sm font-semibold text-slate-800">
+        {{ t('reports_page.filters_heading') }}
+      </p>
+      <p class="mt-0.5 text-xs text-slate-600">
+        {{ t('reports_page.filters_hint') }}
+      </p>
+    </div>
     <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
       <details class="group relative">
         <summary

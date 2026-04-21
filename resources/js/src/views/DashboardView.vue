@@ -414,18 +414,6 @@
       </div>
     </div>
     </section>
-
-    <section
-      class="border-t border-slate-200/80 pt-5 dark:border-slate-800"
-      aria-label="reports"
-    >
-      <RouterLink
-        class="flex items-center justify-center gap-2 rounded-xl border border-dashed border-teal-300/80 bg-teal-50/50 px-4 py-3 text-sm font-medium text-teal-800 transition hover:bg-teal-50 dark:border-teal-800/60 dark:bg-teal-950/30 dark:text-teal-200 dark:hover:bg-teal-950/50"
-        to="/reports"
-      >
-        {{ t('dashboard_analytics.charts_moved_cta') }}
-      </RouterLink>
-    </section>
   </div>
 </template>
 

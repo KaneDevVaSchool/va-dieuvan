@@ -437,7 +437,8 @@ function createSharedApi(t, locale) {
 
   function formatMoney(v) {
     const n = Number(v ?? 0)
-    return new Intl.NumberFormat('vi-VN').format(n) + ' VND'
+    const loc = locale.value === 'vi' ? 'vi-VN' : 'en-GB'
+    return `${new Intl.NumberFormat(loc).format(n)} VND`
   }
 
   const tripLabelMap = computed(() => {
