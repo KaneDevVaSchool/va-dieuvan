@@ -15,9 +15,9 @@
 
 @layer base {
   :root {
-    --va-brand: #9a0036;
-    --va-brand-dark: #7a0029;
-    --va-brand-soft: rgba(154, 0, 54, 0.12);
+    --va-brand: #78001e;
+    --va-brand-dark: #5c0017;
+    --va-brand-soft: rgba(120, 0, 30, 0.14);
   }
 
   html {
@@ -38,5 +38,296 @@
 /* Smooth defaults */
 html, body {
   height: 100%;
+}
+
+/* Splash PWA — ẩn sau khi Vue mount (main.js) */
+.pwa-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: #5c0017;
+  padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+    max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pwa-splash.pwa-splash--hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(1.02);
+}
+
+.pwa-splash__mesh {
+  position: absolute;
+  inset: -35% -20%;
+  background: conic-gradient(
+    from 220deg at 50% 45%,
+    #78001e 0deg,
+    #9a1530 90deg,
+    #5c0017 200deg,
+    #a01835 280deg,
+    #78001e 360deg
+  );
+  opacity: 0.95;
+  animation: pwa-splash-mesh 14s linear infinite;
+  pointer-events: none;
+}
+
+.pwa-splash__glow {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  width: min(110vw, 26rem);
+  height: min(110vw, 26rem);
+  margin-left: calc(min(110vw, 26rem) / -2);
+  margin-top: calc(min(110vw, 26rem) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 200, 210, 0.06) 38%, transparent 65%);
+  animation: pwa-splash-glow-breathe 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.pwa-splash__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  max-width: 22rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.pwa-splash__logo-wrap {
+  position: relative;
+  animation: pwa-splash-logo-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pwa-splash__ring {
+  position: absolute;
+  inset: -0.5rem;
+  border-radius: 28%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 0 32px rgba(255, 255, 255, 0.12);
+  animation: pwa-splash-ring 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.pwa-splash__logo {
+  position: relative;
+  width: min(64vw, 13.5rem);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 28px rgba(0, 0, 0, 0.28));
+  animation: pwa-splash-logo-float 3.5s ease-in-out infinite;
+}
+
+.pwa-splash__kicker {
+  margin-top: 1.75rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  animation: pwa-splash-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.pwa-splash__sub {
+  margin-top: 0.35rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.76);
+  animation: pwa-splash-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+.pwa-splash__track {
+  margin-top: 1.5rem;
+  width: min(13rem, 72vw);
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  animation: pwa-splash-fade-up 0.55s ease 0.45s both;
+}
+
+.pwa-splash__bar {
+  height: 100%;
+  width: 42%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0.15) 80%,
+    transparent
+  );
+  animation: pwa-splash-shimmer 1.35s ease-in-out infinite;
+}
+
+.pwa-splash__dots {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.45rem;
+  animation: pwa-splash-fade-up 0.5s ease 0.55s both;
+}
+
+.pwa-splash__dots span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+  animation: pwa-splash-pulse 1s ease-in-out infinite;
+}
+
+.pwa-splash__dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.pwa-splash__dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.pwa-splash__hint {
+  margin-top: 0.85rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.58);
+  animation: pwa-splash-fade-up 0.55s ease 0.65s both;
+}
+
+@keyframes pwa-splash-mesh {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes pwa-splash-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes pwa-splash-logo-in {
+  0% {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pwa-splash-logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pwa-splash-ring {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes pwa-splash-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pwa-splash-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@keyframes pwa-splash-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-splash.pwa-splash--hide {
+    transform: none;
+  }
+
+  .pwa-splash__mesh,
+  .pwa-splash__glow,
+  .pwa-splash__logo-wrap,
+  .pwa-splash__ring,
+  .pwa-splash__logo,
+  .pwa-splash__kicker,
+  .pwa-splash__sub,
+  .pwa-splash__track,
+  .pwa-splash__bar,
+  .pwa-splash__dots,
+  .pwa-splash__hint {
+    animation: none !important;
+  }
+
+  .pwa-splash__mesh {
+    transform: none;
+  }
+
+  .pwa-splash__logo-wrap,
+  .pwa-splash__kicker,
+  .pwa-splash__sub,
+  .pwa-splash__track,
+  .pwa-splash__dots,
+  .pwa-splash__hint {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pwa-splash__bar {
+    transform: translateX(40%);
+    opacity: 0.7;
+  }
 }
 

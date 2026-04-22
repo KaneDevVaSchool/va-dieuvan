@@ -31,15 +31,60 @@ export function useNavSections() {
       .filter(Boolean)
   }
 
-  const sections = computed(() =>
-    NAV_SECTIONS.map((sec) => ({
+  const sections = computed(() => {
+    if (auth.canAccessDriverWebApp() && !auth.canAccessDispatchWebApp()) {
+      return [
+        {
+          headingKey: 'nav.section_driver',
+          items: [
+            {
+              to: '/driver',
+              labelKey: 'nav.driver_home',
+              icon: 'home',
+            },
+            {
+              to: '/driver/schedule',
+              labelKey: 'nav.bottom_driver_schedule',
+              icon: 'calendar',
+            },
+            {
+              to: '/driver/costs',
+              labelKey: 'nav.bottom_driver_costs',
+              icon: 'costs',
+            },
+            {
+              to: '/driver/maintenance',
+              labelKey: 'nav.bottom_driver_maintenance',
+              icon: 'wrench',
+            },
+            {
+              to: '/profile',
+              labelKey: 'nav.bottom_driver_account',
+              icon: 'user',
+            },
+          ],
+        },
+      ]
+    }
+    return NAV_SECTIONS.map((sec) => ({
       headingKey: sec.headingKey,
       items: filterItems(sec.items),
-    })).filter((sec) => sec.items.length > 0),
-  )
+    })).filter((sec) => sec.items.length > 0)
+  })
 
   /** Thanh điều hướng dưới (mobile, layout ngang) */
-  const bottomNavItems = computed(() => BOTTOM_NAV)
+  const bottomNavItems = computed(() => {
+    if (auth.canAccessDriverWebApp() && !auth.canAccessDispatchWebApp()) {
+      return [
+        { to: '/driver', labelKey: 'nav.bottom_driver_home', icon: 'home' },
+        { to: '/driver/schedule', labelKey: 'nav.bottom_driver_schedule', icon: 'calendar' },
+        { to: '/driver/costs', labelKey: 'nav.bottom_driver_costs', icon: 'costs' },
+        { to: '/driver/maintenance', labelKey: 'nav.bottom_driver_maintenance', icon: 'wrench' },
+        { to: '/profile', labelKey: 'nav.bottom_driver_account', icon: 'user' },
+      ]
+    }
+    return BOTTOM_NAV
+  })
 
   onMounted(async () => {
     if (!auth.isLoggedIn) return

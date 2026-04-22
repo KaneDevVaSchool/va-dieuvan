@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -46,6 +47,27 @@ class User extends Authenticatable
         $roleName = config('permission.superadmin_role', 'superadmin');
 
         return $this->hasRole($roleName);
+    }
+
+    /** Web SPA điều vận: chỉ superadmin (email hoặc role), admin, dispatcher. */
+    public function canAccessDispatchWebApp(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->hasAnyRole(['admin', 'dispatcher']);
+    }
+
+    /** Khu vực web tài xế (`/driver`). */
+    public function canAccessDriverWebApp(): bool
+    {
+        return $this->hasRole('driver');
+    }
+
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
     }
 
     /**

@@ -66,6 +66,11 @@ const isActive = computed(() => {
   if (props.to === '/') {
     return route.path === '/' || route.path === ''
   }
+  if (props.to === '/driver/schedule') {
+    return (
+      route.path === '/driver/schedule' || /^\/driver\/trips\/\d+/.test(route.path)
+    )
+  }
   return route.path === props.to || route.path.startsWith(`${props.to}/`)
 })
 

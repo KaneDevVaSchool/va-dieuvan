@@ -91,11 +91,12 @@ class TripController extends Controller
         $q = $this->newTripListBuilder($user)
             ->with([
                 'dispatcher:id,name,email',
-                'vehicle:id,license_plate,status',
+                'vehicle:id,license_plate,status,type,seat_count',
                 'driver:id,full_name,phone',
                 'transportProvider:id,name',
                 'record:id,trip_id,distance_km',
                 'dispatchRequest:id,status,trip_type,origin,destination,arrive_by,passenger_count,source_channel,paper_status,is_urgent,depart_at,notes',
+                'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
             ])
             ->orderByDesc('trips.depart_at')
             ->orderByDesc('trips.id');
@@ -181,10 +182,10 @@ class TripController extends Controller
 
         $trip->load([
             'dispatcher:id,name,email,employee_code',
-            'vehicle:id,license_plate,status,type,seat_count',
-            'driver:id,full_name,phone',
+            'vehicle:id,license_plate,status,type,seat_count,odometer_km',
+            'driver:id,full_name,phone,odometer_km',
             'transportProvider:id,name',
-            'record:id,trip_id,distance_km',
+            'record',
             'dispatchRequest',
             'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
             'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),

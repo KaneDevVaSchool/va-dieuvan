@@ -3,10 +3,10 @@
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
-          {{ t('trips_page.hero_title') }}
+          {{ pageTitle }}
         </h1>
         <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-          {{ t('trips_page.hero_subtitle') }}
+          {{ pageSubtitle }}
         </p>
       </div>
     </div>
@@ -589,7 +589,7 @@
           </div>
           <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
             <RouterLink
-              :to="`/trips/${trip.id}`"
+              :to="`${tripDetailPrefix}/${trip.id}`"
               class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 sm:min-h-0 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
             >
               <EyeIcon class="h-4 w-4 shrink-0" />
@@ -607,7 +607,7 @@
             </a>
             <RouterLink
               v-if="canAssignTrip && needsAssign(trip)"
-              :to="`/trips/${trip.id}`"
+              :to="`${tripDetailPrefix}/${trip.id}`"
               class="col-span-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-600 sm:col-span-1 sm:min-h-0"
             >
               <UserPlusIcon class="h-4 w-4 shrink-0" />
@@ -714,6 +714,13 @@ import { useAuthStore } from '../../store'
 const { t, locale } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
+
+const pageTitle = computed(() => t('trips_page.hero_title'))
+const pageSubtitle = computed(() => t('trips_page.hero_subtitle'))
+
+const tripDetailPrefix = computed(() =>
+  route.path.startsWith('/driver') ? '/driver/trips' : '/trips',
+)
 
 const loading = ref(false)
 const statsLoading = ref(false)

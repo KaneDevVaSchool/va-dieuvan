@@ -21,3 +21,18 @@ export async function decideTripCost(tripCostId, payload) {
   const { data } = await http.post(`/trip-costs/${tripCostId}/decision`, payload)
   return data.data
 }
+
+export async function getTripCost(id) {
+  const { data } = await http.get(`/trip-costs/${id}`)
+  return data.data
+}
+
+export async function updateTripCost(id, payload) {
+  const { data } = await http.patch(`/trip-costs/${id}`, payload)
+  return data.data
+}
+
+export async function deleteTripCost(id) {
+  const { data } = await http.delete(`/trip-costs/${id}`)
+  return data.data
+}

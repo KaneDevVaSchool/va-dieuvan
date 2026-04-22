@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api\Costs;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Costs\DecideTripCostRequest;
+use App\Http\Requests\Api\Costs\DestroyTripCostByDriverRequest;
 use App\Http\Requests\Api\Costs\ListAllTripCostsRequest;
 use App\Http\Requests\Api\Costs\ListTripCostsRequest;
 use App\Http\Requests\Api\Costs\OverrideTripCostRequest;
+use App\Http\Requests\Api\Costs\ShowTripCostRequest;
 use App\Http\Requests\Api\Costs\SubmitTripCostRequest;
+use App\Http\Requests\Api\Costs\UpdateTripCostByDriverRequest;
 use App\Models\Trip;
 use App\Models\TripCost;
 use App\Services\Auditing\AuditLogger;
@@ -121,6 +124,77 @@ class TripCostController extends Controller
         );
 
         return $this->created($cost);
+    }
+
+    public function show(ShowTripCostRequest $request, TripCost $tripCost)
+    {
+        $tripCost->load([
+            'attachments' => fn ($q) => $q->orderByDesc('id'),
+            'creator:id,name,email',
+            'confirmer:id,name,email',
+            'trip',
+            'trip.dispatchRequest:id,origin,destination,status,arrive_by',
+        ]);
+
+        abort_unless($tripCost->relationLoaded('trip') && $tripCost->trip, 404);
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $tripCost->trip), 403);
+
+        return $this->ok($tripCost);
+    }
+
+    public function updateByDriver(UpdateTripCostByDriverRequest $request, TripCost $tripCost)
+    {
+        $user = $request->user();
+        abort_unless((int) $tripCost->created_by === (int) $user->id, 403);
+        abort_unless(in_array($tripCost->status, ['draft', 'submitted'], true), 409, Messages::COST_NOT_ACTIONABLE);
+
+        $tripCost->load('trip');
+        FinancialDataLock::assertTripNotPaid($tripCost->trip);
+
+        $data = $request->validated();
+        $before = $tripCost->toArray();
+        $tripCost->update([
+            'type' => $data['type'],
+            'amount' => $data['amount'],
+            'currency' => $data['currency'] ?? 'VND',
+            'description' => $data['description'] ?? null,
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'cost.driver_update',
+            auditable: $tripCost,
+            before: $before,
+            after: $tripCost->toArray(),
+        );
+
+        return $this->ok($tripCost);
+    }
+
+    public function destroyByDriver(DestroyTripCostByDriverRequest $request, TripCost $tripCost)
+    {
+        $user = $request->user();
+        abort_unless((int) $tripCost->created_by === (int) $user->id, 403);
+        abort_unless(in_array($tripCost->status, ['draft', 'submitted'], true), 409, Messages::COST_NOT_ACTIONABLE);
+
+        $tripCost->load('trip');
+        FinancialDataLock::assertTripNotPaid($tripCost->trip);
+
+        $deletedId = $tripCost->id;
+        $before = $tripCost->toArray();
+        $relatedTrip = $tripCost->trip;
+        $tripCost->delete();
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'cost.driver_delete',
+            auditable: $relatedTrip,
+            before: $before,
+            after: null,
+            metadata: ['deleted_trip_cost_id' => $deletedId],
+        );
+
+        return $this->ok(['deleted' => true, 'id' => $deletedId]);
     }
 
     public function decide(DecideTripCostRequest $request, TripCost $tripCost)

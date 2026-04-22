@@ -29,7 +29,7 @@
         <header class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-start sm:justify-between">
           <div class="flex min-w-0 flex-1 items-start gap-3">
             <RouterLink
-              to="/trips"
+              :to="tripsListPath"
               class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
               :aria-label="t('trip_detail.header.back_trips')"
             >
@@ -66,6 +66,7 @@
               <ArrowPathIcon class="h-5 w-5" :class="refreshing ? 'animate-spin' : ''" />
             </button>
             <RouterLink
+              v-if="auth.canAccessDispatchWebApp()"
               to="/notifications"
               class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
               :title="t('trip_detail.header.notifications')"
@@ -84,7 +85,7 @@
         >
           {{ t('trip_detail.banner.request_pending') }}
           <RouterLink
-            v-if="trip.dispatch_request?.id"
+            v-if="trip.dispatch_request?.id && auth.canAccessDispatchWebApp()"
             :to="`/requests/${trip.dispatch_request.id}`"
             class="ml-1 font-semibold underline decoration-amber-700/40 underline-offset-2"
           >
@@ -542,6 +543,7 @@
                         {{ t('trip_detail.costs.total', { amount: costsTotalFormatted }) }}
                       </div>
                       <RouterLink
+                        v-if="auth.canAccessDispatchWebApp()"
                         to="/costs"
                         class="rounded-lg px-2 py-1 text-xs font-semibold text-amber-800 underline decoration-amber-300/80 underline-offset-2 hover:bg-amber-50 hover:text-amber-950 dark:text-amber-300 dark:hover:bg-amber-950/40"
                       >
@@ -770,7 +772,7 @@
                   <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.coordination.overlap_section_title') }}</div>
                   <ul class="mt-2 max-h-40 space-y-1.5 overflow-y-auto text-[11px]">
                     <li v-for="row in overlappingOtherTrips" :key="row.id" class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <RouterLink :to="`/trips/${row.id}`" class="font-semibold text-sky-700 underline-offset-2 hover:underline">
+                      <RouterLink :to="tripDetailPathFor(row.id)" class="font-semibold text-sky-700 underline-offset-2 hover:underline">
                         #{{ row.id }}
                       </RouterLink>
                       <span class="tabular-nums text-slate-600">{{ fmtTime(row.depart_at) }}</span>
@@ -1171,6 +1173,13 @@ const WheelchairIcon = {
 const route = useRoute()
 const { t, te, locale } = useI18n()
 const auth = useAuthStore()
+
+const tripsListPath = computed(() =>
+  route.path.startsWith('/driver') ? '/driver/schedule' : '/trips',
+)
+function tripDetailPathFor(id) {
+  return route.path.startsWith('/driver') ? `/driver/trips/${id}` : `/trips/${id}`
+}
 
 function formatApiMessage(e) {
   const d = e?.response?.data

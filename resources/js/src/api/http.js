@@ -1,30 +1,27 @@
-import axios from 'axios'
+import { createHttpClient } from '../core/http/createHttpClient'
+import { enqueueOutboxRequest } from '../core/offline/outbox'
+import { TOKEN_KEY } from '../core/config/authKeys'
 
-const TOKEN_KEY = 'sanctum_token'
-
-export const http = axios.create({
-  baseURL: '/api',
-  headers: {
-    'X-Requested-With': 'XMLHttpRequest',
-    Accept: 'application/json',
-  },
-})
-
-http.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY)
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+export const http = createHttpClient()
 
 http.interceptors.response.use(
   (r) => r,
-  (err) => {
+  async (err) => {
     if (err.response?.status === 401 && !err.config?.url?.includes('/login')) {
       localStorage.removeItem(TOKEN_KEY)
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`
+      }
+    } else if (!err.response && err.config) {
+      const code = err.code
+      const maybeOffline =
+        (typeof navigator !== 'undefined' && !navigator.onLine) || code === 'ERR_NETWORK'
+      if (maybeOffline) {
+        try {
+          await enqueueOutboxRequest(err.config)
+        } catch {
+          /* ignore */
+        }
       }
     }
     return Promise.reject(err)

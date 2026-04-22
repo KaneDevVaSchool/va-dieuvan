@@ -5,6 +5,7 @@
 /public/storage
 /storage/*.key
 /vendor
+/nativephp
 .env
 .env.backup
 .env.production

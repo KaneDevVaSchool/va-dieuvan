@@ -63,6 +63,20 @@ export const useAuthStore = defineStore('auth', {
       this.user = data
       return this.user
     },
+    /** Khớp backend User::canAccessDispatchWebApp — superadmin / admin / dispatcher. */
+    canAccessDispatchWebApp() {
+      const u = this.user
+      if (!u) return false
+      if (u.is_superadmin) return true
+      const allow = new Set(['superadmin', 'admin', 'dispatcher'])
+      return (u.roles ?? []).some((r) => r && allow.has(r.name))
+    },
+    /** Khớp backend User::canAccessDriverWebApp — role driver. */
+    canAccessDriverWebApp() {
+      const u = this.user
+      if (!u) return false
+      return (u.roles ?? []).some((r) => r && r.name === 'driver')
+    },
     async patchProfile(payload) {
       const data = await authApi.patchProfile(payload)
       this.user = data

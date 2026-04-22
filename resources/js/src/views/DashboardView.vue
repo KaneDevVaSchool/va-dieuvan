@@ -24,8 +24,12 @@
 
       <!-- Truy cập nhanh: mũi tên hai bên, ẩn thanh cuộn -->
       <div>
-        <h2 class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <h2
+          class="inline-flex items-center gap-1.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+          :title="t('dashboard_analytics.quick_section_tooltip')"
+        >
           {{ t('dashboard_analytics.quick_title') }}
+          <InformationCircleIcon class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
         </h2>
         <div class="relative -mx-0.5 mt-2 flex items-stretch gap-1 sm:-mx-1 sm:gap-2">
           <button
@@ -47,10 +51,14 @@
                 v-for="item in quickLinks"
                 :key="item.to"
                 :to="item.to"
-                class="flex w-[6.5rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200/90 bg-white/90 px-2.5 py-3.5 text-center shadow-sm transition hover:border-teal-200 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-teal-800 sm:w-32 md:w-36"
+                :title="item.hint"
+                :class="[
+                  'flex w-[6.5rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border bg-gradient-to-b px-2.5 py-3.5 text-center shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md sm:w-32 md:w-36',
+                  item.cardClass,
+                ]"
               >
-                <component :is="item.icon" class="h-7 w-7 shrink-0 text-teal-600 dark:text-teal-400 sm:h-8 sm:w-8" aria-hidden="true" />
-                <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight text-slate-800 dark:text-slate-100 sm:text-xs">
+                <component :is="item.icon" :class="['h-7 w-7 shrink-0 sm:h-8 sm:w-8', item.iconClass]" aria-hidden="true" />
+                <span class="w-full text-center line-clamp-2 text-[11px] font-medium leading-tight sm:text-xs" :class="item.labelClass">
                   {{ item.title }}
                 </span>
               </RouterLink>
@@ -77,14 +85,23 @@
     </div>
 
     <section class="space-y-3" aria-labelledby="dash-section-kpis">
-      <h2 id="dash-section-kpis" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      <h2
+        id="dash-section-kpis"
+        class="inline-flex items-center gap-1.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+        :title="t('dashboard_analytics.section_kpis_tooltip')"
+      >
         {{ t('dashboard_analytics.section_kpis') }}
+        <InformationCircleIcon class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
       </h2>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <Card :title="t('dashboard_analytics.kpi_trips_title')">
-        <div class="text-2xl font-bold tabular-nums text-slate-900 dark:text-white md:text-3xl">{{ totalTrips }}</div>
-        <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.kpi_trips_sub') }}</p>
-        <div class="mt-2 max-h-24 space-y-1 overflow-y-auto border-t border-slate-100 pt-2 text-[11px] text-slate-600 dark:border-slate-700 dark:text-slate-300 md:max-h-28">
+      <Card
+        :title="t('dashboard_analytics.kpi_trips_title')"
+        :hint="t('dashboard_analytics.kpi_trips_tooltip')"
+        class="border-teal-200/90 bg-gradient-to-br from-teal-50/90 via-white to-white shadow-md shadow-teal-900/[0.04] ring-1 ring-teal-900/[0.04] dark:border-teal-900/35 dark:from-teal-950/35 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-teal-900/20"
+      >
+        <div class="text-2xl font-bold tabular-nums text-teal-800 dark:text-teal-200 md:text-3xl">{{ totalTrips }}</div>
+        <p class="mt-0.5 text-[11px] text-teal-900/70 dark:text-teal-300/80">{{ t('dashboard_analytics.kpi_trips_sub') }}</p>
+        <div class="mt-2 max-h-24 space-y-1 overflow-y-auto border-t border-teal-100/90 pt-2 text-[11px] text-slate-600 dark:border-teal-900/40 dark:text-slate-300 md:max-h-28">
           <div v-for="row in tripStatusRows" :key="row.key" class="flex justify-between gap-2 tabular-nums">
             <span class="truncate text-slate-500 dark:text-slate-400">{{ row.label }}</span>
             <span class="shrink-0 font-medium text-slate-900 dark:text-slate-100">{{ row.n }}</span>
@@ -93,20 +110,32 @@
         </div>
       </Card>
 
-      <Card :title="t('dashboard_analytics.kpi_cost_title')">
-        <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white md:text-2xl">{{ formatMoney(totalConfirmedCost) }}</div>
-        <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.kpi_cost_sub') }}</p>
+      <Card
+        :title="t('dashboard_analytics.kpi_cost_title')"
+        :hint="t('dashboard_analytics.kpi_cost_tooltip')"
+        class="border-amber-200/90 bg-gradient-to-br from-amber-50/90 via-white to-white shadow-md shadow-amber-900/[0.04] ring-1 ring-amber-900/[0.04] dark:border-amber-900/35 dark:from-amber-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-amber-900/20"
+      >
+        <div class="text-xl font-bold tabular-nums text-amber-800 dark:text-amber-200 md:text-2xl">{{ formatMoney(totalConfirmedCost) }}</div>
+        <p class="mt-0.5 text-[11px] text-amber-900/70 dark:text-amber-300/80">{{ t('dashboard_analytics.kpi_cost_sub') }}</p>
       </Card>
 
-      <Card :title="t('dashboard_analytics.kpi_sla_title')">
+      <Card
+        :title="t('dashboard_analytics.kpi_sla_title')"
+        :hint="t('dashboard_analytics.kpi_sla_tooltip')"
+        class="border-rose-200/90 bg-gradient-to-br from-rose-50/90 via-white to-white shadow-md shadow-rose-900/[0.04] ring-1 ring-rose-900/[0.04] dark:border-rose-900/35 dark:from-rose-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-rose-900/20"
+      >
         <div class="text-xl font-bold tabular-nums text-rose-600 dark:text-rose-400 md:text-2xl">{{ summary?.cargo_sla_breaches ?? 0 }}</div>
-        <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.kpi_sla_sub') }}</p>
+        <p class="mt-0.5 text-[11px] text-rose-900/70 dark:text-rose-300/80">{{ t('dashboard_analytics.kpi_sla_sub') }}</p>
       </Card>
 
-      <Card :title="t('dashboard_analytics.kpi_providers_title')">
-        <div class="truncate text-base font-semibold text-slate-900 dark:text-white md:text-lg">{{ topProviderName }}</div>
-        <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.kpi_providers_sub') }}</p>
-        <p v-if="topProviderAmount" class="mt-1.5 text-sm font-medium tabular-nums text-slate-700 dark:text-slate-300">
+      <Card
+        :title="t('dashboard_analytics.kpi_providers_title')"
+        :hint="t('dashboard_analytics.kpi_providers_tooltip')"
+        class="border-violet-200/90 bg-gradient-to-br from-violet-50/90 via-white to-white shadow-md shadow-violet-900/[0.04] ring-1 ring-violet-900/[0.04] dark:border-violet-900/35 dark:from-violet-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-violet-900/20"
+      >
+        <div class="truncate text-base font-semibold text-violet-900 dark:text-violet-200 md:text-lg">{{ topProviderName }}</div>
+        <p class="mt-0.5 text-[11px] text-violet-800/80 dark:text-violet-300/80">{{ t('dashboard_analytics.kpi_providers_sub') }}</p>
+        <p v-if="topProviderAmount" class="mt-1.5 text-sm font-medium tabular-nums text-violet-800 dark:text-violet-300">
           {{ formatMoney(topProviderAmount) }}
         </p>
       </Card>
@@ -114,37 +143,52 @@
 
     <!-- KPI hàng 2 -->
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <Card :title="t('dashboard_analytics.kpi_completion_title')">
-        <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white md:text-2xl">
+      <Card
+        :title="t('dashboard_analytics.kpi_completion_title')"
+        :hint="t('dashboard_analytics.kpi_completion_tooltip')"
+        class="border-emerald-200/90 bg-gradient-to-br from-emerald-50/90 via-white to-white shadow-md shadow-emerald-900/[0.04] ring-1 ring-emerald-900/[0.04] dark:border-emerald-900/35 dark:from-emerald-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-emerald-900/20"
+      >
+        <div class="text-xl font-bold tabular-nums text-emerald-800 dark:text-emerald-200 md:text-2xl">
           <template v-if="completionRate != null">{{ completionRate }}%</template>
           <template v-else>—</template>
         </div>
-        <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+        <p class="mt-0.5 text-[11px] text-emerald-900/70 dark:text-emerald-300/80">
           {{ completedTrips }} / {{ totalTripsInRange }} · {{ t('dashboard_analytics.kpi_completion_sub') }}
         </p>
       </Card>
-      <Card :title="t('dashboard_analytics.kpi_distance_title')">
-        <div class="text-xl font-bold tabular-nums text-slate-900 dark:text-white md:text-2xl">
+      <Card
+        :title="t('dashboard_analytics.kpi_distance_title')"
+        :hint="t('dashboard_analytics.kpi_distance_tooltip')"
+        class="border-sky-200/90 bg-gradient-to-br from-sky-50/90 via-white to-white shadow-md shadow-sky-900/[0.04] ring-1 ring-sky-900/[0.04] dark:border-sky-900/35 dark:from-sky-950/30 dark:via-slate-900/90 dark:to-slate-900/80 dark:shadow-none dark:ring-sky-900/20"
+      >
+        <div class="text-xl font-bold tabular-nums text-sky-800 dark:text-sky-200 md:text-2xl">
           {{ formatDistanceKm(summary?.trip_records_distance_km) }}
         </div>
-        <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.kpi_distance_sub') }}</p>
+        <p class="mt-0.5 text-[11px] text-sky-900/70 dark:text-sky-300/80">{{ t('dashboard_analytics.kpi_distance_sub') }}</p>
       </Card>
     </div>
     </section>
 
     <section class="border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800" aria-labelledby="dash-section-compliance">
     <!-- Tuân thủ xe -->
-    <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:p-4">
-      <h2 id="dash-section-compliance" class="text-sm font-semibold text-slate-900 dark:text-white">
+    <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/40 to-teal-50/25 p-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20 dark:ring-white/[0.04] md:p-4">
+      <h2
+        id="dash-section-compliance"
+        class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white"
+        :title="t('dashboard_analytics.section_compliance_tooltip')"
+      >
         {{ t('dashboard_analytics.section_compliance') }}
+        <InformationCircleIcon class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
       </h2>
       <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <div
           v-for="box in complianceBoxes"
           :key="box.key"
-          class="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-950/50"
+          :title="box.tooltip"
+          class="rounded-lg border border-slate-100/90 bg-white/90 px-3 py-2.5 shadow-sm ring-1 ring-slate-900/[0.02] dark:border-slate-700 dark:bg-slate-950/50 dark:ring-white/[0.04]"
+          :class="box.cardTone"
         >
-          <div class="text-xs font-medium text-slate-600 dark:text-slate-300">{{ box.title }}</div>
+          <div class="text-xs font-semibold" :class="box.titleClass">{{ box.title }}</div>
           <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] tabular-nums">
             <span class="text-rose-600 dark:text-rose-400">{{ t('dashboard_analytics.compliance_overdue') }}: {{ box.overdue }}</span>
             <span v-if="box.soon != null" class="text-amber-700 dark:text-amber-400">{{ t('dashboard_analytics.compliance_due_30d') }}: {{ box.soon }}</span>
@@ -430,6 +474,7 @@ import {
   ClockIcon,
   CubeIcon,
   DocumentMagnifyingGlassIcon,
+  InformationCircleIcon,
   PlusCircleIcon,
   Square2StackIcon,
   TableCellsIcon,
@@ -497,15 +542,96 @@ function scrollQuickLinks(direction) {
 }
 
 const quickLinks = computed(() => [
-  { to: '/dispatcher', title: t('dashboard_analytics.quick_dispatcher'), icon: markRaw(Square2StackIcon) },
-  { to: '/trips', title: t('dashboard_analytics.quick_trips'), icon: markRaw(TruckIcon) },
-  { to: '/dispatch-requests/new', title: t('dashboard_analytics.quick_new_request'), icon: markRaw(PlusCircleIcon) },
-  { to: '/requests', title: t('dashboard_analytics.quick_requests'), icon: markRaw(ClipboardDocumentListIcon) },
-  { to: '/resources/list', title: t('dashboard_analytics.quick_resources'), icon: markRaw(UserGroupIcon) },
-  { to: '/cargo', title: t('dashboard_analytics.quick_cargo'), icon: markRaw(CubeIcon) },
-  { to: '/costs', title: t('dashboard_analytics.quick_costs'), icon: markRaw(BanknotesIcon) },
-  { to: '/pricing', title: t('dashboard_analytics.quick_pricing'), icon: markRaw(TableCellsIcon) },
-  { to: '/audit-logs', title: t('dashboard_analytics.quick_audit'), icon: markRaw(DocumentMagnifyingGlassIcon) },
+  {
+    to: '/dispatcher',
+    title: t('dashboard_analytics.quick_dispatcher'),
+    hint: t('dashboard_analytics.quick_dispatcher_tooltip'),
+    icon: markRaw(Square2StackIcon),
+    cardClass:
+      'border-teal-200/90 from-teal-50/95 to-white ring-teal-900/[0.06] hover:border-teal-300 dark:border-teal-800/60 dark:from-teal-950/40 dark:to-slate-900/85 dark:ring-teal-900/25 dark:hover:border-teal-700',
+    iconClass: 'text-teal-600 dark:text-teal-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/trips',
+    title: t('dashboard_analytics.quick_trips'),
+    hint: t('dashboard_analytics.quick_trips_tooltip'),
+    icon: markRaw(TruckIcon),
+    cardClass:
+      'border-sky-200/90 from-sky-50/95 to-white ring-sky-900/[0.06] hover:border-sky-300 dark:border-sky-800/55 dark:from-sky-950/35 dark:to-slate-900/85 dark:ring-sky-900/25 dark:hover:border-sky-700',
+    iconClass: 'text-sky-600 dark:text-sky-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/dispatch-requests/new',
+    title: t('dashboard_analytics.quick_new_request'),
+    hint: t('dashboard_analytics.quick_new_request_tooltip'),
+    icon: markRaw(PlusCircleIcon),
+    cardClass:
+      'border-emerald-200/90 from-emerald-50/95 to-white ring-emerald-900/[0.06] hover:border-emerald-300 dark:border-emerald-800/55 dark:from-emerald-950/35 dark:to-slate-900/85 dark:ring-emerald-900/25 dark:hover:border-emerald-700',
+    iconClass: 'text-emerald-600 dark:text-emerald-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/requests',
+    title: t('dashboard_analytics.quick_requests'),
+    hint: t('dashboard_analytics.quick_requests_tooltip'),
+    icon: markRaw(ClipboardDocumentListIcon),
+    cardClass:
+      'border-violet-200/90 from-violet-50/95 to-white ring-violet-900/[0.06] hover:border-violet-300 dark:border-violet-800/55 dark:from-violet-950/35 dark:to-slate-900/85 dark:ring-violet-900/25 dark:hover:border-violet-700',
+    iconClass: 'text-violet-600 dark:text-violet-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/resources/list',
+    title: t('dashboard_analytics.quick_resources'),
+    hint: t('dashboard_analytics.quick_resources_tooltip'),
+    icon: markRaw(UserGroupIcon),
+    cardClass:
+      'border-indigo-200/90 from-indigo-50/95 to-white ring-indigo-900/[0.06] hover:border-indigo-300 dark:border-indigo-800/55 dark:from-indigo-950/35 dark:to-slate-900/85 dark:ring-indigo-900/25 dark:hover:border-indigo-700',
+    iconClass: 'text-indigo-600 dark:text-indigo-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/cargo',
+    title: t('dashboard_analytics.quick_cargo'),
+    hint: t('dashboard_analytics.quick_cargo_tooltip'),
+    icon: markRaw(CubeIcon),
+    cardClass:
+      'border-amber-200/90 from-amber-50/95 to-white ring-amber-900/[0.06] hover:border-amber-300 dark:border-amber-800/55 dark:from-amber-950/35 dark:to-slate-900/85 dark:ring-amber-900/25 dark:hover:border-amber-700',
+    iconClass: 'text-amber-600 dark:text-amber-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/costs',
+    title: t('dashboard_analytics.quick_costs'),
+    hint: t('dashboard_analytics.quick_costs_tooltip'),
+    icon: markRaw(BanknotesIcon),
+    cardClass:
+      'border-rose-200/90 from-rose-50/95 to-white ring-rose-900/[0.06] hover:border-rose-300 dark:border-rose-800/55 dark:from-rose-950/35 dark:to-slate-900/85 dark:ring-rose-900/25 dark:hover:border-rose-700',
+    iconClass: 'text-rose-600 dark:text-rose-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/pricing',
+    title: t('dashboard_analytics.quick_pricing'),
+    hint: t('dashboard_analytics.quick_pricing_tooltip'),
+    icon: markRaw(TableCellsIcon),
+    cardClass:
+      'border-cyan-200/90 from-cyan-50/95 to-white ring-cyan-900/[0.06] hover:border-cyan-300 dark:border-cyan-800/55 dark:from-cyan-950/35 dark:to-slate-900/85 dark:ring-cyan-900/25 dark:hover:border-cyan-700',
+    iconClass: 'text-cyan-600 dark:text-cyan-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
+  {
+    to: '/audit-logs',
+    title: t('dashboard_analytics.quick_audit'),
+    hint: t('dashboard_analytics.quick_audit_tooltip'),
+    icon: markRaw(DocumentMagnifyingGlassIcon),
+    cardClass:
+      'border-slate-300/90 from-slate-100/90 to-white ring-slate-900/[0.05] hover:border-slate-400 dark:border-slate-600 dark:from-slate-800/50 dark:to-slate-900/85 dark:ring-slate-900/30 dark:hover:border-slate-500',
+    iconClass: 'text-slate-600 dark:text-slate-400',
+    labelClass: 'text-slate-800 dark:text-slate-100',
+  },
 ])
 
 const tripListQuery = computed(() => {
@@ -545,6 +671,9 @@ const complianceBoxes = computed(() => {
     {
       key: 'insp',
       title: t('dashboard_analytics.compliance_inspection'),
+      tooltip: t('dashboard_analytics.compliance_inspection_tooltip'),
+      cardTone: 'border-l-4 border-l-teal-500 bg-gradient-to-r from-teal-50/80 to-white dark:from-teal-950/35 dark:to-slate-950/50',
+      titleClass: 'text-teal-900 dark:text-teal-200',
       overdue: ins.overdue ?? 0,
       soon: ins.due_within_30_days ?? 0,
       stale: null,
@@ -553,6 +682,9 @@ const complianceBoxes = computed(() => {
     {
       key: 'insu',
       title: t('dashboard_analytics.compliance_insurance'),
+      tooltip: t('dashboard_analytics.compliance_insurance_tooltip'),
+      cardTone: 'border-l-4 border-l-sky-500 bg-gradient-to-r from-sky-50/80 to-white dark:from-sky-950/35 dark:to-slate-950/50',
+      titleClass: 'text-sky-900 dark:text-sky-200',
       overdue: insu.overdue ?? 0,
       soon: insu.due_within_30_days ?? 0,
       stale: null,
@@ -561,6 +693,9 @@ const complianceBoxes = computed(() => {
     {
       key: 'road',
       title: t('dashboard_analytics.compliance_road_fee'),
+      tooltip: t('dashboard_analytics.compliance_road_fee_tooltip'),
+      cardTone: 'border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50/80 to-white dark:from-amber-950/30 dark:to-slate-950/50',
+      titleClass: 'text-amber-900 dark:text-amber-200',
       overdue: road.overdue ?? 0,
       soon: road.due_within_30_days ?? 0,
       stale: null,
@@ -569,6 +704,9 @@ const complianceBoxes = computed(() => {
     {
       key: 'maint',
       title: t('dashboard_analytics.compliance_maintenance'),
+      tooltip: t('dashboard_analytics.compliance_maintenance_tooltip'),
+      cardTone: 'border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50/80 to-white dark:from-violet-950/30 dark:to-slate-950/50',
+      titleClass: 'text-violet-900 dark:text-violet-200',
       overdue: 0,
       soon: null,
       stale: maint.no_recent_service_180d ?? 0,

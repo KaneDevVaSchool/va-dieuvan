@@ -1,14 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { TOKEN_KEY } from "../api/http";
+import { TOKEN_KEY } from "../core/config/authKeys";
+import { i18n } from "../i18n";
 import { useAuthStore } from "../store";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
-
-/** Tải theo route — giảm bundle trang đầu; giữ các màn hay dùng là import tĩnh. */
-import DashboardView from "../views/DashboardView.vue";
-import LoginView from "../views/auth/LoginView.vue";
-import RequestsListView from "../views/requests/RequestsListView.vue";
-import RequestDetailView from "../views/requests/RequestDetailView.vue";
-import ProfileView from "../views/profile/ProfileView.vue";
 
 function scrollAppMainToTop() {
     if (typeof document === "undefined") return;
@@ -30,7 +24,7 @@ const router = createRouter({
         {
             path: "/login",
             name: "login",
-            component: LoginView,
+            component: () => import("../views/auth/LoginView.vue"),
             meta: {
                 public: true,
                 title: "Đăng nhập",
@@ -40,7 +34,7 @@ const router = createRouter({
         {
             path: "/",
             name: "dashboard",
-            component: DashboardView,
+            component: () => import("../views/DashboardView.vue"),
             meta: {
                 title: "Tổng quan",
                 subtitle: "Tình trạng vận hành",
@@ -60,13 +54,77 @@ const router = createRouter({
         {
             path: "/profile",
             name: "profile",
-            component: ProfileView,
+            component: () => import("../views/profile/ProfileView.vue"),
             meta: { title: "Hồ sơ", subtitle: "Tài khoản" },
+        },
+        {
+            path: "/driver",
+            name: "driverHome",
+            component: () => import("../views/driver/DriverDashboard.vue"),
+            meta: {
+                title: "Tài xế",
+                subtitle: "Trang tài xế",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/schedule",
+            name: "driverSchedule",
+            component: () => import("../views/driver/DriverScheduleView.vue"),
+            meta: {
+                title: "Lịch hôm nay",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/trips",
+            redirect: { name: "driverSchedule" },
+        },
+        {
+            path: "/driver/costs",
+            name: "driverCosts",
+            component: () => import("../views/driver/DriverCostsView.vue"),
+            meta: {
+                title: "Chi phí",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/costs/:id",
+            name: "driverCostDetail",
+            component: () => import("../views/driver/DriverCostDetailView.vue"),
+            meta: {
+                title: "Chi tiết yêu cầu",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/maintenance",
+            name: "driverMaintenance",
+            component: () => import("../views/driver/DriverMaintenanceView.vue"),
+            meta: {
+                title: "Bảo trì xe",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/trips/:id",
+            name: "driverTripDetail",
+            component: () => import("../views/driver/DriverTripDetailView.vue"),
+            meta: {
+                title: "Chi tiết chuyến",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
         },
         {
             path: "/requests",
             name: "requests",
-            component: RequestsListView,
+            component: () => import("../views/requests/RequestsListView.vue"),
             meta: {
                 title: "Yêu cầu điều xe",
                 subtitle: "Danh sách & trạng thái",
@@ -76,7 +134,7 @@ const router = createRouter({
         {
             path: "/requests/:id",
             name: "requestDetail",
-            component: RequestDetailView,
+            component: () => import("../views/requests/RequestDetailView.vue"),
             meta: {
                 title: "Chi tiết yêu cầu",
                 subtitle: "",
@@ -295,9 +353,35 @@ router.beforeEach(async (to) => {
         auth.setToken(null);
         return { name: "login", query: { redirect: to.fullPath } };
     }
+    if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
+        auth.setToken(null);
+        return {
+            name: "login",
+            query: {
+                redirect: to.fullPath,
+                error: i18n.global.t("routes_meta.login.no_dispatch_access"),
+            },
+        };
+    }
+    const driverOnly =
+        !auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp();
+    if (driverOnly) {
+        const p = to.path;
+        const allowed =
+            p === "/profile" ||
+            p.startsWith("/profile/") ||
+            p === "/driver" ||
+            p.startsWith("/driver/");
+        if (!allowed) {
+            return { path: "/driver", replace: true };
+        }
+    }
     if (to.meta.featureKey) {
         const k = to.meta.featureKey;
         if (!auth.isNavFeatureVisible(k)) {
+            if (driverOnly) {
+                return { path: "/driver", replace: true };
+            }
             return { name: "dashboard" };
         }
     }
@@ -305,6 +389,9 @@ router.beforeEach(async (to) => {
     if (need) {
         const list = Array.isArray(need) ? need : [need];
         if (!auth.hasAnyPermission(list)) {
+            if (driverOnly) {
+                return { path: "/driver", replace: true };
+            }
             return { name: "dashboard" };
         }
     }

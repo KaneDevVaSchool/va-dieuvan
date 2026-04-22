@@ -1,6 +1,6 @@
 import { http } from './http'
 
-export async function listInbox(params = {}) {
+export async function fetchNotificationInbox(params = {}) {
   const { data } = await http.get('/notifications/inbox', { params })
   return data.data
 }

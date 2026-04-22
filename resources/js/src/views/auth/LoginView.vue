@@ -3,10 +3,11 @@
     <div class="login-container">
       <div class="logo-container">
         <img
-          :src="LOGO_2_URL"
-          alt="Vietnam America Schools"
-          width="400"
-          height="120"
+          :src="LOGO_PWA_URL"
+          alt="VA Dispatch"
+          width="512"
+          height="512"
+          class="h-auto w-full max-w-[min(100%,14rem)] aspect-square object-contain"
           decoding="async"
         />
       </div>
@@ -46,13 +47,15 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../store'
 import { formatApiError } from '../../api/http'
 
-/** Public assets — `public/images/logo/...` */
-const LOGO_2_URL = '/images/logo/logo-2.png'
+/** Icon PWA — `public/images/logo/...` */
+const LOGO_PWA_URL = '/images/logo/logo_pwa_v1.png'
 const GOOGLE_LOGO_URL = '/images/logo/google.png'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -89,7 +92,25 @@ onMounted(async () => {
   try {
     auth.setToken(String(q.token))
     await auth.fetchMe()
-    const target = q.redirect != null && q.redirect !== '' ? String(q.redirect) : '/'
+    if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
+      auth.setToken(null)
+      error.value = t('routes_meta.login.no_dispatch_access')
+      await router.replace({
+        path: '/login',
+        query: q.redirect != null && q.redirect !== '' ? { redirect: q.redirect } : {},
+      })
+      return
+    }
+    let target = q.redirect != null && q.redirect !== '' ? String(q.redirect) : '/'
+    if (!auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp()) {
+      const ok =
+        target.startsWith('/driver') ||
+        target === '/profile' ||
+        target.startsWith('/profile/')
+      if (!ok) {
+        target = '/driver'
+      }
+    }
     await router.replace(target)
   } catch (e) {
     auth.setToken(null)
@@ -107,7 +128,7 @@ onMounted(async () => {
   min-height: 100dvh;
   min-height: 100svh;
   width: 100%;
-  background-color: #9a0036;
+  background-color: #78001e;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -139,7 +160,7 @@ onMounted(async () => {
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
-  /* Nâng silhouette tối (xám/đen) để thấy rõ trên #9a0036 */
+  /* Nâng silhouette tối (xám/đen) để thấy rõ trên nền brand */
   filter: brightness(1.45) contrast(1.15) saturate(1.05);
   opacity: 0.92;
   pointer-events: none;

@@ -96,6 +96,12 @@ class GoogleAuthController extends Controller
             }
         }
 
+        if (! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
+            return $this->loginRedirect([
+                'error' => 'Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher hoặc tài xế (driver).',
+            ]);
+        }
+
         $token = $user->createToken('web')->plainTextToken;
         $next = session()->pull('oauth_redirect', '/');
         if (! is_string($next) || $next === '') {

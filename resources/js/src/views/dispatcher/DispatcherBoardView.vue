@@ -1,10 +1,10 @@
 <template>
-  <div class="w-full space-y-4 text-slate-900">
-    <div class="w-full max-w-none space-y-4 px-1 sm:px-0">
+  <div class="mx-auto max-w-[1920px] space-y-4 pb-6 text-slate-900">
+    <div class="w-full min-w-0 space-y-4">
       <!-- Header -->
       <header class="flex flex-col gap-3 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 class="text-lg font-semibold tracking-tight text-slate-900 md:text-xl">
+          <h1 class="text-lg font-semibold tracking-tight md:text-xl">
             {{ t('dispatcher_board.title') }}
           </h1>
           <p class="mt-0.5 text-sm text-slate-600">
@@ -36,11 +36,14 @@
         {{ loadError }}
       </div>
 
-      <div class="flex w-full min-w-0 flex-col gap-4 xl:flex-row xl:items-stretch xl:gap-6">
+      <div
+        class="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div class="flex w-max min-w-full flex-col gap-4 xl:flex-row xl:items-stretch xl:gap-6">
         <!-- Trip queue -->
         <aside
           id="dispatcher-trip-queue"
-          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:w-[min(100%,400px)]"
+          class="flex w-full shrink-0 flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40 xl:w-[340px] xl:max-w-[340px]"
         >
           <div class="border-b border-slate-200 p-3">
             <div class="flex items-start justify-between gap-2">
@@ -121,7 +124,7 @@
             </label>
           </div>
           <div
-            class="min-h-[280px] flex-1 space-y-2.5 overflow-y-auto p-2.5 sm:p-3 xl:max-h-[calc(100dvh-14rem)]"
+            class="min-h-[360px] flex-1 space-y-2.5 overflow-y-auto p-2.5 sm:p-3 xl:max-h-[calc(100dvh-10.5rem)]"
           >
             <div v-if="loading && !trips.length" class="py-8 text-center text-sm text-slate-500">
               {{ t('dispatcher_board.loading') }}
@@ -238,11 +241,15 @@
           </div>
         </aside>
 
-        <!-- Timeline: w-full để khi thu gọn rail sidebar vùng lịch giãn đủ chiều ngang -->
         <section
-          class="min-w-0 w-full flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80"
+          :class="[
+            'w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80',
+            sidebarCollapsed
+              ? 'xl:flex-1 xl:min-w-[990px] xl:max-w-none'
+              : 'xl:min-w-[990px] xl:w-[990px] xl:max-w-[990px]',
+          ]"
         >
-          <div class="space-y-3 border-b border-slate-100/90 bg-gradient-to-r from-teal-50/80 via-white to-sky-50/45 p-4 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80 sm:p-4 sm:pb-3.5">
+          <div class="space-y-3 border-b border-slate-100/90 bg-gradient-to-r from-teal-50/85 via-white to-sky-50/55 px-4 py-3 dark:from-teal-950/35 dark:via-slate-900 dark:to-sky-950/25 dark:border-slate-700/80">
             <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -325,11 +332,15 @@
             </div>
           </div>
 
-          <div class="w-full min-w-0 overflow-x-auto [scrollbar-width:thin]">
-            <div :class="timelineScrollInnerClass">
+          <div
+            class="overflow-x-auto overscroll-x-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div
+              class="w-full min-w-[990px] bg-gradient-to-b from-slate-50/40 to-white p-3 dark:from-slate-950/50 dark:to-slate-900/30"
+            >
               <!-- Hour labels -->
-              <div class="mb-2 flex text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                <div class="w-[200px] shrink-0 lg:w-[240px] xl:w-[260px]" />
+              <div class="mb-1.5 flex text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                <div class="w-[160px] shrink-0" />
                 <div class="grid min-w-0 flex-1" :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }">
                   <div
                     v-for="h in hourSlots"
@@ -347,13 +358,13 @@
                 class="flex border-b border-slate-100/90 last:border-b-0 dark:border-slate-700/60"
               >
                 <div
-                  class="flex w-[200px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/70 py-3 pr-3 text-xs dark:border-slate-700/80 dark:bg-slate-900/40 lg:w-[240px] xl:w-[260px]"
+                  class="flex w-[160px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/60 py-2.5 pr-2.5 text-xs dark:border-slate-700/80 dark:bg-slate-900/30"
                 >
                   <span class="truncate font-medium text-slate-800 dark:text-slate-100">{{ row.label }}</span>
                   <span v-if="row.sub" class="truncate text-[10px] text-rose-600">{{ row.sub }}</span>
                   <span v-else-if="row.meta" class="truncate text-[10px] text-slate-500 dark:text-slate-400">{{ row.meta }}</span>
                 </div>
-                <div class="relative min-h-[76px] min-w-0 flex-1 bg-slate-50/70 dark:bg-slate-950/25">
+                <div class="relative min-h-[64px] min-w-0 flex-1 bg-slate-50/60 dark:bg-slate-950/20">
                   <div
                     class="pointer-events-none absolute inset-0 grid"
                     :style="{ gridTemplateColumns: `repeat(${hourSlots.length}, minmax(0, 1fr))` }"
@@ -379,7 +390,7 @@
                     v-for="bar in row.bars"
                     :key="bar.trip.id"
                     :to="`/trips/${bar.trip.id}`"
-                    class="group absolute top-2.5 z-[5] flex min-h-[3.1rem] items-start gap-1 overflow-hidden rounded-lg border px-2 py-1.5 pl-2 text-left shadow-sm ring-1 ring-black/[0.04] transition-all duration-150 hover:z-[6] hover:-translate-y-px hover:shadow-md hover:ring-black/[0.08] focus-visible:z-[6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/45 dark:ring-white/[0.06] dark:hover:ring-white/12"
+                    class="group absolute top-2 z-[5] flex min-h-[2.75rem] items-start gap-1 overflow-hidden rounded-lg border px-2 py-1.5 pl-2 text-left shadow-md transition-all duration-150 hover:z-[6] hover:-translate-y-px hover:shadow-lg hover:brightness-[0.98] focus-visible:z-[6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/45 dark:hover:brightness-110"
                     :class="bar.toneClass"
                     :style="{ left: `${bar.left}%`, width: `max(${bar.width}%, ${MIN_TIMELINE_BAR_PCT}%)` }"
                     :title="`${labelTripType(tripType(bar.trip))} · ${tripTitle(bar.trip)} · ${fmtTime(bar.trip.depart_at)} · ${labelTripStatus(bar.trip.status)}`"
@@ -417,6 +428,7 @@
             </div>
           </div>
         </section>
+        </div>
       </div>
     </div>
   </div>
@@ -443,24 +455,11 @@ import { listRequests } from '../../api/requests'
 import { labelTripStatus, labelTripType } from '../../util/labels'
 import { shortViDayLabel, toLocalDateKey } from '../../util/dates'
 import { useUiStore } from '../../store/ui'
-import { useSidebarLayout } from '../../composables/useSidebarLayout'
 
 const { t } = useI18n()
 const router = useRouter()
 
-const ui = useUiStore()
-const { sidebarCollapsed } = storeToRefs(ui)
-const { isVertical } = useSidebarLayout()
-
-/** Khi thu gọn rail: nội dung main rộng hơn — tăng nhẹ min-width lưới giờ để lịch “theo” chiều ngang */
-const timelineScrollInnerClass = computed(() => {
-  const base =
-    'w-full bg-gradient-to-b from-slate-50/40 to-white p-4 dark:from-slate-950/50 dark:to-slate-900/30'
-  if (isVertical.value && sidebarCollapsed.value) {
-    return `${base} min-w-[1280px] lg:min-w-[1560px] xl:min-w-[1800px]`
-  }
-  return `${base} min-w-[1280px] lg:min-w-[1480px] xl:min-w-[1680px]`
-})
+const { sidebarCollapsed } = storeToRefs(useUiStore())
 
 const GRID_START = 6
 const GRID_END = 22

@@ -87,6 +87,7 @@ class RbacSeeder extends Seeder
                 'trip.update_status',
                 'trip.record.create',
                 'trip.event.create',
+                'trip.cost.view',
                 'attachment.upload',
             ],
             'dispatcher' => [

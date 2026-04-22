@@ -41,3 +41,8 @@ export async function updateTripPassengerList(tripId, payload) {
   const { data } = await http.patch(`/trips/${tripId}/passenger-list`, payload)
   return data.data
 }
+
+export async function upsertTripRecord(tripId, payload) {
+  const { data } = await http.put(`/trips/${tripId}/record`, payload)
+  return data.data
+}
