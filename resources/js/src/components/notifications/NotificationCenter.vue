@@ -3,7 +3,7 @@
     <!-- Chuông: floating, mobile + desktop -->
     <div
       v-if="auth.isLoggedIn"
-      class="pointer-events-none fixed right-0 top-0 z-[100] p-2 pl-6 sm:p-3 print:hidden"
+      class="pointer-events-none fixed right-0 top-0 z-[100] p-2 pl-6 sm:p-3 print:hidden md:hidden"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
     >
       <div class="pointer-events-auto flex flex-col items-end gap-2">
@@ -27,7 +27,7 @@
     <!-- Panel -->
     <div
       v-if="notifStore.panelOpen"
-      class="fixed inset-0 z-[200] sm:flex sm:items-start sm:justify-end sm:pt-14 sm:pr-3 print:hidden"
+      class="fixed inset-0 z-[200] sm:flex sm:items-start sm:justify-end sm:pt-14 sm:pr-3 print:hidden md:hidden"
     >
       <div
         class="absolute inset-0 bg-slate-900/40"

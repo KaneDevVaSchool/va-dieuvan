@@ -6,42 +6,34 @@
   >
     <div
       class="shrink-0 border-b border-white/15 bg-[color:var(--va-brand)]/95 backdrop-blur-sm"
-      :class="ui.sidebarCollapsed ? 'px-1 py-2 md:px-1.5 md:py-2.5' : 'px-2 py-2.5 md:px-4 md:py-3'"
+      :class="ui.sidebarCollapsed ? 'px-1 py-1.5 md:px-1.5 md:py-2' : 'px-2 py-2 md:px-3 md:py-2.5'"
     >
       <div
         class="flex w-full min-w-0 items-center"
         :class="
           ui.sidebarCollapsed
-            ? 'flex-col items-center gap-1.5'
-            : 'flex-row gap-2.5 justify-start'
+            ? 'flex-col items-center gap-1'
+            : 'flex-row items-center justify-between gap-2'
         "
       >
         <AppLogo
-          class="shrink-0 [&_img]:object-contain"
+          class="min-w-0 [&_img]:object-contain"
           :class="
             ui.sidebarCollapsed
-              ? 'max-h-8 max-w-8 overflow-hidden [&_img]:max-h-8 [&_img]:max-w-8'
-              : 'scale-100 [&_img]:max-h-9'
+              ? 'shrink-0 max-h-8 max-w-8 overflow-hidden [&_img]:max-h-8 [&_img]:max-w-8'
+              : 'min-w-0 flex-1 [&_img]:max-h-8 sm:[&_img]:max-h-9'
           "
           size="sm"
         />
-        <div v-if="!ui.sidebarCollapsed" class="min-w-0 flex-1">
-          <div class="truncate text-xs font-semibold tracking-tight text-white">
-            {{ t('app.title') }}
-          </div>
-          <div class="mt-0.5 hidden text-[11px] leading-snug text-white/75 lg:block">
-            {{ t('app.sidebar_tagline') }}
-          </div>
-        </div>
         <button
           type="button"
-          class="inline-flex shrink-0 items-center justify-center rounded-lg border border-white/25 text-white/90 transition hover:bg-white/10"
-          :class="ui.sidebarCollapsed ? 'h-8 w-8 min-w-0 p-0' : 'h-9 min-w-[2.25rem] px-0'"
+          class="inline-flex shrink-0 items-center justify-center rounded-md text-white/85 transition hover:bg-white/10"
+          :class="ui.sidebarCollapsed ? 'h-7 w-7' : 'h-7 w-7 sm:h-8 sm:w-8'"
           :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
           @click="ui.toggleSidebarCollapsed()"
         >
-          <ChevronDoubleLeftIcon v-if="!ui.sidebarCollapsed" class="h-5 w-5 text-white" aria-hidden="true" />
-          <ChevronDoubleRightIcon v-else class="h-4 w-4 text-white" aria-hidden="true" />
+          <ChevronLeftIcon v-if="!ui.sidebarCollapsed" class="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" aria-hidden="true" />
+          <ChevronRightIcon v-else class="h-4 w-4" aria-hidden="true" />
           <span class="sr-only">
             {{ ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse') }}
           </span>
@@ -319,7 +311,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import AppLogo from '../branding/AppLogo.vue'
 import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarCollapsedNavGroup from '../nav/SidebarCollapsedNavGroup.vue'
