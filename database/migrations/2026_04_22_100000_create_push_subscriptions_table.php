@@ -11,13 +11,14 @@ return new class extends Migration
         Schema::create('push_subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('endpoint', 2048);
+            $table->string('endpoint_hash', 64);
+            $table->text('endpoint');
             $table->string('content_encoding', 32)->default('aesgcm');
             $table->string('public_key', 255);
             $table->string('auth_token', 255);
             $table->timestamps();
 
-            $table->unique(['user_id', 'endpoint']);
+            $table->unique(['user_id', 'endpoint_hash']);
         });
     }
 
