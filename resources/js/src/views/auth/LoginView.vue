@@ -51,8 +51,8 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../store'
 import { formatApiError } from '../../api/http'
 
-/** Icon PWA — `public/images/logo/...` */
-const LOGO_PWA_URL = '/images/logo/logo_pwa_v1.png'
+/** `public/images/logo/...` */
+const LOGO_PWA_URL = '/images/logo/logo-2.png'
 const GOOGLE_LOGO_URL = '/images/logo/google.png'
 
 const { t } = useI18n()
