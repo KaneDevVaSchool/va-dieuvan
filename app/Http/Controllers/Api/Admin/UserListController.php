@@ -28,6 +28,8 @@ class UserListController extends Controller
         $perPage = $data['per_page'] ?? '10';
         $page = max(1, (int) ($data['page'] ?? 1));
 
+        $roleNames = isset($data['roles']) && is_array($data['roles']) ? array_values(array_filter($data['roles'])) : [];
+
         $like = $q !== '' ? '%'.addcslashes($q, '%_\\').'%' : null;
 
         $base = User::query()
@@ -45,6 +47,9 @@ class UserListController extends Controller
                         ->orWhere('email', 'like', $like)
                         ->orWhere('employee_code', 'like', $like);
                 });
+            })
+            ->when(count($roleNames) > 0, function (Builder $b) use ($roleNames) {
+                $b->whereHas('roles', fn (Builder $r) => $r->whereIn('name', $roleNames));
             })
             ->when($assignment === 'assigned', fn (Builder $b) => $b->has('roles'))
             ->when($assignment === 'unassigned', fn (Builder $b) => $b->doesntHave('roles'))

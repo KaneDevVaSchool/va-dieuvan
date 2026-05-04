@@ -14,8 +14,12 @@ use App\Http\Controllers\Api\Payments\ReconciliationController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
+use App\Http\Controllers\Api\Admin\BulkUserRolesUpdateController;
 use App\Http\Controllers\Api\Trips\TripController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('v1/users/roles/bulk-update', BulkUserRolesUpdateController::class)
+    ->middleware(['permission:any,system.user_roles.manage', 'throttle:60,1']);
 
 Route::patch('/reference-pricing/passenger-fares/{passengerFareRate}', [ReferencePricingController::class, 'updatePassengerFare'])
     ->middleware('permission:reference_pricing.manage');

@@ -11,10 +11,16 @@ class RoleService
 {
     public function listWithPermissionCount(): Collection
     {
+        $labels = config('role_categories.labels', []);
+        $default = config('role_categories.default_label', 'Other');
+
         return Role::query()
             ->withCount('permissions')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->each(static function (Role $role) use ($labels, $default) {
+                $role->setAttribute('category', $labels[$role->name] ?? $default);
+            });
     }
 
     public function find(int $id): ?Role
