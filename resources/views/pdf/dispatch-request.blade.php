@@ -394,8 +394,7 @@
             <td style="width:17%; vertical-align:middle; padding-right:10px;">
                 @if($logoDataUri)
                     <img src="{{ $logoDataUri }}"
-                        style="height:80px;width:auto;max-width:100%;display:block;object-fit:contain;"
-                        alt="VAS" />
+                        style="height:80px;width:auto;max-width:100%;display:block;object-fit:contain;" alt="VAS" />
                 @endif
             </td>
 
@@ -582,6 +581,8 @@
     </div>
 
     {{-- ────────── E · NỘI DUNG VẬN CHUYỂN ────────── --}}
+    <br />
+    <br />
     <div class="sec-header">
         <span class="sec-badge">E</span>
         <span class="sec-title">Nội dung đề nghị vận chuyển</span>
@@ -645,7 +646,8 @@
                             <td class="tl">{{ $row['delContact'] }}</td>
                             <td>{{ $row['transport'] }}</td>
                             <td class="tr">
-                                {{ DispatchRequestPdfPresenter::formatCostCell($row['name'] ?? '', $row['cost'] ?? '') }}</td>
+                                {{ DispatchRequestPdfPresenter::formatCostCell($row['name'] ?? '', $row['cost'] ?? '') }}
+                            </td>
                         </tr>
                     @endforeach
                     <tr class="row-total">
