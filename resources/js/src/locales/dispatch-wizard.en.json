@@ -138,11 +138,7 @@
             "option_zalo": "Zalo",
             "option_paper": "Paper form",
             "step4_title": "4. Confirm & submit",
-            "step4_p2p": "«{type}»: all form data (including targets) is stored with the request.",
-            "step4_other": "All form details are stored with the request (not in the notes column unless you type below).",
-            "notes_label": "Extra notes",
-            "notes_optional": "(optional)",
-            "notes_ph": "Only text you enter here is saved to the system notes field…",
+            "step4_lead": "Review the previous steps, then click «{submit}» at the top of the page to finish.",
             "back": "← Back",
             "next": "Next",
             "created": "Request #{id} created",
@@ -291,7 +287,20 @@
             "porter_qty_ph": "e.g. 2 people",
             "cost_vnd": "Cost (VND)",
             "interprov": "Interprovincial freight",
-            "interprov_cost": "Extra cost (VND)"
+            "interprov_cost": "Extra cost (VND)",
+            "card_schedule": "Schedule {n}",
+            "card_duplicate": "Duplicate",
+            "card_copy_above": "Copy from above",
+            "card_remove": "Remove",
+            "card_hint_depart_optional": "Leave empty if only return leg",
+            "toolbar_schedules": "{n} schedule(s)",
+            "toolbar_estimated": "Estimated total:",
+            "toolbar_add": "Add schedule",
+            "empty_schedules": "No schedules yet",
+            "empty_add_first": "+ Add first schedule",
+            "val_time_required": "Enter at least outbound or return time",
+            "val_return_order": "Return time must be after outbound time",
+            "val_guests_min": "At least 1 guest"
         }
     }
 }

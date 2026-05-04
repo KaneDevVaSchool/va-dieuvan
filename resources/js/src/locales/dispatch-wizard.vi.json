@@ -138,11 +138,7 @@
             "option_zalo": "Zalo",
             "option_paper": "Phiếu giấy",
             "step4_title": "4. Xác nhận & nộp",
-            "step4_p2p": "«{type}»: toàn bộ dữ liệu biểu mẫu (kể cả phân bổ mục tiêu) được gửi kèm yêu cầu trong hệ thống.",
-            "step4_other": "Toàn bộ chi tiết biểu mẫu được lưu kèm yêu cầu trong hệ thống (không ghi vào cột ghi chú trừ khi bạn nhập bên dưới).",
-            "notes_label": "Ghi chú thêm",
-            "notes_optional": "(tùy chọn)",
-            "notes_ph": "Chỉ nội dung bạn nhập tại đây mới được lưu vào cột ghi chú trên hệ thống…",
+            "step4_lead": "Kiểm tra lại các bước trước, sau đó nhấn «{submit}» trên đầu trang để hoàn tất.",
             "back": "← Quay lại",
             "next": "Tiếp theo",
             "created": "Đã tạo yêu cầu #{id}",
@@ -291,7 +287,20 @@
             "porter_qty_ph": "VD: 2 người",
             "cost_vnd": "Chi phí (VNĐ)",
             "interprov": "Gửi chành xe đi tỉnh",
-            "interprov_cost": "Chi phí phát sinh (VNĐ)"
+            "interprov_cost": "Chi phí phát sinh (VNĐ)",
+            "card_schedule": "Lịch trình {n}",
+            "card_duplicate": "Nhân bản",
+            "card_copy_above": "Sao chép trên",
+            "card_remove": "Xóa",
+            "card_hint_depart_optional": "Để trống nếu chỉ có chuyến về",
+            "toolbar_schedules": "{n} lịch trình",
+            "toolbar_estimated": "Tổng ước tính:",
+            "toolbar_add": "Thêm lịch trình",
+            "empty_schedules": "Chưa có lịch trình nào",
+            "empty_add_first": "+ Thêm lịch trình đầu tiên",
+            "val_time_required": "Phải có ít nhất thời gian đi hoặc thời gian về",
+            "val_return_order": "Thời gian về phải sau thời gian đi",
+            "val_guests_min": "Tối thiểu 1 khách"
         }
     }
 }

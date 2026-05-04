@@ -547,30 +547,23 @@
         <DispatchWizardStep3 v-if="step === 2" />
 
         <!-- Step 4 -->
-        <div v-if="step === 3" class="space-y-6">
-          <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step4_title') }}</h2>
-
-          <div
-            v-if="isPointToPointTrip"
-            class="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-relaxed text-slate-600"
-          >
-            {{ t('dispatch_wizard.create.step4_p2p', { type: t('dispatch_wizard.trip_type.point_to_point.label') }) }}
+        <div
+          v-if="step === 3"
+          class="rounded-2xl border border-slate-200/90 bg-white px-5 py-7 shadow-sm ring-1 ring-slate-950/[0.04] sm:px-8 sm:py-9"
+        >
+          <div class="flex flex-col gap-1 border-b border-slate-100 pb-5 sm:pb-6">
+            <p class="text-xs font-semibold uppercase tracking-wide text-va-800">
+              {{ t('dispatch_wizard.steps.confirm') }}
+            </p>
+            <h2 class="text-xl font-semibold tracking-tight text-slate-900">
+              {{ t('dispatch_wizard.create.step4_title') }}
+            </h2>
+            <p class="max-w-prose text-sm leading-relaxed text-slate-600">
+              {{ t('dispatch_wizard.create.step4_lead', { submit: t('dispatch_wizard.header.submit') }) }}
+            </p>
           </div>
-          <p v-else class="text-sm text-slate-500">
-            {{ t('dispatch_wizard.create.step4_other') }}
-          </p>
 
-          <label class="block">
-            <span class="mb-1 block text-sm font-medium text-slate-800">{{ t('dispatch_wizard.create.notes_label') }} <span class="font-normal text-slate-500">{{ t('dispatch_wizard.create.notes_optional') }}</span></span>
-            <textarea
-              v-model="form.free_notes"
-              rows="3"
-              class="dw-input min-h-[4.5rem] w-full resize-y"
-              :placeholder="t('dispatch_wizard.create.notes_ph')"
-            />
-          </label>
-
-          <div v-if="error" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          <div v-if="error" class="mt-6 rounded-xl border border-rose-200/90 bg-rose-50 px-4 py-3 text-sm font-medium leading-snug text-rose-900">
             {{ error }}
           </div>
         </div>
@@ -887,7 +880,6 @@ const {
   step2RequesterEmailInvalid,
   step2CoordinatorEmailInvalid,
   tripTypeOptions,
-  isPointToPointTrip,
   openDatePickerFromInput,
   onRequesterPhoneInput,
   onCoordinatorPhoneInput,

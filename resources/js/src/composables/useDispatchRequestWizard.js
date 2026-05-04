@@ -189,6 +189,9 @@ export function useDispatchRequestWizard() {
   const businessRows = ref([emptyBusinessRow()])
   const cargoRows = ref([emptyCargoRow()])
 
+  /** Bước 3: form thẻ — không cho Next khi có lỗi inline hoặc danh sách rỗng (đồng bộ từ DispatchWizardStep3). */
+  const detailStepSchedulesValid = ref(true)
+
   const tripTypeOptions = computed(() => [
     {
       value: 'door_to_door',
@@ -591,6 +594,7 @@ export function useDispatchRequestWizard() {
       )
     }
     if (step.value === 2) {
+      if (!detailStepSchedulesValid.value) return false
       if (!computedDepartAt.value?.trim()) return false
       if (isCargo.value) {
         return cargoRows.value.some((r) => r.name?.trim())
@@ -620,7 +624,6 @@ export function useDispatchRequestWizard() {
 
   function removePassengerRow(i) {
     passengerRows.value.splice(i, 1)
-    if (!passengerRows.value.length) passengerRows.value.push(emptyPassengerRow())
   }
 
   function addBusinessRow() {
@@ -629,7 +632,6 @@ export function useDispatchRequestWizard() {
 
   function removeBusinessRow(i) {
     businessRows.value.splice(i, 1)
-    if (!businessRows.value.length) businessRows.value.push(emptyBusinessRow())
   }
 
   function addCargoRow() {
@@ -638,7 +640,6 @@ export function useDispatchRequestWizard() {
 
   function removeCargoRow(i) {
     cargoRows.value.splice(i, 1)
-    if (!cargoRows.value.length) cargoRows.value.push(emptyCargoRow())
   }
 
   const canSubmitApi = computed(() => !!computedDepartAt.value?.trim())
@@ -1282,6 +1283,7 @@ export function useDispatchRequestWizard() {
     passengerRows,
     businessRows,
     cargoRows,
+    detailStepSchedulesValid,
     tripTypeOptions,
     isCargo,
     isPointToPointTrip,
