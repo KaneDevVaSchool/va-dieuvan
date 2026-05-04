@@ -20,7 +20,7 @@
             margin: 0;
             line-height: 1.45;
             background: #fff;
-            text-transform: lowercase;
+            text-transform: uppercase;
             font-weight: normal;
         }
 
@@ -46,7 +46,7 @@
             font-weight: normal;
             text-align: center;
             letter-spacing: normal;
-            text-transform: lowercase;
+            text-transform: uppercase;
             color: #000;
         }
 
@@ -117,7 +117,7 @@
             border-radius: 0;
             letter-spacing: normal;
             margin-right: 6pt;
-            text-transform: lowercase;
+            text-transform: uppercase;
         }
 
         .sec-title {
@@ -125,7 +125,7 @@
             font-weight: normal;
             color: #000;
             letter-spacing: normal;
-            text-transform: lowercase;
+            text-transform: uppercase;
         }
 
         .sec-subtitle {
@@ -160,7 +160,7 @@
             font-size: 9pt;
             color: #000;
             font-weight: normal;
-            text-transform: lowercase;
+            text-transform: uppercase;
             letter-spacing: normal;
             margin-bottom: 2.5pt;
         }
@@ -289,7 +289,7 @@
             height: 18pt;
             letter-spacing: normal;
             border: 0.5pt solid #000;
-            text-transform: lowercase;
+            text-transform: uppercase;
         }
 
         .sig-col-body {
@@ -534,7 +534,7 @@
     <div class="sec-body">
         <div style="padding:3.5pt 8pt 2.5pt; font-size:9pt; font-weight:normal;
                 color:#000; border-bottom:0.5pt solid #000;
-                text-transform: lowercase; letter-spacing:normal;">
+                text-transform: uppercase; letter-spacing:normal;">
             d.1 &nbsp;Đối tượng sử dụng
         </div>
         <table class="cb-table">
