@@ -36,6 +36,7 @@
       v-model="selected.taxis"
       :options="taxiOptions"
       :is-loading="isLoading"
+      allow-custom-entry
       :title="t('trip_detail.coordination.resource_section_taxi_title')"
       :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
       :placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"

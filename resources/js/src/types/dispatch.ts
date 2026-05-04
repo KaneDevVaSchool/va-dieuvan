@@ -4,6 +4,8 @@ export interface ResourceItem {
   sublabel?: string
   /** undefined/true = có thể chọn; false = bận / không chọn */
   available?: boolean
+  /** Taxi nhập tay (không có bản ghi transport_provider) */
+  isCustom?: boolean
 }
 
 export interface SelectedResources {

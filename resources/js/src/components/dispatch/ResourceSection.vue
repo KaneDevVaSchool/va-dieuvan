@@ -27,6 +27,7 @@
         :placeholder="placeholder"
         @focus="isOpen = true"
         @blur="onBlur"
+        @keydown.enter.prevent="onEnterKey"
       />
 
       <Transition
@@ -61,10 +62,24 @@
             </button>
           </template>
           <div v-else class="px-3 py-2.5 text-center text-[12px] text-slate-500 dark:text-slate-400">
-            {{ emptySearchLabel }}
+            <template v-if="allowCustomEntry && searchQuery.trim()">
+              {{ customAddHint }}
+            </template>
+            <template v-else>
+              {{ emptySearchLabel }}
+            </template>
+          </div>
+          <div
+            v-if="allowCustomEntry && searchQuery.trim() && filteredOptions.length > 0"
+            class="border-t border-slate-100 px-3 py-2 text-center text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400"
+          >
+            {{ customAddHint }}
           </div>
         </div>
       </Transition>
+      <p v-if="allowCustomEntry" class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+        {{ t('trip_detail.coordination.resource_custom_entry_hint') }}
+      </p>
     </div>
 
     <div v-if="isLoading" class="mt-1.5 h-8 animate-pulse rounded-md bg-slate-100 dark:bg-slate-800" />
@@ -108,6 +123,8 @@ const props = defineProps({
   icon: { type: [Object, Function], default: null },
   /** Khi false: chỉ một lựa chọn (thay thế danh sách hiện tại) */
   multiple: { type: Boolean, default: true },
+  /** Enter / gợi ý: thêm mục nhập tay (id custom:...) */
+  allowCustomEntry: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -120,6 +137,9 @@ const isOpen = ref(false)
 const busyLabel = computed(() => t('trip_detail.coordination.resource_busy_badge'))
 const emptySearchLabel = computed(() => t('trip_detail.coordination.resource_search_empty'))
 const emptyStateLabel = computed(() => t('trip_detail.coordination.resource_empty_line', { hint: props.emptyHint }))
+const customAddHint = computed(() =>
+  t('trip_detail.coordination.resource_press_enter_add', { name: searchQuery.value.trim() }),
+)
 
 const filteredOptions = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
@@ -149,6 +169,33 @@ function remove(opt) {
     'update:modelValue',
     props.modelValue.filter((v) => String(v.id) !== String(opt.id)),
   )
+}
+
+function onEnterKey() {
+  if (!props.allowCustomEntry) return
+  const q = searchQuery.value.trim()
+  if (!q) return
+  const qLower = q.toLowerCase()
+  const exactLabel = filteredOptions.value.filter(
+    (o) => o.available !== false && !isSelected(o) && String(o.label).toLowerCase() === qLower,
+  )
+  if (exactLabel.length === 1) {
+    select(exactLabel[0])
+    return
+  }
+  if (
+    props.modelValue.some((v) => v.isCustom === true && String(v.label).toLowerCase() === qLower)
+  ) {
+    searchQuery.value = ''
+    isOpen.value = false
+    return
+  }
+  const id = `custom:${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+  const item = { id, label: q, available: true, isCustom: true }
+  if (props.multiple) emit('update:modelValue', [...props.modelValue, item])
+  else emit('update:modelValue', [item])
+  searchQuery.value = ''
+  isOpen.value = false
 }
 
 function onBlur() {

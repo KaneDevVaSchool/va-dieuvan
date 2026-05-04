@@ -1595,6 +1595,8 @@
             "resource_fit_count": "{n} xe phù hợp",
             "resource_busy_badge": "Bận",
             "resource_search_empty": "Không tìm thấy kết quả",
+            "resource_press_enter_add": "Nhấn Enter để thêm «{name}»",
+            "resource_custom_entry_hint": "Gõ tên taxi / hãng và nhấn Enter để thêm ngay (không cần có trong danh sách).",
             "resource_empty_line": "Chưa chọn — {hint}",
             "resource_section_internal_title": "Xe nội bộ",
             "resource_section_internal_sub": "Xe thuộc đội xe VAS",
@@ -1756,8 +1758,6 @@
         "notes": {
             "title": "Ghi chú điều vận",
             "from_request": "Ghi chú từ yêu cầu",
-            "bm03_title": "Nội dung đơn điện tử (BM.03)",
-            "bm03_hint": "Tự động từ biểu mẫu tạo yêu cầu; không dùng cột ghi chú.",
             "empty": "Chưa có note.",
             "add_title": "+ Thêm note mới",
             "placeholder": "Ghi chú cho dispatcher/ops…",

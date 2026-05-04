@@ -143,7 +143,7 @@
               <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div class="flex min-w-0 items-center gap-3">
                   <div
-                    class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-100 to-indigo-100 text-sm font-bold text-slate-700 ring-2 ring-white"
+                    class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-sm font-bold text-slate-700 ring-2 ring-white dark:bg-slate-800 dark:text-slate-200"
                   >
                     <img
                       v-if="trip.dispatch_request?.requester?.avatar_url"
@@ -281,7 +281,7 @@
                   <div v-if="!routeStops.length" class="text-sm text-slate-500">{{ t('trip_detail.route.no_stops') }}</div>
                 </div>
                 <div class="relative w-full shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 lg:w-[320px]">
-                  <div class="relative aspect-[4/3] w-full bg-gradient-to-br from-emerald-50 via-sky-50 to-indigo-50">
+                  <div class="relative aspect-[4/3] w-full bg-slate-100 dark:bg-slate-800/80">
                     <iframe
                       v-if="embedMapSrc"
                       :src="embedMapSrc"
@@ -516,7 +516,7 @@
               :aria-label="t('trip_detail.costs_block.title')"
             >
               <div
-                class="border-b border-amber-100/90 bg-gradient-to-br from-amber-50/95 via-white to-orange-50/55 px-5 py-4 sm:px-6 dark:from-amber-950/35 dark:via-slate-900 dark:to-orange-950/25 dark:border-amber-900/40"
+                class="border-b border-amber-100/90 bg-amber-50/95 px-5 py-4 sm:px-6 dark:border-amber-900/40 dark:bg-amber-950/35"
               >
                 <div class="flex flex-wrap items-start gap-4">
                   <div
@@ -534,7 +534,7 @@
               </div>
               <div class="p-5 sm:p-6">
                 <div
-                  class="rounded-xl border border-slate-200/75 bg-gradient-to-b from-slate-50/70 to-white p-4 shadow-sm dark:border-slate-700/80 dark:from-slate-950/40 dark:to-slate-900/60"
+                  class="rounded-xl border border-slate-200/75 bg-white p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/60"
                 >
                   <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">{{ t('trip_detail.costs.title') }}</div>
@@ -615,7 +615,7 @@
               :aria-label="t('trip_detail.status_block.title')"
             >
               <div
-                class="border-b border-teal-100/90 bg-gradient-to-br from-teal-50/95 via-white to-cyan-50/50 px-5 py-4 sm:px-6 dark:from-teal-950/35 dark:via-slate-900 dark:to-cyan-950/25 dark:border-teal-900/40"
+                class="border-b border-teal-100/90 bg-teal-50/95 px-5 py-4 sm:px-6 dark:border-teal-900/40 dark:bg-teal-950/35"
               >
                 <div class="flex flex-wrap items-start gap-4">
                   <div
@@ -633,7 +633,7 @@
               </div>
               <div class="p-5 sm:p-6">
                 <form
-                  class="rounded-xl border border-teal-100/90 bg-gradient-to-br from-teal-50/35 via-white to-white p-5 shadow-sm ring-1 ring-teal-100/35 dark:border-teal-900/50 dark:from-teal-950/20 dark:via-slate-900/80 dark:to-slate-900/50 dark:ring-teal-900/30"
+                  class="rounded-xl border border-teal-100/90 bg-white p-5 shadow-sm ring-1 ring-teal-100/35 dark:border-teal-900/50 dark:bg-slate-900/80 dark:ring-teal-900/30"
                   @submit.prevent="doStatus"
                 >
                   <div class="grid gap-3 sm:grid-cols-3">
@@ -662,7 +662,7 @@
               class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden"
               :aria-label="t('trip_detail.coordination.title')"
             >
-              <div class="border-b border-slate-100/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/60 px-4 py-3 sm:px-4">
+              <div class="border-b border-slate-100/90 bg-slate-50 px-4 py-3 sm:px-4 dark:border-slate-700/80 dark:bg-slate-900/80">
                 <div class="flex flex-wrap items-start justify-between gap-2">
                   <div class="min-w-0">
                     <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.coordination.title') }}</h2>
@@ -685,7 +685,7 @@
               <div class="space-y-4 p-4 sm:p-4">
                 <div
                   v-if="canRescheduleTrip"
-                  class="rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 to-white p-3 shadow-sm"
+                  class="rounded-xl border border-indigo-200/80 bg-indigo-50/90 p-3 shadow-sm dark:border-indigo-800/50 dark:bg-indigo-950/40"
                 >
                   <div class="text-xs font-bold uppercase tracking-wide text-indigo-900">{{ t('trip_detail.reschedule.title') }}</div>
                   <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.reschedule.hint') }}</p>
@@ -865,7 +865,7 @@
               class="overflow-hidden rounded-2xl border border-slate-200/85 bg-white shadow-md shadow-slate-500/5 ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
             >
               <div
-                class="flex items-center gap-3 border-b border-slate-100/90 bg-gradient-to-r from-indigo-50/90 via-white to-violet-50/50 px-4 py-3 dark:from-indigo-950/40 dark:via-slate-900 dark:to-violet-950/30 dark:border-slate-700/80"
+                class="flex items-center gap-3 border-b border-slate-100/90 bg-slate-50 px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900"
               >
                 <div
                   class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-950/70 dark:text-indigo-200"
@@ -878,7 +878,7 @@
                 <div v-if="timeline.length" class="relative">
                   <div
                     v-if="timeline.length > 1"
-                    class="pointer-events-none absolute left-[1.125rem] top-11 bottom-11 w-px bg-gradient-to-b from-indigo-200/90 via-slate-200 to-slate-100 dark:from-indigo-800/80 dark:via-slate-600 dark:to-slate-800"
+                    class="pointer-events-none absolute left-[1.125rem] top-11 bottom-11 w-px bg-slate-200 dark:bg-slate-600"
                     aria-hidden="true"
                   />
                   <div v-for="e in timeline" :key="e.key" class="relative z-[1] flex gap-4 pb-6 last:pb-0">
@@ -889,7 +889,7 @@
                       <span class="leading-none">{{ e.icon }}</span>
                     </div>
                     <div
-                      class="min-w-0 flex-1 rounded-xl border border-slate-100/90 bg-gradient-to-br from-white to-slate-50/90 px-4 py-3 shadow-sm dark:border-slate-700/80 dark:from-slate-950/40 dark:to-slate-900/60"
+                      class="min-w-0 flex-1 rounded-xl border border-slate-100/90 bg-white px-4 py-3 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/60"
                     >
                       <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                         <div class="min-w-0">
@@ -928,13 +928,6 @@
                   <div class="text-xs font-medium text-amber-800">{{ t('trip_detail.notes.from_request') }}</div>
                   <div class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">{{ tripRequestNotesFromUser }}</div>
                 </div>
-                <div v-if="tripBm03Display" class="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
-                  <div class="text-[11px] font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.bm03_title') }}</div>
-                  <p class="mt-1 text-xs text-slate-500">{{ t('trip_detail.notes.bm03_hint') }}</p>
-                  <div class="mt-2 max-h-[min(28rem,55vh)] overflow-y-auto whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere]">
-                    {{ tripBm03Display }}
-                  </div>
-                </div>
                 <div v-for="n in noteEvents" :key="n.id" class="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
                   <div class="flex items-baseline justify-between gap-2">
                     <div class="text-xs font-medium text-slate-700">{{ n.creator?.name ?? t('trip_detail.timeline.system') }}</div>
@@ -942,7 +935,7 @@
                   </div>
                   <div class="mt-1 whitespace-pre-wrap text-sm text-slate-800">{{ n.message }}</div>
                 </div>
-                <div v-if="!noteEvents.length && !tripRequestNotesFromUser && !tripBm03Display" class="text-sm text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
+                <div v-if="!noteEvents.length && !tripRequestNotesFromUser" class="text-sm text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
                 <div class="pt-1">
                   <div class="text-sm font-semibold text-slate-900">{{ t('trip_detail.notes.add_title') }}</div>
                   <textarea
@@ -1079,7 +1072,6 @@ import { uploadAttachment, deleteAttachment } from '../../api/attachments'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripStatus, labelTripType } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
-import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd } from '../../util/money'
 import {
   emptyPassengerRow,
@@ -1374,17 +1366,6 @@ const tripRequestNotesFromUser = computed(() => {
   if (!n) return ''
   if (isLegacyBm03NotesBlock(n)) return ''
   return formatDispatchRequestNotesForDisplay(n)
-})
-
-const tripBm03Display = computed(() => {
-  const s = trip.value?.dispatch_request?.wizard_snapshot
-  if (s?.form) {
-    const b = buildBm03BodyFromWizardSnapshot(s)?.trim()
-    if (b) return formatDispatchRequestNotesForDisplay(b)
-  }
-  const n = drNotesRaw.value
-  if (n && isLegacyBm03NotesBlock(n)) return formatDispatchRequestNotesForDisplay(n)
-  return ''
 })
 
 const originLabel = computed(() => trip.value?.dispatch_request?.origin ?? '—')

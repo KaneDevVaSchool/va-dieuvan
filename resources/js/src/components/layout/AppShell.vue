@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'h-dvh min-h-0 w-full overflow-hidden bg-gradient-to-b from-slate-50 via-violet-50/15 to-slate-50 text-slate-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 dark:text-slate-100',
+      'h-dvh min-h-0 w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100',
       'supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]',
       isVertical ? 'flex flex-row' : 'flex flex-col',
     ]"

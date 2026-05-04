@@ -1,11 +1,9 @@
 ---
-
-## alwaysApply: true
-
-Apply:
-
-* @core.mdc
-
+description: >
+  Minimal bug-fix workflow for this project—tight scope, no unrelated refactors, reason from
+  code, fix at the right layer, and summarize root cause briefly in Vietnamese. Apply when
+  debugging, fixing regressions, or doing targeted fixes; users can also @-mention this rule.
+alwaysApply: false
 ---
 
 # 🎯 TASK

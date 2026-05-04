@@ -1735,6 +1735,8 @@
             "resource_fit_count": "{n} suitable vehicles",
             "resource_busy_badge": "Busy",
             "resource_search_empty": "No matches",
+            "resource_press_enter_add": "Press Enter to add «{name}»",
+            "resource_custom_entry_hint": "Type a taxi or brand name and press Enter to add instantly (it does not need to be in the list).",
             "resource_empty_line": "None selected — {hint}",
             "resource_section_internal_title": "Internal fleet",
             "resource_section_internal_sub": "VAS-owned vehicles",
@@ -1896,8 +1898,6 @@
         "notes": {
             "title": "Dispatcher notes",
             "from_request": "Notes from request",
-            "bm03_title": "Electronic form content (BM.03)",
-            "bm03_hint": "Generated from the request wizard; not stored in the notes field.",
             "empty": "No notes yet.",
             "add_title": "+ Add new note",
             "placeholder": "Add a note for dispatcher/ops…",

@@ -2,6 +2,10 @@ import { type Ref, ref, unref, watch } from 'vue'
 import { listDrivers, listTransportProviders, listVehicles } from '../api/operational'
 import type { ResourceDispatchPayload, ResourceItem, ResourceDispatchValidationCode, SelectedResources } from '../types/dispatch'
 
+function isCustomResource(it: ResourceItem): boolean {
+  return it.isCustom === true || String(it.id).startsWith('custom:')
+}
+
 function toResourceVehicle(v: Record<string, unknown>, busy: Set<number>): ResourceItem {
   const id = v.id as number
   const plate = String(v.license_plate ?? '')
@@ -168,16 +172,36 @@ export function useResourceSelector(
     if (code !== null) return base
 
     if (txs.length > 0 || vds.length > 0) {
-      const providerRaw = vds[0]?.id ?? txs[0]?.id
-      const providerId = providerRaw != null ? Number(providerRaw) : null
+      const numericTaxis = txs.filter((t) => !isCustomResource(t))
+      const customTaxis = txs.filter((t) => isCustomResource(t))
+
+      let providerId: number | null = null
+      if (vds.length > 0) providerId = Number(vds[0].id)
+      else if (numericTaxis.length > 0) providerId = Number(numericTaxis[0].id)
+
+      const customLine =
+        customTaxis.length > 0
+          ? `Taxi: ${customTaxis.map((x) => String(x.label).trim()).join(', ')}`
+          : ''
+
+      let evRef = externalVehicleRef?.trim() || null
+      if (customLine) evRef = evRef ? `${customLine} · ${evRef}` : customLine
+
+      const ready =
+        vds.length > 0 || numericTaxis.length > 0 || customTaxis.length > 0
+
       return {
         ...base,
-        readyForSubmit: providerId != null,
-        validationCode: providerId == null ? 'need_provider' : null,
+        readyForSubmit: ready,
+        validationCode: ready ? null : 'need_provider',
         mode: 'external',
         vehicle_id: null,
         driver_id: null,
         transport_provider_id: providerId,
+        external_vehicle_ref: evRef,
+        external_driver_ref: externalDriverRef?.trim() || null,
+        taxi_ids: numericTaxis.map((x) => x.id),
+        vendor_ids: vds.map((x) => x.id),
         primaryVehicleId: null,
       }
     }
