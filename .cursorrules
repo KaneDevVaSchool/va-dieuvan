@@ -1,0 +1,137 @@
+# Cursor Rules — Laravel 10 + Vue 3
+# Code Style & Conventions
+
+## ─── GENERAL ───────────────────────────────────────────────────────────────
+
+- Ưu tiên rõ ràng hơn thông minh (explicit over clever).
+- Không comment thừa; code phải tự giải thích được.
+- Mọi function/method chỉ làm 1 việc.
+- Không để code thừa, dead code, hay TODO chưa xử lý khi commit.
+
+---
+
+## ─── PHP / LARAVEL 10 ───────────────────────────────────────────────────────
+
+### Coding Style
+- Tuân thủ **PSR-12** hoàn toàn.
+- PHP version: **8.1+**; dùng typed properties, enums, readonly, match expression.
+- Đặt tên:
+  - Class/Model: `PascalCase`
+  - Method/variable: `camelCase`
+  - Constant/Enum case: `UPPER_SNAKE_CASE`
+  - Cột DB, migration, route slug: `snake_case`
+
+### Architecture
+- Theo chuẩn **MVC** của Laravel; không nhét logic vào Controller.
+- Dùng **Service class** cho business logic phức tạp.
+- Dùng **Form Request** cho validation (không validate trong Controller).
+- Dùng **API Resource** (`JsonResource`) khi trả về JSON.
+- Dùng **Repository pattern** nếu query phức tạp hoặc tái sử dụng nhiều nơi.
+
+### Eloquent & DB
+- Luôn dùng `fillable` hoặc `guarded` trên Model.
+- Không dùng `DB::statement` raw nếu Eloquent làm được.
+- Eager load quan hệ (`with()`) để tránh N+1.
+- Migration phải có `down()` hoạt động đúng.
+
+### Routes
+- API routes trong `routes/api.php`, dùng prefix versioning: `/api/v1/...`
+- Web routes trong `routes/web.php`.
+- Đặt tên route bằng `->name()`.
+
+### Security
+- Không hardcode secrets; dùng `.env` + `config()`.
+- Luôn dùng `$request->validated()`, không dùng `$request->all()` trực tiếp.
+- Dùng `policy` hoặc `gate` cho authorization.
+
+### Testing
+- Feature test cho API endpoint, Unit test cho Service/helper.
+- Đặt trong `tests/Feature` và `tests/Unit`.
+
+---
+
+## ─── VUE 3 ──────────────────────────────────────────────────────────────────
+
+### Coding Style
+- Dùng **Composition API** (`<script setup>`) — không dùng Options API.
+- TypeScript được khuyến khích nhưng không bắt buộc; nếu dùng thì nhất quán toàn project.
+- Đặt tên:
+  - Component file: `PascalCase.vue` (vd: `UserProfile.vue`)
+  - Props, emit, variable: `camelCase`
+  - CSS class: `kebab-case`
+  - Event emitted: `kebab-case` (vd: `update:modelValue`, `form-submit`)
+
+### Component Structure
+- Thứ tự trong SFC: `<script setup>` → `<template>` → `<style scoped>`.
+- Mỗi component chỉ làm 1 việc; tách thành component nhỏ khi > ~150 dòng template.
+- Props phải khai báo kiểu rõ ràng (`defineProps<{...}>()`).
+- Emit phải khai báo (`defineEmits<{...}>()`).
+
+### State Management
+- Dùng **Pinia** (không dùng Vuex).
+- Store đặt trong `stores/`, tên file: `useXxxStore.ts`.
+- Không để API call trực tiếp trong component; đưa vào store hoặc composable.
+
+### Composables
+- Logic tái sử dụng → `composables/useXxx.ts`.
+- Luôn trả về object (không trả về array như React hooks).
+
+### API & Async
+- Dùng `axios` instance đã config sẵn (base URL, token header).
+- Xử lý lỗi ở tầng store/composable, không để try/catch rải rác trong component.
+- Loading state và error state phải được expose rõ ràng.
+
+### Template
+- Không viết logic phức tạp trong template; dùng computed.
+- `v-if` và `v-for` không dùng chung trên 1 element; dùng `<template>` wrapper.
+- Key của `v-for` phải là unique ID, không dùng index.
+
+### Styling
+- Dùng `<style scoped>` mặc định.
+- Nếu dùng Tailwind: utility-first, không viết CSS thuần song song.
+- Biến màu/spacing theo design token trong `tailwind.config.js`.
+
+---
+
+## ─── FILE STRUCTURE GỢI Ý ──────────────────────────────────────────────────
+
+```
+# Laravel
+app/
+  Http/
+    Controllers/     # Mỏng, chỉ gọi service
+    Requests/        # Form Request validation
+    Resources/       # API Resource
+  Services/          # Business logic
+  Repositories/      # DB query phức tạp (nếu dùng)
+  Models/
+
+# Vue 3
+resources/js/
+  components/        # Reusable UI components
+  views/             # Page-level components
+  stores/            # Pinia stores
+  composables/       # Shared logic (useXxx)
+  services/          # axios calls (api.ts, ...)
+  router/            # Vue Router config
+  types/             # TypeScript interfaces/types
+```
+
+---
+
+## ─── GIT & COMMIT ───────────────────────────────────────────────────────────
+
+- Commit message theo **Conventional Commits**:
+  `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `test:`
+- Không commit file `.env`, `vendor/`, `node_modules/`.
+- Mỗi commit = 1 thay đổi logic rõ ràng.
+
+---
+
+## ─── AI BEHAVIOR (Cursor) ──────────────────────────────────────────────────
+
+- Khi sinh code Laravel, luôn dùng Form Request + Service pattern.
+- Khi sinh Vue component, luôn dùng `<script setup>` + Composition API.
+- Không tự ý đổi architecture pattern trừ khi được yêu cầu.
+- Giải thích ngắn gọn bằng tiếng Việt nếu thay đổi quan trọng.
+- Khi refactor, chỉ thay đổi phần được yêu cầu; không tự sửa code khác.
