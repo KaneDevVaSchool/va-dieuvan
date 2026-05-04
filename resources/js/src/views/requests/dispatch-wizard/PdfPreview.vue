@@ -38,7 +38,7 @@
     </div>
 
     <div
-      v-else-if="pdfError && (!pdfUrl || showFallbackOnly)"
+      v-else-if="pdfError"
       class="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 text-center sm:min-h-[280px]"
     >
       <p class="text-xs font-medium text-rose-700">{{ pdfError }}</p>
@@ -55,7 +55,7 @@
     </div>
 
     <div
-      v-else-if="pdfUrl && !pdfError"
+      v-else-if="pdfUrl"
       class="relative overflow-auto rounded-lg border border-slate-200 bg-slate-100"
       :style="{ maxHeight: 'min(78vh, 900px)' }"
     >
@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 
 const props = defineProps({
   title: { type: String, required: true },
@@ -154,12 +154,18 @@ const ZOOM_STEP = 0.1
 const zoom = ref(1)
 const fullscreenOpen = ref(false)
 
-/** Có bản ghi nhưng không tạo được blob preview */
-const showFallbackOnly = computed(() => !props.pdfUrl && props.hasCreatedRecord)
-
 watch(fullscreenOpen, (open) => {
   if (typeof document === 'undefined') return
   document.body.style.overflow = open ? 'hidden' : ''
+})
+
+watchEffect((onCleanup) => {
+  if (typeof window === 'undefined' || !fullscreenOpen.value) return
+  const onKey = (e) => {
+    if (e.key === 'Escape') fullscreenOpen.value = false
+  }
+  window.addEventListener('keydown', onKey)
+  onCleanup(() => window.removeEventListener('keydown', onKey))
 })
 
 function zoomIn() {

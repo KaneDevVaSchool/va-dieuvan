@@ -1,5 +1,8 @@
 <template>
-  <div class="dispatch-wizard space-y-6 pb-10 text-slate-900">
+  <div
+    class="dispatch-wizard space-y-6 text-slate-900"
+    :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
+  >
     <!-- Header -->
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
@@ -46,6 +49,7 @@
           {{ t('dispatch_wizard.create.clear_draft') }}
         </button>
         <button
+          v-if="!(step === 3 && !created)"
           type="button"
           class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="headerPrimaryDisabled"
@@ -547,29 +551,13 @@
         <DispatchWizardStep3 v-if="step === 2" />
 
         <!-- Step 4 -->
-        <div
-          v-if="step === 3"
-          class="rounded-2xl border border-slate-200/90 bg-white px-5 py-7 shadow-sm ring-1 ring-slate-950/[0.04] sm:px-8 sm:py-9"
-        >
-          <div class="flex flex-col gap-1 border-b border-slate-100 pb-5 sm:pb-6">
-            <p class="text-xs font-semibold uppercase tracking-wide text-va-800">
-              {{ t('dispatch_wizard.steps.confirm') }}
-            </p>
-            <h2 class="text-xl font-semibold tracking-tight text-slate-900">
-              {{ t('dispatch_wizard.create.step4_title') }}
-            </h2>
-            <p class="max-w-prose text-sm leading-relaxed text-slate-600">
-              {{ t('dispatch_wizard.create.step4_lead', { submit: t('dispatch_wizard.header.submit') }) }}
-            </p>
-          </div>
-
-          <div v-if="error" class="mt-6 rounded-xl border border-rose-200/90 bg-rose-50 px-4 py-3 text-sm font-medium leading-snug text-rose-900">
-            {{ error }}
-          </div>
-        </div>
+        <ConfirmSummary v-if="step === 3" />
 
         <!-- Nav buttons -->
-        <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6">
+        <div
+          v-if="step !== 3"
+          class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6"
+        >
           <button
             type="button"
             class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
@@ -591,74 +579,6 @@
           </div>
         </div>
       </section>
-
-      <aside v-if="created" class="pdf-preview-wrapper mt-6 space-y-4">
-        <div
-          class="success-banner flex flex-col gap-4 rounded-[10px] border-[1.5px] border-green-600 bg-green-50 px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-          style="box-shadow: 0 1px 4px rgba(22, 163, 74, 0.1)"
-        >
-          <div class="success-banner__meta flex min-w-0 flex-col gap-1">
-            <span class="text-[15px] font-bold text-green-800">
-              {{ t('dispatch_wizard.create.created', { id: created.id }) }}
-            </span>
-            <span
-              class="success-banner__badge inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider"
-              :class="
-                created.status === 'pending'
-                  ? 'border-amber-200 bg-amber-50 text-amber-900'
-                  : created.status === 'approved'
-                    ? 'border-green-300 bg-green-100 text-green-800'
-                    : 'border-slate-200 bg-white text-slate-700'
-              "
-            >
-              {{ created.status }}
-            </span>
-            <p v-if="pdfError" class="text-sm font-medium text-rose-700">{{ pdfError }}</p>
-          </div>
-          <div class="success-banner__actions flex shrink-0 flex-wrap gap-2">
-            <RouterLink
-              to="/requests"
-              class="btn-outline inline-flex items-center justify-center gap-1.5 rounded-[7px] border-[1.5px] border-slate-300 bg-white px-[18px] py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              {{ t('dispatch_wizard.create.to_list') }}
-            </RouterLink>
-            <button
-              type="button"
-              class="btn-dark inline-flex items-center justify-center gap-1.5 rounded-[7px] border-[1.5px] border-stone-900 bg-stone-900 px-[18px] py-2 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-[0.55]"
-              :disabled="pdfLoading"
-              @click="downloadCreatedPdf"
-            >
-              <span v-if="pdfLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              <DocumentArrowDownIcon v-else class="btn__icon h-[15px] w-[15px] shrink-0" aria-hidden="true" />
-              <span v-if="pdfLoading">{{ t('dispatch_wizard.create.exporting_pdf') }}</span>
-              <span v-else>{{ t('dispatch_wizard.create.download_pdf') }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div
-          v-if="pdfPreviewUrl"
-          class="pdf-preview-container overflow-hidden rounded-lg border border-slate-300 bg-slate-50"
-        >
-          <div
-            class="pdf-preview-header flex items-center justify-between border-b border-slate-200 bg-slate-100 px-4 py-2 text-[13px] font-semibold text-slate-700"
-          >
-            <span>{{ t('dispatch_wizard.create.preview_title') }}</span>
-            <button
-              type="button"
-              class="rounded px-1.5 py-0.5 text-sm text-slate-500 transition hover:bg-slate-200 hover:text-slate-800"
-              @click="closePdfPreview"
-            >
-              {{ t('dispatch_wizard.create.preview_close') }}
-            </button>
-          </div>
-          <iframe
-            :src="pdfPreviewUrl"
-            class="pdf-preview-iframe block h-[720px] w-full border-0"
-            title="PDF đề nghị điều vận"
-          />
-        </div>
-      </aside>
     </div>
   </div>
 
@@ -822,7 +742,6 @@
 
 <script setup>
 import { defineAsyncComponent, provide } from 'vue'
-import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
@@ -836,6 +755,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from './dispatch-wizard/injectionKeys'
+import ConfirmSummary from './dispatch-wizard/ConfirmSummary.vue'
 
 const { t, locale } = useI18n()
 const wizard = useDispatchRequestWizard()
@@ -852,9 +772,6 @@ const {
   loading,
   error,
   created,
-  pdfLoading,
-  pdfError,
-  pdfPreviewUrl,
   hasDraftSnapshot,
   clearDraftModalOpen,
   activeDraftId,
@@ -902,8 +819,6 @@ const {
   headerPrimaryLabel,
   headerPrimaryDisabled,
   primaryAction,
-  downloadCreatedPdf,
-  closePdfPreview,
   saveDraft,
   openClearDraftModal,
   closeClearDraftModal,
