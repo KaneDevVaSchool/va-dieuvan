@@ -25,7 +25,7 @@ function formatCurrency(n) {
 }
 
 /**
- * BM.03 hiển thị từ bản ghi cũ còn `wizard_snapshot` trong DB (yêu cầu mới không lưu snapshot).
+ * BM.03 hiển thị từ bản ghi có `wizard_snapshot` trong DB (được lưu khi tạo yêu cầu từ wizard).
  * @param {Record<string, unknown>|null|undefined} snapshot
  */
 export function buildBm03BodyFromWizardSnapshot(snapshot) {

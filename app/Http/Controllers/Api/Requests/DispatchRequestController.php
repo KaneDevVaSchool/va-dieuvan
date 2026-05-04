@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Requests\CreateDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DecideDispatchRequestRequest;
+use App\Http\Requests\Api\Requests\ExportDispatchRequestPdfRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
@@ -15,8 +16,10 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
+use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
 use App\Support\DispatchCargoShipmentProvisioner;
 use App\Support\Messages;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +49,6 @@ class DispatchRequestController extends Controller
     public function store(CreateDispatchRequestRequest $request)
     {
         $data = $request->validated();
-        unset($data['wizard_snapshot']);
 
         $departAt = Carbon::parse($data['depart_at']);
         $isUrgent = (bool) ($data['is_urgent'] ?? false);
@@ -92,6 +94,19 @@ class DispatchRequestController extends Controller
         }
 
         return $this->created($dispatchRequest);
+    }
+
+    public function exportPdf(ExportDispatchRequestPdfRequest $request, DispatchRequest $dispatchRequest)
+    {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $data = DispatchRequestPdfPresenter::forModel($dispatchRequest);
+
+        return Pdf::loadView('pdf.dispatch-request', $data)
+            ->setPaper('a4', 'landscape')
+            ->stream('de-nghi-dieu-van.pdf', ['Attachment' => false]);
     }
 
     public function markPaperReceived(MarkDispatchRequestPaperReceivedRequest $request, DispatchRequest $dispatchRequest)

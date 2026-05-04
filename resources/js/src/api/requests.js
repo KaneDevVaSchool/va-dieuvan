@@ -1,4 +1,5 @@
 import { http } from './http'
+import { normalizeAxiosBlobError } from '../util/downloadPdfAttachment'
 
 /**
  * Laravel 10 `boolean` rule accepts true/false/0/1/'0'/'1' — not the string "true" from query strings.
@@ -78,5 +79,23 @@ export async function decideDispatchRequest(dispatchRequestId, payload, { idempo
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
   const { data } = await http.post(`/dispatch-requests/${dispatchRequestId}/decision`, payload, { headers })
   return data.data
+}
+
+/**
+ * Xuất PDF biểu mẫu BM.03 (inline preview).
+ * @param {number} dispatchRequestId
+ * @returns {Promise<Blob>}
+ */
+export async function exportDispatchRequestPdf(dispatchRequestId) {
+  try {
+    const res = await http.get(`/dispatch-requests/${dispatchRequestId}/export-pdf`, {
+      responseType: 'blob',
+      headers: { Accept: 'application/pdf' },
+    })
+    return res.data
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
 }
 

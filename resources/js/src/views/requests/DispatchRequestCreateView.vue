@@ -603,12 +603,26 @@
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm shadow-sm">
           <div class="font-semibold text-emerald-900">{{ t('dispatch_wizard.create.created', { id: created.id }) }}</div>
           <div class="mt-1 text-emerald-800">{{ t('dispatch_wizard.create.status', { status: created.status }) }}</div>
-          <RouterLink
-            class="mt-3 inline-flex rounded-lg border border-emerald-300 bg-white px-3 py-2 text-emerald-900 shadow-sm hover:bg-emerald-100/80"
-            to="/requests"
-          >
-            {{ t('dispatch_wizard.create.to_list') }}
-          </RouterLink>
+          <p v-if="pdfError" class="mt-2 text-xs font-medium text-rose-700">{{ pdfError }}</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <RouterLink
+              class="inline-flex rounded-lg border border-emerald-300 bg-white px-3 py-2 text-emerald-900 shadow-sm hover:bg-emerald-100/80"
+              to="/requests"
+            >
+              {{ t('dispatch_wizard.create.to_list') }}
+            </RouterLink>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 font-medium text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="pdfLoading"
+              @click="exportCreatedPdf"
+            >
+              <span v-if="pdfLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              <DocumentArrowDownIcon v-else class="h-4 w-4" aria-hidden="true" />
+              <span v-if="pdfLoading">{{ t('dispatch_wizard.create.exporting_pdf') }}</span>
+              <span v-else>{{ t('dispatch_wizard.create.export_pdf') }}</span>
+            </button>
+          </div>
         </div>
       </aside>
     </div>
@@ -804,6 +818,8 @@ const {
   loading,
   error,
   created,
+  pdfLoading,
+  pdfError,
   hasDraftSnapshot,
   clearDraftModalOpen,
   activeDraftId,
@@ -852,6 +868,7 @@ const {
   headerPrimaryLabel,
   headerPrimaryDisabled,
   primaryAction,
+  exportCreatedPdf,
   saveDraft,
   openClearDraftModal,
   closeClearDraftModal,

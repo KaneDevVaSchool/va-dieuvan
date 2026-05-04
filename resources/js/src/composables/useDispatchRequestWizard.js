@@ -9,7 +9,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../store'
 import { uploadAttachment } from '../api/attachments'
-import { createDispatchRequest } from '../api/requests'
+import { createDispatchRequest, exportDispatchRequestPdf } from '../api/requests'
 import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { parseMoneyVnd } from '../util/money'
@@ -149,6 +149,8 @@ export function useDispatchRequestWizard() {
   const error = ref('')
 
   const created = ref(null)
+  const pdfLoading = ref(false)
+  const pdfError = ref('')
   const draftSavedAt = ref(null)
   const hasDraftSnapshot = ref(false)
   const clearDraftModalOpen = ref(false)
@@ -748,6 +750,16 @@ export function useDispatchRequestWizard() {
     try {
       const { origin, destination } = computeApiOriginDestination()
       const freeNotes = form.value.free_notes?.trim() || ''
+      const formSnap = { ...form.value }
+      if (basisFile.value?.name) {
+        formSnap.basisFileName = basisFile.value.name
+      }
+      const wizard_snapshot = {
+        form: formSnap,
+        passengerRows: passengerRows.value.map((r) => ({ ...r })),
+        businessRows: businessRows.value.map((r) => ({ ...r })),
+        cargoRows: cargoRows.value.map((r) => ({ ...r })),
+      }
       const payload = {
         trip_type: form.value.trip_type,
         source_channel: form.value.source_channel,
@@ -762,6 +774,7 @@ export function useDispatchRequestWizard() {
             : null,
         notes: freeNotes || undefined,
         is_urgent: !!form.value.is_urgent,
+        wizard_snapshot,
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
       created.value = await createDispatchRequest(payload, { idempotencyKey })
@@ -804,6 +817,23 @@ export function useDispatchRequestWizard() {
     } finally {
       loading.value = false
       submitInFlight = false
+    }
+  }
+
+  async function exportCreatedPdf() {
+    pdfError.value = ''
+    if (!created.value?.id) return
+    pdfLoading.value = true
+    try {
+      const blob = await exportDispatchRequestPdf(created.value.id)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank', 'noopener,noreferrer')
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (e) {
+      pdfError.value = formatApiError(e, t('dispatch_wizard.create.pdf_error'))
+      console.error(e)
+    } finally {
+      pdfLoading.value = false
     }
   }
 
@@ -1171,6 +1201,8 @@ export function useDispatchRequestWizard() {
     loading,
     error,
     created,
+    pdfLoading,
+    pdfError,
     draftSavedAt,
     hasDraftSnapshot,
     clearDraftModalOpen,
@@ -1242,6 +1274,7 @@ export function useDispatchRequestWizard() {
     headerPrimaryLabel,
     headerPrimaryDisabled,
     primaryAction,
+    exportCreatedPdf,
     saveDraft,
     openClearDraftModal,
     closeClearDraftModal,
