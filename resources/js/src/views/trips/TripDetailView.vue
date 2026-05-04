@@ -707,11 +707,7 @@
                   </div>
                 </div>
 
-                <div
-                  class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 shadow-sm"
-                  :class="hireExternal ? 'pointer-events-none opacity-45' : ''"
-                >
-                  <div class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ t('trip_detail.coordination.assign_pair_title') }}</div>
+                <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 shadow-sm">
                   <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.coordination.driver_default_vehicle_hint') }}</p>
                   <p v-if="coordinationScheduleHint" class="mt-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-slate-700">
                     {{ coordinationScheduleHint }}
@@ -724,43 +720,19 @@
                   </p>
                   <p v-if="sameDayTripsLoading" class="mt-2 text-[11px] text-slate-500">{{ t('trip_detail.coordination.schedule_loading') }}</p>
                   <p v-if="sameDayTripsError" class="mt-2 text-[11px] text-rose-700">{{ sameDayTripsError }}</p>
-                  <p v-if="busyResourcesHint && !hireExternal" class="mt-2 text-[11px] text-amber-800">{{ busyResourcesHint }}</p>
-                  <div class="mt-4 grid gap-4 sm:grid-cols-1">
-                    <Select
-                      v-model="vehicleChoice"
-                      :disabled="hireExternal"
-                      :label="t('trip_detail.coordination.assign_vehicle')"
-                      :placeholder="t('trip_detail.ops.form.pick_vehicle')"
-                    >
-                      <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                      <option
-                        v-for="v in sortedVehicles"
-                        :key="v.id"
-                        :value="String(v.id)"
-                        :disabled="isVehicleBusy(v.id)"
-                        :title="vehicleOptionTitle(v.id)"
-                      >
-                        {{ vehicleOptionLabel(v) }}
-                      </option>
-                    </Select>
-                    <Select
-                      v-model="driverChoice"
-                      :disabled="hireExternal"
-                      :label="t('trip_detail.coordination.assign_driver')"
-                      :placeholder="t('trip_detail.ops.form.pick_driver')"
-                    >
-                      <option value="">{{ t('trip_detail.ops.form.keep_or_clear') }}</option>
-                      <option
-                        v-for="d in sortedDrivers"
-                        :key="d.id"
-                        :value="String(d.id)"
-                        :disabled="isDriverBusy(d.id)"
-                        :title="driverOptionTitle(d.id)"
-                      >
-                        {{ driverOptionLabel(d) }}
-                      </option>
-                    </Select>
-                  </div>
+                  <p v-if="busyResourcesHint && dispatchResources?.mode !== 'external'" class="mt-2 text-[11px] text-amber-800">{{ busyResourcesHint }}</p>
+                  <ResourcePanel
+                    v-if="trip?.id"
+                    ref="resourcePanelRef"
+                    :trip-id="trip.id"
+                    :available-count="suitableVehiclesCount"
+                    :busy-vehicle-ids="busyVehicleIdList"
+                    :busy-driver-ids="busyDriverIdList"
+                    :trip-snapshot="coordinationTripSnapshot"
+                    :can-quick-create-vendor="canQuickCreateProvider"
+                    @update:resources="onDispatchResourcesUpdate"
+                    @create-vendor="openProviderModal"
+                  />
                   <p v-if="suitableVehiclesHint" class="mt-2 text-xs font-medium text-emerald-800">{{ suitableVehiclesHint }}</p>
                   <p v-if="selectedVehicleSeatsWarning" class="mt-2 text-xs font-medium text-rose-700">{{ selectedVehicleSeatsWarning }}</p>
                 </div>
@@ -784,50 +756,6 @@
                       </span>
                     </li>
                   </ul>
-                </div>
-
-                <label
-                  class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-slate-300"
-                >
-                  <input v-model="hireExternal" type="checkbox" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                  {{ t('trip_detail.coordination.hire_external') }}
-                </label>
-                <p v-if="hireExternal" class="-mt-2 text-[11px] leading-snug text-slate-500">{{ t('trip_detail.coordination.external_mode_hint') }}</p>
-
-                <div v-if="hireExternal" class="grid max-w-full gap-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-4 sm:grid-cols-1">
-                  <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
-                    <div class="min-w-0 flex-1">
-                      <Select
-                        v-model="providerChoice"
-                        :label="t('trip_detail.coordination.provider_select')"
-                        :placeholder="t('trip_detail.coordination.provider_placeholder')"
-                      >
-                        <option value="">{{ t('trip_detail.coordination.provider_placeholder') }}</option>
-                        <option v-for="p in transportProviders" :key="p.id" :value="String(p.id)">
-                          {{ p.name }}<template v-if="p.type"> · {{ providerTypeLabel(p.type) }}</template>
-                        </option>
-                      </Select>
-                    </div>
-                    <Button
-                      v-if="canQuickCreateProvider"
-                      type="button"
-                      variant="secondary"
-                      class="h-10 w-full shrink-0 whitespace-nowrap sm:h-auto sm:w-auto sm:self-end sm:!px-3"
-                      @click="openProviderModal"
-                    >
-                      {{ t('trip_detail.coordination.provider_quick_add') }}
-                    </Button>
-                  </div>
-                  <Input
-                    v-model="externalVehicleRef"
-                    :label="t('trip_detail.coordination.external_vehicle')"
-                    :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
-                  />
-                  <Input
-                    v-model="externalDriverRef"
-                    :label="t('trip_detail.coordination.external_driver')"
-                    :placeholder="t('trip_detail.coordination.external_driver_ph')"
-                  />
                 </div>
 
                 <div>
@@ -1126,7 +1054,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -1143,9 +1071,10 @@ import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
+import ResourcePanel from '../../components/dispatch/ResourcePanel.vue'
 import { addTripEvent, assignTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
 import { submitTripCost } from '../../api/costs'
-import { listVehicles, listDrivers, listTransportProviders, createTransportProvider } from '../../api/operational'
+import { listVehicles, createTransportProvider } from '../../api/operational'
 import { uploadAttachment, deleteAttachment } from '../../api/attachments'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripStatus, labelTripType } from '../../util/labels'
@@ -1196,12 +1125,6 @@ function formatApiMessage(e) {
   return t('trip_detail.messages.error')
 }
 
-function defaultVehicleIdForDriver(driverId) {
-  if (driverId == null || String(driverId).trim() === '') return null
-  const v = vehicles.value.find((x) => x.default_driver && String(x.default_driver.id) === String(driverId))
-  return v ? String(v.id) : null
-}
-
 const trip = ref(null)
 const loading = ref(true)
 const loadError = ref('')
@@ -1218,27 +1141,19 @@ const assigning = ref(false)
 const rejecting = ref(false)
 const assignMsg = ref('')
 const assignFeedbackKind = ref('')
-const suppressDriverVehicleSync = ref(false)
-const needsVehicleResync = ref(false)
 const statusing = ref(false)
 const vehicles = ref([])
-const drivers = ref([])
 const sameDayTrips = ref([])
 const sameDayTripsLoading = ref(false)
 const sameDayTripsError = ref('')
 
 const TRIP_ASSIGN_CONFLICT_STATUSES = ['assigned', 'driver_confirmed', 'in_progress']
 const resourceHint = ref('')
-const vehicleChoice = ref('')
-const driverChoice = ref('')
 const attachInputRef = ref(null)
 const mapExpanded = ref(false)
-const hireExternal = ref(false)
-const externalVehicleRef = ref('')
-const externalDriverRef = ref('')
 const coordinationNotes = ref('')
-const transportProviders = ref([])
-const providerChoice = ref('')
+const resourcePanelRef = ref(null)
+const dispatchResources = ref(null)
 const providerModalOpen = ref(false)
 const newProviderName = ref('')
 const newProviderType = ref('vendor')
@@ -1989,6 +1904,26 @@ const busyVehicleIds = computed(() => {
   return busy
 })
 
+const busyVehicleIdList = computed(() => [...busyVehicleIds.value])
+const busyDriverIdList = computed(() => [...busyDriverIds.value])
+
+const coordinationTripSnapshot = computed(() => {
+  if (!trip.value?.id) return null
+  return {
+    tripId: trip.value.id,
+    vehicleId: trip.value.vehicle_id ?? null,
+    driverId: trip.value.driver_id ?? null,
+    transportProviderId: trip.value.transport_provider_id ?? null,
+    externalVehicleRef: trip.value.external_vehicle_ref ?? '',
+    externalDriverRef: trip.value.external_driver_ref ?? '',
+    lockVersion: trip.value.lock_version ?? 0,
+  }
+})
+
+function onDispatchResourcesUpdate(p) {
+  dispatchResources.value = p
+}
+
 const overlappingOtherTrips = computed(() => {
   const w = scheduleWindowForConflicts.value
   const cur = trip.value
@@ -2014,40 +1949,10 @@ const overlappingOtherTrips = computed(() => {
   return out
 })
 
-const sortedDrivers = computed(() => {
-  const list = [...drivers.value]
-  const busy = busyDriverIds.value
-  const loc = locale.value === 'en' ? 'en' : 'vi'
-  list.sort((a, b) => {
-    const ab = busy.has(a.id) ? 1 : 0
-    const bb = busy.has(b.id) ? 1 : 0
-    if (ab !== bb) return ab - bb
-    return (a.full_name || '').localeCompare(b.full_name || '', loc, { sensitivity: 'base' })
-  })
-  return list
-})
-
-const sortedVehicles = computed(() => {
-  const list = [...vehicles.value]
-  const busy = busyVehicleIds.value
-  const need = neededSeats.value
-  const score = (v) => {
-    const seats = v.seat_count ?? 0
-    const fit = seats >= need ? 2 : 0
-    const free = busy.has(v.id) ? 0 : 1
-    return fit + free
-  }
-  list.sort((a, b) => {
-    const diff = score(b) - score(a)
-    if (diff !== 0) return diff
-    return (a.license_plate || '').localeCompare(b.license_plate || '', undefined, { numeric: true })
-  })
-  return list
-})
-
 const selectedVehicleSeatsWarning = computed(() => {
-  if (hireExternal.value || !vehicleChoice.value) return ''
-  const v = vehicles.value.find((x) => String(x.id) === String(vehicleChoice.value))
+  const p = dispatchResources.value
+  if (!p || p.mode !== 'internal' || !p.primaryVehicleId) return ''
+  const v = vehicles.value.find((x) => String(x.id) === String(p.primaryVehicleId))
   if (!v) return ''
   const n = v.seat_count ?? 0
   if (n >= neededSeats.value) return ''
@@ -2056,15 +1961,12 @@ const selectedVehicleSeatsWarning = computed(() => {
 
 const assignReady = computed(() => {
   if (!canAssign.value) return false
-  const hasExternal = hireExternal.value && providerChoice.value && String(providerChoice.value).trim() !== ''
-  const hasInternal = vehicleChoice.value && driverChoice.value
-  if (!hasInternal && !hasExternal) return false
-  if (hireExternal.value && !hasExternal) return false
-  if (!hireExternal.value && !hasInternal) return false
-  if (!hireExternal.value) {
-    if (driverChoice.value && busyDriverIds.value.has(Number(driverChoice.value))) return false
-    if (vehicleChoice.value && busyVehicleIds.value.has(Number(vehicleChoice.value))) return false
-    const v = vehicles.value.find((x) => String(x.id) === String(vehicleChoice.value))
+  const p = dispatchResources.value
+  if (!p?.readyForSubmit) return false
+  if (p.mode === 'internal') {
+    if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) return false
+    if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) return false
+    const v = vehicles.value.find((x) => Number(x.id) === Number(p.vehicle_id))
     if (v && (v.seat_count ?? 0) < neededSeats.value) return false
   }
   return true
@@ -2082,39 +1984,6 @@ const busyResourcesHint = computed(() => {
   if (!busyDriverIds.value.size && !busyVehicleIds.value.size) return ''
   return t('trip_detail.coordination.busy_resources_hint')
 })
-
-function isDriverBusy(id) {
-  return busyDriverIds.value.has(id)
-}
-
-function isVehicleBusy(id) {
-  return busyVehicleIds.value.has(id)
-}
-
-function driverOptionLabel(d) {
-  const base = `${d.full_name}${d.phone ? ` · ${d.phone}` : ''}`
-  return isDriverBusy(d.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
-}
-
-function driverOptionTitle(id) {
-  return isDriverBusy(id) ? t('trip_detail.coordination.option_busy_title_driver') : ''
-}
-
-function vehicleOptionLabel(v) {
-  const base = `${v.license_plate} · ${v.type ?? '—'}${v.seat_count ? ` (${v.seat_count})` : ''}`
-  return isVehicleBusy(v.id) ? `${base} — ${t('trip_detail.coordination.option_busy_suffix')}` : base
-}
-
-function vehicleOptionTitle(id) {
-  return isVehicleBusy(id) ? t('trip_detail.coordination.option_busy_title_vehicle') : ''
-}
-
-function providerTypeLabel(type) {
-  const t0 = String(type ?? '').toLowerCase()
-  if (t0 === 'taxi') return t('resources.provider_form_type_taxi')
-  if (t0 === 'vendor') return t('resources.provider_form_type_vendor')
-  return type ?? '—'
-}
 
 async function loadSameDayTrips() {
   const key = scheduleDateKeyForList.value
@@ -2297,22 +2166,6 @@ async function submitQuickCost() {
   }
 }
 
-async function loadTransportProvidersList() {
-  try {
-    const res = await listTransportProviders({ is_active: true, per_page: 200 })
-    transportProviders.value = res.items ?? []
-  } catch {
-    transportProviders.value = []
-  }
-}
-
-function openProviderModal() {
-  providerModalError.value = ''
-  newProviderName.value = ''
-  newProviderType.value = 'vendor'
-  providerModalOpen.value = true
-}
-
 async function submitQuickProvider() {
   providerModalError.value = ''
   const name = newProviderName.value.trim()
@@ -2323,14 +2176,23 @@ async function submitQuickProvider() {
   providerCreating.value = true
   try {
     const created = await createTransportProvider({ name, type: newProviderType.value, is_active: true })
-    await loadTransportProvidersList()
-    if (created?.id != null) providerChoice.value = String(created.id)
+    await resourcePanelRef.value?.refreshOptions?.()
+    if (created?.id != null) {
+      resourcePanelRef.value?.pickProvider?.(created.id, newProviderType.value)
+    }
     providerModalOpen.value = false
   } catch (e) {
     providerModalError.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
   } finally {
     providerCreating.value = false
   }
+}
+
+function openProviderModal() {
+  providerModalError.value = ''
+  newProviderName.value = ''
+  newProviderType.value = 'vendor'
+  providerModalOpen.value = true
 }
 
 async function removeAttachment(a) {
@@ -2385,32 +2247,16 @@ async function onAttachmentFile(ev) {
 async function loadResources() {
   resourceHint.value = ''
   try {
-    const [vr, dr, pr] = await Promise.allSettled([
-      listVehicles({ status: 'ready', per_page: 150 }),
-      listDrivers({ employment_status: 'active', availability_status: 'available', per_page: 150 }),
-      listTransportProviders({ is_active: true, per_page: 200 }),
-    ])
-    if (vr.status === 'fulfilled') {
-      vehicles.value = vr.value.items ?? []
-    } else {
-      resourceHint.value = t('trip_detail.ops.messages.vehicles_load_failed')
-    }
-    if (dr.status === 'fulfilled') {
-      drivers.value = dr.value.items ?? []
-    } else {
-      resourceHint.value = resourceHint.value || t('trip_detail.ops.messages.drivers_load_failed')
-    }
-    if (pr.status === 'fulfilled') {
-      transportProviders.value = pr.value.items ?? []
-    }
+    const vr = await listVehicles({ status: 'ready', per_page: 150 })
+    vehicles.value = vr.items ?? []
   } catch {
-    resourceHint.value = t('trip_detail.ops.messages.resources_load_failed')
+    resourceHint.value = t('trip_detail.ops.messages.vehicles_load_failed')
+    vehicles.value = []
   }
 }
 
 async function load(opts = {}) {
   const silent = opts.silent === true
-  needsVehicleResync.value = false
   if (!silent) {
     loading.value = true
     loadError.value = ''
@@ -2422,18 +2268,6 @@ async function load(opts = {}) {
     const data = await getTrip(route.params.id)
     trip.value = data
     assign.value.lock_version = trip.value.lock_version ?? 0
-    suppressDriverVehicleSync.value = true
-    try {
-      vehicleChoice.value = trip.value.vehicle_id ? String(trip.value.vehicle_id) : ''
-      driverChoice.value = trip.value.driver_id ? String(trip.value.driver_id) : ''
-      await nextTick()
-    } finally {
-      suppressDriverVehicleSync.value = false
-    }
-    hireExternal.value = !!trip.value.transport_provider_id
-    externalVehicleRef.value = trip.value.external_vehicle_ref ?? ''
-    externalDriverRef.value = trip.value.external_driver_ref ?? ''
-    providerChoice.value = trip.value.transport_provider_id ? String(trip.value.transport_provider_id) : ''
     rescheduleDepartLocal.value = toDatetimeLocalValue(trip.value.depart_at)
     coordinationNotes.value = ''
     await loadResources()
@@ -2455,32 +2289,27 @@ async function load(opts = {}) {
 async function onApproveTransfer() {
   assignMsg.value = ''
   assignFeedbackKind.value = ''
-  const hasInternal = vehicleChoice.value && driverChoice.value
-  const hasExternal = hireExternal.value && providerChoice.value && String(providerChoice.value).trim() !== ''
-
-  if (!hasInternal && !hasExternal) {
-    assignFeedbackKind.value = 'error'
-    assignMsg.value = t('trip_detail.coordination.validation_assign')
-    return
-  }
-  if (hireExternal.value && !hasExternal) {
-    assignFeedbackKind.value = 'error'
-    assignMsg.value = t('trip_detail.coordination.validation_provider')
-    return
-  }
-  if (!hireExternal.value && !hasInternal) {
+  const ok = resourcePanelRef.value?.validate?.()
+  if (!ok) {
     assignFeedbackKind.value = 'error'
     assignMsg.value = t('trip_detail.coordination.validation_assign')
     return
   }
 
-  if (!hireExternal.value) {
-    if (driverChoice.value && isDriverBusy(Number(driverChoice.value))) {
+  const p = dispatchResources.value
+  if (!p?.readyForSubmit) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = t('trip_detail.coordination.validation_assign')
+    return
+  }
+
+  if (p.mode === 'internal') {
+    if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) {
       assignFeedbackKind.value = 'error'
       assignMsg.value = t('trip_detail.coordination.validation_busy_driver')
       return
     }
-    if (vehicleChoice.value && isVehicleBusy(Number(vehicleChoice.value))) {
+    if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) {
       assignFeedbackKind.value = 'error'
       assignMsg.value = t('trip_detail.coordination.validation_busy_vehicle')
       return
@@ -2489,20 +2318,14 @@ async function onApproveTransfer() {
 
   assigning.value = true
   try {
-    const payload = { lock_version: assign.value.lock_version }
-    if (hireExternal.value && hasExternal) {
-      payload.transport_provider_id = Number(providerChoice.value)
-      payload.vehicle_id = null
-      payload.driver_id = null
-    } else {
-      payload.transport_provider_id = null
-      if (vehicleChoice.value) payload.vehicle_id = Number(vehicleChoice.value)
-      if (driverChoice.value) payload.driver_id = Number(driverChoice.value)
+    const payload = {
+      lock_version: assign.value.lock_version,
+      vehicle_id: p.vehicle_id,
+      driver_id: p.driver_id,
+      transport_provider_id: p.transport_provider_id,
+      external_vehicle_ref: p.external_vehicle_ref,
+      external_driver_ref: p.external_driver_ref,
     }
-    if (externalVehicleRef.value?.trim()) payload.external_vehicle_ref = externalVehicleRef.value.trim()
-    else payload.external_vehicle_ref = null
-    if (externalDriverRef.value?.trim()) payload.external_driver_ref = externalDriverRef.value.trim()
-    else payload.external_driver_ref = null
 
     await assignTrip(route.params.id, payload, { idempotencyKey: newIdempotencyKey() })
 
@@ -2581,34 +2404,6 @@ async function addNote() {
 }
 
 const statusForm = ref({ status: 'in_progress', message: '' })
-
-watch(hireExternal, (on) => {
-  if (!on) providerChoice.value = ''
-  if (on) needsVehicleResync.value = false
-})
-
-function syncVehicleToDriver(driverId) {
-  if (suppressDriverVehicleSync.value || hireExternal.value) return
-  const id = driverId ?? driverChoice.value
-  if (!id) {
-    needsVehicleResync.value = false
-    return
-  }
-  const vid = defaultVehicleIdForDriver(id)
-  if (vid) {
-    vehicleChoice.value = vid
-    needsVehicleResync.value = false
-  } else {
-    needsVehicleResync.value = true
-  }
-}
-
-watch(driverChoice, (id) => syncVehicleToDriver(id), { flush: 'sync' })
-
-watch(vehicles, () => {
-  if (!needsVehicleResync.value) return
-  syncVehicleToDriver()
-})
 
 watch(
   () => [trip.value?.id, scheduleDateKeyForList.value],
