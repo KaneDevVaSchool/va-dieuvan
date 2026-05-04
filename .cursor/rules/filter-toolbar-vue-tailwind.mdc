@@ -1,0 +1,59 @@
+---
+description: Quy ước UI thanh bộ lọc (filter toolbar) Vue 3 + Tailwind — giống Costs / phễu + chip details
+globs: resources/js/**/*.vue
+alwaysApply: false
+---
+
+# Filter toolbar (Vue 3 + Tailwind)
+
+Khi xây dựng thanh lọc dạng “card gradient + phễu tóm tắt + chip `<details>` + hành động bên phải”, bám theo mẫu sau.
+
+## Bố cục tổng thể
+
+1. **Vỏ ngoài** — một `div` `relative z-10`: `rounded-2xl`, `border` viền violet nhạt (`border-violet-200/70`, dark `dark:border-violet-800/50`), `bg-gradient-to-r` từ `slate-50` qua `violet-50/50` tới `indigo-50/30`, `shadow-md shadow-violet-500/5`, `ring-1 ring-violet-200/40`, `backdrop-blur-sm`, padding `px-2 py-2` / `sm:px-3 sm:py-2.5`. Luôn có bản **dark** tương ứng (`dark:from-slate-950`, v.v.).
+
+2. **Hàng trong** — `flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2`.
+
+3. **Thứ tự từ trái sang phải**
+   - Panel **phễu** (`<details>` đầu tiên): tóm tắt bộ lọc đang áp dụng + checkbox “hiển thị trên thanh” + nút xóa hết.
+   - **Gạch dọc** phân cách: `hidden h-6 w-px ... sm:block`.
+   - **Vùng chip lọc** — `flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3`: mỗi bộ lọc là một `<details class="group relative min-w-0 shrink-0">` (thêm `max-w-full` nếu cần).
+   - **Cụm hành động** — `ml-auto flex shrink-0 ... border-l border-violet-200/70 pl-2`: nút xóa bộ lọc (icon) + CTA chính (vd. `bg-va-800`).
+
+## Panel phễu (details đầu)
+
+- **`<summary>`**: `cursor-pointer list-none`, ẩn marker mặc định `[&::-webkit-details-marker]:hidden`; style “thẻ nổi” `rounded-xl border border-white/90 bg-white/95`, icon phễu + chevron; hover teal nhẹ (`hover:border-teal-200/70`).
+- **Dropdown**: `absolute left-0 top-[calc(100%+8px)] z-[100]`, `min-w-[260px]`, `rounded-2xl border`, nền trắng / dark `slate-900`, `shadow-xl`.
+- **Khối “Đang áp dụng”**: header `text-xs font-semibold uppercase tracking-wide text-violet-700` (có `border-b` + gradient header nhạt).
+- **Danh sách điều kiện**: `ul space-y-2 text-sm`; khi rỗng hiển thị một dòng muted: “Chưa chọn điều kiện lọc.”
+- **“Hiển thị bộ lọc trên thanh”**: tiêu đề phụ + mô tả `text-[10px] leading-snug text-slate-500`; danh sách checkbox `max-h-[min(40vh,220px)] overflow-y-auto`.
+- **ID checkbox**: `{module}-filter-vis-{key}` (vd. `costs-filter-vis-status`) và `for` trùng `id`.
+- **Nút** “Xóa tất cả bộ lọc”: full width, `rounded-xl border`, `mt-3`.
+
+## Mỗi chip lọc (`<details>`)
+
+- **`<summary>`**: cùng họ border/glass với chip nhỏ hơn (`rounded-lg`, `px-2 py-1.5`); ba phần: **nhãn** (`whitespace-nowrap text-sm text-slate-600`), **giá trị hiện tại** (`truncate text-sm font-medium text-slate-900 max-w-[10rem]` hoặc tương đương), **chevron** `h-4 w-4 shrink-0 text-slate-400`.
+- **Panel**: `absolute left-0 top-[calc(100%+6px)] z-50`, `rounded-xl border border-slate-200/90`, `shadow-lg ring-1 ring-slate-900/5`, `min-w-[220px]` hoặc `w-[min(100vw-1.5rem,320px)]` tùy nội dung; dark: `dark:border-slate-700 dark:bg-slate-900`.
+
+### Loại điều khiển trong panel
+
+- **Chọn một trong danh sách**: `ul` với `button type="button"` full width; mục **đang chọn** — `bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100`; mục khác — `hover:bg-slate-50 dark:hover:bg-slate-800`.
+- **Khoảng ngày**: hai `input type="date"`, `flex flex-col gap-2 sm:flex-row sm:items-center`, kẹp “—” chỉ hiện từ `sm`.
+- **Chuyến / tìm trong danh sách lớn**: `input type="search"` + `ul max-h-[min(50vh,280px)] overflow-y-auto` + dòng trợ giúp `text-[11px]` khi không có dữ liệu.
+
+## Điều khiển nằm trực tiếp trên thanh (không bọc details)
+
+- **Tìm trong trang**: `type="search"`, `aria-label` + `placeholder` + `title` đồng bộ tiếng Việt; class input thống nhất (vd. `costs-input`) nếu project đã có.
+- **Số dòng/trang**: `label` bọc `select`, nhãn hiển thị dùng `sr-only`; `select` `h-9 rounded-md border-0 bg-white/90 ring-1 ring-slate-200/80 focus:ring-2 focus:ring-teal-500/30`; chữ “dòng” phụ `hidden sm:inline text-xs`.
+
+## Trạng thái & accessibility
+
+- Nút xóa nhanh trên thanh: `title` + `aria-label` “Xóa bộ lọc”; có thể overlay badge X nhỏ trên icon phễu khi đang có lọc.
+- Mọi `select` / ô tìm quan trọng cần `aria-label` hoặc nhãn liên kết rõ.
+
+## Logic đi kèm (gợi ý)
+
+- Tách **trạng thái lọc thực tế** (query/API) khỏi **visibility** (checkbox “hiển thị trên thanh”): ẩn chip không xóa điều kiện; tóm tắt trong phễu vẫn đầy đủ.
+- Đặt prefix state/composable theo module (`useCostsFilters`, v.v.) để ID và query params không trùng.
+
+Khi thêm màn mới, **copy cấu trúc DOM và lớp Tailwind theo đúng các nhóm trên** rồi chỉ thay nhãn tiếng Việt, key filter và options — không phát minh layout khác trừ khi có lý do UX rõ ràng.
