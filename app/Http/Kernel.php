@@ -69,5 +69,7 @@ class Kernel extends HttpKernel
         'idempotency' => \App\Http\Middleware\IdempotencyKey::class,
         'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
         'dispatch.web' => \App\Http\Middleware\EnsureDispatchWebAccess::class,
+        'dispatch.staff' => \App\Http\Middleware\EnsureDispatchStaffAccess::class,
+        'driver.spa' => \App\Http\Middleware\EnsureDriverWebAccess::class,
     ];
 }
