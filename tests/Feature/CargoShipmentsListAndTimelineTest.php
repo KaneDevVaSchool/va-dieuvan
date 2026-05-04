@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CargoShipment;
+use App\Models\DispatchRequest;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,6 +53,49 @@ class CargoShipmentsListAndTimelineTest extends TestCase
         $q->assertOk();
         $this->assertSame(1, $q->json('data.meta.total'));
         $this->assertSame('CGO-TEST-02', $q->json('data.items.0.tracking_code'));
+    }
+
+    public function test_list_excludes_cargo_linked_to_soft_deleted_dispatch_request(): void
+    {
+        $user = $this->seedDispatcher();
+        $requester = User::factory()->create();
+        $this->actingAs($user);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'cargo',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDay(),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+        ]);
+
+        CargoShipment::create([
+            'dispatch_request_id' => $dr->id,
+            'pickup_address' => 'Trash test',
+            'tracking_code' => 'CGO-TRASH-LIST',
+            'status' => 'pending',
+        ]);
+
+        CargoShipment::create([
+            'pickup_address' => 'Standalone',
+            'tracking_code' => 'CGO-STANDALONE',
+            'status' => 'pending',
+        ]);
+
+        $before = $this->getJson('/api/cargo-shipments');
+        $before->assertOk();
+        $this->assertSame(2, $before->json('data.meta.total'));
+
+        $dr->delete();
+
+        $after = $this->getJson('/api/cargo-shipments');
+        $after->assertOk();
+        $this->assertSame(1, $after->json('data.meta.total'));
+        $this->assertSame('CGO-STANDALONE', $after->json('data.items.0.tracking_code'));
     }
 
     public function test_timeline_includes_milestones(): void

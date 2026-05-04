@@ -34,6 +34,12 @@ class CargoController extends Controller
             ])
             ->orderByDesc('id');
 
+        // Dispatch requests use soft deletes; align with Trip list (`whereHas('dispatchRequest')`).
+        $q->where(function (Builder $w) {
+            $w->whereNull('dispatch_request_id')
+                ->orWhereHas('dispatchRequest');
+        });
+
         $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
 
         $q->when(isset($data['from']), fn (Builder $b) => $b->where(

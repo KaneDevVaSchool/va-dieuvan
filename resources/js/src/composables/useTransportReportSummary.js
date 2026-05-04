@@ -340,7 +340,9 @@ function createSharedApi() {
   })
 
   const visibleDimensionFilters = computed(() =>
-    dimensionFilters.value.filter((fd) => dimensionFilterBarVisible.value[fd.id] !== false),
+    dimensionFilters.value.filter(
+      (fd) => fd && fd.id && Array.isArray(fd.options) && dimensionFilterBarVisible.value[fd.id] !== false,
+    ),
   )
 
   const rangeDisplayFormatted = computed(() => {
@@ -539,6 +541,7 @@ function createSharedApi() {
       emptyText: emptyChartLabel.value,
     })
     if (base.graphic) return base
+    const seriesList = Array.isArray(base.series) ? base.series.filter((s) => s && typeof s === 'object') : []
     return {
       ...base,
       backgroundColor: 'transparent',
@@ -553,7 +556,7 @@ function createSharedApi() {
         axisLabel: { color: '#94a3b8', fontSize: 10 },
         splitLine: { lineStyle: { color: 'rgba(148,163,184,0.2)' } },
       },
-      series: base.series.map((s) => ({
+      series: seriesList.map((s) => ({
         ...s,
         lineStyle: { ...s.lineStyle, color: '#60a5fa' },
         itemStyle: { color: '#60a5fa' },

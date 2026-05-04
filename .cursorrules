@@ -1,22 +1,71 @@
-# CORE RULES (ALWAYS APPLY)
+---
 
-- Explicit > clever
-- 1 function = 1 responsibility
-- Không viết dead code / TODO
+## alwaysApply: true
 
-# ARCHITECTURE
+# CORE PRINCIPLES
 
-- Controller must be thin
-- Business logic → Service
-- No API call in Vue component
+* Explicit > clever
+* 1 function = 1 responsibility
+* No dead code / TODO
 
-# STRICT
+# ARCHITECTURE (MANDATORY)
 
-- Không đổi architecture
-- Không refactor ngoài scope
-- Chỉ sửa đúng yêu cầu
+* Laravel:
 
-# OUTPUT
+  * Controller must be thin
+  * Business logic → Service
+* Vue:
 
-- Code sạch, readable, maintainable
-- Giải thích ngắn gọn nếu cần
+  * No API calls in component
+  * Component → Store → Service
+
+# SCOPE CONTROL (CRITICAL)
+
+* Only modify what is explicitly requested
+* Do NOT refactor unrelated code
+* Do NOT change architecture unless asked
+* Prefer minimal changes over large rewrites
+
+# CODE QUALITY
+
+* Clean, readable, maintainable
+* Avoid over-engineering
+* Prefer simple and correct solution
+
+# UI/UX STANDARD
+
+* Clean, minimal, no visual noise
+* No tooltip / helper text unless required
+* Consistent spacing and layout
+* Use Tailwind (utility-first)
+
+# INTERACTION RULES
+
+* Show loading state when needed
+* Disable actions while processing
+* Confirm destructive actions (delete, etc.)
+* Provide success / error feedback
+
+# PERFORMANCE AWARENESS
+
+* Avoid unnecessary re-render (Vue)
+* Avoid N+1 queries (Laravel)
+* Do not introduce heavy logic in UI layer
+
+# RESPONSE RULES
+
+* Return only necessary code
+* Do not include unrelated changes
+* Explain briefly in Vietnamese if needed
+
+# SAFETY RULES
+
+* Do not break existing behavior
+* No side effects
+* No hidden logic changes
+
+# DEFAULT MINDSET
+
+* Think before coding
+* Fix root cause, not symptoms
+* Optimize for long-term maintainability

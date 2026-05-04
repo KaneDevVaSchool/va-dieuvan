@@ -240,7 +240,10 @@
               class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
             >
               <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                <li v-for="opt in fd.options" :key="String(opt.value) + opt.label">
+                <li
+                  v-for="(opt, optIdx) in (fd.options || []).filter((o) => o && typeof o === 'object')"
+                  :key="fd.id + '-' + optIdx + '-' + String(opt.value)"
+                >
                   <button
                     type="button"
                     :class="[
@@ -251,7 +254,7 @@
                     ]"
                     @click="fd.pick(opt.value)"
                   >
-                    {{ opt.label }}
+                    {{ opt.label ?? '—' }}
                   </button>
                 </li>
               </ul>
