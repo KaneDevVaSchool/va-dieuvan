@@ -225,10 +225,30 @@
                       @change="patchRow(row, { upgrade_notice: $event.target.checked })"
                     />
                   </td>
-                  <td class="py-2.5 pl-2 pr-4 text-right align-middle">
-                    <Button variant="danger" class="!px-2.5 !py-1 text-xs" :disabled="saving" @click="confirmRemove(row)">
-                      {{ t('feature_toggles.delete') }}
-                    </Button>
+                  <td class="relative py-2.5 pl-2 pr-4 text-right align-middle">
+                    <details class="group/action-menu relative inline-block text-right">
+                      <summary
+                        class="inline-flex cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 [&::-webkit-details-marker]:hidden dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                        :class="saving ? 'pointer-events-none opacity-40' : ''"
+                      >
+                        <EllipsisVerticalIcon class="h-5 w-5" aria-hidden="true" />
+                        <span class="sr-only">{{ t('feature_toggles.col_actions') }}</span>
+                      </summary>
+                      <div
+                        class="absolute right-0 top-[calc(100%+6px)] z-[60] min-w-[12.5rem] rounded-xl border border-slate-200/90 bg-white py-1 text-left text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950/50"
+                        @click.stop
+                      >
+                        <button
+                          type="button"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-700 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/40"
+                          :disabled="saving"
+                          @click="closeRowActionMenuThen(() => confirmRemove(row))"
+                        >
+                          <TrashIcon class="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
+                          {{ t('feature_toggles.delete') }}
+                        </button>
+                      </div>
+                    </details>
                   </td>
                 </tr>
               </tbody>
@@ -275,9 +295,29 @@
                     @change="patchRow(row, { upgrade_notice: $event.target.checked })"
                   />
                 </label>
-                <Button variant="danger" class="w-full" :disabled="saving" @click="confirmRemove(row)">
-                  {{ t('feature_toggles.delete') }}
-                </Button>
+                <details class="group/action-menu relative">
+                  <summary
+                    class="flex cursor-pointer list-none items-center justify-center gap-2 rounded-lg border border-slate-200/90 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                    :class="saving ? 'pointer-events-none opacity-40' : ''"
+                  >
+                    <EllipsisVerticalIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                    {{ t('feature_toggles.col_actions') }}
+                  </summary>
+                  <div
+                    class="absolute left-0 right-0 top-[calc(100%+6px)] z-[60] rounded-xl border border-slate-200/90 bg-white py-1 text-left text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950/50"
+                    @click.stop
+                  >
+                    <button
+                      type="button"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-700 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/40"
+                      :disabled="saving"
+                      @click="closeRowActionMenuThen(() => confirmRemove(row))"
+                    >
+                      <TrashIcon class="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
+                      {{ t('feature_toggles.delete') }}
+                    </button>
+                  </div>
+                </details>
               </div>
             </div>
           </div>
@@ -285,50 +325,7 @@
       </template>
     </div>
 
-    <Card :title="t('feature_toggles.cluster_title')">
-      <div class="grid gap-3 sm:gap-4 md:grid-cols-2">
-        <details
-          v-for="(cl, ci) in navClusters"
-          :key="'cl' + ci"
-          class="group overflow-hidden rounded-xl border border-slate-200/90 bg-white dark:border-slate-700 dark:bg-slate-900/50"
-        >
-          <summary
-            class="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-900 outline-none ring-inset ring-teal-600/0 transition hover:bg-slate-50 focus-visible:ring-2 dark:text-slate-100 dark:hover:bg-slate-800/80 [&::-webkit-details-marker]:hidden"
-          >
-            <span class="flex items-center justify-between gap-2">
-              {{ t(cl.headingKey) }}
-              <ChevronDownIcon
-                class="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180"
-                aria-hidden="true"
-              />
-            </span>
-          </summary>
-          <div class="border-t border-slate-100 dark:border-slate-800">
-            <div
-              v-for="feat in cl.features"
-              :key="feat.featureKey + cl.headingKey"
-              class="border-b border-slate-100 px-4 py-3 last:border-b-0 dark:border-slate-800"
-            >
-              <div class="font-mono text-xs font-semibold text-teal-800 dark:text-teal-300">{{ feat.featureKey }}</div>
-              <ul class="mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
-                <li
-                  v-for="(ln, li) in feat.links"
-                  :key="li + ln.to"
-                  class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
-                >
-                  <span class="font-medium text-slate-800 dark:text-slate-200">{{ t(ln.labelKey) }}</span>
-                  <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
-                  <code
-                    class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                    >{{ ln.to }}</code
-                  >
-                </li>
-              </ul>
-            </div>
-          </div>
-        </details>
-      </div>
-    </Card>
+ 
 
     <div
       v-if="addModalOpen"
@@ -394,7 +391,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, FunnelIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, EllipsisVerticalIcon, FunnelIcon, MagnifyingGlassIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
@@ -544,6 +541,14 @@ function resetFilters() {
 function setStatusFilter(ev, v) {
   filterStatus.value = v
   closeParentDetails(ev)
+}
+
+function closeRowActionMenuThen(fn) {
+  return (ev) => {
+    const d = ev?.currentTarget?.closest?.('details')
+    if (d) d.open = false
+    fn()
+  }
 }
 
 function openAddModal() {

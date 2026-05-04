@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { FunnelIcon, ChevronDownIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { EllipsisVerticalIcon, FunnelIcon, ChevronDownIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import Card from '../../components/ui/Card.vue'
@@ -299,6 +299,14 @@ function setStatusFilter(ev, val) {
   closeParentDetails(ev)
 }
 
+function closeRowActionMenuThen(fn) {
+  return (ev) => {
+    const d = ev?.currentTarget?.closest?.('details')
+    if (d) d.open = false
+    fn()
+  }
+}
+
 onMounted(() => {
   loadFilterControlVisibility()
   load()
@@ -548,25 +556,39 @@ onMounted(() => {
                       {{ p.plain_summary ?? '—' }}
                     </p>
                   </td>
-                  <td class="py-2.5 pl-2 pr-4 text-right align-middle">
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      class="mr-1 !px-2.5 !py-1 text-xs ring-1 ring-slate-200/80 dark:ring-slate-600"
-                      :disabled="saving"
-                      @click="openEdit(p)"
-                    >
-                      Sửa
-                    </Button>
-                    <button
-                      type="button"
-                      class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-200/90 text-rose-600 transition hover:bg-rose-50 disabled:opacity-40 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40"
-                      :disabled="saving"
-                      aria-label="Xóa"
-                      @click="remove(p)"
-                    >
-                      <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                    </button>
+                  <td class="relative py-2.5 pl-2 pr-4 text-right align-middle">
+                    <details class="group/action-menu relative inline-block text-right">
+                      <summary
+                        class="inline-flex cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 [&::-webkit-details-marker]:hidden dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                        :class="saving ? 'pointer-events-none opacity-40' : ''"
+                      >
+                        <EllipsisVerticalIcon class="h-5 w-5" aria-hidden="true" />
+                        <span class="sr-only">Thao tác</span>
+                      </summary>
+                      <div
+                        class="absolute right-0 top-[calc(100%+6px)] z-[60] min-w-[12.5rem] rounded-xl border border-slate-200/90 bg-white py-1 text-left text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950/50"
+                        @click.stop
+                      >
+                        <button
+                          type="button"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50 disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                          :disabled="saving"
+                          @click="closeRowActionMenuThen(() => openEdit(p))"
+                        >
+                          <PencilSquareIcon class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+                          Sửa
+                        </button>
+                        <button
+                          type="button"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-700 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/40"
+                          :disabled="saving"
+                          @click="closeRowActionMenuThen(() => remove(p))"
+                        >
+                          <TrashIcon class="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
+                          Xóa
+                        </button>
+                      </div>
+                    </details>
                   </td>
                 </tr>
               </tbody>
