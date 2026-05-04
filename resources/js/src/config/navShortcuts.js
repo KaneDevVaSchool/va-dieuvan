@@ -6,7 +6,6 @@ export const NAV_SHORTCUT_ROUTES = {
   h: '/dispatcher',
   r: '/requests',
   t: '/trips',
-  p: '/payments',
   o: '/costs',
   a: '/audit-logs',
 }

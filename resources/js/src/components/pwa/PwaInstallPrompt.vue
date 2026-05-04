@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import { usePwaStore } from '../../store/pwa'
 
 const pwa = usePwaStore()
@@ -50,11 +50,6 @@ const visible = computed(
     pwa.deferredInstallPrompt != null,
 )
 
-function onBeforeInstall(e) {
-  e.preventDefault()
-  pwa.setDeferredInstallPrompt(e)
-}
-
 async function install() {
   const ev = pwa.deferredInstallPrompt
   if (!ev) return
@@ -66,12 +61,4 @@ async function install() {
 function dismiss() {
   pwa.dismissInstallPrompt()
 }
-
-onMounted(() => {
-  window.addEventListener('beforeinstallprompt', onBeforeInstall)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('beforeinstallprompt', onBeforeInstall)
-})
 </script>

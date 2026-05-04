@@ -1,0 +1,17 @@
+Apply:
+- @core.mdc
+- @vue.mdc
+- @ui.mdc
+
+
+Scope:
+- UI only
+- Keep logic
+
+Requirements:
+- reusable
+- clean
+- tailwind
+
+Output:
+- Full file

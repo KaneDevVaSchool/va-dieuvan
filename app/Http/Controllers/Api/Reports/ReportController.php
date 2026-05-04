@@ -34,6 +34,9 @@ class ReportController extends Controller
      */
     protected function applyTripSummaryFilters(Builder $q, array $filters): void
     {
+        // Dispatch requests use soft deletes ("trash"); exclude their trips from aggregates.
+        $q->whereHas('dispatchRequest');
+
         if (! empty($filters['trip_status'])) {
             $q->where('trips.status', $filters['trip_status']);
         }
@@ -170,6 +173,7 @@ class ReportController extends Controller
             ->get();
 
         $cargoSlaBreaches = CargoShipment::query()
+            ->whereHas('dispatchRequest')
             ->whereNotIn('status', ['delivered', 'cancelled'])
             ->whereNotNull('sla_due_at')
             ->where('sla_due_at', '<', now())

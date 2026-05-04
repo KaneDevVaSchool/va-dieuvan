@@ -62,7 +62,6 @@ export const NAV_SECTIONS = [
     headingKey: 'nav.section_reports',
     items: [
       { to: '/reports', labelKey: 'nav.reports', icon: 'reports', featureKey: 'module.reports' },
-      { to: '/payments', labelKey: 'nav.payments', icon: 'payments', featureKey: 'module.finance' },
       { to: '/pricing', labelKey: 'nav.pricing', icon: 'pricing', featureKey: 'module.pricing' },
     ],
   },

@@ -1,18 +1,78 @@
 ---
-alwaysApply: true
----
+
+## alwaysApply: true
+
 Apply:
 
-- @core.mdc
+* @core.mdc
 
-Bug:
-<describe>
+---
 
-Scope:
+# 🎯 TASK
 
-- Minimal change only
+Fix bug in the specified file.
 
-Output:
+---
 
-- Fix code
-- Explain root cause
+# ⚠️ CONTEXT CONTROL (IMPORTANT)
+
+Ignore all previous messages.
+
+Only focus on:
+@<file> (limit lines if possible, e.g. 1–200)
+
+---
+
+# 🐛 BUG
+
+<describe clearly>
+
+---
+
+# 🎯 SCOPE
+
+* Minimal change only
+* Do NOT refactor unrelated code
+* Do NOT change architecture
+* Do NOT touch other files unless absolutely required
+
+---
+
+# 🔒 CONSTRAINTS
+
+* Keep existing behavior intact
+* No side effects
+* No new abstraction unless necessary
+* Prefer simplest fix
+
+---
+
+# 🧠 DEBUG STRATEGY
+
+1. Identify root cause
+2. Fix at the correct layer (UI / Service / Query)
+3. Avoid workaround hacks
+
+---
+
+# 🎯 OUTPUT
+
+1. Fixed code (only affected part or file)
+2. Root cause (ngắn gọn, tiếng Việt)
+3. Why this fix is correct
+
+---
+
+# 🚫 STRICT RULES
+
+* No over-engineering
+* No guessing → must reason from code
+* No large refactor
+
+---
+
+# 🎯 GOAL
+
+* Fix đúng bug
+* Không phát sinh bug mới
+* Code clean, minimal, maintainable

@@ -23,7 +23,20 @@ app.use(router)
 const ui = useUiStore()
 ui.initFromStorage()
 ui.initViewportListener()
-usePwaStore().loadDismissed()
+const pwaStore = usePwaStore()
+pwaStore.loadDismissed()
+
+/** PWA: only defer the browser banner when we will show custom UI — never preventDefault while install was dismissed */
+function onBeforeInstallPrompt(ev) {
+  if (pwaStore.installDismissed) return
+  ev.preventDefault()
+  pwaStore.setDeferredInstallPrompt(ev)
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+}
+
 useAuthStore().initFromStorage()
 app.mount('#app')
 

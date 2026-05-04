@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\D2D\RouteController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
 use App\Http\Controllers\Api\OperationalResourceController;
-use App\Http\Controllers\Api\Payments\ReconciliationController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
@@ -58,17 +57,6 @@ Route::prefix('trips')->group(function () {
 Route::prefix('trip-costs')->controller(TripCostController::class)->group(function () {
     Route::post('/{tripCost}/decision', 'decide')->middleware('throttle:20,1');
     Route::patch('/{tripCost}/override', 'override')->middleware('throttle:10,1');
-});
-
-Route::prefix('reconciliation-periods')->controller(ReconciliationController::class)->group(function () {
-    Route::post('/', 'createPeriod')->middleware('throttle:10,1');
-    Route::post('/{reconciliationPeriod}/lock', 'lockPeriod')->middleware('throttle:10,1');
-    Route::post('/{reconciliationPeriod}/generate-payments', 'generatePayments')->middleware('throttle:10,1');
-});
-Route::prefix('payments')->controller(ReconciliationController::class)->group(function () {
-    Route::post('/{payment}/execute', 'executePayment')
-        ->middleware(['throttle:10,1', 'idempotency'])
-        ->name('api.payments.execute');
 });
 
 Route::prefix('cargo-shipments')->controller(CargoController::class)->group(function () {

@@ -1,6 +1,5 @@
 import {
   AdjustmentsHorizontalIcon,
-  BanknotesIcon,
   BellIcon,
   CalendarDaysIcon,
   ChartBarIcon,
@@ -40,7 +39,6 @@ export const NAV_ICON_MAP = {
   cargo: CubeIcon,
   routes: MapPinIcon,
   resources: RectangleStackIcon,
-  payments: BanknotesIcon,
   reports: ChartBarIcon,
   pricing: TagIcon,
   help: QuestionMarkCircleIcon,

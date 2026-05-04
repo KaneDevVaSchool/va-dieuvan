@@ -185,16 +185,6 @@ const router = createRouter({
             },
         },
         {
-            path: "/payments",
-            name: "payments",
-            component: () => import("../views/payments/PaymentsHubView.vue"),
-            meta: {
-                title: "Đối Soát",
-                subtitle: "Kỳ & payments",
-                featureKey: "module.finance",
-            },
-        },
-        {
             path: "/cargo/:id(\\d+)",
             name: "cargoDetail",
             component: () => import("../views/cargo/CargoDetailView.vue"),

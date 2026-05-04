@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\Costs\TripCostController;
 use App\Http\Controllers\Api\D2D\RouteController;
 use App\Http\Controllers\Api\NavBadgesController;
 use App\Http\Controllers\Api\Notifications\InboxController;
-use App\Http\Controllers\Api\Payments\ReconciliationController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\Trips\TripController;
@@ -45,13 +44,6 @@ Route::controller(CargoController::class)->group(function () {
     Route::get('/cargo-shipments', 'index');
     Route::get('/cargo-shipments/{cargoShipment}/timeline', 'timeline');
     Route::get('/cargo-shipments/{cargoShipment}', 'show');
-});
-
-Route::controller(ReconciliationController::class)->group(function () {
-    Route::get('/reconciliation-periods', 'periodsIndex');
-    Route::get('/reconciliation-periods/{reconciliationPeriod}', 'periodShow');
-    Route::get('/payments', 'paymentsIndex');
-    Route::get('/payments/{payment}', 'paymentShow');
 });
 
 Route::controller(RouteController::class)->group(function () {

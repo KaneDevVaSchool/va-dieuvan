@@ -3,8 +3,8 @@
  * Singleton để giữ bộ lọc khi chuyển giữa / và /reports.
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { getSummary } from '../api/reports'
+import { i18n } from '../i18n'
 import { labelTripStatus, labelTripType, labelRequestStatus } from '../util/labels'
 import {
   sumTrips,
@@ -60,12 +60,17 @@ function startOfQuarter(d) {
   return new Date(d.getFullYear(), q0, 1)
 }
 
-function createSharedApi(t, locale) {
+function createSharedApi() {
+  /** Global composer — avoid capturing component-scoped `useI18n()` in a singleton (stale / invalid after unmount). */
+  function t(...args) {
+    return i18n.global.t(...args)
+  }
+
   function formatDisplayDate(ymdStr) {
     if (!ymdStr || typeof ymdStr !== 'string') return '—'
     const p = ymdStr.split('-').map((x) => Number(x))
     if (p.length !== 3 || Number.isNaN(p[0])) return ymdStr
-    const tag = locale.value === 'vi' ? 'vi-VN' : 'en-GB'
+    const tag = i18n.global.locale.value === 'vi' ? 'vi-VN' : 'en-GB'
     try {
       return new Intl.DateTimeFormat(tag, { day: '2-digit', month: 'short', year: 'numeric' }).format(
         new Date(p[0], p[1] - 1, p[2]),
@@ -437,7 +442,7 @@ function createSharedApi(t, locale) {
 
   function formatMoney(v) {
     const n = Number(v ?? 0)
-    const loc = locale.value === 'vi' ? 'vi-VN' : 'en-GB'
+    const loc = i18n.global.locale.value === 'vi' ? 'vi-VN' : 'en-GB'
     return `${new Intl.NumberFormat(loc).format(n)} VND`
   }
 
@@ -682,9 +687,8 @@ function createSharedApi(t, locale) {
 }
 
 export function useTransportReportSummary() {
-  const { t, locale } = useI18n()
   if (!sharedApi) {
-    sharedApi = createSharedApi(t, locale)
+    sharedApi = createSharedApi()
   }
   return sharedApi
 }
