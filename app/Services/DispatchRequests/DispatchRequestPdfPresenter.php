@@ -132,9 +132,6 @@ final class DispatchRequestPdfPresenter
             'coordEmail' => self::nzString($form['coordinator_email'] ?? null),
             'coordPhone' => self::nzString($form['coordinator_phone'] ?? null),
             'tripType' => $tripTypeLabels[$tripTypeRaw] ?? $tripTypeRaw,
-            'p2pNote' => $isP2P
-                ? '«Điểm — Điểm»: toàn bộ dữ liệu biểu mẫu (kể cả phân bổ mục tiêu) được gửi kèm yêu cầu trong hệ thống.'
-                : '',
             'needPorters' => ! empty($form['need_porters']),
             'porterQty' => self::nzString($form['porter_qty'] ?? null),
             'porterCost' => ! empty($form['porter_cost'])

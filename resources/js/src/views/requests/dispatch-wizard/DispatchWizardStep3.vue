@@ -4,17 +4,7 @@
       <h2 class="text-lg font-semibold text-slate-900">
         {{ t('dispatch_wizard.s3.title') }}
       </h2>
-      <div class="dw-step3-guide mt-3" role="note">
-        <p class="dw-step3-guide__title">{{ t('dispatch_wizard.s3.guide_title') }}</p>
-        <div class="dw-step3-guide__body">
-          <p v-if="!isCargo">
-            {{ t('dispatch_wizard.s3.guide_pass') }}
-          </p>
-          <p v-else>
-            {{ t('dispatch_wizard.s3.guide_cargo') }}
-          </p>
-        </div>
-      </div>
+     
     </div>
 
     <!-- Hành khách / door / p2p: e.1 -->
@@ -31,7 +21,7 @@
         <DispatchStepDetails
           :model-value="passengerRows"
           variant="passenger"
-          @update:valid="(v) => { schedulePassengerValid.value = v }"
+          @update:valid="setSchedulePassengerValid"
         >
           <template #toolbar-extra>
             <label class="dw-table-toolbar__extra mt-2 flex cursor-pointer items-center gap-2 text-sm text-slate-700">
@@ -164,7 +154,7 @@
         <DispatchStepDetails
           :model-value="businessRows"
           variant="business"
-          @update:valid="(v) => { scheduleBusinessValid.value = v }"
+          @update:valid="setScheduleBusinessValid"
         />
       </section>
 
@@ -288,7 +278,7 @@
         <DispatchStepDetails
           :model-value="cargoRows"
           variant="cargo"
-          @update:valid="(v) => { scheduleCargoValid.value = v }"
+          @update:valid="setScheduleCargoValid"
         />
       </article>
 
@@ -392,6 +382,16 @@ const {
 const schedulePassengerValid = ref(true)
 const scheduleBusinessValid = ref(true)
 const scheduleCargoValid = ref(true)
+
+function setSchedulePassengerValid(v) {
+  schedulePassengerValid.value = v
+}
+function setScheduleBusinessValid(v) {
+  scheduleBusinessValid.value = v
+}
+function setScheduleCargoValid(v) {
+  scheduleCargoValid.value = v
+}
 
 const isCargo = computed(() => unref(w.isCargo))
 const isPointToPointTrip = computed(() => unref(w.isPointToPointTrip))

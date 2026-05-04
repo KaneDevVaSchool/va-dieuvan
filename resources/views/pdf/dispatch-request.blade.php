@@ -15,16 +15,20 @@
         }
 
         body {
-            font-size: 9.5pt;
-            color: #18181b;
+            font-size: 9pt;
+            color: #000;
             margin: 0;
             line-height: 1.45;
             background: #fff;
+            text-transform: lowercase;
+            font-weight: normal;
         }
 
-        /* ══════════════════════════════════════════════
-           HEADER
-        ══════════════════════════════════════════════ */
+        strong,
+        b {
+            font-weight: normal;
+        }
+
         .doc-header-table {
             width: 100%;
             border-collapse: collapse;
@@ -38,81 +42,66 @@
         }
 
         .doc-title-main {
-            font-size: 16pt;
-            font-weight: bold;
+            font-size: 10.5pt;
+            font-weight: normal;
             text-align: center;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #18181b;
+            letter-spacing: normal;
+            text-transform: lowercase;
+            color: #000;
         }
 
         .doc-title-sub {
-            font-size: 8.5pt;
+            font-size: 9pt;
             text-align: center;
-            color: #71717a;
-            font-style: italic;
+            color: #000;
+            font-style: normal;
             margin-top: 3px;
-            letter-spacing: 0.3px;
+            letter-spacing: normal;
+            font-weight: normal;
         }
 
-        /* Meta block (top-right) */
         .doc-meta-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7.5pt;
-            border: 0.5pt solid #e4e4e7;
-            border-radius: 3pt;
+            font-size: 9pt;
+            border: 0.5pt solid #000;
         }
 
         .doc-meta-table td {
             padding: 2.5px 6px;
-            border: none;
-            border-bottom: 0.5pt solid #f4f4f5;
-        }
-
-        .doc-meta-table tr:last-child td {
-            border-bottom: none;
+            border: 0.5pt solid #000;
         }
 
         .doc-meta-label {
-            color: #a1a1aa;
+            color: #000;
             width: 90px;
+            font-weight: normal;
         }
 
         .doc-meta-value {
-            font-weight: bold;
+            font-weight: normal;
             text-align: right;
-            color: #3f3f46;
+            color: #000;
         }
 
         .doc-meta-id {
-            color: #991b1b;
-            font-size: 8.5pt;
+            color: #000;
+            font-size: 9pt;
+            font-weight: normal;
         }
 
-        /* Divider */
         .doc-header-divider {
             border: none;
-            border-bottom: 2pt solid #991b1b;
+            border-bottom: 1pt solid #000;
             margin: 8px 0 10px 0;
         }
 
-        .doc-header-accent {
-            border: none;
-            border-bottom: 0.5pt solid #fca5a5;
-            margin: 0 0 10px 0;
-        }
-
-        /* ══════════════════════════════════════════════
-           SECTION HEADER
-        ══════════════════════════════════════════════ */
         .sec-header {
             width: 100%;
             display: table;
-            background: linear-gradient(90deg, #fef2f2 0%, #fafafa 100%);
-            border-left: 3.5pt solid #991b1b;
-            border-top: 0.5pt solid #fca5a5;
-            border-right: 0.5pt solid #e4e4e7;
+            background: #fff;
+            border: 0.5pt solid #000;
+            border-bottom: none;
             padding: 5pt 9pt 4pt 9pt;
             margin-top: 9pt;
             margin-bottom: 0;
@@ -120,39 +109,35 @@
 
         .sec-badge {
             display: inline-block;
-            background: #991b1b;
+            background: #000;
             color: #fff;
-            font-size: 7pt;
-            font-weight: bold;
+            font-size: 9pt;
+            font-weight: normal;
             padding: 1.5pt 6pt;
-            border-radius: 2pt;
-            letter-spacing: 0.8px;
+            border-radius: 0;
+            letter-spacing: normal;
             margin-right: 6pt;
-            text-transform: uppercase;
+            text-transform: lowercase;
         }
 
         .sec-title {
             font-size: 9pt;
-            font-weight: bold;
-            color: #18181b;
-            letter-spacing: 0.2px;
+            font-weight: normal;
+            color: #000;
+            letter-spacing: normal;
+            text-transform: lowercase;
         }
 
         .sec-subtitle {
-            font-size: 7.5pt;
-            color: #991b1b;
-            font-style: italic;
+            font-size: 9pt;
+            color: #000;
+            font-style: normal;
             font-weight: normal;
             margin-left: 4pt;
         }
 
-        /* ══════════════════════════════════════════════
-           SECTION BODY WRAPPER
-        ══════════════════════════════════════════════ */
         .sec-body {
-            border-left: 0.5pt solid #e4e4e7;
-            border-right: 0.5pt solid #e4e4e7;
-            border-bottom: 0.5pt solid #e4e4e7;
+            border: 0.5pt solid #000;
             border-top: none;
         }
 
@@ -160,77 +145,50 @@
             padding: 0;
         }
 
-        /* ══════════════════════════════════════════════
-           FIELD TABLE
-        ══════════════════════════════════════════════ */
         table.field-table {
             width: 100%;
             border-collapse: collapse;
         }
 
         table.field-table td {
-            border-right: 0.5pt solid #e4e4e7;
-            border-bottom: 0.5pt solid #e4e4e7;
+            border: 0.5pt solid #000;
             padding: 5pt 8pt;
             vertical-align: top;
         }
 
-        table.field-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        table.field-table td:last-child {
-            border-right: none;
-        }
-
         .fl {
-            font-size: 7pt;
-            color: #a1a1aa;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 9pt;
+            color: #000;
+            font-weight: normal;
+            text-transform: lowercase;
+            letter-spacing: normal;
             margin-bottom: 2.5pt;
         }
 
         .fv {
-            font-size: 9.5pt;
-            color: #18181b;
+            font-size: 9pt;
+            color: #000;
             min-height: 12pt;
-            font-weight: 500;
-        }
-
-        .fv-empty {
-            color: #d4d4d8;
-            font-style: italic;
             font-weight: normal;
         }
 
-        /* ══════════════════════════════════════════════
-           HINT / NOTE BARS
-        ══════════════════════════════════════════════ */
+        .fv-empty {
+            color: #000;
+            font-style: normal;
+            font-weight: normal;
+        }
+
         .hint-bar {
-            background: #fffbeb;
-            border-left: 3pt solid #f59e0b;
-            border-bottom: 0.5pt solid #fde68a;
+            background: #f5f5f5;
+            border: 0.5pt solid #000;
+            border-top: none;
             padding: 4pt 9pt;
-            font-size: 7.5pt;
-            color: #78350f;
-            font-style: italic;
+            font-size: 9pt;
+            color: #000;
+            font-style: normal;
+            font-weight: normal;
         }
 
-        .p2p-note-bar {
-            background: #fffbeb;
-            border-left: 3pt solid #f59e0b;
-            border-bottom: 0.5pt solid #fde68a;
-            padding: 5pt 9pt;
-            font-size: 8pt;
-            color: #78350f;
-            font-style: italic;
-        }
-
-        /* ══════════════════════════════════════════════
-           CHECKBOX GRID
-        ══════════════════════════════════════════════ */
         table.cb-table {
             width: 100%;
             border-collapse: collapse;
@@ -239,77 +197,53 @@
         table.cb-table td {
             width: 25%;
             padding: 3pt 8pt;
-            border-right: 0.5pt solid #e4e4e7;
-            border-bottom: 0.5pt solid #e4e4e7;
-            font-size: 8.5pt;
-            color: #3f3f46;
+            border: 0.5pt solid #000;
+            font-size: 9pt;
+            color: #000;
             vertical-align: middle;
-        }
-
-        table.cb-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        table.cb-table td:last-child {
-            border-right: none;
+            font-weight: normal;
         }
 
         .cb-sym {
             font-family: 'DejaVu Sans', sans-serif;
             font-size: 9pt;
             margin-right: 3pt;
-            color: #991b1b;
+            color: #000;
         }
 
-        /* ══════════════════════════════════════════════
-           DATA TABLE
-        ══════════════════════════════════════════════ */
         table.data {
             width: 100%;
             border-collapse: collapse;
-            font-size: 8pt;
+            font-size: 9pt;
+            border: 0.5pt solid #000;
         }
 
         table.data th {
             padding: 4.5pt 5pt;
             text-align: center;
-            font-size: 7.5pt;
-            font-weight: bold;
-            letter-spacing: 0.2px;
-            border-right: 0.5pt solid #e4e4e7;
-            border-bottom: 1pt solid #d4d4d8;
+            font-size: 9pt;
+            font-weight: normal;
+            letter-spacing: normal;
+            border: 0.5pt solid #000;
+            background: #fff;
+            color: #000;
         }
 
-        table.data th:last-child {
-            border-right: none;
-        }
-
-        table.data th.col-go {
-            background: #eff6ff;
-            color: #1e40af;
-        }
-
-        table.data th.col-back {
-            background: #f0fdf4;
-            color: #166534;
-        }
-
+        table.data th.col-go,
+        table.data th.col-back,
         table.data th.col-info {
-            background: #f9fafb;
-            color: #374151;
+            background: #fff;
+            color: #000;
         }
 
         table.data td {
             padding: 4.5pt 5pt;
             text-align: center;
-            border-right: 0.5pt solid #e4e4e7;
-            border-bottom: 0.5pt solid #e4e4e7;
-            color: #18181b;
+            border: 0.5pt solid #000;
+            color: #000;
             vertical-align: top;
-        }
-
-        table.data td:last-child {
-            border-right: none;
+            background: #fff;
+            font-weight: normal;
         }
 
         table.data td.tl {
@@ -324,28 +258,14 @@
             text-align: center;
         }
 
-        table.data tr:last-child td {
-            border-bottom: none;
-        }
-
         table.data tr.row-total td {
-            background: #fef2f2;
-            font-weight: bold;
-            border-top: 1pt solid #fca5a5;
-            color: #991b1b;
+            background: #fff;
+            font-weight: normal;
+            border: 0.5pt solid #000;
+            border-top: 1pt solid #000;
+            color: #000;
         }
 
-        table.data tbody tr:nth-child(even) td {
-            background: #fafafa;
-        }
-
-        table.data tbody tr.row-total td {
-            background: #fef2f2 !important;
-        }
-
-        /* ══════════════════════════════════════════════
-           SIGNATURE TABLE
-        ══════════════════════════════════════════════ */
         table.sig-table {
             width: 100%;
             border-collapse: collapse;
@@ -353,22 +273,23 @@
 
         table.sig-table td {
             width: 33.3%;
-            border: 0.5pt solid #e4e4e7;
+            border: 0.5pt solid #000;
             text-align: center;
             vertical-align: bottom;
             padding: 4pt 6pt;
         }
 
         .sig-col-header {
-            background: #f9fafb;
-            font-size: 8.5pt;
-            font-weight: bold;
-            color: #3f3f46;
+            background: #fff;
+            font-size: 9pt;
+            font-weight: normal;
+            color: #000;
             padding: 5pt 6pt;
             vertical-align: middle;
             height: 18pt;
-            letter-spacing: 0.2px;
-            border-bottom: 1pt solid #e4e4e7;
+            letter-spacing: normal;
+            border: 0.5pt solid #000;
+            text-transform: lowercase;
         }
 
         .sig-col-body {
@@ -378,83 +299,65 @@
         }
 
         .sig-name {
-            font-size: 8.5pt;
-            font-weight: bold;
-            color: #18181b;
+            font-size: 9pt;
+            font-weight: normal;
+            color: #000;
         }
 
         .sig-role {
-            font-size: 7.5pt;
-            color: #71717a;
-            font-style: italic;
+            font-size: 9pt;
+            color: #000;
+            font-style: normal;
+            font-weight: normal;
         }
 
-        /* ══════════════════════════════════════════════
-           SECTION G
-        ══════════════════════════════════════════════ */
         .g-row {
             padding: 6pt 9pt;
             display: block;
         }
 
         .g-label {
-            font-size: 8.5pt;
-            font-weight: bold;
-            color: #3f3f46;
+            font-size: 9pt;
+            font-weight: normal;
+            color: #000;
         }
 
         .g-dots {
-            border-bottom: 0.7pt dotted #a1a1aa;
+            border-bottom: 0.7pt dotted #000;
             display: inline-block;
             min-width: 200pt;
             margin-left: 5pt;
             vertical-align: bottom;
         }
 
-        /* ══════════════════════════════════════════════
-           FOOTER
-        ══════════════════════════════════════════════ */
         .page-footer {
             text-align: center;
-            font-size: 7pt;
-            color: #d4d4d8;
+            font-size: 9pt;
+            color: #000;
             margin-top: 10pt;
             padding-top: 5pt;
-            border-top: 0.5pt solid #e4e4e7;
-            letter-spacing: 0.4px;
+            border-top: 0.5pt solid #000;
+            letter-spacing: normal;
+            font-weight: normal;
         }
 
-        /* ══════════════════════════════════════════════
-           MISC
-        ══════════════════════════════════════════════ */
         .muted-note {
-            font-size: 7.5pt;
-            color: #71717a;
-            font-style: italic;
+            font-size: 9pt;
+            color: #000;
+            font-style: normal;
+            font-weight: normal;
         }
 
-        /* Urgent / trip-type chip inline */
-        .chip-urgent {
-            display: inline-block;
-            background: #fef2f2;
-            border: 0.5pt solid #fca5a5;
-            color: #991b1b;
-            font-size: 7.5pt;
-            font-weight: bold;
-            padding: 1pt 5pt;
-            border-radius: 2pt;
-            vertical-align: middle;
-        }
-
+        .chip-urgent,
         .chip-type {
             display: inline-block;
-            background: #f0f9ff;
-            border: 0.5pt solid #bae6fd;
-            color: #0369a1;
-            font-size: 7.5pt;
-            font-weight: bold;
+            background: #fff;
+            border: 0.5pt solid #000;
+            color: #000;
+            font-size: 9pt;
+            font-weight: normal;
             padding: 1pt 5pt;
-            border-radius: 2pt;
+            border-radius: 0;
             vertical-align: middle;
         }
     </style>
@@ -466,8 +369,8 @@
 
         $cb = static function (bool $checked): string {
             return $checked
-                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:10pt;color:#991b1b;">&#x2611;</span>'
-                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:10pt;color:#d4d4d8;">&#x2610;</span>';
+                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#000000;">&#x2611;</span>'
+                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#a3a3a3;">&#x2610;</span>';
         };
 
         $nTargets = count($targetGrid);
@@ -480,7 +383,9 @@
             {{-- Logo --}}
             <td style="width:17%; vertical-align:middle; padding-right:10px;">
                 @if($logoDataUri)
-                    <img src="{{ $logoDataUri }}" style="width:82px; height:auto;" alt="VAS" />
+                    <img src="{{ $logoDataUri }}"
+                        style="height:80px;width:auto;max-width:100%;display:block;object-fit:contain;"
+                        alt="VAS" />
                 @endif
             </td>
 
@@ -521,7 +426,6 @@
     </table>
 
     <hr class="doc-header-divider" />
-    <hr class="doc-header-accent" />
 
     {{-- ────────── A · NGƯỜI ĐỀ NGHỊ ────────── --}}
     <div class="sec-header">
@@ -569,7 +473,7 @@
             <tr>
                 <td colspan="2">
                     <div class="fl">b.2 &nbsp;Căn cứ đề xuất
-                        <span style="font-weight:normal; text-transform:none; letter-spacing:0; color:#a1a1aa;">
+                        <span style="font-weight:normal; color:#000;">
                             — Tờ trình số …/ ngày &amp; nội dung
                         </span>
                     </div>
@@ -599,23 +503,23 @@
         </table>
 
         <div class="hint-bar">
-            ⚠&nbsp; Lưu ý: Tối thiểu 03 ngày làm việc trước ngày cấp xe;
+            Lưu ý: Tối thiểu 03 ngày làm việc trước ngày cấp xe;
             từ 2.000 kg trở lên cần báo sớm ít nhất 05 ngày làm việc.
         </div>
 
-        <table class="field-table">
+        <table class="field-table" style="border-top:none;">
             <tr>
                 <td style="width:60%; vertical-align:middle; padding:5pt 8pt;">
                     <span class="cb-sym">{!! $cb($isUrgent) !!}</span>
-                    <span style="font-weight:bold; font-size:9pt; color:#991b1b;">Gấp</span>
+                    <span style="font-weight:normal; font-size:9pt; color:#000;">Gấp</span>
                     @if($isUrgent)
-                        &nbsp;<span style="font-size:8pt; color:#71717a;">Lý do: {{ $urgentReason }}</span>
+                        &nbsp;<span style="font-size:9pt; color:#000;">Lý do: {{ $urgentReason }}</span>
                     @else
-                        &nbsp;<span style="font-size:8pt; color:#d4d4d8; font-style:italic;">Lý do: —</span>
+                        &nbsp;<span style="font-size:9pt; color:#000; font-style:normal;">Lý do: —</span>
                     @endif
                 </td>
                 <td style="width:40%; text-align:right; vertical-align:middle; padding:5pt 8pt;">
-                    <span style="font-size:7.5pt; color:#a1a1aa;">Loại yêu cầu:</span>
+                    <span style="font-size:9pt; color:#000;">Loại yêu cầu:</span>
                     &nbsp;<span class="chip-type">{{ $tripType }}</span>
                 </td>
             </tr>
@@ -628,9 +532,9 @@
         <span class="sec-title">Khu vực / Đối tượng được phân bổ</span>
     </div>
     <div class="sec-body">
-        <div style="padding:3.5pt 8pt 2.5pt; font-size:7pt; font-weight:bold;
-                color:#a1a1aa; border-bottom:0.5pt solid #e4e4e7;
-                text-transform:uppercase; letter-spacing:0.5px;">
+        <div style="padding:3.5pt 8pt 2.5pt; font-size:9pt; font-weight:normal;
+                color:#000; border-bottom:0.5pt solid #000;
+                text-transform: lowercase; letter-spacing:normal;">
             d.1 &nbsp;Đối tượng sử dụng
         </div>
         <table class="cb-table">
@@ -649,7 +553,7 @@
             @endfor
         </table>
 
-        <table class="field-table" style="border-top:0.5pt solid #e4e4e7;">
+        <table class="field-table" style="border-top:0.5pt solid #000;">
             <tr>
                 <td style="width:35%;">
                     <div class="fl">d.2 &nbsp;Nhân sự phụ trách — Họ tên</div>
@@ -684,10 +588,6 @@
 
     <div class="sec-body sec-body--flush">
 
-        @if($isP2P && $p2pNote)
-            <div class="p2p-note-bar">{{ $p2pNote }}</div>
-        @endif
-
         {{-- ── CARGO TABLE ── --}}
         @if($isCargo)
             <table class="data">
@@ -697,11 +597,11 @@
                         <th colspan="5" class="col-info tc">Thông tin hàng hóa</th>
                         <th colspan="3" class="col-go tc">Điểm tập kết</th>
                         <th colspan="3" class="col-back tc">Điểm giao</th>
-                        <th rowspan="2" class="col-info tc" style="width:8%; color:#991b1b; font-style:italic;">
-                            Loại hình<br /><span style="font-size:7pt;">(NV điều phối)</span>
+                        <th rowspan="2" class="col-info tc" style="width:8%; font-style:normal;">
+                            Loại hình<br /><span style="font-size:9pt;">(NV điều phối)</span>
                         </th>
                         <th rowspan="2" class="col-info tc" style="width:8%;">
-                            Chi phí<br /><span style="font-size:7pt;">(Gồm VAT)</span>
+                            Chi phí<br /><span style="font-size:9pt;">(Gồm VAT)</span>
                         </th>
                     </tr>
                     <tr>
@@ -745,17 +645,17 @@
                 </tbody>
             </table>
 
-            <table class="field-table" style="border-top:0.5pt solid #e4e4e7;">
+            <table class="field-table" style="border-top:0.5pt solid #000;">
                 <tr>
                     <td style="width:72%;">
                         <div class="fl">e.1.1 &nbsp;Các ghi chú khác</div>
-                        <div class="fv" style="font-size:8.5pt;">
+                        <div class="fv" style="font-size:9pt;">
                             <span class="cb-sym">{!! $cb($needPorters) !!}</span>
                             Yêu cầu bốc xếp / nhân công hỗ trợ
                             &nbsp; Số lượng: <strong>{{ $needPorters ? $porterQty : '—' }}</strong>
                             &nbsp; Chi phí phát sinh: <strong>{{ $needPorters ? $porterCost : '—' }}</strong>
                         </div>
-                        <div class="fv" style="font-size:8.5pt; margin-top:4pt;">
+                        <div class="fv" style="font-size:9pt; margin-top:4pt;">
                             <span class="cb-sym">{!! $cb($interprovincial) !!}</span>
                             Gửi chành xe đi tỉnh
                             &nbsp; Chi phí phát sinh: <strong>{{ $interprovincial ? $interprovincialCost : '—' }}</strong>
@@ -764,7 +664,7 @@
                             <div class="muted-note" style="margin-top:5pt;">Ghi chú thêm: {{ $cargoExtraNotes }}</div>
                         @endif
                     </td>
-                    <td class="muted-note" style="width:28%; vertical-align:top; font-size:7.5pt;">
+                    <td class="muted-note" style="width:28%; vertical-align:top; font-size:9pt;">
                         (Vui lòng liên hệ NV Điều vận để điền thông tin chi phí)
                     </td>
                 </tr>
@@ -860,7 +760,7 @@
         <span class="sec-badge">F</span>
         <span class="sec-title">Phần xác nhận của các bên liên quan</span>
     </div>
-    <table class="sig-table" style="border:0.5pt solid #e4e4e7;">
+    <table class="sig-table" style="border:0.5pt solid #000;">
         <tr>
             <td class="sig-col-header">Trưởng phòng Mua hàng</td>
             <td class="sig-col-header">Người đề xuất</td>
@@ -876,7 +776,7 @@
         </tr>
         <tr>
             <td class="sig-col-header">Giám đốc Vận hành</td>
-            <td class="sig-col-header" style="background:#fff;">&nbsp;</td>
+            <td class="sig-col-header">&nbsp;</td>
             <td class="sig-col-header">Tổng Giám đốc</td>
         </tr>
         <tr>
