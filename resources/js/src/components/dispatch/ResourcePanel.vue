@@ -209,8 +209,15 @@ watch(
 )
 
 watch(
-  () => props.tripSnapshot,
-  async (snap) => {
+  () => {
+    const s = props.tripSnapshot
+    if (!s?.tripId) return null
+    return `${s.tripId}:${s.lockVersion ?? 0}`
+  },
+  async (key, prevKey) => {
+    if (key == null) return
+    if (key === prevKey) return
+    const snap = props.tripSnapshot
     if (!snap?.tripId) return
     await fetchOptions()
     applyHydration({
@@ -223,7 +230,7 @@ watch(
     lastPayloadJson.value = ''
     emitResources()
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 )
 
 function validate() {
