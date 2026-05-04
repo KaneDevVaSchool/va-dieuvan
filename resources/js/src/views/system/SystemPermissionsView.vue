@@ -1,116 +1,8 @@
-<template>
-  <div class="space-y-4">
-    <Card title="Quyền thao tác (Permission)">
-      <p class="mb-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-        Mỗi quyền mô tả một hành động cụ thể (ví dụ tạo yêu cầu, duyệt chuyến). Mã quyền dùng chữ thường và dấu chấm,
-        ví dụ <span class="font-mono text-xs">request.create</span>. Chọn mẫu có sẵn để điền nhanh và giảm sai sót.
-      </p>
-      <form class="grid gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:grid-cols-2 lg:grid-cols-4" @submit.prevent="create">
-        <Select
-          v-model="permissionPreset"
-          label="Mẫu có sẵn"
-          hint="Điền sẵn mã và mô tả; có thể chỉnh trước khi thêm."
-          placeholder="— Không dùng mẫu —"
-        >
-          <option value="">— Không dùng mẫu —</option>
-          <option v-for="p in seedPermissions" :key="p.name" :value="p.name">{{ p.name }}</option>
-        </Select>
-        <Input
-          v-model="form.name"
-          label="Mã quyền trong hệ thống"
-          placeholder="vd. request.create"
-          hint="Không dấu cách; các phần cách nhau bằng dấu chấm."
-          required
-        />
-        <Input
-          v-model="form.display_name"
-          label="Nhãn ngắn (tùy chọn)"
-          placeholder="vd. request.create"
-          hint="Hiển thị cạnh mã trong danh sách quản trị."
-        />
-        <div class="flex items-end">
-          <Button type="submit" :loading="saving">Thêm quyền</Button>
-        </div>
-        <div class="md:col-span-2 lg:col-span-4">
-          <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Giải thích cho người vận hành</span>
-            <textarea
-              v-model="form.plain_description"
-              rows="2"
-              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring dark:border-slate-600 dark:bg-slate-900"
-              placeholder="Ví dụ: Được phép tạo yêu cầu điều xe mới trên hệ thống."
-            />
-            <span class="mt-1 block text-xs text-slate-500 dark:text-slate-400">
-              Nên điền để bộ phận nhân sự / quản trị hiểu rõ quyền này dùng để làm gì. Có thể để trống nếu đã có mô tả mẫu.
-            </span>
-          </label>
-        </div>
-      </form>
-
-      <div v-if="loading" class="mt-4 text-sm text-slate-500">Đang tải…</div>
-      <div v-else class="mt-4 overflow-x-auto">
-        <table class="w-full min-w-[44rem] text-left text-sm">
-          <thead>
-            <tr class="border-b border-slate-200 text-slate-500 dark:border-slate-700">
-              <th class="py-2 pr-2">Mã quyền</th>
-              <th class="py-2 pr-2">Nhãn ngắn</th>
-              <th class="py-2 pr-2">Giải thích</th>
-              <th class="py-2 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="p in items" :key="p.id" class="border-b border-slate-100 dark:border-slate-800">
-              <td class="py-2 pr-2 font-mono text-xs">{{ p.name }}</td>
-              <td class="max-w-[12rem] py-2 pr-2">{{ p.display_name ?? '—' }}</td>
-              <td class="max-w-xl py-2 pr-2 text-slate-700 dark:text-slate-300">{{ p.plain_summary ?? '—' }}</td>
-              <td class="py-2 text-right">
-                <Button variant="secondary" class="mr-1" @click="openEdit(p)">Sửa</Button>
-                <Button variant="secondary" class="text-red-600" @click="remove(p)">Xóa</Button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </Card>
-
-    <div
-      v-if="editing"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      @click.self="editing = null"
-    >
-      <Card class="w-full max-w-lg" title="Sửa quyền">
-        <div class="space-y-3">
-          <Input
-            v-model="editForm.name"
-            label="Mã quyền"
-            hint="Đổi mã cần rà soát toàn bộ chỗ đang dùng mã cũ — chỉ thực hiện khi có kế hoạch."
-          />
-          <Input
-            v-model="editForm.display_name"
-            label="Nhãn ngắn"
-            hint="Hiển thị trong danh sách quản trị."
-          />
-          <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Giải thích cho người vận hành</span>
-            <textarea
-              v-model="editForm.plain_description"
-              rows="3"
-              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring dark:border-slate-600 dark:bg-slate-900"
-            />
-            <span class="mt-1 block text-xs text-slate-500">Để trống: dùng mô tả mẫu theo mã (nếu có trong hệ thống).</span>
-          </label>
-          <div class="flex justify-end gap-2">
-            <Button variant="secondary" type="button" @click="editing = null">Hủy</Button>
-            <Button :loading="saving" @click="saveEdit">Lưu</Button>
-          </div>
-        </div>
-      </Card>
-    </div>
-  </div>
-</template>
-
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { FunnelIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
@@ -121,6 +13,17 @@ import * as admin from '../../api/admin'
 import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
+import { debounceTrailing } from '../../composables/useDebounce'
+
+const PERMISSIONS_FILTER_VIS_KEY = 'va.permissions.filter_control_visibility_v1'
+const FILTER_CONTROL_IDS = ['search', 'role', 'status']
+
+function defaultFilterControlVisibility() {
+  return FILTER_CONTROL_IDS.reduce((acc, id) => {
+    acc[id] = true
+    return acc
+  }, {})
+}
 
 const loading = ref(true)
 const saving = ref(false)
@@ -130,6 +33,167 @@ const form = reactive({ name: '', display_name: '', plain_description: '' })
 const editForm = reactive({ name: '', display_name: '', plain_description: '' })
 const seedPermissions = SEED_PERMISSION_PRESETS
 const permissionPreset = ref('')
+
+const rolesBrief = ref([])
+const permissionIdsByRoleId = ref(new Map())
+const roleFacetsReady = ref(false)
+
+const funnelDetailsRef = ref(null)
+const filterControlVisible = reactive(defaultFilterControlVisibility())
+
+const searchInput = ref('')
+const filterQ = ref('')
+const filterRoleId = ref('')
+const filterStatus = ref('all')
+
+const STATUS_OPTIONS = Object.freeze([
+  { value: 'all', label: 'Tất cả' },
+  { value: 'labeled', label: 'Có nhãn hiển thị' },
+  { value: 'unlabeled', label: 'Chưa có nhãn' },
+  { value: 'note_own', label: 'Có mô tả riêng' },
+  { value: 'note_default', label: 'Chưa mô tả riêng' },
+])
+
+const filterControlDefs = Object.freeze([
+  { id: 'search', label: 'Tìm trong danh sách' },
+  { id: 'role', label: 'Theo vai trò' },
+  { id: 'status', label: 'Trạng thái' },
+])
+
+const bumpSearchDebounced = debounceTrailing(() => {
+  filterQ.value = searchInput.value
+}, 300)
+
+watch(searchInput, () => bumpSearchDebounced())
+
+const statusFilterLabel = computed(
+  () => STATUS_OPTIONS.find((x) => x.value === filterStatus.value)?.label ?? 'Tất cả',
+)
+
+const roleChipSummaryText = computed(() => {
+  if (!roleFacetsReady.value) return 'Đang tải…'
+  if (!filterRoleId.value) return 'Tất cả'
+  const r = rolesBrief.value.find((x) => String(x.id) === String(filterRoleId.value))
+  if (!r) return '—'
+  const dn = r.display_name ?? ''
+  return dn ? `${r.name} — ${dn}` : r.name
+})
+
+const filteredItems = computed(() => {
+  const qRaw = filterQ.value.trim().toLowerCase()
+
+  let list = items.value
+  const roleIdSel = filterRoleId.value
+
+  if (roleIdSel && roleFacetsReady.value) {
+    const idNum = Number(roleIdSel)
+    const set = permissionIdsByRoleId.value.get(idNum)
+    list = list.filter((p) => set && set.has(p.id))
+  }
+
+  list = list.filter((p) => {
+    switch (filterStatus.value) {
+      case 'labeled':
+        return !!(p.display_name && String(p.display_name).trim())
+      case 'unlabeled':
+        return !(p.display_name && String(p.display_name).trim())
+      case 'note_own':
+        return !!(p.plain_description && String(p.plain_description).trim())
+      case 'note_default':
+        return !(p.plain_description && String(p.plain_description).trim())
+      default:
+        return true
+    }
+  })
+
+  if (!qRaw) return list
+  return list.filter((p) => {
+    const name = (p.name ?? '').toLowerCase()
+    const dn = (p.display_name ?? '').toLowerCase()
+    const sum = (p.plain_summary ?? '').toLowerCase()
+    return name.includes(qRaw) || dn.includes(qRaw) || sum.includes(qRaw)
+  })
+})
+
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (searchInput.value.trim()) n++
+  if (filterRoleId.value) n++
+  if (filterStatus.value !== 'all') n++
+  return n
+})
+
+function loadFilterControlVisibility() {
+  try {
+    const raw = localStorage.getItem(PERMISSIONS_FILTER_VIS_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    const base = defaultFilterControlVisibility()
+    FILTER_CONTROL_IDS.forEach((id) => {
+      if (typeof o[id] === 'boolean') base[id] = o[id]
+    })
+    Object.assign(filterControlVisible, base)
+  } catch {
+    /* ignore */
+  }
+}
+
+watch(
+  filterControlVisible,
+  () => {
+    try {
+      localStorage.setItem(PERMISSIONS_FILTER_VIS_KEY, JSON.stringify({ ...filterControlVisible }))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+async function hydrateRoleFacets() {
+  roleFacetsReady.value = false
+  permissionIdsByRoleId.value = new Map()
+  try {
+    const brief = (await admin.listRoles()) ?? []
+    rolesBrief.value = brief
+    const pairs = await Promise.all(
+      brief.map(async (r) => {
+        try {
+          const d = await admin.getRole(r.id)
+          const ids = new Set((d.permissions ?? []).map((p) => p.id))
+          return [r.id, ids]
+        } catch {
+          return [r.id, new Set()]
+        }
+      }),
+    )
+    permissionIdsByRoleId.value = new Map(pairs)
+  } catch {
+    rolesBrief.value = []
+  } finally {
+    roleFacetsReady.value = true
+  }
+}
+
+function closeParentDetails(ev) {
+  const el = ev.currentTarget
+  if (!el?.closest) return
+  const d = el.closest('details')
+  if (d) d.open = false
+}
+
+function closeFunnelMenu() {
+  const el = funnelDetailsRef.value
+  if (el) el.open = false
+}
+
+function resetFilters() {
+  searchInput.value = ''
+  filterQ.value = ''
+  filterRoleId.value = ''
+  filterStatus.value = 'all'
+  closeFunnelMenu()
+}
 
 watch(permissionPreset, (v) => {
   if (!v) return
@@ -150,6 +214,7 @@ async function load() {
   } finally {
     loading.value = false
   }
+  void hydrateRoleFacets()
 }
 
 async function create() {
@@ -217,5 +282,347 @@ async function remove(p) {
   }
 }
 
-onMounted(load)
+function setRoleFilter(ev, idVal) {
+  filterRoleId.value = idVal
+  closeParentDetails(ev)
+}
+
+function setStatusFilter(ev, val) {
+  filterStatus.value = val
+  closeParentDetails(ev)
+}
+
+onMounted(() => {
+  loadFilterControlVisibility()
+  load()
+})
 </script>
+
+<template>
+  <div class="mx-auto max-w-6xl space-y-5 pb-6 text-slate-900 dark:text-slate-100 sm:space-y-6 sm:pb-8">
+    <Card title="Thêm quyền mới">
+      <form class="grid gap-4 md:grid-cols-2 lg:grid-cols-4" @submit.prevent="create">
+        <Select v-model="permissionPreset" label="Mẫu có sẵn" placeholder="— Không dùng mẫu —">
+          <option value="">— Không dùng mẫu —</option>
+          <option v-for="p in seedPermissions" :key="p.name" :value="p.name">{{ p.name }}</option>
+        </Select>
+        <Input v-model="form.name" label="Mã quyền trong hệ thống" placeholder="vd. request.create" required />
+        <Input v-model="form.display_name" label="Nhãn ngắn" placeholder="vd. Tạo yêu cầu điều xe" />
+        <div class="flex items-end">
+          <Button type="submit" class="w-full sm:w-auto" :loading="saving" :disabled="saving">
+            Thêm quyền
+          </Button>
+        </div>
+        <div class="md:col-span-2 lg:col-span-4">
+          <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
+              Giải thích ngắn trên danh sách quản trị
+            </span>
+            <textarea
+              v-model="form.plain_description"
+              rows="2"
+              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              placeholder="Mô tả thao tác được phép thực hiện."
+            />
+          </label>
+        </div>
+      </form>
+    </Card>
+
+    <Card title="Danh sách quyền">
+      <div class="relative z-40 mb-4">
+        <AppFilterBar>
+          <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+            <details ref="funnelDetailsRef" class="group relative">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="relative inline-flex">
+                  <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                  <span
+                    v-if="activeFilterCount > 0"
+                    class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
+                  >
+                    {{ activeFilterCount }}
+                  </span>
+                </span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
+              >
+                <p
+                  class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300"
+                >
+                  Đang áp dụng
+                </p>
+                <div class="p-3 pt-2">
+                  <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <li v-if="searchInput.trim()" class="flex justify-between gap-2">
+                      <span class="text-slate-500 dark:text-slate-400">Tìm trong trang</span>
+                      <span class="max-w-[10rem] truncate text-right font-medium" :title="searchInput">{{ searchInput }}</span>
+                    </li>
+                    <li v-if="filterRoleId" class="flex justify-between gap-2">
+                      <span class="text-slate-500 dark:text-slate-400">Vai trò</span>
+                      <span class="max-w-[12rem] truncate text-right font-medium">
+                        {{ roleChipSummaryText }}
+                      </span>
+                    </li>
+                    <li v-if="filterStatus !== 'all'" class="flex justify-between gap-2">
+                      <span class="text-slate-500 dark:text-slate-400">Trạng thái</span>
+                      <span class="font-medium">{{ statusFilterLabel }}</span>
+                    </li>
+                    <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">
+                      Chưa chọn điều kiện lọc.
+                    </li>
+                  </ul>
+                  <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                      Hiển thị trên thanh
+                    </p>
+                    <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                      <li v-for="fd in filterControlDefs" :key="fd.id" class="flex items-start gap-2">
+                        <input
+                          :id="`permissions-filter-vis-${fd.id}`"
+                          v-model="filterControlVisible[fd.id]"
+                          type="checkbox"
+                          class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                        />
+                        <label
+                          :for="`permissions-filter-vis-${fd.id}`"
+                          class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                        >
+                          {{ fd.label }}
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
+                  <button
+                    type="button"
+                    class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @click="resetFilters"
+                  >
+                    Xóa tất cả bộ lọc
+                  </button>
+                </div>
+              </div>
+            </details>
+
+            <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
+
+            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+              <AppFilterDropdown
+                v-if="filterControlVisible.role"
+                root-class="shrink-0"
+                label="Vai trò"
+                :summary-text="roleChipSummaryText"
+                summary-text-class="max-w-[10rem]"
+                panel-class="max-h-[min(60vh,320px)] min-w-[220px] overflow-hidden py-1"
+              >
+                <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-1 py-1">
+                  <li>
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition disabled:opacity-50"
+                      :disabled="!roleFacetsReady"
+                      :class="
+                        !filterRoleId
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="setRoleFilter($event, '')"
+                    >
+                      Tất cả
+                    </button>
+                  </li>
+                  <li v-for="r in rolesBrief" :key="r.id">
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition disabled:opacity-50"
+                      :disabled="!roleFacetsReady"
+                      :class="
+                        String(filterRoleId) === String(r.id)
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="setRoleFilter($event, String(r.id))"
+                    >
+                      {{ r.name }} — {{ r.display_name ?? '—' }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+
+              <AppFilterDropdown
+                v-if="filterControlVisible.status"
+                root-class="shrink-0"
+                label="Trạng thái"
+                :summary-text="statusFilterLabel"
+                summary-text-class="max-w-[10rem]"
+                panel-class="min-w-[220px] py-1"
+              >
+                <ul class="space-y-0.5 px-1 py-1">
+                  <li v-for="opt in STATUS_OPTIONS" :key="opt.value">
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                      :class="
+                        filterStatus === opt.value
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="setStatusFilter($event, opt.value)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+
+              <input
+                v-if="filterControlVisible.search"
+                v-model="searchInput"
+                type="search"
+                aria-label="Tìm trong trang danh sách quyền"
+                placeholder="Tìm mã, nhãn hoặc mô tả…"
+                title="Tìm trong trang danh sách quyền"
+                class="h-9 w-[10rem] shrink-0 rounded-md border-0 bg-white/90 px-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500 sm:w-52"
+              />
+            </div>
+
+            <div
+              class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
+            >
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+                title="Xóa bộ lọc"
+                aria-label="Xóa bộ lọc"
+                @click="resetFilters"
+              >
+                <span class="relative inline-flex">
+                  <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+                  <XMarkIcon
+                    class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+                  />
+                </span>
+              </button>
+            </div>
+          </div>
+        </AppFilterBar>
+      </div>
+
+      <p v-if="!loading" class="mb-3 text-xs text-slate-500 dark:text-slate-400">
+        Hiển thị {{ filteredItems.length }} / {{ items.length }} quyền.
+      </p>
+
+      <div v-if="loading" class="flex items-center gap-3 py-10 text-sm text-slate-500 dark:text-slate-400">
+        <span
+          class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600 dark:border-slate-600 dark:border-t-teal-400"
+          aria-hidden="true"
+        />
+        Đang tải…
+      </div>
+
+      <template v-else-if="!items.length">
+        <div
+          class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-12 text-center dark:border-slate-700 dark:bg-slate-900/30"
+        >
+          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Chưa có quyền nào.</p>
+        </div>
+      </template>
+
+      <template v-else>
+        <div
+          v-if="filteredItems.length === 0"
+          class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 py-10 text-center text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200/90"
+        >
+          Không có quyền khớp bộ lọc.
+        </div>
+
+        <div v-else class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700">
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[40rem] border-collapse text-left text-sm">
+              <thead>
+                <tr
+                  class="border-b border-slate-200 bg-slate-50/95 text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300"
+                >
+                  <th class="whitespace-nowrap py-3 pl-4 pr-3 font-semibold">Quyền</th>
+                  <th class="whitespace-nowrap py-3 pr-3 font-semibold text-right tabular-nums">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(p, pi) in filteredItems"
+                  :key="p.id"
+                  class="border-b border-slate-100 transition-colors hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                  :class="pi % 2 === 1 ? 'bg-white dark:bg-transparent' : 'bg-slate-50/30 dark:bg-slate-900/40'"
+                >
+                  <td class="max-w-xl py-2.5 pl-4 pr-3 align-middle">
+                    <p class="font-semibold leading-snug text-slate-900 dark:text-slate-100">
+                      {{ p.display_name?.trim() || p.name }}
+                    </p>
+                    <p class="mt-0.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">{{ p.name }}</p>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                      {{ p.plain_summary ?? '—' }}
+                    </p>
+                  </td>
+                  <td class="py-2.5 pl-2 pr-4 text-right align-middle">
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      class="mr-1 !px-2.5 !py-1 text-xs ring-1 ring-slate-200/80 dark:ring-slate-600"
+                      :disabled="saving"
+                      @click="openEdit(p)"
+                    >
+                      Sửa
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      class="!px-2.5 !py-1 text-xs text-rose-600 ring-1 ring-slate-200/80 hover:bg-rose-50 dark:text-rose-400 dark:ring-slate-600 dark:hover:bg-rose-950/30"
+                      :disabled="saving"
+                      @click="remove(p)"
+                    >
+                      Xóa
+                    </Button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </template>
+    </Card>
+
+    <div
+      v-if="editing"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      @click.self="editing = null"
+    >
+      <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto" :title="`Sửa quyền: ${editing.name}`">
+        <div class="space-y-4">
+          <Input v-model="editForm.name" label="Mã quyền" />
+          <Input v-model="editForm.display_name" label="Nhãn ngắn" />
+          <label class="block">
+            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Giải thích hiển thị trong danh sách quản trị</span>
+            <textarea
+              v-model="editForm.plain_description"
+              rows="3"
+              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              placeholder="Mô tả thao tác được phép thực hiện."
+            />
+          </label>
+          <div class="flex justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+            <Button variant="secondary" type="button" :disabled="saving" @click="editing = null">
+              Đóng
+            </Button>
+            <Button :loading="saving" :disabled="saving" @click="saveEdit">Lưu thay đổi</Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  </div>
+</template>
