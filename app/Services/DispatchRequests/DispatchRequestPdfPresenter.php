@@ -29,10 +29,10 @@ final class DispatchRequestPdfPresenter
         $form = isset($snapshot['form']) && is_array($snapshot['form']) ? $snapshot['form'] : [];
 
         $tripTypeRaw = (string) $dr->trip_type;
-        $isCargo = $tripTypeRaw === 'cargo';
-        $isP2P = $tripTypeRaw === 'point_to_point';
-        $isBusiness = $tripTypeRaw === 'business';
-        $isDoor = $tripTypeRaw === 'door_to_door';
+        $isCargo = $dr->trip_type === 'cargo';
+        $isP2P = $dr->trip_type === 'point_to_point';
+        $isBusiness = $dr->trip_type === 'business';
+        $isDoor = $dr->trip_type === 'door_to_door';
 
         $cargoRows = self::normalizeList($snapshot['cargoRows'] ?? []);
         $passengerRows = self::normalizeList($snapshot['passengerRows'] ?? []);
@@ -69,15 +69,17 @@ final class DispatchRequestPdfPresenter
             ->values()
             ->all();
 
+        $showPassenger = ! $isCargo && ! $isBusiness;
+
         $cargoRaw = $isCargo ? self::collectCargoModels($cargoRows) : collect();
-        $passRaw = (! $isCargo && ($isDoor || $isP2P)) ? self::collectPassengerModels($passengerRows) : collect();
+        $passRaw = $showPassenger ? self::collectPassengerModels($passengerRows) : collect();
         $bizRaw = $isBusiness ? self::collectBusinessModels($businessRows) : collect();
 
         $cargoSectionRows = $isCargo
             ? self::padRows($cargoRaw->map(fn (array $r) => self::cargoRowToPdf($r))->all(), 10)
             : [];
 
-        $passengerSectionRows = (! $isCargo && ($isDoor || $isP2P))
+        $passengerSectionRows = $showPassenger
             ? self::padRows($passRaw->map(fn (array $r) => self::passengerRowToPdf($r))->all(), 5)
             : [];
 
@@ -239,21 +241,34 @@ final class DispatchRequestPdfPresenter
     {
         $name = self::nzString($r['description'] ?? null);
         if ($name === '') {
-            $name = 'Hành khách / chương trình';
+            $name = self::nzString($r['name'] ?? null);
+        }
+
+        $qty = self::nzString($r['guests'] ?? null);
+        if ($qty === '') {
+            $qty = self::nzString(isset($r['passenger_count']) ? (string) $r['passenger_count'] : '');
+        }
+
+        $puPlace = self::nzString($r['pickup_place'] ?? null);
+        if ($puPlace === '') {
+            $puPlace = self::nzString($r['pickup'] ?? null);
+        }
+        $delPlace = self::nzString($r['dropoff_place'] ?? null);
+        if ($delPlace === '') {
+            $delPlace = self::nzString($r['dropoff'] ?? null);
         }
 
         return [
             'name' => $name,
-            'qty' => self::nzString($r['guests'] ?? null),
-            'dim' => self::nzString($r['dimensions'] ?? null),
-            'weight' => self::nzString($r['weight'] ?? null),
-            'inotes' => self::nzString($r['notes'] ?? null),
-            'puTime' => self::nzString($r['depart_at'] ?? null),
-            'puPlace' => self::nzString($r['pickup'] ?? null),
+            'qty' => $qty,
+            'puTime' => self::fmtPdfShortDatetime($r['depart_at'] ?? null),
+            'puPlace' => $puPlace,
+            'delTime' => self::fmtPdfShortDatetime($r['return_at'] ?? null),
+            'delPlace' => $delPlace,
             'puContact' => self::nzString($r['person_in_charge'] ?? null),
-            'delTime' => self::nzString($r['return_at'] ?? null),
-            'delPlace' => self::nzString($r['dropoff'] ?? null),
-            'delContact' => self::nzString($r['receiver'] ?? null),
+            'unitPrice' => self::fmtPdfVndSuffix($r['unit_price'] ?? null),
+            'extraFee' => self::fmtPdfVndSuffix($r['extra_fee'] ?? null),
+            'inotes' => self::nzString($r['notes'] ?? null),
         ];
     }
 
@@ -288,7 +303,7 @@ final class DispatchRequestPdfPresenter
                 [
                     'name', 'qty', 'dim', 'weight', 'inotes', 'puTime', 'puPlace',
                     'puContact', 'delTime', 'delPlace', 'delContact', 'transport',
-                    'cost', 'waypoint',
+                    'cost', 'waypoint', 'unitPrice', 'extraFee',
                 ],
                 ''
             )
@@ -331,6 +346,26 @@ final class DispatchRequestPdfPresenter
         return trim($s);
     }
 
+    private static function fmtPdfShortDatetime(mixed $v): string
+    {
+        $s = self::nzString(is_scalar($v) ? (string) $v : null);
+        if ($s === '') {
+            return '';
+        }
+        try {
+            return Carbon::parse($s)->format('d/m H:i');
+        } catch (\Throwable) {
+            return $s;
+        }
+    }
+
+    private static function fmtPdfVndSuffix(mixed $v): string
+    {
+        $n = self::parseMoney($v);
+
+        return $n > 0 ? number_format($n, 0, ',', '.').' đ' : '';
+    }
+
     private static function fmtDateStr(?string $d): string
     {
         $s = self::nzString($d);
@@ -362,7 +397,13 @@ final class DispatchRequestPdfPresenter
      */
     private static function isPassengerRowFilled(array $r): bool
     {
+        if (self::nzString($r['pickup_place'] ?? null) || self::nzString($r['dropoff_place'] ?? null)) {
+            return true;
+        }
         if (self::nzString($r['pickup'] ?? null) || self::nzString($r['dropoff'] ?? null)) {
+            return true;
+        }
+        if (self::nzString($r['description'] ?? null)) {
             return true;
         }
         if (self::nzString($r['depart_at'] ?? null) || self::nzString($r['return_at'] ?? null)) {

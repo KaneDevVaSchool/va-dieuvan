@@ -179,7 +179,7 @@ return [
          *
          * @var string
          */
-        'default_font' => 'times',
+        'default_font' => 'DejaVu Sans',
 
         /** @deprecated Dompdf 2.x; no-op if unsupported */
         'enable_unicode' => true,

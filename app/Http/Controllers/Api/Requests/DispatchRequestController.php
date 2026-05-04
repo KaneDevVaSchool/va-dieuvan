@@ -106,10 +106,18 @@ class DispatchRequestController extends Controller
 
         $data = DispatchRequestPdfPresenter::buildPdfData($dispatchRequest);
 
+        logger()->debug('PDF trip_type', [
+            'raw' => $dispatchRequest->trip_type,
+            'isCargo' => $data['isCargo'],
+            'isP2P' => $data['isP2P'],
+            'isBusiness' => $data['isBusiness'],
+            'isDoor' => $data['isDoor'],
+        ]);
+
         return Pdf::loadView('pdf.dispatch-request', $data)
             ->setPaper('a4', $data['isCargo'] ? 'landscape' : 'portrait')
             ->setOptions([
-                'defaultFont' => 'times',
+                'defaultFont' => 'DejaVu Sans',
                 'enable_unicode' => true,
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => false,

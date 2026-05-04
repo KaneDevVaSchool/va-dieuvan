@@ -539,7 +539,12 @@ export function useDispatchRequestWizard() {
       businessRows.value.reduce((s, r) => s + parseGuests(r.guests), 0),
   )
 
-  const cargoTotal = computed(() => cargoRows.value.reduce((s, r) => s + parseMoney(r.cost), 0))
+  const cargoTotal = computed(() =>
+    cargoRows.value.reduce(
+      (s, r) => s + (r.name?.trim() ? parseMoney(r.cost) : 0),
+      0,
+    ),
+  )
 
   const extraCosts = computed(() => {
     let x = 0

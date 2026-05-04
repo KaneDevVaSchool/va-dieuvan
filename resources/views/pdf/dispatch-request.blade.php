@@ -6,10 +6,10 @@
         @page { margin: 22px 24px; }
         * {
             box-sizing: border-box;
-            font-family: 'times', 'Times New Roman', Times, serif;
+            font-family: 'DejaVu Sans', sans-serif;
         }
         body {
-            font-family: 'times', serif;
+            font-family: 'DejaVu Sans', sans-serif;
             font-size: 11pt;
             color: #111;
             margin: 0;
@@ -86,7 +86,17 @@
         </td>
         <td class="nb" style="width:52%; vertical-align:middle;">
             <h1>ĐỀ NGHỊ ĐIỀU VẬN</h1>
-            <div class="tc value" style="font-size:11pt; margin-top:4px;">(Điều chuyển Hàng hóa)</div>
+            <div class="tc value" style="font-size:11pt; margin-top:4px;">
+                @if($isCargo)
+                    (Điều chuyển Hàng hóa)
+                @elseif($isP2P)
+                    (Vận chuyển Điểm — Điểm)
+                @elseif($isBusiness)
+                    (Công tác)
+                @else
+                    (Đưa đón tận nơi)
+                @endif
+            </div>
         </td>
         <td class="nb header-meta" style="width:24%; vertical-align:top;">
             <table style="width:100%; border-collapse:collapse;" class="header-meta">
@@ -249,44 +259,51 @@
 </table>
 @endif
 
-@if(!$isCargo && ($isDoor || $isP2P))
-    <div class="label" style="margin-top:8px; margin-bottom:4px;">E.1 Bảng nội dung hành khách / chương trình</div>
+@if(!$isCargo && !$isBusiness)
+    <div class="label" style="margin-top:8px; margin-bottom:4px;">
+        @if($isP2P)
+            E.1 Bảng nội dung hành trình (Điểm — Điểm)
+        @else
+            E.1 Bảng nội dung hành khách
+        @endif
+    </div>
     <table class="data" style="width:100%; font-size:10pt;">
         <thead>
             <tr style="background:#f0f0f0;">
                 <th style="width:4%;" class="tc">STT</th>
-                <th style="width:14%;" class="tc">Diễn giải</th>
-                <th style="width:5%;" class="tc">SL</th>
-                <th style="width:8%;" class="tc">Kích thước</th>
-                <th style="width:7%;" class="tc">Khối lượng</th>
-                <th style="width:8%;" class="tc">Ghi chú</th>
-                <th style="width:8%;" class="tc">TG đi/lấy</th>
-                <th style="width:9%;" class="tc">Điểm đi</th>
-                <th style="width:9%;" class="tc">Người liên hệ</th>
-                <th style="width:8%;" class="tc">TG về/giao</th>
-                <th style="width:9%;" class="tc">Điểm đến</th>
-                <th style="width:11%;" class="tc">Người nhận</th>
+                <th style="width:16%;" class="tc">Diễn giải</th>
+                <th style="width:6%;" class="tc">SL khách</th>
+                <th style="width:9%;" class="tc">TG đi</th>
+                <th style="width:11%;" class="tc">Điểm đón</th>
+                <th style="width:9%;" class="tc">TG về</th>
+                <th style="width:11%;" class="tc">Điểm trả</th>
+                <th style="width:10%;" class="tc">Người phụ trách</th>
+                <th style="width:9%;" class="tc">Đơn giá</th>
+                <th style="width:8%;" class="tc">Phụ thu</th>
+                <th style="width:7%;" class="tc">Ghi chú</th>
             </tr>
         </thead>
         <tbody>
             @foreach($passengerSectionRows as $idx => $row)
-                <tr style="min-height:22px;">
+                <tr style="height:22px;">
                     <td class="tc">{{ $idx + 1 }}</td>
                     <td>{{ $row['name'] }}</td>
                     <td class="tc">{{ $row['qty'] }}</td>
-                    <td>{{ $row['dim'] }}</td>
-                    <td>{{ $row['weight'] }}</td>
-                    <td>{{ $row['inotes'] }}</td>
                     <td>{{ $row['puTime'] }}</td>
                     <td>{{ $row['puPlace'] }}</td>
-                    <td>{{ $row['puContact'] }}</td>
                     <td>{{ $row['delTime'] }}</td>
                     <td>{{ $row['delPlace'] }}</td>
-                    <td>{{ $row['delContact'] }}</td>
+                    <td>{{ $row['puContact'] }}</td>
+                    <td class="tr">{{ $row['unitPrice'] ?? '' }}</td>
+                    <td class="tr">{{ $row['extraFee'] ?? '' }}</td>
+                    <td>{{ $row['inotes'] }}</td>
                 </tr>
             @endforeach
             <tr>
-                <td colspan="12" class="tr label">Tổng (ước tính): {{ $grandTotalFmt }}</td>
+                <td colspan="10" class="tr label" style="padding:4px 8px;">
+                    Tổng ước tính:
+                </td>
+                <td class="tr label">{{ $grandTotalFmt }}</td>
             </tr>
         </tbody>
     </table>
