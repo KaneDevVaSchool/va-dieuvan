@@ -20,18 +20,20 @@
             {{ t('user_roles_page.bulk_remove') }}
           </label>
         </div>
-        <div class="mt-3">
+        <div class="mt-3 min-w-0">
           <p class="mb-1 text-[10px] font-semibold uppercase text-slate-500 dark:text-slate-400">
             {{ t('user_roles_page.bulk_pick_roles_label') }}
           </p>
-          <div class="max-h-28 overflow-y-auto rounded-lg border border-slate-200/80 bg-white/80 p-2 dark:border-slate-700 dark:bg-slate-900/80">
-            <div class="flex flex-wrap gap-1.5">
+          <div
+            class="overflow-x-auto rounded-lg border border-slate-200/80 bg-white/80 px-2 py-2 [-webkit-overflow-scrolling:touch] dark:border-slate-700 dark:bg-slate-900/80"
+          >
+            <div class="inline-flex min-h-[1.625rem] flex-nowrap gap-1.5 pr-1">
               <button
                 v-for="r in flatRoles"
                 :key="r.id"
                 type="button"
                 :disabled="disabled"
-                class="rounded-full border px-2 py-0.5 text-[10px] font-medium transition disabled:opacity-50"
+                class="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium transition disabled:opacity-50"
                 :class="
                   pickedSet.has(r.name)
                     ? 'border-teal-500 bg-teal-600 text-white dark:bg-teal-500'
