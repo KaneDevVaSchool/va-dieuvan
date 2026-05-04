@@ -6,7 +6,7 @@
   />
   <template v-else>
     <Onboarding
-      v-if="!hasOnboarded && isAuthenticated"
+      v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated"
       @done="completeOnboarding"
     />
     <template v-else>
@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import { useAuthStore } from './store'
 import { useOnboarding } from './composables/useOnboarding'
@@ -78,8 +78,28 @@ const isAuthenticated = computed(() => auth.isAuthenticated)
 const showSplash = ref(true)
 const splashAppReady = ref(false)
 
+/** Onboarding chỉ trên màn hẹp (mobile / tablet); desktop ≥1024px bỏ qua. */
+const ONBOARDING_MAX_MQ = '(max-width: 1023px)'
+const onboardingViewportOk = ref(
+  typeof window !== 'undefined' && window.matchMedia(ONBOARDING_MAX_MQ).matches,
+)
+
+let onboardingMq = null
+function onboardingMqSync() {
+  if (onboardingMq) onboardingViewportOk.value = onboardingMq.matches
+}
+
 onMounted(() => {
   splashAppReady.value = true
+  onboardingMq = window.matchMedia(ONBOARDING_MAX_MQ)
+  onboardingMqSync()
+  onboardingMq.addEventListener('change', onboardingMqSync)
+})
+
+onUnmounted(() => {
+  if (onboardingMq) {
+    onboardingMq.removeEventListener('change', onboardingMqSync)
+  }
 })
 </script>
 
