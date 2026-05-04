@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { FunnelIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { FunnelIcon, ChevronDownIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import Card from '../../components/ui/Card.vue'
@@ -40,6 +40,7 @@ const roleFacetsReady = ref(false)
 
 const funnelDetailsRef = ref(null)
 const filterControlVisible = reactive(defaultFilterControlVisibility())
+const createModalOpen = ref(false)
 
 const searchInput = ref('')
 const filterQ = ref('')
@@ -232,11 +233,17 @@ async function create() {
     permissionPreset.value = ''
     await load()
     showAppSuccess('Đã thêm quyền mới.', 'Thành công')
+    createModalOpen.value = false
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
     saving.value = false
   }
+}
+
+function closeCreateModal() {
+  if (saving.value) return
+  createModalOpen.value = false
 }
 
 function openEdit(p) {
@@ -300,36 +307,13 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-6xl space-y-5 pb-6 text-slate-900 dark:text-slate-100 sm:space-y-6 sm:pb-8">
-    <Card title="Thêm quyền mới">
-      <form class="grid gap-4 md:grid-cols-2 lg:grid-cols-4" @submit.prevent="create">
-        <Select v-model="permissionPreset" label="Mẫu có sẵn" placeholder="— Không dùng mẫu —">
-          <option value="">— Không dùng mẫu —</option>
-          <option v-for="p in seedPermissions" :key="p.name" :value="p.name">{{ p.name }}</option>
-        </Select>
-        <Input v-model="form.name" label="Mã quyền trong hệ thống" placeholder="vd. request.create" required />
-        <Input v-model="form.display_name" label="Nhãn ngắn" placeholder="vd. Tạo yêu cầu điều xe" />
-        <div class="flex items-end">
-          <Button type="submit" class="w-full sm:w-auto" :loading="saving" :disabled="saving">
-            Thêm quyền
-          </Button>
-        </div>
-        <div class="md:col-span-2 lg:col-span-4">
-          <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
-              Giải thích ngắn trên danh sách quản trị
-            </span>
-            <textarea
-              v-model="form.plain_description"
-              rows="2"
-              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-              placeholder="Mô tả thao tác được phép thực hiện."
-            />
-          </label>
-        </div>
-      </form>
-    </Card>
-
-    <Card title="Danh sách quyền">
+    <Card>
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">Danh sách quyền</h2>
+        <Button type="button" class="w-full sm:w-auto" :disabled="saving" @click="createModalOpen = true">
+          + Thêm mới
+        </Button>
+      </div>
       <div class="relative z-40 mb-4">
         <AppFilterBar>
           <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
@@ -496,7 +480,6 @@ onMounted(() => {
               <button
                 type="button"
                 class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-                title="Xóa bộ lọc"
                 aria-label="Xóa bộ lọc"
                 @click="resetFilters"
               >
@@ -511,10 +494,6 @@ onMounted(() => {
           </div>
         </AppFilterBar>
       </div>
-
-      <p v-if="!loading" class="mb-3 text-xs text-slate-500 dark:text-slate-400">
-        Hiển thị {{ filteredItems.length }} / {{ items.length }} quyền.
-      </p>
 
       <div v-if="loading" class="flex items-center gap-3 py-10 text-sm text-slate-500 dark:text-slate-400">
         <span
@@ -547,8 +526,10 @@ onMounted(() => {
                 <tr
                   class="border-b border-slate-200 bg-slate-50/95 text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300"
                 >
-                  <th class="whitespace-nowrap py-3 pl-4 pr-3 font-semibold">Quyền</th>
-                  <th class="whitespace-nowrap py-3 pr-3 font-semibold text-right tabular-nums">Thao tác</th>
+                  <th class="whitespace-nowrap py-2.5 pl-4 pr-3 text-xs font-semibold uppercase tracking-wide">Quyền</th>
+                  <th class="whitespace-nowrap py-2.5 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-wide tabular-nums">
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -563,7 +544,7 @@ onMounted(() => {
                       {{ p.display_name?.trim() || p.name }}
                     </p>
                     <p class="mt-0.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">{{ p.name }}</p>
-                    <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                    <p class="mt-1 text-xs leading-snug text-slate-500 dark:text-slate-400">
                       {{ p.plain_summary ?? '—' }}
                     </p>
                   </td>
@@ -577,15 +558,15 @@ onMounted(() => {
                     >
                       Sửa
                     </Button>
-                    <Button
-                      variant="secondary"
+                    <button
                       type="button"
-                      class="!px-2.5 !py-1 text-xs text-rose-600 ring-1 ring-slate-200/80 hover:bg-rose-50 dark:text-rose-400 dark:ring-slate-600 dark:hover:bg-rose-950/30"
+                      class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-rose-200/90 text-rose-600 transition hover:bg-rose-50 disabled:opacity-40 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                       :disabled="saving"
+                      aria-label="Xóa"
                       @click="remove(p)"
                     >
-                      Xóa
-                    </Button>
+                      <TrashIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -594,6 +575,41 @@ onMounted(() => {
         </div>
       </template>
     </Card>
+
+    <div
+      v-if="createModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="system-permissions-create-title"
+      @click.self="closeCreateModal"
+    >
+      <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
+        <h2 id="system-permissions-create-title" class="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+          Thêm quyền
+        </h2>
+        <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="create">
+          <Select v-model="permissionPreset" label="Mẫu có sẵn" placeholder="— Không dùng mẫu —" class="sm:col-span-2">
+            <option value="">— Không dùng mẫu —</option>
+            <option v-for="p in seedPermissions" :key="p.name" :value="p.name">{{ p.name }}</option>
+          </Select>
+          <Input v-model="form.name" label="Mã quyền" placeholder="vd. request.create" required />
+          <Input v-model="form.display_name" label="Nhãn hiển thị" placeholder="vd. Tạo yêu cầu điều xe" />
+          <label class="block sm:col-span-2">
+            <span class="mb-1 block text-sm font-medium text-slate-800 dark:text-slate-200">Mô tả</span>
+            <textarea
+              v-model="form.plain_description"
+              rows="3"
+              class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </label>
+          <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:col-span-2 sm:flex-row sm:justify-end">
+            <Button variant="secondary" type="button" :disabled="saving" @click="closeCreateModal">Huỷ</Button>
+            <Button type="submit" :loading="saving" :disabled="saving">Thêm</Button>
+          </div>
+        </form>
+      </Card>
+    </div>
 
     <div
       v-if="editing"
@@ -605,14 +621,13 @@ onMounted(() => {
       <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto" :title="`Sửa quyền: ${editing.name}`">
         <div class="space-y-4">
           <Input v-model="editForm.name" label="Mã quyền" />
-          <Input v-model="editForm.display_name" label="Nhãn ngắn" />
+          <Input v-model="editForm.display_name" label="Nhãn hiển thị" />
           <label class="block">
-            <span class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">Giải thích hiển thị trong danh sách quản trị</span>
+            <span class="mb-1 block text-sm font-medium text-slate-800 dark:text-slate-200">Mô tả</span>
             <textarea
               v-model="editForm.plain_description"
               rows="3"
               class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-              placeholder="Mô tả thao tác được phép thực hiện."
             />
           </label>
           <div class="flex justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">

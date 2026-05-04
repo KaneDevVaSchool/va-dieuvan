@@ -1,0 +1,32 @@
+---
+alwaysApply: true
+---
+# LARAVEL RULES
+
+## FLOW (MANDATORY)
+
+Controller → FormRequest → Service → Resource
+
+## CONTROLLER
+
+- No business logic
+- Use FormRequest
+
+## SERVICE
+
+- Handle all business logic
+- No $request usage
+
+## DB
+
+- Use Eloquent
+- Avoid N+1 (use with())
+
+## SECURITY
+
+- Use $request->validated()
+- No hardcode secrets
+
+## API
+
+- Use Resource

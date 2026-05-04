@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+# VUE 3 RULES
+
+## CORE
+
+- Use <script setup>
+- Composition API only
+
+## ARCHITECTURE
+
+Component → Store → Service
+
+## RULES
+
+- No API call in component
+- Logic → store/composable
+- Template must be simple
+
+## STATE
+
+- expose: data, loading, error
+
+## UI
+
+- Use Tailwind

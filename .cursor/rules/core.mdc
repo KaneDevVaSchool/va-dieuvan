@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+Apply:
+
+- @core.mdc
+
+Bug:
+<describe>
+
+Scope:
+
+- Minimal change only
+
+Output:
+
+- Fix code
+- Explain root cause
