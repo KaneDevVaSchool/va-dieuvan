@@ -710,6 +710,7 @@ import {
   labelTripType,
 } from '../../util/labels'
 import { useAuthStore } from '../../store'
+import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -719,7 +720,7 @@ const pageTitle = computed(() => t('trips_page.hero_title'))
 const pageSubtitle = computed(() => t('trips_page.hero_subtitle'))
 
 const tripDetailPrefix = computed(() =>
-  route.path.startsWith('/driver') ? '/driver/trips' : '/trips',
+  route.path.startsWith('/driver') ? '/driver/trips' : staffPath('/trips'),
 )
 
 const loading = ref(false)

@@ -1,3 +1,5 @@
+import { DISPATCH_WEB_BASE } from './dispatchWebBase'
+
 /**
  * Mục sidebar / drawer.
  * `icon`: khóa trong `navIconMap.js`
@@ -16,10 +18,10 @@ export const NAV_SECTIONS = [
         icon: 'home',
         featureKey: 'module.overview',
         children: [
-          { to: '/', labelKey: 'nav.dashboard', icon: 'home', featureKey: 'module.overview' },
-          { to: '/dispatcher', labelKey: 'nav.dispatcher_board', icon: 'dispatcher', featureKey: 'module.overview' },
+          { to: DISPATCH_WEB_BASE, labelKey: 'nav.dashboard', icon: 'home', featureKey: 'module.overview' },
+          { to: `${DISPATCH_WEB_BASE}/dispatcher`, labelKey: 'nav.dispatcher_board', icon: 'dispatcher', featureKey: 'module.overview' },
           {
-            to: '/resources',
+            to: `${DISPATCH_WEB_BASE}/resources`,
             labelKey: 'nav.resources_overview',
             icon: 'resources',
             featureKey: 'module.operations',
@@ -33,24 +35,24 @@ export const NAV_SECTIONS = [
     headingKey: 'nav.section_ops',
     items: [
       {
-        to: '/requests',
+        to: `${DISPATCH_WEB_BASE}/requests`,
         labelKey: 'nav.requests',
         icon: 'requests',
         badgeKey: 'pending_dispatch_requests',
         featureKey: 'module.operations',
       },
-      { to: '/trips', labelKey: 'nav.trips', icon: 'trips', featureKey: 'module.operations' },
-      { to: '/costs', labelKey: 'nav.costs', icon: 'costs', featureKey: 'module.operations' },
+      { to: `${DISPATCH_WEB_BASE}/trips`, labelKey: 'nav.trips', icon: 'trips', featureKey: 'module.operations' },
+      { to: `${DISPATCH_WEB_BASE}/costs`, labelKey: 'nav.costs', icon: 'costs', featureKey: 'module.operations' },
       {
-        to: '/cargo',
+        to: `${DISPATCH_WEB_BASE}/cargo`,
         labelKey: 'nav.cargo',
         icon: 'cargo',
         badgeKey: 'cargo_sla_breaches',
         featureKey: 'module.operations',
       },
-      { to: '/routes', labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.d2d_routes' },
+      { to: `${DISPATCH_WEB_BASE}/routes`, labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.d2d_routes' },
       {
-        to: '/resources/list',
+        to: `${DISPATCH_WEB_BASE}/resources/list`,
         labelKey: 'nav.resources',
         icon: 'resources',
         featureKey: 'module.operations',
@@ -61,8 +63,8 @@ export const NAV_SECTIONS = [
     sectionKey: 'reports',
     headingKey: 'nav.section_reports',
     items: [
-      { to: '/reports', labelKey: 'nav.reports', icon: 'reports', featureKey: 'module.reports' },
-      { to: '/pricing', labelKey: 'nav.pricing', icon: 'pricing', featureKey: 'module.pricing' },
+      { to: `${DISPATCH_WEB_BASE}/reports`, labelKey: 'nav.reports', icon: 'reports', featureKey: 'module.reports' },
+      { to: `${DISPATCH_WEB_BASE}/pricing`, labelKey: 'nav.pricing', icon: 'pricing', featureKey: 'module.pricing' },
     ],
   },
   {
@@ -74,35 +76,35 @@ export const NAV_SECTIONS = [
         icon: 'settings',
         children: [
           {
-            to: '/system/roles',
+            to: `${DISPATCH_WEB_BASE}/system/roles`,
             labelKey: 'nav.system_roles',
             icon: 'roles',
             featureKey: 'module.system.roles',
             permissionKey: 'system.roles.manage',
           },
           {
-            to: '/system/permissions',
+            to: `${DISPATCH_WEB_BASE}/system/permissions`,
             labelKey: 'nav.system_permissions',
             icon: 'permissions',
             featureKey: 'module.system.permissions',
             permissionKey: 'system.permissions.manage',
           },
           {
-            to: '/system/user-roles',
+            to: `${DISPATCH_WEB_BASE}/system/user-roles`,
             labelKey: 'nav.system_user_roles',
             icon: 'user_roles',
             featureKey: 'module.system.user_roles',
             permissionKey: 'system.user_roles.manage',
           },
           {
-            to: '/system/feature-toggles',
+            to: `${DISPATCH_WEB_BASE}/system/feature-toggles`,
             labelKey: 'nav.system_feature_toggles',
             icon: 'feature_toggle',
             featureKey: 'module.system.feature_toggles',
             permissionKey: 'system.feature_toggles.manage',
           },
           {
-            to: '/audit-logs',
+            to: `${DISPATCH_WEB_BASE}/audit-logs`,
             labelKey: 'nav.audit',
             icon: 'audit',
             featureKey: 'module.system.audit',
@@ -116,16 +118,16 @@ export const NAV_SECTIONS = [
 
 /** Bottom bar (mobile): rút gọn */
 export const BOTTOM_NAV = [
-  { to: '/', labelKey: 'nav.bottom_home', icon: 'home' },
-  { to: '/dispatcher', labelKey: 'nav.bottom_dispatcher', icon: 'dispatcher' },
+  { to: DISPATCH_WEB_BASE, labelKey: 'nav.bottom_home', icon: 'home' },
+  { to: `${DISPATCH_WEB_BASE}/dispatcher`, labelKey: 'nav.bottom_dispatcher', icon: 'dispatcher' },
   {
-    to: '/requests',
+    to: `${DISPATCH_WEB_BASE}/requests`,
     labelKey: 'nav.bottom_requests',
     icon: 'requests',
     badgeKey: 'pending_dispatch_requests',
   },
-  { to: '/trips', labelKey: 'nav.bottom_trips', icon: 'trips' },
-  { to: '/costs', labelKey: 'nav.bottom_costs', icon: 'costs' },
+  { to: `${DISPATCH_WEB_BASE}/trips`, labelKey: 'nav.bottom_trips', icon: 'trips' },
+  { to: `${DISPATCH_WEB_BASE}/costs`, labelKey: 'nav.bottom_costs', icon: 'costs' },
 ]
 
 /**

@@ -113,6 +113,7 @@
 import { computed, nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
 
 const panelId = useId()
@@ -145,8 +146,8 @@ function labelFor(item) {
 
 function isItemActive(to) {
   if (!to) return false
-  if (to === '/') {
-    return route.path === '/' || route.path === ''
+  if (isDispatchStaffHomePath(to)) {
+    return isDispatchStaffHomePath(route.path)
   }
   return route.path === to || route.path.startsWith(`${to}/`)
 }

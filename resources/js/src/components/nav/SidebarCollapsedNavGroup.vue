@@ -71,6 +71,7 @@
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
 
 const props = defineProps({
@@ -104,7 +105,7 @@ const badgeTotal = computed(() =>
 
 function pathMatches(to, path) {
   if (!to) return false
-  if (to === '/') return path === '/' || path === ''
+  if (isDispatchStaffHomePath(to)) return isDispatchStaffHomePath(path)
   return path === to || path.startsWith(`${to}/`)
 }
 

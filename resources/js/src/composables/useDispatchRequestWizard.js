@@ -32,6 +32,7 @@ import {
   MAX_SAVED_DRAFTS,
 } from './dispatchWizardConstants'
 import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
+import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
 export function useDispatchRequestWizard() {
   const router = useRouter()
@@ -1258,7 +1259,7 @@ export function useDispatchRequestWizard() {
 
   function onCancel() {
     if (created.value) {
-      router.push('/requests')
+      router.push(staffPath('/requests'))
       return
     }
     router.back()

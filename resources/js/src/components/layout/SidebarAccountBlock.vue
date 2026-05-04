@@ -125,7 +125,7 @@
 
         <RouterLink
           role="menuitem"
-          to="/profile"
+          :to="profileTo"
           class="flex items-center gap-2 px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/80 dark:hover:text-slate-50"
           @click="accountMenuOpen = false"
         >
@@ -279,13 +279,14 @@
 </template>
 
 <script setup>
-import { nextTick, onUnmounted, ref, useId, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, useId, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowRightOnRectangleIcon, ChevronDownIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 import UserAvatar from '../branding/UserAvatar.vue'
 import { useAuthStore } from '../../store'
 import { useUiStore } from '../../store/ui'
+import { profilePathForAuth } from '../../config/dispatchWebBase'
 import { setLocale } from '../../i18n'
 import { applyRouteDocumentTitle } from '../../util/routeDocumentTitle'
 
@@ -300,6 +301,8 @@ const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const ui = useUiStore()
+
+const profileTo = computed(() => profilePathForAuth(auth.canAccessDispatchWebApp()))
 
 const segmentActive =
   'bg-slate-800 text-white shadow-sm dark:bg-slate-600 dark:text-white'

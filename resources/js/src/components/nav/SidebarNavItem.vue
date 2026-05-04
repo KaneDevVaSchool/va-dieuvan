@@ -31,6 +31,7 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 import { NAV_ICON_MAP } from '../../config/navIconMap'
 
 const props = defineProps({
@@ -63,8 +64,8 @@ const route = useRoute()
 const IconComp = computed(() => NAV_ICON_MAP[props.icon] ?? NAV_ICON_MAP.home)
 
 const isActive = computed(() => {
-  if (props.to === '/') {
-    return route.path === '/' || route.path === ''
+  if (isDispatchStaffHomePath(props.to)) {
+    return isDispatchStaffHomePath(route.path)
   }
   if (props.to === '/driver/schedule') {
     return (

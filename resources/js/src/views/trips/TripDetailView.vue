@@ -1161,6 +1161,7 @@ import {
   isCargoRowFilled,
 } from '../../composables/dispatchWizardConstants'
 import { useAuthStore } from '../../store'
+import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
 import { confirmAction } from '../../composables/useConfirm'
 
 /** Simple wheelchair glyph for special-needs hint (Hero lacks a dedicated wheelchair icon in outline set). */
@@ -1175,10 +1176,10 @@ const { t, te, locale } = useI18n()
 const auth = useAuthStore()
 
 const tripsListPath = computed(() =>
-  route.path.startsWith('/driver') ? '/driver/schedule' : '/trips',
+  route.path.startsWith('/driver') ? '/driver/schedule' : staffPath('/trips'),
 )
 function tripDetailPathFor(id) {
-  return route.path.startsWith('/driver') ? `/driver/trips/${id}` : `/trips/${id}`
+  return route.path.startsWith('/driver') ? `/driver/trips/${id}` : staffPath(`/trips/${id}`)
 }
 
 function formatApiMessage(e) {

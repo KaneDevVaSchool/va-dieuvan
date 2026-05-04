@@ -16,7 +16,7 @@
         </div>
         <RouterLink
           class="shrink-0 text-sm font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-300"
-          to="/reports"
+          :to="staffPath('/reports')"
         >
           {{ t('dashboard_analytics.reports_link') }} →
         </RouterLink>
@@ -211,7 +211,7 @@
           </h3>
           <RouterLink
             class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
-            to="/trips"
+            :to="staffPath('/trips')"
           >
             {{ t('dashboard_analytics.recent_see_all') }} →
           </RouterLink>
@@ -227,7 +227,7 @@
           <RouterLink
             v-for="tr in recentTrips"
             :key="tr.id"
-            :to="`/trips/${tr.id}`"
+            :to="staffPath(`/trips/${tr.id}`)"
             :class="[
               'group flex gap-3 rounded-xl border p-3 transition',
               'border-slate-100 bg-gradient-to-br from-white to-slate-50/90 shadow-sm ring-1 ring-slate-900/[0.03]',
@@ -337,7 +337,7 @@
           </h3>
           <RouterLink
             class="text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400"
-            to="/requests"
+            :to="staffPath('/requests')"
           >
             {{ t('dashboard_analytics.recent_see_all') }} →
           </RouterLink>
@@ -353,7 +353,7 @@
           <RouterLink
             v-for="rq in recentRequests"
             :key="rq.id"
-            :to="`/requests/${rq.id}`"
+            :to="staffPath(`/requests/${rq.id}`)"
             :class="[
               'group flex gap-3 rounded-xl border p-3 transition',
               'border-slate-100 bg-gradient-to-br from-white to-violet-50/40 shadow-sm ring-1 ring-slate-900/[0.03]',
@@ -487,6 +487,7 @@ import { useTransportReportSummary } from '../composables/useTransportReportSumm
 import { listTrips } from '../api/trips'
 import { listRequests, normalizeRequestListParams } from '../api/requests'
 import { labelTripStatus, labelRequestStatus } from '../util/labels'
+import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
 const { t } = useI18n()
 
@@ -543,7 +544,7 @@ function scrollQuickLinks(direction) {
 
 const quickLinks = computed(() => [
   {
-    to: '/dispatcher',
+    to: staffPath('/dispatcher'),
     title: t('dashboard_analytics.quick_dispatcher'),
     hint: t('dashboard_analytics.quick_dispatcher_tooltip'),
     icon: markRaw(Square2StackIcon),
@@ -553,8 +554,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/trips',
-    title: t('dashboard_analytics.quick_trips'),
+    to: staffPath('/trips'),
     hint: t('dashboard_analytics.quick_trips_tooltip'),
     icon: markRaw(TruckIcon),
     cardClass:
@@ -563,7 +563,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/dispatch-requests/new',
+    to: staffPath('/dispatch-requests/new'),
     title: t('dashboard_analytics.quick_new_request'),
     hint: t('dashboard_analytics.quick_new_request_tooltip'),
     icon: markRaw(PlusCircleIcon),
@@ -573,8 +573,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/requests',
-    title: t('dashboard_analytics.quick_requests'),
+    to: staffPath('/requests'),
     hint: t('dashboard_analytics.quick_requests_tooltip'),
     icon: markRaw(ClipboardDocumentListIcon),
     cardClass:
@@ -583,7 +582,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/resources/list',
+    to: staffPath('/resources/list'),
     title: t('dashboard_analytics.quick_resources'),
     hint: t('dashboard_analytics.quick_resources_tooltip'),
     icon: markRaw(UserGroupIcon),
@@ -593,7 +592,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/cargo',
+    to: staffPath('/cargo'),
     title: t('dashboard_analytics.quick_cargo'),
     hint: t('dashboard_analytics.quick_cargo_tooltip'),
     icon: markRaw(CubeIcon),
@@ -603,8 +602,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/costs',
-    title: t('dashboard_analytics.quick_costs'),
+    to: staffPath('/costs'),
     hint: t('dashboard_analytics.quick_costs_tooltip'),
     icon: markRaw(BanknotesIcon),
     cardClass:
@@ -613,7 +611,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/pricing',
+    to: staffPath('/pricing'),
     title: t('dashboard_analytics.quick_pricing'),
     hint: t('dashboard_analytics.quick_pricing_tooltip'),
     icon: markRaw(TableCellsIcon),
@@ -623,7 +621,7 @@ const quickLinks = computed(() => [
     labelClass: 'text-slate-800 dark:text-slate-100',
   },
   {
-    to: '/audit-logs',
+    to: staffPath('/audit-logs'),
     title: t('dashboard_analytics.quick_audit'),
     hint: t('dashboard_analytics.quick_audit_tooltip'),
     icon: markRaw(DocumentMagnifyingGlassIcon),
