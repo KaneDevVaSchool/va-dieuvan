@@ -31,6 +31,7 @@ import {
   draftActiveStorageKey,
   MAX_SAVED_DRAFTS,
 } from './dispatchWizardConstants'
+import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
 
 export function useDispatchRequestWizard() {
   const router = useRouter()
@@ -643,6 +644,69 @@ export function useDispatchRequestWizard() {
   }
 
   const canSubmitApi = computed(() => !!computedDepartAt.value?.trim())
+
+  function pushConfirmRowIssues(msgs, rows, variant, sectionKey) {
+    rows.forEach((row, idx) => {
+      const filled =
+        variant === 'cargo'
+          ? isCargoRowFilled(row)
+          : variant === 'business'
+            ? isBusinessRowFilled(row)
+            : isPassengerRowFilled(row)
+      if (!filled) return
+      const err = dispatchScheduleRowErrors(row, variant)
+      const n = idx + 1
+      if (err.time_required) {
+        msgs.push(t('dispatch_wizard.confirm.issue_row_time_required', { section: t(sectionKey), n }))
+      }
+      if (err.return_time) {
+        msgs.push(t('dispatch_wizard.confirm.issue_row_return_order', { section: t(sectionKey), n }))
+      }
+      if (err.passengers) {
+        msgs.push(t('dispatch_wizard.confirm.issue_row_guests', { section: t(sectionKey), n }))
+      }
+    })
+  }
+
+  /** Gợi ý kiểm tra trước khi gửi — không thay cho validateBeforeApi khi submit. */
+  const confirmReviewIssues = computed(() => {
+    const msgs = []
+    const f = form.value
+    if (!f.trip_type) msgs.push(t('dispatch_wizard.validate.pick_type'))
+    if (!f.requester_name?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_requester_name'))
+    if (!f.requester_email?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_requester_email'))
+    else if (!isPlausibleEmail(f.requester_email)) msgs.push(t('dispatch_wizard.confirm.issue_requester_email'))
+    if (step2CoordinatorEmailInvalid.value) msgs.push(t('dispatch_wizard.validate.coord_email'))
+    if (!f.purpose?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_purpose'))
+    if (!f.proposed_date || !f.date_needed) msgs.push(t('dispatch_wizard.confirm.issue_dates'))
+    if (step2DateOrderInvalid.value) msgs.push(t('dispatch_wizard.validate.date_order'))
+    if (f.is_urgent && !f.urgent_reason?.trim()) msgs.push(t('dispatch_wizard.validate.urgent_reason'))
+
+    if (isCargo.value) {
+      if (!cargoRows.value.some((r) => r.name?.trim())) msgs.push(t('dispatch_wizard.validate.cargo_row'))
+      pushConfirmRowIssues(msgs, cargoRows.value, 'cargo', 'dispatch_wizard.confirm.sec_cargo')
+    } else if (f.trip_type === 'point_to_point') {
+      if (!passengerRows.value.some(isPassengerRowFilled)) msgs.push(t('dispatch_wizard.validate.p2p_row'))
+      pushConfirmRowIssues(msgs, passengerRows.value, 'passenger', 'dispatch_wizard.confirm.sec_e1')
+    } else if (f.trip_type === 'business') {
+      if (!businessRows.value.some(isBusinessRowFilled)) msgs.push(t('dispatch_wizard.validate.detail_row'))
+      pushConfirmRowIssues(msgs, businessRows.value, 'business', 'dispatch_wizard.confirm.sec_e2')
+    } else if (f.trip_type === 'door_to_door') {
+      if (
+        !passengerRows.value.some(isPassengerRowFilled) &&
+        !businessRows.value.some(isBusinessRowFilled)
+      ) {
+        msgs.push(t('dispatch_wizard.validate.detail_row'))
+      }
+      pushConfirmRowIssues(msgs, passengerRows.value, 'passenger', 'dispatch_wizard.confirm.sec_e1')
+      pushConfirmRowIssues(msgs, businessRows.value, 'business', 'dispatch_wizard.confirm.sec_e2')
+    }
+
+    if (!detailStepSchedulesValid.value) msgs.push(t('dispatch_wizard.confirm.issue_schedule_invalid'))
+    if (!computedDepartAt.value?.trim()) msgs.push(t('dispatch_wizard.validate.depart_time'))
+
+    return msgs
+  })
 
   const headerPrimaryLabel = computed(() => {
     if (loading.value) return t('dispatch_wizard.header.sending')
@@ -1324,6 +1388,7 @@ export function useDispatchRequestWizard() {
     addCargoRow,
     removeCargoRow,
     canSubmitApi,
+    confirmReviewIssues,
     headerPrimaryLabel,
     headerPrimaryDisabled,
     primaryAction,
