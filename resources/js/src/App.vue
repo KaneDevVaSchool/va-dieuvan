@@ -1,23 +1,98 @@
 <template>
-  <AppShell v-if="!isLoginLayout">
-    <RouterView />
-  </AppShell>
-  <RouterView v-else />
+  <SplashScreen
+    v-if="showSplash"
+    :app-ready="splashAppReady"
+    @done="showSplash = false"
+  />
+  <template v-else>
+    <Onboarding
+      v-if="!hasOnboarded && isAuthenticated"
+      @done="completeOnboarding"
+    />
+    <template v-else>
+      <AppShell v-if="!isLoginLayout">
+        <RouterView />
+      </AppShell>
+      <RouterView v-else />
+    </template>
+  </template>
+
   <AppMessageModal />
   <ConfirmModal />
-  <PwaInstallPrompt />
+  <PwaInstallBanner />
+
+  <Transition name="slide-up">
+    <div
+      v-if="updateAvailable"
+      class="fixed bottom-0 inset-x-0 z-[101] pointer-events-none p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    >
+      <div
+        class="pointer-events-auto mx-auto max-w-lg flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#78001e]/20 bg-[#78001e] text-white px-4 py-3 shadow-lg"
+      >
+        <span class="text-sm font-medium">Có bản cập nhật mới</span>
+        <div class="flex gap-2 shrink-0">
+          <button
+            type="button"
+            class="text-xs font-medium px-2 py-1 rounded-lg bg-white/15 hover:bg-white/25"
+            @click="dismissUpdate"
+          >
+            Để sau
+          </button>
+          <button
+            type="button"
+            class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-[#78001e] hover:bg-white/95"
+            @click="applyUpdate"
+          >
+            Cập nhật
+          </button>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
   <NotificationCenter />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
+import { useAuthStore } from './store'
+import { useOnboarding } from './composables/useOnboarding'
+import { usePwaUpdate } from './composables/usePwaUpdate'
 import AppShell from './components/layout/AppShell.vue'
 import AppMessageModal from './components/ui/AppMessageModal.vue'
 import ConfirmModal from './components/ui/ConfirmModal.vue'
-import PwaInstallPrompt from './components/pwa/PwaInstallPrompt.vue'
+import SplashScreen from './components/SplashScreen.vue'
+import Onboarding from './components/Onboarding.vue'
+import PwaInstallBanner from './components/PwaInstallBanner.vue'
 import NotificationCenter from './components/notifications/NotificationCenter.vue'
 
 const route = useRoute()
+const auth = useAuthStore()
+const { hasOnboarded, completeOnboarding } = useOnboarding()
+const { updateAvailable, applyUpdate, dismissUpdate } = usePwaUpdate()
+
 const isLoginLayout = computed(() => route.name === 'login')
+const isAuthenticated = computed(() => auth.isAuthenticated)
+
+const showSplash = ref(true)
+const splashAppReady = ref(false)
+
+onMounted(() => {
+  splashAppReady.value = true
+})
 </script>
+
+<style scoped>
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease;
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
+}
+</style>

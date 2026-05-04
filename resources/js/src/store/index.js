@@ -2,13 +2,21 @@ import { defineStore } from 'pinia'
 import { http, TOKEN_KEY } from '../api/http'
 import * as authApi from '../api/auth'
 
+const USER_HINT_KEY = 'vas_user_hint'
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
     token: null,
+    /** Đang khôi phục phiên (GET /user). */
+    isRestoring: false,
   }),
   getters: {
     isLoggedIn: (s) => !!s.token || !!localStorage.getItem(TOKEN_KEY),
+    /** Alias cho guard / onboarding — cùng điều kiện với isLoggedIn. */
+    isAuthenticated() {
+      return this.isLoggedIn
+    },
     roleNames: (s) => (s.user?.roles ?? []).map((r) => r.name),
     permissionNames: (s) => s.user?.permissions ?? [],
     /**
@@ -29,6 +37,38 @@ export const useAuthStore = defineStore('auth', {
     },
   },
   actions: {
+    /** Gọi trước khi mount app: cookie Bearer + user từ /api/user (Sanctum). */
+    async restoreSession() {
+      this.isRestoring = true
+      try {
+        const t = localStorage.getItem(TOKEN_KEY)
+        if (!t) {
+          this.user = null
+          return
+        }
+        await this.fetchMe()
+        try {
+          if (this.user) {
+            localStorage.setItem(
+              USER_HINT_KEY,
+              JSON.stringify({ id: this.user.id, name: this.user.name }),
+            )
+          }
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        this.user = null
+        this.setToken(null)
+        try {
+          localStorage.removeItem(USER_HINT_KEY)
+        } catch {
+          /* ignore */
+        }
+      } finally {
+        this.isRestoring = false
+      }
+    },
     initFromStorage() {
       const t = localStorage.getItem(TOKEN_KEY)
       if (t) {
@@ -47,6 +87,16 @@ export const useAuthStore = defineStore('auth', {
       const res = await authApi.login({ email, password, device_name: deviceName })
       this.setToken(res.token)
       this.user = res.user
+      try {
+        if (res.user) {
+          localStorage.setItem(
+            USER_HINT_KEY,
+            JSON.stringify({ id: res.user.id, name: res.user.name }),
+          )
+        }
+      } catch {
+        /* ignore */
+      }
       return res
     },
     async logout() {
@@ -57,6 +107,11 @@ export const useAuthStore = defineStore('auth', {
       }
       this.user = null
       this.setToken(null)
+      try {
+        localStorage.removeItem(USER_HINT_KEY)
+      } catch {
+        /* ignore */
+      }
     },
     async fetchMe() {
       const { data } = await http.get('/user')

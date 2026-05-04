@@ -9,6 +9,11 @@ http.interceptors.response.use(
   async (err) => {
     if (err.response?.status === 401 && !err.config?.url?.includes('/login')) {
       localStorage.removeItem(TOKEN_KEY)
+      try {
+        localStorage.removeItem('vas_user_hint')
+      } catch {
+        /* ignore */
+      }
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
         window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`
       }
