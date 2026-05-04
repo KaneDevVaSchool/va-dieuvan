@@ -15,10 +15,10 @@
         }
 
         body {
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
             margin: 0;
-            line-height: 1.45;
+            line-height: 1.4;
             background: #fff;
             text-transform: uppercase;
             font-weight: normal;
@@ -42,8 +42,8 @@
         }
 
         .doc-title-main {
-            font-size: 10.5pt;
-            font-weight: normal;
+            font-size: 9pt;
+            font-weight: bold;
             text-align: center;
             letter-spacing: normal;
             text-transform: uppercase;
@@ -51,7 +51,7 @@
         }
 
         .doc-title-sub {
-            font-size: 9pt;
+            font-size: 7.5pt;
             text-align: center;
             color: #000;
             font-style: normal;
@@ -63,7 +63,7 @@
         .doc-meta-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 9pt;
+            font-size: 7.5pt;
             border: 0.5pt solid #000;
         }
 
@@ -75,7 +75,7 @@
         .doc-meta-label {
             color: #000;
             width: 90px;
-            font-weight: normal;
+            font-weight: bold;
         }
 
         .doc-meta-value {
@@ -86,7 +86,7 @@
 
         .doc-meta-id {
             color: #000;
-            font-size: 9pt;
+            font-size: 7.5pt;
             font-weight: normal;
         }
 
@@ -111,8 +111,8 @@
             display: inline-block;
             background: #000;
             color: #fff;
-            font-size: 9pt;
-            font-weight: normal;
+            font-size: 7.5pt;
+            font-weight: bold;
             padding: 1.5pt 6pt;
             border-radius: 0;
             letter-spacing: normal;
@@ -121,18 +121,18 @@
         }
 
         .sec-title {
-            font-size: 9pt;
-            font-weight: normal;
+            font-size: 7.5pt;
+            font-weight: bold;
             color: #000;
             letter-spacing: normal;
             text-transform: uppercase;
         }
 
         .sec-subtitle {
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
             font-style: normal;
-            font-weight: normal;
+            font-weight: bold;
             margin-left: 4pt;
         }
 
@@ -156,19 +156,24 @@
             vertical-align: top;
         }
 
-        .fl {
-            font-size: 9pt;
-            color: #000;
+        .fl-hint-inline {
             font-weight: normal;
+            color: #000;
+        }
+
+        .fl {
+            font-size: 7.5pt;
+            color: #000;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: normal;
             margin-bottom: 2.5pt;
         }
 
         .fv {
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
-            min-height: 12pt;
+            min-height: 10pt;
             font-weight: normal;
         }
 
@@ -183,7 +188,7 @@
             border: 0.5pt solid #000;
             border-top: none;
             padding: 4pt 9pt;
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
             font-style: normal;
             font-weight: normal;
@@ -198,7 +203,7 @@
             width: 25%;
             padding: 3pt 8pt;
             border: 0.5pt solid #000;
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
             vertical-align: middle;
             font-weight: normal;
@@ -206,7 +211,7 @@
 
         .cb-sym {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 9pt;
+            font-size: 7.5pt;
             margin-right: 3pt;
             color: #000;
         }
@@ -214,15 +219,15 @@
         table.data {
             width: 100%;
             border-collapse: collapse;
-            font-size: 9pt;
+            font-size: 7.5pt;
             border: 0.5pt solid #000;
         }
 
         table.data th {
             padding: 4.5pt 5pt;
             text-align: center;
-            font-size: 9pt;
-            font-weight: normal;
+            font-size: 7.5pt;
+            font-weight: bold;
             letter-spacing: normal;
             border: 0.5pt solid #000;
             background: #fff;
@@ -260,7 +265,7 @@
 
         table.data tr.row-total td {
             background: #fff;
-            font-weight: normal;
+            font-weight: bold;
             border: 0.5pt solid #000;
             border-top: 1pt solid #000;
             color: #000;
@@ -281,8 +286,8 @@
 
         .sig-col-header {
             background: #fff;
-            font-size: 9pt;
-            font-weight: normal;
+            font-size: 7.5pt;
+            font-weight: bold;
             color: #000;
             padding: 5pt 6pt;
             vertical-align: middle;
@@ -299,13 +304,13 @@
         }
 
         .sig-name {
-            font-size: 9pt;
+            font-size: 7.5pt;
             font-weight: normal;
             color: #000;
         }
 
         .sig-role {
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
             font-style: normal;
             font-weight: normal;
@@ -317,8 +322,8 @@
         }
 
         .g-label {
-            font-size: 9pt;
-            font-weight: normal;
+            font-size: 7.5pt;
+            font-weight: bold;
             color: #000;
         }
 
@@ -332,7 +337,7 @@
 
         .page-footer {
             text-align: center;
-            font-size: 9pt;
+            font-size: 7pt;
             color: #000;
             margin-top: 10pt;
             padding-top: 5pt;
@@ -342,7 +347,7 @@
         }
 
         .muted-note {
-            font-size: 9pt;
+            font-size: 7.5pt;
             color: #000;
             font-style: normal;
             font-weight: normal;
@@ -354,11 +359,16 @@
             background: #fff;
             border: 0.5pt solid #000;
             color: #000;
-            font-size: 9pt;
+            font-size: 7.5pt;
             font-weight: normal;
             padding: 1pt 5pt;
             border-radius: 0;
             vertical-align: middle;
+        }
+
+        table.data th .th-sub {
+            font-size: 6.5pt;
+            font-weight: normal;
         }
     </style>
 </head>
@@ -369,8 +379,8 @@
 
         $cb = static function (bool $checked): string {
             return $checked
-                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#000000;">&#x2611;</span>'
-                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#a3a3a3;">&#x2610;</span>';
+                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:7.5pt;color:#000000;">&#x2611;</span>'
+                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:7.5pt;color:#a3a3a3;">&#x2610;</span>';
         };
 
         $nTargets = count($targetGrid);
@@ -473,7 +483,7 @@
             <tr>
                 <td colspan="2">
                     <div class="fl">b.2 &nbsp;Căn cứ đề xuất
-                        <span style="font-weight:normal; color:#000;">
+                        <span class="fl-hint-inline">
                             — Tờ trình số …/ ngày &amp; nội dung
                         </span>
                     </div>
@@ -511,15 +521,15 @@
             <tr>
                 <td style="width:60%; vertical-align:middle; padding:5pt 8pt;">
                     <span class="cb-sym">{!! $cb($isUrgent) !!}</span>
-                    <span style="font-weight:normal; font-size:9pt; color:#000;">Gấp</span>
+                    <span style="font-weight:bold; font-size:7.5pt; color:#000;">Gấp</span>
                     @if($isUrgent)
-                        &nbsp;<span style="font-size:9pt; color:#000;">Lý do: {{ $urgentReason }}</span>
+                        &nbsp;<span style="font-size:7.5pt; color:#000;">Lý do: {{ $urgentReason }}</span>
                     @else
-                        &nbsp;<span style="font-size:9pt; color:#000; font-style:normal;">Lý do: —</span>
+                        &nbsp;<span style="font-size:7.5pt; color:#000; font-style:normal;">Lý do: —</span>
                     @endif
                 </td>
                 <td style="width:40%; text-align:right; vertical-align:middle; padding:5pt 8pt;">
-                    <span style="font-size:9pt; color:#000;">Loại yêu cầu:</span>
+                    <span style="font-size:7.5pt; font-weight:bold; color:#000;">Loại yêu cầu:</span>
                     &nbsp;<span class="chip-type">{{ $tripType }}</span>
                 </td>
             </tr>
@@ -532,7 +542,7 @@
         <span class="sec-title">Khu vực / Đối tượng được phân bổ</span>
     </div>
     <div class="sec-body">
-        <div style="padding:3.5pt 8pt 2.5pt; font-size:9pt; font-weight:normal;
+        <div style="padding:3.5pt 8pt 2.5pt; font-size:7.5pt; font-weight:bold;
                 color:#000; border-bottom:0.5pt solid #000;
                 text-transform: uppercase; letter-spacing:normal;">
             d.1 &nbsp;Đối tượng sử dụng
@@ -598,10 +608,10 @@
                         <th colspan="3" class="col-go tc">Điểm tập kết</th>
                         <th colspan="3" class="col-back tc">Điểm giao</th>
                         <th rowspan="2" class="col-info tc" style="width:8%; font-style:normal;">
-                            Loại hình<br /><span style="font-size:9pt;">(NV điều phối)</span>
+                            Loại hình<br /><span class="th-sub">(NV điều phối)</span>
                         </th>
                         <th rowspan="2" class="col-info tc" style="width:8%;">
-                            Chi phí<br /><span style="font-size:9pt;">(Gồm VAT)</span>
+                            Chi phí<br /><span class="th-sub">(Gồm VAT)</span>
                         </th>
                     </tr>
                     <tr>
@@ -649,13 +659,13 @@
                 <tr>
                     <td style="width:72%;">
                         <div class="fl">e.1.1 &nbsp;Các ghi chú khác</div>
-                        <div class="fv" style="font-size:9pt;">
+                        <div class="fv">
                             <span class="cb-sym">{!! $cb($needPorters) !!}</span>
                             Yêu cầu bốc xếp / nhân công hỗ trợ
                             &nbsp; Số lượng: <strong>{{ $needPorters ? $porterQty : '—' }}</strong>
                             &nbsp; Chi phí phát sinh: <strong>{{ $needPorters ? $porterCost : '—' }}</strong>
                         </div>
-                        <div class="fv" style="font-size:9pt; margin-top:4pt;">
+                        <div class="fv" style="margin-top:4pt;">
                             <span class="cb-sym">{!! $cb($interprovincial) !!}</span>
                             Gửi chành xe đi tỉnh
                             &nbsp; Chi phí phát sinh: <strong>{{ $interprovincial ? $interprovincialCost : '—' }}</strong>
@@ -664,7 +674,7 @@
                             <div class="muted-note" style="margin-top:5pt;">Ghi chú thêm: {{ $cargoExtraNotes }}</div>
                         @endif
                     </td>
-                    <td class="muted-note" style="width:28%; vertical-align:top; font-size:9pt;">
+                    <td class="muted-note" style="width:28%; vertical-align:top;">
                         (Vui lòng liên hệ NV Điều vận để điền thông tin chi phí)
                     </td>
                 </tr>
