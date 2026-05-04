@@ -102,11 +102,19 @@ class DispatchRequestController extends Controller
             abort(404);
         }
 
-        $data = DispatchRequestPdfPresenter::forModel($dispatchRequest);
+        $this->authorize('view', $dispatchRequest);
+
+        $data = DispatchRequestPdfPresenter::buildPdfData($dispatchRequest);
 
         return Pdf::loadView('pdf.dispatch-request', $data)
-            ->setPaper('a4', 'landscape')
-            ->stream('de-nghi-dieu-van.pdf', ['Attachment' => false]);
+            ->setPaper('a4', $data['isCargo'] ? 'landscape' : 'portrait')
+            ->setOptions([
+                'defaultFont' => 'times',
+                'enable_unicode' => true,
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => false,
+            ], true)
+            ->stream('de-nghi-dieu-van-'.$dispatchRequest->id.'.pdf');
     }
 
     public function markPaperReceived(MarkDispatchRequestPaperReceivedRequest $request, DispatchRequest $dispatchRequest)

@@ -30,7 +30,8 @@ Route::post('/notifications/{notification}/read', [InboxController::class, 'mark
 
 Route::get('/dispatch-requests/{dispatchRequest}', [DispatchRequestController::class, 'show']);
 Route::get('/dispatch-requests/{dispatchRequest}/export-pdf', [DispatchRequestController::class, 'exportPdf'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:30,1')
+    ->name('dispatch-requests.export-pdf');
 
 Route::controller(TripController::class)->group(function () {
     Route::get('/trips', 'index');

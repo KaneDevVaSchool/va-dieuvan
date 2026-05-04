@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -151,6 +151,8 @@ export function useDispatchRequestWizard() {
   const created = ref(null)
   const pdfLoading = ref(false)
   const pdfError = ref('')
+  const pdfPreviewUrl = ref(null)
+  const pdfPreviewForId = ref(null)
   const draftSavedAt = ref(null)
   const hasDraftSnapshot = ref(false)
   const clearDraftModalOpen = ref(false)
@@ -735,6 +737,66 @@ export function useDispatchRequestWizard() {
     return ''
   }
 
+  function revokePdfPreviewUrl() {
+    if (pdfPreviewUrl.value) {
+      URL.revokeObjectURL(pdfPreviewUrl.value)
+      pdfPreviewUrl.value = null
+    }
+  }
+
+  async function ensurePdfPreview() {
+    if (!created.value?.id) return
+    if (pdfPreviewForId.value === created.value.id && pdfPreviewUrl.value) return
+    pdfLoading.value = true
+    pdfError.value = ''
+    try {
+      revokePdfPreviewUrl()
+      pdfPreviewForId.value = null
+      const blob = await exportDispatchRequestPdf(created.value.id)
+      pdfPreviewUrl.value = URL.createObjectURL(blob)
+      pdfPreviewForId.value = created.value.id
+    } catch (e) {
+      pdfPreviewForId.value = null
+      pdfError.value = formatApiError(e, t('dispatch_wizard.create.pdf_error'))
+      console.error(e)
+    } finally {
+      pdfLoading.value = false
+    }
+  }
+
+  async function downloadCreatedPdf() {
+    await ensurePdfPreview()
+    if (!pdfPreviewUrl.value || !created.value?.id) return
+    const a = document.createElement('a')
+    a.href = pdfPreviewUrl.value
+    a.download = `de-nghi-dieu-van-${created.value.id}.pdf`
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
+  function closePdfPreview() {
+    revokePdfPreviewUrl()
+    pdfPreviewForId.value = null
+  }
+
+  watch(
+    () => created.value,
+    (val) => {
+      if (val?.id) {
+        ensurePdfPreview()
+      } else {
+        closePdfPreview()
+      }
+    },
+    { immediate: true },
+  )
+
+  onUnmounted(() => {
+    revokePdfPreviewUrl()
+  })
+
   async function doSubmit() {
     if (submitInFlight || loading.value) return
     const v = validateBeforeApi()
@@ -817,23 +879,6 @@ export function useDispatchRequestWizard() {
     } finally {
       loading.value = false
       submitInFlight = false
-    }
-  }
-
-  async function exportCreatedPdf() {
-    pdfError.value = ''
-    if (!created.value?.id) return
-    pdfLoading.value = true
-    try {
-      const blob = await exportDispatchRequestPdf(created.value.id)
-      const url = URL.createObjectURL(blob)
-      window.open(url, '_blank', 'noopener,noreferrer')
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
-    } catch (e) {
-      pdfError.value = formatApiError(e, t('dispatch_wizard.create.pdf_error'))
-      console.error(e)
-    } finally {
-      pdfLoading.value = false
     }
   }
 
@@ -1203,6 +1248,7 @@ export function useDispatchRequestWizard() {
     created,
     pdfLoading,
     pdfError,
+    pdfPreviewUrl,
     draftSavedAt,
     hasDraftSnapshot,
     clearDraftModalOpen,
@@ -1274,7 +1320,8 @@ export function useDispatchRequestWizard() {
     headerPrimaryLabel,
     headerPrimaryDisabled,
     primaryAction,
-    exportCreatedPdf,
+    downloadCreatedPdf,
+    closePdfPreview,
     saveDraft,
     openClearDraftModal,
     closeClearDraftModal,

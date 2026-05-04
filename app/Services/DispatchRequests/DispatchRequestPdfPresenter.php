@@ -8,21 +8,37 @@ use Illuminate\Support\Carbon;
 
 final class DispatchRequestPdfPresenter
 {
+    public static function formatCostCell(string $name, string $cost): string
+    {
+        $amount = self::parseMoney($cost);
+        if ($name === '' || $amount === 0) {
+            return '';
+        }
+
+        return number_format($amount, 0, ',', '.').' đ';
+    }
+
     /**
      * @return array<string, mixed>
      */
-    public static function forModel(DispatchRequest $dispatchRequest): array
+    public static function buildPdfData(DispatchRequest $dr): array
     {
-        $dispatchRequest->loadMissing('requester:id,name,email,phone');
+        $dr->loadMissing(['requester:id,name,email,phone']);
 
-        $snapshot = is_array($dispatchRequest->wizard_snapshot) ? $dispatchRequest->wizard_snapshot : [];
+        $snapshot = is_array($dr->wizard_snapshot) ? $dr->wizard_snapshot : [];
         $form = isset($snapshot['form']) && is_array($snapshot['form']) ? $snapshot['form'] : [];
+
+        $tripTypeRaw = (string) $dr->trip_type;
+        $isCargo = $tripTypeRaw === 'cargo';
+        $isP2P = $tripTypeRaw === 'point_to_point';
+        $isBusiness = $tripTypeRaw === 'business';
+        $isDoor = $tripTypeRaw === 'door_to_door';
 
         $cargoRows = self::normalizeList($snapshot['cargoRows'] ?? []);
         $passengerRows = self::normalizeList($snapshot['passengerRows'] ?? []);
         $businessRows = self::normalizeList($snapshot['businessRows'] ?? []);
 
-        $user = $dispatchRequest->requester;
+        $user = $dr->requester;
 
         $aName = self::nzString($form['requester_name'] ?? null) ?: self::nzString($user?->name);
         $aEmail = self::nzString($form['requester_email'] ?? null) ?: self::nzString($user?->email);
@@ -32,62 +48,74 @@ final class DispatchRequestPdfPresenter
         $selectedTargets = [];
         if (isset($form['targets']) && is_array($form['targets'])) {
             foreach ($form['targets'] as $t) {
-                $s = self::nzString($t);
+                $s = self::nzString(is_scalar($t) ? (string) $t : null);
                 if ($s !== '') {
-                    $selectedTargets[$s] = true;
+                    $selectedTargets[] = $s;
                 }
             }
         }
 
-        $targetGrid = [];
-        foreach (DispatchBm03TargetOptions::OPTIONS as $label) {
-            $targetGrid[] = [
+        $targetOptions = config('dispatch.target_options');
+        if (! is_array($targetOptions) || $targetOptions === []) {
+            $targetOptions = collect(DispatchBm03TargetOptions::OPTIONS)
+                ->mapWithKeys(fn (string $l) => [$l => $l])
+                ->all();
+        }
+        $targetGrid = collect($targetOptions)
+            ->map(fn (string $label, string $key) => [
                 'label' => $label,
-                'checked' => isset($selectedTargets[$label]),
-            ];
-        }
+                'checked' => in_array($key, $selectedTargets, true),
+            ])
+            ->values()
+            ->all();
 
-        $sectionERows = self::buildSectionERows($form, $cargoRows, $passengerRows, $businessRows);
-        $lineSum = 0;
-        foreach ($sectionERows as $row) {
-            if (self::nzString($row['name'] ?? null) !== '') {
-                $lineSum += self::parseMoney($row['cost'] ?? null);
-            }
-        }
-        $extras = 0;
-        if (! empty($form['need_porters'])) {
-            $extras += self::parseMoney($form['porter_cost'] ?? null);
-        }
-        if (! empty($form['interprovincial'])) {
-            $extras += self::parseMoney($form['interprovincial_cost'] ?? null);
-        }
-        $grandTotal = $lineSum + $extras;
+        $cargoRaw = $isCargo ? self::collectCargoModels($cargoRows) : collect();
+        $passRaw = (! $isCargo && ($isDoor || $isP2P)) ? self::collectPassengerModels($passengerRows) : collect();
+        $bizRaw = $isBusiness ? self::collectBusinessModels($businessRows) : collect();
 
-        $basisFileName = self::nzString($form['basisFileName'] ?? null);
-        $basisLine = $basisFileName !== ''
-            ? 'Đính kèm tệp «'.$basisFileName.'»'
-            : '';
+        $cargoSectionRows = $isCargo
+            ? self::padRows($cargoRaw->map(fn (array $r) => self::cargoRowToPdf($r))->all(), 10)
+            : [];
 
-        $poCode = self::nzString($dispatchRequest->paper_reference);
-        $g2Date = '';
-        if ($dispatchRequest->paper_received_at) {
-            $g2Date = Carbon::parse($dispatchRequest->paper_received_at)->format('d/m/Y');
-        } elseif ($dispatchRequest->status === 'approved' && $dispatchRequest->updated_at) {
-            $g2Date = $dispatchRequest->updated_at->format('d/m/Y');
-        }
+        $passengerSectionRows = (! $isCargo && ($isDoor || $isP2P))
+            ? self::padRows($passRaw->map(fn (array $r) => self::passengerRowToPdf($r))->all(), 5)
+            : [];
 
-        $logoPath = public_path('images/logo/vas-logo.png');
-        $logoDataUri = '';
-        if (is_readable($logoPath)) {
-            $raw = @file_get_contents($logoPath);
-            if ($raw !== false) {
-                $logoDataUri = 'data:image/png;base64,'.base64_encode($raw);
-            }
-        }
+        $businessSectionRows = $isBusiness
+            ? self::padRows($bizRaw->map(fn (array $r) => self::businessRowToPdf($r))->all(), 5)
+            : [];
+
+        $grandTotal = match (true) {
+            $isCargo => $cargoRaw->sum(fn (array $r) => self::parseMoney($r['cost'] ?? null)),
+            $isBusiness => $bizRaw->sum(fn (array $r) => self::parseMoney($r['unit_price'] ?? null) + self::parseMoney($r['extra_fee'] ?? null)),
+            default => $passRaw->sum(fn (array $r) => self::parseMoney($r['unit_price'] ?? null) + self::parseMoney($r['extra_fee'] ?? null)),
+        };
+        $grandTotalFmt = $grandTotal > 0
+            ? number_format($grandTotal, 0, ',', '.').' đ'
+            : '0 đ';
+
+        $tripTypeLabels = [
+            'door_to_door' => 'Đưa đón tận nơi',
+            'point_to_point' => 'Điểm — Điểm',
+            'business' => 'Công tác',
+            'cargo' => 'Điều chuyển hàng hóa',
+        ];
+
+        $basisLine = self::basisLineFromForm($form);
+        $g2Date = self::resolveG2Date($dr);
 
         return [
-            'dispatchRequest' => $dispatchRequest,
-            'logoDataUri' => $logoDataUri,
+            'dispatchRequest' => $dr,
+            'isCargo' => $isCargo,
+            'isP2P' => $isP2P,
+            'isBusiness' => $isBusiness,
+            'isDoor' => $isDoor,
+            'logoDataUri' => self::resolveLogoDataUri(),
+            'targetGrid' => $targetGrid,
+            'cargoSectionRows' => $cargoSectionRows,
+            'passengerSectionRows' => $passengerSectionRows,
+            'businessSectionRows' => $businessSectionRows,
+            'grandTotalFmt' => $grandTotalFmt,
             'aName' => $aName,
             'aEmail' => $aEmail,
             'aPhone' => $aPhone,
@@ -98,23 +126,192 @@ final class DispatchRequestPdfPresenter
             'dateNeeded' => self::fmtDateStr($form['date_needed'] ?? null),
             'isUrgent' => ! empty($form['is_urgent']),
             'urgentReason' => self::nzString($form['urgent_reason'] ?? null),
-            'targetGrid' => $targetGrid,
             'coordName' => self::nzString($form['coordinator_name'] ?? null),
             'coordEmail' => self::nzString($form['coordinator_email'] ?? null),
             'coordPhone' => self::nzString($form['coordinator_phone'] ?? null),
-            'sectionERows' => $sectionERows,
-            'grandTotal' => $grandTotal,
-            'grandTotalFmt' => self::formatVnd($grandTotal),
-            'cargoExtraNotes' => self::nzString($form['cargo_extra_notes'] ?? null),
+            'tripType' => $tripTypeLabels[$tripTypeRaw] ?? $tripTypeRaw,
+            'p2pNote' => $isP2P
+                ? '«Điểm — Điểm»: toàn bộ dữ liệu biểu mẫu (kể cả phân bổ mục tiêu) được gửi kèm yêu cầu trong hệ thống.'
+                : '',
             'needPorters' => ! empty($form['need_porters']),
             'porterQty' => self::nzString($form['porter_qty'] ?? null),
-            'porterCost' => self::nzString($form['porter_cost'] ?? null),
+            'porterCost' => ! empty($form['porter_cost'])
+                ? number_format(self::parseMoney($form['porter_cost'] ?? null), 0, ',', '.').' đ'
+                : '',
             'interprovincial' => ! empty($form['interprovincial']),
-            'interprovincialCost' => self::nzString($form['interprovincial_cost'] ?? null),
-            'poCode' => $poCode,
+            'interprovincialCost' => ! empty($form['interprovincial_cost'])
+                ? number_format(self::parseMoney($form['interprovincial_cost'] ?? null), 0, ',', '.').' đ'
+                : '',
+            'cargoExtraNotes' => self::nzString($form['cargo_extra_notes'] ?? null),
+            'poCode' => self::nzString($dr->paper_reference),
             'g2Date' => $g2Date,
-            'tripType' => self::nzString($form['trip_type'] ?? $dispatchRequest->trip_type),
         ];
+    }
+
+    /**
+     * @deprecated Use {@see buildPdfData()}
+     *
+     * @return array<string, mixed>
+     */
+    public static function forModel(DispatchRequest $dispatchRequest): array
+    {
+        return self::buildPdfData($dispatchRequest);
+    }
+
+    private static function basisLineFromForm(array $form): string
+    {
+        $ref = self::nzString($form['basis_ref'] ?? null);
+        if ($ref !== '') {
+            return $ref;
+        }
+        $basisFileName = self::nzString($form['basisFileName'] ?? null);
+
+        return $basisFileName !== ''
+            ? 'Đính kèm tệp «'.$basisFileName.'»'
+            : '';
+    }
+
+    private static function resolveG2Date(DispatchRequest $dr): string
+    {
+        if ($dr->paper_received_at) {
+            return Carbon::parse($dr->paper_received_at)->format('d/m/Y');
+        }
+        if ($dr->status === 'approved' && $dr->updated_at) {
+            return $dr->updated_at->format('d/m/Y');
+        }
+
+        return '';
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $cargoRows
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private static function collectCargoModels(array $cargoRows)
+    {
+        return collect($cargoRows)->filter(fn (array $r) => self::nzString($r['name'] ?? null) !== '');
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private static function collectPassengerModels(array $rows)
+    {
+        return collect($rows)->filter(fn (array $r) => self::isPassengerRowFilled($r));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private static function collectBusinessModels(array $rows)
+    {
+        return collect($rows)->filter(fn (array $r) => self::isBusinessRowFilled($r));
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private static function cargoRowToPdf(array $r): array
+    {
+        return [
+            'name' => self::nzString($r['name'] ?? null),
+            'qty' => self::nzString($r['qty'] ?? null),
+            'dim' => self::nzString($r['dimensions'] ?? null),
+            'weight' => self::nzString($r['weight'] ?? null),
+            'inotes' => self::nzString($r['item_notes'] ?? null),
+            'puTime' => self::nzString($r['pickup_at'] ?? null),
+            'puPlace' => self::nzString($r['pickup_place'] ?? null),
+            'puContact' => self::nzString($r['pickup_contact'] ?? null),
+            'delTime' => self::nzString($r['delivery_at'] ?? null),
+            'delPlace' => self::nzString($r['delivery_place'] ?? null),
+            'delContact' => self::nzString($r['delivery_contact'] ?? null),
+            'transport' => self::nzString($r['transport_note'] ?? null),
+            'cost' => self::nzString($r['cost'] ?? null),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private static function passengerRowToPdf(array $r): array
+    {
+        $name = self::nzString($r['description'] ?? null);
+        if ($name === '') {
+            $name = 'Hành khách / chương trình';
+        }
+
+        return [
+            'name' => $name,
+            'qty' => self::nzString($r['guests'] ?? null),
+            'dim' => self::nzString($r['dimensions'] ?? null),
+            'weight' => self::nzString($r['weight'] ?? null),
+            'inotes' => self::nzString($r['notes'] ?? null),
+            'puTime' => self::nzString($r['depart_at'] ?? null),
+            'puPlace' => self::nzString($r['pickup'] ?? null),
+            'puContact' => self::nzString($r['person_in_charge'] ?? null),
+            'delTime' => self::nzString($r['return_at'] ?? null),
+            'delPlace' => self::nzString($r['dropoff'] ?? null),
+            'delContact' => self::nzString($r['receiver'] ?? null),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private static function businessRowToPdf(array $r): array
+    {
+        return [
+            'name' => self::nzString($r['description'] ?? null) ?: 'Công tác',
+            'qty' => self::nzString($r['guests'] ?? null),
+            'dim' => self::nzString($r['waypoint'] ?? null),
+            'inotes' => self::nzString($r['notes'] ?? null),
+            'puTime' => self::nzString($r['depart_at'] ?? null),
+            'puPlace' => self::nzString($r['pickup'] ?? null),
+            'delTime' => self::nzString($r['return_at'] ?? null),
+            'delPlace' => self::nzString($r['dropoff'] ?? null),
+            'delContact' => self::nzString($r['other'] ?? null),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, string>>  $rows
+     * @return list<array<string, string>>
+     */
+    private static function padRows(array $rows, int $min): array
+    {
+        $empty = array_fill(
+            0,
+            max(0, $min - count($rows)),
+            array_fill_keys(
+                [
+                    'name', 'qty', 'dim', 'weight', 'inotes', 'puTime', 'puPlace',
+                    'puContact', 'delTime', 'delPlace', 'delContact', 'transport',
+                    'cost', 'waypoint',
+                ],
+                ''
+            )
+        );
+
+        return array_merge($rows, $empty);
+    }
+
+    private static function resolveLogoDataUri(): string
+    {
+        foreach ([
+            public_path('images/vas-logo.png'),
+            public_path('images/logo/vas-logo.png'),
+        ] as $path) {
+            if (is_readable($path)) {
+                $raw = @file_get_contents($path);
+                if ($raw !== false) {
+                    return 'data:image/png;base64,'.base64_encode($raw);
+                }
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -160,86 +357,6 @@ final class DispatchRequestPdfPresenter
         return (int) round((float) $s);
     }
 
-    public static function formatVnd(int $n): string
-    {
-        return number_format($n, 0, ',', '.').' đ';
-    }
-
-    public static function formatCostCell(string $name, string $cost): string
-    {
-        if ($name === '') {
-            return '';
-        }
-
-        return self::formatVnd(self::parseMoney($cost));
-    }
-
-    /**
-     * @param  array<string, mixed>  $form
-     * @param  array<int, array<string, mixed>>  $cargoRows
-     * @param  array<int, array<string, mixed>>  $passengerRows
-     * @param  array<int, array<string, mixed>>  $businessRows
-     * @return array<int, array<string, string>>
-     */
-    private static function buildSectionERows(
-        array $form,
-        array $cargoRows,
-        array $passengerRows,
-        array $businessRows,
-    ): array {
-        $trip = $form['trip_type'] ?? '';
-        $built = [];
-        if ($trip === 'cargo') {
-            foreach ($cargoRows as $r) {
-                if (! self::nzString($r['name'] ?? null)) {
-                    continue;
-                }
-                $built[] = [
-                    'name' => self::nzString($r['name'] ?? null),
-                    'qty' => self::nzString($r['qty'] ?? null) ?: '—',
-                    'dim' => self::nzString($r['dimensions'] ?? null) ?: '—',
-                    'weight' => self::nzString($r['weight'] ?? null) ?: '—',
-                    'inotes' => self::nzString($r['item_notes'] ?? null),
-                    'puTime' => self::nzString($r['pickup_at'] ?? null) ?: '—',
-                    'puPlace' => self::nzString($r['pickup_place'] ?? null) ?: '—',
-                    'puContact' => self::nzString($r['pickup_contact'] ?? null) ?: '—',
-                    'delTime' => self::nzString($r['delivery_at'] ?? null) ?: '—',
-                    'delPlace' => self::nzString($r['delivery_place'] ?? null) ?: '—',
-                    'delContact' => self::nzString($r['delivery_contact'] ?? null) ?: '—',
-                    'transport' => self::nzString($r['transport_note'] ?? null) ?: '—',
-                    'cost' => self::nzString($r['cost'] ?? null) !== ''
-                        ? self::nzString($r['cost'] ?? null)
-                        : '0',
-                ];
-            }
-        } else {
-            foreach ($passengerRows as $r) {
-                if (! self::isPassengerRowFilled($r)) {
-                    continue;
-                }
-                $built[] = self::passengerRowToE($r);
-            }
-            foreach ($businessRows as $r) {
-                if (! self::isBusinessRowFilled($r)) {
-                    continue;
-                }
-                $built[] = self::businessRowToE($r);
-            }
-        }
-
-        $empty = [
-            'name' => '', 'qty' => '', 'dim' => '', 'weight' => '', 'inotes' => '',
-            'puTime' => '', 'puPlace' => '', 'puContact' => '',
-            'delTime' => '', 'delPlace' => '', 'delContact' => '',
-            'transport' => '', 'cost' => '',
-        ];
-        while (count($built) < 10) {
-            $built[] = $empty;
-        }
-
-        return array_slice($built, 0, 10);
-    }
-
     /**
      * @param  array<string, mixed>  $r
      */
@@ -276,62 +393,11 @@ final class DispatchRequestPdfPresenter
         if (self::parseMoney($r['unit_price'] ?? null) || self::parseMoney($r['extra_fee'] ?? null)) {
             return true;
         }
-        if (self::nzString($r['notes'] ?? null)) {
+        if (self::nzString($r['notes'] ?? null) || self::nzString($r['description'] ?? null)) {
             return true;
         }
         $g = self::nzString($r['guests'] ?? null);
 
         return $g !== '' && $g !== '1';
-    }
-
-    /**
-     * @param  array<string, mixed>  $r
-     * @return array<string, string>
-     */
-    private static function passengerRowToE(array $r): array
-    {
-        $line = 'Hành khách / chương trình';
-        $total = self::parseMoney($r['unit_price'] ?? null) + self::parseMoney($r['extra_fee'] ?? null);
-
-        return [
-            'name' => $line,
-            'qty' => self::nzString($r['guests'] ?? null) ?: '—',
-            'dim' => '—',
-            'weight' => '—',
-            'inotes' => self::nzString($r['notes'] ?? null),
-            'puTime' => self::nzString($r['depart_at'] ?? null) ?: '—',
-            'puPlace' => self::nzString($r['pickup'] ?? null) ?: '—',
-            'puContact' => self::nzString($r['person_in_charge'] ?? null) ?: '—',
-            'delTime' => self::nzString($r['return_at'] ?? null) ?: '—',
-            'delPlace' => self::nzString($r['dropoff'] ?? null) ?: '—',
-            'delContact' => '—',
-            'transport' => 'Điểm — Điểm',
-            'cost' => $total > 0 ? (string) $total : '0',
-        ];
-    }
-
-    /**
-     * @param  array<string, mixed>  $r
-     * @return array<string, string>
-     */
-    private static function businessRowToE(array $r): array
-    {
-        $total = self::parseMoney($r['unit_price'] ?? null) + self::parseMoney($r['extra_fee'] ?? null);
-
-        return [
-            'name' => 'Công tác',
-            'qty' => self::nzString($r['guests'] ?? null) ?: '—',
-            'dim' => self::nzString($r['waypoint'] ?? null) ?: '—',
-            'weight' => '—',
-            'inotes' => self::nzString($r['notes'] ?? null),
-            'puTime' => self::nzString($r['depart_at'] ?? null) ?: '—',
-            'puPlace' => self::nzString($r['pickup'] ?? null) ?: '—',
-            'puContact' => '—',
-            'delTime' => self::nzString($r['return_at'] ?? null) ?: '—',
-            'delPlace' => self::nzString($r['dropoff'] ?? null) ?: '—',
-            'delContact' => '—',
-            'transport' => 'Công tác',
-            'cost' => $total > 0 ? (string) $total : '0',
-        ];
     }
 }
