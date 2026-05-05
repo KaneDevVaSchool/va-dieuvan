@@ -8,8 +8,14 @@
     :aria-label="t('trip_detail.status_block.title')"
   >
     <!-- Header: title + status badge -->
-    <div class="flex items-center gap-2" :class="embedded ? 'justify-end' : 'justify-between'">
-      <h2 :class="embedded ? 'sr-only' : 'text-sm font-semibold text-slate-700 dark:text-slate-200'">
+    <div class="flex flex-wrap items-center gap-2" :class="embedded ? 'justify-between' : 'justify-between'">
+      <h2
+        :class="
+          embedded
+            ? 'text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400'
+            : 'text-sm font-semibold text-slate-700 dark:text-slate-200'
+        "
+      >
         {{ t('trip_detail.status_block.title') }}
       </h2>
       <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="badgeClass">

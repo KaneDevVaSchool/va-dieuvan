@@ -1564,6 +1564,24 @@
             "checkin_expand_pickup": "Địa chỉ đón",
             "checkin_private_note": "Ghi chú riêng",
             "checkin_error": "Không thể cập nhật trạng thái lên xe.",
+            "search_ph": "Tìm tên, vai trò, SĐT hoặc ghi chú…",
+            "search_aria": "Lọc danh sách hành khách",
+            "search_empty": "Không có dòng khớp bộ lọc.",
+            "search_match": "Hiển thị {shown}/{total}",
+            "search_clear_aria": "Xóa tìm kiếm",
+            "filter_all": "Tất cả",
+            "filter_waiting": "Chưa lên xe",
+            "filter_onboard": "Đã lên xe",
+            "filter_segment_aria": "Lọc theo trạng thái lên xe",
+            "filter_all_aria": "Hiển thị mọi hành khách",
+            "filter_waiting_aria": "Chỉ hành khách chưa lên xe",
+            "filter_onboard_aria": "Chỉ hành khách đã lên xe",
+            "export_csv": "CSV",
+            "export_csv_aria": "Xuất danh sách hành khách CSV",
+            "csv_checked": "Lên xe",
+            "csv_pickup": "Điểm đón",
+            "csv_yes": "Có",
+            "csv_no": "Không",
             "tel_call": "Gọi"
         },
         "costs_block": {
@@ -1886,7 +1904,8 @@
             "breakdown_title": "Phân bổ theo loại",
             "add_btn": "+ Thêm chi phí",
             "add_btn_cancel": "Đóng",
-            "breakdown_total": "Tổng"
+            "breakdown_total": "Tổng",
+            "embedded_summary": "{count} mục · {total}"
         }
     },
     "dashboard_analytics": {

@@ -1704,6 +1704,24 @@
             "checkin_expand_pickup": "Pickup address",
             "checkin_private_note": "Private note",
             "checkin_error": "Could not update boarding status.",
+            "search_ph": "Search name, role, phone, or notes…",
+            "search_aria": "Filter passenger list",
+            "search_empty": "No rows match your filter.",
+            "search_match": "Showing {shown}/{total}",
+            "search_clear_aria": "Clear search",
+            "filter_all": "All",
+            "filter_waiting": "Not on board",
+            "filter_onboard": "On board",
+            "filter_segment_aria": "Filter by boarding check-in status",
+            "filter_all_aria": "Show every passenger row",
+            "filter_waiting_aria": "Passengers not yet checked on board",
+            "filter_onboard_aria": "Passengers checked on board",
+            "export_csv": "CSV",
+            "export_csv_aria": "Export passenger list as CSV",
+            "csv_checked": "On board",
+            "csv_pickup": "Pickup",
+            "csv_yes": "Yes",
+            "csv_no": "No",
             "tel_call": "Call"
         },
         "costs_block": {
@@ -2013,7 +2031,8 @@
             "breakdown_title": "Breakdown by type",
             "add_btn": "+ Add cost",
             "add_btn_cancel": "Close",
-            "breakdown_total": "Total"
+            "breakdown_total": "Total",
+            "embedded_summary": "{count} items · {total}"
         },
         "step": {
             "pending": "Pending",

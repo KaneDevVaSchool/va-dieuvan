@@ -8,12 +8,25 @@
     :aria-label="t('trip_detail.costs_block.title')"
   >
     <!-- Header -->
-    <div class="flex flex-wrap items-center gap-2" :class="embedded ? 'justify-end' : 'justify-between'">
-      <h2 :class="embedded ? 'sr-only' : 'text-sm font-semibold text-slate-700 dark:text-slate-200'">
-        {{ t('trip_detail.costs_block.title') }}
+    <div class="flex flex-wrap items-center gap-2 justify-between">
+      <h2
+        :class="
+          embedded
+            ? 'min-w-0 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400'
+            : 'text-sm font-semibold text-slate-700 dark:text-slate-200'
+        "
+      >
+        {{
+          embedded
+            ? embeddedSummaryLine
+            : t('trip_detail.costs_block.title')
+        }}
       </h2>
       <div class="flex flex-wrap items-center justify-end gap-2">
-        <span v-if="(costs ?? []).length" class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
+        <span
+          v-if="!embedded && (costs ?? []).length"
+          class="text-xs tabular-nums text-slate-500 dark:text-slate-400"
+        >
           {{ costsTotalFormatted }}
         </span>
         <RouterLink
@@ -251,6 +264,13 @@ const costsTotalFormatted = computed(() => {
   const sum = list.reduce((s, c) => s + (Number(c.amount) || 0), 0)
   return `${new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(sum)} ${cur}`
 })
+
+const embeddedSummaryLine = computed(() =>
+  t('trip_detail.costs.embedded_summary', {
+    count: props.costs?.length ?? 0,
+    total: costsTotalFormatted.value,
+  }),
+)
 
 const grandFmt = computed(() => {
   const cur = props.costs?.[0]?.currency || 'VND'
