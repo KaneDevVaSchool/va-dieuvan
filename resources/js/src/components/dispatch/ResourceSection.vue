@@ -88,9 +88,6 @@
           </div>
         </div>
       </Transition>
-      <p v-if="allowCustomEntry" class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-        {{ t('trip_detail.coordination.resource_custom_entry_hint') }}
-      </p>
     </div>
 
     <div v-if="isLoading" class="mt-1.5 h-8 animate-pulse rounded-md bg-slate-100 dark:bg-slate-800" />
@@ -112,10 +109,6 @@
         </button>
       </div>
     </div>
-
-    <div v-else-if="!isLoading" class="mt-1 py-0.5 text-[12px] italic text-slate-500 dark:text-slate-400">
-      {{ emptyStateLabel }}
-    </div>
   </div>
 </template>
 
@@ -129,7 +122,6 @@ const props = defineProps({
   title: { type: String, required: true },
   subtitle: { type: String, required: true },
   placeholder: { type: String, required: true },
-  emptyHint: { type: String, required: true },
   isLoading: { type: Boolean, default: false },
   icon: { type: [Object, Function], default: null },
   /** Khi false: chỉ một lựa chọn (thay thế danh sách hiện tại) */
@@ -149,7 +141,6 @@ const isOpen = ref(false)
 
 const busyLabel = computed(() => t('trip_detail.coordination.resource_busy_badge'))
 const emptySearchLabel = computed(() => t('trip_detail.coordination.resource_search_empty'))
-const emptyStateLabel = computed(() => t('trip_detail.coordination.resource_empty_line', { hint: props.emptyHint }))
 const customAddHint = computed(() =>
   t('trip_detail.coordination.resource_press_enter_add', { name: searchQuery.value.trim() }),
 )

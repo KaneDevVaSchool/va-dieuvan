@@ -17,7 +17,6 @@
       :title="t('trip_detail.coordination.resource_section_internal_title')"
       :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
       :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
-      :empty-hint="t('trip_detail.coordination.resource_section_internal_empty')"
       :icon="TruckIcon"
     />
 
@@ -38,7 +37,6 @@
         :title="t('trip_detail.coordination.resource_section_driver_title')"
         :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
         :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
-        :empty-hint="t('trip_detail.coordination.resource_section_driver_empty')"
         :icon="UserIcon"
         :option-label-class-fn="driverOptionLabelClass"
       >
@@ -61,7 +59,6 @@
       :title="t('trip_detail.coordination.resource_section_taxi_title')"
       :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
       :placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
-      :empty-hint="t('trip_detail.coordination.resource_section_taxi_empty')"
       :icon="BuildingStorefrontIcon"
     />
 
@@ -90,7 +87,6 @@
       :title="t('trip_detail.coordination.resource_section_vendor_title')"
       :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
       :placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
-      :empty-hint="t('trip_detail.coordination.resource_section_vendor_empty')"
       :icon="BuildingOffice2Icon"
     />
 

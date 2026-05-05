@@ -167,22 +167,72 @@
                         />
 
                         <section
-                            class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm"
+                            class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-950/40"
                         >
                             <div
-                                class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                                class="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:justify-between sm:gap-3"
                             >
-                                <h2
-                                    class="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                                <div
+                                    class="flex min-w-0 flex-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800/90"
+                                    role="tablist"
+                                    :aria-label="
+                                        t('trip_detail.attachments_notes_tabs_aria')
+                                    "
                                 >
-                                    {{ t("trip_detail.attachments.title") }}
-                                </h2>
+                                    <button
+                                        id="trip-detail-tab-attachments"
+                                        type="button"
+                                        role="tab"
+                                        :aria-selected="
+                                            attachmentNotesTab === 'attachments'
+                                        "
+                                        :tabindex="
+                                            attachmentNotesTab === 'attachments'
+                                                ? 0
+                                                : -1
+                                        "
+                                        aria-controls="trip-detail-panel-attachments"
+                                        class="min-w-0 flex-1 rounded-md px-2.5 py-1.5 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                                        :class="
+                                            attachmentNotesTab === 'attachments'
+                                                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
+                                                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                                        "
+                                        @click="attachmentNotesTab = 'attachments'"
+                                    >
+                                        {{ t("trip_detail.attachments.title") }}
+                                    </button>
+                                    <button
+                                        id="trip-detail-tab-notes"
+                                        type="button"
+                                        role="tab"
+                                        :aria-selected="
+                                            attachmentNotesTab === 'notes'
+                                        "
+                                        :tabindex="
+                                            attachmentNotesTab === 'notes'
+                                                ? 0
+                                                : -1
+                                        "
+                                        aria-controls="trip-detail-panel-notes"
+                                        class="min-w-0 flex-1 rounded-md px-2.5 py-1.5 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                                        :class="
+                                            attachmentNotesTab === 'notes'
+                                                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
+                                                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                                        "
+                                        @click="attachmentNotesTab = 'notes'"
+                                    >
+                                        {{ t("trip_detail.notes.title") }}
+                                    </button>
+                                </div>
                                 <div
                                     v-if="
+                                        attachmentNotesTab === 'attachments' &&
                                         canManageAttachments &&
                                         trip.dispatch_request?.id
                                     "
-                                    class="flex flex-wrap items-center gap-2"
+                                    class="flex shrink-0 flex-wrap items-center justify-end gap-2"
                                 >
                                     <input
                                         ref="attachInputRef"
@@ -203,222 +253,200 @@
                                     </Button>
                                 </div>
                             </div>
-                            <p
-                                v-if="attachMsg"
-                                class="mt-2 text-xs"
-                                :class="
-                                    attachMsgIsError
-                                        ? 'text-rose-600'
-                                        : 'text-slate-600'
-                                "
-                            >
-                                {{ attachMsg }}
-                            </p>
-                            <ul class="mt-2 space-y-1.5">
-                                <li
-                                    v-for="a in attachmentsList"
-                                    :key="a.id"
-                                    class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5"
-                                >
-                                    <div class="min-w-0">
-                                        <div
-                                            class="truncate text-sm font-medium text-slate-900"
-                                        >
-                                            {{
-                                                a.original_name ||
-                                                t(
-                                                    "trip_detail.attachments.unnamed",
-                                                )
-                                            }}
-                                        </div>
-                                        <div class="text-xs text-slate-500">
-                                            {{ fmtFileSize(a.size_bytes) }}
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="flex shrink-0 items-center gap-1"
-                                    >
-                                        <a
-                                            v-if="a.url"
-                                            :href="a.url"
-                                            target="_blank"
-                                            rel="noopener"
-                                            class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                            :download="
-                                                a.original_name || undefined
-                                            "
-                                        >
-                                            <ArrowDownTrayIcon
-                                                class="h-5 w-5"
-                                            />
-                                        </a>
-                                        <button
-                                            v-if="canManageAttachments"
-                                            type="button"
-                                            class="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                                            :disabled="
-                                                attachDeletingId === a.id
-                                            "
-                                            :aria-label="
-                                                t(
-                                                    'trip_detail.attachments.delete',
-                                                )
-                                            "
-                                            @click="removeAttachment(a)"
-                                        >
-                                            <TrashIcon class="h-5 w-5" />
-                                        </button>
-                                    </div>
-                                </li>
-                            </ul>
-                            <p
-                                v-if="!attachmentsList.length"
-                                class="mt-2 text-sm text-slate-500"
-                            >
-                                {{ t("trip_detail.attachments.empty") }}
-                            </p>
-                        </section>
 
-                        <!-- Dispatcher notes -->
-                        <section
-                            class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm"
-                        >
-                            <h2
-                                class="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                            <div
+                                v-show="attachmentNotesTab === 'attachments'"
+                                id="trip-detail-panel-attachments"
+                                role="tabpanel"
+                                aria-labelledby="trip-detail-tab-attachments"
                             >
-                                {{ t("trip_detail.notes.title") }}
-                            </h2>
-                            <div class="mt-2 space-y-2">
-                                <div
-                                    v-if="tripRequestNotesFromUser"
-                                    class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950"
-                                >
-                                    <div
-                                        class="text-xs font-medium text-amber-800"
-                                    >
-                                        {{
-                                            t("trip_detail.notes.from_request")
-                                        }}
-                                    </div>
-                                    <div
-                                        class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap"
-                                    >
-                                        {{ tripRequestNotesFromUser }}
-                                    </div>
-                                </div>
-                                <div
-                                    v-for="n in noteEvents"
-                                    :key="n.id"
-                                    class="rounded-lg border border-slate-100 bg-slate-50/50 p-2"
-                                >
-                                    <div
-                                        class="flex items-baseline justify-between gap-2"
-                                    >
-                                        <div
-                                            class="text-xs font-medium text-slate-700"
-                                        >
-                                            {{
-                                                n.creator?.name ??
-                                                t("trip_detail.timeline.system")
-                                            }}
-                                        </div>
-                                        <div class="text-xs text-slate-400">
-                                            {{ fmt(n.created_at) }}
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="mt-1 whitespace-pre-wrap text-sm text-slate-800"
-                                    >
-                                        {{ n.message }}
-                                    </div>
-                                </div>
-                                <div
-                                    v-if="
-                                        !noteEvents.length &&
-                                        !tripRequestNotesFromUser
+                                <p
+                                    v-if="attachMsg"
+                                    class="mt-2 text-xs"
+                                    :class="
+                                        attachMsgIsError
+                                            ? 'text-rose-600'
+                                            : 'text-slate-600'
                                     "
-                                    class="text-xs text-slate-500"
                                 >
-                                    {{ t("trip_detail.notes.empty") }}
-                                </div>
-                                <div class="pt-1">
-                                    <div
-                                        class="text-xs font-semibold text-slate-500 dark:text-slate-400"
+                                    {{ attachMsg }}
+                                </p>
+                                <ul class="mt-2 space-y-1.5">
+                                    <li
+                                        v-for="a in attachmentsList"
+                                        :key="a.id"
+                                        class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5 dark:border-slate-700/80 dark:bg-slate-900/30"
                                     >
-                                        {{ t("trip_detail.notes.add_title") }}
-                                    </div>
-                                    <textarea
-                                        v-model="newNote"
-                                        rows="2"
-                                        class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                                        :placeholder="
-                                            t('trip_detail.notes.placeholder')
-                                        "
-                                    />
+                                        <div class="min-w-0">
+                                            <div
+                                                class="truncate text-sm font-medium text-slate-900 dark:text-slate-100"
+                                            >
+                                                {{
+                                                    a.original_name ||
+                                                    t(
+                                                        "trip_detail.attachments.unnamed",
+                                                    )
+                                                }}
+                                            </div>
+                                            <div
+                                                class="text-xs text-slate-500"
+                                            >
+                                                {{ fmtFileSize(a.size_bytes) }}
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="flex shrink-0 items-center gap-1"
+                                        >
+                                            <a
+                                                v-if="a.url"
+                                                :href="a.url"
+                                                target="_blank"
+                                                rel="noopener"
+                                                class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                                                :download="
+                                                    a.original_name ||
+                                                    undefined
+                                                "
+                                            >
+                                                <ArrowDownTrayIcon
+                                                    class="h-5 w-5"
+                                                />
+                                            </a>
+                                            <button
+                                                v-if="canManageAttachments"
+                                                type="button"
+                                                class="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800/60 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                                                :disabled="
+                                                    attachDeletingId === a.id
+                                                "
+                                                :aria-label="
+                                                    t(
+                                                        'trip_detail.attachments.delete',
+                                                    )
+                                                "
+                                                @click="removeAttachment(a)"
+                                            >
+                                                <TrashIcon class="h-5 w-5" />
+                                            </button>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <p
+                                    v-if="!attachmentsList.length"
+                                    class="mt-2 text-sm text-slate-500 dark:text-slate-400"
+                                >
+                                    {{ t("trip_detail.attachments.empty") }}
+                                </p>
+                            </div>
+
+                            <div
+                                v-show="attachmentNotesTab === 'notes'"
+                                id="trip-detail-panel-notes"
+                                role="tabpanel"
+                                aria-labelledby="trip-detail-tab-notes"
+                            >
+                                <div class="mt-2 space-y-2">
                                     <div
-                                        class="mt-1.5 flex flex-wrap items-center gap-2"
+                                        v-if="tripRequestNotesFromUser"
+                                        class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
                                     >
-                                        <Button
-                                            :loading="noting"
-                                            :disabled="!newNote.trim()"
-                                            @click="addNote"
-                                            >{{
+                                        <div
+                                            class="text-xs font-medium text-amber-800 dark:text-amber-200"
+                                        >
+                                            {{
                                                 t(
-                                                    "trip_detail.notes.add_action",
+                                                    "trip_detail.notes.from_request",
                                                 )
-                                            }}</Button
+                                            }}
+                                        </div>
+                                        <div
+                                            class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap"
                                         >
-                                        <span
-                                            v-if="noteMsg"
-                                            class="text-sm text-slate-600"
-                                            >{{ noteMsg }}</span
+                                            {{ tripRequestNotesFromUser }}
+                                        </div>
+                                    </div>
+                                    <div
+                                        v-for="n in noteEvents"
+                                        :key="n.id"
+                                        class="rounded-lg border border-slate-100 bg-slate-50/50 p-2 dark:border-slate-700/80 dark:bg-slate-900/40"
+                                    >
+                                        <div
+                                            class="flex items-baseline justify-between gap-2"
                                         >
+                                            <div
+                                                class="text-xs font-medium text-slate-700 dark:text-slate-300"
+                                            >
+                                                {{
+                                                    n.creator?.name ??
+                                                    t(
+                                                        "trip_detail.timeline.system",
+                                                    )
+                                                }}
+                                            </div>
+                                            <div
+                                                class="text-xs text-slate-400"
+                                            >
+                                                {{ fmt(n.created_at) }}
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200"
+                                        >
+                                            {{ n.message }}
+                                        </div>
+                                    </div>
+                                    <div
+                                        v-if="
+                                            !noteEvents.length &&
+                                            !tripRequestNotesFromUser
+                                        "
+                                        class="text-xs text-slate-500 dark:text-slate-400"
+                                    >
+                                        {{ t("trip_detail.notes.empty") }}
+                                    </div>
+                                    <div class="pt-1">
+                                        <div
+                                            class="text-xs font-semibold text-slate-500 dark:text-slate-400"
+                                        >
+                                            {{
+                                                t(
+                                                    "trip_detail.notes.add_title",
+                                                )
+                                            }}
+                                        </div>
+                                        <textarea
+                                            v-model="newNote"
+                                            rows="2"
+                                            class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.notes.placeholder',
+                                                )
+                                            "
+                                        />
+                                        <div
+                                            class="mt-1.5 flex flex-wrap items-center gap-2"
+                                        >
+                                            <Button
+                                                :loading="noting"
+                                                :disabled="!newNote.trim()"
+                                                @click="addNote"
+                                                >{{
+                                                    t(
+                                                        "trip_detail.notes.add_action",
+                                                    )
+                                                }}</Button
+                                            >
+                                            <span
+                                                v-if="noteMsg"
+                                                class="text-sm text-slate-600 dark:text-slate-400"
+                                                >{{ noteMsg }}</span
+                                            >
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </section>
-
-                        <Card
-                            v-if="
-                                trip.vehicle ||
-                                trip.driver ||
-                                trip.transport_provider
-                            "
-                            :title="t('trip_detail.assigned.title')"
-                        >
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between gap-2">
-                                    <span class="text-slate-500">{{
-                                        t("trip_detail.assigned.vehicle")
-                                    }}</span>
-                                    <span class="font-medium text-slate-900">{{
-                                        trip.vehicle?.license_plate ?? "—"
-                                    }}</span>
-                                </div>
-                                <div class="flex justify-between gap-2">
-                                    <span class="text-slate-500">{{
-                                        t("trip_detail.assigned.driver")
-                                    }}</span>
-                                    <span
-                                        class="min-w-0 truncate font-medium text-slate-900"
-                                        >{{
-                                            trip.driver?.full_name ?? "—"
-                                        }}</span
-                                    >
-                                </div>
-                                <div class="flex justify-between gap-2">
-                                    <span class="text-slate-500">{{
-                                        t("trip_detail.assigned.provider")
-                                    }}</span>
-                                    <span
-                                        class="min-w-0 truncate font-medium text-slate-900"
-                                        >{{
-                                            trip.transport_provider?.name ?? "—"
-                                        }}</span
-                                    >
-                                </div>
-                            </div>
-                        </Card>
                     </div>
                     <div class="min-w-0 space-y-4 xl:col-span-12">
                         <PassengerCheckIn
@@ -1106,7 +1134,6 @@ import { computed, onMounted, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/vue/24/outline";
-import Card from "../../components/ui/Card.vue";
 import Button from "../../components/ui/Button.vue";
 import Input from "../../components/ui/Input.vue";
 import Select from "../../components/ui/Select.vue";
@@ -1248,6 +1275,7 @@ const attachDeletingId = ref(null);
 const attachMsg = ref("");
 const attachMsgIsError = ref(false);
 
+const attachmentNotesTab = ref("attachments");
 const newNote = ref("");
 const noting = ref(false);
 const noteMsg = ref("");
