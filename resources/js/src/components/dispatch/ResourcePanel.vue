@@ -17,6 +17,7 @@
       v-model="selected.internalVehicles"
       :options="internalVehicleOptions"
       :is-loading="isLoading"
+      :disabled="disabled"
       :title="t('trip_detail.coordination.resource_section_internal_title')"
       :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
       :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
@@ -31,7 +32,7 @@
       <button
         type="button"
         class="mb-2 w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-left text-[11px] font-medium text-[#8B1A1A] hover:bg-rose-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-rose-950/30"
-        :disabled="!tripDate"
+        :disabled="!tripDate || disabled"
         @click="showWorkloadPanel = true"
       >
         {{ t('trip_detail.coordination.workload_open_panel') }}
@@ -40,6 +41,7 @@
         v-model="selected.internalDrivers"
         :options="internalDriverOptions"
         :is-loading="isLoading"
+        :disabled="disabled"
         :multiple="false"
         :title="t('trip_detail.coordination.resource_section_driver_title')"
         :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
@@ -92,7 +94,9 @@
           :is-loading="isLoading"
           :default-seat="4"
           indent-body
+          :disabled="disabled"
           :title="t('trip_detail.coordination.resource_section_taxi_title')"
+          :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
           :name-placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
           :name-field-label="t('trip_detail.coordination.supplement_field_provider')"
           :icon="TruckIcon"
@@ -107,7 +111,9 @@
           :default-seat="7"
           indent-body
           :can-quick-create="canQuickCreateVendor"
+          :disabled="disabled"
           :title="t('trip_detail.coordination.resource_section_vendor_title')"
+          :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
           :name-placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
           :name-field-label="t('trip_detail.coordination.supplement_field_ncc_name')"
           :icon="BuildingOffice2Icon"
@@ -142,7 +148,7 @@
 
     <Teleport to="body">
       <div
-        v-if="showWorkloadPanel && !hideInternalDriverSection"
+        v-if="showWorkloadPanel && !hideInternalDriverSection && !disabled"
         class="fixed inset-0 z-[200] flex justify-end bg-black/30"
         @click.self="showWorkloadPanel = false"
       >
@@ -191,6 +197,8 @@ const props = defineProps({
   hideTaxiSection: { type: Boolean, default: false },
   /** Ẩn section NCC + nút tạo nhanh (dùng khi tab không phải NCC) */
   hideVendorSection: { type: Boolean, default: false },
+  /** Khóa toàn bộ thao tác (vd. sau khi đã gán trên timeline) */
+  disabled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['create-vendor', 'update:resources'])
@@ -201,6 +209,13 @@ const tripIdRef = toRef(props, 'tripId')
 const tripDateRef = toRef(props, 'tripDate')
 
 const showWorkloadPanel = ref(false)
+
+watch(
+  () => props.disabled,
+  (d) => {
+    if (d) showWorkloadPanel.value = false
+  },
+)
 
 const hydratingFromSnapshot = ref(false)
 
@@ -395,6 +410,7 @@ watch(
         transportProviderId: snap.transportProviderId,
         externalVehicleRef: snap.externalVehicleRef,
         externalDriverRef: snap.externalDriverRef,
+        supplementTransports: snap.supplementTransports ?? null,
       })
       lastPayloadJson.value = ''
       emitResources()

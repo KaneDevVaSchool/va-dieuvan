@@ -12,14 +12,16 @@
     <div class="mt-2 flex flex-wrap gap-2">
       <button
         type="button"
-        class="rounded-[12px] border-[0.5px] border-[#EF9F27]/55 bg-white px-3 py-1.5 text-xs font-medium text-[#8A4A0A] hover:bg-[#EF9F27]/10 dark:border-amber-700/60 dark:bg-slate-900 dark:text-amber-100 dark:hover:bg-amber-950/50"
+        class="rounded-[12px] border-[0.5px] border-[#EF9F27]/55 bg-white px-3 py-1.5 text-xs font-medium text-[#8A4A0A] hover:bg-[#EF9F27]/10 disabled:cursor-not-allowed disabled:opacity-45 dark:border-amber-700/60 dark:bg-slate-900 dark:text-amber-100 dark:hover:bg-amber-950/50"
+        :disabled="disabled"
         @click="$emit('pick-again')"
       >
         {{ t('trip_detail.coordination.conflict_pick_again') }}
       </button>
       <button
         type="button"
-        class="rounded-[12px] border-[0.5px] border-transparent bg-[#EF9F27] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#d98a1f] dark:bg-[#EF9F27] dark:hover:bg-[#f0a84a]"
+        class="rounded-[12px] border-[0.5px] border-transparent bg-[#EF9F27] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#d98a1f] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#EF9F27] dark:hover:bg-[#f0a84a]"
+        :disabled="disabled"
         @click="$emit('keep-anyway')"
       >
         {{ t('trip_detail.coordination.conflict_keep') }}
@@ -39,6 +41,7 @@ export type VehicleConflict = {
 
 defineProps<{
   conflict: VehicleConflict | null
+  disabled?: boolean
 }>()
 
 defineEmits<{

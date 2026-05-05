@@ -26,6 +26,22 @@ export interface SelectedResources {
 
 export type ResourceDispatchValidationCode = null | 'empty' | 'need_provider'
 
+/** Snapshot đầy đủ của một item bổ sung phương tiện — được lưu xuống DB. */
+export interface SupplementItem {
+  id: string
+  label: string
+  supplementSeats?: number | null
+  isCustom?: boolean | null
+  externalVehicleRef?: string | null
+  externalDriverRef?: string | null
+}
+
+/** Cấu trúc JSON lưu trong trips.supplement_transports */
+export interface SupplementTransports {
+  taxis: SupplementItem[]
+  vendors: SupplementItem[]
+}
+
 export interface ResourceDispatchPayload {
   readyForSubmit: boolean
   validationCode: ResourceDispatchValidationCode
@@ -43,4 +59,6 @@ export interface ResourceDispatchPayload {
   taxiSeatSupplement: number
   /** Số chỗ bổ sung khai báo cho phần NCC. */
   nccSeatSupplement: number
+  /** Danh sách đầy đủ để lưu DB và hydrate lại sau refresh. */
+  supplementTransports: SupplementTransports
 }

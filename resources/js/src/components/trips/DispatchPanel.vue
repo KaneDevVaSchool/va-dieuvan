@@ -1,6 +1,6 @@
 <template>
     <section
-        class="overflow-hidden rounded-[12px] border-[0.5px] border-slate-200/90 bg-white print:hidden dark:border-slate-700/80 dark:bg-slate-950/30"
+        class="overflow-hidden rounded-[12px] border-[0.5px] bg-white print:hidden dark:border-slate-700/80 dark:bg-slate-950/30"
         :aria-label="t('trip_detail.coordination.title')"
     >
         <div class="space-y-3 p-3">
@@ -18,10 +18,18 @@
                 </span>
             </div>
 
+            <p
+                v-if="coordinationActionsLocked"
+                class="rounded-[12px] bg-slate-100/90 px-2.5 py-2 text-[12px] font-normal text-slate-600 dark:bg-slate-800/70 dark:text-slate-300"
+                role="status"
+            >
+                {{ t("trip_detail.coordination.actions_locked_after_assign") }}
+            </p>
+
             <!-- Departure datetime row (grouped card) -->
             <div
                 v-if="canRescheduleTrip"
-                class="rounded-[12px] border-[0.5px] border-slate-200/80 bg-slate-50/40 p-2.5 dark:border-slate-700/50 dark:bg-slate-900/25"
+                class="rounded-[12px] border-[0.5px] bg-slate-50/40 p-2.5 dark:border-slate-700/50Z dark:bg-slate-900/25"
             >
                 <div
                     class="flex flex-nowrap items-center gap-2 overflow-x-auto"
@@ -32,13 +40,14 @@
                     <input
                         :value="rescheduleDepartLocal"
                         type="datetime-local"
-                        class="min-w-0 flex-1 shrink rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-1.5 text-[13px] font-normal outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:min-w-[10rem]"
+                        class="min-w-0 flex-1 shrink rounded-[12px] border-[0.5px] bg-white px-2 py-1.5 text-[13px] font-normal outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:min-w-[10rem]"
+                        :disabled="coordinationActionsLocked"
                         @input="onRescheduleDateInput"
                     />
                     <button
                         type="button"
                         class="shrink-0 rounded-[12px] border-[0.5px] border-slate-300/90 bg-white px-2.5 py-1.5 text-[12px] font-normal text-slate-800 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
-                        :disabled="rescheduling"
+                        :disabled="rescheduling || coordinationActionsLocked"
                         @click="$emit('reschedule')"
                     >
                         <span
@@ -138,6 +147,7 @@
                             "
                             :vehicle="selectedVehicleForCard"
                             :busy="vehicleCardBusy"
+                            :allow-change="!coordinationActionsLocked"
                             @change="$emit('vehicle-card-change')"
                         />
                         <DriverCard
@@ -146,12 +156,14 @@
                             "
                             :driver="selectedDriverForCard"
                             :busy="driverCardBusy"
+                            :allow-change="!coordinationActionsLocked"
                             @change="$emit('driver-card-change')"
                         />
                     </div>
                     <ConflictBanner
                         class="mt-3"
                         :conflict="vehicleConflictBanner"
+                        :disabled="coordinationActionsLocked"
                         @pick-again="$emit('conflict-pick-again')"
                         @keep-anyway="$emit('conflict-keep')"
                     />
@@ -173,6 +185,7 @@
                         :can-quick-create-vendor="canQuickCreateProvider"
                         :hide-internal-vehicle-section="showInternalVehicleCard"
                         :hide-internal-driver-section="showInternalDriverCard"
+                        :disabled="coordinationActionsLocked"
                         @update:resources="$emit('update:resources', $event)"
                         @create-vendor="$emit('create-vendor')"
                     />
@@ -252,10 +265,11 @@
                 <textarea
                     :value="coordinationNotes"
                     rows="3"
-                    class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-2 text-sm font-normal outline-none ring-0 focus:border-[#8B1A1A]/35 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    class="w-full rounded-[12px] border-[0.5px] bg-white px-2.5 py-2 text-sm font-normal outline-none ring-0 focus:border-[#8B1A1A]/35 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                     :placeholder="
                         t('trip_detail.coordination.internal_notes_ph')
                     "
+                    :disabled="coordinationActionsLocked"
                     @input="onCoordNotesInput"
                 />
             </div>
@@ -313,10 +327,13 @@ import DriverCard from "./DriverCard.vue";
 import VehicleCard from "./VehicleCard.vue";
 import { buildStaffPrefixedPath as staffPath } from "../../config/dispatchWebBase";
 
-const props = defineProps<{
+const props = withDefaults(
+    defineProps<{
     canAssign: boolean;
     canUpdateStatus: boolean;
     canRescheduleTrip: boolean;
+    /** Chuyến đã qua bước gán trên timeline — khóa chỉnh sửa panel điều phối */
+    coordinationActionsLocked?: boolean;
     canQuickCreateProvider: boolean;
     rescheduleDepartLocal: string;
     rescheduling: boolean;
@@ -351,7 +368,11 @@ const props = defineProps<{
     showAssignFooter: boolean;
     assignReady: boolean;
     assigning: boolean;
-}>();
+}>(),
+    {
+        coordinationActionsLocked: false,
+    },
+);
 
 const emit = defineEmits<{
     reschedule: [];

@@ -1,7 +1,14 @@
 import { type Ref, ref, unref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { listDrivers, listTransportProviders, listVehicles } from '../api/operational'
-import type { ResourceDispatchPayload, ResourceItem, ResourceDispatchValidationCode, SelectedResources } from '../types/dispatch'
+import type {
+  ResourceDispatchPayload,
+  ResourceItem,
+  ResourceDispatchValidationCode,
+  SelectedResources,
+  SupplementItem,
+  SupplementTransports,
+} from '../types/dispatch'
 
 function isCustomResource(it: ResourceItem): boolean {
   return it.isCustom === true || String(it.id).startsWith('custom:')
@@ -48,6 +55,18 @@ function toResourceProvider(p: Record<string, unknown>): ResourceItem {
     label: name,
     sublabel: type || undefined,
     available: true,
+  }
+}
+
+/** Chuyển ResourceItem thành SupplementItem gọn để lưu DB. */
+function toSupplementItem(it: ResourceItem): SupplementItem {
+  return {
+    id: String(it.id),
+    label: String(it.label ?? ''),
+    ...(it.supplementSeats != null ? { supplementSeats: Number(it.supplementSeats) } : {}),
+    ...(it.isCustom ? { isCustom: true } : {}),
+    ...(it.externalVehicleRef ? { externalVehicleRef: String(it.externalVehicleRef) } : {}),
+    ...(it.externalDriverRef ? { externalDriverRef: String(it.externalDriverRef) } : {}),
   }
 }
 
@@ -230,6 +249,12 @@ export function useResourceSelector(
     const userEvInput = [taxiExt.vehicle, vendorExt.vehicle].filter(Boolean).join(' · ')
     const userEdInput = [taxiExt.driver, vendorExt.driver].filter(Boolean).join(' · ')
 
+    // Chuẩn bị danh sách đầy đủ để lưu DB
+    const supplementTransports: SupplementTransports = {
+      taxis: txs.map(toSupplementItem),
+      vendors: vds.map(toSupplementItem),
+    }
+
     const base: ResourceDispatchPayload = {
       readyForSubmit: false,
       validationCode: code,
@@ -245,6 +270,7 @@ export function useResourceSelector(
       primaryVehicleId: null,
       taxiSeatSupplement,
       nccSeatSupplement,
+      supplementTransports,
     }
 
     if (code !== null) {
@@ -318,6 +344,8 @@ export function useResourceSelector(
     transportProviderId?: number | null
     externalVehicleRef?: string | null
     externalDriverRef?: string | null
+    /** Danh sách bổ sung đầy đủ lưu từ lần gán trước — ưu tiên dùng nếu có. */
+    supplementTransports?: SupplementTransports | null
   }) {
     selected.value = {
       internalVehicles: [],
@@ -325,6 +353,8 @@ export function useResourceSelector(
       taxis: [],
       vendors: [],
     }
+
+    // --- Xe / tài xế nội bộ ---
     const vid = snapshot.vehicleId
     if (vid != null) {
       const found = internalVehicleOptions.value.find((x) => Number(x.id) === Number(vid))
@@ -343,6 +373,49 @@ export function useResourceSelector(
         selected.value.internalDrivers = [{ id: did, label: `#${did}`, available: true }]
       }
     }
+
+    // --- Bổ sung phương tiện: ưu tiên snapshot đầy đủ ---
+    const supp = snapshot.supplementTransports
+    if (supp && (supp.taxis?.length || supp.vendors?.length)) {
+      // Khôi phục taxi — kết hợp label/sublabel từ options nếu có
+      selected.value.taxis = (supp.taxis ?? []).map((item): ResourceItem => {
+        const numericId = Number(item.id)
+        const fromOpts = !isNaN(numericId)
+          ? taxiOptions.value.find((o) => Number(o.id) === numericId)
+          : null
+        return {
+          id: item.id,
+          label: fromOpts?.label ?? item.label,
+          sublabel: fromOpts?.sublabel,
+          available: fromOpts?.available ?? true,
+          isCustom: item.isCustom ?? false,
+          supplementSeats: item.supplementSeats ?? null,
+          externalVehicleRef: item.externalVehicleRef ?? null,
+          externalDriverRef: item.externalDriverRef ?? null,
+        }
+      })
+
+      // Khôi phục vendor — kết hợp label/sublabel từ options nếu có
+      selected.value.vendors = (supp.vendors ?? []).map((item): ResourceItem => {
+        const numericId = Number(item.id)
+        const fromOpts = !isNaN(numericId)
+          ? vendorOptions.value.find((o) => Number(o.id) === numericId)
+          : null
+        return {
+          id: item.id,
+          label: fromOpts?.label ?? item.label,
+          sublabel: fromOpts?.sublabel,
+          available: fromOpts?.available ?? true,
+          isCustom: item.isCustom ?? false,
+          supplementSeats: item.supplementSeats ?? null,
+          externalVehicleRef: item.externalVehicleRef ?? null,
+          externalDriverRef: item.externalDriverRef ?? null,
+        }
+      })
+      return
+    }
+
+    // --- Fallback: legacy single-provider từ transport_provider_id ---
     const pid = snapshot.transportProviderId
     if (pid != null) {
       const taxi = taxiOptions.value.find((x) => Number(x.id) === Number(pid))

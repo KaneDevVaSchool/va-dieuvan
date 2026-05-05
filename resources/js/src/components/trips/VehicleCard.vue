@@ -14,6 +14,7 @@
             {{ vehicle?.license_plate ?? '—' }}
           </div>
           <button
+            v-if="props.allowChange"
             type="button"
             class="shrink-0 rounded-[12px] border-[0.5px] border-[#8B1A1A]/50 px-2 py-1 text-[11px] font-normal text-[#8B1A1A] hover:bg-[#8B1A1A]/5 dark:border-[#8B1A1A]/40 dark:text-[#e85c5c] dark:hover:bg-[#8B1A1A]/10"
             @click="$emit('change')"
@@ -56,15 +57,20 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TruckIcon } from '@heroicons/vue/24/outline'
 
-const props = defineProps<{
-  vehicle: {
-    license_plate?: string | null
-    type?: string | null
-    seat_count?: number | null
-    status?: string | null
-  } | null
-  busy?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    vehicle: {
+      license_plate?: string | null
+      type?: string | null
+      seat_count?: number | null
+      status?: string | null
+    } | null
+    busy?: boolean
+    /** false = ẩn nút Đổi (vd. sau khi đã gán trên timeline) */
+    allowChange?: boolean
+  }>(),
+  { allowChange: true },
+)
 
 defineEmits<{
   change: []

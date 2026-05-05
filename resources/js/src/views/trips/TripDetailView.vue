@@ -122,7 +122,8 @@
                             ref="dispatchPanelRef"
                             :can-assign="canAssign"
                             :can-update-status="canUpdateStatus"
-                            :can-reschedule-trip="canRescheduleTrip"
+                            :can-reschedule-trip="canRescheduleForCoordinationPanel"
+                            :coordination-actions-locked="coordinationActionsLocked"
                             :can-quick-create-provider="canQuickCreateProvider"
                             :reschedule-depart-local="rescheduleDepartLocal"
                             :rescheduling="rescheduling"
@@ -1311,6 +1312,25 @@ const canRescheduleTrip = computed(() => {
     return true;
 });
 
+/** Sau bước timeline «gán xe & tài xế» — không chỉnh panel điều phối (chỉ xem). */
+const COORDINATION_ACTIONS_LOCKED_STATUSES = new Set([
+    "assigned",
+    "driver_confirmed",
+    "in_progress",
+    "completed",
+    "cancelled",
+    "incident",
+]);
+
+const coordinationActionsLocked = computed(() => {
+    const s = String(trip.value?.status ?? "").toLowerCase();
+    return COORDINATION_ACTIONS_LOCKED_STATUSES.has(s);
+});
+
+const canRescheduleForCoordinationPanel = computed(
+    () => canRescheduleTrip.value && !coordinationActionsLocked.value,
+);
+
 const passengersEditMode = ref(false);
 const passengersEditDraft = ref(null);
 const passengersSaving = ref(false);
@@ -1940,6 +1960,7 @@ const coordinationTripSnapshot = computed(() => {
         externalVehicleRef: trip.value.external_vehicle_ref ?? "",
         externalDriverRef: trip.value.external_driver_ref ?? "",
         lockVersion: trip.value.lock_version ?? 0,
+        supplementTransports: trip.value.supplement_transports ?? null,
     };
 });
 
@@ -2548,6 +2569,7 @@ async function onApproveTransfer() {
             transport_provider_id: p.transport_provider_id,
             external_vehicle_ref: p.external_vehicle_ref,
             external_driver_ref: p.external_driver_ref,
+            supplement_transports: p.supplementTransports ?? null,
         };
 
         await assignTrip(route.params.id, payload, {

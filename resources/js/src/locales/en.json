@@ -1751,6 +1751,7 @@
         },
         "coordination": {
             "title": "Coordination",
+            "actions_locked_after_assign": "Vehicle and driver are already assigned — changes are not allowed here.",
             "subtitle": "Assign resources and record decisions.",
             "assign_vehicle": "Assign vehicle",
             "assign_driver": "Assign driver",

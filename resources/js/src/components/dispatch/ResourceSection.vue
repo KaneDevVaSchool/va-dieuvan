@@ -31,8 +31,9 @@
           v-model="searchQuery"
           type="text"
           class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white py-1.5 pl-2.5 pr-2 text-[13px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          :disabled="disabled"
           :placeholder="placeholder"
-          @focus="isOpen = true"
+          @focus="onSearchFocus"
           @blur="onBlur"
           @keydown.enter.prevent="onEnterKey"
         />
@@ -54,7 +55,7 @@
                 type="button"
                 class="flex w-full items-start gap-2 border-b border-slate-100 px-3 py-2 text-left text-slate-900 last:border-b-0 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
                 :class="isSelected(opt) ? 'cursor-default bg-rose-50/80 dark:bg-rose-950/30' : ''"
-                :disabled="opt.available === false || isSelected(opt)"
+                :disabled="disabled || opt.available === false || isSelected(opt)"
                 @mousedown.prevent="select(opt)"
               >
                 <div class="min-w-0 flex-1">
@@ -104,6 +105,7 @@
         min="0"
         step="1"
         class="w-[4.25rem] shrink-0 rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-1.5 py-1.5 text-center text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+        :disabled="disabled"
         :aria-label="supplementSeatsAria"
         :placeholder="supplementSeatsPlaceholder"
         inputmode="numeric"
@@ -121,7 +123,8 @@
         <span class="min-w-0 truncate">{{ chipLabel(item) }}</span>
         <button
           type="button"
-          class="shrink-0 px-0.5 text-[14px] leading-none text-slate-500 hover:text-[#8B1A1A] dark:text-slate-400"
+          class="shrink-0 px-0.5 text-[14px] leading-none text-slate-500 hover:text-[#8B1A1A] disabled:cursor-not-allowed disabled:opacity-45 dark:text-slate-400"
+          :disabled="disabled"
           aria-label="Remove"
           @click="remove(item)"
         >
@@ -149,7 +152,8 @@ const props = defineProps({
   optionLabelClassFn: { type: Function, default: null },
   indentSearch: { type: Boolean, default: false },
   /** Ô số chỗ gắn với lần thêm tiếp theo (mỗi dòng = tên + chỗ). */
-  showSupplementSeats: { type: Boolean, default: false },
+  /** Khi true: không đổi lựa chọn (panel điều phối bị khóa) */
+  disabled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -213,6 +217,7 @@ function chipLabel(item) {
 }
 
 function select(opt) {
+  if (props.disabled) return
   if (opt.available === false || isSelected(opt)) return
   const toAdd = enrichItem(opt)
   if (props.multiple) emit('update:modelValue', [...props.modelValue, toAdd])
@@ -223,6 +228,7 @@ function select(opt) {
 }
 
 function remove(opt) {
+  if (props.disabled) return
   emit(
     'update:modelValue',
     props.modelValue.filter((v) => String(v.id) !== String(opt.id)),
@@ -230,6 +236,7 @@ function remove(opt) {
 }
 
 function onEnterKey() {
+  if (props.disabled) return
   if (!props.allowCustomEntry) return
   const q = searchQuery.value.trim()
   if (!q) return
@@ -257,6 +264,11 @@ function onEnterKey() {
   searchQuery.value = ''
   seatDraft.value = ''
   isOpen.value = false
+}
+
+function onSearchFocus() {
+  if (props.disabled) return
+  isOpen.value = true
 }
 
 function onBlur() {

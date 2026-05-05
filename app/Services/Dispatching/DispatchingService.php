@@ -56,12 +56,34 @@ class DispatchingService
                 }
             }
 
+            $supplementRaw = $payload['supplement_transports'] ?? null;
+            $supplementJson = null;
+            if (is_array($supplementRaw)) {
+                $taxis   = array_values(array_filter($supplementRaw['taxis']   ?? [], 'is_array'));
+                $vendors = array_values(array_filter($supplementRaw['vendors'] ?? [], 'is_array'));
+                if (count($taxis) > 0 || count($vendors) > 0) {
+                    $sanitize = fn (array $item): array => array_filter([
+                        'id'                 => (string) ($item['id'] ?? ''),
+                        'label'              => substr((string) ($item['label'] ?? ''), 0, 255),
+                        'supplementSeats'    => isset($item['supplementSeats']) ? (int) $item['supplementSeats'] : null,
+                        'isCustom'           => isset($item['isCustom']) ? (bool) $item['isCustom'] : null,
+                        'externalVehicleRef' => isset($item['externalVehicleRef']) ? substr((string) $item['externalVehicleRef'], 0, 255) : null,
+                        'externalDriverRef'  => isset($item['externalDriverRef'])  ? substr((string) $item['externalDriverRef'],  0, 255) : null,
+                    ], fn ($v) => $v !== null && $v !== '');
+                    $supplementJson = json_encode([
+                        'taxis'   => array_map($sanitize, $taxis),
+                        'vendors' => array_map($sanitize, $vendors),
+                    ]);
+                }
+            }
+
             $before = $trip->only([
                 'vehicle_id',
                 'driver_id',
                 'transport_provider_id',
                 'external_vehicle_ref',
                 'external_driver_ref',
+                'supplement_transports',
                 'status',
                 'lock_version',
             ]);
@@ -70,15 +92,16 @@ class DispatchingService
                 ->whereKey($trip->id)
                 ->where('lock_version', $expectedVersion)
                 ->update([
-                    'vehicle_id' => $vehicleId,
-                    'driver_id' => $driverId,
-                    'transport_provider_id' => $providerId,
-                    'external_vehicle_ref' => $payload['external_vehicle_ref'] ?? null,
-                    'external_driver_ref' => $payload['external_driver_ref'] ?? null,
-                    'status' => 'assigned',
-                    'lock_version' => $expectedVersion + 1,
-                    'dispatcher_id' => $payload['dispatcher_id'] ?? $trip->dispatcher_id,
-                    'updated_at' => now(),
+                    'vehicle_id'             => $vehicleId,
+                    'driver_id'              => $driverId,
+                    'transport_provider_id'  => $providerId,
+                    'external_vehicle_ref'   => $payload['external_vehicle_ref'] ?? null,
+                    'external_driver_ref'    => $payload['external_driver_ref'] ?? null,
+                    'supplement_transports'  => $supplementJson,
+                    'status'                 => 'assigned',
+                    'lock_version'           => $expectedVersion + 1,
+                    'dispatcher_id'          => $payload['dispatcher_id'] ?? $trip->dispatcher_id,
+                    'updated_at'             => now(),
                 ]);
 
             if ($updated !== 1) {
@@ -93,7 +116,10 @@ class DispatchingService
                 auditable: $trip,
                 before: $before,
                 after: $trip->only(array_keys($before)),
-                metadata: ['source' => 'DispatchingService'],
+                metadata: [
+                    'source'               => 'DispatchingService',
+                    'supplement_transports' => $supplementJson ? json_decode($supplementJson, true) : null,
+                ],
             );
 
             return $trip;

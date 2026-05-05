@@ -27,12 +27,14 @@ class Trip extends Model
         'completed_at',
         'lock_version',
         'passenger_check_ins',
+        'supplement_transports',
         'payment_status',
         'paid_at',
     ];
 
     protected $casts = [
         'passenger_check_ins' => 'array',
+        'supplement_transports' => 'array',
         'depart_at' => 'datetime',
         'arrive_by' => 'datetime',
         'started_at' => 'datetime',

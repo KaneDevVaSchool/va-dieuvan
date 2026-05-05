@@ -1610,6 +1610,7 @@
             "no_transition": "Không có chuyển tiếp từ trạng thái hiện tại."
         },
         "coordination": {
+            "actions_locked_after_assign": "Chuyến đã gán xe & tài xế — không chỉnh sửa điều phối tại đây.",
             "title": "Hành động điều phối",
             "subtitle": "Gán nguồn lực và ghi nhận quyết định.",
             "assign_vehicle": "Gán xe",

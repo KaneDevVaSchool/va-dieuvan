@@ -9,15 +9,16 @@
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
+            <div class="min-w-0">
             <div class="text-[13px] font-medium text-slate-900 dark:text-slate-100">{{ title }}</div>
-            <div class="mt-0.5 text-[11px] font-normal text-slate-500 dark:text-slate-400">{{ subtitle }}</div>
+            <div v-if="subtitle" class="mt-0.5 text-[11px] font-normal text-slate-500 dark:text-slate-400">{{ subtitle }}</div>
           </div>
           <div class="flex shrink-0 items-center gap-2">
-            <template v-if="kind === 'vendor' && canQuickCreate">
+            <template v-if="kind === 'vendor' && canQuickCreate && !disabled">
               <button
                 type="button"
-                class="whitespace-nowrap text-[12px] font-normal text-[#8B1A1A] underline-offset-2 hover:underline dark:text-[#e57373]"
+                class="whitespace-nowrap text-[12px] font-normal text-[#8B1A1A] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#e57373]"
+                :disabled="disabled"
                 @click="$emit('create-vendor')"
               >
                 {{ t('trip_detail.coordination.provider_quick_add_inline') }}
@@ -90,7 +91,8 @@
           </span>
           <button
             type="button"
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-slate-200/80 text-[16px] font-normal leading-none text-slate-500 hover:border-rose-200/80 hover:text-rose-700 dark:border-slate-600 dark:text-slate-400 dark:hover:text-rose-400"
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-slate-200/80 text-[16px] font-normal leading-none text-slate-500 hover:border-rose-200/80 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-45 dark:border-slate-600 dark:text-slate-400 dark:hover:text-rose-400"
+            :disabled="disabled"
             :aria-label="t('trip_detail.coordination.supplement_remove_aria')"
             @click="removeAt(idx)"
           >
@@ -103,8 +105,9 @@
         >
           <button
             type="button"
-            class="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-[11px] font-normal text-slate-600 dark:text-slate-400"
+            class="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-[11px] font-normal text-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400"
             :aria-expanded="refsOpen[itemId(item)]"
+            :disabled="disabled"
             @click="toggleRefs(itemId(item))"
           >
             <span>{{ t('trip_detail.coordination.supplement_ncc_refs_toggle') }}</span>
@@ -123,8 +126,9 @@
               <input
                 :value="item.externalVehicleRef ?? ''"
                 type="text"
-                class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                 :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
+                :disabled="disabled"
                 @input="onExternalVehicleInput(idx, $event)"
               />
             </div>
@@ -135,8 +139,9 @@
               <input
                 :value="item.externalDriverRef ?? ''"
                 type="text"
-                class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                 :placeholder="t('trip_detail.coordination.external_driver_ph')"
+                :disabled="disabled"
                 @input="onExternalDriverInput(idx, $event)"
               />
             </div>
@@ -156,7 +161,7 @@ const props = defineProps<{
   modelValue: ResourceItem[]
   options: ResourceItem[]
   title: string
-  subtitle: string
+  subtitle?: string
   namePlaceholder: string
   nameFieldLabel: string
   isLoading: boolean
@@ -208,6 +213,7 @@ watch(
 )
 
 function toggleRefs(id: string) {
+  if (props.disabled) return
   refsOpen.value = { ...refsOpen.value, [id]: !refsOpen.value[id] }
 }
 
@@ -222,6 +228,7 @@ function onExternalDriverInput(idx: number, e: Event) {
 }
 
 function patchItem(idx: number, key: 'externalVehicleRef' | 'externalDriverRef', value: string) {
+  if (props.disabled) return
   const next = props.modelValue.map((it, i) =>
     i === idx ? { ...it, [key]: value } : it,
   )
@@ -259,6 +266,7 @@ function isCustomDuplicate(name: string) {
 }
 
 function onAdd() {
+  if (props.disabled) return
   const name = nameDraft.value.trim()
   if (!name) return
   const seats = parseSeats()
@@ -299,6 +307,7 @@ function onAdd() {
 }
 
 function removeAt(index: number) {
+  if (props.disabled) return
   const removed = props.modelValue[index]
   const next = props.modelValue.filter((_, i) => i !== index)
   if (removed) {
