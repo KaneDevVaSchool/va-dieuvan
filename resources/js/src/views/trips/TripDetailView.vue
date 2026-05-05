@@ -251,49 +251,20 @@
                 />
               </div>
 
-              <!-- Trạng thái chuyến -->
               <div class="min-w-0 lg:col-span-5">
-                <section
-                  class="overflow-hidden rounded-2xl bg-white print:break-inside-avoid dark:bg-slate-900/45"
-                  :aria-label="t('trip_detail.status_block.title')"
-                >
-                  <div
-                    class="border-b border-teal-100/90 bg-teal-50/95 px-5 py-4 sm:px-6 dark:border-teal-900/40 dark:bg-teal-950/35"
-                  >
-                    <div class="flex flex-wrap items-start gap-4">
-                      <div
-                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-100 text-teal-800 shadow-sm dark:bg-teal-950/70 dark:text-teal-200"
-                      >
-                        <ArrowPathIcon class="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div class="min-w-0 flex-1">
-                        <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">{{ t('trip_detail.status_block.title') }}</h2>
-                        <p class="mt-1 max-w-2xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                          {{ t('trip_detail.status_block.subtitle') }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="p-5 sm:p-6">
-                    <form class="rounded-xl bg-white p-5 dark:bg-slate-900/80" @submit.prevent="doStatus">
-                      <div class="grid gap-3 sm:grid-cols-3">
-                        <Select v-model="statusForm.status" :label="t('trip_detail.status_update.status')" :placeholder="t('trip_detail.status_update.pick')">
-                          <option value="driver_confirmed">{{ labelTripStatus('driver_confirmed') }}</option>
-                          <option value="in_progress">{{ labelTripStatus('in_progress') }}</option>
-                          <option value="completed">{{ labelTripStatus('completed') }}</option>
-                          <option value="cancelled">{{ labelTripStatus('cancelled') }}</option>
-                        </Select>
-                        <div class="sm:col-span-2">
-                          <Input v-model="statusForm.message" :label="t('trip_detail.status_update.note')" :placeholder="t('trip_detail.status_update.note_ph')" />
-                        </div>
-                        <div class="sm:col-span-3 flex flex-wrap items-center gap-3 border-t border-teal-100/80 pt-4 dark:border-teal-900/40">
-                          <Button v-if="canUpdateStatus" :loading="statusing" type="submit">{{ t('trip_detail.status_update.update') }}</Button>
-                          <span v-else class="text-xs text-slate-500 dark:text-slate-400">{{ t('trip_detail.coordination.no_permission_status') }}</span>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </section>
+                <StatusActions
+                  :trip-status="trip.status"
+                  :can-assign="canAssign"
+                  :can-update-status="canUpdateStatus"
+                  :assign-ready="assignReady"
+                  :assigning="assigning"
+                  :statusing="statusing"
+                  :rejecting="rejecting"
+                  v-model="tripStatusWorkflowNote"
+                  @assign="onApproveTransfer"
+                  @advance="doAdvanceTripStatus"
+                  @cancel="onWorkflowCancelTrip"
+                />
               </div>
             </div>
           </div>
@@ -647,7 +618,6 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
-  ArrowPathIcon,
   ChevronDownIcon,
   FunnelIcon,
   TrashIcon,
@@ -659,6 +629,7 @@ import Select from '../../components/ui/Select.vue'
 import ResourcePanel from '../../components/dispatch/ResourcePanel.vue'
 import ConflictBanner from '../../components/trips/ConflictBanner.vue'
 import CostTracker from '../../components/trips/CostTracker.vue'
+import StatusActions from '../../components/trips/StatusActions.vue'
 import DriverCard from '../../components/trips/DriverCard.vue'
 import PassengerCheckIn from '../../components/trips/PassengerCheckIn.vue'
 import StickyTripHeader from '../../components/trips/StickyTripHeader.vue'
@@ -1909,14 +1880,46 @@ async function onRejectTrip() {
   }
 }
 
-async function doStatus() {
+async function doAdvanceTripStatus(to) {
+  if (to !== 'in_progress' && to !== 'completed') return
   if (!canUpdateStatus.value) return
   statusing.value = true
   try {
-    await updateTripStatus(route.params.id, statusForm.value)
+    const msg = tripStatusWorkflowNote.value.trim() || undefined
+    await updateTripStatus(route.params.id, { status: to, message: msg })
+    tripStatusWorkflowNote.value = ''
     await load({ silent: true })
   } finally {
     statusing.value = false
+  }
+}
+
+async function onWorkflowCancelTrip() {
+  if (!canUpdateStatus.value) return
+  const ok = await confirmAction({
+    title: t('trip_detail.coordination.reject_confirm_title'),
+    message: t('trip_detail.coordination.reject_confirm_body'),
+    confirmLabel: t('trip_detail.coordination.reject'),
+    cancelLabel: t('trip_detail.coordination.reject_cancel'),
+    danger: true,
+  })
+  if (!ok) return
+
+  assignMsg.value = ''
+  assignFeedbackKind.value = ''
+  rejecting.value = true
+  try {
+    const msg = tripStatusWorkflowNote.value.trim() || undefined
+    await updateTripStatus(route.params.id, { status: 'cancelled', message: msg })
+    tripStatusWorkflowNote.value = ''
+    assignFeedbackKind.value = 'success'
+    assignMsg.value = t('trip_detail.coordination.reject_success')
+    await load({ silent: true })
+  } catch (e) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = formatApiMessage(e)
+  } finally {
+    rejecting.value = false
   }
 }
 
@@ -1935,7 +1938,7 @@ async function addNote() {
   }
 }
 
-const statusForm = ref({ status: 'in_progress', message: '' })
+const tripStatusWorkflowNote = ref('')
 
 watch(
   () => [trip.value?.id, scheduleDateKeyForList.value],

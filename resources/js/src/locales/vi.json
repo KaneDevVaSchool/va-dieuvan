@@ -1574,6 +1574,17 @@
             "title": "Trạng thái",
             "subtitle": "Cập nhật bước vận hành: tài xế xác nhận, đang chạy, hoàn thành hoặc hủy."
         },
+        "status_workflow": {
+            "assign_vehicle": "Gán xe",
+            "start_trip": "Bắt đầu chuyến",
+            "complete_trip": "Hoàn thành",
+            "resume_trip": "Đánh dấu đang chạy",
+            "cancel_outlined": "Huỷ chuyến",
+            "terminal_hint": "Không có bước tiếp theo.",
+            "pending_hint": "Chuyến đang chờ xử lý. Kiểm tra yêu cầu hoặc quy trình duyệt trước khi điều tiếp.",
+            "approved_need_assign_perm": "Bạn không có quyền gán xe — liên hệ điều phối hoặc quản trị để có quyền «trip.assign».",
+            "no_transition": "Không có chuyển tiếp từ trạng thái hiện tại."
+        },
         "coordination": {
             "title": "Hành động điều phối",
             "subtitle": "Gán nguồn lực và ghi nhận quyết định.",
@@ -1837,6 +1848,10 @@
         "costs": {
             "title": "Chi phí (50 mới nhất)",
             "empty": "Chưa có.",
+            "empty_title": "Chưa có chi phí",
+            "empty_cta": "Thêm chi phí đầu tiên",
+            "view_all": "Xem tất cả",
+            "attach_receipt_aria": "Đính kèm biên lai (ảnh hoặc PDF)",
             "total": "Tổng: {amount}",
             "open_list": "Mở trang chi phí",
             "quick_title": "Ghi nhận chi phí nhanh",

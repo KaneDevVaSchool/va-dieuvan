@@ -1714,6 +1714,17 @@
             "title": "Status",
             "subtitle": "Update the operational step: driver confirmed, in progress, completed, or cancelled."
         },
+        "status_workflow": {
+            "assign_vehicle": "Assign vehicle",
+            "start_trip": "Start trip",
+            "complete_trip": "Mark complete",
+            "resume_trip": "Resume (in progress)",
+            "cancel_outlined": "Cancel trip",
+            "terminal_hint": "No next step from here.",
+            "pending_hint": "This trip is still pending upstream steps. Resolve the dispatch request/banner hints before progressing.",
+            "approved_need_assign_perm": "You do not have assignment permission (`trip.assign`) — coordinate with ops or admins.",
+            "no_transition": "No allowed forward transition from the current status."
+        },
         "coordination": {
             "title": "Coordination",
             "subtitle": "Assign resources and record decisions.",
@@ -1964,6 +1975,10 @@
         "costs": {
             "title": "Costs (latest 50)",
             "empty": "None yet.",
+            "empty_title": "No costs yet",
+            "empty_cta": "Add the first cost",
+            "view_all": "View all",
+            "attach_receipt_aria": "Attach receipt (image or PDF)",
             "total": "Total: {amount}",
             "open_list": "Open costs page",
             "quick_title": "Quick log cost",

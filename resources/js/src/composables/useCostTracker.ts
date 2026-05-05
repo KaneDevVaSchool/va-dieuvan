@@ -16,6 +16,8 @@ export type CostRow = {
   status?: string | null
   description?: string | null
   receipt_url?: string | null
+  /** ISO-like string from trip costs API when exposed */
+  created_at?: string | null
 }
 
 function normalizeCostType(t: string | null | undefined): string {
