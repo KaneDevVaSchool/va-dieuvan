@@ -59,20 +59,20 @@
 
     <div
       v-if="!hideTaxiSection || !hideVendorSection"
-      class="mt-2 border-t border-[0.5px] border-slate-200/80 px-1.5 pb-2 pt-3.5 dark:border-slate-700/60"
+      class="mt-2 px-1.5 pb-2 pt-3.5"
     >
-      <div class="mb-2 rounded-[12px] border-[0.5px] border-slate-200/60 bg-white/50 p-2.5 dark:border-slate-700/50 dark:bg-slate-900/25">
+      <div class="mb-2 rounded-[12px] bg-white/50 p-2.5 dark:bg-slate-900/25">
         <div class="mb-3 flex items-center justify-between gap-2">
           <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{{
             t('trip_detail.coordination.supplement_section_title')
           }}</span>
           <span
             v-if="showCapacityBadge"
-            class="shrink-0 rounded-[100px] border-[0.5px] px-2 py-0.5 text-[11px] font-medium tabular-nums"
+            class="shrink-0 rounded-[100px] px-2 py-0.5 text-[11px] font-medium tabular-nums"
             :class="
               capacityGapRemaining > 0
-                ? 'border-[#EF9F27]/80 bg-[#FAEEDA] text-[#854F0B] dark:border-[#EF9F27]/50 dark:bg-amber-950/35 dark:text-[#F2C07D]'
-                : 'border-[#1D9E75]/45 bg-[#E1F5EE] text-[#0F6E56] dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-200'
+                ? 'bg-[#FAEEDA] text-[#854F0B] dark:bg-amber-950/35 dark:text-[#F2C07D]'
+                : 'bg-[#E1F5EE] text-[#0F6E56] dark:bg-emerald-950/40 dark:text-emerald-200'
             "
           >
             <template v-if="capacityGapRemaining > 0">
@@ -93,7 +93,6 @@
           :default-seat="4"
           indent-body
           :title="t('trip_detail.coordination.resource_section_taxi_title')"
-          :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
           :name-placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
           :name-field-label="t('trip_detail.coordination.supplement_field_provider')"
           :icon="TruckIcon"
@@ -109,16 +108,13 @@
           indent-body
           :can-quick-create="canQuickCreateVendor"
           :title="t('trip_detail.coordination.resource_section_vendor_title')"
-          :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
           :name-placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
           :name-field-label="t('trip_detail.coordination.supplement_field_ncc_name')"
           :icon="BuildingOffice2Icon"
           @create-vendor="$emit('create-vendor')"
         />
 
-        <div
-          class="mt-3 flex items-center justify-between gap-2 border-t border-[0.5px] border-slate-200/75 pt-2.5 text-[11px] dark:border-slate-700/55"
-        >
+        <div class="mt-3 flex items-center justify-between gap-2 pt-2.5 text-[11px]">
           <span class="font-medium text-slate-600 dark:text-slate-400">{{
             t('trip_detail.coordination.supplement_total_label')
           }}</span>
