@@ -53,6 +53,7 @@
     </div>
 
     <ResourceSection
+      v-if="!hideTaxiSection"
       v-model="selected.taxis"
       :options="taxiOptions"
       :is-loading="isLoading"
@@ -65,6 +66,7 @@
     />
 
     <ResourceSection
+      v-if="!hideVendorSection"
       v-model="selected.vendors"
       :options="vendorOptions"
       :is-loading="isLoading"
@@ -75,7 +77,7 @@
       :icon="BuildingOffice2Icon"
     />
 
-    <div v-if="canQuickCreateVendor" class="mt-1.5">
+    <div v-if="canQuickCreateVendor && !hideVendorSection" class="mt-1.5">
       <button
         type="button"
         class="w-full rounded-md border border-dashed border-[#8B1A1A] px-3 py-1.5 text-[12px] text-[#8B1A1A] hover:bg-rose-50 dark:hover:bg-rose-950/40"
@@ -181,6 +183,10 @@ const props = defineProps({
   hideInternalDriverSection: { type: Boolean, default: false },
   /** Số chỗ tối thiểu chuyến — chọn xe mặc định theo tài xế + gợi ý taxi/NCC */
   neededSeats: { type: Number, default: 1 },
+  /** Ẩn section taxi (dùng khi tab Nội bộ đang active) */
+  hideTaxiSection: { type: Boolean, default: false },
+  /** Ẩn section NCC + nút tạo nhanh (dùng khi tab không phải NCC) */
+  hideVendorSection: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['create-vendor', 'update:resources'])

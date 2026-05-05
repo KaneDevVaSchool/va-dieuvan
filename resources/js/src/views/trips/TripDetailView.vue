@@ -316,7 +316,7 @@
 
             <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.attachments.title') }}</h2>
+                <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ t('trip_detail.attachments.title') }}</h2>
                 <div v-if="canManageAttachments && trip.dispatch_request?.id" class="flex flex-wrap items-center gap-2">
                   <input ref="attachInputRef" type="file" class="hidden" @change="onAttachmentFile" />
                   <Button type="button" variant="secondary" class="!px-3" :loading="attachUploading" @click="attachInputRef?.click()">
@@ -364,7 +364,7 @@
 
             <!-- Dispatcher notes -->
             <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
-              <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.title') }}</h2>
+              <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ t('trip_detail.notes.title') }}</h2>
               <div class="mt-2 space-y-2">
                 <div v-if="tripRequestNotesFromUser" class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950">
                   <div class="text-xs font-medium text-amber-800">{{ t('trip_detail.notes.from_request') }}</div>
@@ -379,11 +379,11 @@
                 </div>
                 <div v-if="!noteEvents.length && !tripRequestNotesFromUser" class="text-xs text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
                 <div class="pt-1">
-                  <div class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.add_title') }}</div>
+                  <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">{{ t('trip_detail.notes.add_title') }}</div>
                   <textarea
                     v-model="newNote"
                     rows="2"
-                    class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-sky-200 focus:ring"
+                    class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                     :placeholder="t('trip_detail.notes.placeholder')"
                   />
                   <div class="mt-1.5 flex flex-wrap items-center gap-2">

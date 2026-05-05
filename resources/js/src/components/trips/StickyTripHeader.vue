@@ -1,20 +1,21 @@
 <template>
   <header
-    class="sticky top-0 z-50 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 shadow-sm"
+    class="sticky top-0 z-50 flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-4 print:hidden dark:border-slate-700 dark:bg-slate-950"
   >
-    <div class="flex min-w-0 flex-1 items-center gap-3">
+    <!-- Left zone: back + identity -->
+    <div class="flex min-w-0 flex-1 items-center gap-2.5">
       <button
         type="button"
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50"
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
         :aria-label="$t('trip_detail.header.back_trips')"
         @click="$emit('back')"
       >
-        <ArrowLeftIcon class="h-5 w-5" />
+        <ArrowLeftIcon class="h-4 w-4" />
       </button>
-      <div class="min-w-0 truncate text-sm font-semibold text-slate-900 sm:text-base">
-        <span class="tabular-nums text-slate-600">REQ {{ reqCode }}</span>
-        <span class="mx-2 text-slate-300">·</span>
-        <span class="tabular-nums text-slate-800">{{ tripCodeDisp }}</span>
+      <div class="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+        <span class="tabular-nums text-slate-500 dark:text-slate-400">{{ reqCode }}</span>
+        <span class="mx-2 text-slate-300 dark:text-slate-600">·</span>
+        <span class="tabular-nums font-semibold text-slate-800 dark:text-slate-100">{{ tripCodeDisp }}</span>
         <span
           class="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium align-middle"
           :class="badgeClass"
@@ -22,59 +23,54 @@
           {{ labelTripStatus(trip.status) }}
         </span>
       </div>
-    </div>
-    <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
       <span
         v-if="countdown"
-        class="hidden rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 sm:inline-block"
+        class="hidden shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 sm:inline-block dark:bg-slate-800 dark:text-slate-300"
       >
-        Còn {{ countdown }}
+        {{ countdown }}
       </span>
+    </div>
+
+    <!-- Right zone: utility + actions -->
+    <div class="flex shrink-0 items-center gap-1.5">
       <button
         type="button"
-        class="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+        class="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
         :disabled="refreshing"
         :aria-label="$t('trip_detail.actions.refresh')"
         @click="$emit('refresh')"
       >
-        <ArrowPathIcon class="h-5 w-5" :class="refreshing ? 'animate-spin' : ''" />
+        <ArrowPathIcon class="h-4 w-4" :class="refreshing ? 'animate-spin' : ''" />
       </button>
-      <RouterLink
-        v-if="auth.canAccessDispatchWebApp()"
-        to="/notifications"
-        class="hidden h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 sm:flex"
-        :aria-label="$t('trip_detail.header.notifications')"
-      >
-        <BellIcon class="h-5 w-5" />
-      </RouterLink>
-      <button
-        v-if="canReject"
-        type="button"
-        class="rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50"
-        @click="$emit('reject')"
-      >
-        {{ $t('trip_detail.coordination.reject') }}
-      </button>
-      <button
-        v-if="canApprove"
-        type="button"
-        class="rounded-lg bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-        :disabled="assignDisabled"
-        :aria-label="$t('trip_detail.coordination.approve_transfer')"
-        @click="$emit('approve')"
-      >
-        {{ $t('trip_detail.coordination.approve_transfer') }}
-      </button>
+
+      <div v-if="canReject || canApprove" class="ml-1 flex items-center gap-1.5">
+        <button
+          v-if="canReject"
+          type="button"
+          class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-800/60 dark:bg-transparent dark:text-rose-400 dark:hover:bg-rose-950/30"
+          @click="$emit('reject')"
+        >
+          {{ $t('trip_detail.coordination.reject') }}
+        </button>
+        <button
+          v-if="canApprove"
+          type="button"
+          class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="assignDisabled"
+          :aria-label="$t('trip_detail.coordination.approve_transfer')"
+          @click="$emit('approve')"
+        >
+          {{ $t('trip_detail.coordination.approve_transfer') }}
+        </button>
+      </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import { ArrowLeftIcon, ArrowPathIcon, BellIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import { labelTripStatus } from '../../util/labels'
-import { useAuthStore } from '../../store'
 
 type TripLike = {
   id?: number
@@ -98,8 +94,6 @@ defineEmits<{
   back: []
   refresh: []
 }>()
-
-const auth = useAuthStore()
 
 const tripCodeDisp = computed(() => {
   const id = props.trip?.id

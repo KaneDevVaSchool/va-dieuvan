@@ -1795,6 +1795,10 @@
             "external_mode_hint": "You can combine internal vehicle/driver with taxi or vendor. Extra taxi/vendor rows are appended to «External vehicle reference» (max 255 characters).",
             "validation_busy_driver": "That driver is busy in this trip window — pick another driver or reschedule.",
             "validation_busy_vehicle": "That vehicle is busy in this trip window — pick another vehicle or reschedule.",
+            "tab_internal": "Internal",
+            "tab_taxi": "Taxi",
+            "tab_ncc": "Vendor",
+            "tab_aria_label": "Select resource type",
             "refresh_schedule": "Refresh schedule data",
             "toolbar_funnel_label": "Schedule & alerts",
             "toolbar_funnel_applied": "Active",
@@ -1998,6 +2002,8 @@
             "receipt_drop_hint": "Drop or click — image/PDF",
             "receipt_uploading": "Uploading…",
             "breakdown_title": "Breakdown by type",
+            "add_btn": "+ Add cost",
+            "add_btn_cancel": "Close",
             "breakdown_total": "Total"
         },
         "step": {

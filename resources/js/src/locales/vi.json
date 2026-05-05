@@ -1655,6 +1655,10 @@
             "external_mode_hint": "Có thể kết hợp xe/tài xế nội bộ với taxi hoặc NCC. Nhiều taxi/NCC được ghi thêm trong «Tham chiếu xe ngoài» (tối đa 255 ký tự).",
             "validation_busy_driver": "Tài xế đang bận trong khung giờ chuyến này — chọn tài xế khác hoặc đổi giờ.",
             "validation_busy_vehicle": "Xe đang bận trong khung giờ chuyến này — chọn xe khác hoặc đổi giờ.",
+            "tab_internal": "Nội bộ",
+            "tab_taxi": "Taxi",
+            "tab_ncc": "NCC",
+            "tab_aria_label": "Chọn loại nguồn lực",
             "refresh_schedule": "Cập nhật lịch trùng",
             "toolbar_funnel_label": "Lịch & cảnh báo",
             "toolbar_funnel_applied": "Đang áp dụng",
@@ -1871,6 +1875,8 @@
             "receipt_drop_hint": "Kéo thả hoặc click — ảnh/PDF",
             "receipt_uploading": "Đang tải…",
             "breakdown_title": "Phân bổ theo loại",
+            "add_btn": "+ Thêm chi phí",
+            "add_btn_cancel": "Đóng",
             "breakdown_total": "Tổng"
         }
     },

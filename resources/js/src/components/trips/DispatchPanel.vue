@@ -4,18 +4,46 @@
     :aria-label="t('trip_detail.coordination.title')"
   >
     <div class="space-y-3 p-3">
-      <!-- Header row: title + funnel + refresh -->
-      <div class="flex flex-nowrap items-center gap-2">
-        <span class="shrink-0 text-xs font-bold uppercase tracking-wide text-slate-500">
+      <!-- Header row: title + tabs + funnel + refresh -->
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">
           {{ t('trip_detail.coordination.title') }}
         </span>
 
-        <details class="group relative min-w-0 shrink-0">
+        <!-- Resource tabs -->
+        <div
+          v-if="canAssign"
+          class="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800/60"
+          role="tablist"
+          :aria-label="t('trip_detail.coordination.tab_aria_label')"
+        >
+          <button
+            v-for="tab in RESOURCE_TABS"
+            :key="tab.id"
+            type="button"
+            role="tab"
+            :aria-selected="activeTab === tab.id"
+            class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+            :class="
+              activeTab === tab.id
+                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            "
+            @click="activeTab = tab.id"
+          >
+            {{ t(tab.labelKey) }}
+          </button>
+        </div>
+
+        <div class="flex-1" />
+
+        <!-- Funnel dropdown -->
+        <details class="group relative shrink-0">
           <summary
             class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-left hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
           >
             <FunnelIcon class="h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden="true" />
-            <span class="max-w-[6rem] truncate text-xs text-slate-700 dark:text-slate-300 sm:max-w-[9rem]">
+            <span class="max-w-[6rem] truncate text-xs text-slate-600 dark:text-slate-300 sm:max-w-[9rem]">
               {{ t('trip_detail.coordination.toolbar_funnel_label') }}
             </span>
             <ChevronDownIcon
@@ -24,9 +52,9 @@
             />
           </summary>
           <div
-            class="absolute left-0 top-[calc(100%+6px)] z-[100] min-w-[240px] max-w-[min(100vw-1.5rem,300px)] rounded-xl border border-slate-200 bg-white p-2.5 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
+            class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[240px] max-w-[min(100vw-1.5rem,300px)] rounded-xl border border-slate-200 bg-white p-2.5 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
           >
-            <div class="border-b border-slate-100 pb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <div class="border-b border-slate-100 pb-1.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {{ t('trip_detail.coordination.toolbar_funnel_applied') }}
             </div>
             <ul class="mt-2 max-h-[min(40vh,200px)] space-y-1.5 overflow-y-auto text-xs text-slate-700 dark:text-slate-300">
@@ -38,12 +66,10 @@
           </div>
         </details>
 
-        <div class="flex-1" />
-
         <button
           v-if="canAssign"
           type="button"
-          class="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+          class="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           :disabled="sameDayTripsLoading || refreshing"
           @click="$emit('refresh-coordination')"
         >
@@ -58,7 +84,7 @@
         class="rounded-xl border border-indigo-200/80 bg-indigo-50/80 p-2 dark:border-indigo-800/50 dark:bg-indigo-950/40"
       >
         <div class="flex flex-nowrap items-center gap-2 overflow-x-auto">
-          <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-indigo-800 dark:text-indigo-200">
+          <span class="shrink-0 text-xs font-semibold text-indigo-800 dark:text-indigo-200">
             {{ t('trip_detail.reschedule.title') }}
           </span>
           <input
@@ -117,8 +143,10 @@
           :busy-driver-ids="busyDriverIds"
           :trip-snapshot="tripSnapshot"
           :can-quick-create-vendor="canQuickCreateProvider"
-          :hide-internal-vehicle-section="showInternalVehicleCard"
-          :hide-internal-driver-section="showInternalDriverCard"
+          :hide-internal-vehicle-section="showInternalVehicleCard || activeTab !== 'internal'"
+          :hide-internal-driver-section="showInternalDriverCard || activeTab !== 'internal'"
+          :hide-taxi-section="activeTab !== 'taxi'"
+          :hide-vendor-section="activeTab !== 'ncc'"
           @update:resources="$emit('update:resources', $event)"
           @create-vendor="$emit('create-vendor')"
         />
@@ -129,7 +157,7 @@
         v-if="canAssign && overlappingOtherTrips.length"
         class="rounded-xl border border-slate-200/80 bg-white p-2.5 dark:border-slate-700/60 dark:bg-slate-900/40"
       >
-        <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+        <div class="text-xs font-semibold text-slate-600 dark:text-slate-400">
           {{ t('trip_detail.coordination.overlap_section_title') }}
         </div>
         <ul class="mt-1.5 max-h-36 space-y-1 overflow-y-auto text-[11px]">
@@ -155,20 +183,6 @@
         </ul>
       </div>
 
-      <!-- Internal notes -->
-      <div>
-        <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">
-          {{ t('trip_detail.coordination.internal_notes') }}
-        </label>
-        <textarea
-          :value="coordinationNotes"
-          rows="2"
-          class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-sky-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-          :placeholder="t('trip_detail.coordination.internal_notes_ph')"
-          @input="onCoordNotesInput"
-        />
-      </div>
-
       <!-- Assign feedback -->
       <div
         v-if="assignMsg"
@@ -183,6 +197,20 @@
         role="alert"
       >
         {{ assignMsg }}
+      </div>
+
+      <!-- Internal notes (pinned to bottom) -->
+      <div class="border-t border-slate-100 pt-2.5 dark:border-slate-700/60">
+        <label class="mb-1.5 block text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {{ t('trip_detail.coordination.internal_notes') }}
+        </label>
+        <textarea
+          :value="coordinationNotes"
+          rows="2"
+          class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-blue-200 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          :placeholder="t('trip_detail.coordination.internal_notes_ph')"
+          @input="onCoordNotesInput"
+        />
       </div>
 
       <p v-if="!canAssign && !canUpdateStatus" class="text-xs text-slate-500">
@@ -202,6 +230,14 @@ import ConflictBanner, { type VehicleConflict } from './ConflictBanner.vue'
 import DriverCard from './DriverCard.vue'
 import VehicleCard from './VehicleCard.vue'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
+
+type ResourceTab = 'internal' | 'taxi' | 'ncc'
+
+const RESOURCE_TABS: { id: ResourceTab; labelKey: string }[] = [
+  { id: 'internal', labelKey: 'trip_detail.coordination.tab_internal' },
+  { id: 'taxi', labelKey: 'trip_detail.coordination.tab_taxi' },
+  { id: 'ncc', labelKey: 'trip_detail.coordination.tab_ncc' },
+]
 
 const props = defineProps<{
   canAssign: boolean
@@ -251,6 +287,7 @@ const emit = defineEmits<{
 const { t, locale } = useI18n()
 const route = useRoute()
 
+const activeTab = ref<ResourceTab>('internal')
 const resourcePanelRef = ref<InstanceType<typeof ResourcePanel> | null>(null)
 defineExpose({ resourcePanel: resourcePanelRef })
 
