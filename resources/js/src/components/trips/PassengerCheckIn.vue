@@ -52,9 +52,7 @@
                 v-if="canCheckIn && rows.length"
                 class="flex flex-wrap gap-1.5"
                 role="group"
-                :aria-label="
-                    t('trip_detail.passengers.filter_segment_aria')
-                "
+                :aria-label="t('trip_detail.passengers.filter_segment_aria')"
             >
                 <button
                     v-for="opt in filterOptions"
@@ -78,7 +76,9 @@
             <div
                 class="flex min-w-[12rem] flex-1 flex-wrap items-center gap-2 sm:max-w-xl sm:justify-end"
             >
-                <div class="relative min-h-9 w-full min-w-0 sm:max-w-md sm:flex-1">
+                <div
+                    class="relative min-h-9 w-full min-w-0 sm:max-w-md sm:flex-1"
+                >
                     <MagnifyingGlassIcon
                         class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                         aria-hidden="true"
@@ -89,9 +89,7 @@
                         :aria-label="t('trip_detail.passengers.search_aria')"
                         autocomplete="off"
                         class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-9 text-sm text-slate-900 outline-none ring-blue-500/30 placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                        :placeholder="
-                            t('trip_detail.passengers.search_ph')
-                        "
+                        :placeholder="t('trip_detail.passengers.search_ph')"
                     />
                     <button
                         v-if="passengerSearch.trim()"
@@ -129,9 +127,7 @@
                         @click="exportCsv"
                     >
                         <ArrowDownTrayIcon class="h-4 w-4 shrink-0" />
-                        {{
-                            t("trip_detail.passengers.export_csv")
-                        }}
+                        {{ t("trip_detail.passengers.export_csv") }}
                     </button>
                 </div>
             </div>
@@ -157,7 +153,9 @@
                     v-else-if="rows.length"
                     class="min-w-full divide-y divide-slate-100 text-sm dark:divide-slate-700"
                 >
-                    <thead class="sticky top-0 z-10 bg-slate-50/95 shadow-sm backdrop-blur-sm dark:bg-slate-800/95 dark:shadow-slate-900/80">
+                    <thead
+                        class="sticky top-0 z-10 bg-slate-50/95 shadow-sm backdrop-blur-sm dark:bg-slate-800/95 dark:shadow-slate-900/80"
+                    >
                         <tr>
                             <th
                                 v-if="canCheckIn"
@@ -190,7 +188,9 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white dark:divide-slate-700 dark:bg-slate-950/40">
+                    <tbody
+                        class="divide-y divide-slate-100 bg-white dark:divide-slate-700 dark:bg-slate-950/40"
+                    >
                         <template
                             v-for="row in displayRows"
                             :key="row.passengerKey"
@@ -518,13 +518,11 @@ const passengerTableScroll = computed(
 );
 
 const waitingCount = computed(
-    () =>
-        props.rows.filter((r) => !checkedLocal.value[r.passengerKey]).length,
+    () => props.rows.filter((r) => !checkedLocal.value[r.passengerKey]).length,
 );
 
 const onboardCount = computed(
-    () =>
-        props.rows.filter((r) => !!checkedLocal.value[r.passengerKey]).length,
+    () => props.rows.filter((r) => !!checkedLocal.value[r.passengerKey]).length,
 );
 
 const checkedCount = computed(

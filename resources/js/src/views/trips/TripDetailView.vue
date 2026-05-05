@@ -114,7 +114,6 @@
                             :embed-map-src="embedMapSrc"
                             :expand-map="expandTripMap"
                         />
-
                     </div>
 
                     <!-- Sidebar / coordination (5/12) -->
@@ -842,7 +841,9 @@
                                     <button
                                         type="button"
                                         role="tab"
-                                        :aria-selected="mainLowerTab === 'workflow'"
+                                        :aria-selected="
+                                            mainLowerTab === 'workflow'
+                                        "
                                         class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
                                         :class="
                                             mainLowerTab === 'workflow'
@@ -853,14 +854,16 @@
                                     >
                                         {{
                                             t(
-                                                'trip_detail.lower_panel.tab_workflow',
+                                                "trip_detail.lower_panel.tab_workflow",
                                             )
                                         }}
                                     </button>
                                     <button
                                         type="button"
                                         role="tab"
-                                        :aria-selected="mainLowerTab === 'costs'"
+                                        :aria-selected="
+                                            mainLowerTab === 'costs'
+                                        "
                                         class="relative min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
                                         :class="
                                             mainLowerTab === 'costs'
@@ -870,7 +873,9 @@
                                         @click="mainLowerTab = 'costs'"
                                     >
                                         {{
-                                            t('trip_detail.lower_panel.tab_costs')
+                                            t(
+                                                "trip_detail.lower_panel.tab_costs",
+                                            )
                                         }}
                                         <span
                                             v-if="(trip.costs ?? []).length"
