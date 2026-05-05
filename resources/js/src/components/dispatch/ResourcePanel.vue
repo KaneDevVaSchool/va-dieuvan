@@ -1,10 +1,13 @@
 <template>
   <div class="flex flex-col">
-    <div class="mb-1 flex items-center justify-between gap-2">
-      <span class="text-[13px] font-medium text-slate-900 dark:text-slate-100">{{
+    <div
+      v-if="!hideInternalVehicleSection || !hideInternalDriverSection"
+      class="mb-1 flex items-center justify-between gap-2"
+    >
+      <span class="text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">{{
         t('trip_detail.coordination.assign_pair_title')
       }}</span>
-      <span class="text-[11px] text-slate-500 dark:text-slate-400">{{
+      <span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">{{
         t('trip_detail.coordination.resource_fit_count', { n: availableCount })
       }}</span>
     </div>
@@ -20,10 +23,14 @@
       :icon="TruckIcon"
     />
 
-    <div v-if="!hideInternalDriverSection" id="dispatch-internal-driver-section" class="rounded-lg">
+    <div
+      v-if="!hideInternalDriverSection"
+      id="dispatch-internal-driver-section"
+      class="rounded-[12px]"
+    >
       <button
         type="button"
-        class="mb-2 w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-left text-[11px] font-medium text-[#8B1A1A] hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-rose-950/30"
+        class="mb-2 w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-left text-[11px] font-medium text-[#8B1A1A] hover:bg-rose-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-rose-950/30"
         :disabled="!tripDate"
         @click="showWorkloadPanel = true"
       >
@@ -50,107 +57,125 @@
       </ResourceSection>
     </div>
 
-    <ResourceSection
-      v-if="!hideTaxiSection"
-      v-model="selected.taxis"
-      :options="taxiOptions"
-      :is-loading="isLoading"
-      allow-custom-entry
-      :title="t('trip_detail.coordination.resource_section_taxi_title')"
-      :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
-      :placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
-      :icon="BuildingStorefrontIcon"
-    />
-
     <div
-      v-if="!hideTaxiSection && selected.taxis.length > 0"
-      class="mb-1 -mt-0.5 rounded-lg border border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
+      v-if="!hideTaxiSection || !hideVendorSection"
+      class="mt-2 border-t border-[0.5px] border-slate-200/80 pt-3 dark:border-slate-700/60"
     >
-      <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
-        {{ t('trip_detail.coordination.external_seats_taxi_label') }}
-      </label>
-      <input
-        v-model="taxiSeatSupplementStr"
-        type="number"
-        min="0"
-        step="1"
-        class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[13px] tabular-nums text-slate-900 outline-none ring-blue-500/40 focus:border-blue-400 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
-        :placeholder="t('trip_detail.coordination.external_seats_ph')"
-      />
-    </div>
-
-    <ResourceSection
-      v-if="!hideVendorSection"
-      v-model="selected.vendors"
-      :options="vendorOptions"
-      :is-loading="isLoading"
-      :title="t('trip_detail.coordination.resource_section_vendor_title')"
-      :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
-      :placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
-      :icon="BuildingOffice2Icon"
-    />
-
-    <div
-      v-if="!hideVendorSection && selected.vendors.length > 0"
-      class="-mt-0.5 rounded-lg border border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
-    >
-      <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
-        {{ t('trip_detail.coordination.external_seats_ncc_label') }}
-      </label>
-      <input
-        v-model="nccSeatSupplementStr"
-        type="number"
-        min="0"
-        step="1"
-        class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[13px] tabular-nums text-slate-900 outline-none ring-blue-500/40 focus:border-blue-400 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
-        :placeholder="t('trip_detail.coordination.external_seats_ph')"
-      />
-    </div>
-
-    <div v-if="canQuickCreateVendor && !hideVendorSection" class="mt-1.5">
-      <button
-        type="button"
-        class="w-full rounded-md border border-dashed border-[#8B1A1A] px-3 py-1.5 text-[12px] text-[#8B1A1A] hover:bg-rose-50 dark:hover:bg-rose-950/40"
-        @click="$emit('create-vendor')"
-      >
-        {{ t('trip_detail.coordination.provider_quick_add') }}
-      </button>
-    </div>
-
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="-translate-y-1 opacity-0"
-      leave-active-class="transition duration-150 ease-in"
-      leave-to-class="-translate-y-1 opacity-0"
-    >
-      <div
-        v-if="selected.taxis.length > 0 || selected.vendors.length > 0"
-        class="mt-2 flex flex-col gap-2 rounded-lg border border-amber-200/80 bg-amber-50/70 p-2.5 dark:border-amber-800/50 dark:bg-amber-950/30"
-      >
-        <div>
-          <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{{
-            t('trip_detail.coordination.external_vehicle')
-          }}</label>
-          <input
-            v-model="externalVehicleRef"
-            type="text"
-            class="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-900 outline-none ring-sky-200 focus:ring dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{{
-            t('trip_detail.coordination.external_driver')
-          }}</label>
-          <input
-            v-model="externalDriverRef"
-            type="text"
-            class="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[13px] text-slate-900 outline-none ring-sky-200 focus:ring dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            :placeholder="t('trip_detail.coordination.external_driver_ph')"
-          />
-        </div>
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{{
+          t('trip_detail.coordination.supplement_section_title')
+        }}</span>
+        <span
+          class="shrink-0 rounded-full border-[0.5px] border-slate-300/80 bg-slate-100/90 px-2 py-0.5 text-[11px] font-medium tabular-nums text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+        >
+          {{ t('trip_detail.coordination.supplement_options_count', { n: supplementOptionCount }) }}
+        </span>
       </div>
-    </Transition>
+
+      <ResourceSection
+        v-if="!hideTaxiSection"
+        v-model="selected.taxis"
+        :options="taxiOptions"
+        :is-loading="isLoading"
+        allow-custom-entry
+        indent-search
+        :title="t('trip_detail.coordination.resource_section_taxi_title')"
+        :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
+        :placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
+        :icon="BuildingStorefrontIcon"
+      />
+
+      <div
+        v-if="!hideTaxiSection && selected.taxis.length > 0"
+        class="mb-1 -mt-0.5 ml-[38px] rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
+      >
+        <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+          {{ t('trip_detail.coordination.external_seats_taxi_label') }}
+        </label>
+        <input
+          v-model="taxiSeatSupplementStr"
+          type="number"
+          min="0"
+          step="1"
+          class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-1.5 text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+          :placeholder="t('trip_detail.coordination.external_seats_ph')"
+        />
+      </div>
+
+      <ResourceSection
+        v-if="!hideVendorSection"
+        v-model="selected.vendors"
+        :options="vendorOptions"
+        :is-loading="isLoading"
+        indent-search
+        :title="t('trip_detail.coordination.resource_section_vendor_title')"
+        :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
+        :placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
+        :icon="BuildingOffice2Icon"
+      />
+
+      <div
+        v-if="!hideVendorSection && selected.vendors.length > 0"
+        class="-mt-0.5 ml-[38px] rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
+      >
+        <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+          {{ t('trip_detail.coordination.external_seats_ncc_label') }}
+        </label>
+        <input
+          v-model="nccSeatSupplementStr"
+          type="number"
+          min="0"
+          step="1"
+          class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-1.5 text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+          :placeholder="t('trip_detail.coordination.external_seats_ph')"
+        />
+      </div>
+
+      <div v-if="canQuickCreateVendor && !hideVendorSection" class="mt-2">
+        <button
+          type="button"
+          class="w-full rounded-[12px] border-[0.5px] border-dashed border-[#8B1A1A]/70 px-3 py-2 text-[12px] font-medium text-[#8B1A1A] hover:bg-rose-50/80 dark:hover:bg-rose-950/40"
+          @click="$emit('create-vendor')"
+        >
+          {{ t('trip_detail.coordination.provider_quick_add') }}
+        </button>
+      </div>
+
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="-translate-y-1 opacity-0"
+        leave-active-class="transition duration-150 ease-in"
+        leave-to-class="-translate-y-1 opacity-0"
+      >
+        <div
+          v-if="selected.taxis.length > 0 || selected.vendors.length > 0"
+          class="mt-2 ml-[38px] flex flex-col gap-2 rounded-[12px] border-[0.5px] border-[#EF9F27]/40 bg-[#EF9F27]/10 p-2.5 dark:border-amber-800/50 dark:bg-amber-950/30"
+        >
+          <div>
+            <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{{
+              t('trip_detail.coordination.external_vehicle')
+            }}</label>
+            <input
+              v-model="externalVehicleRef"
+              type="text"
+              class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{{
+              t('trip_detail.coordination.external_driver')
+            }}</label>
+            <input
+              v-model="externalDriverRef"
+              type="text"
+              class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              :placeholder="t('trip_detail.coordination.external_driver_ph')"
+            />
+          </div>
+        </div>
+      </Transition>
+    </div>
 
     <Transition
       enter-active-class="transition duration-150 ease-out"
@@ -160,7 +185,7 @@
     >
       <div
         v-if="showValidation && panelErrorMessage"
-        class="mt-2 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[12px] font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200"
+        class="mt-2 rounded-[12px] border-[0.5px] border-rose-200/80 bg-rose-50 px-2.5 py-1.5 text-[12px] font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200"
         role="alert"
       >
         {{ panelErrorMessage }}
@@ -173,7 +198,7 @@
         class="fixed inset-0 z-[200] flex justify-end bg-black/30"
         @click.self="showWorkloadPanel = false"
       >
-        <div class="h-full w-[min(380px,100vw)] translate-x-0 shadow-2xl transition-transform duration-200 ease-out">
+        <div class="h-full w-[min(380px,100vw)] translate-x-0 border-l border-[0.5px] border-slate-200/90 bg-white transition-transform duration-200 ease-out dark:border-slate-700 dark:bg-slate-950">
           <DriverWorkloadPanel
             v-if="tripDate"
             :drivers="internalDriverOptions"
@@ -266,6 +291,10 @@ const {
   fetchOptions,
   applyHydration,
 } = useResourceSelector(tripIdRef, busyVehicleIdsRef, busyDriverIdsRef)
+
+const supplementOptionCount = computed(
+  () => taxiOptions.value.length + vendorOptions.value.length,
+)
 
 const showValidation = ref(false)
 const externalVehicleRef = ref('')

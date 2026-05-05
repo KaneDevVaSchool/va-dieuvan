@@ -1,15 +1,17 @@
 <template>
-  <div class="border-b border-slate-200 py-3 last:border-b-0 dark:border-slate-700">
+  <div
+    class="border-b border-[0.5px] border-slate-200 py-3 last:border-b-0 dark:border-slate-700"
+  >
     <div class="mb-2 flex items-center gap-2">
       <div
         v-if="icon"
-        class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+        class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-slate-200/80 bg-slate-100/80 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
       >
         <component :is="icon" class="h-3.5 w-3.5" aria-hidden="true" />
       </div>
       <div class="min-w-0 flex-1">
         <div class="text-[13px] font-medium text-slate-900 dark:text-slate-100">{{ title }}</div>
-        <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{{ subtitle }}</div>
+        <div class="mt-0.5 text-[11px] font-normal text-slate-500 dark:text-slate-400">{{ subtitle }}</div>
       </div>
       <span
         v-if="modelValue.length > 0"
@@ -19,11 +21,15 @@
       </span>
     </div>
 
-    <div v-if="!isLoading" class="relative">
+    <div
+      v-if="!isLoading"
+      class="relative"
+      :class="indentSearch ? 'ml-[38px]' : ''"
+    >
       <input
         v-model="searchQuery"
         type="text"
-        class="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-2.5 pr-2 text-[13px] text-slate-900 outline-none ring-2 ring-transparent placeholder:text-slate-400 focus:border-[#8B1A1A] focus:ring-[#8B1A1A]/15 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+        class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white py-1.5 pl-2.5 pr-2 text-[13px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
         :placeholder="placeholder"
         @focus="isOpen = true"
         @blur="onBlur"
@@ -38,7 +44,7 @@
       >
         <div
           v-if="isOpen"
-          class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-900"
+          class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[12px] border-[0.5px] border-slate-200/90 bg-white dark:border-slate-600 dark:bg-slate-900"
         >
           <template v-if="filteredOptions.length > 0">
             <button
@@ -69,7 +75,7 @@
               >
                 {{ busyLabel }}
               </span>
-              <span v-if="isSelected(opt)" class="text-[13px] font-semibold text-[#8B1A1A]">✓</span>
+              <span v-if="isSelected(opt)" class="text-[13px] font-medium text-[#8B1A1A]">✓</span>
             </button>
           </template>
           <div v-else class="px-3 py-2.5 text-center text-[12px] text-slate-500 dark:text-slate-400">
@@ -90,13 +96,13 @@
       </Transition>
     </div>
 
-    <div v-if="isLoading" class="mt-1.5 h-8 animate-pulse rounded-md bg-slate-100 dark:bg-slate-800" />
+    <div v-if="isLoading" class="mt-1.5 h-8 animate-pulse rounded-[12px] bg-slate-100 dark:bg-slate-800" />
 
     <div v-if="modelValue.length > 0 && !isLoading" class="mt-2 flex flex-wrap gap-1.5">
       <div
         v-for="item in modelValue"
         :key="item.id"
-        class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[12px] text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        class="inline-flex items-center gap-1 rounded-[10px] border-[0.5px] border-slate-200/90 bg-slate-50 px-2 py-0.5 text-[12px] font-normal text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
       >
         <span>{{ item.label }}</span>
         <button
@@ -130,6 +136,8 @@ const props = defineProps({
   allowCustomEntry: { type: Boolean, default: false },
   /** (option) => class string — tùy chỉnh màu/chữ theo option */
   optionLabelClassFn: { type: Function, default: null },
+  /** Thụt ô tìm kiếm (vd. bổ sung phương tiện) */
+  indentSearch: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])

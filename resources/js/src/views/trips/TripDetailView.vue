@@ -150,7 +150,11 @@
                             :coordination-notes="coordinationNotes"
                             :assign-msg="assignMsg"
                             :assign-feedback-kind="assignFeedbackKind"
-                            :coordination-funnel-lines="coordinationFunnelLines"
+                            :schedule-info-lines="coordinationScheduleLines"
+                            :capacity-banner-text="coordinationCapacityBanner"
+                            :show-assign-footer="showCoordinationAssignFooter"
+                            :assign-ready="assignReady"
+                            :assigning="assigning"
                             @reschedule="doReschedule"
                             @vehicle-card-change="onVehicleCardChange"
                             @driver-card-change="onDriverCardChange"
@@ -158,6 +162,8 @@
                             @conflict-keep="onVehicleConflictKeep"
                             @update:resources="onDispatchResourcesUpdate"
                             @create-vendor="openProviderModal"
+                            @assign="onApproveTransfer"
+                            @cancel="onCoordinationCancel"
                             @update:reschedule-depart-local="
                                 rescheduleDepartLocal = $event
                             "
@@ -2009,33 +2015,6 @@ const coordinationSeatTotals = computed(() => {
     };
 });
 
-const coordinationSeatCapacityLine = computed(() => {
-    const s = coordinationSeatTotals.value;
-    const p = dispatchResources.value;
-    if (!s || !p?.readyForSubmit) return "";
-    const hasAnySeatSource = !!(
-        p.vehicle_id != null ||
-        s.hasTaxi ||
-        s.hasVendor
-    );
-    if (!hasAnySeatSource) return "";
-    if (s.total >= s.need) return "";
-
-    const taxiSep = s.hasTaxi
-        ? t("trip_detail.coordination.capacity_taxi_seg", { n: s.taxiExtra })
-        : "";
-    const nccSep = s.hasVendor
-        ? t("trip_detail.coordination.capacity_ncc_seg", { n: s.nccExtra })
-        : "";
-    return t("trip_detail.coordination.capacity_shortfall_detail", {
-        need: s.need,
-        total: s.total,
-        internal: s.internalCap,
-        taxiSep,
-        nccSep,
-    });
-});
-
 const assignReady = computed(() => {
     if (!canAssign.value) return false;
     const p = dispatchResources.value;
@@ -2119,8 +2098,8 @@ const busyResourcesHint = computed(() => {
     return t("trip_detail.coordination.busy_resources_hint");
 });
 
-/** Lịch / tải / cảnh báo gọn trong panel phễu (không hiển thị dạng đoạn hint dài trên trang). */
-const coordinationFunnelLines = computed(() => {
+/** Lịch & cảnh báo — luôn hiển thị trong panel (sức chở xử lý riêng qua banner). */
+const coordinationScheduleLines = computed(() => {
     const lines = [];
     if (sameDayTripsLoading.value)
         lines.push(t("trip_detail.coordination.schedule_loading"));
@@ -2131,12 +2110,29 @@ const coordinationFunnelLines = computed(() => {
         lines.push(t("trip_detail.coordination.preview_window_hint"));
     const busy = busyResourcesHint.value;
     if (busy) lines.push(busy);
-    const seats = coordinationSeatCapacityLine.value;
-    if (seats) lines.push(seats);
     const rh = resourceHint.value?.trim();
     if (rh) lines.push(rh);
     return lines;
 });
+
+const coordinationCapacityBanner = computed(() => {
+    const s = coordinationSeatTotals.value;
+    if (!s || !dispatchResources.value) return "";
+    if (s.total >= s.need) return "";
+    return t("trip_detail.coordination.capacity_banner_shortfall", {
+        need: s.need,
+        internal: s.internalCap,
+    });
+});
+
+const showCoordinationAssignFooter = computed(() => {
+    const st = String(trip.value?.status ?? "").toLowerCase();
+    return st === "approved" && canAssign.value;
+});
+
+function onCoordinationCancel() {
+    coordinationNotes.value = "";
+}
 
 async function loadSameDayTrips() {
     const key = scheduleDateKeyForList.value;

@@ -1,40 +1,54 @@
 <template>
   <div
-    class="flex items-start gap-3 rounded-xl border border-emerald-200/90 bg-emerald-50/80 p-3 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/30"
+    class="rounded-[12px] border-[0.5px] border-slate-200/90 border-t-[3px] border-t-[#1D9E75] bg-emerald-50/35 p-3 dark:border-slate-600/80 dark:bg-emerald-950/20"
   >
-    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-emerald-700 shadow-sm dark:bg-emerald-950 dark:text-emerald-300">
-      <TruckIcon class="h-5 w-5" />
-    </div>
-    <div class="min-w-0 flex-1">
-      <div class="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <div class="text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-            {{ vehicle?.license_plate ?? '—' }}
+    <div class="flex items-start gap-3">
+      <div
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-[#1D9E75]/30 bg-white text-[#1D9E75] dark:bg-emerald-950/40 dark:text-[#4dcf9a]"
+      >
+        <TruckIcon class="h-5 w-5" aria-hidden="true" />
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-sm font-medium tabular-nums text-slate-900 dark:text-slate-100">
+              {{ vehicle?.license_plate ?? '—' }}
+            </div>
+            <div class="mt-0.5 text-xs font-normal text-slate-600 dark:text-slate-400">
+              {{ typeLabel }}
+            </div>
           </div>
-          <div class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-            {{ typeLabel }} · {{ seatsLabel }}
-          </div>
+          <button
+            type="button"
+            class="shrink-0 rounded-[12px] border-[0.5px] border-[#8B1A1A]/50 px-2 py-1 text-[11px] font-medium text-[#8B1A1A] hover:bg-[#8B1A1A]/5 dark:border-[#8B1A1A]/40 dark:text-[#e85c5c] dark:hover:bg-[#8B1A1A]/10"
+            @click="$emit('change')"
+          >
+            {{ t('trip_detail.coordination.card_change') }} →
+          </button>
         </div>
-        <button
-          type="button"
-          class="shrink-0 text-xs font-semibold text-[#8B1A1A] underline-offset-2 hover:underline"
-          @click="$emit('change')"
-        >
-          {{ t('trip_detail.coordination.card_change') }} →
-        </button>
+        <div class="mt-2 flex flex-wrap gap-1.5">
+          <span
+            class="rounded-full border-[0.5px] border-[#378ADD]/45 px-2 py-0.5 text-[10px] font-medium text-[#378ADD] dark:border-[#378ADD]/40 dark:text-[#6cb3f5]"
+          >
+            GPS
+          </span>
+          <span
+            v-if="seatChipText"
+            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[10px] font-medium text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
+          >
+            {{ seatChipText }}
+          </span>
+          <span
+            v-if="vehicle?.status === 'ready'"
+            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[10px] font-medium text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
+          >
+            {{ t('trip_detail.coordination.vehicle_ready_chip') }}
+          </span>
+        </div>
+        <p v-if="busy" class="mt-2 text-[11px] font-medium text-rose-700 dark:text-rose-400">
+          {{ t('trip_detail.coordination.vehicle_busy_hint') }}
+        </p>
       </div>
-      <div class="mt-2 flex flex-wrap gap-1.5">
-        <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-200">GPS</span>
-        <span
-          v-if="vehicle?.status === 'ready'"
-          class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
-        >
-          {{ t('trip_detail.coordination.vehicle_ready_chip') }}
-        </span>
-      </div>
-      <p v-if="busy" class="mt-2 text-[11px] font-medium text-rose-700 dark:text-rose-400">
-        {{ t('trip_detail.coordination.vehicle_busy_hint') }}
-      </p>
     </div>
   </div>
 </template>
@@ -65,9 +79,9 @@ const typeLabel = computed(() => {
   return x && String(x).trim() ? String(x) : '—'
 })
 
-const seatsLabel = computed(() => {
+const seatChipText = computed(() => {
   const n = props.vehicle?.seat_count
-  if (n == null || !Number.isFinite(Number(n))) return t('trip_detail.coordination.seats_unknown')
+  if (n == null || !Number.isFinite(Number(n))) return ''
   return t('trip_detail.coordination.seats_n', { n })
 })
 </script>
