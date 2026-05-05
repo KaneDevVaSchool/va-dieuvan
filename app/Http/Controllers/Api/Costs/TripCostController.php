@@ -12,6 +12,7 @@ use App\Http\Requests\Api\Costs\OverrideTripCostRequest;
 use App\Http\Requests\Api\Costs\ShowTripCostRequest;
 use App\Http\Requests\Api\Costs\SubmitTripCostRequest;
 use App\Http\Requests\Api\Costs\UpdateTripCostByDriverRequest;
+use App\Http\Requests\Api\Costs\UploadTripCostReceiptRequest;
 use App\Models\Trip;
 use App\Models\TripCost;
 use App\Services\Auditing\AuditLogger;
@@ -21,6 +22,7 @@ use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TripCostController extends Controller
 {
@@ -279,5 +281,31 @@ class TripCostController extends Controller
 
             return $this->ok($tripCost);
         });
+    }
+
+    public function uploadReceiptForTrip(UploadTripCostReceiptRequest $request, Trip $trip, TripCost $tripCost)
+    {
+        abort_if((int) $tripCost->trip_id !== (int) $trip->id, 404);
+
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $trip->refresh();
+        FinancialDataLock::assertTripNotPaid($trip);
+
+        /** @var \Illuminate\Http\UploadedFile $file */
+        $file = $request->file('file');
+        $path = Storage::disk('public')->putFile("attachments/costs/{$tripCost->id}", $file);
+        $tripCost->receipt_url = Storage::disk('public')->url($path);
+        $tripCost->save();
+
+        app(AuditLogger::class)->log(
+            actorId: $request->user()->id,
+            event: 'cost.receipt_upload',
+            auditable: $tripCost,
+            before: null,
+            after: ['receipt_url' => $tripCost->receipt_url],
+        );
+
+        return $this->ok($tripCost);
     }
 }

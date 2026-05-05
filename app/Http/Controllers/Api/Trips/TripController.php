@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api\Trips;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Trips\AssignTripRequest;
+use App\Http\Requests\Api\Trips\DuplicateTripRequest;
 use App\Http\Requests\Api\Trips\ListTripsRequest;
 use App\Http\Requests\Api\Trips\RescheduleTripRequest;
 use App\Http\Requests\Api\Trips\ShowTripRequest;
+use App\Http\Requests\Api\Trips\TripPassengerCheckInRequest;
+use App\Http\Requests\Api\Trips\TripPassengerUncheckRequest;
 use App\Http\Requests\Api\Trips\UpdateTripPassengerListRequest;
 use App\Models\DispatchRequest;
 use App\Models\Trip;
@@ -524,5 +527,127 @@ class TripController extends Controller
         }
 
         return max(1, $sum);
+    }
+
+    public function passengerCheckIn(TripPassengerCheckInRequest $request, Trip $trip, string $passenger)
+    {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $trip->refresh();
+        FinancialDataLock::assertTripNotPaid($trip);
+
+        $key = $this->normalizePassengerCheckInKey($passenger);
+
+        $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
+        $map[$key] = [
+            'checked_in_at' => Carbon::parse($request->validated()['checked_in_at'])->toIso8601String(),
+        ];
+        $trip->passenger_check_ins = $map;
+        $trip->save();
+
+        $fresh = $trip->fresh()->load([
+            'dispatcher:id,name,email,employee_code',
+            'vehicle:id,license_plate,status,type,seat_count,odometer_km',
+            'driver:id,full_name,phone,odometer_km',
+            'transportProvider:id,name',
+            'record',
+            'dispatchRequest',
+            'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
+            'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
+            'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
+            'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
+        ]);
+
+        if ($fresh->relationLoaded('dispatchRequest') && $fresh->dispatchRequest) {
+            $fresh->dispatchRequest->makeVisible(['wizard_snapshot']);
+        }
+
+        return $this->ok($fresh);
+    }
+
+    public function passengerUncheckIn(TripPassengerUncheckRequest $request, Trip $trip, string $passenger)
+    {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $trip->refresh();
+        FinancialDataLock::assertTripNotPaid($trip);
+
+        $key = $this->normalizePassengerCheckInKey($passenger);
+
+        $map = is_array($trip->passenger_check_ins) ? $trip->passenger_check_ins : [];
+        unset($map[$key]);
+        $trip->passenger_check_ins = $map;
+        $trip->save();
+
+        $fresh = $trip->fresh()->load([
+            'dispatcher:id,name,email,employee_code',
+            'vehicle:id,license_plate,status,type,seat_count,odometer_km',
+            'driver:id,full_name,phone,odometer_km',
+            'transportProvider:id,name',
+            'record',
+            'dispatchRequest',
+            'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
+            'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
+            'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
+            'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
+        ]);
+
+        if ($fresh->relationLoaded('dispatchRequest') && $fresh->dispatchRequest) {
+            $fresh->dispatchRequest->makeVisible(['wizard_snapshot']);
+        }
+
+        return $this->ok($fresh);
+    }
+
+    /**
+     * Nhân bản yêu cầu điều vận (bản sao trạng thái chờ duyệt) — dùng khi lặp lại chuyến tương tự.
+     */
+    public function duplicate(DuplicateTripRequest $request, Trip $trip)
+    {
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $trip->loadMissing('dispatchRequest');
+        $src = $trip->dispatchRequest;
+        if (! $src instanceof DispatchRequest || $src->trashed()) {
+            abort(404, 'Không tìm thấy yêu cầu điều vận.');
+        }
+
+        $copy = $src->replicate([
+            'approved_by',
+            'paper_received_at',
+            'paper_reference',
+        ]);
+
+        $copy->status = 'pending';
+        $copy->approved_by = null;
+        $copy->rejection_reason = null;
+        $copy->paper_status = 'pending';
+        $copy->paper_received_at = null;
+        $copy->paper_reference = null;
+        $copy->requester_id = $src->requester_id;
+        $copy->save();
+
+        app(AuditLogger::class)->log(
+            actorId: $request->user()->id,
+            event: 'dispatch_request.duplicate_from_trip',
+            auditable: $copy,
+            before: null,
+            after: $copy->toArray(),
+            metadata: ['source_dispatch_request_id' => $src->id, 'source_trip_id' => $trip->id],
+        );
+
+        return $this->ok([
+            'dispatch_request_id' => $copy->id,
+        ]);
+    }
+
+    private function normalizePassengerCheckInKey(string $passenger): string
+    {
+        $s = trim($passenger);
+        if ($s === '' || strlen($s) > 64 || ! preg_match('/^[a-zA-Z0-9_-]+$/', $s)) {
+            abort(422, 'Mã hành khách không hợp lệ.');
+        }
+
+        return $s;
     }
 }

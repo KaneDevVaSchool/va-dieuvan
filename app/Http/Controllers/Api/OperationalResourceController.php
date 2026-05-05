@@ -30,11 +30,16 @@ use App\Http\Requests\Api\Operational\RestoreDriverRequest;
 use App\Http\Requests\Api\Operational\RestoreTransportProviderRequest;
 use App\Http\Requests\Api\Operational\RestoreVehicleRequest;
 use App\Http\Requests\Api\Operational\UpdateVehicleRequest;
+use App\Http\Requests\Api\Operational\VehicleConflictsRequest;
 use App\Models\Driver;
 use App\Models\TransportProvider;
+use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class OperationalResourceController extends Controller
 {
@@ -69,6 +74,64 @@ class OperationalResourceController extends Controller
                 'per_page' => $results->perPage(),
                 'total' => $results->total(),
                 'last_page' => $results->lastPage(),
+            ],
+        ]);
+    }
+
+    public function vehicleScheduleConflicts(VehicleConflictsRequest $request, Vehicle $vehicle)
+    {
+        $data = $request->validated();
+        $tripId = isset($data['trip_id']) ? (int) $data['trip_id'] : null;
+        if ($tripId === null || $tripId < 1) {
+            return $this->ok(['conflict' => null]);
+        }
+
+        $trip = Trip::query()->with(['dispatchRequest.requester:id,name'])->find($tripId);
+        if (! $trip instanceof Trip) {
+            return $this->ok(['conflict' => null]);
+        }
+
+        abort_unless(TripVisibility::userCanViewTrip($request->user(), $trip), 403);
+
+        $excludeId = isset($data['exclude_trip']) ? (int) $data['exclude_trip'] : $tripId;
+
+        $departAt = $trip->depart_at instanceof Carbon ? $trip->depart_at : Carbon::parse($trip->depart_at);
+        $arriveBy = $trip->arrive_by
+            ? ($trip->arrive_by instanceof Carbon ? $trip->arrive_by : Carbon::parse($trip->arrive_by))
+            : $departAt->copy()->addHours(2);
+
+        $dbDriver = DB::getDriverName();
+        $plannedEndExpr = $dbDriver === 'mysql'
+            ? 'COALESCE(arrive_by, DATE_ADD(depart_at, INTERVAL 2 HOUR))'
+            : "COALESCE(arrive_by, datetime(depart_at, '+2 hours'))";
+
+        $other = Trip::query()
+            ->where('id', '!=', $excludeId)
+            ->whereIn('status', ['assigned', 'driver_confirmed', 'in_progress'])
+            ->where('vehicle_id', $vehicle->id)
+            ->where('depart_at', '<', $arriveBy)
+            ->whereRaw("($plannedEndExpr) > ?", [$departAt])
+            ->with(['dispatchRequest.requester:id,name'])
+            ->orderBy('depart_at')
+            ->first();
+
+        if (! $other instanceof Trip) {
+            return $this->ok(['conflict' => null]);
+        }
+
+        $oStart = $other->depart_at instanceof Carbon ? $other->depart_at : Carbon::parse($other->depart_at);
+        $oEnd = $other->arrive_by
+            ? ($other->arrive_by instanceof Carbon ? $other->arrive_by : Carbon::parse($other->arrive_by))
+            : $oStart->copy()->addHours(2);
+
+        $dr = $other->dispatchRequest;
+        $requester = $dr?->requester?->name ?? '—';
+
+        return $this->ok([
+            'conflict' => [
+                'trip_code' => 'TRP-'.str_pad((string) $other->id, 4, '0', STR_PAD_LEFT),
+                'time_range' => $oStart->format('d/m/Y H:i').'–'.$oEnd->format('H:i'),
+                'requester' => $requester,
             ],
         ]);
     }
@@ -376,7 +439,7 @@ class OperationalResourceController extends Controller
         $vehicle = Vehicle::onlyTrashed()->findOrFail($id);
         $vehicle->forceDelete();
 
-        return $this->ok(['deleted' => true, 'permanent' => true]);
+        return $this->ok(['deleted' => true, 'permanent' => true        ]);
     }
 
     private function serializeVehicle(Vehicle $v): array

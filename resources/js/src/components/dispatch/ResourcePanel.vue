@@ -10,6 +10,7 @@
     </div>
 
     <ResourceSection
+      v-if="!hideInternalVehicleSection"
       v-model="selected.internalVehicles"
       :options="internalVehicleOptions"
       :is-loading="isLoading"
@@ -21,6 +22,7 @@
     />
 
     <ResourceSection
+      v-if="!hideInternalDriverSection"
       v-model="selected.internalDrivers"
       :options="internalDriverOptions"
       :is-loading="isLoading"
@@ -131,6 +133,10 @@ const props = defineProps({
   busyDriverIds: { type: Array, default: () => [] },
   tripSnapshot: { type: Object, default: null },
   canQuickCreateVendor: { type: Boolean, default: false },
+  /** Ẩn picker xe nội bộ (hiển thị VehicleCard thay thế) */
+  hideInternalVehicleSection: { type: Boolean, default: false },
+  /** Ẩn picker tài xế nội bộ (hiển thị DriverCard thay thế) */
+  hideInternalDriverSection: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['create-vendor', 'update:resources'])
@@ -259,5 +265,17 @@ function pickProvider(providerId, kind) {
   }
 }
 
-defineExpose({ validate, refreshOptions, pickProvider })
+function clearInternalVehicle() {
+  selected.value.internalVehicles = []
+  lastPayloadJson.value = ''
+  emitResources()
+}
+
+function clearInternalDriver() {
+  selected.value.internalDrivers = []
+  lastPayloadJson.value = ''
+  emitResources()
+}
+
+defineExpose({ validate, refreshOptions, pickProvider, clearInternalVehicle, clearInternalDriver })
 </script>

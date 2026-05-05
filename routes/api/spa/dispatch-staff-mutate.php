@@ -51,6 +51,13 @@ Route::prefix('trips')->group(function () {
             ->name('api.trips.assign');
         Route::post('/{trip}/reschedule', 'reschedule')->middleware('throttle:60,1');
         Route::patch('/{trip}/passenger-list', 'updatePassengerList')->middleware('throttle:30,1');
+        Route::patch('/{trip}/passengers/{passenger}/checkin', 'passengerCheckIn')
+            ->middleware('throttle:60,1')
+            ->where('passenger', '[a-zA-Z0-9_-]+');
+        Route::delete('/{trip}/passengers/{passenger}/checkin', 'passengerUncheckIn')
+            ->middleware('throttle:60,1')
+            ->where('passenger', '[a-zA-Z0-9_-]+');
+        Route::post('/{trip}/duplicate', 'duplicate')->middleware('throttle:10,1');
     });
 });
 

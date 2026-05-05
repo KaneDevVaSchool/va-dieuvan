@@ -1621,6 +1621,14 @@
             "trip_ref": "Trip {code}",
             "notifications": "Notifications"
         },
+        "quick": {
+            "duplicate": "Duplicate trip",
+            "print": "Print slip",
+            "copy_link": "Copy tracking link",
+            "copied": "Link copied.",
+            "duplicate_ok": "Draft request created.",
+            "pdf_error": "Could not open PDF."
+        },
         "banner": {
             "request_pending": "The source request is still pending approval.",
             "open_request": "Open request details"
@@ -1689,7 +1697,14 @@
             "flag_wheelchair": "Wheelchair assistance",
             "flag_allergy": "Allergy / diet",
             "summary_wheelchair": "Vehicle should support wheelchair boarding.",
-            "summary_allergy": "Driver should be informed about allergies / food restrictions."
+            "summary_allergy": "Driver should be informed about allergies / food restrictions.",
+            "checkin_header_badge": "{checked}/{total} boarded",
+            "checkin_on_vehicle": "Boarded",
+            "checkin_waiting": "Waiting",
+            "checkin_expand_pickup": "Pickup address",
+            "checkin_private_note": "Private note",
+            "checkin_error": "Could not update boarding status.",
+            "tel_call": "Call"
         },
         "costs_block": {
             "title": "Trip costs",
@@ -1777,7 +1792,19 @@
             "validation_provider": "External hire requires selecting a provider.",
             "reject_confirm_title": "Cancel this trip?",
             "reject_confirm_body": "The trip will be marked cancelled. Internal notes (if any) are stored on the status change.",
-            "reject_cancel": "Back"
+            "reject_cancel": "Back",
+            "conflict_title": "Overlaps {code}",
+            "conflict_pick_again": "Pick again",
+            "conflict_keep": "Assign anyway",
+            "card_change": "Change",
+            "vehicle_ready_chip": "Ready",
+            "vehicle_busy_hint": "Vehicle is busy in this window.",
+            "seats_unknown": "— seats",
+            "seats_n": "{n} seats",
+            "driver_code": "Staff ID: {code}",
+            "driver_busy": "Busy",
+            "driver_free": "Available",
+            "driver_trips_month": "{n} trips this month"
         },
         "attachments": {
             "title": "Attachments",
@@ -1929,7 +1956,12 @@
             "type_toll": "Toll / road fee",
             "type_parking": "Parking",
             "type_labor": "Labor / allowance",
-            "type_other": "Other"
+            "type_other": "Other",
+            "receipt_upload": "Receipt",
+            "receipt_drop_hint": "Drop or click — image/PDF",
+            "receipt_uploading": "Uploading…",
+            "breakdown_title": "Breakdown by type",
+            "breakdown_total": "Total"
         },
         "step": {
             "pending": "Pending",

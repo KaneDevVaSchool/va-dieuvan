@@ -24,61 +24,25 @@
     </div>
 
     <template v-else-if="trip">
-      <div class="mx-auto max-w-7xl space-y-6 px-4 pb-12">
-        <!-- Header -->
-        <header class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-start sm:justify-between">
-          <div class="flex min-w-0 flex-1 items-start gap-3">
-            <RouterLink
-              :to="tripsListPath"
-              class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-              :aria-label="t('trip_detail.header.back_trips')"
-            >
-              <ArrowLeftIcon class="h-5 w-5" />
-            </RouterLink>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                  {{ t('trip_detail.header.page_title') }}
-                </h1>
-                <span
-                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                  :class="pillClassForStatus(trip.status)"
-                >
-                  {{ labelTripStatus(trip.status) }}
-                </span>
-              </div>
-              <p class="mt-1 text-sm text-slate-600">
-                {{ t('trip_detail.header.request_ref', { code: requestRefCode }) }}
-                <span class="text-slate-300">·</span>
-                {{ t('trip_detail.header.trip_ref', { code: tripCode }) }}
-              </p>
-              <p class="mt-0.5 text-xs text-slate-500">{{ t('trip_detail.created_at', { time: fmt(trip.created_at) }) }}</p>
-            </div>
-          </div>
-          <div class="flex flex-wrap items-center justify-end gap-2">
-            <button
-              type="button"
-              class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-              :disabled="refreshing"
-              :title="t('trip_detail.actions.refresh')"
-              @click="load({ silent: true })"
-            >
-              <ArrowPathIcon class="h-5 w-5" :class="refreshing ? 'animate-spin' : ''" />
-            </button>
-            <RouterLink
-              v-if="auth.canAccessDispatchWebApp()"
-              to="/notifications"
-              class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50"
-              :title="t('trip_detail.header.notifications')"
-            >
-              <BellIcon class="h-5 w-5" />
-            </RouterLink>
-          </div>
-          <p v-if="silentLoadError" class="w-full rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs text-amber-900 sm:order-last">
-            {{ silentLoadError }}
-          </p>
-        </header>
-
+      <StickyTripHeader
+        :trip="trip"
+        :can-approve="canAssign"
+        :can-reject="canUpdateStatus"
+        :refreshing="refreshing"
+        :assign-disabled="assigning || !assignReady"
+        @back="router.push(tripsListPath)"
+        @refresh="load({ silent: true })"
+        @approve="onApproveTransfer"
+        @reject="onRejectTrip"
+      />
+      <p class="mx-auto max-w-7xl px-4 pt-1 text-xs text-slate-500">{{ t('trip_detail.created_at', { time: fmt(trip.created_at) }) }}</p>
+      <p
+        v-if="silentLoadError"
+        class="mx-auto max-w-7xl px-4 pt-2 text-xs text-amber-900"
+      >
+        {{ silentLoadError }}
+      </p>
+      <div class="mx-auto max-w-7xl space-y-6 px-4 pb-12 pt-3">
         <div
           v-if="trip.dispatch_request && trip.dispatch_request.status === 'pending'"
           class="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-900"
@@ -93,236 +57,52 @@
           </RouterLink>
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,34rem)] 2xl:grid-cols-[minmax(0,1fr)_36rem]">
+        <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
           <!-- Main column -->
           <div class="min-w-0 space-y-6">
-            <!-- Overview -->
-            <section class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <div class="absolute right-4 top-4">
-                <span :class="['rounded-full px-2.5 py-0.5 text-xs font-medium', pillClassForStatus(trip.status)]">
-                  {{ labelTripStatus(trip.status) }}
-                </span>
-              </div>
-              <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.overview.title') }}</h2>
+            <TripInfoCard
+              :trip="trip"
+              :countdown="countdown"
+              :passenger-count="Number(trip.dispatch_request?.passenger_count ?? 0)"
+              :schedule-date-long="scheduleDateLong"
+              :schedule-time-range="scheduleTimeRange"
+              :schedule-duration="scheduleDuration"
+              :schedule-mismatch-notes="scheduleMismatchNotes"
+              :estimated-distance-label="estimatedDistanceLabel"
+              :estimated-distance-sub="estimatedDistanceSub"
+              :estimated-cost-label="estimatedCostLabel"
+              :estimated-cost-sub="estimatedCostSub"
+              :requester-initials="requesterInitials"
+              :requester-name="requesterName"
+              :requester-subtitle="requesterSubtitle"
+              :trip-type-label="tripTypeLabel"
+              :sla-banner="slaBanner"
+              :step-pickup="stepPickup"
+              :step-current="stepCurrent"
+              :step-dropoff="stepDropoff"
+              :origin-label="originLabel"
+              :destination-label="destinationLabel"
+              :current-label="currentLabel"
+              :route-stops="routeStops"
+              :embed-map-src="embedMapSrc"
+              :expand-map="expandTripMap"
+            />
 
-              <div
-                v-if="slaBanner"
-                class="mt-3 rounded-xl border px-3 py-2 text-sm font-medium"
-                :class="slaBanner.kind === 'overdue' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-sky-200 bg-sky-50 text-sky-950'"
-              >
-                {{ slaBanner.text }}
-              </div>
-
-              <div class="mt-3 flex flex-wrap gap-2 print:hidden">
-                <span
-                  v-if="trip.dispatcher?.name"
-                  class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800"
-                >
-                  {{ t('trip_detail.meta.dispatcher', { name: trip.dispatcher.name }) }}
-                </span>
-                <span
-                  v-if="trip.dispatch_request?.source_channel"
-                  class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-900"
-                >
-                  {{ t('trip_detail.meta.source', { ch: trip.dispatch_request.source_channel }) }}
-                </span>
-                <span
-                  v-if="trip.dispatch_request?.paper_status"
-                  class="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900"
-                >
-                  {{ t('trip_detail.meta.paper', { st: trip.dispatch_request.paper_status }) }}
-                </span>
-                <span
-                  v-if="trip.payment_status === 'paid'"
-                  class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-900"
-                >
-                  {{ t('trip_detail.meta.paid') }}
-                </span>
-              </div>
-
-              <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div class="flex min-w-0 items-center gap-3">
-                  <div
-                    class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-sm font-bold text-slate-700 ring-2 ring-white dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    <img
-                      v-if="trip.dispatch_request?.requester?.avatar_url"
-                      :src="trip.dispatch_request.requester.avatar_url"
-                      alt=""
-                      class="h-full w-full object-cover"
-                    />
-                    <span v-else>{{ requesterInitials }}</span>
-                  </div>
-                  <div class="min-w-0">
-                    <div class="truncate font-semibold text-slate-900">{{ requesterName }}</div>
-                    <div class="truncate text-sm text-slate-600">{{ requesterSubtitle }}</div>
-                  </div>
-                </div>
-                <div class="flex flex-1 flex-wrap gap-2 sm:justify-end">
-                  <span
-                    class="inline-flex items-center rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-800 ring-1 ring-violet-100"
-                  >
-                    {{ tripTypeLabel }}
-                  </span>
-                  <span
-                    v-if="trip.dispatch_request?.is_urgent"
-                    class="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700 ring-1 ring-rose-100"
-                  >
-                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    {{ t('trip_detail.high_priority') }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-4">
-                  <div class="flex items-center gap-2 text-xs font-medium text-slate-500">
-                    <CalendarDaysIcon class="h-4 w-4 text-slate-400" />
-                    {{ t('trip_detail.overview.schedule') }}
-                  </div>
-                  <div class="mt-2 text-sm font-semibold text-slate-900">{{ scheduleDateLong }}</div>
-                  <div class="mt-1 text-sm text-slate-600">
-                    {{ scheduleTimeRange }}
-                    <span v-if="scheduleDuration" class="text-slate-500">({{ scheduleDuration }})</span>
-                  </div>
-                  <ul class="mt-2 space-y-1 text-xs text-slate-600">
-                    <li v-if="trip.dispatch_request?.passenger_count != null && trip.dispatch_request.passenger_count > 0">
-                      {{ t('trip_detail.overview.pax_count', { n: trip.dispatch_request.passenger_count }) }}
-                    </li>
-                    <li v-if="trip.arrive_by">{{ t('trip_detail.overview.arrive_deadline', { time: fmtTime(trip.arrive_by) }) }}</li>
-                    <li v-for="(ln, i) in scheduleMismatchNotes" :key="i" class="text-amber-800/90">{{ ln }}</li>
-                  </ul>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
-                    <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.overview.est_distance') }}</div>
-                    <div class="mt-1 text-lg font-semibold tabular-nums text-slate-900">{{ estimatedDistanceLabel }}</div>
-                    <p class="mt-1 text-[11px] leading-snug text-slate-500">{{ estimatedDistanceSub }}</p>
-                  </div>
-                  <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
-                    <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.overview.est_cost') }}</div>
-                    <div class="mt-1 text-lg font-semibold tabular-nums text-slate-900">{{ estimatedCostLabel }}</div>
-                    <p class="mt-1 text-[11px] leading-snug text-slate-500">{{ estimatedCostSub }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Trip progress (pickup / en route / dropoff) -->
-              <div class="mt-6 border-t border-slate-100 pt-5">
-                <div class="grid gap-4 md:grid-cols-3">
-                  <div class="flex items-start gap-3">
-                    <div :class="dotClass(stepPickup.state)" />
-                    <div class="min-w-0">
-                      <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.trip_status.pickup') }}</div>
-                      <div class="mt-1 text-sm font-semibold text-slate-900">{{ originLabel }}</div>
-                      <div class="mt-1 text-xs text-slate-500">
-                        <span class="font-medium">{{ stepPickup.label }}</span>
-                        <span v-if="trip.depart_at"> · {{ fmtTime(trip.depart_at) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <div :class="dotClass(stepCurrent.state)" />
-                    <div class="min-w-0">
-                      <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.trip_status.current') }}</div>
-                      <div class="mt-1 text-sm font-semibold text-slate-900">{{ currentLabel }}</div>
-                      <div class="mt-1 text-xs text-slate-500">
-                        <span class="font-medium">{{ stepCurrent.label }}</span>
-                        <span v-if="trip.started_at"> · {{ fmtTime(trip.started_at) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <div :class="dotClass(stepDropoff.state)" />
-                    <div class="min-w-0">
-                      <div class="text-xs font-medium text-slate-500">{{ t('trip_detail.trip_status.dropoff') }}</div>
-                      <div class="mt-1 text-sm font-semibold text-slate-900">{{ destinationLabel }}</div>
-                      <div class="mt-1 text-xs text-slate-500">
-                        <span class="font-medium">{{ stepDropoff.label }}</span>
-                        <span v-if="trip.arrive_by"> · {{ fmtTime(trip.arrive_by) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- Route + map -->
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.route.section_title') }}</h2>
-                <div v-if="routeStops.length" class="flex flex-wrap gap-2 text-xs text-slate-600">
-                  <span class="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
-                    {{ t('trip_detail.route.stop_count', { n: routeStops.length }) }}
-                  </span>
-                  <span v-if="trip.record?.distance_km != null && trip.record.distance_km !== ''" class="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-800">
-                    {{ t('trip_detail.route.recorded_km', { km: trip.record.distance_km }) }}
-                  </span>
-                  <span class="rounded-full bg-sky-50 px-2.5 py-1 font-medium text-sky-800">{{ tripTypeLabel }}</span>
-                </div>
-              </div>
-              <div class="mt-4 flex flex-col gap-5 lg:flex-row">
-                <div class="min-w-0 flex-1">
-                  <ol class="relative space-y-0 border-l-2 border-slate-200 pl-6">
-                    <li v-for="(stop, idx) in routeStops" :key="`${idx}-${stop.address}`" class="relative pb-8 last:pb-0">
-                      <span
-                        class="absolute -left-[25px] top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold"
-                        :class="stopDotClass(stop.kind)"
-                      >
-                        {{ idx + 1 }}
-                      </span>
-                      <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ stopLabel(stop.kind) }}</div>
-                      <div class="mt-1 text-sm font-medium text-slate-900">{{ stop.address }}</div>
-                      <ul v-if="stop.detailLines?.length" class="mt-2 space-y-0.5 border-l-2 border-slate-100 pl-3">
-                        <li v-for="(dl, j) in stop.detailLines" :key="j" class="text-xs leading-relaxed text-slate-600">{{ dl }}</li>
-                      </ul>
-                    </li>
-                  </ol>
-                  <div v-if="!routeStops.length" class="text-sm text-slate-500">{{ t('trip_detail.route.no_stops') }}</div>
-                </div>
-                <div class="relative w-full shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 lg:w-[320px]">
-                  <div class="relative aspect-[4/3] w-full bg-slate-100 dark:bg-slate-800/80">
-                    <iframe
-                      v-if="embedMapSrc"
-                      :src="embedMapSrc"
-                      class="absolute inset-0 h-full w-full border-0"
-                      loading="lazy"
-                      referrerpolicy="no-referrer-when-downgrade"
-                      :title="t('trip_detail.route.map_title')"
-                    />
-                    <div v-else class="flex h-full min-h-[200px] items-center justify-center p-4 text-center text-sm text-slate-500">
-                      {{ t('trip_detail.route.map_placeholder') }}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    class="absolute right-2 top-2 rounded-lg border border-slate-200/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
-                    @click="mapExpanded = true"
-                  >
-                    {{ t('trip_detail.route.expand_map') }}
-                  </button>
-                </div>
-              </div>
-              <p class="mt-3 text-xs text-slate-500">{{ t('trip_detail.route_tracking.hint_no_gps') }}</p>
-            </section>
-
-            <!-- Passengers -->
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">
-                  {{ t('trip_detail.passengers.title', { n: passengerRowsDisplay.length }) }}
-                </h2>
-                <div v-if="canEditPassengerList" class="flex flex-wrap items-center gap-2">
-                  <template v-if="!passengersEditMode">
-                    <button
-                      type="button"
-                      class="rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 py-1.5 text-sm font-semibold text-sky-800 transition hover:bg-sky-100 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
-                      @click="startPassengersEdit"
-                    >
-                      {{ t('trip_detail.passengers.edit_inline') }}
-                    </button>
-                  </template>
-                  <template v-else>
+            <PassengerCheckIn
+              :trip-id="trip.id"
+              :trip="trip"
+              :rows="passengerRowsDisplay"
+              :can-check-in="canPassengerCheckIn"
+              :can-edit-list="canEditPassengerList"
+              :edit-mode="passengersEditMode"
+              :edit-message="passengersEditMsg"
+              :special-summary="specialNeedsSummary"
+              @start-edit="startPassengersEdit"
+              @trip-updated="applyTripPayload"
+            >
+              <template #editor>
+                <template v-if="passengersEditMode && passengersEditDraft">
+                  <div class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2">
                     <button
                       type="button"
                       class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -345,12 +125,7 @@
                     >
                       {{ t('trip_detail.passengers.save') }}
                     </button>
-                  </template>
-                </div>
-              </div>
-              <p v-if="passengersEditMsg" class="mt-2 text-sm text-rose-600 dark:text-rose-400">{{ passengersEditMsg }}</p>
-              <div class="mt-4 overflow-x-auto rounded-xl border border-slate-100">
-                <template v-if="passengersEditMode && passengersEditDraft">
+                  </div>
                   <!-- D2D / P2P -->
                   <table v-if="passengersEditDraft.kind === 'passenger'" class="min-w-full divide-y divide-slate-100 text-sm">
                     <thead class="bg-slate-50/80">
@@ -460,154 +235,18 @@
                     </tbody>
                   </table>
                 </template>
-                <template v-else>
-                  <table class="min-w-full divide-y divide-slate-100 text-sm">
-                    <thead class="bg-slate-50/80">
-                      <tr>
-                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_name') }}</th>
-                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_role') }}</th>
-                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_contact') }}</th>
-                        <th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600">{{ t('trip_detail.passengers.col_notes') }}</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                      <tr v-for="(row, idx) in passengerRowsDisplay" :key="idx">
-                        <td class="px-3 py-2.5 font-medium text-slate-900">{{ row.name }}</td>
-                        <td class="px-3 py-2.5">
-                          <span
-                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                            :class="rolePillClass(row.roleKind)"
-                          >
-                            {{ row.roleLabel }}
-                          </span>
-                        </td>
-                        <td class="max-w-[140px] truncate px-3 py-2.5 text-slate-600">{{ row.contact || '—' }}</td>
-                        <td class="px-3 py-2.5">
-                          <div class="flex flex-wrap items-center gap-1.5">
-                            <span v-if="row.flagWheelchair" :title="t('trip_detail.passengers.flag_wheelchair')">
-                              <WheelchairIcon class="h-5 w-5 text-rose-600" />
-                            </span>
-                            <span v-if="row.flagAllergy" :title="t('trip_detail.passengers.flag_allergy')">
-                              <ExclamationTriangleIcon class="h-5 w-5 text-amber-500" />
-                            </span>
-                            <span class="text-slate-600">{{ row.notes || '—' }}</span>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div v-if="!passengerRowsDisplay.length" class="px-3 py-6 text-center text-sm text-slate-500">
-                    {{ t('trip_detail.passengers.empty') }}
-                  </div>
-                </template>
-              </div>
-              <div
-                v-if="specialNeedsSummary"
-                class="mt-4 rounded-xl border border-sky-100 bg-sky-50/80 px-4 py-3 text-sm text-sky-950"
-              >
-                <div class="text-xs font-bold uppercase tracking-wide text-sky-800/80">{{ t('trip_detail.passengers.special_summary_title') }}</div>
-                <p class="mt-1 whitespace-pre-wrap">{{ specialNeedsSummary }}</p>
-              </div>
-            </section>
+              </template>
+            </PassengerCheckIn>
 
-            <!-- Chi phí phát sinh -->
-            <section
-              class="overflow-hidden rounded-2xl border border-amber-200/85 bg-white shadow-lg shadow-amber-500/[0.06] ring-1 ring-amber-100/50 print:break-inside-avoid dark:border-amber-900/45 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
-              :aria-label="t('trip_detail.costs_block.title')"
-            >
-              <div
-                class="border-b border-amber-100/90 bg-amber-50/95 px-5 py-4 sm:px-6 dark:border-amber-900/40 dark:bg-amber-950/35"
-              >
-                <div class="flex flex-wrap items-start gap-4">
-                  <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 shadow-sm dark:bg-amber-950/70 dark:text-amber-200"
-                  >
-                    <BanknotesIcon class="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">{{ t('trip_detail.costs_block.title') }}</h2>
-                    <p class="mt-1 max-w-2xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                      {{ t('trip_detail.costs_block.subtitle') }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div class="p-5 sm:p-6">
-                <div
-                  class="rounded-xl border border-slate-200/75 bg-white p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/60"
-                >
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">{{ t('trip_detail.costs.title') }}</div>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <div v-if="(trip.costs ?? []).length" class="text-sm font-semibold tabular-nums text-slate-900 dark:text-white">
-                        {{ t('trip_detail.costs.total', { amount: costsTotalFormatted }) }}
-                      </div>
-                      <RouterLink
-                        v-if="auth.canAccessDispatchWebApp()"
-                        to="/costs"
-                        class="rounded-lg px-2 py-1 text-xs font-semibold text-amber-800 underline decoration-amber-300/80 underline-offset-2 hover:bg-amber-50 hover:text-amber-950 dark:text-amber-300 dark:hover:bg-amber-950/40"
-                      >
-                        {{ t('trip_detail.costs.open_list') }}
-                      </RouterLink>
-                    </div>
-                  </div>
-                  <div
-                    v-if="canSubmitQuickCost"
-                    class="mt-4 rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 p-3 dark:border-amber-900/50 dark:bg-amber-950/25"
-                  >
-                    <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ t('trip_detail.costs.quick_title') }}</div>
-                    <div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                      <Select v-model="costQuickForm.type" :label="t('trip_detail.costs.quick_type')">
-                        <option value="fuel">{{ t('trip_detail.costs.type_fuel') }}</option>
-                        <option value="toll">{{ t('trip_detail.costs.type_toll') }}</option>
-                        <option value="parking">{{ t('trip_detail.costs.type_parking') }}</option>
-                        <option value="labor">{{ t('trip_detail.costs.type_labor') }}</option>
-                        <option value="other">{{ t('trip_detail.costs.type_other') }}</option>
-                      </Select>
-                      <Input
-                        v-model="costQuickForm.amount"
-                        type="number"
-                        min="0"
-                        step="1"
-                        :label="t('trip_detail.costs.quick_amount')"
-                        :placeholder="t('trip_detail.costs.quick_amount_ph')"
-                      />
-                      <div class="sm:col-span-2 xl:col-span-2">
-                        <Input v-model="costQuickForm.description" :label="t('trip_detail.costs.quick_desc')" :placeholder="t('trip_detail.costs.quick_desc_ph')" />
-                      </div>
-                    </div>
-                    <div class="mt-2 flex flex-wrap items-center gap-2">
-                      <Button type="button" variant="secondary" class="!py-1.5 !text-xs" :loading="costSubmitting" @click="submitQuickCost">{{ t('trip_detail.costs.quick_submit') }}</Button>
-                      <span v-if="costFormMsg" class="text-xs text-slate-600 dark:text-slate-400">{{ costFormMsg }}</span>
-                    </div>
-                  </div>
-                  <div class="mt-4 space-y-2">
-                    <div
-                      v-for="c in trip.costs ?? []"
-                      :key="c.id"
-                      class="flex flex-col gap-1 rounded-xl border border-slate-100/90 bg-white px-3 py-2.5 shadow-sm transition hover:border-amber-100 hover:shadow-md dark:border-slate-700/80 dark:bg-slate-950/40 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2">
-                          <span class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ costTypeLabel(c.type) }}</span>
-                          <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide" :class="costStatusClass(c.status)">
-                            {{ c.status }}
-                          </span>
-                        </div>
-                        <p v-if="c.description?.trim()" class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">{{ c.description.trim() }}</p>
-                      </div>
-                      <div class="shrink-0 text-sm font-semibold tabular-nums text-slate-900 dark:text-white">{{ formatCostAmount(c.amount, c.currency) }}</div>
-                    </div>
-                    <div
-                      v-if="!(trip.costs ?? []).length"
-                      class="rounded-xl border border-dashed border-slate-200/90 bg-slate-50/50 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/30 dark:text-slate-400"
-                    >
-                      {{ t('trip_detail.costs.empty') }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <TripTimeline :current-status="timelineWorkflowStatus" :logs="activityLogs" />
+
+            <CostTracker
+              :trip-id="trip.id"
+              :costs="trip.costs ?? []"
+              :can-submit="canSubmitQuickCost"
+              :show-costs-link="auth.canAccessDispatchWebApp()"
+              @updated="load({ silent: true })"
+            />
 
             <!-- Trạng thái chuyến -->
             <section
@@ -683,6 +322,15 @@
               </div>
 
               <div class="space-y-4 p-4 sm:p-4">
+                <TripCoordinationQuickActions
+                  :can-duplicate="canAssign && !!trip?.dispatch_request?.id"
+                  :can-export-pdf="!!trip?.dispatch_request?.id && auth.canAccessDispatchWebApp()"
+                  :duplicating="duplicatingTrip"
+                  :pdf-loading="pdfExportLoading"
+                  @duplicate="onDuplicateTrip"
+                  @export-pdf="onExportTripPdf"
+                  @copy-link="onCopyTripLink"
+                />
                 <div
                   v-if="canRescheduleTrip"
                   class="rounded-xl border border-indigo-200/80 bg-indigo-50/90 p-3 shadow-sm dark:border-indigo-800/50 dark:bg-indigo-950/40"
@@ -721,6 +369,19 @@
                   <p v-if="sameDayTripsLoading" class="mt-2 text-[11px] text-slate-500">{{ t('trip_detail.coordination.schedule_loading') }}</p>
                   <p v-if="sameDayTripsError" class="mt-2 text-[11px] text-rose-700">{{ sameDayTripsError }}</p>
                   <p v-if="busyResourcesHint && dispatchResources?.mode !== 'external'" class="mt-2 text-[11px] text-amber-800">{{ busyResourcesHint }}</p>
+                  <VehicleCard
+                    v-if="showInternalVehicleCard && selectedVehicleForCard"
+                    :vehicle="selectedVehicleForCard"
+                    :busy="vehicleCardBusy"
+                    @change="onVehicleCardChange"
+                  />
+                  <ConflictBanner :conflict="vehicleConflictBanner" @pick-again="onVehicleConflictPickAgain" @keep-anyway="onVehicleConflictKeep" />
+                  <DriverCard
+                    v-if="showInternalDriverCard && selectedDriverForCard"
+                    :driver="selectedDriverForCard"
+                    :busy="driverCardBusy"
+                    @change="onDriverCardChange"
+                  />
                   <ResourcePanel
                     v-if="trip?.id"
                     ref="resourcePanelRef"
@@ -730,6 +391,8 @@
                     :busy-driver-ids="busyDriverIdList"
                     :trip-snapshot="coordinationTripSnapshot"
                     :can-quick-create-vendor="canQuickCreateProvider"
+                    :hide-internal-vehicle-section="showInternalVehicleCard"
+                    :hide-internal-driver-section="showInternalDriverCard"
                     @update:resources="onDispatchResourcesUpdate"
                     @create-vendor="openProviderModal"
                   />
@@ -786,30 +449,7 @@
                   {{ assignMsg }}
                 </div>
 
-                <div v-if="canAssign || canUpdateStatus" class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-                  <Button
-                    v-if="canUpdateStatus"
-                    variant="secondary"
-                    class="min-h-[2.75rem] w-full justify-center !border-rose-200 !bg-white !text-rose-700 hover:!bg-rose-50"
-                    :loading="rejecting"
-                    type="button"
-                    @click="onRejectTrip"
-                  >
-                    {{ t('trip_detail.coordination.reject') }}
-                  </Button>
-                  <Button
-                    v-if="canAssign"
-                    class="min-h-[2.75rem] w-full justify-center !bg-sky-600 !py-2.5 text-[15px] font-semibold hover:!bg-sky-700 disabled:!cursor-not-allowed disabled:!opacity-60"
-                    :loading="assigning"
-                    type="button"
-                    :disabled="assigning || !assignReady"
-                    :title="!assignReady ? t('trip_detail.coordination.assign_disabled_hint') : ''"
-                    @click="onApproveTransfer"
-                  >
-                    {{ t('trip_detail.coordination.approve_transfer') }}
-                  </Button>
-                </div>
-                <p v-else class="text-xs text-slate-500">{{ t('trip_detail.coordination.no_permission_assign') }}</p>
+                <p v-if="!canAssign && !canUpdateStatus" class="text-xs text-slate-500">{{ t('trip_detail.coordination.no_permission_assign') }}</p>
               </div>
             </section>
 
@@ -859,65 +499,6 @@
                 </li>
               </ul>
               <p v-if="!attachmentsList.length" class="mt-2 text-sm text-slate-500">{{ t('trip_detail.attachments.empty') }}</p>
-            </section>
-
-            <section
-              class="overflow-hidden rounded-2xl border border-slate-200/85 bg-white shadow-md shadow-slate-500/5 ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
-            >
-              <div
-                class="flex items-center gap-3 border-b border-slate-100/90 bg-slate-50 px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900"
-              >
-                <div
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-950/70 dark:text-indigo-200"
-                >
-                  <CalendarDaysIcon class="h-5 w-5" aria-hidden="true" />
-                </div>
-                <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">{{ t('trip_detail.timeline.title') }}</h2>
-              </div>
-              <div class="p-4 sm:p-4">
-                <div v-if="timeline.length" class="relative">
-                  <div
-                    v-if="timeline.length > 1"
-                    class="pointer-events-none absolute left-[1.125rem] top-11 bottom-11 w-px bg-slate-200 dark:bg-slate-600"
-                    aria-hidden="true"
-                  />
-                  <div v-for="e in timeline" :key="e.key" class="relative z-[1] flex gap-4 pb-6 last:pb-0">
-                    <div
-                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-semibold shadow-sm ring-4 ring-white dark:ring-slate-900"
-                      :class="timelineToneClass(e.tone)"
-                    >
-                      <span class="leading-none">{{ e.icon }}</span>
-                    </div>
-                    <div
-                      class="min-w-0 flex-1 rounded-xl border border-slate-100/90 bg-white px-4 py-3 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/60"
-                    >
-                      <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                        <div class="min-w-0">
-                          <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            {{ e.title }}
-                            <span v-if="e.actor" class="text-xs font-normal text-slate-500 dark:text-slate-400"> · {{ e.actor }}</span>
-                          </div>
-                        </div>
-                        <time
-                          class="shrink-0 rounded-lg bg-slate-100/90 px-2 py-0.5 text-xs tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                          :datetime="e.at"
-                        >
-                          {{ fmt(e.at) }}
-                        </time>
-                      </div>
-                      <p v-if="e.subtitle" class="mt-2 border-t border-slate-100/80 pt-2 text-sm leading-relaxed text-slate-600 dark:border-slate-700/80 dark:text-slate-400">
-                        {{ e.subtitle }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  v-else
-                  class="rounded-xl border border-dashed border-slate-200/90 bg-slate-50/50 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/30 dark:text-slate-400"
-                >
-                  {{ t('trip_detail.timeline.empty') }}
-                </div>
-              </div>
             </section>
 
             <!-- Dispatcher notes -->
@@ -1048,29 +629,32 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
-  ArrowLeftIcon,
   ArrowPathIcon,
-  BanknotesIcon,
-  BellIcon,
-  CalendarDaysIcon,
   TrashIcon,
 } from '@heroicons/vue/24/outline'
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/solid'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
 import ResourcePanel from '../../components/dispatch/ResourcePanel.vue'
-import { addTripEvent, assignTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
-import { submitTripCost } from '../../api/costs'
-import { listVehicles, createTransportProvider } from '../../api/operational'
+import ConflictBanner from '../../components/trips/ConflictBanner.vue'
+import CostTracker from '../../components/trips/CostTracker.vue'
+import DriverCard from '../../components/trips/DriverCard.vue'
+import PassengerCheckIn from '../../components/trips/PassengerCheckIn.vue'
+import StickyTripHeader from '../../components/trips/StickyTripHeader.vue'
+import TripCoordinationQuickActions from '../../components/trips/TripCoordinationQuickActions.vue'
+import TripTimeline from '../../components/trips/TripTimeline.vue'
+import TripInfoCard from '../../components/trips/TripInfoCard.vue'
+import { addTripEvent, assignTrip, duplicateTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
+import { exportDispatchRequestPdf } from '../../api/requests'
+import { listVehicles, createTransportProvider, listDrivers, getVehicleScheduleConflicts } from '../../api/operational'
 import { uploadAttachment, deleteAttachment } from '../../api/attachments'
 import { newIdempotencyKey } from '../../util/idempotency'
-import { labelTripStatus, labelTripType } from '../../util/labels'
+import { labelTripStatus } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
 import { parseMoneyVnd } from '../../util/money'
 import {
@@ -1084,16 +668,12 @@ import {
 import { useAuthStore } from '../../store'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
 import { confirmAction } from '../../composables/useConfirm'
-
-/** Simple wheelchair glyph for special-needs hint (Hero lacks a dedicated wheelchair icon in outline set). */
-const WheelchairIcon = {
-  name: 'WheelchairIcon',
-  template:
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm7.94 14.13-1.39-3.47A2 2 0 0 0 16.67 16H13v-2.34c1.81.34 3.72-.37 4.92-2.02l1.14-1.59a1 1 0 0 0-1.62-1.16l-1.15 1.6c-.72 1-1.86 1.51-3.03 1.51h-.61a1 1 0 0 0-.98.8l-2.2 11a1 1 0 1 0 1.96.39l2.03-10.19H16a4 4 0 0 1 3.89 3.05l1.39 3.47a1 1 0 1 0 1.86-.73ZM7 12a5 5 0 1 0 5 5 5 5 0 0 0-5-5Zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg>',
-}
+import { showAppSuccess, showAppError } from '../../composables/appMessage'
+import { useTripDetail } from '../../composables/useTripDetail'
 
 const route = useRoute()
-const { t, te, locale } = useI18n()
+const router = useRouter()
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 
 const tripsListPath = computed(() =>
@@ -1118,6 +698,25 @@ function formatApiMessage(e) {
 }
 
 const trip = ref(null)
+
+const {
+  countdown,
+  tripTypeLabel,
+  slaBanner,
+  requesterName,
+  requesterSubtitle,
+  requesterInitials,
+  scheduleDateLong,
+  scheduleTimeRange,
+  scheduleDuration,
+  scheduleMismatchNotes,
+  originLabel,
+  destinationLabel,
+  currentLabel,
+  stepPickup,
+  stepCurrent,
+  stepDropoff,
+} = useTripDetail(trip)
 const loading = ref(true)
 const loadError = ref('')
 const refreshing = ref(false)
@@ -1126,15 +725,17 @@ const rescheduleDepartLocal = ref('')
 const rescheduling = ref(false)
 const rescheduleMsg = ref('')
 const rescheduleFeedbackIsError = ref(false)
-const costQuickForm = ref({ type: 'fuel', amount: '', description: '' })
-const costSubmitting = ref(false)
-const costFormMsg = ref('')
 const assigning = ref(false)
 const rejecting = ref(false)
 const assignMsg = ref('')
 const assignFeedbackKind = ref('')
 const statusing = ref(false)
 const vehicles = ref([])
+const driversList = ref([])
+const vehicleScheduleConflict = ref(null)
+const suppressVehicleScheduleConflict = ref(false)
+const duplicatingTrip = ref(false)
+const pdfExportLoading = ref(false)
 const sameDayTrips = ref([])
 const sameDayTripsLoading = ref(false)
 const sameDayTripsError = ref('')
@@ -1143,6 +744,9 @@ const TRIP_ASSIGN_CONFLICT_STATUSES = ['assigned', 'driver_confirmed', 'in_progr
 const resourceHint = ref('')
 const attachInputRef = ref(null)
 const mapExpanded = ref(false)
+function expandTripMap() {
+  mapExpanded.value = true
+}
 const coordinationNotes = ref('')
 const resourcePanelRef = ref(null)
 const dispatchResources = ref(null)
@@ -1185,6 +789,13 @@ const passengersEditMsg = ref('')
 const canEditPassengerList = computed(
   () => canAssign.value && trip.value?.dispatch_request?.id != null && (trip.value?.payment_status ?? 'unpaid') !== 'paid',
 )
+
+const canPassengerCheckIn = computed(() => {
+  if (!trip.value) return false
+  const s = trip.value.status
+  if (s === 'cancelled' || s === 'completed') return false
+  return canAssign.value || canUpdateStatus.value
+})
 
 const paxEditInputClass =
   'w-full min-w-[6rem] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400/30 dark:border-slate-600 dark:bg-slate-900 dark:text-white'
@@ -1288,26 +899,6 @@ async function submitPassengersEdit() {
   }
 }
 
-const slaBanner = computed(() => {
-  const tr = trip.value
-  if (!tr?.arrive_by) return null
-  if (['completed', 'cancelled'].includes(tr.status)) return null
-  const end = new Date(tr.arrive_by).getTime()
-  if (!Number.isFinite(end)) return null
-  const min = Math.round((end - Date.now()) / 60000)
-  if (min < 0) return { kind: 'overdue', text: t('trip_detail.sla.overdue_detail', { n: Math.abs(min) }) }
-  return { kind: 'ok', text: t('trip_detail.sla.remaining_minutes', { n: min }) }
-})
-
-function costTypeLabel(type) {
-  const raw = String(type ?? '').trim()
-  if (!raw) return '—'
-  const slug = raw.toLowerCase().replace(/[^a-z0-9_]/g, '_')
-  const key = `trip_detail.costs.type_${slug}`
-  if (te(key)) return t(key)
-  return raw
-}
-
 function fmt(v) {
   const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
   return v ? new Date(v).toLocaleString(l) : '-'
@@ -1316,13 +907,6 @@ function fmt(v) {
 function fmtTime(v) {
   const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
   return v ? new Date(v).toLocaleTimeString(l, { hour: '2-digit', minute: '2-digit' }) : '-'
-}
-
-function fmtDateLong(v) {
-  const l = locale.value === 'en' ? 'en-US' : 'vi-VN'
-  return v
-    ? new Date(v).toLocaleDateString(l, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    : '—'
 }
 
 function toDatetimeLocalValue(iso) {
@@ -1366,71 +950,6 @@ const tripRequestNotesFromUser = computed(() => {
   if (!n) return ''
   if (isLegacyBm03NotesBlock(n)) return ''
   return formatDispatchRequestNotesForDisplay(n)
-})
-
-const originLabel = computed(() => trip.value?.dispatch_request?.origin ?? '—')
-const destinationLabel = computed(() => trip.value?.dispatch_request?.destination ?? '—')
-const currentLabel = computed(() => {
-  if (trip.value?.status === 'in_progress') return t('trip_detail.current_location.en_route')
-  return '—'
-})
-
-const tripTypeLabel = computed(() => labelTripType(trip.value?.dispatch_request?.trip_type))
-
-const requesterName = computed(() => trip.value?.dispatch_request?.requester?.name ?? '—')
-
-const requesterSubtitle = computed(() => {
-  const u = snap.value?.form?.requester_unit
-  if (u?.trim()) return u.trim()
-  const code = trip.value?.dispatch_request?.requester?.employee_code
-  if (code) return t('trip_detail.overview.employee_code', { code })
-  return trip.value?.dispatch_request?.requester?.email ?? '—'
-})
-
-const requesterInitials = computed(() => {
-  const name = requesterName.value.trim()
-  if (!name || name === '—') return '?'
-  const parts = name.split(/\s+/).filter(Boolean)
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-})
-
-const scheduleDateLong = computed(() => fmtDateLong(trip.value?.depart_at))
-const scheduleTimeRange = computed(() => {
-  const a = trip.value?.depart_at
-  const b = trip.value?.arrive_by
-  if (!a) return '—'
-  if (!b) return fmtTime(a)
-  return `${fmtTime(a)} – ${fmtTime(b)}`
-})
-
-const scheduleDuration = computed(() => {
-  const a = trip.value?.depart_at
-  const b = trip.value?.arrive_by
-  if (!a || !b) return ''
-  const ms = new Date(b) - new Date(a)
-  if (!Number.isFinite(ms) || ms <= 0) return ''
-  const h = Math.round((ms / 3600000) * 10) / 10
-  return t('trip_detail.overview.duration_hours', { n: h })
-})
-
-function scheduleSame(isoA, isoB) {
-  if (!isoA || !isoB) return true
-  return new Date(isoA).getTime() === new Date(isoB).getTime()
-}
-
-const scheduleMismatchNotes = computed(() => {
-  const dr = trip.value?.dispatch_request
-  const tr = trip.value
-  if (!dr || !tr) return []
-  const out = []
-  if (dr.depart_at && tr.depart_at && !scheduleSame(dr.depart_at, tr.depart_at)) {
-    out.push(t('trip_detail.overview.depart_vs_request', { req: fmtTime(dr.depart_at), trip: fmtTime(tr.depart_at) }))
-  }
-  if (dr.arrive_by && tr.arrive_by && !scheduleSame(dr.arrive_by, tr.arrive_by)) {
-    out.push(t('trip_detail.overview.arrive_vs_request', { req: fmtTime(dr.arrive_by), trip: fmtTime(tr.arrive_by) }))
-  }
-  return out
 })
 
 const estimatedDistanceLabel = computed(() => {
@@ -1477,86 +996,6 @@ const estimatedCostVnd = computed(() => {
 
   const total = extras + totalPass + totalBus + cargoCosts
   return total > 0 ? total : null
-})
-
-const costsTotalFormatted = computed(() => {
-  const list = trip.value?.costs ?? []
-  if (!list.length) return '—'
-  const cur = list[0]?.currency || 'VND'
-  const sum = list.reduce((s, c) => s + (Number(c.amount) || 0), 0)
-  return `${new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(sum)} ${cur}`
-})
-
-function formatCostAmount(amount, currency) {
-  const n = Number(amount)
-  const c = currency || 'VND'
-  if (!Number.isFinite(n)) return `— ${c}`
-  return `${new Intl.NumberFormat(locale.value === 'en' ? 'en-US' : 'vi-VN').format(n)} ${c}`
-}
-
-function costStatusClass(s) {
-  const x = String(s ?? '').toLowerCase()
-  if (x === 'confirmed' || x === 'approved') return 'bg-emerald-100 text-emerald-800'
-  if (x === 'rejected') return 'bg-rose-100 text-rose-800'
-  if (x === 'pending') return 'bg-amber-100 text-amber-900'
-  if (x === 'submitted') return 'bg-sky-100 text-sky-900'
-  return 'bg-slate-100 text-slate-700'
-}
-
-function pillClassForStatus(s) {
-  const map = {
-    pending: 'bg-slate-100 text-slate-700',
-    approved: 'bg-amber-50 text-amber-800',
-    assigned: 'bg-indigo-50 text-indigo-700',
-    driver_confirmed: 'bg-amber-50 text-amber-700',
-    in_progress: 'bg-emerald-50 text-emerald-700',
-    completed: 'bg-emerald-100 text-emerald-800',
-    cancelled: 'bg-rose-50 text-rose-700',
-    incident: 'bg-rose-50 text-rose-700',
-  }
-  return map[s] ?? 'bg-slate-100 text-slate-700'
-}
-
-function dotClass(state) {
-  const base = 'mt-0.5 h-3 w-3 flex-none rounded-full'
-  if (state === 'done') return `${base} bg-emerald-500`
-  if (state === 'active') return `${base} bg-amber-400`
-  if (state === 'blocked') return `${base} bg-rose-400`
-  return `${base} bg-slate-300`
-}
-
-function stopDotClass(kind) {
-  if (kind === 'pickup') return 'bg-emerald-500 text-white ring-2 ring-emerald-200'
-  if (kind === 'dropoff') return 'bg-sky-600 text-white ring-2 ring-sky-200'
-  return 'bg-slate-200 text-slate-700 ring-2 ring-slate-100'
-}
-
-function stopLabel(kind) {
-  if (kind === 'pickup') return t('trip_detail.route.stop_pickup')
-  if (kind === 'dropoff') return t('trip_detail.route.stop_dropoff')
-  return t('trip_detail.route.stop_waypoint')
-}
-
-const stepPickup = computed(() => {
-  const s = trip.value?.status
-  if (s === 'completed') return { state: 'done', label: t('trip_detail.step.completed') }
-  if (s === 'in_progress') return { state: 'done', label: t('trip_detail.step.completed') }
-  if (s === 'cancelled') return { state: 'blocked', label: t('trip_detail.step.cancelled') }
-  return { state: 'active', label: t('trip_detail.step.pending') }
-})
-const stepCurrent = computed(() => {
-  const s = trip.value?.status
-  if (s === 'in_progress') return { state: 'active', label: t('trip_detail.step.en_route') }
-  if (s === 'completed') return { state: 'done', label: t('trip_detail.step.arrived') }
-  if (s === 'cancelled') return { state: 'blocked', label: t('trip_detail.step.cancelled') }
-  return { state: 'pending', label: t('trip_detail.step.waiting') }
-})
-const stepDropoff = computed(() => {
-  const s = trip.value?.status
-  if (s === 'completed') return { state: 'done', label: t('trip_detail.step.completed') }
-  if (s === 'cancelled') return { state: 'blocked', label: t('trip_detail.step.cancelled') }
-  if (s === 'in_progress') return { state: 'active', label: t('trip_detail.step.pending') }
-  return { state: 'pending', label: t('trip_detail.step.pending') }
 })
 
 const mapsHref = computed(() => {
@@ -1672,13 +1111,6 @@ function inferRoleKind(tripType) {
   return 'guest'
 }
 
-function rolePillClass(kind) {
-  if (kind === 'staff') return 'bg-slate-100 text-slate-800'
-  if (kind === 'student') return 'bg-sky-50 text-sky-800'
-  if (kind === 'cargo') return 'bg-amber-50 text-amber-900'
-  return 'bg-slate-50 text-slate-700'
-}
-
 const passengerRowsDisplay = computed(() => {
   const dr = trip.value?.dispatch_request
   const s = snap.value
@@ -1693,17 +1125,22 @@ const passengerRowsDisplay = computed(() => {
       if (!isCargoRowFilled(r)) continue
       i += 1
       const notes = [r.item_notes, r.transport_note].filter(Boolean).join(' · ')
+      const pickupAddress = [r.pickup_place, r.pickup_contact].filter(Boolean).join(' · ') || ''
       rows.push({
         name: r.name?.trim() || t('trip_detail.passengers.cargo_item', { n: i }),
         roleKind: 'cargo',
         roleLabel: t('trip_detail.passengers.role_cargo'),
         contact: r.pickup_contact || r.delivery_contact || '',
         notes,
+        pickupAddress,
         flagWheelchair: /xe lăn|wheelchair/i.test(notes),
         flagAllergy: /dị ứng|allergy/i.test(notes),
       })
     }
-    return rows
+    return rows.map((r, i) => ({
+      ...r,
+      passengerKey: `row_${i}`,
+    }))
   }
 
   let idx = 0
@@ -1724,6 +1161,7 @@ const passengerRowsDisplay = computed(() => {
             : t('trip_detail.passengers.role_guest'),
       contact: '',
       notes,
+      pickupAddress: (r.pickup ?? '').trim(),
       flagWheelchair: /xe lăn|wheelchair/i.test(notes),
       flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(notes),
     })
@@ -1739,6 +1177,7 @@ const passengerRowsDisplay = computed(() => {
       roleLabel: t('trip_detail.passengers.role_staff'),
       contact: '',
       notes,
+      pickupAddress: '',
       flagWheelchair: /xe lăn|wheelchair/i.test(notes),
       flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(notes),
     })
@@ -1754,12 +1193,16 @@ const passengerRowsDisplay = computed(() => {
           : t('trip_detail.passengers.role_guest'),
       contact: '',
       notes: '',
+      pickupAddress: '',
       flagWheelchair: false,
       flagAllergy: false,
     })
   }
 
-  return rows
+  return rows.map((r, i) => ({
+    ...r,
+    passengerKey: `row_${i}`,
+  }))
 })
 
 const specialNeedsSummary = computed(() => {
@@ -1953,6 +1396,57 @@ const assignReady = computed(() => {
   return true
 })
 
+const showInternalVehicleCard = computed(
+  () => dispatchResources.value?.mode === 'internal' && dispatchResources.value?.vehicle_id != null,
+)
+const showInternalDriverCard = computed(
+  () => dispatchResources.value?.mode === 'internal' && dispatchResources.value?.driver_id != null,
+)
+
+const selectedVehicleForCard = computed(() => {
+  const id = dispatchResources.value?.vehicle_id
+  if (id == null) return null
+  const v = vehicles.value.find((x) => Number(x.id) === Number(id))
+  return v ?? trip.value?.vehicle ?? null
+})
+
+const selectedDriverForCard = computed(() => {
+  const id = dispatchResources.value?.driver_id
+  if (id == null) return null
+  const d = driversList.value.find((x) => Number(x.id) === Number(id))
+  return d ?? trip.value?.driver ?? null
+})
+
+const vehicleCardBusy = computed(() => {
+  const id = dispatchResources.value?.vehicle_id
+  return id != null && busyVehicleIds.value.has(Number(id))
+})
+
+const driverCardBusy = computed(() => {
+  const id = dispatchResources.value?.driver_id
+  return id != null && busyDriverIds.value.has(Number(id))
+})
+
+const vehicleConflictBanner = computed(() => {
+  if (suppressVehicleScheduleConflict.value) return null
+  return vehicleScheduleConflict.value
+})
+
+watch(
+  () => [trip.value?.id, dispatchResources.value?.primaryVehicleId],
+  async ([tid, vid]) => {
+    vehicleScheduleConflict.value = null
+    suppressVehicleScheduleConflict.value = false
+    if (!tid || !vid || !canAssign.value) return
+    try {
+      const data = await getVehicleScheduleConflicts(Number(vid), { trip_id: tid, exclude_trip: tid })
+      vehicleScheduleConflict.value = data?.conflict ?? null
+    } catch {
+      vehicleScheduleConflict.value = null
+    }
+  },
+)
+
 const coordinationScheduleHint = computed(() => {
   if (!trip.value?.depart_at) return ''
   const r = scheduleTimeRange.value
@@ -2005,6 +1499,76 @@ async function refreshCoordinationData() {
   await Promise.all([loadResources(), loadSameDayTrips()])
 }
 
+function applyTripPayload(data) {
+  if (!data) return
+  trip.value = data
+  assign.value.lock_version = trip.value.lock_version ?? 0
+}
+
+async function onDuplicateTrip() {
+  const tid = trip.value?.id
+  if (tid == null || !canAssign.value) return
+  duplicatingTrip.value = true
+  try {
+    const res = await duplicateTrip(tid)
+    showAppSuccess(t('trip_detail.quick.duplicate_ok'), '')
+    const rid = res?.dispatch_request_id
+    if (rid != null) router.push(staffPath(`/requests/${rid}`))
+  } catch (e) {
+    showAppError(formatApiMessage(e))
+  } finally {
+    duplicatingTrip.value = false
+  }
+}
+
+async function onExportTripPdf() {
+  const id = trip.value?.dispatch_request?.id
+  if (id == null) return
+  pdfExportLoading.value = true
+  try {
+    const blob = await exportDispatchRequestPdf(id)
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  } catch (e) {
+    showAppError(formatApiMessage(e) || t('trip_detail.quick.pdf_error'))
+  } finally {
+    pdfExportLoading.value = false
+  }
+}
+
+async function onCopyTripLink() {
+  const url = typeof window !== 'undefined' ? window.location.href : ''
+  if (!url) return
+  try {
+    await navigator.clipboard.writeText(url)
+    showAppSuccess(t('trip_detail.quick.copied'), '')
+  } catch {
+    showAppError(t('trip_detail.messages.error'))
+  }
+}
+
+function onVehicleCardChange() {
+  vehicleScheduleConflict.value = null
+  suppressVehicleScheduleConflict.value = false
+  resourcePanelRef.value?.clearInternalVehicle?.()
+}
+
+function onDriverCardChange() {
+  resourcePanelRef.value?.clearInternalDriver?.()
+}
+
+function onVehicleConflictPickAgain() {
+  suppressVehicleScheduleConflict.value = false
+  vehicleScheduleConflict.value = null
+  resourcePanelRef.value?.clearInternalVehicle?.()
+}
+
+function onVehicleConflictKeep() {
+  suppressVehicleScheduleConflict.value = true
+  vehicleScheduleConflict.value = null
+}
+
 const attachmentsList = computed(() => trip.value?.dispatch_request?.attachments ?? [])
 
 const noteEvents = computed(() => {
@@ -2053,6 +1617,50 @@ function eventTitle(e) {
   if (e.type === 'note') return t('trip_detail.timeline.dispatcher_note')
   return e.type || t('trip_detail.timeline.event')
 }
+
+const timelineWorkflowStatus = computed(() => {
+  const s = trip.value?.status
+  const m = {
+    pending: 'created',
+    approved: 'approved',
+    assigned: 'assigned',
+    driver_confirmed: 'assigned',
+    in_progress: 'running',
+    completed: 'completed',
+    cancelled: 'created',
+    incident: 'created',
+  }
+  return m[s] ?? 'created'
+})
+
+const activityLogs = computed(() => {
+  const logs = []
+  if (trip.value?.created_at) {
+    logs.push({ status: 'created', created_at: trip.value.created_at, actor_name: '' })
+  }
+  const ev = trip.value?.events ?? []
+  for (const e of ev) {
+    if (e?.type === 'status_change' && e?.data?.to) {
+      const st = e.data.to
+      const keyMap = {
+        pending: 'created',
+        approved: 'approved',
+        assigned: 'assigned',
+        driver_confirmed: 'assigned',
+        in_progress: 'running',
+        completed: 'completed',
+        cancelled: 'created',
+        incident: 'created',
+      }
+      logs.push({
+        status: keyMap[st] ?? 'created',
+        created_at: e.created_at,
+        actor_name: e.creator?.name ?? '',
+      })
+    }
+  }
+  return logs
+})
 
 const timeline = computed(() => {
   const items = []
@@ -2110,40 +1718,6 @@ async function doReschedule() {
     rescheduleMsg.value = formatApiMessage(e)
   } finally {
     rescheduling.value = false
-  }
-}
-
-async function submitQuickCost() {
-  if (!canSubmitQuickCost.value) return
-  costFormMsg.value = ''
-  const type = String(costQuickForm.value.type ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-  const amount = Number(costQuickForm.value.amount)
-  if (!type || !Number.isFinite(amount) || amount <= 0) {
-    costFormMsg.value = t('trip_detail.costs.quick_invalid')
-    return
-  }
-  costSubmitting.value = true
-  try {
-    await submitTripCost(
-      route.params.id,
-      {
-        type,
-        amount,
-        currency: 'VND',
-        description: costQuickForm.value.description?.trim() || undefined,
-      },
-      { idempotencyKey: newIdempotencyKey() },
-    )
-    costQuickForm.value = { type: costQuickForm.value.type, amount: '', description: '' }
-    costFormMsg.value = t('trip_detail.messages.ok')
-    await load({ silent: true })
-  } catch (e) {
-    costFormMsg.value = e?.response?.data?.message ?? t('trip_detail.messages.error')
-  } finally {
-    costSubmitting.value = false
   }
 }
 
@@ -2228,11 +1802,16 @@ async function onAttachmentFile(ev) {
 async function loadResources() {
   resourceHint.value = ''
   try {
-    const vr = await listVehicles({ status: 'ready', per_page: 150 })
+    const [vr, dr] = await Promise.all([
+      listVehicles({ status: 'ready', per_page: 150 }),
+      listDrivers({ employment_status: 'active', availability_status: 'available', per_page: 150 }),
+    ])
     vehicles.value = vr.items ?? []
+    driversList.value = dr.items ?? []
   } catch {
     resourceHint.value = t('trip_detail.ops.messages.vehicles_load_failed')
     vehicles.value = []
+    driversList.value = []
   }
 }
 

@@ -1481,6 +1481,14 @@
             "trip_ref": "Chuyến {code}",
             "notifications": "Thông báo"
         },
+        "quick": {
+            "duplicate": "Nhân bản chuyến",
+            "print": "In phiếu",
+            "copy_link": "Copy link theo dõi",
+            "copied": "Đã copy link chuyến.",
+            "duplicate_ok": "Đã tạo bản sao yêu cầu.",
+            "pdf_error": "Không mở được PDF."
+        },
         "banner": {
             "request_pending": "Yêu cầu gốc vẫn đang chờ duyệt.",
             "open_request": "Mở chi tiết yêu cầu"
@@ -1549,7 +1557,14 @@
             "flag_wheelchair": "Hỗ trợ xe lăn",
             "flag_allergy": "Dị ứng / chế độ ăn",
             "summary_wheelchair": "Xe cần hỗ trợ lên xuống cho xe lăn.",
-            "summary_allergy": "Cần thông báo tài xế về dị ứng / thực phẩm."
+            "summary_allergy": "Cần thông báo tài xế về dị ứng / thực phẩm.",
+            "checkin_header_badge": "{checked}/{total} đã lên",
+            "checkin_on_vehicle": "Đã lên",
+            "checkin_waiting": "Đang đợi",
+            "checkin_expand_pickup": "Địa chỉ đón",
+            "checkin_private_note": "Ghi chú riêng",
+            "checkin_error": "Không thể cập nhật trạng thái lên xe.",
+            "tel_call": "Gọi"
         },
         "costs_block": {
             "title": "Chi phí phát sinh",
@@ -1637,7 +1652,19 @@
             "validation_provider": "Khi thuê ngoài, chọn nhà cung cấp trong danh sách.",
             "reject_confirm_title": "Hủy chuyến này?",
             "reject_confirm_body": "Trạng thái chuyến sẽ chuyển sang đã hủy. Ghi chú nội bộ (nếu có) sẽ lưu vào nhật ký trạng thái.",
-            "reject_cancel": "Không"
+            "reject_cancel": "Không",
+            "conflict_title": "Trùng lịch với {code}",
+            "conflict_pick_again": "Chọn lại",
+            "conflict_keep": "Vẫn gán",
+            "card_change": "Đổi",
+            "vehicle_ready_chip": "Sạch",
+            "vehicle_busy_hint": "Xe đang bận trong khung giờ này.",
+            "seats_unknown": "— chỗ",
+            "seats_n": "{n} chỗ",
+            "driver_code": "Mã NV: {code}",
+            "driver_busy": "Bận",
+            "driver_free": "Đang rảnh",
+            "driver_trips_month": "{n} chuyến tháng này"
         },
         "attachments": {
             "title": "Tệp đính kèm",
@@ -1802,7 +1829,12 @@
             "type_toll": "Phí cầu đường",
             "type_parking": "Gửi xe / bãi",
             "type_labor": "Nhân công / phụ cấp",
-            "type_other": "Khác"
+            "type_other": "Khác",
+            "receipt_upload": "Biên lai",
+            "receipt_drop_hint": "Kéo thả hoặc click — ảnh/PDF",
+            "receipt_uploading": "Đang tải…",
+            "breakdown_title": "Phân bổ theo loại",
+            "breakdown_total": "Tổng"
         }
     },
     "dashboard_analytics": {

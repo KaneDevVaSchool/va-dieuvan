@@ -21,6 +21,7 @@ Route::prefix('trips')->group(function () {
         Route::post('/{trip}/costs', 'store')
             ->middleware(['throttle:60,1', 'idempotency'])
             ->name('api.trips.costs.store');
+        Route::post('/{trip}/costs/{tripCost}/receipt', 'uploadReceiptForTrip')->middleware('throttle:30,1');
     });
 });
 

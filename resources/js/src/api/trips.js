@@ -46,3 +46,18 @@ export async function upsertTripRecord(tripId, payload) {
   const { data } = await http.put(`/trips/${tripId}/record`, payload)
   return data.data
 }
+
+export async function duplicateTrip(tripId) {
+  const { data } = await http.post(`/trips/${tripId}/duplicate`)
+  return data.data
+}
+
+export async function passengerCheckIn(tripId, passengerKey, payload) {
+  const { data } = await http.patch(`/trips/${tripId}/passengers/${encodeURIComponent(passengerKey)}/checkin`, payload)
+  return data.data
+}
+
+export async function passengerUncheckIn(tripId, passengerKey) {
+  const { data } = await http.delete(`/trips/${tripId}/passengers/${encodeURIComponent(passengerKey)}/checkin`)
+  return data.data
+}

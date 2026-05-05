@@ -36,3 +36,12 @@ export async function deleteTripCost(id) {
   const { data } = await http.delete(`/trip-costs/${id}`)
   return data.data
 }
+
+export async function uploadTripCostReceipt(tripId, tripCostId, file, { idempotencyKey } = {}) {
+  const headers = {}
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
+  const body = new FormData()
+  body.append('file', file)
+  const { data } = await http.post(`/trips/${tripId}/costs/${tripCostId}/receipt`, body, { headers })
+  return data.data
+}
