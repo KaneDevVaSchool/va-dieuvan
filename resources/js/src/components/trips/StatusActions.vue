@@ -1,16 +1,16 @@
 <template>
   <section
-    class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 dark:border-slate-700/80 dark:bg-slate-900/45"
+    class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3 dark:border-slate-700/80 dark:bg-slate-900/45"
     :aria-label="t('trip_detail.status_block.title')"
   >
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-sm font-semibold text-slate-900 dark:text-white">{{ t('trip_detail.status_block.title') }}</h2>
+      <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.status_block.title') }}</h2>
       <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="badgeClass">
         {{ labelTripStatus(tripStatus) }}
       </span>
     </div>
 
-    <div class="mt-3 flex flex-wrap items-center gap-2">
+    <div class="mt-2 flex flex-wrap items-center gap-2">
       <button
         v-if="workflow.primaryAction?.kind === 'assign'"
         type="button"
@@ -71,7 +71,7 @@
       </button>
     </div>
 
-    <label v-if="!workflow.isTerminal" class="mt-3 block">
+    <label v-if="!workflow.isTerminal" class="mt-2 block">
       <span class="sr-only">{{ t('trip_detail.status_update.note') }}</span>
       <textarea
         :value="modelValue"
@@ -82,7 +82,7 @@
       />
     </label>
 
-    <p v-if="workflow.hintI18nKey && !workflow.isTerminal" class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+    <p v-if="workflow.hintI18nKey && !workflow.isTerminal" class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
       {{ t(workflow.hintI18nKey) }}
     </p>
     <span v-if="!canAssign && !canUpdateStatus && !workflow.isTerminal && !workflow.hintI18nKey" class="mt-2 block text-xs text-slate-500">

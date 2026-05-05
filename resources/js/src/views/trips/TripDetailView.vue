@@ -42,10 +42,10 @@
       >
         {{ silentLoadError }}
       </p>
-      <div class="mx-auto max-w-7xl space-y-6 px-4 pb-12 pt-3">
+      <div class="mx-auto max-w-7xl space-y-4 px-4 pb-12 pt-3">
         <div
           v-if="trip.dispatch_request && trip.dispatch_request.status === 'pending'"
-          class="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-900"
+          class="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-2 text-sm text-amber-900"
         >
           {{ t('trip_detail.banner.request_pending') }}
           <RouterLink
@@ -57,9 +57,9 @@
           </RouterLink>
         </div>
 
-        <div class="grid gap-6 xl:grid-cols-12">
+        <div class="grid gap-4 xl:grid-cols-12">
           <!-- Main column (7/12) -->
-          <div class="min-w-0 space-y-6 xl:col-span-7">
+          <div class="min-w-0 space-y-4 xl:col-span-7">
             <TripInfoCard
               :trip="trip"
               :countdown="countdown"
@@ -240,7 +240,7 @@
 
             <TripTimeline :current-status="timelineWorkflowStatus" :logs="activityLogs" />
 
-            <div class="grid gap-6 lg:grid-cols-12">
+            <div class="grid gap-3 lg:grid-cols-12">
               <div class="min-w-0 lg:col-span-7">
                 <CostTracker
                   :trip-id="trip.id"
@@ -270,176 +270,51 @@
           </div>
 
           <!-- Sidebar / coordination (5/12) -->
-          <div class="min-w-0 space-y-4 xl:col-span-5">
-            <section
-              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden dark:border-slate-700/80 dark:bg-slate-950/30 dark:ring-slate-800/80"
-              :aria-label="t('trip_detail.coordination.title')"
-            >
-              <div class="space-y-3 p-3 sm:p-4">
-                <div
-                  class="relative z-10 rounded-2xl border border-violet-200/70 bg-gradient-to-r from-slate-50 via-violet-50/50 to-indigo-50/30 px-2 py-2 shadow-md shadow-violet-500/5 ring-1 ring-violet-200/40 backdrop-blur-sm dark:border-violet-800/50 dark:from-slate-950 dark:via-violet-950/30 dark:to-indigo-950/20 dark:shadow-none dark:ring-violet-800/40"
-                >
-                  <div class="flex flex-nowrap items-center gap-x-1 overflow-x-auto sm:gap-x-2">
-                    <span
-                      class="max-w-[42%] shrink-0 truncate text-[10px] font-bold uppercase tracking-wide text-violet-800 dark:text-violet-200 sm:max-w-[13rem]"
-                    >{{ t('trip_detail.coordination.title') }}</span>
-                    <details class="group relative min-w-0 shrink-0">
-                      <summary
-                        class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2 py-1.5 text-left shadow-sm hover:border-teal-200/70 dark:border-slate-700/90 dark:bg-slate-900/95 dark:hover:border-teal-800/70 [&::-webkit-details-marker]:hidden"
-                      >
-                        <FunnelIcon class="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" aria-hidden="true" />
-                        <span class="max-w-[6.5rem] truncate text-xs font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">{{
-                          t('trip_detail.coordination.toolbar_funnel_label')
-                        }}</span>
-                        <ChevronDownIcon
-                          class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 dark:text-slate-500"
-                          aria-hidden="true"
-                        />
-                      </summary>
-                      <div
-                        class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] max-w-[min(100vw-1.5rem,320px)] rounded-2xl border border-violet-200/70 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/50 dark:bg-slate-900"
-                      >
-                        <div
-                          class="border-b border-violet-100/80 pb-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-800 dark:text-violet-300"
-                        >
-                          {{ t('trip_detail.coordination.toolbar_funnel_applied') }}
-                        </div>
-                        <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto text-sm text-slate-800 dark:text-slate-200">
-                          <li v-for="(line, idx) in coordinationFunnelLines" :key="'cf-' + idx">{{ line }}</li>
-                          <li v-if="!coordinationFunnelLines.length" class="text-sm text-slate-500 dark:text-slate-400">
-                            {{ t('trip_detail.coordination.toolbar_funnel_empty') }}
-                          </li>
-                        </ul>
-                      </div>
-                    </details>
-                    <div class="hidden h-6 w-px shrink-0 bg-violet-200/80 sm:block dark:bg-violet-700/50" aria-hidden="true" />
-                    <div class="min-w-0 flex-1" />
-                    <div class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 dark:border-violet-700/50">
-                      <Button
-                        v-if="canAssign"
-                        type="button"
-                        variant="secondary"
-                        class="!shrink-0 !whitespace-nowrap !px-2.5 !py-1.5 !text-xs"
-                        :loading="sameDayTripsLoading || refreshing"
-                        :disabled="sameDayTripsLoading"
-                        @click="refreshCoordinationData"
-                      >
-                        {{ t('trip_detail.coordination.refresh_schedule') }}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+          <div class="min-w-0 space-y-3 xl:col-span-5">
+            <DispatchPanel
+              ref="dispatchPanelRef"
+              :can-assign="canAssign"
+              :can-update-status="canUpdateStatus"
+              :can-reschedule-trip="canRescheduleTrip"
+              :can-quick-create-provider="canQuickCreateProvider"
+              :reschedule-depart-local="rescheduleDepartLocal"
+              :rescheduling="rescheduling"
+              :reschedule-msg="rescheduleMsg"
+              :reschedule-feedback-is-error="rescheduleFeedbackIsError"
+              :same-day-trips-loading="sameDayTripsLoading"
+              :refreshing="refreshing"
+              :show-internal-vehicle-card="showInternalVehicleCard"
+              :selected-vehicle-for-card="selectedVehicleForCard"
+              :vehicle-card-busy="vehicleCardBusy"
+              :show-internal-driver-card="showInternalDriverCard"
+              :selected-driver-for-card="selectedDriverForCard"
+              :driver-card-busy="driverCardBusy"
+              :vehicle-conflict-banner="vehicleConflictBanner"
+              :trip-id="trip.id"
+              :schedule-date-key-for-list="scheduleDateKeyForList"
+              :needed-seats="neededSeats"
+              :suitable-vehicles-count="suitableVehiclesCount"
+              :busy-vehicle-ids="busyVehicleIdList"
+              :busy-driver-ids="busyDriverIdList"
+              :trip-snapshot="coordinationTripSnapshot"
+              :overlapping-other-trips="overlappingOtherTrips"
+              :coordination-notes="coordinationNotes"
+              :assign-msg="assignMsg"
+              :assign-feedback-kind="assignFeedbackKind"
+              :coordination-funnel-lines="coordinationFunnelLines"
+              @refresh-coordination="refreshCoordinationData"
+              @reschedule="doReschedule"
+              @vehicle-card-change="onVehicleCardChange"
+              @driver-card-change="onDriverCardChange"
+              @conflict-pick-again="onVehicleConflictPickAgain"
+              @conflict-keep="onVehicleConflictKeep"
+              @update:resources="onDispatchResourcesUpdate"
+              @create-vendor="openProviderModal"
+              @update:reschedule-depart-local="rescheduleDepartLocal = $event"
+              @update:coordination-notes="coordinationNotes = $event"
+            />
 
-                <div
-                  v-if="canRescheduleTrip"
-                  class="rounded-xl border border-indigo-200/80 bg-indigo-50/90 p-2 shadow-sm dark:border-indigo-800/50 dark:bg-indigo-950/40"
-                >
-                  <div class="flex flex-nowrap items-center gap-2 overflow-x-auto">
-                    <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-indigo-900 dark:text-indigo-200">{{
-                      t('trip_detail.reschedule.title')
-                    }}</span>
-                    <input
-                      v-model="rescheduleDepartLocal"
-                      type="datetime-local"
-                      class="min-w-0 flex-1 shrink rounded-lg border border-indigo-100 bg-white px-2 py-1.5 text-xs outline-none ring-2 ring-transparent focus:border-indigo-300 focus:ring-indigo-100 dark:border-indigo-800 dark:bg-slate-900 dark:text-slate-100 sm:min-w-[11rem] sm:text-sm"
-                    />
-                    <Button class="shrink-0 !px-2.5 !py-1.5 !text-xs" type="button" :loading="rescheduling" @click="doReschedule">
-                      {{ t('trip_detail.reschedule.save') }}
-                    </Button>
-                  </div>
-                  <div
-                    v-if="rescheduleMsg"
-                    class="mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium"
-                    :class="rescheduleFeedbackIsError ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'"
-                    role="status"
-                  >
-                    {{ rescheduleMsg }}
-                  </div>
-                </div>
-
-                <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-                  <VehicleCard
-                    v-if="showInternalVehicleCard && selectedVehicleForCard"
-                    :vehicle="selectedVehicleForCard"
-                    :busy="vehicleCardBusy"
-                    @change="onVehicleCardChange"
-                  />
-                  <ConflictBanner :conflict="vehicleConflictBanner" @pick-again="onVehicleConflictPickAgain" @keep-anyway="onVehicleConflictKeep" />
-                  <DriverCard
-                    v-if="showInternalDriverCard && selectedDriverForCard"
-                    :driver="selectedDriverForCard"
-                    :busy="driverCardBusy"
-                    @change="onDriverCardChange"
-                  />
-                  <ResourcePanel
-                    v-if="trip?.id"
-                    ref="resourcePanelRef"
-                    :trip-id="trip.id"
-                    :trip-date="scheduleDateKeyForList"
-                    :needed-seats="neededSeats"
-                    :available-count="suitableVehiclesCount"
-                    :busy-vehicle-ids="busyVehicleIdList"
-                    :busy-driver-ids="busyDriverIdList"
-                    :trip-snapshot="coordinationTripSnapshot"
-                    :can-quick-create-vendor="canQuickCreateProvider"
-                    :hide-internal-vehicle-section="showInternalVehicleCard"
-                    :hide-internal-driver-section="showInternalDriverCard"
-                    @update:resources="onDispatchResourcesUpdate"
-                    @create-vendor="openProviderModal"
-                  />
-                </div>
-
-                <div
-                  v-if="canAssign && overlappingOtherTrips.length"
-                  class="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm"
-                >
-                  <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.coordination.overlap_section_title') }}</div>
-                  <ul class="mt-2 max-h-40 space-y-1.5 overflow-y-auto text-[11px]">
-                    <li v-for="row in overlappingOtherTrips" :key="row.id" class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <RouterLink :to="tripDetailPathFor(row.id)" class="font-semibold text-sky-700 underline-offset-2 hover:underline">
-                        #{{ row.id }}
-                      </RouterLink>
-                      <span class="tabular-nums text-slate-600">{{ fmtTime(row.depart_at) }}</span>
-                      <span class="min-w-0 text-slate-700">{{ row.label }}</span>
-                      <span v-if="row.driverName || row.vehiclePlate" class="text-slate-500">
-                        <template v-if="row.driverName">{{ row.driverName }}</template>
-                        <template v-if="row.driverName && row.vehiclePlate"> · </template>
-                        <template v-if="row.vehiclePlate">{{ row.vehiclePlate }}</template>
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-800">{{ t('trip_detail.coordination.internal_notes') }}</label>
-                  <textarea
-                    v-model="coordinationNotes"
-                    rows="3"
-                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-sky-200 focus:ring"
-                    :placeholder="t('trip_detail.coordination.internal_notes_ph')"
-                  />
-                </div>
-
-                <div
-                  v-if="assignMsg"
-                  class="rounded-lg border px-3 py-2.5 text-sm font-medium"
-                  :class="
-                    assignFeedbackKind === 'success'
-                      ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
-                      : assignFeedbackKind === 'error'
-                        ? 'border-rose-200 bg-rose-50 text-rose-950'
-                        : 'border-slate-200 bg-slate-50 text-slate-800'
-                  "
-                  role="alert"
-                >
-                  {{ assignMsg }}
-                </div>
-
-                <p v-if="!canAssign && !canUpdateStatus" class="text-xs text-slate-500">{{ t('trip_detail.coordination.no_permission_assign') }}</p>
-              </div>
-            </section>
-
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.attachments.title') }}</h2>
                 <div v-if="canManageAttachments && trip.dispatch_request?.id" class="flex flex-wrap items-center gap-2">
@@ -450,11 +325,11 @@
                 </div>
               </div>
               <p v-if="attachMsg" class="mt-2 text-xs" :class="attachMsgIsError ? 'text-rose-600' : 'text-slate-600'">{{ attachMsg }}</p>
-              <ul class="mt-3 space-y-2">
+              <ul class="mt-2 space-y-1.5">
                 <li
                   v-for="a in attachmentsList"
                   :key="a.id"
-                  class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-2"
+                  class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/50 px-3 py-1.5"
                 >
                   <div class="min-w-0">
                     <div class="truncate text-sm font-medium text-slate-900">{{ a.original_name || t('trip_detail.attachments.unnamed') }}</div>
@@ -488,30 +363,30 @@
             </section>
 
             <!-- Dispatcher notes -->
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
               <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.title') }}</h2>
-              <div class="mt-3 space-y-3">
+              <div class="mt-2 space-y-2">
                 <div v-if="tripRequestNotesFromUser" class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950">
                   <div class="text-xs font-medium text-amber-800">{{ t('trip_detail.notes.from_request') }}</div>
                   <div class="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">{{ tripRequestNotesFromUser }}</div>
                 </div>
-                <div v-for="n in noteEvents" :key="n.id" class="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+                <div v-for="n in noteEvents" :key="n.id" class="rounded-lg border border-slate-100 bg-slate-50/50 p-2">
                   <div class="flex items-baseline justify-between gap-2">
                     <div class="text-xs font-medium text-slate-700">{{ n.creator?.name ?? t('trip_detail.timeline.system') }}</div>
                     <div class="text-xs text-slate-400">{{ fmt(n.created_at) }}</div>
                   </div>
                   <div class="mt-1 whitespace-pre-wrap text-sm text-slate-800">{{ n.message }}</div>
                 </div>
-                <div v-if="!noteEvents.length && !tripRequestNotesFromUser" class="text-sm text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
+                <div v-if="!noteEvents.length && !tripRequestNotesFromUser" class="text-xs text-slate-500">{{ t('trip_detail.notes.empty') }}</div>
                 <div class="pt-1">
-                  <div class="text-sm font-semibold text-slate-900">{{ t('trip_detail.notes.add_title') }}</div>
+                  <div class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('trip_detail.notes.add_title') }}</div>
                   <textarea
                     v-model="newNote"
-                    rows="3"
-                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-sky-200 focus:ring"
+                    rows="2"
+                    class="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm outline-none ring-sky-200 focus:ring"
                     :placeholder="t('trip_detail.notes.placeholder')"
                   />
-                  <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <div class="mt-1.5 flex flex-wrap items-center gap-2">
                     <Button :loading="noting" :disabled="!newNote.trim()" @click="addNote">{{ t('trip_detail.notes.add_action') }}</Button>
                     <span v-if="noteMsg" class="text-sm text-slate-600">{{ noteMsg }}</span>
                   </div>
@@ -618,23 +493,19 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
-  ChevronDownIcon,
-  FunnelIcon,
   TrashIcon,
 } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
-import ResourcePanel from '../../components/dispatch/ResourcePanel.vue'
-import ConflictBanner from '../../components/trips/ConflictBanner.vue'
 import CostTracker from '../../components/trips/CostTracker.vue'
 import StatusActions from '../../components/trips/StatusActions.vue'
-import DriverCard from '../../components/trips/DriverCard.vue'
 import PassengerCheckIn from '../../components/trips/PassengerCheckIn.vue'
 import StickyTripHeader from '../../components/trips/StickyTripHeader.vue'
 import TripTimeline from '../../components/trips/TripTimeline.vue'
 import TripInfoCard from '../../components/trips/TripInfoCard.vue'
+import DispatchPanel from '../../components/trips/DispatchPanel.vue'
 import { addTripEvent, assignTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
 import { listVehicles, createTransportProvider, listDrivers, getVehicleScheduleConflicts } from '../../api/operational'
 import { uploadAttachment, deleteAttachment } from '../../api/attachments'
@@ -731,7 +602,7 @@ function expandTripMap() {
   mapExpanded.value = true
 }
 const coordinationNotes = ref('')
-const resourcePanelRef = ref(null)
+const dispatchPanelRef = ref(null)
 const dispatchResources = ref(null)
 const providerModalOpen = ref(false)
 const newProviderName = ref('')
@@ -1496,17 +1367,17 @@ function applyTripPayload(data) {
 function onVehicleCardChange() {
   vehicleScheduleConflict.value = null
   suppressVehicleScheduleConflict.value = false
-  resourcePanelRef.value?.clearInternalVehicle?.()
+  dispatchPanelRef.value?.resourcePanel?.clearInternalVehicle?.()
 }
 
 function onDriverCardChange() {
-  resourcePanelRef.value?.clearInternalDriver?.()
+  dispatchPanelRef.value?.resourcePanel?.clearInternalDriver?.()
 }
 
 function onVehicleConflictPickAgain() {
   suppressVehicleScheduleConflict.value = false
   vehicleScheduleConflict.value = null
-  resourcePanelRef.value?.clearInternalVehicle?.()
+  dispatchPanelRef.value?.resourcePanel?.clearInternalVehicle?.()
 }
 
 function onVehicleConflictKeep() {
@@ -1676,9 +1547,9 @@ async function submitQuickProvider() {
   providerCreating.value = true
   try {
     const created = await createTransportProvider({ name, type: newProviderType.value, is_active: true })
-    await resourcePanelRef.value?.refreshOptions?.()
+    await dispatchPanelRef.value?.resourcePanel?.refreshOptions?.()
     if (created?.id != null) {
-      resourcePanelRef.value?.pickProvider?.(created.id, newProviderType.value)
+      dispatchPanelRef.value?.resourcePanel?.pickProvider?.(created.id, newProviderType.value)
     }
     providerModalOpen.value = false
   } catch (e) {
@@ -1794,7 +1665,7 @@ async function load(opts = {}) {
 async function onApproveTransfer() {
   assignMsg.value = ''
   assignFeedbackKind.value = ''
-  const ok = resourcePanelRef.value?.validate?.()
+  const ok = dispatchPanelRef.value?.resourcePanel?.validate?.()
   if (!ok) {
     assignFeedbackKind.value = 'error'
     assignMsg.value = t('trip_detail.coordination.validation_assign')
