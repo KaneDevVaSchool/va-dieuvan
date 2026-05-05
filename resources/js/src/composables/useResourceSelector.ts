@@ -1,4 +1,5 @@
 import { type Ref, ref, unref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { listDrivers, listTransportProviders, listVehicles } from '../api/operational'
 import type { ResourceDispatchPayload, ResourceItem, ResourceDispatchValidationCode, SelectedResources } from '../types/dispatch'
 
@@ -55,6 +56,7 @@ export function useResourceSelector(
   busyVehicleIds: Ref<Set<number>>,
   busyDriverIds: Ref<Set<number>>,
 ) {
+  const { t } = useI18n()
   const internalVehicleOptions = ref<ResourceItem[]>([])
   const internalDriverOptions = ref<ResourceItem[]>([])
   const taxiOptions = ref<ResourceItem[]>([])
@@ -148,28 +150,34 @@ export function useResourceSelector(
     if (!hasV && !hasD && !hasT && !hasP) return 'empty'
 
     const numericTaxis = txs.filter((t) => !isCustomResource(t))
-    const customMeaningful = txs
+    const numericVendors = vds.filter((v) => !isCustomResource(v))
+    const customTaxiOk = txs
       .filter((t) => isCustomResource(t))
+      .some((x) => String(x.label ?? '').trim().length > 0)
+    const customVendorOk = vds
+      .filter((v) => isCustomResource(v))
       .some((x) => String(x.label ?? '').trim().length > 0)
 
     if (hasT || hasP) {
-      const hasNumericId = vds.length > 0 || numericTaxis.length > 0
-      if (!hasNumericId && !customMeaningful) return 'need_provider'
+      const hasNumericId = numericVendors.length > 0 || numericTaxis.length > 0
+      if (!hasNumericId && !customTaxiOk && !customVendorOk) return 'need_provider'
     }
 
     return null
   }
 
+  function sumSupplementSeats(items: ResourceItem[]): number {
+    return items.reduce((acc, it) => {
+      const n = Number(it.supplementSeats)
+      if (!Number.isFinite(n) || n <= 0) return acc
+      return acc + Math.floor(n)
+    }, 0)
+  }
+
   function buildDispatchPayload(
     externalVehicleRef: string,
     externalDriverRef: string,
-    seatExtras?: { taxiSeatSupplement?: number | null; nccSeatSupplement?: number | null },
   ): ResourceDispatchPayload {
-    const taxiSupRaw = Number(seatExtras?.taxiSeatSupplement)
-    const nccSupRaw = Number(seatExtras?.nccSeatSupplement)
-    const taxiSeatSupplement = Number.isFinite(taxiSupRaw) ? Math.max(0, Math.floor(taxiSupRaw)) : 0
-    const nccSeatSupplement = Number.isFinite(nccSupRaw) ? Math.max(0, Math.floor(nccSupRaw)) : 0
-
     const code = validationCode()
     const intV = selected.value.internalVehicles
     const intD = selected.value.internalDrivers
@@ -178,13 +186,35 @@ export function useResourceSelector(
 
     const hasV = intV.length > 0
     const hasD = intD.length > 0
-    const hasT = txs.length > 0
-    const hasP = vds.length > 0
 
     const numericTaxis = txs.filter((t) => !isCustomResource(t))
-    const customTaxis = txs.filter((t) => isCustomResource(t))
-    const customLabels = customTaxis.map((x) => String(x.label ?? '').trim()).filter(Boolean)
-    const customLine = customLabels.length ? `Taxi: ${customLabels.join(', ')}` : ''
+    const numericVendors = vds.filter((v) => !isCustomResource(v))
+
+    const taxiSeatSupplement = sumSupplementSeats(txs)
+    const nccSeatSupplement = sumSupplementSeats(vds)
+
+    function lineForItem(it: ResourceItem): string {
+      const lab = String(it.label ?? '').trim()
+      if (!lab) return ''
+      const n = Number(it.supplementSeats)
+      const seats = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0
+      if (seats > 0) return `${lab} — ${t('trip_detail.coordination.seats_n', { n: seats })}`
+      return lab
+    }
+
+    function supplementDescribeBlock(kind: 'taxi' | 'vendor', items: ResourceItem[]): string {
+      const parts = items.map(lineForItem).filter(Boolean)
+      if (!parts.length) return ''
+      const head =
+        kind === 'taxi'
+          ? t('trip_detail.coordination.resource_section_taxi_title')
+          : t('trip_detail.coordination.resource_section_vendor_title')
+      return `${head}: ${parts.join(' · ')}`
+    }
+
+    const taxiBlock = supplementDescribeBlock('taxi', txs)
+    const nccBlock = supplementDescribeBlock('vendor', vds)
+    const prefixParts = [taxiBlock, nccBlock].filter(Boolean)
 
     const base: ResourceDispatchPayload = {
       readyForSubmit: false,
@@ -216,42 +246,14 @@ export function useResourceSelector(
     const safeDriverId = Number.isFinite(driverId) ? driverId : null
 
     let providerId: number | null = null
-    let primaryKind: 'vendor' | 'taxi' | null = null
-    if (vds.length > 0) {
-      const id = Number(vds[0].id)
+    if (numericVendors.length > 0) {
+      const id = Number(numericVendors[0].id)
       providerId = Number.isFinite(id) ? id : null
-      primaryKind = 'vendor'
     } else if (numericTaxis.length > 0) {
       const id = Number(numericTaxis[0].id)
       providerId = Number.isFinite(id) ? id : null
-      primaryKind = 'taxi'
     }
 
-    const extraProviderLabels: string[] = []
-    if (primaryKind === 'vendor' && providerId != null) {
-      for (let i = 1; i < vds.length; i++) {
-        const lab = String(vds[i].label ?? '').trim()
-        if (lab) extraProviderLabels.push(`NCC: ${lab}`)
-      }
-      for (const t of numericTaxis) {
-        const lab = String(t.label ?? '').trim()
-        if (lab) extraProviderLabels.push(`Taxi: ${lab}`)
-      }
-    } else if (primaryKind === 'taxi' && providerId != null) {
-      for (let i = 1; i < numericTaxis.length; i++) {
-        const lab = String(numericTaxis[i].label ?? '').trim()
-        if (lab) extraProviderLabels.push(`Taxi: ${lab}`)
-      }
-      for (const v of vds) {
-        const lab = String(v.label ?? '').trim()
-        if (lab) extraProviderLabels.push(`NCC: ${lab}`)
-      }
-    }
-
-    const seatPrefixParts: string[] = []
-    if (taxiSeatSupplement > 0) seatPrefixParts.push(`Taxi ${taxiSeatSupplement} chỗ`)
-    if (nccSeatSupplement > 0) seatPrefixParts.push(`NCC ${nccSeatSupplement} chỗ`)
-    const prefixParts = [...seatPrefixParts, ...extraProviderLabels, customLine].filter(Boolean)
     const prefix = prefixParts.join(' · ')
     const userEv = externalVehicleRef?.trim() || ''
     let evRef = ''
@@ -260,9 +262,19 @@ export function useResourceSelector(
     else evRef = userEv
     evRef = evRef ? truncateExternalRef(evRef) : ''
 
-    const hasInternal = hasV || hasD
+    const hasCustomTaxi = txs.some(
+      (x) => isCustomResource(x) && String(x.label ?? '').trim().length > 0,
+    )
+    const hasCustomVendor = vds.some(
+      (x) => isCustomResource(x) && String(x.label ?? '').trim().length > 0,
+    )
     const hasExternalBody =
-      vds.length > 0 || numericTaxis.length > 0 || customLabels.length > 0
+      numericTaxis.length > 0 ||
+      numericVendors.length > 0 ||
+      hasCustomTaxi ||
+      hasCustomVendor
+
+    const hasInternal = hasV || hasD
     const mode =
       hasInternal && hasExternalBody ? 'combined' : hasInternal ? 'internal' : 'external'
 

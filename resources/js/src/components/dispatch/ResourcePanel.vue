@@ -61,21 +61,24 @@
       v-if="!hideTaxiSection || !hideVendorSection"
       class="mt-2 border-t border-[0.5px] border-slate-200/80 px-1.5 pb-2 pt-3.5 dark:border-slate-700/60"
     >
-      <div class="mb-3 flex items-center justify-between gap-2">
-        <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{{
-          t('trip_detail.coordination.supplement_section_title')
-        }}</span>
-        <span
-          class="shrink-0 rounded-full border-[0.5px] border-slate-300/80 bg-slate-100/90 px-2 py-0.5 text-[11px] font-medium tabular-nums text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-        >
-          {{ t('trip_detail.coordination.supplement_options_count', { n: supplementOptionCount }) }}
-        </span>
-      </div>
+      <div class="mb-2 rounded-[12px] border-[0.5px] border-slate-200/60 bg-white/50 p-2.5 dark:border-slate-700/50 dark:bg-slate-900/25">
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{{
+            t('trip_detail.coordination.supplement_section_title')
+          }}</span>
+          <span
+            class="shrink-0 rounded-full border-[0.5px] border-slate-300/80 bg-slate-100/90 px-2 py-0.5 text-[11px] font-medium tabular-nums text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          >
+            {{ t('trip_detail.coordination.supplement_options_count', { n: supplementOptionCount }) }}
+          </span>
+        </div>
+        <p class="mb-3 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400">
+          {{ t('trip_detail.coordination.supplement_section_hint') }}
+        </p>
 
       <ResourceSection
         v-if="!hideTaxiSection"
         v-model="selected.taxis"
-        v-model:supplement-seats="taxiSeatSupplementStr"
         :options="taxiOptions"
         :is-loading="isLoading"
         allow-custom-entry
@@ -90,9 +93,9 @@
       <ResourceSection
         v-if="!hideVendorSection"
         v-model="selected.vendors"
-        v-model:supplement-seats="nccSeatSupplementStr"
         :options="vendorOptions"
         :is-loading="isLoading"
+        allow-custom-entry
         show-supplement-seats
         indent-search
         :title="t('trip_detail.coordination.resource_section_vendor_title')"
@@ -151,6 +154,7 @@
             />
           </div>
         </div>
+      </div>
       </div>
     </div>
 
@@ -277,24 +281,9 @@ const supplementOptionCount = computed(
 const showValidation = ref(false)
 const externalVehicleRef = ref('')
 const externalDriverRef = ref('')
-const taxiSeatSupplementStr = ref('')
-const nccSeatSupplementStr = ref('')
-
-function parsePositiveIntStr(raw) {
-  const n = Number(String(raw ?? '').trim())
-  if (!Number.isFinite(n) || n <= 0) return 0
-  return Math.floor(n)
-}
-
-function seatExtrasForPayload() {
-  return {
-    taxiSeatSupplement: selected.value.taxis.length > 0 ? parsePositiveIntStr(taxiSeatSupplementStr.value) : 0,
-    nccSeatSupplement: selected.value.vendors.length > 0 ? parsePositiveIntStr(nccSeatSupplementStr.value) : 0,
-  }
-}
 
 const panelErrorMessage = computed(() => {
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value, seatExtrasForPayload())
+  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
   const c = p.validationCode
   if (!c) return ''
   const map = {
@@ -308,7 +297,7 @@ const panelErrorMessage = computed(() => {
 const lastPayloadJson = ref('')
 
 function emitResources() {
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value, seatExtrasForPayload())
+  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
   const j = JSON.stringify(p)
   if (j === lastPayloadJson.value) return
   lastPayloadJson.value = j
@@ -391,20 +380,6 @@ watch(
 )
 
 watch(
-  () => selected.value.taxis.length,
-  (n) => {
-    if (!n) taxiSeatSupplementStr.value = ''
-  },
-)
-
-watch(
-  () => selected.value.vendors.length,
-  (n) => {
-    if (!n) nccSeatSupplementStr.value = ''
-  },
-)
-
-watch(
   () => selected.value.taxis.length + selected.value.vendors.length,
   (sum) => {
     if (sum === 0) showExternalRefs.value = false
@@ -436,7 +411,7 @@ watch(
 )
 
 watch(
-  [selected, externalVehicleRef, externalDriverRef, taxiSeatSupplementStr, nccSeatSupplementStr],
+  [selected, externalVehicleRef, externalDriverRef],
   () => emitResources(),
   { deep: true },
 )
@@ -462,8 +437,6 @@ watch(
       })
       externalVehicleRef.value = snap.externalVehicleRef ?? ''
       externalDriverRef.value = snap.externalDriverRef ?? ''
-      taxiSeatSupplementStr.value = ''
-      nccSeatSupplementStr.value = ''
       showExternalRefs.value = false
       autoExternalSeatsHint.value = ''
       lastPayloadJson.value = ''
@@ -489,7 +462,7 @@ watch(
 
 function validate() {
   showValidation.value = true
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value, seatExtrasForPayload())
+  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
   return p.readyForSubmit === true
 }
 

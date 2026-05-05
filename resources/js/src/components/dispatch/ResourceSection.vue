@@ -38,68 +38,68 @@
         />
 
         <Transition
-        enter-active-class="transition duration-100 ease-out"
-        enter-from-class="-translate-y-1 opacity-0"
-        leave-active-class="transition duration-100 ease-in"
-        leave-to-class="-translate-y-1 opacity-0"
-      >
-        <div
-          v-if="isOpen"
-          class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[12px] border-[0.5px] border-slate-200/90 bg-white dark:border-slate-600 dark:bg-slate-900"
+          enter-active-class="transition duration-100 ease-out"
+          enter-from-class="-translate-y-1 opacity-0"
+          leave-active-class="transition duration-100 ease-in"
+          leave-to-class="-translate-y-1 opacity-0"
         >
-          <template v-if="filteredOptions.length > 0">
-            <button
-              v-for="opt in filteredOptions"
-              :key="opt.id"
-              type="button"
-              class="flex w-full items-start gap-2 border-b border-slate-100 px-3 py-2 text-left text-slate-900 last:border-b-0 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
-              :class="isSelected(opt) ? 'cursor-default bg-rose-50/80 dark:bg-rose-950/30' : ''"
-              :disabled="opt.available === false || isSelected(opt)"
-              @mousedown.prevent="select(opt)"
-            >
-              <div class="min-w-0 flex-1">
-                <div class="flex items-start justify-between gap-2">
-                  <span
-                    class="text-[13px] font-medium"
-                    :class="optionLabelClass(opt)"
-                  >{{ opt.label }}</span>
-                  <span
-                    v-if="opt.sublabel"
-                    class="shrink-0 text-[11px] text-slate-500 dark:text-slate-400"
-                  >{{ opt.sublabel }}</span>
-                </div>
-                <slot name="option-extra" :option="opt" />
-              </div>
-              <span
-                v-if="opt.available === false"
-                class="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-              >
-                {{ busyLabel }}
-              </span>
-              <span v-if="isSelected(opt)" class="text-[13px] font-medium text-[#8B1A1A]">✓</span>
-            </button>
-          </template>
-          <div v-else class="px-3 py-2.5 text-center text-[12px] text-slate-500 dark:text-slate-400">
-            <template v-if="allowCustomEntry && searchQuery.trim()">
-              {{ customAddHint }}
-            </template>
-            <template v-else>
-              {{ emptySearchLabel }}
-            </template>
-          </div>
           <div
-            v-if="allowCustomEntry && searchQuery.trim() && filteredOptions.length > 0"
-            class="border-t border-slate-100 px-3 py-2 text-center text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400"
+            v-if="isOpen"
+            class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[12px] border-[0.5px] border-slate-200/90 bg-white dark:border-slate-600 dark:bg-slate-900"
           >
-            {{ customAddHint }}
+            <template v-if="filteredOptions.length > 0">
+              <button
+                v-for="opt in filteredOptions"
+                :key="opt.id"
+                type="button"
+                class="flex w-full items-start gap-2 border-b border-slate-100 px-3 py-2 text-left text-slate-900 last:border-b-0 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
+                :class="isSelected(opt) ? 'cursor-default bg-rose-50/80 dark:bg-rose-950/30' : ''"
+                :disabled="opt.available === false || isSelected(opt)"
+                @mousedown.prevent="select(opt)"
+              >
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-2">
+                    <span
+                      class="text-[13px] font-medium"
+                      :class="optionLabelClass(opt)"
+                    >{{ opt.label }}</span>
+                    <span
+                      v-if="opt.sublabel"
+                      class="shrink-0 text-[11px] text-slate-500 dark:text-slate-400"
+                    >{{ opt.sublabel }}</span>
+                  </div>
+                  <slot name="option-extra" :option="opt" />
+                </div>
+                <span
+                  v-if="opt.available === false"
+                  class="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                >
+                  {{ busyLabel }}
+                </span>
+                <span v-if="isSelected(opt)" class="text-[13px] font-medium text-[#8B1A1A]">✓</span>
+              </button>
+            </template>
+            <div v-else class="px-3 py-2.5 text-center text-[12px] text-slate-500 dark:text-slate-400">
+              <template v-if="allowCustomEntry && searchQuery.trim()">
+                {{ customAddHint }}
+              </template>
+              <template v-else>
+                {{ emptySearchLabel }}
+              </template>
+            </div>
+            <div
+              v-if="allowCustomEntry && searchQuery.trim() && filteredOptions.length > 0"
+              class="border-t border-slate-100 px-3 py-2 text-center text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400"
+            >
+              {{ customAddHint }}
+            </div>
           </div>
-        </div>
-      </Transition>
+        </Transition>
       </div>
 
       <input
         v-if="showSupplementSeats"
-        :value="supplementSeats"
+        v-model="seatDraft"
         type="number"
         min="0"
         step="1"
@@ -107,7 +107,6 @@
         :aria-label="supplementSeatsAria"
         :placeholder="supplementSeatsPlaceholder"
         inputmode="numeric"
-        @input="onSupplementSeatsInput"
       />
     </div>
 
@@ -117,12 +116,12 @@
       <div
         v-for="item in modelValue"
         :key="item.id"
-        class="inline-flex items-center gap-1 rounded-[10px] border-[0.5px] border-slate-200/90 bg-slate-50 px-2 py-0.5 text-[12px] font-normal text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        class="inline-flex max-w-full items-center gap-1 rounded-[10px] border-[0.5px] border-slate-200/90 bg-slate-50 px-2 py-0.5 text-[12px] font-normal text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
       >
-        <span>{{ item.label }}</span>
+        <span class="min-w-0 truncate">{{ chipLabel(item) }}</span>
         <button
           type="button"
-          class="px-0.5 text-[14px] leading-none text-slate-500 hover:text-[#8B1A1A] dark:text-slate-400"
+          class="shrink-0 px-0.5 text-[14px] leading-none text-slate-500 hover:text-[#8B1A1A] dark:text-slate-400"
           aria-label="Remove"
           @click="remove(item)"
         >
@@ -145,32 +144,23 @@ const props = defineProps({
   placeholder: { type: String, required: true },
   isLoading: { type: Boolean, default: false },
   icon: { type: [Object, Function], default: null },
-  /** Khi false: chỉ một lựa chọn (thay thế danh sách hiện tại) */
   multiple: { type: Boolean, default: true },
-  /** Enter / gợi ý: thêm mục nhập tay (id custom:...) */
   allowCustomEntry: { type: Boolean, default: false },
-  /** (option) => class string — tùy chỉnh màu/chữ theo option */
   optionLabelClassFn: { type: Function, default: null },
-  /** Thụt ô tìm kiếm (vd. bổ sung phương tiện) */
   indentSearch: { type: Boolean, default: false },
-  /** Ô số chỗ bổ sung cùng hàng với tìm kiếm (taxi/NCC) */
+  /** Ô số chỗ gắn với lần thêm tiếp theo (mỗi dòng = tên + chỗ). */
   showSupplementSeats: { type: Boolean, default: false },
-  supplementSeats: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelValue', 'update:supplementSeats'])
+const emit = defineEmits(['update:modelValue'])
 
 const { t } = useI18n()
-
-function onSupplementSeatsInput(e) {
-  const v = e?.target?.value
-  emit('update:supplementSeats', v != null ? String(v) : '')
-}
 
 const supplementSeatsAria = computed(() => t('trip_detail.coordination.supplement_seats_aria'))
 const supplementSeatsPlaceholder = computed(() => t('trip_detail.coordination.supplement_seats_ph'))
 
 const searchQuery = ref('')
+const seatDraft = ref('')
 const isOpen = ref(false)
 
 const busyLabel = computed(() => t('trip_detail.coordination.resource_busy_badge'))
@@ -200,11 +190,35 @@ function isSelected(opt) {
   return props.modelValue.some((v) => String(v.id) === String(opt.id))
 }
 
+function parseSeatDraft() {
+  if (!props.showSupplementSeats) return undefined
+  const n = Number(String(seatDraft.value).trim())
+  if (!Number.isFinite(n) || n <= 0) return undefined
+  return Math.floor(n)
+}
+
+function enrichItem(raw) {
+  const seats = parseSeatDraft()
+  const next = { ...raw }
+  if (seats != null) next.supplementSeats = seats
+  else delete next.supplementSeats
+  return next
+}
+
+function chipLabel(item) {
+  const n = Number(item.supplementSeats)
+  if (Number.isFinite(n) && n > 0)
+    return `${item.label} — ${t('trip_detail.coordination.seats_n', { n })}`
+  return String(item.label ?? '')
+}
+
 function select(opt) {
   if (opt.available === false || isSelected(opt)) return
-  if (props.multiple) emit('update:modelValue', [...props.modelValue, opt])
-  else emit('update:modelValue', [opt])
+  const toAdd = enrichItem(opt)
+  if (props.multiple) emit('update:modelValue', [...props.modelValue, toAdd])
+  else emit('update:modelValue', [toAdd])
   searchQuery.value = ''
+  seatDraft.value = ''
   isOpen.value = false
 }
 
@@ -235,10 +249,13 @@ function onEnterKey() {
     return
   }
   const id = `custom:${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+  const seats = parseSeatDraft()
   const item = { id, label: q, available: true, isCustom: true }
+  if (seats != null) item.supplementSeats = seats
   if (props.multiple) emit('update:modelValue', [...props.modelValue, item])
   else emit('update:modelValue', [item])
   searchQuery.value = ''
+  seatDraft.value = ''
   isOpen.value = false
 }
 

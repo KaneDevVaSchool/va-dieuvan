@@ -1644,6 +1644,7 @@
             "capacity_short_badge": "Thiếu chỗ",
             "current_assignment_section": "Phân công hiện tại",
             "supplement_section_title": "Bổ sung phương tiện",
+            "supplement_section_hint": "Mỗi dòng: gõ tên (vd. «Xe Taxi 1»), nhập số chỗ bên phải, nhấn Enter — lặp lại cho xe tiếp theo. Có thể chọn nhà cung cấp trong danh sách hoặc nhập tên tự do.",
             "supplement_options_count": "{n} tùy chọn",
             "schedule_alerts_heading": "Lịch & cảnh báo",
             "footer_cancel": "Hủy",

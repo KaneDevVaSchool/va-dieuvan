@@ -1784,6 +1784,7 @@
             "capacity_short_badge": "Short on seats",
             "current_assignment_section": "Current assignment",
             "supplement_section_title": "Supplementary transport",
+            "supplement_section_hint": "Each line: type a name (e.g. «Taxi 1»), enter seats on the right, press Enter — repeat for more vehicles. Pick a provider from the list or type a free-text name.",
             "supplement_options_count": "{n} options",
             "schedule_alerts_heading": "Schedule & alerts",
             "footer_cancel": "Cancel",

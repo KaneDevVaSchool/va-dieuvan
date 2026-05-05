@@ -9,6 +9,8 @@ export interface ResourceItem {
   /** Gắn từ API vehicle — đồng bộ xe khi chọn tài xế */
   defaultDriverId?: number | null
   seatCount?: number | null
+  /** Taxi / NCC — số chỗ khai báo cho đúng dòng bổ sung (cộng vào sức chở). */
+  supplementSeats?: number | null
 }
 
 export interface SelectedResources {
