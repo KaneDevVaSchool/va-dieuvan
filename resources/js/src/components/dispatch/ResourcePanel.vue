@@ -59,7 +59,7 @@
 
     <div
       v-if="!hideTaxiSection || !hideVendorSection"
-      class="mt-2 border-t border-[0.5px] border-slate-200/80 pt-3 dark:border-slate-700/60"
+      class="mt-2 border-t border-[0.5px] border-slate-200/80 px-1.5 pb-2 pt-3.5 dark:border-slate-700/60"
     >
       <div class="mb-3 flex items-center justify-between gap-2">
         <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{{
@@ -75,9 +75,11 @@
       <ResourceSection
         v-if="!hideTaxiSection"
         v-model="selected.taxis"
+        v-model:supplement-seats="taxiSeatSupplementStr"
         :options="taxiOptions"
         :is-loading="isLoading"
         allow-custom-entry
+        show-supplement-seats
         indent-search
         :title="t('trip_detail.coordination.resource_section_taxi_title')"
         :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
@@ -85,51 +87,19 @@
         :icon="BuildingStorefrontIcon"
       />
 
-      <div
-        v-if="!hideTaxiSection && selected.taxis.length > 0"
-        class="mb-1 -mt-0.5 ml-[38px] rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
-      >
-        <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
-          {{ t('trip_detail.coordination.external_seats_taxi_label') }}
-        </label>
-        <input
-          v-model="taxiSeatSupplementStr"
-          type="number"
-          min="0"
-          step="1"
-          class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-1.5 text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
-          :placeholder="t('trip_detail.coordination.external_seats_ph')"
-        />
-      </div>
-
       <ResourceSection
         v-if="!hideVendorSection"
         v-model="selected.vendors"
+        v-model:supplement-seats="nccSeatSupplementStr"
         :options="vendorOptions"
         :is-loading="isLoading"
+        show-supplement-seats
         indent-search
         :title="t('trip_detail.coordination.resource_section_vendor_title')"
         :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
         :placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
         :icon="BuildingOffice2Icon"
       />
-
-      <div
-        v-if="!hideVendorSection && selected.vendors.length > 0"
-        class="-mt-0.5 ml-[38px] rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
-      >
-        <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
-          {{ t('trip_detail.coordination.external_seats_ncc_label') }}
-        </label>
-        <input
-          v-model="nccSeatSupplementStr"
-          type="number"
-          min="0"
-          step="1"
-          class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-1.5 text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
-          :placeholder="t('trip_detail.coordination.external_seats_ph')"
-        />
-      </div>
 
       <div v-if="canQuickCreateVendor && !hideVendorSection" class="mt-2">
         <button
@@ -141,15 +111,22 @@
         </button>
       </div>
 
-      <Transition
-        enter-active-class="transition duration-150 ease-out"
-        enter-from-class="-translate-y-1 opacity-0"
-        leave-active-class="transition duration-150 ease-in"
-        leave-to-class="-translate-y-1 opacity-0"
+      <div
+        v-if="selected.taxis.length > 0 || selected.vendors.length > 0"
+        class="mt-2"
       >
+        <button
+          type="button"
+          class="flex w-full items-center justify-center gap-1 rounded-[12px] border-[0.5px] border-slate-300/90 bg-white px-3 py-2 text-[12px] font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/80"
+          :aria-expanded="showExternalRefs"
+          @click="showExternalRefs = !showExternalRefs"
+        >
+          {{ t('trip_detail.coordination.external_ref_expand_btn') }}
+          <span class="tabular-nums text-slate-400" aria-hidden="true">{{ showExternalRefs ? '▾' : '▸' }}</span>
+        </button>
         <div
-          v-if="selected.taxis.length > 0 || selected.vendors.length > 0"
-          class="mt-2 ml-[38px] flex flex-col gap-2 rounded-[12px] border-[0.5px] border-[#EF9F27]/40 bg-[#EF9F27]/10 p-2.5 dark:border-amber-800/50 dark:bg-amber-950/30"
+          v-show="showExternalRefs"
+          class="mt-2 space-y-2 rounded-[12px] border-[0.5px] border-slate-200/80 bg-slate-50/60 p-2.5 dark:border-slate-700 dark:bg-slate-900/40"
         >
           <div>
             <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{{
@@ -174,7 +151,7 @@
             />
           </div>
         </div>
-      </Transition>
+      </div>
     </div>
 
     <Transition
@@ -198,7 +175,7 @@
         class="fixed inset-0 z-[200] flex justify-end bg-black/30"
         @click.self="showWorkloadPanel = false"
       >
-        <div class="h-full w-[min(380px,100vw)] translate-x-0 border-l border-[0.5px] border-slate-200/90 bg-white transition-transform duration-200 ease-out dark:border-slate-700 dark:bg-slate-950">
+        <div class="h-full w-[min(380px,100vw)] translate-x-0 bg-white transition-transform duration-200 ease-out dark:bg-slate-950">
           <DriverWorkloadPanel
             v-if="tripDate"
             :drivers="internalDriverOptions"
@@ -252,6 +229,7 @@ const tripIdRef = toRef(props, 'tripId')
 const tripDateRef = toRef(props, 'tripDate')
 
 const showWorkloadPanel = ref(false)
+const showExternalRefs = ref(false)
 
 const hydratingFromSnapshot = ref(false)
 const autoExternalSeatsHint = ref('')
@@ -427,6 +405,13 @@ watch(
 )
 
 watch(
+  () => selected.value.taxis.length + selected.value.vendors.length,
+  (sum) => {
+    if (sum === 0) showExternalRefs.value = false
+  },
+)
+
+watch(
   () => [selected.value.taxis.length, selected.value.vendors.length],
   ([taxiN, vendorN], prev) => {
     const prevT = prev?.[0] ?? 0
@@ -479,6 +464,7 @@ watch(
       externalDriverRef.value = snap.externalDriverRef ?? ''
       taxiSeatSupplementStr.value = ''
       nccSeatSupplementStr.value = ''
+      showExternalRefs.value = false
       autoExternalSeatsHint.value = ''
       lastPayloadJson.value = ''
       emitResources()

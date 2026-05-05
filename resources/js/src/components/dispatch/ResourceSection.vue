@@ -23,20 +23,21 @@
 
     <div
       v-if="!isLoading"
-      class="relative"
+      class="relative flex gap-2"
       :class="indentSearch ? 'ml-[38px]' : ''"
     >
-      <input
-        v-model="searchQuery"
-        type="text"
-        class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white py-1.5 pl-2.5 pr-2 text-[13px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-        :placeholder="placeholder"
-        @focus="isOpen = true"
-        @blur="onBlur"
-        @keydown.enter.prevent="onEnterKey"
-      />
+      <div class="relative min-w-0 flex-1">
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white py-1.5 pl-2.5 pr-2 text-[13px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          :placeholder="placeholder"
+          @focus="isOpen = true"
+          @blur="onBlur"
+          @keydown.enter.prevent="onEnterKey"
+        />
 
-      <Transition
+        <Transition
         enter-active-class="transition duration-100 ease-out"
         enter-from-class="-translate-y-1 opacity-0"
         leave-active-class="transition duration-100 ease-in"
@@ -94,6 +95,20 @@
           </div>
         </div>
       </Transition>
+      </div>
+
+      <input
+        v-if="showSupplementSeats"
+        :value="supplementSeats"
+        type="number"
+        min="0"
+        step="1"
+        class="w-[4.25rem] shrink-0 rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-1.5 py-1.5 text-center text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+        :aria-label="supplementSeatsAria"
+        :placeholder="supplementSeatsPlaceholder"
+        inputmode="numeric"
+        @input="onSupplementSeatsInput"
+      />
     </div>
 
     <div v-if="isLoading" class="mt-1.5 h-8 animate-pulse rounded-[12px] bg-slate-100 dark:bg-slate-800" />
@@ -138,11 +153,22 @@ const props = defineProps({
   optionLabelClassFn: { type: Function, default: null },
   /** Thụt ô tìm kiếm (vd. bổ sung phương tiện) */
   indentSearch: { type: Boolean, default: false },
+  /** Ô số chỗ bổ sung cùng hàng với tìm kiếm (taxi/NCC) */
+  showSupplementSeats: { type: Boolean, default: false },
+  supplementSeats: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'update:supplementSeats'])
 
 const { t } = useI18n()
+
+function onSupplementSeatsInput(e) {
+  const v = e?.target?.value
+  emit('update:supplementSeats', v != null ? String(v) : '')
+}
+
+const supplementSeatsAria = computed(() => t('trip_detail.coordination.supplement_seats_aria'))
+const supplementSeatsPlaceholder = computed(() => t('trip_detail.coordination.supplement_seats_ph'))
 
 const searchQuery = ref('')
 const isOpen = ref(false)

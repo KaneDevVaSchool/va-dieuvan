@@ -1,22 +1,17 @@
 <template>
   <div
-    class="rounded-[12px] border-[0.5px] border-slate-200/90 border-t-[3px] border-t-[#1D9E75] bg-emerald-50/35 p-3 dark:border-slate-600/80 dark:bg-emerald-950/20"
+    class="rounded-[12px] border-[0.5px] border-slate-200/90 bg-emerald-50/35 p-3 dark:border-slate-600/80 dark:bg-emerald-950/20"
   >
     <div class="flex items-start gap-3">
       <div
-        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-[#1D9E75]/30 bg-white text-[#1D9E75] dark:bg-emerald-950/40 dark:text-[#4dcf9a]"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-slate-200/80 bg-white text-[#1D9E75] dark:border-slate-700 dark:bg-emerald-950/40 dark:text-[#4dcf9a]"
       >
         <TruckIcon class="h-5 w-5" aria-hidden="true" />
       </div>
       <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-start justify-between gap-2">
-          <div class="min-w-0">
-            <div class="text-sm font-medium tabular-nums text-slate-900 dark:text-slate-100">
-              {{ vehicle?.license_plate ?? '—' }}
-            </div>
-            <div class="mt-0.5 text-xs font-normal text-slate-600 dark:text-slate-400">
-              {{ typeLabel }}
-            </div>
+        <div class="flex items-start justify-between gap-2 flex-nowrap">
+          <div class="min-w-0 truncate text-sm font-medium tabular-nums text-slate-900 dark:text-slate-100">
+            {{ vehicle?.license_plate ?? '—' }}
           </div>
           <button
             type="button"
@@ -25,6 +20,9 @@
           >
             {{ t('trip_detail.coordination.card_change') }} →
           </button>
+        </div>
+        <div class="mt-0.5 text-xs font-normal text-slate-600 dark:text-slate-400">
+          {{ typeLabel }}
         </div>
         <div class="mt-2 flex flex-wrap gap-1.5">
           <span

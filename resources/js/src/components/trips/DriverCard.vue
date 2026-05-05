@@ -1,22 +1,17 @@
 <template>
   <div
-    class="rounded-[12px] border-[0.5px] border-slate-200/90 border-t-[3px] border-t-[#378ADD] bg-sky-50/35 p-3 dark:border-slate-600/80 dark:bg-sky-950/25"
+    class="rounded-[12px] border-[0.5px] border-slate-200/90 bg-sky-50/35 p-3 dark:border-slate-600/80 dark:bg-sky-950/25"
   >
     <div class="flex items-start gap-3">
       <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[0.5px] border-[#378ADD]/35 bg-white text-sm font-medium text-[#378ADD] dark:bg-slate-900 dark:text-[#6cb3f5]"
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[0.5px] border-slate-200/80 bg-white text-sm font-medium text-[#378ADD] dark:border-slate-700 dark:bg-slate-900 dark:text-[#6cb3f5]"
       >
         {{ initials }}
       </div>
       <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-start justify-between gap-2">
-          <div class="min-w-0">
-            <div class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-              {{ driver?.full_name ?? '—' }}
-            </div>
-            <div class="mt-0.5 text-[11px] font-normal text-slate-600 dark:text-slate-400">
-              {{ t('trip_detail.coordination.driver_internal_subtitle') }}
-            </div>
+        <div class="flex items-start justify-between gap-2 flex-nowrap">
+          <div class="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+            {{ driver?.full_name ?? '—' }}
           </div>
           <button
             type="button"
@@ -25,6 +20,9 @@
           >
             {{ t('trip_detail.coordination.card_change') }} →
           </button>
+        </div>
+        <div class="mt-0.5 text-[11px] font-normal text-slate-600 dark:text-slate-400">
+          {{ t('trip_detail.coordination.driver_internal_subtitle') }}
         </div>
         <div class="mt-2">
           <span
