@@ -43,6 +43,12 @@
         {{ silentLoadError }}
       </p>
       <div class="mx-auto max-w-7xl space-y-4 px-4 pb-12 pt-3">
+        <TripTimeline
+          class="w-full min-w-0"
+          :current-status="timelineWorkflowStatus"
+          :logs="activityLogs"
+        />
+
         <div
           v-if="trip.dispatch_request && trip.dispatch_request.status === 'pending'"
           class="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-2 text-sm text-amber-900"
@@ -81,7 +87,6 @@
               :origin-label="originLabel"
               :destination-label="destinationLabel"
               :current-label="currentLabel"
-              :route-stops="routeStops"
               :embed-map-src="embedMapSrc"
               :expand-map="expandTripMap"
             />
@@ -235,8 +240,6 @@
                 </template>
               </template>
             </PassengerCheckIn>
-
-            <TripTimeline :current-status="timelineWorkflowStatus" :logs="activityLogs" />
 
             <section
               class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-950/40"

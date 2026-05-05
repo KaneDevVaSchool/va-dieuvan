@@ -6,8 +6,6 @@ import { labelTripStatus } from '../../util/labels'
 
 type Step = { state: string; label: string }
 
-type RouteStop = { kind: string; address: string; detailLines?: string[] }
-
 type SlaBanner = { kind: 'overdue' | 'ok'; text: string } | null
 
 const props = defineProps<{
@@ -31,7 +29,6 @@ const props = defineProps<{
   originLabel: string
   destinationLabel: string
   currentLabel: string
-  routeStops: RouteStop[]
   embedMapSrc: string
   expandMap: () => void
 }>()
@@ -65,18 +62,6 @@ function dotClass(state: string) {
   return `${base} bg-slate-300`
 }
 
-function stopDotClass(kind: string) {
-  if (kind === 'pickup') return 'bg-emerald-500 text-white ring-2 ring-emerald-200'
-  if (kind === 'dropoff') return 'bg-sky-600 text-white ring-2 ring-sky-200'
-  return 'bg-slate-200 text-slate-700 ring-2 ring-slate-100'
-}
-
-function stopLabel(kind: string) {
-  if (kind === 'pickup') return t('trip_detail.route.stop_pickup')
-  if (kind === 'dropoff') return t('trip_detail.route.stop_dropoff')
-  return t('trip_detail.route.stop_waypoint')
-}
-
 const currentDotClass = computed(() => {
   const base = dotClass(props.stepCurrent.state)
   if (props.stepCurrent.state === 'active') return `${base} location-dot-pulse`
@@ -85,10 +70,7 @@ const currentDotClass = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <section
-      class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
-    >
+  <section class="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <div class="absolute right-4 top-4 flex flex-wrap items-center justify-end gap-2">
         <span
           v-if="countdown"
@@ -262,99 +244,47 @@ const currentDotClass = computed(() => {
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- Route + map -->
-    <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-      <details class="group" open>
-        <summary
-          class="flex cursor-pointer list-none flex-col gap-2 marker:content-none sm:flex-row sm:items-start sm:justify-between [&::-webkit-details-marker]:hidden"
-        >
-          <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">
-            {{ t('trip_detail.route.section_title') }}
-          </h2>
-          <div
-            v-if="routeStops.length"
-            class="flex flex-wrap gap-2 text-xs text-slate-600"
-            @click.stop
+      <!-- Map (trong tổng quan) -->
+      <div class="mt-6 border-t border-slate-100 pt-5 print:hidden">
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">
+            {{ t('trip_detail.route.map_title') }}
+          </h3>
+          <span
+            v-if="trip.record?.distance_km != null && trip.record.distance_km !== ''"
+            class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
           >
-            <span class="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
-              {{ t('trip_detail.route.stop_count', { n: routeStops.length }) }}
-            </span>
-            <span
-              v-if="trip.record?.distance_km != null && trip.record.distance_km !== ''"
-              class="rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-800"
-            >
-              {{ t('trip_detail.route.recorded_km', { km: trip.record.distance_km }) }}
-            </span>
-            <span class="rounded-full bg-sky-50 px-2.5 py-1 font-medium text-sky-800">{{ tripTypeLabel }}</span>
-          </div>
-        </summary>
-        <div class="mt-4 flex flex-col gap-5 lg:flex-row">
-          <div class="min-w-0 flex-1">
-            <ol class="relative space-y-0 border-l-2 border-slate-200 pl-6">
-              <li
-                v-for="(stop, idx) in routeStops"
-                :key="`${idx}-${stop.address}`"
-                class="relative pb-8 last:pb-0"
-              >
-                <span
-                  class="absolute -left-[25px] top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold"
-                  :class="stopDotClass(stop.kind)"
-                >
-                  {{ idx + 1 }}
-                </span>
-                <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  {{ stopLabel(stop.kind) }}
-                </div>
-                <div class="mt-1 text-sm font-medium text-slate-900">{{ stop.address }}</div>
-                <ul
-                  v-if="stop.detailLines?.length"
-                  class="mt-2 space-y-0.5 border-l-2 border-slate-100 pl-3"
-                >
-                  <li
-                    v-for="(dl, j) in stop.detailLines"
-                    :key="j"
-                    class="text-xs leading-relaxed text-slate-600"
-                  >
-                    {{ dl }}
-                  </li>
-                </ul>
-              </li>
-            </ol>
-            <div v-if="!routeStops.length" class="text-sm text-slate-500">
-              {{ t('trip_detail.route.no_stops') }}
-            </div>
-          </div>
-          <div class="relative w-full shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 lg:w-[320px]">
-            <div class="relative aspect-[4/3] w-full bg-slate-100 dark:bg-slate-800/80">
-              <iframe
-                v-if="embedMapSrc"
-                :src="embedMapSrc"
-                class="absolute inset-0 h-full w-full border-0"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-                :aria-label="t('trip_detail.route.map_title')"
-              />
-              <div
-                v-else
-                class="flex h-full min-h-[200px] items-center justify-center p-4 text-center text-sm text-slate-500"
-              >
-                {{ t('trip_detail.route.map_placeholder') }}
-              </div>
-            </div>
-            <button
-              type="button"
-              class="absolute right-2 top-2 rounded-lg border border-slate-200/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
-              @click="expandMap"
-            >
-              {{ t('trip_detail.route.expand_map') }}
-            </button>
-          </div>
+            {{ t('trip_detail.route.recorded_km', { km: trip.record.distance_km }) }}
+          </span>
         </div>
-      </details>
+        <div class="relative mt-3 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/50">
+          <div class="relative aspect-video w-full min-h-[200px] bg-slate-100 dark:bg-slate-800/80">
+            <iframe
+              v-if="embedMapSrc"
+              :src="embedMapSrc"
+              class="absolute inset-0 h-full w-full border-0"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              :aria-label="t('trip_detail.route.map_title')"
+            />
+            <div
+              v-else
+              class="flex h-full min-h-[200px] items-center justify-center p-4 text-center text-sm text-slate-500"
+            >
+              {{ t('trip_detail.route.map_placeholder') }}
+            </div>
+          </div>
+          <button
+            type="button"
+            class="absolute right-2 top-2 rounded-lg border border-slate-200/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100 dark:hover:bg-slate-900"
+            @click="expandMap"
+          >
+            {{ t('trip_detail.route.expand_map') }}
+          </button>
+        </div>
+      </div>
     </section>
-  </div>
 </template>
 
 <style scoped>
