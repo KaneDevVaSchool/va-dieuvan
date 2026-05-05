@@ -325,15 +325,6 @@
               </div>
 
               <div class="space-y-4 p-4 sm:p-4">
-                <TripCoordinationQuickActions
-                  :can-duplicate="canAssign && !!trip?.dispatch_request?.id"
-                  :can-export-pdf="!!trip?.dispatch_request?.id && auth.canAccessDispatchWebApp()"
-                  :duplicating="duplicatingTrip"
-                  :pdf-loading="pdfExportLoading"
-                  @duplicate="onDuplicateTrip"
-                  @export-pdf="onExportTripPdf"
-                  @copy-link="onCopyTripLink"
-                />
                 <div
                   v-if="canRescheduleTrip"
                   class="rounded-xl border border-indigo-200/80 bg-indigo-50/90 p-3 shadow-sm dark:border-indigo-800/50 dark:bg-indigo-950/40"
@@ -649,11 +640,9 @@ import CostTracker from '../../components/trips/CostTracker.vue'
 import DriverCard from '../../components/trips/DriverCard.vue'
 import PassengerCheckIn from '../../components/trips/PassengerCheckIn.vue'
 import StickyTripHeader from '../../components/trips/StickyTripHeader.vue'
-import TripCoordinationQuickActions from '../../components/trips/TripCoordinationQuickActions.vue'
 import TripTimeline from '../../components/trips/TripTimeline.vue'
 import TripInfoCard from '../../components/trips/TripInfoCard.vue'
-import { addTripEvent, assignTrip, duplicateTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
-import { exportDispatchRequestPdf } from '../../api/requests'
+import { addTripEvent, assignTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
 import { listVehicles, createTransportProvider, listDrivers, getVehicleScheduleConflicts } from '../../api/operational'
 import { uploadAttachment, deleteAttachment } from '../../api/attachments'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -737,8 +726,6 @@ const vehicles = ref([])
 const driversList = ref([])
 const vehicleScheduleConflict = ref(null)
 const suppressVehicleScheduleConflict = ref(false)
-const duplicatingTrip = ref(false)
-const pdfExportLoading = ref(false)
 const sameDayTrips = ref([])
 const sameDayTripsLoading = ref(false)
 const sameDayTripsError = ref('')
@@ -1506,49 +1493,6 @@ function applyTripPayload(data) {
   if (!data) return
   trip.value = data
   assign.value.lock_version = trip.value.lock_version ?? 0
-}
-
-async function onDuplicateTrip() {
-  const tid = trip.value?.id
-  if (tid == null || !canAssign.value) return
-  duplicatingTrip.value = true
-  try {
-    const res = await duplicateTrip(tid)
-    showAppSuccess(t('trip_detail.quick.duplicate_ok'), '')
-    const rid = res?.dispatch_request_id
-    if (rid != null) router.push(staffPath(`/requests/${rid}`))
-  } catch (e) {
-    showAppError(formatApiMessage(e))
-  } finally {
-    duplicatingTrip.value = false
-  }
-}
-
-async function onExportTripPdf() {
-  const id = trip.value?.dispatch_request?.id
-  if (id == null) return
-  pdfExportLoading.value = true
-  try {
-    const blob = await exportDispatchRequestPdf(id)
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank', 'noopener')
-    setTimeout(() => URL.revokeObjectURL(url), 60_000)
-  } catch (e) {
-    showAppError(formatApiMessage(e) || t('trip_detail.quick.pdf_error'))
-  } finally {
-    pdfExportLoading.value = false
-  }
-}
-
-async function onCopyTripLink() {
-  const url = typeof window !== 'undefined' ? window.location.href : ''
-  if (!url) return
-  try {
-    await navigator.clipboard.writeText(url)
-    showAppSuccess(t('trip_detail.quick.copied'), '')
-  } catch {
-    showAppError(t('trip_detail.messages.error'))
-  }
 }
 
 function onVehicleCardChange() {
