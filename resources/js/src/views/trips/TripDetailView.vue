@@ -3,13 +3,13 @@
     <div v-if="loading && !trip" class="mx-auto max-w-7xl space-y-6 px-4 py-10">
       <div class="animate-pulse space-y-4">
         <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(14rem,18rem)]">
-          <div class="min-w-0 space-y-4">
+        <div class="grid gap-6 xl:grid-cols-12">
+          <div class="min-w-0 space-y-4 xl:col-span-7">
             <div class="h-64 rounded-2xl bg-slate-200/80" />
             <div class="h-48 rounded-2xl bg-slate-200/70" />
             <div class="h-56 rounded-2xl bg-slate-200/70" />
           </div>
-          <div class="space-y-4">
+          <div class="min-w-0 space-y-4 xl:col-span-5">
             <div class="h-72 rounded-2xl bg-slate-200/80" />
             <div class="h-40 rounded-2xl bg-slate-200/70" />
           </div>
@@ -57,9 +57,9 @@
           </RouterLink>
         </div>
 
-        <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
-          <!-- Main column -->
-          <div class="min-w-0 space-y-6">
+        <div class="grid gap-6 xl:grid-cols-12">
+          <!-- Main column (7/12) -->
+          <div class="min-w-0 space-y-6 xl:col-span-7">
             <TripInfoCard
               :trip="trip"
               :countdown="countdown"
@@ -298,8 +298,8 @@
             </div>
           </div>
 
-          <!-- Sidebar -->
-          <div class="min-w-0 space-y-4 xl:max-w-none">
+          <!-- Sidebar / coordination (5/12) -->
+          <div class="min-w-0 space-y-4 xl:col-span-5">
             <section
               class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden"
               :aria-label="t('trip_detail.coordination.title')"
