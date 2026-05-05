@@ -45,13 +45,24 @@
               v-for="opt in filteredOptions"
               :key="opt.id"
               type="button"
-              class="flex w-full items-center gap-2 border-b border-slate-100 px-3 py-2 text-left text-slate-900 last:border-b-0 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
+              class="flex w-full items-start gap-2 border-b border-slate-100 px-3 py-2 text-left text-slate-900 last:border-b-0 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
               :class="isSelected(opt) ? 'cursor-default bg-rose-50/80 dark:bg-rose-950/30' : ''"
               :disabled="opt.available === false || isSelected(opt)"
               @mousedown.prevent="select(opt)"
             >
-              <span class="flex-1 text-[13px] font-medium">{{ opt.label }}</span>
-              <span v-if="opt.sublabel" class="text-[11px] text-slate-500 dark:text-slate-400">{{ opt.sublabel }}</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <span
+                    class="text-[13px] font-medium"
+                    :class="optionLabelClass(opt)"
+                  >{{ opt.label }}</span>
+                  <span
+                    v-if="opt.sublabel"
+                    class="shrink-0 text-[11px] text-slate-500 dark:text-slate-400"
+                  >{{ opt.sublabel }}</span>
+                </div>
+                <slot name="option-extra" :option="opt" />
+              </div>
               <span
                 v-if="opt.available === false"
                 class="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
@@ -125,6 +136,8 @@ const props = defineProps({
   multiple: { type: Boolean, default: true },
   /** Enter / gợi ý: thêm mục nhập tay (id custom:...) */
   allowCustomEntry: { type: Boolean, default: false },
+  /** (option) => class string — tùy chỉnh màu/chữ theo option */
+  optionLabelClassFn: { type: Function, default: null },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -140,6 +153,12 @@ const emptyStateLabel = computed(() => t('trip_detail.coordination.resource_empt
 const customAddHint = computed(() =>
   t('trip_detail.coordination.resource_press_enter_add', { name: searchQuery.value.trim() }),
 )
+
+function optionLabelClass(opt) {
+  const fn = props.optionLabelClassFn
+  if (typeof fn !== 'function') return undefined
+  return fn(opt) || undefined
+}
 
 const filteredOptions = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()

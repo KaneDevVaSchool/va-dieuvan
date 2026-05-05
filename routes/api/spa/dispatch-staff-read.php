@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\Admin\UserSearchController;
 use App\Http\Controllers\Api\Audit\AuditLogController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
+use App\Http\Controllers\Api\Operational\DriverWorkloadController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
 use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
@@ -27,6 +28,8 @@ Route::get('/vehicles/{vehicle}/conflicts', [OperationalResourceController::clas
 Route::get('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocumentController::class, 'index']);
 Route::get('/vehicles/{vehicle}/compliance-audit', [VehicleComplianceDocumentController::class, 'auditLogs']);
 Route::get('/drivers', [OperationalResourceController::class, 'drivers']);
+Route::get('/drivers/workload', [DriverWorkloadController::class, 'workload']);
+Route::get('/drivers/{driver}/workload-detail', [DriverWorkloadController::class, 'workloadDetail']);
 Route::get('/drivers/{driver}', [OperationalResourceController::class, 'showDriver']);
 Route::get('/drivers/{driver}/compliance-documents', [DriverComplianceDocumentController::class, 'index']);
 Route::get('/drivers/{driver}/compliance-audit', [DriverComplianceDocumentController::class, 'auditLogs']);

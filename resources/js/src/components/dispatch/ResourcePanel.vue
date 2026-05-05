@@ -21,18 +21,36 @@
       :icon="TruckIcon"
     />
 
-    <ResourceSection
-      v-if="!hideInternalDriverSection"
-      v-model="selected.internalDrivers"
-      :options="internalDriverOptions"
-      :is-loading="isLoading"
-      :multiple="false"
-      :title="t('trip_detail.coordination.resource_section_driver_title')"
-      :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
-      :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
-      :empty-hint="t('trip_detail.coordination.resource_section_driver_empty')"
-      :icon="UserIcon"
-    />
+    <div v-if="!hideInternalDriverSection" id="dispatch-internal-driver-section" class="rounded-lg">
+      <button
+        type="button"
+        class="mb-2 w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-left text-[11px] font-medium text-[#8B1A1A] hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-rose-950/30"
+        :disabled="!tripDate"
+        @click="showWorkloadPanel = true"
+      >
+        {{ t('trip_detail.coordination.workload_open_panel') }}
+      </button>
+      <ResourceSection
+        v-model="selected.internalDrivers"
+        :options="internalDriverOptions"
+        :is-loading="isLoading"
+        :multiple="false"
+        :title="t('trip_detail.coordination.resource_section_driver_title')"
+        :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
+        :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
+        :empty-hint="t('trip_detail.coordination.resource_section_driver_empty')"
+        :icon="UserIcon"
+        :option-label-class-fn="driverOptionLabelClass"
+      >
+        <template #option-extra="{ option }">
+          <DriverWorkloadBadge
+            v-if="driverWorkloadEntry(option.id)"
+            :workload="driverWorkloadEntry(option.id)"
+            :color-fn="loadColor"
+          />
+        </template>
+      </ResourceSection>
+    </div>
 
     <ResourceSection
       v-model="selected.taxis"
@@ -116,18 +134,42 @@
         {{ panelErrorMessage }}
       </div>
     </Transition>
+
+    <Teleport to="body">
+      <div
+        v-if="showWorkloadPanel && !hideInternalDriverSection"
+        class="fixed inset-0 z-[200] flex justify-end bg-black/30"
+        @click.self="showWorkloadPanel = false"
+      >
+        <div class="h-full w-[min(380px,100vw)] translate-x-0 shadow-2xl transition-transform duration-200 ease-out">
+          <DriverWorkloadPanel
+            v-if="tripDate"
+            :drivers="internalDriverOptions"
+            :trip-date="tripDate"
+            :selected-driver-id="selectedInternalDriverId"
+            @close="showWorkloadPanel = false"
+            @assign="onAssignFromWorkloadPanel"
+          />
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, toRef, watch } from 'vue'
+import { computed, nextTick, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { BuildingOffice2Icon, BuildingStorefrontIcon, TruckIcon, UserIcon } from '@heroicons/vue/24/outline'
 import ResourceSection from './ResourceSection.vue'
+import DriverWorkloadBadge from './DriverWorkloadBadge.vue'
+import DriverWorkloadPanel from './DriverWorkloadPanel.vue'
 import { useResourceSelector } from '../../composables/useResourceSelector'
+import { useDriverWorkload } from '../../composables/useDriverWorkload'
 
 const props = defineProps({
   tripId: { type: [String, Number], required: true },
+  /** YYYY-MM-DD — ngày chuyến (khung tuần & “hôm nay” trong workload) */
+  tripDate: { type: String, default: '' },
   availableCount: { type: Number, default: 0 },
   busyVehicleIds: { type: Array, default: () => [] },
   busyDriverIds: { type: Array, default: () => [] },
@@ -144,6 +186,11 @@ const emit = defineEmits(['create-vendor', 'update:resources'])
 const { t } = useI18n()
 
 const tripIdRef = toRef(props, 'tripId')
+const tripDateRef = toRef(props, 'tripDate')
+
+const showWorkloadPanel = ref(false)
+
+const { fetchWorkload, loadColor, workloadMap } = useDriverWorkload(tripDateRef)
 
 const busyVehicleSet = computed(() => new Set((props.busyVehicleIds || []).map(Number)))
 const busyDriverSet = computed(() => new Set((props.busyDriverIds || []).map(Number)))
@@ -208,6 +255,40 @@ function emitResources() {
   emit('update:resources', p)
 }
 
+function driverWorkloadEntry(id) {
+  const n = Number(id)
+  if (!Number.isFinite(n)) return null
+  return workloadMap.value[String(n)] ?? null
+}
+
+function driverOptionLabelClass(opt) {
+  const w = driverWorkloadEntry(opt.id)
+  return w?.load_level === 'high' ? 'text-rose-700/90 dark:text-rose-300' : ''
+}
+
+const selectedInternalDriverId = computed(() => {
+  const first = selected.value.internalDrivers[0]
+  if (!first) return null
+  const n = Number(first.id)
+  return Number.isFinite(n) ? n : null
+})
+
+function onAssignFromWorkloadPanel(driverId) {
+  const id = Number(driverId)
+  const driver = internalDriverOptions.value.find((d) => Number(d.id) === id)
+  if (!driver) return
+  selected.value.internalDrivers = [driver]
+  showWorkloadPanel.value = false
+  lastPayloadJson.value = ''
+  emitResources()
+  void nextTick(() => {
+    document.getElementById('dispatch-internal-driver-section')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    })
+  })
+}
+
 watch(
   [selected, externalVehicleRef, externalDriverRef],
   () => emitResources(),
@@ -235,6 +316,17 @@ watch(
     externalDriverRef.value = snap.externalDriverRef ?? ''
     lastPayloadJson.value = ''
     emitResources()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => [props.tripId, props.tripDate, props.hideInternalDriverSection],
+  () => {
+    if (props.hideInternalDriverSection) return
+    if (props.tripId == null || props.tripId === '') return
+    if (!props.tripDate) return
+    void fetchWorkload()
   },
   { immediate: true },
 )

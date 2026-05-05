@@ -380,6 +380,7 @@
                     v-if="trip?.id"
                     ref="resourcePanelRef"
                     :trip-id="trip.id"
+                    :trip-date="scheduleDateKeyForList"
                     :available-count="suitableVehiclesCount"
                     :busy-vehicle-ids="busyVehicleIdList"
                     :busy-driver-ids="busyDriverIdList"

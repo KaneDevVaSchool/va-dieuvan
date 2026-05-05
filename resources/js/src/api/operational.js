@@ -39,6 +39,18 @@ export async function listDrivers(params = {}) {
   return data.data
 }
 
+/** @param {{ date_from?: string, date_to?: string, trip_date?: string }} [params] */
+export async function fetchDriversWorkload(params = {}) {
+  const { data } = await http.get('/drivers/workload', { params })
+  return data.data
+}
+
+/** @param {number} driverId */
+export async function fetchDriverWorkloadDetail(driverId) {
+  const { data } = await http.get(`/drivers/${driverId}/workload-detail`)
+  return data.data
+}
+
 /**
  * Tài xế không gắn user (ngoài hệ thống). Chỉ cần full_name; các trường khác tùy chọn.
  * @param {Record<string, unknown>} payload
