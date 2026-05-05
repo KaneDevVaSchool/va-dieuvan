@@ -62,99 +62,70 @@
       class="mt-2 border-t border-[0.5px] border-slate-200/80 px-1.5 pb-2 pt-3.5 dark:border-slate-700/60"
     >
       <div class="mb-2 rounded-[12px] border-[0.5px] border-slate-200/60 bg-white/50 p-2.5 dark:border-slate-700/50 dark:bg-slate-900/25">
-        <div class="mb-2 flex items-center justify-between gap-2">
+        <div class="mb-3 flex items-center justify-between gap-2">
           <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{{
             t('trip_detail.coordination.supplement_section_title')
           }}</span>
           <span
-            class="shrink-0 rounded-full border-[0.5px] border-slate-300/80 bg-slate-100/90 px-2 py-0.5 text-[11px] font-medium tabular-nums text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+            v-if="showCapacityBadge"
+            class="shrink-0 rounded-[100px] border-[0.5px] px-2 py-0.5 text-[11px] font-medium tabular-nums"
+            :class="
+              capacityGapRemaining > 0
+                ? 'border-[#EF9F27]/80 bg-[#FAEEDA] text-[#854F0B] dark:border-[#EF9F27]/50 dark:bg-amber-950/35 dark:text-[#F2C07D]'
+                : 'border-[#1D9E75]/45 bg-[#E1F5EE] text-[#0F6E56] dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-200'
+            "
           >
-            {{ t('trip_detail.coordination.supplement_options_count', { n: supplementOptionCount }) }}
+            <template v-if="capacityGapRemaining > 0">
+              {{ t('trip_detail.coordination.supplement_capacity_badge_short', { n: capacityGapRemaining }) }}
+            </template>
+            <template v-else>
+              {{ t('trip_detail.coordination.supplement_capacity_badge_ok') }}
+            </template>
           </span>
         </div>
-        <p class="mb-3 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400">
-          {{ t('trip_detail.coordination.supplement_section_hint') }}
-        </p>
 
-      <ResourceSection
-        v-if="!hideTaxiSection"
-        v-model="selected.taxis"
-        :options="taxiOptions"
-        :is-loading="isLoading"
-        allow-custom-entry
-        show-supplement-seats
-        indent-search
-        :title="t('trip_detail.coordination.resource_section_taxi_title')"
-        :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
-        :placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
-        :icon="BuildingStorefrontIcon"
-      />
+        <SupplementTransportSection
+          v-if="!hideTaxiSection"
+          v-model="selected.taxis"
+          kind="taxi"
+          :options="taxiOptions"
+          :is-loading="isLoading"
+          :default-seat="4"
+          indent-body
+          :title="t('trip_detail.coordination.resource_section_taxi_title')"
+          :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
+          :name-placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
+          :name-field-label="t('trip_detail.coordination.supplement_field_provider')"
+          :icon="TruckIcon"
+        />
 
-      <ResourceSection
-        v-if="!hideVendorSection"
-        v-model="selected.vendors"
-        :options="vendorOptions"
-        :is-loading="isLoading"
-        allow-custom-entry
-        show-supplement-seats
-        indent-search
-        :title="t('trip_detail.coordination.resource_section_vendor_title')"
-        :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
-        :placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
-        :icon="BuildingOffice2Icon"
-      />
+        <SupplementTransportSection
+          v-if="!hideVendorSection"
+          v-model="selected.vendors"
+          kind="vendor"
+          :options="vendorOptions"
+          :is-loading="isLoading"
+          :default-seat="7"
+          indent-body
+          :can-quick-create="canQuickCreateVendor"
+          :title="t('trip_detail.coordination.resource_section_vendor_title')"
+          :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
+          :name-placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
+          :name-field-label="t('trip_detail.coordination.supplement_field_ncc_name')"
+          :icon="BuildingOffice2Icon"
+          @create-vendor="$emit('create-vendor')"
+        />
 
-      <div v-if="canQuickCreateVendor && !hideVendorSection" class="mt-2">
-        <button
-          type="button"
-          class="w-full rounded-[12px] border-[0.5px] border-dashed border-[#8B1A1A]/70 px-3 py-2 text-[12px] font-medium text-[#8B1A1A] hover:bg-rose-50/80 dark:hover:bg-rose-950/40"
-          @click="$emit('create-vendor')"
-        >
-          {{ t('trip_detail.coordination.provider_quick_add') }}
-        </button>
-      </div>
-
-      <div
-        v-if="selected.taxis.length > 0 || selected.vendors.length > 0"
-        class="mt-2"
-      >
-        <button
-          type="button"
-          class="flex w-full items-center justify-center gap-1 rounded-[12px] border-[0.5px] border-slate-300/90 bg-white px-3 py-2 text-[12px] font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/80"
-          :aria-expanded="showExternalRefs"
-          @click="showExternalRefs = !showExternalRefs"
-        >
-          {{ t('trip_detail.coordination.external_ref_expand_btn') }}
-          <span class="tabular-nums text-slate-400" aria-hidden="true">{{ showExternalRefs ? '▾' : '▸' }}</span>
-        </button>
         <div
-          v-show="showExternalRefs"
-          class="mt-2 space-y-2 rounded-[12px] border-[0.5px] border-slate-200/80 bg-slate-50/60 p-2.5 dark:border-slate-700 dark:bg-slate-900/40"
+          class="mt-3 flex items-center justify-between gap-2 border-t border-[0.5px] border-slate-200/75 pt-2.5 text-[11px] dark:border-slate-700/55"
         >
-          <div>
-            <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{{
-              t('trip_detail.coordination.external_vehicle')
-            }}</label>
-            <input
-              v-model="externalVehicleRef"
-              type="text"
-              class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-              :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
-            />
-          </div>
-          <div>
-            <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{{
-              t('trip_detail.coordination.external_driver')
-            }}</label>
-            <input
-              v-model="externalDriverRef"
-              type="text"
-              class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-              :placeholder="t('trip_detail.coordination.external_driver_ph')"
-            />
-          </div>
+          <span class="font-medium text-slate-600 dark:text-slate-400">{{
+            t('trip_detail.coordination.supplement_total_label')
+          }}</span>
+          <span class="tabular-nums text-[13px] font-normal text-slate-800 dark:text-slate-200">{{
+            t('trip_detail.coordination.supplement_total_value', { n: supplementTotalSeats })
+          }}</span>
         </div>
-      </div>
       </div>
     </div>
 
@@ -197,8 +168,9 @@
 <script setup>
 import { computed, nextTick, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { BuildingOffice2Icon, BuildingStorefrontIcon, TruckIcon, UserIcon } from '@heroicons/vue/24/outline'
+import { BuildingOffice2Icon, TruckIcon, UserIcon } from '@heroicons/vue/24/outline'
 import ResourceSection from './ResourceSection.vue'
+import SupplementTransportSection from './SupplementTransportSection.vue'
 import DriverWorkloadBadge from './DriverWorkloadBadge.vue'
 import DriverWorkloadPanel from './DriverWorkloadPanel.vue'
 import { useResourceSelector } from '../../composables/useResourceSelector'
@@ -233,10 +205,8 @@ const tripIdRef = toRef(props, 'tripId')
 const tripDateRef = toRef(props, 'tripDate')
 
 const showWorkloadPanel = ref(false)
-const showExternalRefs = ref(false)
 
 const hydratingFromSnapshot = ref(false)
-const autoExternalSeatsHint = ref('')
 
 const { fetchWorkload, loadColor, workloadMap } = useDriverWorkload(tripDateRef)
 
@@ -274,16 +244,45 @@ const {
   applyHydration,
 } = useResourceSelector(tripIdRef, busyVehicleIdsRef, busyDriverIdsRef)
 
-const supplementOptionCount = computed(
-  () => taxiOptions.value.length + vendorOptions.value.length,
+function minSeatsNeeded() {
+  const n = Number(props.neededSeats)
+  return Number.isFinite(n) && n > 0 ? n : 1
+}
+
+function sumListedSupplementSeats(list) {
+  return list.reduce((acc, it) => {
+    const n = Number(it.supplementSeats)
+    if (!Number.isFinite(n) || n < 1) return acc
+    return acc + Math.floor(n)
+  }, 0)
+}
+
+const supplementTotalSeats = computed(
+  () =>
+    sumListedSupplementSeats(selected.value.taxis) +
+    sumListedSupplementSeats(selected.value.vendors),
+)
+
+const internalSeatCapacity = computed(() => {
+  const v = selected.value.internalVehicles[0]
+  const n = Number(v?.seatCount)
+  return Number.isFinite(n) && n > 0 ? n : 0
+})
+
+const capacityGapRemaining = computed(() => {
+  const need = minSeatsNeeded()
+  const covered = internalSeatCapacity.value + supplementTotalSeats.value
+  return Math.max(0, need - covered)
+})
+
+const showCapacityBadge = computed(
+  () => !props.hideTaxiSection || !props.hideVendorSection,
 )
 
 const showValidation = ref(false)
-const externalVehicleRef = ref('')
-const externalDriverRef = ref('')
 
 const panelErrorMessage = computed(() => {
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
+  const p = buildDispatchPayload()
   const c = p.validationCode
   if (!c) return ''
   const map = {
@@ -297,7 +296,7 @@ const panelErrorMessage = computed(() => {
 const lastPayloadJson = ref('')
 
 function emitResources() {
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
+  const p = buildDispatchPayload()
   const j = JSON.stringify(p)
   if (j === lastPayloadJson.value) return
   lastPayloadJson.value = j
@@ -338,11 +337,6 @@ function onAssignFromWorkloadPanel(driverId) {
   })
 }
 
-function minSeatsNeeded() {
-  const n = Number(props.neededSeats)
-  return Number.isFinite(n) && n > 0 ? n : 1
-}
-
 function findBestVehicleForDriver(driverId) {
   const need = minSeatsNeeded()
   const opts = internalVehicleOptions.value.filter(
@@ -380,38 +374,7 @@ watch(
 )
 
 watch(
-  () => selected.value.taxis.length + selected.value.vendors.length,
-  (sum) => {
-    if (sum === 0) showExternalRefs.value = false
-  },
-)
-
-watch(
-  () => [selected.value.taxis.length, selected.value.vendors.length],
-  ([taxiN, vendorN], prev) => {
-    const prevT = prev?.[0] ?? 0
-    const prevV = prev?.[1] ?? 0
-    const now = taxiN + vendorN > 0
-    const was = prevT + prevV > 0
-    const hint = String(
-      t('trip_detail.coordination.external_vehicle_seats_auto', { n: minSeatsNeeded() }) || '',
-    ).trim()
-    if (now && !was && !String(externalVehicleRef.value || '').trim() && hint) {
-      externalVehicleRef.value = hint
-      autoExternalSeatsHint.value = hint
-      return
-    }
-    if (!now && was && autoExternalSeatsHint.value) {
-      const cur = String(externalVehicleRef.value || '').trim()
-      const auto = String(autoExternalSeatsHint.value || '').trim()
-      if (cur === auto) externalVehicleRef.value = ''
-      autoExternalSeatsHint.value = ''
-    }
-  },
-)
-
-watch(
-  [selected, externalVehicleRef, externalDriverRef],
+  () => selected,
   () => emitResources(),
   { deep: true },
 )
@@ -434,11 +397,9 @@ watch(
         vehicleId: snap.vehicleId,
         driverId: snap.driverId,
         transportProviderId: snap.transportProviderId,
+        externalVehicleRef: snap.externalVehicleRef,
+        externalDriverRef: snap.externalDriverRef,
       })
-      externalVehicleRef.value = snap.externalVehicleRef ?? ''
-      externalDriverRef.value = snap.externalDriverRef ?? ''
-      showExternalRefs.value = false
-      autoExternalSeatsHint.value = ''
       lastPayloadJson.value = ''
       emitResources()
     } finally {
@@ -462,7 +423,7 @@ watch(
 
 function validate() {
   showValidation.value = true
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
+  const p = buildDispatchPayload()
   return p.readyForSubmit === true
 }
 
@@ -473,15 +434,16 @@ async function refreshOptions() {
 function pickProvider(providerId, kind) {
   const id = Number(providerId)
   if (!Number.isFinite(id)) return
+  const seats = Math.max(1, minSeatsNeeded())
   if (kind === 'taxi') {
     const item = taxiOptions.value.find((x) => Number(x.id) === id)
     if (item && !selected.value.taxis.some((x) => Number(x.id) === id)) {
-      selected.value.taxis = [...selected.value.taxis, item]
+      selected.value.taxis = [...selected.value.taxis, { ...item, supplementSeats: Math.max(4, seats) }]
     }
   } else {
     const item = vendorOptions.value.find((x) => Number(x.id) === id)
     if (item && !selected.value.vendors.some((x) => Number(x.id) === id)) {
-      selected.value.vendors = [...selected.value.vendors, item]
+      selected.value.vendors = [...selected.value.vendors, { ...item, supplementSeats: Math.max(7, seats) }]
     }
   }
 }

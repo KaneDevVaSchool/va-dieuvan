@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-[12px] border-[0.5px] border-slate-200/90 bg-sky-50/35 p-3 dark:border-slate-600/80 dark:bg-sky-950/25"
+    class="overflow-hidden rounded-[12px] border-[0.5px] border-slate-200/90 border-t-[2px] border-t-[#378ADD] bg-sky-50/35 p-3 dark:border-slate-600/80 dark:bg-sky-950/25"
   >
     <div class="flex items-start gap-3">
       <div
@@ -10,12 +10,12 @@
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-start justify-between gap-2 flex-nowrap">
-          <div class="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+          <div class="min-w-0 truncate text-[13px] font-medium text-slate-900 dark:text-slate-100">
             {{ driver?.full_name ?? '—' }}
           </div>
           <button
             type="button"
-            class="shrink-0 rounded-[12px] border-[0.5px] border-[#8B1A1A]/50 px-2 py-1 text-[11px] font-medium text-[#8B1A1A] hover:bg-[#8B1A1A]/5 dark:border-[#8B1A1A]/40 dark:text-[#e85c5c] dark:hover:bg-[#8B1A1A]/10"
+            class="shrink-0 rounded-[12px] border-[0.5px] border-[#8B1A1A]/50 px-2 py-1 text-[11px] font-normal text-[#8B1A1A] hover:bg-[#8B1A1A]/5 dark:border-[#8B1A1A]/40 dark:text-[#e85c5c] dark:hover:bg-[#8B1A1A]/10"
             @click="$emit('change')"
           >
             {{ t('trip_detail.coordination.card_change') }} →
@@ -26,7 +26,7 @@
         </div>
         <div class="mt-2">
           <span
-            class="inline-flex items-center gap-1.5 rounded-full border-[0.5px] px-2 py-0.5 text-[10px] font-medium"
+            class="inline-flex items-center gap-1.5 rounded-full border-[0.5px] px-2 py-0.5 text-[12px] font-normal"
             :class="
               busy
                 ? 'border-rose-300/60 bg-rose-50/80 text-rose-800 dark:border-rose-800/50 dark:bg-rose-950/40 dark:text-rose-200'

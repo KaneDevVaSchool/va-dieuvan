@@ -174,10 +174,19 @@ export function useResourceSelector(
     }, 0)
   }
 
-  function buildDispatchPayload(
-    externalVehicleRef: string,
-    externalDriverRef: string,
-  ): ResourceDispatchPayload {
+  function aggregateExternalRefs(items: ResourceItem[]): { vehicle: string; driver: string } {
+    const vp: string[] = []
+    const dp: string[] = []
+    for (const it of items) {
+      const ev = String(it.externalVehicleRef ?? '').trim()
+      const ed = String(it.externalDriverRef ?? '').trim()
+      if (ev) vp.push(ev)
+      if (ed) dp.push(ed)
+    }
+    return { vehicle: vp.join(' · '), driver: dp.join(' · ') }
+  }
+
+  function buildDispatchPayload(): ResourceDispatchPayload {
     const code = validationCode()
     const intV = selected.value.internalVehicles
     const intD = selected.value.internalDrivers
@@ -216,6 +225,11 @@ export function useResourceSelector(
     const nccBlock = supplementDescribeBlock('vendor', vds)
     const prefixParts = [taxiBlock, nccBlock].filter(Boolean)
 
+    const taxiExt = aggregateExternalRefs(txs)
+    const vendorExt = aggregateExternalRefs(vds)
+    const userEvInput = [taxiExt.vehicle, vendorExt.vehicle].filter(Boolean).join(' · ')
+    const userEdInput = [taxiExt.driver, vendorExt.driver].filter(Boolean).join(' · ')
+
     const base: ResourceDispatchPayload = {
       readyForSubmit: false,
       validationCode: code,
@@ -224,7 +238,7 @@ export function useResourceSelector(
       driver_id: null,
       transport_provider_id: null,
       external_vehicle_ref: null,
-      external_driver_ref: externalDriverRef?.trim() || null,
+      external_driver_ref: userEdInput ? userEdInput : null,
       internal_vehicle_ids: intV.map((x) => x.id),
       taxi_ids: txs.map((x) => x.id),
       vendor_ids: vds.map((x) => x.id),
@@ -236,7 +250,8 @@ export function useResourceSelector(
     if (code !== null) {
       return {
         ...base,
-        external_vehicle_ref: externalVehicleRef?.trim() || null,
+        external_vehicle_ref: userEvInput ? userEvInput : null,
+        external_driver_ref: userEdInput ? userEdInput : null,
       }
     }
 
@@ -255,7 +270,7 @@ export function useResourceSelector(
     }
 
     const prefix = prefixParts.join(' · ')
-    const userEv = externalVehicleRef?.trim() || ''
+    const userEv = userEvInput?.trim() || ''
     let evRef = ''
     if (prefix && userEv) evRef = `${prefix} · ${userEv}`
     else if (prefix) evRef = prefix
@@ -281,7 +296,7 @@ export function useResourceSelector(
     const ready = hasV || hasD || hasExternalBody
 
     const extVehicleFinal = hasExternalBody ? evRef || null : null
-    const extDriverFinal = hasExternalBody ? externalDriverRef?.trim() || null : null
+    const extDriverFinal = hasExternalBody ? (userEdInput?.trim() || null) : null
 
     return {
       ...base,
@@ -336,6 +351,26 @@ export function useResourceSelector(
       else if (vendor) selected.value.vendors = [vendor]
       else {
         selected.value.vendors = [{ id: pid, label: `#${pid}`, available: true }]
+      }
+    }
+
+    const extV = String(snapshot.externalVehicleRef ?? '').trim()
+    const extD = String(snapshot.externalDriverRef ?? '').trim()
+    if (extV || extD) {
+      if (selected.value.vendors.length > 0) {
+        const v0 = selected.value.vendors[0]
+        selected.value.vendors[0] = {
+          ...v0,
+          ...(extV ? { externalVehicleRef: extV } : {}),
+          ...(extD ? { externalDriverRef: extD } : {}),
+        }
+      } else if (selected.value.taxis.length > 0) {
+        const t0 = selected.value.taxis[0]
+        selected.value.taxis[0] = {
+          ...t0,
+          ...(extV ? { externalVehicleRef: extV } : {}),
+          ...(extD ? { externalDriverRef: extD } : {}),
+        }
       }
     }
   }

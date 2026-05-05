@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-[12px] border-[0.5px] border-slate-200/90 bg-emerald-50/35 p-3 dark:border-slate-600/80 dark:bg-emerald-950/20"
+    class="overflow-hidden rounded-[12px] border-[0.5px] border-slate-200/90 border-t-[2px] border-t-[#1D9E75] bg-emerald-50/35 p-3 dark:border-slate-600/80 dark:bg-emerald-950/20"
   >
     <div class="flex items-start gap-3">
       <div
@@ -10,40 +10,40 @@
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-start justify-between gap-2 flex-nowrap">
-          <div class="min-w-0 truncate text-sm font-medium tabular-nums text-slate-900 dark:text-slate-100">
+          <div class="min-w-0 truncate text-[13px] font-medium tabular-nums text-slate-900 dark:text-slate-100">
             {{ vehicle?.license_plate ?? '—' }}
           </div>
           <button
             type="button"
-            class="shrink-0 rounded-[12px] border-[0.5px] border-[#8B1A1A]/50 px-2 py-1 text-[11px] font-medium text-[#8B1A1A] hover:bg-[#8B1A1A]/5 dark:border-[#8B1A1A]/40 dark:text-[#e85c5c] dark:hover:bg-[#8B1A1A]/10"
+            class="shrink-0 rounded-[12px] border-[0.5px] border-[#8B1A1A]/50 px-2 py-1 text-[11px] font-normal text-[#8B1A1A] hover:bg-[#8B1A1A]/5 dark:border-[#8B1A1A]/40 dark:text-[#e85c5c] dark:hover:bg-[#8B1A1A]/10"
             @click="$emit('change')"
           >
             {{ t('trip_detail.coordination.card_change') }} →
           </button>
         </div>
-        <div class="mt-0.5 text-xs font-normal text-slate-600 dark:text-slate-400">
+        <div class="mt-0.5 text-[13px] font-normal text-slate-600 dark:text-slate-400">
           {{ typeLabel }}
         </div>
         <div class="mt-2 flex flex-wrap gap-1.5">
           <span
-            class="rounded-full border-[0.5px] border-[#378ADD]/45 px-2 py-0.5 text-[10px] font-medium text-[#378ADD] dark:border-[#378ADD]/40 dark:text-[#6cb3f5]"
+            class="rounded-full border-[0.5px] border-[#378ADD]/45 px-2 py-0.5 text-[12px] font-normal text-[#378ADD] dark:border-[#378ADD]/40 dark:text-[#6cb3f5]"
           >
             GPS
           </span>
           <span
             v-if="seatChipText"
-            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[10px] font-medium text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
+            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[12px] font-normal text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
           >
             {{ seatChipText }}
           </span>
           <span
             v-if="vehicle?.status === 'ready'"
-            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[10px] font-medium text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
+            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[12px] font-normal text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
           >
             {{ t('trip_detail.coordination.vehicle_ready_chip') }}
           </span>
         </div>
-        <p v-if="busy" class="mt-2 text-[11px] font-medium text-rose-700 dark:text-rose-400">
+        <p v-if="busy" class="mt-2 text-[11px] font-normal text-rose-700 dark:text-rose-400">
           {{ t('trip_detail.coordination.vehicle_busy_hint') }}
         </p>
       </div>

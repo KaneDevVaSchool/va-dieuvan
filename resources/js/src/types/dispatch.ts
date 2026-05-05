@@ -11,6 +11,9 @@ export interface ResourceItem {
   seatCount?: number | null
   /** Taxi / NCC — số chỗ khai báo cho đúng dòng bổ sung (cộng vào sức chở). */
   supplementSeats?: number | null
+  /** Tham chiếu xe/lái ngoài (chủ yếu NCC), gộp khi submit. */
+  externalVehicleRef?: string | null
+  externalDriverRef?: string | null
 }
 
 export interface SelectedResources {

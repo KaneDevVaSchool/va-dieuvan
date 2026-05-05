@@ -6,18 +6,73 @@
         <div class="space-y-3 p-3">
             <!-- Header: title + shortfall badge -->
             <div class="flex flex-wrap items-center gap-2">
-                <span
-                    class="shrink-0 text-sm font-medium text-slate-700 dark:text-slate-200"
-                >
+                <span class="shrink-0 text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">
                     {{ t("trip_detail.coordination.title") }}
                 </span>
                 <div class="flex-1" />
                 <span
                     v-if="capacityBannerText"
-                    class="shrink-0 rounded-full border-[0.5px] border-[#EF9F27]/50 bg-[#EF9F27]/12 px-2 py-0.5 text-[11px] font-medium text-[#B9720D] dark:border-[#EF9F27]/40 dark:bg-[#EF9F27]/14 dark:text-[#F2C07D]"
+                    class="shrink-0 rounded-[100px] border-[0.5px] border-[#EF9F27]/70 bg-[#FAEEDA] px-2 py-0.5 text-[11px] font-medium text-[#854F0B] dark:border-[#EF9F27]/45 dark:bg-amber-950/30 dark:text-[#F2C07D]"
                 >
                     ⚠ {{ t("trip_detail.coordination.capacity_short_badge") }}
                 </span>
+            </div>
+
+            <!-- Departure datetime row (grouped card) -->
+            <div
+                v-if="canRescheduleTrip"
+                class="rounded-[12px] border-[0.5px] border-slate-200/80 bg-slate-50/40 p-2.5 dark:border-slate-700/50 dark:bg-slate-900/25"
+            >
+                <div
+                    class="flex flex-nowrap items-center gap-2 overflow-x-auto"
+                >
+                    <span class="shrink-0 text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                        {{ t("trip_detail.reschedule.depart_label") }}
+                    </span>
+                    <input
+                        :value="rescheduleDepartLocal"
+                        type="datetime-local"
+                        class="min-w-0 flex-1 shrink rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-1.5 text-[13px] font-normal outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:min-w-[10rem]"
+                        @input="onRescheduleDateInput"
+                    />
+                    <button
+                        type="button"
+                        class="shrink-0 rounded-[12px] border-[0.5px] border-slate-300/90 bg-white px-2.5 py-1.5 text-[12px] font-normal text-slate-800 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
+                        :disabled="rescheduling"
+                        @click="$emit('reschedule')"
+                    >
+                        <span
+                            v-if="rescheduling"
+                            class="mr-1 inline-block h-2.5 w-2.5 animate-spin rounded-full border border-slate-400/50 border-t-slate-700 dark:border-t-slate-200"
+                        />
+                        {{ t("trip_detail.reschedule.save") }}
+                    </button>
+                </div>
+                <div
+                    v-if="rescheduleMsg"
+                    class="mt-1.5 rounded-[12px] border-[0.5px] px-2 py-1.5 text-[12px] font-normal"
+                    :class="
+                        rescheduleFeedbackIsError
+                            ? 'border-rose-200/80 bg-rose-50 text-rose-900'
+                            : 'border-emerald-200/80 bg-emerald-50 text-emerald-900'
+                    "
+                    role="status"
+                >
+                    {{ rescheduleMsg }}
+                </div>
+            </div>
+
+            <!-- Capacity shortfall -->
+            <div
+                v-if="capacityBannerText"
+                class="flex gap-2 rounded-[12px] border-[0.5px] border-[#EF9F27]/60 bg-[#FAEEDA] px-2.5 py-2 text-[13px] font-normal text-[#854F0B] dark:border-[#EF9F27]/40 dark:bg-amber-950/25 dark:text-[#F2C07D]"
+                role="status"
+            >
+                <ClockIcon
+                    class="mt-0.5 h-4 w-4 shrink-0 text-[#EF9F27]"
+                    aria-hidden="true"
+                />
+                <span class="min-w-0 leading-snug">{{ capacityBannerText }}</span>
             </div>
 
             <!-- Schedule & alerts (surfaced, not collapsed) -->
@@ -30,7 +85,7 @@
                     {{ t("trip_detail.coordination.schedule_alerts_heading") }}
                 </div>
                 <ul
-                    class="mt-1.5 space-y-1 text-xs font-normal text-slate-700 dark:text-slate-300"
+                    class="mt-1.5 space-y-1 text-[13px] font-normal text-slate-700 dark:text-slate-300"
                 >
                     <li
                         v-for="(line, idx) in scheduleInfoLines"
@@ -50,64 +105,10 @@
                 </ul>
             </div>
 
-            <!-- Capacity shortfall -->
             <div
-                v-if="capacityBannerText"
-                class="flex gap-2 rounded-[12px] border-[0.5px] border-[#EF9F27]/45 bg-[#EF9F27]/14 px-2.5 py-2 text-xs font-normal text-[#8A4A0A] dark:border-[#EF9F27]/35 dark:bg-[#EF9F27]/12 dark:text-[#F2C98A]"
-                role="status"
-            >
-                <ClockIcon
-                    class="mt-0.5 h-4 w-4 shrink-0 text-[#EF9F27]"
-                    aria-hidden="true"
-                />
-                <span class="min-w-0 leading-snug">{{ capacityBannerText }}</span>
-            </div>
-
-            <!-- Departure datetime row (grouped card) -->
-            <div
-                v-if="canRescheduleTrip"
-                class="rounded-[12px] border-[0.5px] border-slate-200/80 bg-slate-50/40 p-2.5 dark:border-slate-700/50 dark:bg-slate-900/25"
-            >
-                <div
-                    class="flex flex-nowrap items-center gap-2 overflow-x-auto"
-                >
-                    <span
-                        class="shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300"
-                    >
-                        {{ t("trip_detail.reschedule.depart_label") }}
-                    </span>
-                    <input
-                        :value="rescheduleDepartLocal"
-                        type="datetime-local"
-                        class="min-w-0 flex-1 shrink rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2 py-1.5 text-xs font-normal outline-none ring-0 focus:border-[#8B1A1A]/40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:min-w-[10rem]"
-                        @input="onRescheduleDateInput"
-                    />
-                    <button
-                        type="button"
-                        class="shrink-0 rounded-[12px] border-[0.5px] border-slate-300/90 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
-                        :disabled="rescheduling"
-                        @click="$emit('reschedule')"
-                    >
-                        <span
-                            v-if="rescheduling"
-                            class="mr-1 inline-block h-2.5 w-2.5 animate-spin rounded-full border border-slate-400/50 border-t-slate-700 dark:border-t-slate-200"
-                        />
-                        {{ t("trip_detail.reschedule.save") }}
-                    </button>
-                </div>
-                <div
-                    v-if="rescheduleMsg"
-                    class="mt-1.5 rounded-[12px] border-[0.5px] px-2 py-1.5 text-xs font-medium"
-                    :class="
-                        rescheduleFeedbackIsError
-                            ? 'border-rose-200/80 bg-rose-50 text-rose-900'
-                            : 'border-emerald-200/80 bg-emerald-50 text-emerald-900'
-                    "
-                    role="status"
-                >
-                    {{ rescheduleMsg }}
-                </div>
-            </div>
+                class="border-t border-[0.5px] border-slate-200/70 dark:border-slate-700/50"
+                aria-hidden="true"
+            />
 
             <!-- Current assignment + resources -->
             <div>
@@ -274,7 +275,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <button
                         type="button"
-                        class="rounded-[12px] border-[0.5px] border-slate-300/90 bg-transparent px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800/80"
+                        class="rounded-[12px] border-[0.5px] border-slate-300/90 bg-transparent px-3 py-2 text-[12px] font-normal text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800/80"
                         :disabled="assigning"
                         @click="emit('cancel')"
                     >
@@ -282,7 +283,7 @@
                     </button>
                     <button
                         type="button"
-                        class="min-w-0 flex-1 rounded-[12px] px-3 py-2 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[12rem] sm:flex-initial"
+                        class="min-w-0 flex-1 rounded-[12px] px-3 py-2 text-[12px] font-normal text-white disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[12rem] sm:flex-initial"
                         style="background-color: #8b1a1a"
                         :disabled="assigning || !assignReady"
                         @click="emit('assign')"
