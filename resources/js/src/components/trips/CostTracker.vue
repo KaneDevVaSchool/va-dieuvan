@@ -1,6 +1,6 @@
 <template>
   <section
-    class="overflow-hidden rounded-2xl border border-amber-200/85 bg-white shadow-lg shadow-amber-500/[0.06] ring-1 ring-amber-100/50 print:break-inside-avoid dark:border-amber-900/45 dark:bg-slate-900/45 dark:shadow-none dark:ring-slate-800/80"
+    class="overflow-hidden rounded-2xl bg-white print:break-inside-avoid dark:bg-slate-900/45"
     :aria-label="t('trip_detail.costs_block.title')"
   >
     <div class="border-b border-amber-100/90 bg-amber-50/95 px-5 py-4 sm:px-6 dark:border-amber-900/40 dark:bg-amber-950/35">
@@ -19,7 +19,7 @@
       </div>
     </div>
     <div class="p-5 sm:p-6">
-      <div class="rounded-xl border border-slate-200/75 bg-white p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/60">
+      <div class="rounded-xl bg-white p-4 dark:bg-slate-900/60">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div class="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400">{{ t('trip_detail.costs.title') }}</div>
           <div class="flex flex-wrap items-center gap-2">
