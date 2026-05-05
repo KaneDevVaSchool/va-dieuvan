@@ -65,6 +65,23 @@
       :icon="BuildingStorefrontIcon"
     />
 
+    <div
+      v-if="!hideTaxiSection && selected.taxis.length > 0"
+      class="mb-1 -mt-0.5 rounded-lg border border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
+    >
+      <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+        {{ t('trip_detail.coordination.external_seats_taxi_label') }}
+      </label>
+      <input
+        v-model="taxiSeatSupplementStr"
+        type="number"
+        min="0"
+        step="1"
+        class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[13px] tabular-nums text-slate-900 outline-none ring-blue-500/40 focus:border-blue-400 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+        :placeholder="t('trip_detail.coordination.external_seats_ph')"
+      />
+    </div>
+
     <ResourceSection
       v-if="!hideVendorSection"
       v-model="selected.vendors"
@@ -76,6 +93,23 @@
       :empty-hint="t('trip_detail.coordination.resource_section_vendor_empty')"
       :icon="BuildingOffice2Icon"
     />
+
+    <div
+      v-if="!hideVendorSection && selected.vendors.length > 0"
+      class="-mt-0.5 rounded-lg border border-slate-200/90 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900/50"
+    >
+      <label class="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-400">
+        {{ t('trip_detail.coordination.external_seats_ncc_label') }}
+      </label>
+      <input
+        v-model="nccSeatSupplementStr"
+        type="number"
+        min="0"
+        step="1"
+        class="w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[13px] tabular-nums text-slate-900 outline-none ring-blue-500/40 focus:border-blue-400 focus:ring-2 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+        :placeholder="t('trip_detail.coordination.external_seats_ph')"
+      />
+    </div>
 
     <div v-if="canQuickCreateVendor && !hideVendorSection" class="mt-1.5">
       <button
@@ -240,9 +274,24 @@ const {
 const showValidation = ref(false)
 const externalVehicleRef = ref('')
 const externalDriverRef = ref('')
+const taxiSeatSupplementStr = ref('')
+const nccSeatSupplementStr = ref('')
+
+function parsePositiveIntStr(raw) {
+  const n = Number(String(raw ?? '').trim())
+  if (!Number.isFinite(n) || n <= 0) return 0
+  return Math.floor(n)
+}
+
+function seatExtrasForPayload() {
+  return {
+    taxiSeatSupplement: selected.value.taxis.length > 0 ? parsePositiveIntStr(taxiSeatSupplementStr.value) : 0,
+    nccSeatSupplement: selected.value.vendors.length > 0 ? parsePositiveIntStr(nccSeatSupplementStr.value) : 0,
+  }
+}
 
 const panelErrorMessage = computed(() => {
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
+  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value, seatExtrasForPayload())
   const c = p.validationCode
   if (!c) return ''
   const map = {
@@ -256,7 +305,7 @@ const panelErrorMessage = computed(() => {
 const lastPayloadJson = ref('')
 
 function emitResources() {
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
+  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value, seatExtrasForPayload())
   const j = JSON.stringify(p)
   if (j === lastPayloadJson.value) return
   lastPayloadJson.value = j
@@ -339,6 +388,20 @@ watch(
 )
 
 watch(
+  () => selected.value.taxis.length,
+  (n) => {
+    if (!n) taxiSeatSupplementStr.value = ''
+  },
+)
+
+watch(
+  () => selected.value.vendors.length,
+  (n) => {
+    if (!n) nccSeatSupplementStr.value = ''
+  },
+)
+
+watch(
   () => [selected.value.taxis.length, selected.value.vendors.length],
   ([taxiN, vendorN], prev) => {
     const prevT = prev?.[0] ?? 0
@@ -363,7 +426,7 @@ watch(
 )
 
 watch(
-  [selected, externalVehicleRef, externalDriverRef],
+  [selected, externalVehicleRef, externalDriverRef, taxiSeatSupplementStr, nccSeatSupplementStr],
   () => emitResources(),
   { deep: true },
 )
@@ -389,6 +452,8 @@ watch(
       })
       externalVehicleRef.value = snap.externalVehicleRef ?? ''
       externalDriverRef.value = snap.externalDriverRef ?? ''
+      taxiSeatSupplementStr.value = ''
+      nccSeatSupplementStr.value = ''
       autoExternalSeatsHint.value = ''
       lastPayloadJson.value = ''
       emitResources()
@@ -413,7 +478,7 @@ watch(
 
 function validate() {
   showValidation.value = true
-  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value)
+  const p = buildDispatchPayload(externalVehicleRef.value, externalDriverRef.value, seatExtrasForPayload())
   return p.readyForSubmit === true
 }
 

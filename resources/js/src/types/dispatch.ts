@@ -34,4 +34,8 @@ export interface ResourceDispatchPayload {
   taxi_ids: Array<string | number>
   vendor_ids: Array<string | number>
   primaryVehicleId: number | null
+  /** Số chỗ bổ sung khai báo cho phần taxi (cộng vào sức chở ước tính). */
+  taxiSeatSupplement: number
+  /** Số chỗ bổ sung khai báo cho phần NCC. */
+  nccSeatSupplement: number
 }

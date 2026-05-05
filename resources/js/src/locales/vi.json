@@ -1574,6 +1574,11 @@
             "title": "Trạng thái",
             "subtitle": "Cập nhật bước vận hành: tài xế xác nhận, đang chạy, hoàn thành hoặc hủy."
         },
+        "lower_panel": {
+            "aria": "Trạng thái và chi phí chuyến",
+            "tab_workflow": "Trạng thái",
+            "tab_costs": "Chi phí"
+        },
         "status_workflow": {
             "assign_vehicle": "Gán xe",
             "start_trip": "Bắt đầu chuyến",
@@ -1613,6 +1618,13 @@
             "external_vehicle_ph": "Biển số / mã xe đối tác…",
             "external_driver": "Tham chiếu tài xế ngoài",
             "external_driver_ph": "Tên / SĐT tài xế đối tác…",
+            "external_seats_taxi_label": "Số chỗ bổ sung (taxi)",
+            "external_seats_ncc_label": "Số chỗ bổ sung (NCC)",
+            "external_seats_ph": "VD: 7",
+            "combined_pick_hint": "Có thể gán xe/tài xế nội bộ kèm taxi và NCC trong cùng một lần — nhập số chỗ bổ sung phía taxi/NCC để tổng đủ chỗ chuyến.",
+            "capacity_shortfall_detail": "Không đủ chỗ: cần {need}. Ước tính tổng {total} chỗ (xe nội bộ {internal}{taxiSep}{nccSep}).",
+            "capacity_taxi_seg": " · Taxi +{n}",
+            "capacity_ncc_seg": " · NCC +{n}",
             "internal_notes": "Ghi chú nội bộ / lý do",
             "internal_notes_ph": "Ghi chú cho điều vận, đính kèm khi gán hoặc hủy…",
             "reject": "Từ chối / Hủy chuyến",

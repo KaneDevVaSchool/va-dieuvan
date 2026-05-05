@@ -1,11 +1,15 @@
 <template>
   <section
-    class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3 dark:border-slate-700/80 dark:bg-slate-900/45"
+    :class="
+      embedded
+        ? ''
+        : 'overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3 dark:border-slate-700/80 dark:bg-slate-900/45'
+    "
     :aria-label="t('trip_detail.status_block.title')"
   >
     <!-- Header: title + status badge -->
-    <div class="flex items-center justify-between gap-2">
-      <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+    <div class="flex items-center gap-2" :class="embedded ? 'justify-end' : 'justify-between'">
+      <h2 :class="embedded ? 'sr-only' : 'text-sm font-semibold text-slate-700 dark:text-slate-200'">
         {{ t('trip_detail.status_block.title') }}
       </h2>
       <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="badgeClass">
@@ -119,6 +123,7 @@ const props = defineProps<{
   rejecting: boolean
   statusing: boolean
   modelValue: string
+  embedded?: boolean
 }>()
 
 const emit = defineEmits<{

@@ -240,33 +240,79 @@
 
             <TripTimeline :current-status="timelineWorkflowStatus" :logs="activityLogs" />
 
-            <div class="grid gap-3 lg:grid-cols-12">
-              <div class="min-w-0 lg:col-span-7">
-                <CostTracker
-                  :trip-id="trip.id"
-                  :costs="trip.costs ?? []"
-                  :can-submit="canSubmitQuickCost"
-                  :show-costs-link="auth.canAccessDispatchWebApp()"
-                  @updated="load({ silent: true })"
-                />
+            <section
+              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-950/40"
+              :aria-label="t('trip_detail.lower_panel.aria')"
+            >
+              <div
+                class="flex gap-1 border-b border-slate-100 bg-slate-50/90 px-2 pt-2 dark:border-slate-700/80 dark:bg-slate-900/60"
+                role="tablist"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  :aria-selected="mainLowerTab === 'workflow'"
+                  class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
+                  :class="
+                    mainLowerTab === 'workflow'
+                      ? 'bg-white text-blue-700 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-blue-400 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
+                      : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200'
+                  "
+                  @click="mainLowerTab = 'workflow'"
+                >
+                  {{ t('trip_detail.lower_panel.tab_workflow') }}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  :aria-selected="mainLowerTab === 'costs'"
+                  class="relative min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
+                  :class="
+                    mainLowerTab === 'costs'
+                      ? 'bg-white text-blue-700 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-blue-400 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
+                      : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200'
+                  "
+                  @click="mainLowerTab = 'costs'"
+                >
+                  {{ t('trip_detail.lower_panel.tab_costs') }}
+                  <span
+                    v-if="(trip.costs ?? []).length"
+                    class="ml-1 inline-block min-w-[1.125rem] rounded-full bg-blue-100 px-1 py-px text-[10px] font-bold tabular-nums text-blue-800 dark:bg-blue-950/70 dark:text-blue-200"
+                  >
+                    {{ (trip.costs ?? []).length }}
+                  </span>
+                </button>
               </div>
 
-              <div class="min-w-0 lg:col-span-5">
-                <StatusActions
-                  :trip-status="trip.status"
-                  :can-assign="canAssign"
-                  :can-update-status="canUpdateStatus"
-                  :assign-ready="assignReady"
-                  :assigning="assigning"
-                  :statusing="statusing"
-                  :rejecting="rejecting"
-                  v-model="tripStatusWorkflowNote"
-                  @assign="onApproveTransfer"
-                  @advance="doAdvanceTripStatus"
-                  @cancel="onWorkflowCancelTrip"
-                />
+              <div class="p-4">
+                <div v-show="mainLowerTab === 'workflow'" class="space-y-0">
+                  <StatusActions
+                    embedded
+                    :trip-status="trip.status"
+                    :can-assign="canAssign"
+                    :can-update-status="canUpdateStatus"
+                    :assign-ready="assignReady"
+                    :assigning="assigning"
+                    :statusing="statusing"
+                    :rejecting="rejecting"
+                    v-model="tripStatusWorkflowNote"
+                    @assign="onApproveTransfer"
+                    @advance="doAdvanceTripStatus"
+                    @cancel="onWorkflowCancelTrip"
+                  />
+                </div>
+                <div v-show="mainLowerTab === 'costs'">
+                  <CostTracker
+                    embedded
+                    :trip-id="trip.id"
+                    :costs="trip.costs ?? []"
+                    :can-submit="canSubmitQuickCost"
+                    :show-costs-link="auth.canAccessDispatchWebApp()"
+                    @updated="load({ silent: true })"
+                  />
+                </div>
               </div>
-            </div>
+            </section>
           </div>
 
           <!-- Sidebar / coordination (5/12) -->
@@ -604,6 +650,8 @@ function expandTripMap() {
 const coordinationNotes = ref('')
 const dispatchPanelRef = ref(null)
 const dispatchResources = ref(null)
+/** Tab cột trái: trạng thái vs chi phí */
+const mainLowerTab = ref('workflow')
 const providerModalOpen = ref(false)
 const newProviderName = ref('')
 const newProviderType = ref('vendor')
@@ -1221,14 +1269,60 @@ const overlappingOtherTrips = computed(() => {
   return out
 })
 
-const selectedVehicleSeatsWarning = computed(() => {
+/** Tổng sức chở khai báo: xe nội bộ + chỗ bổ sung taxi + chỗ bổ sung NCC */
+const coordinationSeatTotals = computed(() => {
   const p = dispatchResources.value
-  if (!p || !p.primaryVehicleId) return ''
-  const v = vehicles.value.find((x) => String(x.id) === String(p.primaryVehicleId))
-  if (!v) return ''
-  const n = v.seat_count ?? 0
-  if (n >= neededSeats.value) return ''
-  return t('trip_detail.coordination.vehicle_seats_warning', { n, need: neededSeats.value })
+  const needRaw = Number(neededSeats.value)
+  const need = Number.isFinite(needRaw) && needRaw > 0 ? needRaw : 1
+  if (!p) return null
+
+  let internalCap = 0
+  if (p.vehicle_id != null) {
+    const vv = vehicles.value.find((x) => Number(x.id) === Number(p.vehicle_id))
+    internalCap = Number(vv?.seat_count) || 0
+  }
+
+  const hasTaxi = Array.isArray(p.taxi_ids) && p.taxi_ids.length > 0
+  const hasVendor = Array.isArray(p.vendor_ids) && p.vendor_ids.length > 0
+
+  const taxiExtraRaw = Number(p.taxiSeatSupplement)
+  const nccExtraRaw = Number(p.nccSeatSupplement)
+  const taxiExtra = hasTaxi && Number.isFinite(taxiExtraRaw) ? Math.max(0, Math.floor(taxiExtraRaw)) : 0
+  const nccExtra = hasVendor && Number.isFinite(nccExtraRaw) ? Math.max(0, Math.floor(nccExtraRaw)) : 0
+
+  const total = internalCap + taxiExtra + nccExtra
+  return {
+    internalCap,
+    taxiExtra,
+    nccExtra,
+    total,
+    need,
+    hasTaxi,
+    hasVendor,
+  }
+})
+
+const coordinationSeatCapacityLine = computed(() => {
+  const s = coordinationSeatTotals.value
+  const p = dispatchResources.value
+  if (!s || !p?.readyForSubmit) return ''
+  const hasAnySeatSource = !!(
+    p.vehicle_id != null ||
+    s.hasTaxi ||
+    s.hasVendor
+  )
+  if (!hasAnySeatSource) return ''
+  if (s.total >= s.need) return ''
+
+  const taxiSep = s.hasTaxi ? t('trip_detail.coordination.capacity_taxi_seg', { n: s.taxiExtra }) : ''
+  const nccSep = s.hasVendor ? t('trip_detail.coordination.capacity_ncc_seg', { n: s.nccExtra }) : ''
+  return t('trip_detail.coordination.capacity_shortfall_detail', {
+    need: s.need,
+    total: s.total,
+    internal: s.internalCap,
+    taxiSep,
+    nccSep,
+  })
 })
 
 const assignReady = computed(() => {
@@ -1237,9 +1331,9 @@ const assignReady = computed(() => {
   if (!p?.readyForSubmit) return false
   if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) return false
   if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) return false
-  const v = vehicles.value.find((x) => Number(x.id) === Number(p.vehicle_id))
-  if (v && (v.seat_count ?? 0) < neededSeats.value) return false
-  return true
+  const s = coordinationSeatTotals.value
+  if (!s) return false
+  return s.total >= s.need
 })
 
 const showInternalVehicleCard = computed(() => dispatchResources.value?.vehicle_id != null)
@@ -1312,7 +1406,7 @@ const coordinationFunnelLines = computed(() => {
   if (schedulePreviewDirty.value) lines.push(t('trip_detail.coordination.preview_window_hint'))
   const busy = busyResourcesHint.value
   if (busy) lines.push(busy)
-  const seats = selectedVehicleSeatsWarning.value
+  const seats = coordinationSeatCapacityLine.value
   if (seats) lines.push(seats)
   const rh = resourceHint.value?.trim()
   if (rh) lines.push(rh)

@@ -163,7 +163,13 @@ export function useResourceSelector(
   function buildDispatchPayload(
     externalVehicleRef: string,
     externalDriverRef: string,
+    seatExtras?: { taxiSeatSupplement?: number | null; nccSeatSupplement?: number | null },
   ): ResourceDispatchPayload {
+    const taxiSupRaw = Number(seatExtras?.taxiSeatSupplement)
+    const nccSupRaw = Number(seatExtras?.nccSeatSupplement)
+    const taxiSeatSupplement = Number.isFinite(taxiSupRaw) ? Math.max(0, Math.floor(taxiSupRaw)) : 0
+    const nccSeatSupplement = Number.isFinite(nccSupRaw) ? Math.max(0, Math.floor(nccSupRaw)) : 0
+
     const code = validationCode()
     const intV = selected.value.internalVehicles
     const intD = selected.value.internalDrivers
@@ -193,6 +199,8 @@ export function useResourceSelector(
       taxi_ids: txs.map((x) => x.id),
       vendor_ids: vds.map((x) => x.id),
       primaryVehicleId: null,
+      taxiSeatSupplement,
+      nccSeatSupplement,
     }
 
     if (code !== null) {
@@ -240,7 +248,10 @@ export function useResourceSelector(
       }
     }
 
-    const prefixParts = [...extraProviderLabels, customLine].filter(Boolean)
+    const seatPrefixParts: string[] = []
+    if (taxiSeatSupplement > 0) seatPrefixParts.push(`Taxi ${taxiSeatSupplement} chỗ`)
+    if (nccSeatSupplement > 0) seatPrefixParts.push(`NCC ${nccSeatSupplement} chỗ`)
+    const prefixParts = [...seatPrefixParts, ...extraProviderLabels, customLine].filter(Boolean)
     const prefix = prefixParts.join(' · ')
     const userEv = externalVehicleRef?.trim() || ''
     let evRef = ''

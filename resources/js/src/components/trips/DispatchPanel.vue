@@ -10,31 +10,6 @@
           {{ t('trip_detail.coordination.title') }}
         </span>
 
-        <!-- Resource tabs -->
-        <div
-          v-if="canAssign"
-          class="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800/60"
-          role="tablist"
-          :aria-label="t('trip_detail.coordination.tab_aria_label')"
-        >
-          <button
-            v-for="tab in RESOURCE_TABS"
-            :key="tab.id"
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === tab.id"
-            class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
-            :class="
-              activeTab === tab.id
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-            "
-            @click="activeTab = tab.id"
-          >
-            {{ t(tab.labelKey) }}
-          </button>
-        </div>
-
         <div class="flex-1" />
 
         <!-- Funnel dropdown -->
@@ -77,6 +52,10 @@
           {{ t('trip_detail.coordination.refresh_schedule') }}
         </button>
       </div>
+
+      <p v-if="canAssign" class="text-xs leading-snug text-slate-500 dark:text-slate-400">
+        {{ t('trip_detail.coordination.combined_pick_hint') }}
+      </p>
 
       <!-- Reschedule block -->
       <div
@@ -143,10 +122,8 @@
           :busy-driver-ids="busyDriverIds"
           :trip-snapshot="tripSnapshot"
           :can-quick-create-vendor="canQuickCreateProvider"
-          :hide-internal-vehicle-section="showInternalVehicleCard || activeTab !== 'internal'"
-          :hide-internal-driver-section="showInternalDriverCard || activeTab !== 'internal'"
-          :hide-taxi-section="activeTab !== 'taxi'"
-          :hide-vendor-section="activeTab !== 'ncc'"
+          :hide-internal-vehicle-section="showInternalVehicleCard"
+          :hide-internal-driver-section="showInternalDriverCard"
           @update:resources="$emit('update:resources', $event)"
           @create-vendor="$emit('create-vendor')"
         />
@@ -231,14 +208,6 @@ import DriverCard from './DriverCard.vue'
 import VehicleCard from './VehicleCard.vue'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
 
-type ResourceTab = 'internal' | 'taxi' | 'ncc'
-
-const RESOURCE_TABS: { id: ResourceTab; labelKey: string }[] = [
-  { id: 'internal', labelKey: 'trip_detail.coordination.tab_internal' },
-  { id: 'taxi', labelKey: 'trip_detail.coordination.tab_taxi' },
-  { id: 'ncc', labelKey: 'trip_detail.coordination.tab_ncc' },
-]
-
 const props = defineProps<{
   canAssign: boolean
   canUpdateStatus: boolean
@@ -287,7 +256,6 @@ const emit = defineEmits<{
 const { t, locale } = useI18n()
 const route = useRoute()
 
-const activeTab = ref<ResourceTab>('internal')
 const resourcePanelRef = ref<InstanceType<typeof ResourcePanel> | null>(null)
 defineExpose({ resourcePanel: resourcePanelRef })
 

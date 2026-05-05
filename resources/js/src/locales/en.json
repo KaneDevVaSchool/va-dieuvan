@@ -1714,6 +1714,11 @@
             "title": "Status",
             "subtitle": "Update the operational step: driver confirmed, in progress, completed, or cancelled."
         },
+        "lower_panel": {
+            "aria": "Trip status and costs",
+            "tab_workflow": "Status",
+            "tab_costs": "Costs"
+        },
         "status_workflow": {
             "assign_vehicle": "Assign vehicle",
             "start_trip": "Start trip",
@@ -1753,6 +1758,13 @@
             "external_vehicle_ph": "Plate / partner vehicle id…",
             "external_driver": "External driver reference",
             "external_driver_ph": "Name / phone of partner driver…",
+            "external_seats_taxi_label": "Supplement seats (taxi)",
+            "external_seats_ncc_label": "Supplement seats (vendor)",
+            "external_seats_ph": "e.g. 7",
+            "combined_pick_hint": "Pick internal vehicle and driver alongside taxi or vendor in one assign — enter supplement seats for taxi/vendor so totals meet the trip need.",
+            "capacity_shortfall_detail": "Not enough seats: need {need}. Estimated total {total} seats (internal {internal}{taxiSep}{nccSep}).",
+            "capacity_taxi_seg": " · taxi +{n}",
+            "capacity_ncc_seg": " · vendor +{n}",
             "internal_notes": "Internal notes / reason",
             "internal_notes_ph": "Notes for dispatch, saved with assign or cancel…",
             "reject": "Reject / Cancel trip",

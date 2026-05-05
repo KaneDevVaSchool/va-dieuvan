@@ -1,14 +1,18 @@
 <template>
   <section
-    class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3 print:break-inside-avoid dark:border-slate-700/80 dark:bg-slate-900/45"
+    :class="
+      embedded
+        ? 'print:break-inside-avoid'
+        : 'overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3 print:break-inside-avoid dark:border-slate-700/80 dark:bg-slate-900/45'
+    "
     :aria-label="t('trip_detail.costs_block.title')"
   >
     <!-- Header -->
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+    <div class="flex flex-wrap items-center gap-2" :class="embedded ? 'justify-end' : 'justify-between'">
+      <h2 :class="embedded ? 'sr-only' : 'text-sm font-semibold text-slate-700 dark:text-slate-200'">
         {{ t('trip_detail.costs_block.title') }}
       </h2>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-end gap-2">
         <span v-if="(costs ?? []).length" class="text-xs tabular-nums text-slate-500 dark:text-slate-400">
           {{ costsTotalFormatted }}
         </span>
@@ -180,6 +184,8 @@ const props = defineProps<{
   costs?: CostRow[] | null
   canSubmit: boolean
   showCostsLink?: boolean
+  /** Bỏ viền thẻ ngoài (dùng trong tab panel chung) */
+  embedded?: boolean
 }>()
 
 const emit = defineEmits<{
