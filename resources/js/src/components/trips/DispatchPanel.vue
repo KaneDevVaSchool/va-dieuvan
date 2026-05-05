@@ -1,6 +1,6 @@
 <template>
   <section
-    class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm print:hidden dark:border-slate-700/80 dark:bg-slate-950/30"
+    class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-900/5 ring-1 ring-blue-600/10 dark:border-slate-700/80 dark:bg-slate-950/30 dark:shadow-none dark:ring-blue-500/20 print:hidden"
     :aria-label="t('trip_detail.coordination.title')"
   >
     <div class="space-y-3 p-3">

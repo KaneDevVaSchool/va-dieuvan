@@ -4,15 +4,9 @@
       <div class="animate-pulse space-y-4">
         <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
         <div class="grid gap-6 xl:grid-cols-12">
-          <div class="min-w-0 space-y-4 xl:col-span-7">
-            <div class="h-64 rounded-2xl bg-slate-200/80" />
-            <div class="h-48 rounded-2xl bg-slate-200/70" />
-            <div class="h-56 rounded-2xl bg-slate-200/70" />
-          </div>
-          <div class="min-w-0 space-y-4 xl:col-span-5">
-            <div class="h-72 rounded-2xl bg-slate-200/80" />
-            <div class="h-40 rounded-2xl bg-slate-200/70" />
-          </div>
+          <div class="min-h-48 xl:col-span-12 xl:rounded-2xl xl:bg-white/70" />
+          <div class="min-h-52 xl:col-span-8 xl:rounded-2xl xl:bg-white/70" />
+          <div class="min-h-64 xl:col-span-4 xl:rounded-2xl xl:bg-white/70" />
         </div>
       </div>
       <p class="text-center text-xs text-slate-500">{{ t('trip_detail.loading') }}</p>
@@ -63,9 +57,9 @@
           </RouterLink>
         </div>
 
-        <div class="grid gap-4 xl:grid-cols-12">
-          <!-- Main column (7/12) -->
-          <div class="min-w-0 space-y-4 xl:col-span-7">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:gap-5">
+          <!-- Cột chính: full width trong vùng content -->
+          <div class="min-w-0 flex-1 space-y-4">
             <TripInfoCard
               :trip="trip"
               :countdown="countdown"
@@ -87,8 +81,9 @@
               :origin-label="originLabel"
               :destination-label="destinationLabel"
               :current-label="currentLabel"
-              :embed-map-src="embedMapSrc"
+              :map-queries="tripMapGeocodeQueries"
               :expand-map="expandTripMap"
+              @map-resolve="onTripMapResolved"
             />
 
             <PassengerCheckIn
@@ -242,18 +237,18 @@
             </PassengerCheckIn>
 
             <section
-              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-950/40"
+              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-200/60 dark:border-slate-700/80 dark:bg-slate-950/40 dark:ring-slate-600/40"
               :aria-label="t('trip_detail.lower_panel.aria')"
             >
               <div
-                class="flex gap-1 border-b border-slate-100 bg-slate-50/90 px-2 pt-2 dark:border-slate-700/80 dark:bg-slate-900/60"
+                class="flex gap-1 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-50/30 px-3 pt-2 dark:border-slate-700/80 dark:from-slate-900/70 dark:to-slate-900/40"
                 role="tablist"
               >
                 <button
                   type="button"
                   role="tab"
                   :aria-selected="mainLowerTab === 'workflow'"
-                  class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
+                  class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
                   :class="
                     mainLowerTab === 'workflow'
                       ? 'bg-white text-blue-700 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-blue-400 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
@@ -267,7 +262,7 @@
                   type="button"
                   role="tab"
                   :aria-selected="mainLowerTab === 'costs'"
-                  class="relative min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
+                  class="relative min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
                   :class="
                     mainLowerTab === 'costs'
                       ? 'bg-white text-blue-700 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-blue-400 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
@@ -285,7 +280,7 @@
                 </button>
               </div>
 
-              <div class="p-4">
+              <div class="p-4 sm:p-5">
                 <div v-show="mainLowerTab === 'workflow'" class="space-y-0">
                   <StatusActions
                     embedded
@@ -314,51 +309,8 @@
                 </div>
               </div>
             </section>
-          </div>
 
-          <!-- Sidebar / coordination (5/12) -->
-          <div class="min-w-0 space-y-3 xl:col-span-5">
-            <DispatchPanel
-              ref="dispatchPanelRef"
-              :can-assign="canAssign"
-              :can-update-status="canUpdateStatus"
-              :can-reschedule-trip="canRescheduleTrip"
-              :can-quick-create-provider="canQuickCreateProvider"
-              :reschedule-depart-local="rescheduleDepartLocal"
-              :rescheduling="rescheduling"
-              :reschedule-msg="rescheduleMsg"
-              :reschedule-feedback-is-error="rescheduleFeedbackIsError"
-              :show-internal-vehicle-card="showInternalVehicleCard"
-              :selected-vehicle-for-card="selectedVehicleForCard"
-              :vehicle-card-busy="vehicleCardBusy"
-              :show-internal-driver-card="showInternalDriverCard"
-              :selected-driver-for-card="selectedDriverForCard"
-              :driver-card-busy="driverCardBusy"
-              :vehicle-conflict-banner="vehicleConflictBanner"
-              :trip-id="trip.id"
-              :schedule-date-key-for-list="scheduleDateKeyForList"
-              :needed-seats="neededSeats"
-              :suitable-vehicles-count="suitableVehiclesCount"
-              :busy-vehicle-ids="busyVehicleIdList"
-              :busy-driver-ids="busyDriverIdList"
-              :trip-snapshot="coordinationTripSnapshot"
-              :overlapping-other-trips="overlappingOtherTrips"
-              :coordination-notes="coordinationNotes"
-              :assign-msg="assignMsg"
-              :assign-feedback-kind="assignFeedbackKind"
-              :coordination-funnel-lines="coordinationFunnelLines"
-              @reschedule="doReschedule"
-              @vehicle-card-change="onVehicleCardChange"
-              @driver-card-change="onDriverCardChange"
-              @conflict-pick-again="onVehicleConflictPickAgain"
-              @conflict-keep="onVehicleConflictKeep"
-              @update:resources="onDispatchResourcesUpdate"
-              @create-vendor="openProviderModal"
-              @update:reschedule-depart-local="rescheduleDepartLocal = $event"
-              @update:coordination-notes="coordinationNotes = $event"
-            />
-
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm ring-1 ring-slate-100/80 dark:border-slate-700/80 dark:bg-slate-950/30 dark:ring-slate-700/50">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ t('trip_detail.attachments.title') }}</h2>
                 <div v-if="canManageAttachments && trip.dispatch_request?.id" class="flex flex-wrap items-center gap-2">
@@ -406,8 +358,7 @@
               <p v-if="!attachmentsList.length" class="mt-2 text-sm text-slate-500">{{ t('trip_detail.attachments.empty') }}</p>
             </section>
 
-            <!-- Dispatcher notes -->
-            <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm ring-1 ring-slate-100/80 dark:border-slate-700/80 dark:bg-slate-950/30 dark:ring-slate-700/50">
               <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ t('trip_detail.notes.title') }}</h2>
               <div class="mt-2 space-y-2">
                 <div v-if="tripRequestNotesFromUser" class="rounded-lg border border-amber-100 bg-amber-50 p-3 text-sm text-amber-950">
@@ -455,6 +406,52 @@
               </div>
             </Card>
           </div>
+
+          <!-- Điều phối: sidebar cố định -->
+          <aside
+            class="w-full shrink-0 space-y-3 xl:sticky xl:top-16 xl:z-10 xl:w-[min(360px,max(288px,calc((100vw-2rem)*0.38)))] xl:max-w-[360px] xl:self-start xl:overflow-y-auto"
+            style="max-height: calc(100vh - 5rem)"
+          >
+            <DispatchPanel
+              ref="dispatchPanelRef"
+              :can-assign="canAssign"
+              :can-update-status="canUpdateStatus"
+              :can-reschedule-trip="canRescheduleTrip"
+              :can-quick-create-provider="canQuickCreateProvider"
+              :reschedule-depart-local="rescheduleDepartLocal"
+              :rescheduling="rescheduling"
+              :reschedule-msg="rescheduleMsg"
+              :reschedule-feedback-is-error="rescheduleFeedbackIsError"
+              :show-internal-vehicle-card="showInternalVehicleCard"
+              :selected-vehicle-for-card="selectedVehicleForCard"
+              :vehicle-card-busy="vehicleCardBusy"
+              :show-internal-driver-card="showInternalDriverCard"
+              :selected-driver-for-card="selectedDriverForCard"
+              :driver-card-busy="driverCardBusy"
+              :vehicle-conflict-banner="vehicleConflictBanner"
+              :trip-id="trip.id"
+              :schedule-date-key-for-list="scheduleDateKeyForList"
+              :needed-seats="neededSeats"
+              :suitable-vehicles-count="suitableVehiclesCount"
+              :busy-vehicle-ids="busyVehicleIdList"
+              :busy-driver-ids="busyDriverIdList"
+              :trip-snapshot="coordinationTripSnapshot"
+              :overlapping-other-trips="overlappingOtherTrips"
+              :coordination-notes="coordinationNotes"
+              :assign-msg="assignMsg"
+              :assign-feedback-kind="assignFeedbackKind"
+              :coordination-funnel-lines="coordinationFunnelLines"
+              @reschedule="doReschedule"
+              @vehicle-card-change="onVehicleCardChange"
+              @driver-card-change="onDriverCardChange"
+              @conflict-pick-again="onVehicleConflictPickAgain"
+              @conflict-keep="onVehicleConflictKeep"
+              @update:resources="onDispatchResourcesUpdate"
+              @create-vendor="openProviderModal"
+              @update:reschedule-depart-local="rescheduleDepartLocal = $event"
+              @update:coordination-notes="coordinationNotes = $event"
+            />
+          </aside>
         </div>
       </div>
 
@@ -478,24 +475,24 @@
                 {{ t('trip_detail.route.close_map') }}
               </button>
             </div>
-            <div class="relative min-h-[60vh] flex-1 bg-slate-100">
-              <iframe
-                v-if="embedMapSrc"
-                :src="embedMapSrc"
-                class="absolute inset-0 h-full w-full border-0"
-                loading="lazy"
-                :aria-label="t('trip_detail.route.map_title')"
+            <div class="relative min-h-[60vh] flex-1 bg-slate-100 dark:bg-slate-900/50">
+              <OsmTripMap
+                v-if="mapExpanded"
+                ref="modalOsmRef"
+                :queries="tripMapGeocodeQueries"
+                min-height-class="min-h-[60vh]"
+                @resolved="onModalMapResolved"
               />
             </div>
-            <div class="border-t border-slate-100 px-4 py-3">
+            <div class="border-t border-slate-100 px-4 py-3 dark:border-slate-700">
               <a
-                v-if="mapsHref"
-                :href="mapsHref"
+                v-if="osmExternalMapHref"
+                :href="osmExternalMapHref"
                 target="_blank"
                 rel="noopener"
-                class="text-sm font-semibold text-sky-700 hover:underline"
+                class="text-sm font-semibold text-sky-700 hover:underline dark:text-sky-400"
               >
-                {{ t('trip_detail.route.open_in_google_maps') }}
+                {{ t('trip_detail.route.open_in_osm') }}
               </a>
             </div>
           </div>
@@ -532,7 +529,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -549,6 +546,7 @@ import PassengerCheckIn from '../../components/trips/PassengerCheckIn.vue'
 import StickyTripHeader from '../../components/trips/StickyTripHeader.vue'
 import TripTimeline from '../../components/trips/TripTimeline.vue'
 import TripInfoCard from '../../components/trips/TripInfoCard.vue'
+import OsmTripMap from '../../components/maps/OsmTripMap.vue'
 import DispatchPanel from '../../components/trips/DispatchPanel.vue'
 import { addTripEvent, assignTrip, getTrip, listTrips, rescheduleTrip, updateTripPassengerList, updateTripStatus } from '../../api/trips'
 import { listVehicles, createTransportProvider, listDrivers, getVehicleScheduleConflicts } from '../../api/operational'
@@ -642,8 +640,12 @@ const TRIP_ASSIGN_CONFLICT_STATUSES = ['assigned', 'driver_confirmed', 'in_progr
 const resourceHint = ref('')
 const attachInputRef = ref(null)
 const mapExpanded = ref(false)
+const modalOsmRef = ref(null)
 function expandTripMap() {
   mapExpanded.value = true
+}
+function onModalMapResolved() {
+  nextTick(() => modalOsmRef.value?.invalidateSize?.())
 }
 const coordinationNotes = ref('')
 const dispatchPanelRef = ref(null)
@@ -887,35 +889,6 @@ const estimatedCostVnd = computed(() => {
   return total > 0 ? total : null
 })
 
-const mapsHref = computed(() => {
-  const o = originLabel.value
-  const d = destinationLabel.value
-  if (!o || !d || o === '—' || d === '—') return ''
-  const u = new URL('https://www.google.com/maps/dir/')
-  u.searchParams.set('api', '1')
-  u.searchParams.set('origin', o)
-  u.searchParams.set('destination', d)
-  return u.toString()
-})
-
-const embedMapSrc = computed(() => {
-  const o = trip.value?.dispatch_request?.origin?.trim()
-  const d = trip.value?.dispatch_request?.destination?.trim()
-  if (o && d) {
-    return `https://maps.google.com/maps?q=${encodeURIComponent(`${o} → ${d}`)}&output=embed`
-  }
-  const stops = routeStops.value
-  if (stops.length >= 2) {
-    const first = stops[0].address
-    const last = stops[stops.length - 1].address
-    return `https://maps.google.com/maps?q=${encodeURIComponent(`${first} → ${last}`)}&output=embed`
-  }
-  if (stops.length === 1) {
-    return `https://maps.google.com/maps?q=${encodeURIComponent(stops[0].address)}&output=embed`
-  }
-  return ''
-})
-
 const routeStops = computed(() => {
   const dr = trip.value?.dispatch_request
   const s = snap.value
@@ -991,6 +964,35 @@ const routeStops = computed(() => {
     out[out.length - 1].kind = 'dropoff'
   }
   return out
+})
+
+const tripMapGeocodeQueries = computed(() => {
+  const o = trip.value?.dispatch_request?.origin?.trim()
+  const d = trip.value?.dispatch_request?.destination?.trim()
+  if (o && d) return [o, d]
+  const stops = routeStops.value
+  if (stops.length >= 2) return [stops[0].address, stops[stops.length - 1].address]
+  if (stops.length === 1) return [stops[0].address]
+  return []
+})
+
+const tripMapPoints = ref([])
+function onTripMapResolved(payload) {
+  tripMapPoints.value = payload.points || []
+}
+
+const osmExternalMapHref = computed(() => {
+  const pts = tripMapPoints.value
+  if (pts.length >= 2) {
+    const a = pts[0]
+    const b = pts[pts.length - 1]
+    return `https://www.openstreetmap.org/directions?from=${a.lat}%2C${a.lon}&to=${b.lat}%2C${b.lon}`
+  }
+  const qs = tripMapGeocodeQueries.value.filter(Boolean)
+  if (qs.length) {
+    return `https://www.openstreetmap.org/search?query=${encodeURIComponent(qs.join(' → '))}`
+  }
+  return ''
 })
 
 function inferRoleKind(tripType) {

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CalendarDaysIcon, MapIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 import { labelTripStatus } from '../../util/labels'
+import OsmTripMap from '../maps/OsmTripMap.vue'
 
 type Step = { state: string; label: string }
 
@@ -29,8 +30,13 @@ const props = defineProps<{
   originLabel: string
   destinationLabel: string
   currentLabel: string
-  embedMapSrc: string
+  /** Địa chỉ ghép tuyến cho geocode OSM */
+  mapQueries: string[]
   expandMap: () => void
+}>()
+
+const emit = defineEmits<{
+  mapResolve: [payload: { points: { lat: number; lon: number }[] }]
 }>()
 
 const { t, locale } = useI18n()
@@ -247,7 +253,7 @@ const currentDotClass = computed(() => {
 
       <!-- Map (trong tổng quan) -->
       <div class="mt-6 border-t border-slate-100 pt-5 print:hidden">
-        <div class="mt-3 flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">
             {{ t('trip_detail.route.map_title') }}
           </h3>
@@ -259,25 +265,14 @@ const currentDotClass = computed(() => {
           </span>
         </div>
         <div class="relative mt-3 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/50">
-          <div class="relative aspect-video w-full min-h-[200px] bg-slate-100 dark:bg-slate-800/80">
-            <iframe
-              v-if="embedMapSrc"
-              :src="embedMapSrc"
-              class="absolute inset-0 h-full w-full border-0"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              :aria-label="t('trip_detail.route.map_title')"
-            />
-            <div
-              v-else
-              class="flex h-full min-h-[200px] items-center justify-center p-4 text-center text-sm text-slate-500"
-            >
-              {{ t('trip_detail.route.map_placeholder') }}
-            </div>
-          </div>
+          <OsmTripMap
+            :queries="mapQueries"
+            min-height-class="min-h-[220px]"
+            @resolved="emit('mapResolve', $event)"
+          />
           <button
             type="button"
-            class="absolute right-2 top-2 rounded-lg border border-slate-200/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100 dark:hover:bg-slate-900"
+            class="absolute right-2 top-2 z-[600] rounded-lg border border-slate-200/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100 dark:hover:bg-slate-900"
             @click="expandMap"
           >
             {{ t('trip_detail.route.expand_map') }}

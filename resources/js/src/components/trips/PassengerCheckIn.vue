@@ -1,6 +1,6 @@
 <template>
-  <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+  <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm ring-1 ring-slate-100/90 dark:border-slate-700/80 dark:bg-slate-950/25 dark:ring-slate-700/50">
+    <div class="flex flex-col gap-3 border-b border-slate-100 pb-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex flex-wrap items-center gap-2">
         <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">
           {{ t('trip_detail.passengers.title', { n: rows.length }) }}
@@ -27,7 +27,7 @@
 
     <p v-if="editMessage" class="mt-2 text-sm text-rose-600 dark:text-rose-400">{{ editMessage }}</p>
 
-    <div class="mt-4 overflow-x-auto rounded-xl border border-slate-100">
+    <div class="mt-5 overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-700/70">
       <slot name="editor" />
       <template v-if="!editMode">
         <table v-if="rows.length" class="min-w-full divide-y divide-slate-100 text-sm">
