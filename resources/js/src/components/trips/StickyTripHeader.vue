@@ -34,7 +34,7 @@
         type="button"
         class="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
         :disabled="refreshing"
-        :title="$t('trip_detail.actions.refresh')"
+        :aria-label="$t('trip_detail.actions.refresh')"
         @click="$emit('refresh')"
       >
         <ArrowPathIcon class="h-5 w-5" :class="refreshing ? 'animate-spin' : ''" />
@@ -43,7 +43,7 @@
         v-if="auth.canAccessDispatchWebApp()"
         to="/notifications"
         class="hidden h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 sm:flex"
-        :title="$t('trip_detail.header.notifications')"
+        :aria-label="$t('trip_detail.header.notifications')"
       >
         <BellIcon class="h-5 w-5" />
       </RouterLink>
@@ -60,7 +60,7 @@
         type="button"
         class="rounded-lg bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
         :disabled="assignDisabled"
-        :title="assignDisabled ? $t('trip_detail.coordination.assign_disabled_hint') : ''"
+        :aria-label="$t('trip_detail.coordination.approve_transfer')"
         @click="$emit('approve')"
       >
         {{ $t('trip_detail.coordination.approve_transfer') }}

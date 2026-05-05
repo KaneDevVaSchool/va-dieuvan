@@ -179,6 +179,8 @@ const props = defineProps({
   hideInternalVehicleSection: { type: Boolean, default: false },
   /** Ẩn picker tài xế nội bộ (hiển thị DriverCard thay thế) */
   hideInternalDriverSection: { type: Boolean, default: false },
+  /** Số chỗ tối thiểu chuyến — chọn xe mặc định theo tài xế + gợi ý taxi/NCC */
+  neededSeats: { type: Number, default: 1 },
 })
 
 const emit = defineEmits(['create-vendor', 'update:resources'])
@@ -189,6 +191,9 @@ const tripIdRef = toRef(props, 'tripId')
 const tripDateRef = toRef(props, 'tripDate')
 
 const showWorkloadPanel = ref(false)
+
+const hydratingFromSnapshot = ref(false)
+const autoExternalSeatsHint = ref('')
 
 const { fetchWorkload, loadColor, workloadMap } = useDriverWorkload(tripDateRef)
 
@@ -236,9 +241,6 @@ const panelErrorMessage = computed(() => {
   if (!c) return ''
   const map = {
     empty: 'trip_detail.coordination.resource_validation_empty',
-    mix: 'trip_detail.coordination.resource_validation_mix',
-    need_driver: 'trip_detail.coordination.resource_validation_need_driver',
-    need_vehicle: 'trip_detail.coordination.resource_validation_need_vehicle',
     need_provider: 'trip_detail.coordination.validation_provider',
   }
   const key = map[c]
@@ -289,6 +291,71 @@ function onAssignFromWorkloadPanel(driverId) {
   })
 }
 
+function minSeatsNeeded() {
+  const n = Number(props.neededSeats)
+  return Number.isFinite(n) && n > 0 ? n : 1
+}
+
+function findBestVehicleForDriver(driverId) {
+  const need = minSeatsNeeded()
+  const opts = internalVehicleOptions.value.filter(
+    (v) => v.defaultDriverId === driverId && v.available !== false,
+  )
+  if (!opts.length) return null
+  const fitting = opts.filter((v) => (v.seatCount ?? 0) >= need)
+  const pool = fitting.length ? fitting : opts
+  if (fitting.length) {
+    return pool.slice().sort((a, b) => (a.seatCount ?? 0) - (b.seatCount ?? 0))[0]
+  }
+  return pool.slice().sort((a, b) => (b.seatCount ?? 0) - (a.seatCount ?? 0))[0]
+}
+
+function syncInternalVehicleToDriver() {
+  if (props.hideInternalDriverSection || props.hideInternalVehicleSection) return
+  const d = selected.value.internalDrivers[0]
+  if (!d || !Number.isFinite(Number(d.id))) return
+  const veh = findBestVehicleForDriver(Number(d.id))
+  if (!veh) return
+  const cur = selected.value.internalVehicles[0]
+  if (cur && Number(cur.id) === Number(veh.id)) return
+  selected.value.internalVehicles = [veh]
+}
+
+watch(
+  () => selected.value.internalDrivers.map((x) => String(x.id)).join(','),
+  () => {
+    if (hydratingFromSnapshot.value) return
+    if (props.hideInternalDriverSection || props.hideInternalVehicleSection) return
+    const d = selected.value.internalDrivers[0]
+    if (!d || !Number.isFinite(Number(d.id))) return
+    syncInternalVehicleToDriver()
+  },
+)
+
+watch(
+  () => [selected.value.taxis.length, selected.value.vendors.length],
+  ([taxiN, vendorN], prev) => {
+    const prevT = prev?.[0] ?? 0
+    const prevV = prev?.[1] ?? 0
+    const now = taxiN + vendorN > 0
+    const was = prevT + prevV > 0
+    const hint = String(
+      t('trip_detail.coordination.external_vehicle_seats_auto', { n: minSeatsNeeded() }) || '',
+    ).trim()
+    if (now && !was && !String(externalVehicleRef.value || '').trim() && hint) {
+      externalVehicleRef.value = hint
+      autoExternalSeatsHint.value = hint
+      return
+    }
+    if (!now && was && autoExternalSeatsHint.value) {
+      const cur = String(externalVehicleRef.value || '').trim()
+      const auto = String(autoExternalSeatsHint.value || '').trim()
+      if (cur === auto) externalVehicleRef.value = ''
+      autoExternalSeatsHint.value = ''
+    }
+  },
+)
+
 watch(
   [selected, externalVehicleRef, externalDriverRef],
   () => emitResources(),
@@ -306,16 +373,23 @@ watch(
     if (key === prevKey) return
     const snap = props.tripSnapshot
     if (!snap?.tripId) return
-    await fetchOptions()
-    applyHydration({
-      vehicleId: snap.vehicleId,
-      driverId: snap.driverId,
-      transportProviderId: snap.transportProviderId,
-    })
-    externalVehicleRef.value = snap.externalVehicleRef ?? ''
-    externalDriverRef.value = snap.externalDriverRef ?? ''
-    lastPayloadJson.value = ''
-    emitResources()
+    hydratingFromSnapshot.value = true
+    try {
+      await fetchOptions()
+      applyHydration({
+        vehicleId: snap.vehicleId,
+        driverId: snap.driverId,
+        transportProviderId: snap.transportProviderId,
+      })
+      externalVehicleRef.value = snap.externalVehicleRef ?? ''
+      externalDriverRef.value = snap.externalDriverRef ?? ''
+      autoExternalSeatsHint.value = ''
+      lastPayloadJson.value = ''
+      emitResources()
+    } finally {
+      await nextTick()
+      hydratingFromSnapshot.value = false
+    }
   },
   { immediate: true },
 )

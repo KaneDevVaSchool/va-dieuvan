@@ -301,47 +301,84 @@
           <!-- Sidebar / coordination (5/12) -->
           <div class="min-w-0 space-y-4 xl:col-span-5">
             <section
-              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden"
+              class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md ring-1 ring-slate-100/80 print:hidden dark:border-slate-700/80 dark:bg-slate-950/30 dark:ring-slate-800/80"
               :aria-label="t('trip_detail.coordination.title')"
             >
-              <div class="border-b border-slate-100/90 bg-slate-50 px-4 py-3 sm:px-4 dark:border-slate-700/80 dark:bg-slate-900/80">
-                <div class="flex flex-wrap items-start justify-between gap-2">
-                  <div class="min-w-0">
-                    <h2 class="text-sm font-bold tracking-tight text-slate-900">{{ t('trip_detail.coordination.title') }}</h2>
-                    <p class="mt-1 text-xs leading-relaxed text-slate-600">{{ t('trip_detail.coordination.subtitle') }}</p>
+              <div class="space-y-3 p-3 sm:p-4">
+                <div
+                  class="relative z-10 rounded-2xl border border-violet-200/70 bg-gradient-to-r from-slate-50 via-violet-50/50 to-indigo-50/30 px-2 py-2 shadow-md shadow-violet-500/5 ring-1 ring-violet-200/40 backdrop-blur-sm dark:border-violet-800/50 dark:from-slate-950 dark:via-violet-950/30 dark:to-indigo-950/20 dark:shadow-none dark:ring-violet-800/40"
+                >
+                  <div class="flex flex-nowrap items-center gap-x-1 overflow-x-auto sm:gap-x-2">
+                    <span
+                      class="max-w-[42%] shrink-0 truncate text-[10px] font-bold uppercase tracking-wide text-violet-800 dark:text-violet-200 sm:max-w-[13rem]"
+                    >{{ t('trip_detail.coordination.title') }}</span>
+                    <details class="group relative min-w-0 shrink-0">
+                      <summary
+                        class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2 py-1.5 text-left shadow-sm hover:border-teal-200/70 dark:border-slate-700/90 dark:bg-slate-900/95 dark:hover:border-teal-800/70 [&::-webkit-details-marker]:hidden"
+                      >
+                        <FunnelIcon class="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" aria-hidden="true" />
+                        <span class="max-w-[6.5rem] truncate text-xs font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">{{
+                          t('trip_detail.coordination.toolbar_funnel_label')
+                        }}</span>
+                        <ChevronDownIcon
+                          class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 dark:text-slate-500"
+                          aria-hidden="true"
+                        />
+                      </summary>
+                      <div
+                        class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] max-w-[min(100vw-1.5rem,320px)] rounded-2xl border border-violet-200/70 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/50 dark:bg-slate-900"
+                      >
+                        <div
+                          class="border-b border-violet-100/80 pb-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-800 dark:text-violet-300"
+                        >
+                          {{ t('trip_detail.coordination.toolbar_funnel_applied') }}
+                        </div>
+                        <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto text-sm text-slate-800 dark:text-slate-200">
+                          <li v-for="(line, idx) in coordinationFunnelLines" :key="'cf-' + idx">{{ line }}</li>
+                          <li v-if="!coordinationFunnelLines.length" class="text-sm text-slate-500 dark:text-slate-400">
+                            {{ t('trip_detail.coordination.toolbar_funnel_empty') }}
+                          </li>
+                        </ul>
+                      </div>
+                    </details>
+                    <div class="hidden h-6 w-px shrink-0 bg-violet-200/80 sm:block dark:bg-violet-700/50" aria-hidden="true" />
+                    <div class="min-w-0 flex-1" />
+                    <div class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 dark:border-violet-700/50">
+                      <Button
+                        v-if="canAssign"
+                        type="button"
+                        variant="secondary"
+                        class="!shrink-0 !whitespace-nowrap !px-2.5 !py-1.5 !text-xs"
+                        :loading="sameDayTripsLoading || refreshing"
+                        :disabled="sameDayTripsLoading"
+                        @click="refreshCoordinationData"
+                      >
+                        {{ t('trip_detail.coordination.refresh_schedule') }}
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    v-if="canAssign"
-                    type="button"
-                    variant="secondary"
-                    class="!shrink-0 !px-2.5 !py-1.5 !text-xs"
-                    :loading="sameDayTripsLoading || refreshing"
-                    :disabled="sameDayTripsLoading"
-                    @click="refreshCoordinationData"
-                  >
-                    {{ t('trip_detail.coordination.refresh_schedule') }}
-                  </Button>
                 </div>
-              </div>
 
-              <div class="space-y-4 p-4 sm:p-4">
                 <div
                   v-if="canRescheduleTrip"
-                  class="rounded-xl border border-indigo-200/80 bg-indigo-50/90 p-3 shadow-sm dark:border-indigo-800/50 dark:bg-indigo-950/40"
+                  class="rounded-xl border border-indigo-200/80 bg-indigo-50/90 p-2 shadow-sm dark:border-indigo-800/50 dark:bg-indigo-950/40"
                 >
-                  <div class="text-xs font-bold uppercase tracking-wide text-indigo-900">{{ t('trip_detail.reschedule.title') }}</div>
-                  <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.reschedule.hint') }}</p>
-                  <input
-                    v-model="rescheduleDepartLocal"
-                    type="datetime-local"
-                    class="mt-3 w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm outline-none ring-2 ring-transparent focus:border-indigo-300 focus:ring-indigo-100"
-                  />
-                  <Button class="mt-3 w-full sm:w-auto" type="button" :loading="rescheduling" @click="doReschedule">
-                    {{ t('trip_detail.reschedule.save') }}
-                  </Button>
+                  <div class="flex flex-nowrap items-center gap-2 overflow-x-auto">
+                    <span class="shrink-0 text-[10px] font-bold uppercase tracking-wide text-indigo-900 dark:text-indigo-200">{{
+                      t('trip_detail.reschedule.title')
+                    }}</span>
+                    <input
+                      v-model="rescheduleDepartLocal"
+                      type="datetime-local"
+                      class="min-w-0 flex-1 shrink rounded-lg border border-indigo-100 bg-white px-2 py-1.5 text-xs outline-none ring-2 ring-transparent focus:border-indigo-300 focus:ring-indigo-100 dark:border-indigo-800 dark:bg-slate-900 dark:text-slate-100 sm:min-w-[11rem] sm:text-sm"
+                    />
+                    <Button class="shrink-0 !px-2.5 !py-1.5 !text-xs" type="button" :loading="rescheduling" @click="doReschedule">
+                      {{ t('trip_detail.reschedule.save') }}
+                    </Button>
+                  </div>
                   <div
                     v-if="rescheduleMsg"
-                    class="mt-3 rounded-lg border px-3 py-2 text-xs font-medium"
+                    class="mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium"
                     :class="rescheduleFeedbackIsError ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'"
                     role="status"
                   >
@@ -349,20 +386,7 @@
                   </div>
                 </div>
 
-                <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 shadow-sm">
-                  <p class="mt-1 text-xs text-slate-600">{{ t('trip_detail.coordination.driver_default_vehicle_hint') }}</p>
-                  <p v-if="coordinationScheduleHint" class="mt-2 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 py-1.5 text-[11px] font-medium text-slate-700">
-                    {{ coordinationScheduleHint }}
-                  </p>
-                  <p
-                    v-if="schedulePreviewDirty"
-                    class="mt-2 rounded-lg border border-sky-200/90 bg-sky-50/90 px-2.5 py-1.5 text-[11px] font-medium text-sky-900"
-                  >
-                    {{ t('trip_detail.coordination.preview_window_hint') }}
-                  </p>
-                  <p v-if="sameDayTripsLoading" class="mt-2 text-[11px] text-slate-500">{{ t('trip_detail.coordination.schedule_loading') }}</p>
-                  <p v-if="sameDayTripsError" class="mt-2 text-[11px] text-rose-700">{{ sameDayTripsError }}</p>
-                  <p v-if="busyResourcesHint && dispatchResources?.mode !== 'external'" class="mt-2 text-[11px] text-amber-800">{{ busyResourcesHint }}</p>
+                <div class="rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/40">
                   <VehicleCard
                     v-if="showInternalVehicleCard && selectedVehicleForCard"
                     :vehicle="selectedVehicleForCard"
@@ -381,6 +405,7 @@
                     ref="resourcePanelRef"
                     :trip-id="trip.id"
                     :trip-date="scheduleDateKeyForList"
+                    :needed-seats="neededSeats"
                     :available-count="suitableVehiclesCount"
                     :busy-vehicle-ids="busyVehicleIdList"
                     :busy-driver-ids="busyDriverIdList"
@@ -391,8 +416,6 @@
                     @update:resources="onDispatchResourcesUpdate"
                     @create-vendor="openProviderModal"
                   />
-                  <p v-if="suitableVehiclesHint" class="mt-2 text-xs font-medium text-emerald-800">{{ suitableVehiclesHint }}</p>
-                  <p v-if="selectedVehicleSeatsWarning" class="mt-2 text-xs font-medium text-rose-700">{{ selectedVehicleSeatsWarning }}</p>
                 </div>
 
                 <div
@@ -426,9 +449,6 @@
                   />
                 </div>
 
-                <div v-if="resourceHint" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950">
-                  {{ resourceHint }}
-                </div>
                 <div
                   v-if="assignMsg"
                   class="rounded-lg border px-3 py-2.5 text-sm font-medium"
@@ -485,7 +505,7 @@
                       type="button"
                       class="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 disabled:opacity-50"
                       :disabled="attachDeletingId === a.id"
-                      :title="t('trip_detail.attachments.delete')"
+                      :aria-label="t('trip_detail.attachments.delete')"
                       @click="removeAttachment(a)"
                     >
                       <TrashIcon class="h-5 w-5" />
@@ -574,7 +594,7 @@
                 :src="embedMapSrc"
                 class="absolute inset-0 h-full w-full border-0"
                 loading="lazy"
-                :title="t('trip_detail.route.map_title')"
+                :aria-label="t('trip_detail.route.map_title')"
               />
             </div>
             <div class="border-t border-slate-100 px-4 py-3">
@@ -602,7 +622,6 @@
         >
           <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
             <h3 class="text-sm font-semibold text-slate-900">{{ t('trip_detail.coordination.provider_modal_title') }}</h3>
-            <p class="mt-1 text-xs text-slate-500">{{ t('trip_detail.coordination.provider_modal_hint') }}</p>
             <div class="mt-4 space-y-3">
               <Input v-model="newProviderName" :label="t('trip_detail.coordination.provider_modal_name')" :placeholder="t('trip_detail.coordination.provider_modal_name_ph')" />
               <Select v-model="newProviderType" :label="t('trip_detail.coordination.provider_modal_type')">
@@ -629,6 +648,8 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ChevronDownIcon,
+  FunnelIcon,
   TrashIcon,
 } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
@@ -1221,12 +1242,6 @@ const suitableVehiclesCount = computed(() => {
   return vehicles.value.filter((v) => (v.seat_count ?? 0) >= neededSeats.value).length
 })
 
-const suitableVehiclesHint = computed(() => {
-  const n = suitableVehiclesCount.value
-  if (!vehicles.value.length || n < 1) return ''
-  return t('trip_detail.coordination.suitable_vehicles', { n })
-})
-
 function toLocalDateKey(iso) {
   if (!iso) return ''
   const x = new Date(iso)
@@ -1366,7 +1381,7 @@ const overlappingOtherTrips = computed(() => {
 
 const selectedVehicleSeatsWarning = computed(() => {
   const p = dispatchResources.value
-  if (!p || p.mode !== 'internal' || !p.primaryVehicleId) return ''
+  if (!p || !p.primaryVehicleId) return ''
   const v = vehicles.value.find((x) => String(x.id) === String(p.primaryVehicleId))
   if (!v) return ''
   const n = v.seat_count ?? 0
@@ -1378,21 +1393,15 @@ const assignReady = computed(() => {
   if (!canAssign.value) return false
   const p = dispatchResources.value
   if (!p?.readyForSubmit) return false
-  if (p.mode === 'internal') {
-    if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) return false
-    if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) return false
-    const v = vehicles.value.find((x) => Number(x.id) === Number(p.vehicle_id))
-    if (v && (v.seat_count ?? 0) < neededSeats.value) return false
-  }
+  if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) return false
+  if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) return false
+  const v = vehicles.value.find((x) => Number(x.id) === Number(p.vehicle_id))
+  if (v && (v.seat_count ?? 0) < neededSeats.value) return false
   return true
 })
 
-const showInternalVehicleCard = computed(
-  () => dispatchResources.value?.mode === 'internal' && dispatchResources.value?.vehicle_id != null,
-)
-const showInternalDriverCard = computed(
-  () => dispatchResources.value?.mode === 'internal' && dispatchResources.value?.driver_id != null,
-)
+const showInternalVehicleCard = computed(() => dispatchResources.value?.vehicle_id != null)
+const showInternalDriverCard = computed(() => dispatchResources.value?.driver_id != null)
 
 const selectedVehicleForCard = computed(() => {
   const id = dispatchResources.value?.vehicle_id
@@ -1449,6 +1458,23 @@ const coordinationScheduleHint = computed(() => {
 const busyResourcesHint = computed(() => {
   if (!busyDriverIds.value.size && !busyVehicleIds.value.size) return ''
   return t('trip_detail.coordination.busy_resources_hint')
+})
+
+/** Lịch / tải / cảnh báo gọn trong panel phễu (không hiển thị dạng đoạn hint dài trên trang). */
+const coordinationFunnelLines = computed(() => {
+  const lines = []
+  if (sameDayTripsLoading.value) lines.push(t('trip_detail.coordination.schedule_loading'))
+  if (sameDayTripsError.value) lines.push(sameDayTripsError.value)
+  const win = coordinationScheduleHint.value
+  if (win) lines.push(win)
+  if (schedulePreviewDirty.value) lines.push(t('trip_detail.coordination.preview_window_hint'))
+  const busy = busyResourcesHint.value
+  if (busy) lines.push(busy)
+  const seats = selectedVehicleSeatsWarning.value
+  if (seats) lines.push(seats)
+  const rh = resourceHint.value?.trim()
+  if (rh) lines.push(rh)
+  return lines
 })
 
 async function loadSameDayTrips() {
@@ -1811,17 +1837,15 @@ async function onApproveTransfer() {
     return
   }
 
-  if (p.mode === 'internal') {
-    if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) {
-      assignFeedbackKind.value = 'error'
-      assignMsg.value = t('trip_detail.coordination.validation_busy_driver')
-      return
-    }
-    if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) {
-      assignFeedbackKind.value = 'error'
-      assignMsg.value = t('trip_detail.coordination.validation_busy_vehicle')
-      return
-    }
+  if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = t('trip_detail.coordination.validation_busy_driver')
+    return
+  }
+  if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id))) {
+    assignFeedbackKind.value = 'error'
+    assignMsg.value = t('trip_detail.coordination.validation_busy_vehicle')
+    return
   }
 
   assigning.value = true

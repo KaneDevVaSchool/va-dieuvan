@@ -10,15 +10,19 @@ function toResourceVehicle(v: Record<string, unknown>, busy: Set<number>): Resou
   const id = v.id as number
   const plate = String(v.license_plate ?? '')
   const type = v.type != null ? String(v.type) : '—'
-  const seats = v.seat_count != null ? Number(v.seat_count) : 0
+  const seatsRaw = v.seat_count != null ? Number(v.seat_count) : 0
+  const seats = Number.isFinite(seatsRaw) && seatsRaw > 0 ? seatsRaw : 0
   const subParts: string[] = []
-  const def = v.default_driver as { full_name?: string } | undefined
+  const def = v.default_driver as { id?: number; full_name?: string } | undefined
   if (def?.full_name) subParts.push(String(def.full_name))
+  const defId = def?.id != null && Number.isFinite(Number(def.id)) ? Number(def.id) : null
   return {
     id,
     label: `${plate} · ${type}${seats ? ` (${seats})` : ''}`,
     sublabel: subParts.length ? subParts.join(' · ') : undefined,
     available: !busy.has(id),
+    defaultDriverId: defId,
+    seatCount: seats > 0 ? seats : null,
   }
 }
 
@@ -123,25 +127,37 @@ export function useResourceSelector(
     }))
   })
 
+  const MAX_EXTERNAL_VEHICLE_REF = 255
+
+  function truncateExternalRef(s: string): string {
+    const t = s.trim()
+    if (t.length <= MAX_EXTERNAL_VEHICLE_REF) return t
+    return `${t.slice(0, MAX_EXTERNAL_VEHICLE_REF - 1)}…`
+  }
+
   function validationCode(): ResourceDispatchValidationCode {
     const intV = selected.value.internalVehicles
     const intD = selected.value.internalDrivers
     const txs = selected.value.taxis
     const vds = selected.value.vendors
 
-    const hasInternalPiece = intV.length > 0 || intD.length > 0
-    const hasExternalPiece = txs.length > 0 || vds.length > 0
+    const hasV = intV.length > 0
+    const hasD = intD.length > 0
+    const hasT = txs.length > 0
+    const hasP = vds.length > 0
+    if (!hasV && !hasD && !hasT && !hasP) return 'empty'
 
-    if (!hasInternalPiece && !hasExternalPiece) return 'empty'
-    if (hasInternalPiece && hasExternalPiece) return 'mix'
-    if (hasExternalPiece) {
-      if (vds.length === 0 && txs.length === 0) return 'need_provider'
-      return null
+    const numericTaxis = txs.filter((t) => !isCustomResource(t))
+    const customMeaningful = txs
+      .filter((t) => isCustomResource(t))
+      .some((x) => String(x.label ?? '').trim().length > 0)
+
+    if (hasT || hasP) {
+      const hasNumericId = vds.length > 0 || numericTaxis.length > 0
+      if (!hasNumericId && !customMeaningful) return 'need_provider'
     }
-    if (intV.length > 0 && intD.length === 0) return 'need_driver'
-    if (intD.length > 0 && intV.length === 0) return 'need_vehicle'
-    if (intV.length > 0 && intD.length > 0) return null
-    return 'empty'
+
+    return null
   }
 
   function buildDispatchPayload(
@@ -154,6 +170,16 @@ export function useResourceSelector(
     const txs = selected.value.taxis
     const vds = selected.value.vendors
 
+    const hasV = intV.length > 0
+    const hasD = intD.length > 0
+    const hasT = txs.length > 0
+    const hasP = vds.length > 0
+
+    const numericTaxis = txs.filter((t) => !isCustomResource(t))
+    const customTaxis = txs.filter((t) => isCustomResource(t))
+    const customLabels = customTaxis.map((x) => String(x.label ?? '').trim()).filter(Boolean)
+    const customLine = customLabels.length ? `Taxi: ${customLabels.join(', ')}` : ''
+
     const base: ResourceDispatchPayload = {
       readyForSubmit: false,
       validationCode: code,
@@ -161,7 +187,7 @@ export function useResourceSelector(
       vehicle_id: null,
       driver_id: null,
       transport_provider_id: null,
-      external_vehicle_ref: externalVehicleRef?.trim() || null,
+      external_vehicle_ref: null,
       external_driver_ref: externalDriverRef?.trim() || null,
       internal_vehicle_ids: intV.map((x) => x.id),
       taxi_ids: txs.map((x) => x.id),
@@ -169,55 +195,82 @@ export function useResourceSelector(
       primaryVehicleId: null,
     }
 
-    if (code !== null) return base
-
-    if (txs.length > 0 || vds.length > 0) {
-      const numericTaxis = txs.filter((t) => !isCustomResource(t))
-      const customTaxis = txs.filter((t) => isCustomResource(t))
-
-      let providerId: number | null = null
-      if (vds.length > 0) providerId = Number(vds[0].id)
-      else if (numericTaxis.length > 0) providerId = Number(numericTaxis[0].id)
-
-      const customLine =
-        customTaxis.length > 0
-          ? `Taxi: ${customTaxis.map((x) => String(x.label).trim()).join(', ')}`
-          : ''
-
-      let evRef = externalVehicleRef?.trim() || null
-      if (customLine) evRef = evRef ? `${customLine} · ${evRef}` : customLine
-
-      const ready =
-        vds.length > 0 || numericTaxis.length > 0 || customTaxis.length > 0
-
+    if (code !== null) {
       return {
         ...base,
-        readyForSubmit: ready,
-        validationCode: ready ? null : 'need_provider',
-        mode: 'external',
-        vehicle_id: null,
-        driver_id: null,
-        transport_provider_id: providerId,
-        external_vehicle_ref: evRef,
-        external_driver_ref: externalDriverRef?.trim() || null,
-        taxi_ids: numericTaxis.map((x) => x.id),
-        vendor_ids: vds.map((x) => x.id),
-        primaryVehicleId: null,
+        external_vehicle_ref: externalVehicleRef?.trim() || null,
       }
     }
 
-    const vehicleId = intV.length ? Number(intV[0].id) : null
-    const driverId = intD.length ? Number(intD[0].id) : null
+    const vehicleId = hasV ? Number(intV[0].id) : null
+    const driverId = hasD ? Number(intD[0].id) : null
+    const safeVehicleId = Number.isFinite(vehicleId) ? vehicleId : null
+    const safeDriverId = Number.isFinite(driverId) ? driverId : null
+
+    let providerId: number | null = null
+    let primaryKind: 'vendor' | 'taxi' | null = null
+    if (vds.length > 0) {
+      const id = Number(vds[0].id)
+      providerId = Number.isFinite(id) ? id : null
+      primaryKind = 'vendor'
+    } else if (numericTaxis.length > 0) {
+      const id = Number(numericTaxis[0].id)
+      providerId = Number.isFinite(id) ? id : null
+      primaryKind = 'taxi'
+    }
+
+    const extraProviderLabels: string[] = []
+    if (primaryKind === 'vendor' && providerId != null) {
+      for (let i = 1; i < vds.length; i++) {
+        const lab = String(vds[i].label ?? '').trim()
+        if (lab) extraProviderLabels.push(`NCC: ${lab}`)
+      }
+      for (const t of numericTaxis) {
+        const lab = String(t.label ?? '').trim()
+        if (lab) extraProviderLabels.push(`Taxi: ${lab}`)
+      }
+    } else if (primaryKind === 'taxi' && providerId != null) {
+      for (let i = 1; i < numericTaxis.length; i++) {
+        const lab = String(numericTaxis[i].label ?? '').trim()
+        if (lab) extraProviderLabels.push(`Taxi: ${lab}`)
+      }
+      for (const v of vds) {
+        const lab = String(v.label ?? '').trim()
+        if (lab) extraProviderLabels.push(`NCC: ${lab}`)
+      }
+    }
+
+    const prefixParts = [...extraProviderLabels, customLine].filter(Boolean)
+    const prefix = prefixParts.join(' · ')
+    const userEv = externalVehicleRef?.trim() || ''
+    let evRef = ''
+    if (prefix && userEv) evRef = `${prefix} · ${userEv}`
+    else if (prefix) evRef = prefix
+    else evRef = userEv
+    evRef = evRef ? truncateExternalRef(evRef) : ''
+
+    const hasInternal = hasV || hasD
+    const hasExternalBody =
+      vds.length > 0 || numericTaxis.length > 0 || customLabels.length > 0
+    const mode =
+      hasInternal && hasExternalBody ? 'combined' : hasInternal ? 'internal' : 'external'
+
+    const ready = hasV || hasD || hasExternalBody
+
+    const extVehicleFinal = hasExternalBody ? evRef || null : null
+    const extDriverFinal = hasExternalBody ? externalDriverRef?.trim() || null : null
+
     return {
       ...base,
-      readyForSubmit: vehicleId != null && driverId != null,
-      mode: 'internal',
-      vehicle_id: vehicleId,
-      driver_id: driverId,
-      transport_provider_id: null,
-      external_vehicle_ref: null,
-      external_driver_ref: null,
-      primaryVehicleId: vehicleId,
+      readyForSubmit: ready,
+      validationCode: null,
+      mode,
+      vehicle_id: safeVehicleId,
+      driver_id: safeDriverId,
+      transport_provider_id: providerId,
+      external_vehicle_ref: extVehicleFinal,
+      external_driver_ref: extDriverFinal,
+      primaryVehicleId: safeVehicleId,
     }
   }
 

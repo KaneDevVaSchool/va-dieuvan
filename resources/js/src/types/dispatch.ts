@@ -6,6 +6,9 @@ export interface ResourceItem {
   available?: boolean
   /** Taxi nhập tay (không có bản ghi transport_provider) */
   isCustom?: boolean
+  /** Gắn từ API vehicle — đồng bộ xe khi chọn tài xế */
+  defaultDriverId?: number | null
+  seatCount?: number | null
 }
 
 export interface SelectedResources {
@@ -16,18 +19,12 @@ export interface SelectedResources {
   vendors: ResourceItem[]
 }
 
-export type ResourceDispatchValidationCode =
-  | null
-  | 'empty'
-  | 'mix'
-  | 'need_driver'
-  | 'need_vehicle'
-  | 'need_provider'
+export type ResourceDispatchValidationCode = null | 'empty' | 'need_provider'
 
 export interface ResourceDispatchPayload {
   readyForSubmit: boolean
   validationCode: ResourceDispatchValidationCode
-  mode: 'internal' | 'external'
+  mode: 'internal' | 'external' | 'combined'
   vehicle_id: number | null
   driver_id: number | null
   transport_provider_id: number | null
