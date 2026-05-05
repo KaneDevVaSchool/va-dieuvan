@@ -104,11 +104,19 @@
                 </td>
                 <td class="px-3 py-2.5 align-top text-slate-600" @click="toggleExpand(row.passengerKey)">
                   <div class="flex flex-wrap items-center gap-1.5">
-                    <span v-if="row.flagWheelchair" :title="t('trip_detail.passengers.flag_wheelchair')">
-                      <WheelchairGlyph class="h-5 w-5 text-rose-600" />
+                    <span
+                      v-if="row.flagWheelchair"
+                      role="img"
+                      :aria-label="t('trip_detail.passengers.flag_wheelchair')"
+                    >
+                      <WheelchairGlyph class="h-5 w-5 text-rose-600" aria-hidden="true" />
                     </span>
-                    <span v-if="row.flagAllergy" :title="t('trip_detail.passengers.flag_allergy')">
-                      <ExclamationTriangleIcon class="h-5 w-5 text-amber-500" />
+                    <span
+                      v-if="row.flagAllergy"
+                      role="img"
+                      :aria-label="t('trip_detail.passengers.flag_allergy')"
+                    >
+                      <ExclamationTriangleIcon class="h-5 w-5 text-amber-500" aria-hidden="true" />
                     </span>
                     <span>{{ row.notes || '—' }}</span>
                   </div>

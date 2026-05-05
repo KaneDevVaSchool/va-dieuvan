@@ -1621,7 +1621,6 @@
             "external_seats_taxi_label": "Số chỗ bổ sung (taxi)",
             "external_seats_ncc_label": "Số chỗ bổ sung (NCC)",
             "external_seats_ph": "VD: 7",
-            "combined_pick_hint": "Có thể gán xe/tài xế nội bộ kèm taxi và NCC trong cùng một lần — nhập số chỗ bổ sung phía taxi/NCC để tổng đủ chỗ chuyến.",
             "capacity_shortfall_detail": "Không đủ chỗ: cần {need}. Ước tính tổng {total} chỗ (xe nội bộ {internal}{taxiSep}{nccSep}).",
             "capacity_taxi_seg": " · Taxi +{n}",
             "capacity_ncc_seg": " · NCC +{n}",
@@ -1671,7 +1670,6 @@
             "tab_taxi": "Taxi",
             "tab_ncc": "NCC",
             "tab_aria_label": "Chọn loại nguồn lực",
-            "refresh_schedule": "Cập nhật lịch trùng",
             "toolbar_funnel_label": "Lịch & cảnh báo",
             "toolbar_funnel_applied": "Đang áp dụng",
             "toolbar_funnel_empty": "Không có cảnh báo lịch hoặc lỗi tải.",
@@ -1757,8 +1755,7 @@
         "route_tracking": {
             "title": "Theo dõi tuyến đường",
             "route": "Tuyến đường",
-            "open_map": "Mở bản đồ",
-            "hint_no_gps": "Gợi ý: hiện chưa có GPS tracking, nút “Mở bản đồ” sẽ mở chỉ đường theo điểm đón/trả."
+            "open_map": "Mở bản đồ"
         },
         "ops": {
             "title": "Thao tác điều vận",

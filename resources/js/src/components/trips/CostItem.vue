@@ -51,7 +51,6 @@
           type="button"
           :disabled="uploadingReceipt"
           class="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:border-blue-700 dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
-          :title="receiptAria"
           :aria-label="receiptAria"
           @click="triggerPick"
         >

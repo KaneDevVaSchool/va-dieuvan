@@ -1761,7 +1761,6 @@
             "external_seats_taxi_label": "Supplement seats (taxi)",
             "external_seats_ncc_label": "Supplement seats (vendor)",
             "external_seats_ph": "e.g. 7",
-            "combined_pick_hint": "Pick internal vehicle and driver alongside taxi or vendor in one assign — enter supplement seats for taxi/vendor so totals meet the trip need.",
             "capacity_shortfall_detail": "Not enough seats: need {need}. Estimated total {total} seats (internal {internal}{taxiSep}{nccSep}).",
             "capacity_taxi_seg": " · taxi +{n}",
             "capacity_ncc_seg": " · vendor +{n}",
@@ -1811,7 +1810,6 @@
             "tab_taxi": "Taxi",
             "tab_ncc": "Vendor",
             "tab_aria_label": "Select resource type",
-            "refresh_schedule": "Refresh schedule data",
             "toolbar_funnel_label": "Schedule & alerts",
             "toolbar_funnel_applied": "Active",
             "toolbar_funnel_empty": "No schedule alerts or load errors.",
@@ -1897,8 +1895,7 @@
         "route_tracking": {
             "title": "Live route tracking",
             "route": "Route",
-            "open_map": "Open map",
-            "hint_no_gps": "Tip: GPS tracking is not available yet. “Open map” will open directions based on origin/destination."
+            "open_map": "Open map"
         },
         "ops": {
             "title": "Dispatch actions",

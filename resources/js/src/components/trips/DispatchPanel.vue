@@ -4,7 +4,7 @@
     :aria-label="t('trip_detail.coordination.title')"
   >
     <div class="space-y-3 p-3">
-      <!-- Header row: title + tabs + funnel + refresh -->
+      <!-- Header row: title + tabs + funnel -->
       <div class="flex flex-wrap items-center gap-2">
         <span class="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">
           {{ t('trip_detail.coordination.title') }}
@@ -40,22 +40,7 @@
             </ul>
           </div>
         </details>
-
-        <button
-          v-if="canAssign"
-          type="button"
-          class="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-          :disabled="sameDayTripsLoading || refreshing"
-          @click="$emit('refresh-coordination')"
-        >
-          <span v-if="sameDayTripsLoading || refreshing" class="mr-1 inline-block h-2.5 w-2.5 animate-spin rounded-full border border-slate-300 border-t-slate-600" />
-          {{ t('trip_detail.coordination.refresh_schedule') }}
-        </button>
       </div>
-
-      <p v-if="canAssign" class="text-xs leading-snug text-slate-500 dark:text-slate-400">
-        {{ t('trip_detail.coordination.combined_pick_hint') }}
-      </p>
 
       <!-- Reschedule block -->
       <div
@@ -217,8 +202,6 @@ const props = defineProps<{
   rescheduling: boolean
   rescheduleMsg: string
   rescheduleFeedbackIsError: boolean
-  sameDayTripsLoading: boolean
-  refreshing: boolean
   showInternalVehicleCard: boolean
   selectedVehicleForCard: object | null
   vehicleCardBusy: boolean
@@ -241,7 +224,6 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'refresh-coordination': []
   reschedule: []
   'vehicle-card-change': []
   'driver-card-change': []

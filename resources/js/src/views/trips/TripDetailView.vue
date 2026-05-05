@@ -69,9 +69,7 @@
               :schedule-duration="scheduleDuration"
               :schedule-mismatch-notes="scheduleMismatchNotes"
               :estimated-distance-label="estimatedDistanceLabel"
-              :estimated-distance-sub="estimatedDistanceSub"
               :estimated-cost-label="estimatedCostLabel"
-              :estimated-cost-sub="estimatedCostSub"
               :requester-initials="requesterInitials"
               :requester-name="requesterName"
               :requester-subtitle="requesterSubtitle"
@@ -327,8 +325,6 @@
               :rescheduling="rescheduling"
               :reschedule-msg="rescheduleMsg"
               :reschedule-feedback-is-error="rescheduleFeedbackIsError"
-              :same-day-trips-loading="sameDayTripsLoading"
-              :refreshing="refreshing"
               :show-internal-vehicle-card="showInternalVehicleCard"
               :selected-vehicle-for-card="selectedVehicleForCard"
               :vehicle-card-busy="vehicleCardBusy"
@@ -348,7 +344,6 @@
               :assign-msg="assignMsg"
               :assign-feedback-kind="assignFeedbackKind"
               :coordination-funnel-lines="coordinationFunnelLines"
-              @refresh-coordination="refreshCoordinationData"
               @reschedule="doReschedule"
               @vehicle-card-change="onVehicleCardChange"
               @driver-card-change="onDriverCardChange"
@@ -858,17 +853,6 @@ const estimatedDistanceLabel = computed(() => {
   const km = trip.value?.record?.distance_km
   if (km != null && km !== '') return `${km} km`
   return '—'
-})
-
-const estimatedDistanceSub = computed(() => {
-  const km = trip.value?.record?.distance_km
-  if (km != null && km !== '') return t('trip_detail.overview.distance_from_record')
-  return t('trip_detail.overview.distance_not_recorded')
-})
-
-const estimatedCostSub = computed(() => {
-  if (estimatedCostVnd.value != null) return t('trip_detail.overview.cost_from_wizard')
-  return t('trip_detail.overview.cost_no_estimate')
 })
 
 const estimatedCostLabel = computed(() => {
@@ -1446,10 +1430,6 @@ async function loadSameDayTrips() {
   } finally {
     sameDayTripsLoading.value = false
   }
-}
-
-async function refreshCoordinationData() {
-  await Promise.all([loadResources(), loadSameDayTrips()])
 }
 
 function applyTripPayload(data) {

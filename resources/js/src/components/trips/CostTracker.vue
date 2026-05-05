@@ -93,7 +93,6 @@
           <button
             type="button"
             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-600 dark:bg-slate-900"
-            :title="t('trip_detail.costs.attach_receipt_aria')"
             :aria-label="t('trip_detail.costs.attach_receipt_aria')"
             @click="pendingFileRef?.click()"
           >

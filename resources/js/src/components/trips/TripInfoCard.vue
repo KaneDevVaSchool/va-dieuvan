@@ -19,9 +19,7 @@ const props = defineProps<{
   scheduleDuration: string
   scheduleMismatchNotes: string[]
   estimatedDistanceLabel: string
-  estimatedDistanceSub: string
   estimatedCostLabel: string
-  estimatedCostSub: string
   requesterInitials: string
   requesterName: string
   requesterSubtitle: string
@@ -222,9 +220,7 @@ const currentDotClass = computed(() => {
             {{ t('trip_detail.overview.est_distance') }} · {{ t('trip_detail.overview.est_cost') }}
           </div>
           <div class="mt-2 text-sm font-semibold tabular-nums text-slate-900">{{ estimatedDistanceLabel }}</div>
-          <p class="mt-0.5 text-[11px] leading-snug text-slate-500">{{ estimatedDistanceSub }}</p>
           <div class="mt-2 text-sm font-semibold tabular-nums text-slate-900">{{ estimatedCostLabel }}</div>
-          <p class="mt-0.5 text-[11px] leading-snug text-slate-500">{{ estimatedCostSub }}</p>
         </div>
       </div>
 
@@ -338,7 +334,7 @@ const currentDotClass = computed(() => {
                 class="absolute inset-0 h-full w-full border-0"
                 loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"
-                :title="t('trip_detail.route.map_title')"
+                :aria-label="t('trip_detail.route.map_title')"
               />
               <div
                 v-else
@@ -356,7 +352,6 @@ const currentDotClass = computed(() => {
             </button>
           </div>
         </div>
-        <p class="mt-3 text-xs text-slate-500">{{ t('trip_detail.route_tracking.hint_no_gps') }}</p>
       </details>
     </section>
   </div>
