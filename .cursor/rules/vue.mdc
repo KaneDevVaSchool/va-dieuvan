@@ -1,28 +1,31 @@
 ---
-alwaysApply: true
+description: Vue 3 + Pinia — script setup, tầng store/service, Tailwind; áp dụng khi sửa frontend.
+globs:
+  - resources/js/**/*.vue
+  - resources/js/**/*.ts
+alwaysApply: false
 ---
 
 # VUE 3 RULES
 
 ## CORE
 
-- Use <script setup>
-- Composition API only
+- Dùng `<script setup>`
+- Chỉ Composition API
 
 ## ARCHITECTURE
 
-Component → Store → Service
+Component → Store → Service (không gọi HTTP trực tiếp trong component)
 
-## RULES
+## LOGIC & STATE
 
-- No API call in component
-- Logic → store/composable
-- Template must be simple
+- Logic tái sử dụng → composable hoặc store
+- Expose rõ: data, loading, error cho UI
 
-## STATE
+## TEMPLATE
 
-- expose: data, loading, error
+- Giữ template đơn giản; nhánh phức tạp → tách component con
 
 ## UI
 
-- Use Tailwind
+- Tailwind; bám pattern filter/toolbar có sẵn khi thêm thanh lọc (xem `filter-toolbar-vue-tailwind.mdc`)

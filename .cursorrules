@@ -1,6 +1,7 @@
 ---
-
-## alwaysApply: true
+alwaysApply: true
+description: VA Điều Vận — nguyên tắc cốt lõi, tối ưu context/prompt, ranh giới stack (Laravel + Vue).
+---
 
 # CORE PRINCIPLES
 
@@ -8,64 +9,80 @@
 * 1 function = 1 responsibility
 * No dead code / TODO
 
+# CONTEXT & PROMPT (TỐI ƯU)
+
+* **Thu hẹp phạm vi**: Ưu tiên đọc/ghi đúng file/route/controller/service liên quan tính năng; không mở rộng diff không được yêu cầu.
+* **Thu thập có chủ đích**: Dùng tìm theo symbol/route/string trước; đọc file lớn theo khúc (offset/limit) hoặc chỉ component/hàm liên quan — tránh nạp toàn bộ view/controller dài vào phản hồi.
+* **Giảm trùng lặp**: Không nhắc lại toàn bộ rule đã có trong `.cursor/rules/` khi đã áp dụng; không paste lại cả file nếu chỉ sửa vài dòng (trích đoạn + đường dẫn đủ).
+* **Ràng buộc nhiệm vụ**: Nếu user mơ hồ, làm rõ 1 câu trước khi đổi kiến trúc; mặc định ưu tiên thay đổi tối thiểu.
+* **Ngôn ngữ**: User viết tiếng Việt → trả lời tiếng Việt khi phù hợp; nhãn UI/i18n theo locale hiện có (`resources/js/src/locales`).
+
 # ARCHITECTURE (MANDATORY)
 
 * Laravel:
 
-  * Controller must be thin
-  * Business logic → Service
+  * Controller mỏng
+  * Logic nghiệp vụ → Service
 * Vue:
 
-  * No API calls in component
+  * Không gọi API trực tiếp trong component
   * Component → Store → Service
+
+Chi tiết thêm: `.cursor/rules/laravel.mdc`, `.cursor/rules/vue.mdc` khi làm việc với file khớp glob.
+
+# ĐIỂM Neo REPO (THAM CHIẾU NHANH)
+
+* API SPA / route: `routes/api/`, đặc biệt `routes/api/spa/`
+* Backend: `app/Http/Controllers/`, `app/Services/`, `app/Http/Requests/`
+* Frontend: `resources/js/src/` (views, components, stores, composables)
 
 # SCOPE CONTROL (CRITICAL)
 
-* Only modify what is explicitly requested
-* Do NOT refactor unrelated code
-* Do NOT change architecture unless asked
-* Prefer minimal changes over large rewrites
+* Chỉ sửa phần được yêu cầu rõ ràng
+* Không refactor nhánh không liên quan
+* Không đổi kiến trúc trừ khi được hỏi
+* Ưu tiên thay đổi tối thiểu thay vì viết lại lớn
 
 # CODE QUALITY
 
-* Clean, readable, maintainable
-* Avoid over-engineering
-* Prefer simple and correct solution
+* Rõ ràng, dễ bảo trì
+* Tránh over-engineering
+* Ưu tiên đơn giản và đúng
 
 # UI/UX STANDARD
 
-* Clean, minimal, no visual noise
-* No tooltip / helper text unless required
-* Consistent spacing and layout
-* Use Tailwind (utility-first)
+* Gọn, tối giản
+* Không tooltip/helper text trừ khi cần
+* Spacing và layout nhất quán
+* Tailwind (utility-first)
 
 # INTERACTION RULES
 
-* Show loading state when needed
-* Disable actions while processing
-* Confirm destructive actions (delete, etc.)
-* Provide success / error feedback
+* Loading khi cần
+* Disable khi đang xử lý
+* Xác nhận hành động phá hủy (xóa, v.v.)
+* Phản hồi thành công / lỗi
 
 # PERFORMANCE AWARENESS
 
-* Avoid unnecessary re-render (Vue)
-* Avoid N+1 queries (Laravel)
-* Do not introduce heavy logic in UI layer
+* Tránh re-render thừa (Vue)
+* Tránh N+1 (Laravel)
+* Không đặt logic nặng ở tầng UI
 
 # RESPONSE RULES
 
-* Return only necessary code
-* Do not include unrelated changes
-* Explain briefly in Vietnamese if needed
+* Chỉ trả code / diff cần thiết
+* Không kèm thay đổi không liên quan
+* Giải thích ngắn bằng tiếng Việt khi cần
 
 # SAFETY RULES
 
-* Do not break existing behavior
-* No side effects
-* No hidden logic changes
+* Không phá hành vi hiện có
+* Không side effect không chủ ý
+* Không đổi logic ẩn
 
 # DEFAULT MINDSET
 
-* Think before coding
-* Fix root cause, not symptoms
-* Optimize for long-term maintainability
+* Suy nghĩ trước khi code
+* Sửa gốc, không vá triệu chứng
+* Ưu tiên bảo trì lâu dài

@@ -1,76 +1,44 @@
 ---
-description: >
-  Minimal bug-fix workflow for this project—tight scope, no unrelated refactors, reason from
-  code, fix at the right layer, and summarize root cause briefly in Vietnamese. Apply when
-  debugging, fixing regressions, or doing targeted fixes; users can also @-mention this rule.
+description: Quy trình sửa bug tối thiểu — phạm vi chặt, không refactor lan; @mention khi debug/fix.
 alwaysApply: false
 ---
 
-# 🎯 TASK
+# TASK
 
-Fix bug in the specified file.
+Sửa bug trong file/ngữ cảnh được chỉ định.
 
----
+## CONTEXT CONTROL
 
-# ⚠️ CONTEXT CONTROL (IMPORTANT)
+- Tập trung vào: `@<file>` (nên giới hạn dòng, ví dụ 1–200) khi có thể.
+- Bỏ qua tin nhắn không liên quan đến bug nếu user yêu cầu chế độ “chỉ bug”.
 
-Ignore all previous messages.
+## SCOPE
 
-Only focus on:
-@<file> (limit lines if possible, e.g. 1–200)
+- Thay đổi tối thiểu
+- Không refactor code không liên quan
+- Không đổi kiến trúc
+- Không đụng file khác trừ khi bắt buộc để sửa đúng
 
----
+## CONSTRAINTS
 
-# 🐛 BUG
+- Giữ hành vi hiện có (trừ phần sai)
+- Không side effect
+- Không abstraction mới trừ khi thực sự cần
+- Ưu tiên fix đơn giản nhất đúng layer (UI / Service / Query)
 
-<describe clearly>
+## DEBUG STRATEGY
 
----
+1. Xác định root cause từ code/thực thi, không đoán mù.
+2. Sửa đúng tầng (UI / Service / Query).
+3. Tránh workaround che lỗi.
 
-# 🎯 SCOPE
+## OUTPUT
 
-* Minimal change only
-* Do NOT refactor unrelated code
-* Do NOT change architecture
-* Do NOT touch other files unless absolutely required
+1. Code đã sửa (phần/file ảnh hưởng)
+2. Root cause (ngắn, tiếng Việt)
+3. Vì sao fix này đúng
 
----
+## GOAL
 
-# 🔒 CONSTRAINTS
-
-* Keep existing behavior intact
-* No side effects
-* No new abstraction unless necessary
-* Prefer simplest fix
-
----
-
-# 🧠 DEBUG STRATEGY
-
-1. Identify root cause
-2. Fix at the correct layer (UI / Service / Query)
-3. Avoid workaround hacks
-
----
-
-# 🎯 OUTPUT
-
-1. Fixed code (only affected part or file)
-2. Root cause (ngắn gọn, tiếng Việt)
-3. Why this fix is correct
-
----
-
-# 🚫 STRICT RULES
-
-* No over-engineering
-* No guessing → must reason from code
-* No large refactor
-
----
-
-# 🎯 GOAL
-
-* Fix đúng bug
-* Không phát sinh bug mới
-* Code clean, minimal, maintainable
+- Fix đúng bug, không tạo bug mới
+- Code gọn, dễ bảo trì

@@ -1,32 +1,42 @@
 ---
-alwaysApply: true
+description: Laravel API — FormRequest, Service, Resource; không logic trong controller.
+globs:
+  - app/**/*.php
+  - routes/**/*.php
+  - database/**/*.php
+alwaysApply: false
 ---
+
 # LARAVEL RULES
 
 ## FLOW (MANDATORY)
 
-Controller → FormRequest → Service → Resource
+Controller → FormRequest → Service → Resource (JSON)
 
 ## CONTROLLER
 
-- No business logic
-- Use FormRequest
+- Không chứa business logic
+- Inject service; chỉ điều phối và trả response
+
+## FORM REQUEST
+
+- Validate và authorize tại đây
+- Service nhận dữ liệu đã validate (DTO/array), không dùng trực tiếp `$request` trong service
 
 ## SERVICE
 
-- Handle all business logic
-- No $request usage
+- Toàn bộ logic nghiệp vụ
+- Truy vấn Eloquent / transaction tại đây khi phù hợp
 
 ## DB
 
-- Use Eloquent
-- Avoid N+1 (use with())
+- Eloquent; tránh N+1 (`with()`, eager load có chủ đích)
 
 ## SECURITY
 
-- Use $request->validated()
-- No hardcode secrets
+- `$request->validated()` / dữ liệu đã validate truyền xuống
+- Không hardcode secret; dùng config/env
 
 ## API
 
-- Use Resource
+- Dùng API Resource cho response chuẩn hóa
