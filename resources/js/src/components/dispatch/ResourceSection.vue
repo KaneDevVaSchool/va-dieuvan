@@ -1,11 +1,11 @@
 <template>
   <div
-    class="border-b border-[0.5px] border-slate-200 py-3 last:border-b-0 dark:border-slate-700"
+    class="border-b  py-3 last:border-b-0 dark:border-slate-700"
   >
     <div class="mb-2 flex items-center gap-2">
       <div
         v-if="icon"
-        class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-slate-200/80 bg-slate-100/80 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+        class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[10px] bg-slate-100/80 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
       >
         <component :is="icon" class="h-3.5 w-3.5" aria-hidden="true" />
       </div>
@@ -30,7 +30,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          class="w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white py-1.5 pl-2.5 pr-2 text-[13px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          class="w-full rounded-[12px] bg-white py-1.5 pl-2.5 pr-2 text-[13px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           :disabled="disabled"
           :placeholder="placeholder"
           @focus="onSearchFocus"
@@ -46,7 +46,7 @@
         >
           <div
             v-if="isOpen"
-            class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[12px] border-[0.5px] border-slate-200/90 bg-white dark:border-slate-600 dark:bg-slate-900"
+            class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[12px] /90 bg-white dark:border-slate-600 dark:bg-slate-900"
           >
             <template v-if="filteredOptions.length > 0">
               <button
@@ -104,7 +104,7 @@
         type="number"
         min="0"
         step="1"
-        class="w-[4.25rem] shrink-0 rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-1.5 py-1.5 text-center text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+        class="w-[4.25rem] shrink-0 rounded-[12px] /90 bg-white px-1.5 py-1.5 text-center text-[13px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/45 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
         :disabled="disabled"
         :aria-label="supplementSeatsAria"
         :placeholder="supplementSeatsPlaceholder"
@@ -118,7 +118,7 @@
       <div
         v-for="item in modelValue"
         :key="item.id"
-        class="inline-flex max-w-full items-center gap-1 rounded-[10px] border-[0.5px] border-slate-200/90 bg-slate-50 px-2 py-0.5 text-[12px] font-normal text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        class="inline-flex max-w-full items-center gap-1 rounded-[10px] /90 bg-slate-50 px-2 py-0.5 text-[12px] font-normal text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
       >
         <span class="min-w-0 truncate">{{ chipLabel(item) }}</span>
         <button
