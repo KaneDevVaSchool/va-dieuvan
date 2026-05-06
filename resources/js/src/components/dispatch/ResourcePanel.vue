@@ -389,6 +389,7 @@ function onAssignFromWorkloadPanel(driverId) {
   const driver = internalDriverOptions.value.find((d) => Number(d.id) === id)
   if (!driver) return
   selected.value.internalDrivers = [driver]
+  syncInternalVehicleToDriver()
   showWorkloadPanel.value = false
   lastPayloadJson.value = ''
   emitResources()
@@ -424,17 +425,6 @@ function syncInternalVehicleToDriver() {
   if (cur && Number(cur.id) === Number(veh.id)) return
   selected.value.internalVehicles = [veh]
 }
-
-watch(
-  () => selected.value.internalDrivers.map((x) => String(x.id)).join(','),
-  () => {
-    if (hydratingFromSnapshot.value) return
-    if (props.hideInternalDriverSection || props.hideInternalVehicleSection) return
-    const d = selected.value.internalDrivers[0]
-    if (!d || !Number.isFinite(Number(d.id))) return
-    syncInternalVehicleToDriver()
-  },
-)
 
 watch(
   () => selected,

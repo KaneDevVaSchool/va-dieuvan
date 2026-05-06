@@ -1782,7 +1782,10 @@
             "named_save_ok": "Passenger list saved.",
             "named_count_mismatch": "Passenger count must match the number of rows.",
             "named_invalid_count": "Invalid passenger count (1–50).",
-            "named_name_required": "Enter full name for passenger {n}."
+            "named_name_required": "Enter full name for passenger {n}.",
+            "named_mobile_fab_aria": "Named passenger list",
+            "named_sheet_close": "Close",
+            "named_sheet_close_overlay": "Close and return"
         },
         "costs_block": {
             "title": "Trip costs",
@@ -1816,7 +1819,7 @@
             "assign_driver": "Assign driver",
             "assign_pair_title": "Internal vehicle & driver",
             "resource_combine_hint": "You can tick any combination: vehicle only, driver only, taxi only, vendor only, or mixes (e.g. vehicle + vendor, vehicle + taxi, taxi + vendor, all three). Extra taxi/vendor rows are appended to «External vehicle reference».",
-            "driver_default_vehicle_hint": "Choosing a driver selects their default vehicle when it exists in the list.",
+            "driver_default_vehicle_hint": "Pick internal vehicle and driver independently; assigning from the driver workload panel suggests their default vehicle when available.",
             "assign_success": "Resources assigned successfully.",
             "reject_success": "Trip cancelled.",
             "hire_external": "Hire external taxi / vendor",

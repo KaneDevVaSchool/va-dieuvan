@@ -1642,7 +1642,10 @@
             "named_save_ok": "Đã lưu danh sách hành khách.",
             "named_count_mismatch": "Số khách phải khớp với số hành khách đã nhập.",
             "named_invalid_count": "Số khách không hợp lệ (1–50).",
-            "named_name_required": "Vui lòng nhập họ tên cho hành khách {n}."
+            "named_name_required": "Vui lòng nhập họ tên cho hành khách {n}.",
+            "named_mobile_fab_aria": "Danh sách hành khách có họ tên",
+            "named_sheet_close": "Đóng",
+            "named_sheet_close_overlay": "Đóng và quay lại"
         },
         "costs_block": {
             "title": "Chi phí phát sinh",
@@ -1676,7 +1679,7 @@
             "assign_driver": "Gán tài xế",
             "assign_pair_title": "Xe & tài xế nội bộ",
             "resource_combine_hint": "Có thể tick đồng thời: chỉ xe, chỉ tài xế, chỉ taxi, chỉ NCC, hoặc bất kỳ tổ hợp (vd. xe + NCC, xe + taxi, taxi + NCC, cả ba…). Nhiều taxi/NCC phụ được ghi thêm trong «Tham chiếu xe ngoài».",
-            "driver_default_vehicle_hint": "Chọn tài xế sẽ tự chọn xe mặc định gắn với tài xế đó (nếu có trong danh sách).",
+            "driver_default_vehicle_hint": "Chọn xe và tài xế nội bộ độc lập; từ «Lịch tải tài xế» hệ thống gợi ý xe mặc định gắn tài xế (nếu có).",
             "assign_success": "Đã gán nguồn lực thành công.",
             "reject_success": "Đã hủy chuyến.",
             "hire_external": "Thuê ngoài taxi / NCC",

@@ -461,6 +461,7 @@
                     <div class="min-w-0 space-y-4 xl:col-span-12">
                         <TripNamedPassengersEditor
                             v-if="showNamedPassengersEditor"
+                            class="hidden md:block"
                             v-model:passenger-count="namedPassengerCount"
                             v-model:passengers="namedPassengers"
                             :saving="namedPassengersSaving"
@@ -753,6 +754,119 @@
                 </div>
             </Teleport>
         </template>
+
+        <Teleport to="body">
+            <template v-if="showNamedPassengersEditor && trip">
+                <!-- Mobile: nút trong cột phải giống NotificationCenter (stack dưới chuông) -->
+                <div
+                    class="pointer-events-none fixed right-0 top-0 z-[105] p-2 pl-6 print:hidden md:hidden sm:p-3"
+                    :style="namedPassengersMobileFabOffsetStyle"
+                >
+                    <div
+                        class="pointer-events-auto flex flex-col items-end gap-2"
+                    >
+                        <button
+                            type="button"
+                            class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200/90 bg-white/95 text-slate-800 shadow-md backdrop-blur transition hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-900/95 dark:text-slate-100 dark:hover:bg-slate-800"
+                            :title="
+                                t('trip_detail.passengers.named_mobile_fab_aria')
+                            "
+                            :aria-expanded="namedPassengersMobileOpen"
+                            aria-controls="trip-named-passengers-mobile-sheet"
+                            @click="
+                                namedPassengersMobileOpen =
+                                    !namedPassengersMobileOpen
+                            "
+                        >
+                            <UserGroupIcon
+                                class="h-6 w-6"
+                                aria-hidden="true"
+                            />
+                            <span
+                                v-if="namedPassengerCount > 0"
+                                class="absolute -bottom-1 -left-1 min-w-[1.25rem] rounded-full bg-[#8B1A1A] px-1 py-0.5 text-center text-[10px] font-bold leading-none text-white"
+                            >
+                                {{ namedPassengerCount }}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <Transition
+                    enter-active-class="transition-opacity duration-200 ease-out motion-reduce:transition-none"
+                    enter-from-class="opacity-0"
+                    leave-active-class="transition-opacity duration-150 ease-in motion-reduce:transition-none"
+                    leave-to-class="opacity-0"
+                >
+                    <div
+                        v-show="namedPassengersMobileOpen"
+                        class="fixed inset-0 z-[210] md:hidden print:hidden"
+                        role="dialog"
+                        aria-modal="true"
+                        :aria-label="
+                            t('trip_detail.passengers.named_section_title')
+                        "
+                    >
+                        <button
+                            type="button"
+                            class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+                            :aria-label="
+                                t(
+                                    'trip_detail.passengers.named_sheet_close_overlay',
+                                )
+                            "
+                            @click="namedPassengersMobileOpen = false"
+                        />
+                        <div
+                            id="trip-named-passengers-mobile-sheet"
+                            class="absolute inset-x-0 bottom-0 max-h-[min(92dvh,920px)] overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950"
+                            :style="{
+                                paddingBottom:
+                                    'max(0.75rem, env(safe-area-inset-bottom, 0px))',
+                            }"
+                            @click.stop
+                        >
+                            <div
+                                class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700"
+                            >
+                                <h2
+                                    class="text-sm font-semibold text-slate-900 dark:text-slate-50"
+                                >
+                                    {{
+                                        t(
+                                            "trip_detail.passengers.named_section_title",
+                                        )
+                                    }}
+                                </h2>
+                                <button
+                                    type="button"
+                                    class="rounded-xl px-3 py-1.5 text-xs font-medium text-[#8B1A1A] hover:bg-rose-50 dark:text-[#e57373] dark:hover:bg-rose-950/40"
+                                    @click="namedPassengersMobileOpen = false"
+                                >
+                                    {{
+                                        t(
+                                            "trip_detail.passengers.named_sheet_close",
+                                        )
+                                    }}
+                                </button>
+                            </div>
+                            <div
+                                class="max-h-[calc(min(92dvh,920px)-4rem)] overflow-y-auto overscroll-contain p-4"
+                            >
+                                <TripNamedPassengersEditor
+                                    v-model:passenger-count="
+                                        namedPassengerCount
+                                    "
+                                    v-model:passengers="namedPassengers"
+                                    :saving="namedPassengersSaving"
+                                    @save="onNamedPassengersMobileSave"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </Transition>
+            </template>
+        </Teleport>
     </div>
 </template>
 
@@ -760,7 +874,11 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { ArrowDownTrayIcon, TrashIcon } from "@heroicons/vue/24/outline";
+import {
+    ArrowDownTrayIcon,
+    TrashIcon,
+    UserGroupIcon,
+} from "@heroicons/vue/24/outline";
 import Button from "../../components/ui/Button.vue";
 import Input from "../../components/ui/Input.vue";
 import Select from "../../components/ui/Select.vue";
@@ -994,6 +1112,29 @@ const {
     formatApiMessage,
     t,
 });
+
+const namedPassengersMobileOpen = ref(false);
+
+const namedPassengersMobileFabOffsetStyle = computed(() => ({
+    paddingTop:
+        "calc(max(0.5rem, env(safe-area-inset-top, 0px)) + 3.25rem)",
+}));
+
+watch(
+    () => route.params.id,
+    () => {
+        namedPassengersMobileOpen.value = false;
+    },
+);
+
+watch(showNamedPassengersEditor, (v) => {
+    if (!v) namedPassengersMobileOpen.value = false;
+});
+
+async function onNamedPassengersMobileSave() {
+    const ok = await submitNamedPassengerList();
+    if (ok) namedPassengersMobileOpen.value = false;
+}
 
 const canPassengerCheckIn = computed(() => {
     if (!trip.value) return false;
