@@ -4,7 +4,7 @@ namespace App\Http\Requests\Api\Requests;
 
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Models\DispatchRequest;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
