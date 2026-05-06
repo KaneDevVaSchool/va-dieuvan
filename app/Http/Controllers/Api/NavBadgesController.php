@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Models\CargoShipment;
 use App\Models\DispatchRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class NavBadgesController extends Controller
@@ -28,6 +29,10 @@ class NavBadgesController extends Controller
         $cargoSlaBreaches = null;
         if ($user->hasPermission('cargo.manage') || $user->hasPermission('trip.assign')) {
             $cargoSlaBreaches = CargoShipment::query()
+                ->where(function (Builder $w) {
+                    $w->whereNull('dispatch_request_id')
+                        ->orWhereHas('dispatchRequest');
+                })
                 ->whereNotIn('status', ['delivered', 'cancelled'])
                 ->whereNotNull('sla_due_at')
                 ->where('sla_due_at', '<', now())
