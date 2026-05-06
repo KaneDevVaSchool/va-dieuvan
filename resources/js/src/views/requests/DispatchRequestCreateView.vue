@@ -293,11 +293,10 @@
                     {{ t('dispatch_wizard.create.date_needed') }} <span class="dw-req" aria-hidden="true">*</span>
                   </span>
                   <input
-                    v-model="form.date_needed"
-                    type="date"
+                    v-model="requestedDateTime"
+                    type="datetime-local"
                     lang="vi"
-                    :class="['dw-input dw-date-input mt-1 min-h-[2.75rem]', step2DateOrderInvalid ? 'ring-1 ring-rose-300' : '']"
-                    @click="openDatePickerFromInput($event)"
+                    :class="['dw-input mt-1 min-h-[2.75rem]', step2DateOrderInvalid ? 'ring-1 ring-rose-300' : '']"
                   />
                 </label>
               </div>
@@ -832,6 +831,7 @@ const {
   step2DateOrderInvalid,
   step2RequesterEmailInvalid,
   step2CoordinatorEmailInvalid,
+  requestedDateTime,
   tripTypeOptions,
   openDatePickerFromInput,
   onRequesterPhoneInput,

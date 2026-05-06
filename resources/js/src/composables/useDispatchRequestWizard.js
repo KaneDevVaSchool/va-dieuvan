@@ -15,7 +15,6 @@ import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { parseMoneyVnd } from '../util/money'
 import { newIdempotencyKey } from '../util/idempotency'
-import { toDatetimeLocalValue } from '../util/datetime'
 import {
   LEGACY_DRAFT_KEY,
   TARGET_OPTIONS,
@@ -31,6 +30,7 @@ import {
   draftItemStorageKey,
   draftActiveStorageKey,
   MAX_SAVED_DRAFTS,
+  todayISODate,
 } from './dispatchWizardConstants'
 import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
@@ -144,6 +144,7 @@ export function useDispatchRequestWizard() {
     trimBusinessRowsInPlace()
     trimCargoRowsInPlace()
     hasDraftSnapshot.value = true
+    hydrateRequestedDateTimeFromState()
     queueMicrotask(() => {
       syncUrgentFromSchedule()
       if (!urgentAutoActive.value) {
@@ -172,6 +173,12 @@ export function useDispatchRequestWizard() {
   const draftsModalOpen = ref(false)
 
   const form = ref(createInitialForm())
+  const requestedDateTime = ref(
+    (() => {
+      const d = form.value.date_needed || form.value.proposed_date || todayISODate()
+      return d ? `${d}T00:00` : ''
+    })(),
+  )
 
   /** Ngưỡng gấp (giờ): từ API `dispatch-form-settings`. */
   const urgentThresholds = ref({
@@ -503,36 +510,76 @@ export function useDispatchRequestWizard() {
     return t('dispatch_wizard.draft.new_session')
   })
 
-  function minDatetimeLocalFromValues(values) {
-    const vals = values.filter(Boolean)
-    if (!vals.length) return ''
-    let min = null
-    for (const v of vals) {
-      const t = new Date(v).getTime()
-      if (!Number.isNaN(t) && (min === null || t < min)) min = t
-    }
-    if (min === null) return ''
-    return toDatetimeLocalValue(new Date(min))
+  function formatRequestedDateTimeDisplay(v) {
+    const s = v != null ? String(v).trim() : ''
+    if (!s) return ''
+    const [dPart, tPartRaw] = s.split('T')
+    if (!dPart) return ''
+    const ymd = dPart.split('-')
+    if (ymd.length !== 3) return ''
+    const [y, m, day] = ymd
+    const hm = tPartRaw ? tPartRaw.slice(0, 5) : ''
+    return hm ? `${day}/${m}/${y} ${hm}` : `${day}/${m}/${y}`
   }
 
-  const computedDepartAt = computed(() => {
-    const vals = []
-    if (isCargo.value) {
-      for (const r of cargoRows.value) {
-        if (r.pickup_at) vals.push(r.pickup_at)
-      }
-    } else {
-      for (const r of passengerRows.value) {
-        if (r.depart_at) vals.push(r.depart_at)
-      }
-      if (!isPointToPointTrip.value) {
-        for (const r of businessRows.value) {
-          if (r.depart_at) vals.push(r.depart_at)
-        }
+  const formattedRequestedDateTime = computed(() => formatRequestedDateTimeDisplay(requestedDateTime.value))
+
+  const computedDepartAt = computed(() => requestedDateTime.value?.trim() || '')
+
+  function syncRowDepartTimesFromRequested(isoLocal) {
+    const v = isoLocal != null ? String(isoLocal).trim() : ''
+    for (const r of passengerRows.value) {
+      r.depart_at = v
+    }
+    for (const r of businessRows.value) {
+      r.depart_at = v
+    }
+    for (const r of cargoRows.value) {
+      r.pickup_at = v
+    }
+  }
+
+  function applyRequestedDateTimeToFormAndRows() {
+    const raw = requestedDateTime.value?.trim() ?? ''
+    form.value.date_needed = raw.length >= 10 ? raw.slice(0, 10) : ''
+    syncRowDepartTimesFromRequested(raw)
+  }
+
+  function hydrateRequestedDateTimeFromState() {
+    for (const r of passengerRows.value) {
+      if (r.depart_at?.trim()) {
+        requestedDateTime.value = r.depart_at.trim()
+        return
       }
     }
-    return minDatetimeLocalFromValues(vals)
-  })
+    for (const r of businessRows.value) {
+      if (r.depart_at?.trim()) {
+        requestedDateTime.value = r.depart_at.trim()
+        return
+      }
+    }
+    for (const r of cargoRows.value) {
+      if (r.pickup_at?.trim()) {
+        requestedDateTime.value = r.pickup_at.trim()
+        return
+      }
+    }
+    const d = form.value.date_needed || form.value.proposed_date || todayISODate()
+    requestedDateTime.value = d ? `${d}T00:00` : ''
+  }
+
+  watch(
+    () => ({
+      dt: requestedDateTime.value,
+      pl: passengerRows.value.length,
+      bl: businessRows.value.length,
+      cl: cargoRows.value.length,
+    }),
+    () => {
+      applyRequestedDateTimeToFormAndRows()
+    },
+    { flush: 'post', immediate: true },
+  )
 
   function thresholdHoursForTripType(tripType) {
     return tripType === 'cargo' ? urgentThresholds.value.cargo : urgentThresholds.value.passenger
@@ -1271,6 +1318,7 @@ export function useDispatchRequestWizard() {
     coordinatorSearchError.value = ''
     urgentAutoActive.value = false
     urgentManualDesired.value = false
+    hydrateRequestedDateTimeFromState()
   }
 
   function openClearDraftModal() {
@@ -1405,9 +1453,11 @@ export function useDispatchRequestWizard() {
     () => form.value.proposed_date,
     (newVal, oldVal) => {
       if (!newVal) return
-      // Chỉ đồng bộ khi "Ngày cần xe" vẫn trùng ngày đề xuất cũ — tránh ghi đè khi người dùng / nháp đã tách hai ngày.
+      // Chỉ đồng bộ khi ngày cần xe (theo bước 2) vẫn trùng ngày đề xuất cũ — tránh ghi đè khi nháp đã tách hai ngày.
       if (oldVal != null && form.value.date_needed !== oldVal) return
-      form.value.date_needed = newVal
+      const cur = requestedDateTime.value?.trim() || ''
+      const tPart = cur.includes('T') ? cur.slice(11) : '00:00'
+      requestedDateTime.value = `${newVal}T${tPart || '00:00'}`
     },
   )
 
@@ -1475,6 +1525,8 @@ export function useDispatchRequestWizard() {
     urgentAutoActive,
     appliedUrgentThresholdHours,
     toggleUrgentManual,
+    requestedDateTime,
+    formattedRequestedDateTime,
     computedDepartAt,
     rowLineTotal,
     passengerE1Total,

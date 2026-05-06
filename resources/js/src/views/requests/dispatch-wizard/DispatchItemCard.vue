@@ -35,13 +35,24 @@
         <legend class="px-1 text-xs font-semibold text-sky-700">
           {{ t('dispatch_wizard.s3.trip_out') }}
         </legend>
-        <BaseDateTime
-          :label="t('dispatch_wizard.s3.time')"
-          :model-value="departModel"
-          :error="errs.departTime"
-          :hint="t('dispatch_wizard.s3.card_hint_depart_optional')"
-          @update:model-value="setDepart"
-        />
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-medium text-slate-700">{{ t('dispatch_wizard.s3.time') }}</span>
+          <input
+            :value="formattedTripStart"
+            type="text"
+            readonly
+            tabindex="-1"
+            :class="[
+              'rounded-lg border px-3 py-2 text-sm shadow-sm',
+              errs.departTime
+                ? 'border-rose-300 bg-rose-50/50 text-slate-900 ring-1 ring-rose-200'
+                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-800',
+            ]"
+            :placeholder="t('dispatch_wizard.s3.readonly_depart_empty')"
+          />
+          <span v-if="errs.departTime" class="text-xs font-medium text-rose-600">{{ errs.departTime }}</span>
+          <span v-else class="text-xs text-slate-500">{{ t('dispatch_wizard.s3.trip_out_time_from_step2') }}</span>
+        </div>
         <BaseInput
           :label="t('dispatch_wizard.s3.place')"
           :model-value="pickupModel"
@@ -54,12 +65,17 @@
         <legend class="px-1 text-xs font-semibold text-emerald-700">
           {{ t('dispatch_wizard.s3.trip_back') }}
         </legend>
-        <BaseDateTime
-          :label="t('dispatch_wizard.s3.time')"
-          :model-value="returnModel"
-          :error="errs.returnTime"
-          @update:model-value="setReturn"
-        />
+        <div class="flex flex-col gap-1">
+          <BaseDateTime
+            :label="t('dispatch_wizard.s3.time')"
+            :model-value="returnModel"
+            :error="errs.returnTime"
+            @update:model-value="setReturn"
+          />
+          <p v-if="tripDurationLabel" class="text-xs font-medium text-slate-600">
+            {{ tripDurationLabel }}
+          </p>
+        </div>
         <BaseInput
           :label="t('dispatch_wizard.s3.place')"
           :model-value="dropoffModel"
@@ -202,12 +218,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseInput from '../../../components/base/BaseInput.vue'
 import BaseDateTime from '../../../components/base/BaseDateTime.vue'
 import { dispatchScheduleRowErrors } from '../../../composables/dispatchScheduleRowErrors'
 import { formatVndWhileTyping } from '../../../util/money'
+import { DISPATCH_WIZARD_KEY } from './injectionKeys'
 
 const props = defineProps({
   row: { type: Object, required: true },
@@ -222,6 +239,23 @@ const props = defineProps({
 defineEmits(['remove', 'duplicate', 'autofill'])
 
 const { t } = useI18n()
+
+const wizard = inject(DISPATCH_WIZARD_KEY, null)
+
+const formattedTripStart = computed(() => wizard?.formattedRequestedDateTime?.value ?? '')
+
+const tripDurationLabel = computed(() => {
+  const startRaw = wizard?.requestedDateTime?.value?.trim() ?? ''
+  const retRaw = String(returnModel.value ?? '').trim()
+  if (!startRaw || !retRaw) return ''
+  const a = new Date(startRaw).getTime()
+  const b = new Date(retRaw).getTime()
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return ''
+  const ms = b - a
+  const h = Math.floor(ms / 3600000)
+  const m = Math.round((ms % 3600000) / 60000)
+  return t('dispatch_wizard.s3.trip_duration_hint', { hours: h, minutes: m })
+})
 
 function vndRow(row, key, raw) {
   row[key] = formatVndWhileTyping(raw)
@@ -245,10 +279,6 @@ const notesPh = computed(() =>
     : t('dispatch_wizard.s3.row_notes_ph'),
 )
 
-const departModel = computed(() =>
-  props.variant === 'cargo' ? props.row.pickup_at ?? '' : props.row.depart_at ?? '',
-)
-
 const returnModel = computed(() =>
   props.variant === 'cargo' ? props.row.delivery_at ?? '' : props.row.return_at ?? '',
 )
@@ -262,11 +292,6 @@ const dropoffModel = computed(() =>
 )
 
 const notesModel = computed(() => props.row.notes ?? props.row.item_notes ?? '')
-
-function setDepart(v) {
-  if (props.variant === 'cargo') props.row.pickup_at = v
-  else props.row.depart_at = v
-}
 
 function setReturn(v) {
   if (props.variant === 'cargo') props.row.delivery_at = v

@@ -4,7 +4,23 @@
       <h2 class="text-lg font-semibold text-slate-900">
         {{ t('dispatch_wizard.s3.title') }}
       </h2>
-     
+    </div>
+
+    <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+      <label class="block">
+        <span class="dw-label-text">{{ t('dispatch_wizard.s3.readonly_depart_label') }}</span>
+        <input
+          :value="formattedRequestedDateTime"
+          type="text"
+          readonly
+          tabindex="-1"
+          :placeholder="t('dispatch_wizard.s3.readonly_depart_empty')"
+          class="dw-input mt-1 min-h-[2.75rem] cursor-not-allowed bg-slate-100 text-slate-800"
+        />
+        <span class="mt-1 block text-xs text-slate-500">
+          {{ t('dispatch_wizard.s3.readonly_depart_hint', { step: t('dispatch_wizard.steps.info') }) }}
+        </span>
+      </label>
     </div>
 
     <!-- Hành khách / door / p2p: e.1 -->
@@ -377,6 +393,7 @@ const {
   openDatePickerFromInput,
   toggleE1Weekday,
   detailStepSchedulesValid,
+  formattedRequestedDateTime,
 } = w
 
 const schedulePassengerValid = ref(true)

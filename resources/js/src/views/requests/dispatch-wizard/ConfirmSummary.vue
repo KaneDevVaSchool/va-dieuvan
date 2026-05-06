@@ -275,6 +275,7 @@ const {
   downloadCreatedPdf,
   closePdfPreview,
   step,
+  formattedRequestedDateTime,
 } = w
 
 const showStickyBar = computed(() => step.value === 3 && !created.value)
@@ -293,7 +294,8 @@ const tripTypeLabel = computed(() => {
 
 const usageDatesDisplay = computed(() => {
   const a = formatIsoDate(form.value.proposed_date)
-  const b = formatIsoDate(form.value.date_needed)
+  const b =
+    formattedRequestedDateTime.value?.trim() || formatIsoDate(form.value.date_needed)
   if (a === '—' && b === '—') return '—'
   return `${a} → ${b}`
 })
