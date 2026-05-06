@@ -107,6 +107,7 @@ class TripCostController extends Controller
 
         $trip->refresh();
         FinancialDataLock::assertTripNotPaid($trip);
+        FinancialDataLock::assertTripAllowsPassengerAndCostEdits($trip);
 
         $cost = TripCost::create([
             ...$data,
@@ -152,6 +153,7 @@ class TripCostController extends Controller
 
         $tripCost->load('trip');
         FinancialDataLock::assertTripNotPaid($tripCost->trip);
+        FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
 
         $data = $request->validated();
         $before = $tripCost->toArray();
@@ -181,6 +183,7 @@ class TripCostController extends Controller
 
         $tripCost->load('trip');
         FinancialDataLock::assertTripNotPaid($tripCost->trip);
+        FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
 
         $deletedId = $tripCost->id;
         $before = $tripCost->toArray();
@@ -210,6 +213,7 @@ class TripCostController extends Controller
 
             $tripCost->load('trip');
             FinancialDataLock::assertTripNotPaid($tripCost->trip);
+            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
 
             if (! in_array($tripCost->status, ['submitted', 'draft'], true)) {
                 abort(409, Messages::COST_NOT_ACTIONABLE);
@@ -261,6 +265,9 @@ class TripCostController extends Controller
         $user = $request->user();
 
         return DB::transaction(function () use ($tripCost, $data, $user) {
+            $tripCost->loadMissing('trip');
+            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+
             $before = $tripCost->toArray();
 
             $tripCost->fill([
@@ -291,6 +298,7 @@ class TripCostController extends Controller
 
         $trip->refresh();
         FinancialDataLock::assertTripNotPaid($trip);
+        FinancialDataLock::assertTripAllowsPassengerAndCostEdits($trip);
 
         /** @var \Illuminate\Http\UploadedFile $file */
         $file = $request->file('file');

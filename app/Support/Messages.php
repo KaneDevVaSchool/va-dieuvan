@@ -29,4 +29,6 @@ final class Messages
     public const COST_CONFIRMED_NO_ATTACHMENT = 'Chi phí đã xác nhận; không thể đính kèm thêm. Dùng Admin override nếu cần điều chỉnh.';
 
     public const TRIP_PAID_CANNOT_ADD_TO_RECONCILE = 'Một hoặc nhiều chuyến đã thanh toán; không thể tạo/ghi lại payment trong kỳ đối soát.';
+
+    public const TRIP_TERMINAL_NO_LIST_OR_COST_EDITS = 'Chuyến đã hoàn thành hoặc đã hủy; không thể thêm, sửa hay xóa hành khách hoặc chi phí.';
 }

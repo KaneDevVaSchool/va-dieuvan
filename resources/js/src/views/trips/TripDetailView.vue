@@ -908,11 +908,20 @@ const canManageAttachments = computed(() =>
 const canQuickCreateProvider = computed(() =>
     auth.hasPermission("resource.provider.manage"),
 );
-const canSubmitQuickCost = computed(
-    () =>
+/** Chuyến kết thúc (hoặc huỷ): không chỉnh danh sách hành khách / chi phí trên UI. */
+const tripBlocksPassengerAndCostEdits = computed(() => {
+    if (!trip.value) return true;
+    const s = String(trip.value.status ?? "").toLowerCase();
+    return s === "completed" || s === "cancelled";
+});
+
+const canSubmitQuickCost = computed(() => {
+    if (tripBlocksPassengerAndCostEdits.value) return false;
+    return (
         auth.hasPermission("trip.record.create") ||
-        auth.hasPermission("trip.update_status"),
-);
+        auth.hasPermission("trip.update_status")
+    );
+});
 const canRescheduleTrip = computed(() => {
     if (!canAssign.value || !trip.value) return false;
     if ((trip.value.payment_status ?? "unpaid") === "paid") return false;
@@ -940,12 +949,14 @@ const canRescheduleForCoordinationPanel = computed(
     () => canRescheduleTrip.value && !coordinationActionsLocked.value,
 );
 
-const canEditPassengerList = computed(
-    () =>
+const canEditPassengerList = computed(() => {
+    if (tripBlocksPassengerAndCostEdits.value) return false;
+    return (
         canAssign.value &&
         trip.value?.dispatch_request?.id != null &&
-        (trip.value?.payment_status ?? "unpaid") !== "paid",
-);
+        (trip.value?.payment_status ?? "unpaid") !== "paid"
+    );
+});
 
 const canPassengerCheckIn = computed(() => {
     if (!trip.value) return false;
@@ -981,7 +992,7 @@ function applyPassengerDraftToArrays(arrays, meta, draft) {
             ...arrays.passengerRows[i],
         };
         cur.person_in_charge = draft.person_in_charge ?? "";
-        cur.guests = String(draft.guests ?? "1");
+        cur.guests = "1";
         cur.notes = draft.notes ?? "";
         cur.pickup = draft.pickup ?? "";
         arrays.passengerRows[i] = cur;
@@ -1035,6 +1046,12 @@ async function persistPassengerListSnapshot(mutator) {
     const tt = dr.trip_type;
     const arrays = clonePassengerListArrays();
     mutator(arrays);
+    if (tt !== "cargo" && tt !== "business") {
+        arrays.passengerRows = arrays.passengerRows.map((r) => ({
+            ...r,
+            guests: "1",
+        }));
+    }
     let payload;
     if (tt === "cargo") {
         const filled = arrays.cargoRows.filter(isCargoRowFilled);
@@ -1433,7 +1450,6 @@ const passengerRowsDisplay = computed(() => {
             editable: passengerListRowEditable(tripType, "passenger"),
             editFields: {
                 person_in_charge: r.person_in_charge ?? "",
-                guests: String(r.guests ?? "1"),
                 notes: r.notes ?? "",
                 pickup: r.pickup ?? "",
             },

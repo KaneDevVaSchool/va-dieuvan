@@ -264,13 +264,6 @@
                                                 )
                                             "
                                         />
-                                        <input
-                                            v-model="editDraft.qty"
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            class="mt-1 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                                        />
                                     </template>
                                     <template
                                         v-else-if="
@@ -289,13 +282,6 @@
                                             :placeholder="
                                                 t('trip_detail.passengers.ph_name')
                                             "
-                                        />
-                                        <input
-                                            v-model="editDraft.guests"
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            class="mt-1 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                                         />
                                     </template>
                                 </template>
@@ -379,7 +365,36 @@
                                             min="1"
                                             step="1"
                                             class="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.passengers.ph_guests',
+                                                )
+                                            "
                                         />
+                                    </template>
+                                    <template v-else-if="row.editMeta?.kind === 'cargo'">
+                                        <div class="flex flex-col gap-0.5">
+                                            <span
+                                                class="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                                >{{
+                                                    t(
+                                                        "trip_detail.passengers.col_qty",
+                                                    )
+                                                }}</span
+                                            >
+                                            <input
+                                                v-model="editDraft.qty"
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                class="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                                :placeholder="
+                                                    t(
+                                                        'trip_detail.passengers.ph_qty',
+                                                    )
+                                                "
+                                            />
+                                        </div>
                                     </template>
                                     <template v-else>
                                         <span
@@ -716,6 +731,16 @@
                     >
                         {{ t("trip_detail.passengers.add_modal_title") }}
                     </h3>
+                    <p
+                        v-if="listKind === 'passenger'"
+                        class="mt-1 text-xs text-slate-500 dark:text-slate-400"
+                    >
+                        {{
+                            t(
+                                "trip_detail.passengers.one_row_one_passenger_hint",
+                            )
+                        }}
+                    </p>
 
                     <div
                         v-if="listKind === 'passenger'"
@@ -735,47 +760,36 @@
                                 :placeholder="t('trip_detail.passengers.ph_name')"
                             />
                         </label>
-                        <label class="block">
-                            <span
-                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                >{{
-                                    t("trip_detail.passengers.col_guests")
-                                }}</span
-                            >
-                            <input
-                                v-model="addForm.guests"
-                                type="number"
-                                min="1"
-                                step="1"
-                                class="inp"
-                            />
-                        </label>
-                        <label class="block">
-                            <span
-                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                >{{
-                                    t("trip_detail.passengers.m_depart_at")
-                                }}</span
-                            >
-                            <input
-                                v-model="addForm.depart_at"
-                                type="datetime-local"
-                                class="inp"
-                            />
-                        </label>
-                        <label class="block">
-                            <span
-                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                >{{
-                                    t("trip_detail.passengers.m_return_at")
-                                }}</span
-                            >
-                            <input
-                                v-model="addForm.return_at"
-                                type="datetime-local"
-                                class="inp"
-                            />
-                        </label>
+                        <div
+                            class="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2"
+                        >
+                            <label class="block min-w-0">
+                                <span
+                                    class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                    >{{
+                                        t("trip_detail.passengers.m_depart_at")
+                                    }}</span
+                                >
+                                <input
+                                    v-model="addForm.depart_at"
+                                    type="datetime-local"
+                                    class="inp min-w-0"
+                                />
+                            </label>
+                            <label class="block min-w-0">
+                                <span
+                                    class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                    >{{
+                                        t("trip_detail.passengers.m_return_at")
+                                    }}</span
+                                >
+                                <input
+                                    v-model="addForm.return_at"
+                                    type="datetime-local"
+                                    class="inp min-w-0"
+                                />
+                            </label>
+                        </div>
                         <label class="block sm:col-span-2">
                             <span
                                 class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
@@ -787,6 +801,9 @@
                                 v-model="addForm.pickup"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_pickup')
+                                "
                             />
                         </label>
                         <label class="block sm:col-span-2">
@@ -800,6 +817,9 @@
                                 v-model="addForm.dropoff"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_dropoff')
+                                "
                             />
                         </label>
                         <label class="block">
@@ -813,6 +833,11 @@
                                 v-model="addForm.unit_price"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t(
+                                        'trip_detail.passengers.ph_unit_price',
+                                    )
+                                "
                             />
                         </label>
                         <label class="block">
@@ -826,6 +851,9 @@
                                 v-model="addForm.extra_fee"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_extra_fee')
+                                "
                             />
                         </label>
                         <label class="block sm:col-span-2">
@@ -848,7 +876,7 @@
                         v-else-if="listKind === 'business'"
                         class="mt-4 grid gap-3 sm:grid-cols-2"
                     >
-                        <label class="block">
+                        <label class="block sm:col-span-2">
                             <span
                                 class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
                                 >{{
@@ -860,22 +888,46 @@
                                 type="number"
                                 min="1"
                                 step="1"
-                                class="inp"
+                                class="inp max-w-[12rem]"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_guests')
+                                "
                             />
                         </label>
-                        <label class="block">
-                            <span
-                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                >{{
-                                    t("trip_detail.passengers.m_depart_at")
-                                }}</span
-                            >
-                            <input
-                                v-model="addForm.depart_at"
-                                type="datetime-local"
-                                class="inp"
-                            />
-                        </label>
+                        <div
+                            class="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2"
+                        >
+                            <label class="block min-w-0">
+                                <span
+                                    class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                    >{{
+                                        t(
+                                            "trip_detail.passengers.m_depart_at",
+                                        )
+                                    }}</span
+                                >
+                                <input
+                                    v-model="addForm.depart_at"
+                                    type="datetime-local"
+                                    class="inp min-w-0"
+                                />
+                            </label>
+                            <label class="block min-w-0">
+                                <span
+                                    class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                    >{{
+                                        t(
+                                            "trip_detail.passengers.m_return_at",
+                                        )
+                                    }}</span
+                                >
+                                <input
+                                    v-model="addForm.return_at"
+                                    type="datetime-local"
+                                    class="inp min-w-0"
+                                />
+                            </label>
+                        </div>
                         <label class="block sm:col-span-2">
                             <span
                                 class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
@@ -887,6 +939,9 @@
                                 v-model="addForm.pickup"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_pickup')
+                                "
                             />
                         </label>
                         <label class="block sm:col-span-2">
@@ -900,6 +955,9 @@
                                 v-model="addForm.waypoint"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_waypoint')
+                                "
                             />
                         </label>
                         <label class="block sm:col-span-2">
@@ -913,19 +971,9 @@
                                 v-model="addForm.dropoff"
                                 type="text"
                                 class="inp"
-                            />
-                        </label>
-                        <label class="block">
-                            <span
-                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                >{{
-                                    t("trip_detail.passengers.m_return_at")
-                                }}</span
-                            >
-                            <input
-                                v-model="addForm.return_at"
-                                type="datetime-local"
-                                class="inp"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_dropoff')
+                                "
                             />
                         </label>
                         <label class="block">
@@ -939,6 +987,11 @@
                                 v-model="addForm.unit_price"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t(
+                                        'trip_detail.passengers.ph_unit_price',
+                                    )
+                                "
                             />
                         </label>
                         <label class="block">
@@ -952,6 +1005,11 @@
                                 v-model="addForm.extra_fee"
                                 type="text"
                                 class="inp"
+                                :placeholder="
+                                    t(
+                                        'trip_detail.passengers.ph_extra_fee',
+                                    )
+                                "
                             />
                         </label>
                         <label class="block sm:col-span-2">

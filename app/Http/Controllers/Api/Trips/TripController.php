@@ -242,6 +242,7 @@ class TripController extends Controller
 
         $trip->refresh();
         FinancialDataLock::assertTripNotPaid($trip);
+        FinancialDataLock::assertTripAllowsPassengerAndCostEdits($trip);
 
         $trip->loadMissing('dispatchRequest');
         $dr = $trip->dispatchRequest;
