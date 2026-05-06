@@ -113,7 +113,14 @@
         "pending_banner_title": "Bạn có {n} chuyến chờ xác nhận",
         "pending_banner_sub": "Vui lòng xác nhận hoặc báo bận trước 2 giờ",
         "btn_confirm": "Xác nhận",
-        "btn_decline": "Từ chối"
+        "btn_decline": "Từ chối",
+        "urgent_badge": "GẤP",
+        "pending_urgent_hint": "Có yêu cầu gấp — ưu tiên xử lý",
+        "pending_pickup": "Điểm đón",
+        "pending_dropoff": "Điểm đến",
+        "pending_requester": "Người đặt: {name}",
+        "pending_passengers": "{n} khách",
+        "pending_view_detail": "Xem chi tiết chuyến"
     },
     "driver_schedule": {
         "title": "Lịch hôm nay",

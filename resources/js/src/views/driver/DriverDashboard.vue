@@ -94,12 +94,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { getDriverSummary } from '../../api/driver'
 import { listTrips } from '../../api/trips'
 import { useAuthStore } from '../../store'
+import { useNotificationStore } from '../../store/notificationCenter'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
 import CurrentTripCard from '../../components/driver/CurrentTripCard.vue'
 import TripListItem from '../../components/driver/TripListItem.vue'
@@ -107,10 +108,14 @@ import PendingConfirmationBanner from '../../components/driver/PendingConfirmati
 
 const { t } = useI18n()
 const auth = useAuthStore()
+const notifStore = useNotificationStore()
 
 const loading = ref(true)
 const errorMsg = ref('')
-const rawTrips = ref([])
+/** Mọi chuyến từ API (trước khi lọc theo tài xế đăng nhập) */
+const rawListItems = ref([])
+/** `drivers.id` của user hiện tại (từ GET /driver/summary) */
+const myDriverId = ref(null)
 
 const user = computed(() => auth.user)
 const avatarUrl = computed(() => user.value?.avatar_url || null)
@@ -135,10 +140,27 @@ function tripStatusNorm(t) {
   return String(t?.status ?? '').trim().toLowerCase()
 }
 
-// Trips chờ xác nhận (chưa in_progress)
-const pendingTrips = computed(() =>
-  rawTrips.value.filter((x) => pendingStatuses.has(tripStatusNorm(x))),
-)
+/** Chỉ chuyến đã gán cho tài xế đăng nhập (`trip.driver_id` khớp hồ sơ tài xế). */
+const rawTrips = computed(() => {
+  const id = myDriverId.value
+  if (id == null) return []
+  return rawListItems.value.filter(
+    (t) => t.driver_id != null && Number(t.driver_id) === Number(id),
+  )
+})
+
+// Trips chờ xác nhận (chưa in_progress); chuyến gấp lên trước
+const pendingTrips = computed(() => {
+  const list = rawTrips.value.filter((x) => pendingStatuses.has(tripStatusNorm(x)))
+  return list
+    .slice()
+    .sort((a, b) => {
+      const ua = a.dispatch_request?.is_urgent ? 1 : 0
+      const ub = b.dispatch_request?.is_urgent ? 1 : 0
+      if (ub !== ua) return ub - ua
+      return (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0)
+    })
+})
 
 // Chuyến hiện tại = chỉ khi đã thực sự in_progress (đang chạy)
 const heroTrip = computed(() => {
@@ -181,14 +203,16 @@ async function fetchData(showLoader = true) {
   const horizon = new Date(now)
   horizon.setDate(horizon.getDate() + 21)
   try {
-    const [, listRes] = await Promise.all([
+    const [sum, listRes] = await Promise.all([
       getDriverSummary(),
       listTrips({ from: ymd(now), to: ymd(horizon), per_page: 60 }),
     ])
-    rawTrips.value = listRes?.items ?? []
+    myDriverId.value = sum?.driver?.id ?? null
+    rawListItems.value = listRes?.items ?? []
   } catch {
     errorMsg.value = t('driver_home.load_error')
-    rawTrips.value = []
+    myDriverId.value = null
+    rawListItems.value = []
   } finally {
     if (showLoader) loading.value = false
   }
@@ -197,6 +221,14 @@ async function fetchData(showLoader = true) {
 async function refreshTrips() {
   await fetchData(false)
 }
+
+// Làm mới badge thông báo khi có chuyến chờ gấp (đồng bộ với inbox / PWA)
+watch(
+  () => pendingTrips.value.some((x) => x.dispatch_request?.is_urgent),
+  (urgent) => {
+    if (urgent) void notifStore.refreshBadges()
+  },
+)
 
 onMounted(() => fetchData(true))
 </script>
