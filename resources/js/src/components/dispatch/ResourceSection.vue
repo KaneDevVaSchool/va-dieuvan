@@ -14,6 +14,12 @@
         </div>
         <div class="min-w-0">
           <div class="text-[12px] font-semibold tracking-tight text-slate-800 dark:text-slate-100">{{ title }}</div>
+          <p
+            v-if="subtitle"
+            class="mt-0.5 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
+          >
+            {{ subtitle }}
+          </p>
         </div>
       </div>
       <span
@@ -25,10 +31,41 @@
     </div>
 
     <div class="space-y-2 rounded-b-2xl bg-white/50 px-3 pb-2.5 pt-1.5 dark:bg-slate-950/25">
-      <slot name="body-before-search" />
+      <slot v-if="bodySlotBeforeNative" name="body-before-search" />
 
       <div
-        v-if="!isLoading"
+        v-if="showNativeSelect && !isLoading"
+        class="space-y-2"
+        :class="indentSearch ? 'ml-[38px]' : ''"
+      >
+        <label class="sr-only" :for="nativeSelectId">{{ nativeSelectAriaLabel }}</label>
+        <select
+          :id="nativeSelectId"
+          class="w-full appearance-none rounded-xl border border-transparent bg-slate-100/90 py-2 pl-3 pr-8 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:border-slate-300 focus:bg-white focus:shadow-md disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:border-slate-600 dark:focus:bg-slate-900 dark:focus:shadow-black/35"
+          :disabled="disabled"
+          :value="nativeBoundId"
+          :aria-label="nativeSelectAriaLabel"
+          @change="onNativeSelectChange"
+        >
+          <option value="">{{ effectiveNativePlaceholder }}</option>
+          <option
+            v-for="opt in options"
+            :key="opt.id"
+            :value="String(opt.id)"
+            :disabled="opt.available === false"
+          >
+            {{ nativeOptionLine(opt) }}
+          </option>
+        </select>
+      </div>
+
+      <slot
+        v-if="!bodySlotBeforeNative && showNativeSelect"
+        name="body-before-search"
+      />
+
+      <div
+        v-if="!showNativeSelect && !isLoading"
         class="relative flex gap-2"
         :class="indentSearch ? 'ml-[38px]' : ''"
       >
@@ -132,7 +169,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
@@ -149,16 +186,18 @@ const props = defineProps({
   indentSearch: { type: Boolean, default: false },
   /** Ô số chỗ khi chọn xe (mỗi dòng có thêm bổ sung chỗ). */
   showSupplementSeats: { type: Boolean, default: false },
-  /** Ô số chỗ gắn với lần thêm tiếp theo (mỗi dòng = tên + chỗ). */
-  /** Khi true: không đổi lựa chọn (panel điều phối bị khóa) */
+  /** Hiển thị thẻ select đủ lựa chọn (phân bổ xe/tài xế nội bộ). */
+  showNativeSelect: { type: Boolean, default: false },
+  nativeSelectPlaceholder: { type: String, default: '' },
+  /** false: với select nội bộ, slot (vd. nút lịch tài xế) nằm dưới select */
+  bodySlotBeforeNative: { type: Boolean, default: true },
   disabled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
 const { t } = useI18n()
-
-const supplementSeatsAria = computed(() => t('trip_detail.coordination.supplement_seats_aria'))
+const nativeSelectId = useId()
 const supplementSeatsPlaceholder = computed(() => t('trip_detail.coordination.supplement_seats_ph'))
 
 const searchQuery = ref('')
@@ -167,6 +206,16 @@ const isOpen = ref(false)
 
 const busyLabel = computed(() => t('trip_detail.coordination.resource_busy_badge'))
 const emptySearchLabel = computed(() => t('trip_detail.coordination.resource_search_empty'))
+const nativeBoundId = computed(() => {
+  const v = props.modelValue[0]
+  return v ? String(v.id) : ''
+})
+const effectiveNativePlaceholder = computed(() => {
+  const p = props.nativeSelectPlaceholder?.trim()
+  if (p) return p
+  return t('trip_detail.coordination.resource_native_pick_default')
+})
+const nativeSelectAriaLabel = computed(() => props.title)
 const customAddHint = computed(() =>
   t('trip_detail.coordination.resource_press_enter_add', { name: searchQuery.value.trim() }),
 )
@@ -216,6 +265,25 @@ function enrichItem(raw) {
   if (seats != null) next.supplementSeats = seats
   else delete next.supplementSeats
   return next
+}
+
+function nativeOptionLine(opt) {
+  const main = String(opt.label ?? '')
+  const sub = opt.sublabel ? ` — ${opt.sublabel}` : ''
+  const busy = opt.available === false ? ` (${busyLabel.value})` : ''
+  return `${main}${sub}${busy}`
+}
+
+function onNativeSelectChange(ev) {
+  if (props.disabled) return
+  const raw = ev.target.value
+  if (!raw) {
+    emit('update:modelValue', [])
+    return
+  }
+  const opt = (props.options || []).find((x) => String(x.id) === String(raw))
+  if (!opt || opt.available === false) return
+  emit('update:modelValue', [enrichItem(opt)])
 }
 
 function chipLabel(item) {

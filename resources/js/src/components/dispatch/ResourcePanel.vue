@@ -50,6 +50,8 @@
             :options="internalVehicleOptions"
             :is-loading="isLoading"
             :disabled="disabled"
+            show-native-select
+            :native-select-placeholder="t('trip_detail.coordination.resource_native_pick_vehicle')"
             :title="t('trip_detail.coordination.resource_section_internal_title')"
             :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
             :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
@@ -68,6 +70,9 @@
             :is-loading="isLoading"
             :disabled="disabled"
             :multiple="false"
+            show-native-select
+            :native-select-placeholder="t('trip_detail.coordination.resource_native_pick_driver')"
+            :body-slot-before-native="false"
             :title="t('trip_detail.coordination.resource_section_driver_title')"
             :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
             :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
