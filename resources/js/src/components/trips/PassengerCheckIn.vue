@@ -14,7 +14,7 @@
                 </h2>
                 <span
                     v-if="canCheckIn && rows.length"
-                    class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-900"
+                    class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200"
                 >
                     {{
                         t("trip_detail.passengers.checkin_header_badge", {
@@ -24,214 +24,282 @@
                     }}
                 </span>
             </div>
-            <div v-if="canEditList" class="flex flex-wrap items-center gap-2">
-                <template v-if="!editMode">
-                    <button
-                        type="button"
-                        class="rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 py-1.5 text-sm font-semibold text-sky-800 transition hover:bg-sky-100 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
-                        @click="$emit('start-edit')"
-                    >
-                        {{ t("trip_detail.passengers.edit_inline") }}
-                    </button>
-                </template>
-            </div>
         </div>
 
-        <p
-            v-if="editMessage"
-            class="mt-2 text-sm text-rose-600 dark:text-rose-400"
-        >
-            {{ editMessage }}
-        </p>
-
         <div
-            v-if="!editMode && rows.length >= 2"
-            class="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+            v-if="canCheckIn && rows.length >= 2"
+            class="mt-3 flex flex-wrap gap-1.5"
+            role="group"
+            :aria-label="t('trip_detail.passengers.filter_segment_aria')"
         >
-            <div
-                v-if="canCheckIn && rows.length"
-                class="flex flex-wrap gap-1.5"
-                role="group"
-                :aria-label="t('trip_detail.passengers.filter_segment_aria')"
+            <button
+                v-for="opt in filterOptions"
+                :key="opt.key"
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
+                :class="filterChipClass(opt.key)"
+                :aria-pressed="statusFilter === opt.key"
+                :aria-label="opt.ariaLabel"
+                @click="statusFilter = opt.key"
             >
-                <button
-                    v-for="opt in filterOptions"
-                    :key="opt.key"
-                    type="button"
-                    class="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900"
-                    :class="filterChipClass(opt.key)"
-                    :aria-pressed="statusFilter === opt.key"
-                    :aria-label="opt.ariaLabel"
-                    @click="statusFilter = opt.key"
+                {{ opt.label }}
+                <span
+                    v-if="opt.badge != null"
+                    class="min-w-[1.25rem] rounded-md bg-white/80 px-1 text-center text-[10px] font-bold tabular-nums text-slate-800 dark:bg-slate-900/60 dark:text-slate-100"
                 >
-                    {{ opt.label }}
-                    <span
-                        v-if="opt.badge != null"
-                        class="min-w-[1.25rem] rounded-md bg-white/80 px-1 text-center text-[10px] font-bold tabular-nums text-slate-800 dark:bg-slate-900/60 dark:text-slate-100"
-                    >
-                        {{ opt.badge }}
-                    </span>
+                    {{ opt.badge }}
+                </span>
+            </button>
+        </div>
+
+        <!-- DataTable toolbar -->
+        <div
+            v-if="rows.length"
+            class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+        >
+            <div class="relative w-full sm:w-64">
+                <MagnifyingGlassIcon
+                    class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                    aria-hidden="true"
+                />
+                <input
+                    v-model="passengerSearch"
+                    type="text"
+                    autocomplete="off"
+                    class="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-8 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                    :placeholder="t('trip_detail.passengers.dt_search_ph')"
+                    :aria-label="t('trip_detail.passengers.search_aria')"
+                />
+                <button
+                    v-if="passengerSearch.trim()"
+                    type="button"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    :aria-label="t('trip_detail.passengers.search_clear_aria')"
+                    @click="passengerSearch = ''"
+                >
+                    <XMarkIcon class="h-4 w-4" aria-hidden="true" />
                 </button>
             </div>
-            <div
-                class="flex min-w-[12rem] flex-1 flex-wrap items-center gap-2 sm:max-w-xl sm:justify-end"
-            >
-                <div
-                    class="relative min-h-9 w-full min-w-0 sm:max-w-md sm:flex-1"
+            <div class="flex flex-wrap items-center gap-2">
+                <select
+                    v-model.number="pageSize"
+                    :aria-label="t('trip_detail.passengers.dt_page_size_aria')"
+                    class="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-sky-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                 >
-                    <MagnifyingGlassIcon
-                        class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        aria-hidden="true"
-                    />
-                    <input
-                        v-model="passengerSearch"
-                        type="search"
-                        :aria-label="t('trip_detail.passengers.search_aria')"
-                        autocomplete="off"
-                        class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-9 text-sm text-slate-900 outline-none ring-blue-500/30 placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                        :placeholder="t('trip_detail.passengers.search_ph')"
-                    />
-                    <button
-                        v-if="passengerSearch.trim()"
-                        type="button"
-                        class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                        :aria-label="
-                            t('trip_detail.passengers.search_clear_aria')
-                        "
-                        @click="passengerSearch = ''"
-                    >
-                        <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-                    </button>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span
-                        v-if="
-                            passengerSearch.trim() &&
-                            displayRows.length < rowsFilteredByStatus.length
-                        "
-                        class="text-xs tabular-nums text-slate-500 dark:text-slate-400"
-                    >
-                        {{
-                            t("trip_detail.passengers.search_match", {
-                                shown: displayRows.length,
-                                total: rowsFilteredByStatus.length,
-                            })
-                        }}
-                    </span>
-                    <button
-                        type="button"
-                        class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                        :aria-label="
-                            t('trip_detail.passengers.export_csv_aria')
-                        "
-                        @click="exportCsv"
-                    >
-                        <ArrowDownTrayIcon class="h-4 w-4 shrink-0" />
-                        {{ t("trip_detail.passengers.export_csv") }}
-                    </button>
-                </div>
+                    <option :value="5">5</option>
+                    <option :value="10">10</option>
+                    <option :value="15">15</option>
+                    <option :value="20">20</option>
+                </select>
+                <button
+                    v-if="canEditList && selectedKeys.length > 0"
+                    type="button"
+                    class="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-50"
+                    :disabled="listBusy"
+                    @click="onBulkDelete"
+                >
+                    {{ t("trip_detail.passengers.dt_bulk_delete") }}
+                </button>
+                <button
+                    v-if="canEditList"
+                    type="button"
+                    class="rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 py-1.5 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
+                    :disabled="listBusy"
+                    @click="onAddRow"
+                >
+                    {{ t("trip_detail.passengers.dt_add_row") }}
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    :aria-label="t('trip_detail.passengers.export_csv_aria')"
+                    @click="exportCsv"
+                >
+                    <ArrowDownTrayIcon class="h-4 w-4 shrink-0" />
+                    {{ t("trip_detail.passengers.export_csv") }}
+                </button>
             </div>
         </div>
 
         <div
-            class="mt-4 rounded-xl border border-slate-100 dark:border-slate-700/80"
+            class="mt-4 overflow-x-auto rounded-xl ring-1 ring-slate-200/60 dark:ring-slate-700/60"
             :class="
-                passengerTableScroll && !editMode
-                    ? 'max-h-[min(28rem,72vh)] overflow-auto overscroll-contain'
-                    : 'overflow-x-auto'
+                passengerTableScroll
+                    ? 'max-h-[min(28rem,72vh)] overflow-y-auto overscroll-contain'
+                    : ''
             "
         >
-            <slot name="editor" />
-            <template v-if="!editMode">
-                <div
-                    v-if="rows.length && !displayRows.length"
-                    class="bg-white px-3 py-10 text-center text-sm text-slate-500 dark:bg-slate-950/40 dark:text-slate-400"
+            <p
+                v-if="rows.length && !filteredRows.length"
+                class="px-3 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+            >
+                {{ t("trip_detail.passengers.search_empty") }}
+            </p>
+            <table
+                v-else-if="rows.length"
+                class="min-w-full divide-y divide-slate-100 text-sm dark:divide-slate-700"
+            >
+                <thead
+                    class="sticky top-0 z-10 bg-slate-50/95 shadow-sm backdrop-blur-sm dark:bg-slate-800/95 dark:shadow-slate-900/80"
                 >
-                    {{ t("trip_detail.passengers.search_empty") }}
-                </div>
-                <table
-                    v-else-if="rows.length"
-                    class="min-w-full divide-y divide-slate-100 text-sm dark:divide-slate-700"
-                >
-                    <thead
-                        class="sticky top-0 z-10 bg-slate-50/95 shadow-sm backdrop-blur-sm dark:bg-slate-800/95 dark:shadow-slate-900/80"
-                    >
-                        <tr>
-                            <th
-                                v-if="canCheckIn"
-                                scope="col"
-                                class="w-10 px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
-                            />
-                            <th
-                                scope="col"
-                                class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
-                            >
-                                {{ t("trip_detail.passengers.col_name") }}
-                            </th>
-                            <th
-                                scope="col"
-                                class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
-                            >
-                                {{ t("trip_detail.passengers.col_role") }}
-                            </th>
-                            <th
-                                scope="col"
-                                class="min-w-[9rem] max-w-[220px] px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
-                            >
-                                {{ t("trip_detail.passengers.col_contact") }}
-                            </th>
-                            <th
-                                scope="col"
-                                class="min-w-0 px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
-                            >
-                                {{ t("trip_detail.passengers.col_notes") }}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody
-                        class="divide-y divide-slate-100 bg-white dark:divide-slate-700 dark:bg-slate-950/40"
-                    >
-                        <template
-                            v-for="row in displayRows"
-                            :key="row.passengerKey"
+                    <tr>
+                        <th
+                            v-if="canEditList"
+                            scope="col"
+                            class="w-10 px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
                         >
-                            <tr
-                                class="cursor-pointer border-b border-slate-100 transition dark:border-slate-700/60"
-                                :class="[
-                                    rowExpanded === row.passengerKey
-                                        ? 'bg-slate-50/80 dark:bg-slate-800/50'
-                                        : '',
-                                    checkedLocal[row.passengerKey]
-                                        ? 'bg-emerald-50/90 dark:bg-emerald-950/25'
-                                        : '',
-                                    'hover:bg-slate-50/70 dark:hover:bg-slate-800/30',
-                                ]"
-                                @click.self="toggleExpand(row.passengerKey)"
+                            <input
+                                ref="headerSelectRef"
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                :aria-label="t('trip_detail.passengers.dt_col_select')"
+                                @change="onToggleAll"
+                            />
+                        </th>
+                        <th
+                            v-if="canCheckIn"
+                            scope="col"
+                            class="w-10 px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
+                        />
+                        <th
+                            scope="col"
+                            class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("trip_detail.passengers.col_name") }}
+                        </th>
+                        <th
+                            scope="col"
+                            class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("trip_detail.passengers.col_role") }}
+                        </th>
+                        <th
+                            scope="col"
+                            class="min-w-[9rem] max-w-[220px] px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("trip_detail.passengers.col_contact") }}
+                        </th>
+                        <th
+                            scope="col"
+                            class="min-w-0 px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("trip_detail.passengers.col_notes") }}
+                        </th>
+                        <th
+                            v-if="canEditList"
+                            scope="col"
+                            class="w-24 px-3 py-2.5 text-right text-xs font-semibold text-slate-600 dark:text-slate-300"
+                        >
+                            {{ t("trip_detail.passengers.dt_col_actions") }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody
+                    class="divide-y divide-slate-100 bg-white dark:divide-slate-700 dark:bg-slate-950/40"
+                >
+                    <template
+                        v-for="row in paginatedRows"
+                        :key="row.passengerKey"
+                    >
+                        <tr
+                            class="transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                            :class="[
+                                rowExpanded === row.passengerKey
+                                    ? 'bg-slate-50/80 dark:bg-slate-800/50'
+                                    : '',
+                                checkedLocal[row.passengerKey]
+                                    ? 'bg-emerald-50/90 dark:bg-emerald-950/25'
+                                    : '',
+                                editingKey === row.passengerKey
+                                    ? 'bg-sky-50/50 dark:bg-sky-950/20'
+                                    : '',
+                            ]"
+                            @click.self="maybeToggleExpand(row)"
+                        >
+                            <td
+                                v-if="canEditList"
+                                class="px-3 py-2.5 align-middle"
+                                @click.stop
                             >
-                                <td
-                                    v-if="canCheckIn"
-                                    class="px-2 py-2.5 align-middle"
-                                    @click.stop
+                                <input
+                                    v-if="isRowSelectable(row)"
+                                    v-model="selectedKeys"
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                    :value="row.passengerKey"
+                                    :disabled="listBusy"
+                                />
+                            </td>
+                            <td
+                                v-if="canCheckIn"
+                                class="px-2 py-2.5 align-middle"
+                                @click.stop
+                            >
+                                <input
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                    :checked="!!checkedLocal[row.passengerKey]"
+                                    :disabled="checkingKey === row.passengerKey"
+                                    @change="onToggleCheck(row)"
+                                />
+                            </td>
+                            <td
+                                class="px-3 py-2.5 align-top"
+                                @click="maybeToggleExpand(row)"
+                            >
+                                <template
+                                    v-if="editingKey === row.passengerKey && editDraft"
                                 >
-                                    <input
-                                        type="checkbox"
-                                        class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                        :checked="
-                                            !!checkedLocal[row.passengerKey]
+                                    <template v-if="row.editMeta?.kind === 'cargo'">
+                                        <input
+                                            v-model="editDraft.name"
+                                            type="text"
+                                            class="w-full min-w-[8rem] rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.passengers.ph_cargo_name',
+                                                )
+                                            "
+                                        />
+                                        <input
+                                            v-model="editDraft.qty"
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            class="mt-1 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                        />
+                                    </template>
+                                    <template
+                                        v-else-if="
+                                            row.editMeta?.kind === 'business'
                                         "
-                                        :disabled="
-                                            checkingKey === row.passengerKey
-                                        "
-                                        @change="onToggleCheck(row)"
-                                    />
-                                </td>
-                                <td
-                                    class="px-3 py-2.5 align-top"
-                                    @click="toggleExpand(row.passengerKey)"
-                                >
+                                    >
+                                        <div class="text-sm text-slate-600 dark:text-slate-400">
+                                            {{ row.name }}
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <input
+                                            v-model="editDraft.person_in_charge"
+                                            type="text"
+                                            class="w-full min-w-[8rem] rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t('trip_detail.passengers.ph_name')
+                                            "
+                                        />
+                                        <input
+                                            v-model="editDraft.guests"
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            class="mt-1 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                        />
+                                    </template>
+                                </template>
+                                <template v-else>
                                     <div class="flex items-center gap-2">
                                         <div
-                                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-700"
+                                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200"
                                         >
                                             {{ initials(row.name) }}
                                         </div>
@@ -243,9 +311,7 @@
                                             </div>
                                             <div
                                                 v-if="
-                                                    checkedLocal[
-                                                        row.passengerKey
-                                                    ]
+                                                    checkedLocal[row.passengerKey]
                                                 "
                                                 class="mt-0.5 text-[10px] text-emerald-700"
                                             >
@@ -257,11 +323,36 @@
                                             </div>
                                         </div>
                                     </div>
-                                </td>
-                                <td
-                                    class="px-3 py-2.5 align-top"
-                                    @click="toggleExpand(row.passengerKey)"
+                                </template>
+                            </td>
+                            <td
+                                class="px-3 py-2.5 align-top"
+                                @click="maybeToggleExpand(row)"
+                            >
+                                <template
+                                    v-if="editingKey === row.passengerKey && editDraft"
                                 >
+                                    <template
+                                        v-if="row.editMeta?.kind === 'business'"
+                                    >
+                                        <input
+                                            v-model="editDraft.guests"
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            class="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                        />
+                                    </template>
+                                    <template v-else>
+                                        <span
+                                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                                            :class="rolePillClass(row.roleKind)"
+                                        >
+                                            {{ row.roleLabel }}
+                                        </span>
+                                    </template>
+                                </template>
+                                <template v-else>
                                     <span
                                         class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                                         :class="rolePillClass(row.roleKind)"
@@ -270,7 +361,7 @@
                                     </span>
                                     <span
                                         v-if="checkedLocal[row.passengerKey]"
-                                        class="ml-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800"
+                                        class="ml-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950/55 dark:text-emerald-200"
                                     >
                                         {{
                                             t(
@@ -280,7 +371,7 @@
                                     </span>
                                     <span
                                         v-else-if="canCheckIn"
-                                        class="ml-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
+                                        class="ml-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                                     >
                                         {{
                                             t(
@@ -288,11 +379,58 @@
                                             )
                                         }}
                                     </span>
-                                </td>
-                                <td
-                                    class="max-w-[220px] min-w-[9rem] px-3 py-2.5 align-top"
-                                    @click.stop
+                                </template>
+                            </td>
+                            <td
+                                class="max-w-[220px] min-w-[9rem] px-3 py-2.5 align-top"
+                                @click.stop
+                            >
+                                <template
+                                    v-if="editingKey === row.passengerKey && editDraft"
                                 >
+                                    <template v-if="row.editMeta?.kind === 'cargo'">
+                                        <input
+                                            v-model="editDraft.pickup_contact"
+                                            type="text"
+                                            class="mb-1 w-full rounded-md border border-slate-300 px-2 py-1 text-xs shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.passengers.ph_pickup_contact',
+                                                )
+                                            "
+                                        />
+                                        <input
+                                            v-model="editDraft.delivery_contact"
+                                            type="text"
+                                            class="w-full rounded-md border border-slate-300 px-2 py-1 text-xs shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.passengers.ph_delivery_contact',
+                                                )
+                                            "
+                                        />
+                                    </template>
+                                    <template
+                                        v-else-if="
+                                            row.editMeta?.kind === 'passenger'
+                                        "
+                                    >
+                                        <input
+                                            v-model="editDraft.pickup"
+                                            type="text"
+                                            class="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.passengers.checkin_expand_pickup',
+                                                )
+                                            "
+                                        />
+                                    </template>
+                                    <template v-else>
+                                        <span class="text-slate-500">—</span>
+                                    </template>
+                                </template>
+                                <template v-else>
                                     <template v-if="telHref(row.contact)">
                                         <a
                                             :href="
@@ -307,11 +445,65 @@
                                     <span v-else class="text-slate-600">{{
                                         row.contact || "—"
                                     }}</span>
-                                </td>
-                                <td
-                                    class="min-w-0 px-3 py-2.5 align-top text-slate-600 dark:text-slate-300"
-                                    @click="toggleExpand(row.passengerKey)"
+                                </template>
+                            </td>
+                            <td
+                                class="min-w-0 px-3 py-2.5 align-top text-slate-600 dark:text-slate-300"
+                                @click="maybeToggleExpand(row)"
+                            >
+                                <template
+                                    v-if="editingKey === row.passengerKey && editDraft"
                                 >
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <input
+                                            v-if="row.editMeta?.kind !== 'cargo'"
+                                            v-model="editDraft.notes"
+                                            type="text"
+                                            class="min-w-[10rem] flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t('trip_detail.passengers.ph_notes')
+                                            "
+                                        />
+                                        <input
+                                            v-else
+                                            v-model="editDraft.item_notes"
+                                            type="text"
+                                            class="min-w-[10rem] flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t('trip_detail.passengers.ph_notes')
+                                            "
+                                        />
+                                        <button
+                                            type="button"
+                                            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                                            :disabled="listBusy"
+                                            :aria-label="t('trip_detail.passengers.save')"
+                                            @click.stop="saveEdit(row)"
+                                        >
+                                            <CheckIcon
+                                                class="h-4 w-4"
+                                                aria-hidden="true"
+                                            />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                            :aria-label="
+                                                t(
+                                                    'trip_detail.passengers.cancel_edit',
+                                                )
+                                            "
+                                            :disabled="listBusy"
+                                            @click.stop="cancelEdit"
+                                        >
+                                            <XMarkIcon
+                                                class="h-4 w-4"
+                                                aria-hidden="true"
+                                            />
+                                        </button>
+                                    </div>
+                                </template>
+                                <template v-else>
                                     <div
                                         class="flex flex-wrap items-center gap-1.5"
                                     >
@@ -345,63 +537,128 @@
                                         </span>
                                         <span>{{ row.notes || "—" }}</span>
                                     </div>
-                                </td>
-                            </tr>
-                            <tr
-                                v-if="rowExpanded === row.passengerKey"
-                                class="bg-slate-50/60"
+                                </template>
+                            </td>
+                            <td
+                                v-if="canEditList"
+                                class="px-3 py-2.5 text-right align-top"
+                                @click.stop
                             >
-                                <td
-                                    :colspan="canCheckIn ? 5 : 4"
-                                    class="px-4 py-3 text-xs text-slate-700 dark:text-slate-200"
-                                >
-                                    <div class="grid gap-2 sm:grid-cols-2">
-                                        <div>
-                                            <div
-                                                class="font-semibold text-slate-500"
+                                <template v-if="row.editable && row.editMeta">
+                                    <div
+                                        v-if="editingKey !== row.passengerKey"
+                                        class="flex justify-end"
+                                    >
+                                        <AppRowActionsMenu
+                                            :aria-label="
+                                                t(
+                                                    'trip_detail.passengers.dt_col_actions',
+                                                )
+                                            "
+                                            :disabled="listBusy"
+                                            align="end"
+                                        >
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="flex w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800"
+                                                @click="startEdit(row)"
                                             >
-                                                {{
-                                                    t(
-                                                        "trip_detail.passengers.checkin_expand_pickup",
-                                                    )
-                                                }}
-                                            </div>
-                                            <div class="mt-0.5">
-                                                {{
-                                                    row.pickupAddress?.trim() ||
-                                                    "—"
-                                                }}
-                                            </div>
+                                                {{ t("trip_detail.passengers.dt_edit") }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                class="flex w-full px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                                                @click="deleteRow(row)"
+                                            >
+                                                {{ t("trip_detail.passengers.dt_delete") }}
+                                            </button>
+                                        </AppRowActionsMenu>
+                                    </div>
+                                </template>
+                            </td>
+                        </tr>
+                        <tr
+                            v-if="rowExpanded === row.passengerKey"
+                            class="bg-slate-50/60 dark:bg-slate-800/25"
+                        >
+                            <td
+                                :colspan="tableColSpan"
+                                class="px-4 py-3 text-xs text-slate-700 dark:text-slate-200"
+                            >
+                                <div class="grid gap-2 sm:grid-cols-2">
+                                    <div>
+                                        <div class="font-semibold text-slate-500 dark:text-slate-400">
+                                            {{
+                                                t(
+                                                    "trip_detail.passengers.checkin_expand_pickup",
+                                                )
+                                            }}
                                         </div>
-                                        <div>
-                                            <div
-                                                class="font-semibold text-slate-500"
-                                            >
-                                                {{
-                                                    t(
-                                                        "trip_detail.passengers.checkin_private_note",
-                                                    )
-                                                }}
-                                            </div>
-                                            <div
-                                                class="mt-0.5 whitespace-pre-wrap"
-                                            >
-                                                {{ row.notes?.trim() || "—" }}
-                                            </div>
+                                        <div class="mt-0.5">
+                                            {{
+                                                row.pickupAddress?.trim() || "—"
+                                            }}
                                         </div>
                                     </div>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-                <div
-                    v-if="!rows.length"
-                    class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400"
-                >
-                    {{ t("trip_detail.passengers.empty") }}
+                                    <div>
+                                        <div class="font-semibold text-slate-500 dark:text-slate-400">
+                                            {{
+                                                t(
+                                                    "trip_detail.passengers.checkin_private_note",
+                                                )
+                                            }}
+                                        </div>
+                                        <div class="mt-0.5 whitespace-pre-wrap">
+                                            {{ row.notes?.trim() || "—" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <div
+                v-else
+                class="p-6 text-center text-sm text-slate-500 dark:text-slate-400"
+            >
+                {{ t("trip_detail.passengers.dt_empty_table") }}
+            </div>
+
+            <div
+                v-if="rows.length && filteredRows.length > 0"
+                class="flex flex-col gap-2 border-t border-slate-100 px-3 py-2.5 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:text-slate-400"
+            >
+                <div class="tabular-nums">
+                    {{
+                        t("trip_detail.passengers.dt_showing", {
+                            from: showFrom,
+                            to: showTo,
+                            total: totalFiltered,
+                        })
+                    }}
                 </div>
-            </template>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button"
+                        class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        :disabled="page <= 1"
+                        @click="page--"
+                    >
+                        {{ t("trip_detail.passengers.dt_prev") }}
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        :disabled="page >= totalPages"
+                        @click="page++"
+                    >
+                        {{ t("trip_detail.passengers.dt_next") }}
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div
@@ -419,20 +676,28 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import {
     ArrowDownTrayIcon,
+    CheckIcon,
     MagnifyingGlassIcon,
     XMarkIcon,
 } from "@heroicons/vue/24/outline";
 import { ExclamationTriangleIcon } from "@heroicons/vue/24/solid";
+import AppRowActionsMenu from "../ui/AppRowActionsMenu.vue";
 import { togglePassengerCheckInApi } from "../../composables/usePassengerCheckIn";
+import { confirmAction } from "../../composables/useConfirm";
 
 const WheelchairGlyph = {
     name: "WheelchairGlyph",
     template:
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm7.94 14.13-1.39-3.47A2 2 0 0 0 16.67 16H13v-2.34c1.81.34 3.72-.37 4.92-2.02l1.14-1.59a1 1 0 0 0-1.62-1.16l-1.15 1.6c-.72 1-1.86 1.51-3.03 1.51h-.61a1 1 0 0 0-.98.8l-2.2 11a1 1 0 1 0 1.96.39l2.03-10.19H16a4 4 0 0 1 3.89 3.05l1.39 3.47a1 1 0 1 0 1.86-.73ZM7 12a5 5 0 1 0 5 5 5 5 0 0 0-5-5Zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg>',
+};
+
+export type PassengerEditMeta = {
+    kind: "passenger" | "business" | "cargo";
+    rowIndex: number;
 };
 
 export type PassengerRow = {
@@ -445,6 +710,9 @@ export type PassengerRow = {
     pickupAddress?: string;
     flagWheelchair?: boolean;
     flagAllergy?: boolean;
+    editMeta?: PassengerEditMeta | null;
+    editable?: boolean;
+    editFields?: Record<string, string> | null;
 };
 
 const props = defineProps<{
@@ -453,14 +721,25 @@ const props = defineProps<{
     rows: PassengerRow[];
     canCheckIn: boolean;
     canEditList: boolean;
-    editMode?: boolean;
-    editMessage?: string;
     specialSummary?: string;
 }>();
 
 const emit = defineEmits<{
-    "start-edit": [];
     "trip-updated": [trip: Record<string, unknown>];
+    "passenger-list-save": [
+        payload: {
+            meta: PassengerEditMeta;
+            draft: Record<string, string>;
+            resolve: (ok: boolean) => void;
+        },
+    ];
+    "passenger-list-delete": [
+        payload: {
+            keys: string[];
+            resolve: (ok: boolean) => void;
+        },
+    ];
+    "passenger-list-add": [payload: { resolve: (ok: boolean) => void }];
 }>();
 
 const { t } = useI18n();
@@ -469,10 +748,17 @@ type StatusFilterKey = "all" | "waiting" | "onboard";
 
 const statusFilter = ref<StatusFilterKey>("all");
 const passengerSearch = ref("");
+const page = ref(1);
+const pageSize = ref(10);
+const selectedKeys = ref<string[]>([]);
 const rowExpanded = ref<string | null>(null);
 const checkingKey = ref<string | null>(null);
 const checkedLocal = ref<Record<string, boolean>>({});
 const checkedAtLocal = ref<Record<string, string>>({});
+const editingKey = ref<string | null>(null);
+const editDraft = ref<Record<string, string> | null>(null);
+const listBusy = ref(false);
+const headerSelectRef = ref<HTMLInputElement | null>(null);
 
 function syncFromTrip() {
     const m = props.trip?.passenger_check_ins as
@@ -500,21 +786,34 @@ watch(
 );
 
 watch(
-    () => props.editMode,
-    (on) => {
-        if (on) {
-            passengerSearch.value = "";
-            statusFilter.value = "all";
+    () => props.rows,
+    () => {
+        selectedKeys.value = selectedKeys.value.filter((k) =>
+            props.rows.some((r) => r.passengerKey === k),
+        );
+        if (editingKey.value && !props.rows.some((r) => r.passengerKey === editingKey.value)) {
+            editingKey.value = null;
+            editDraft.value = null;
         }
     },
+    { deep: true },
 );
 
 watch([passengerSearch, statusFilter], () => {
     rowExpanded.value = null;
+    page.value = 1;
+});
+
+watch([() => props.rows.length, pageSize], () => {
+    const maxPage = Math.max(
+        1,
+        Math.ceil(filteredRows.value.length / pageSize.value) || 1,
+    );
+    if (page.value > maxPage) page.value = maxPage;
 });
 
 const passengerTableScroll = computed(
-    () => props.rows.length >= 10 && !props.editMode,
+    () => props.rows.length >= 10,
 );
 
 const waitingCount = computed(
@@ -538,7 +837,7 @@ const rowsFilteredByStatus = computed(() => {
     return all.filter((r) => !!checkedLocal.value[r.passengerKey]);
 });
 
-const displayRows = computed(() => {
+const filteredRows = computed(() => {
     const base = rowsFilteredByStatus.value;
     const q = passengerSearch.value.trim().toLowerCase();
     if (!q) return base;
@@ -555,6 +854,33 @@ const displayRows = computed(() => {
         return hay.includes(q);
     });
 });
+
+const totalFiltered = computed(() => filteredRows.value.length);
+const totalPages = computed(() =>
+    Math.max(1, Math.ceil(totalFiltered.value / pageSize.value) || 1),
+);
+const pageStart = computed(() => (page.value - 1) * pageSize.value);
+const paginatedRows = computed(() => {
+    const f = filteredRows.value;
+    const start = pageStart.value;
+    return f.slice(start, start + pageSize.value);
+});
+const showFrom = computed(() =>
+    totalFiltered.value === 0 ? 0 : pageStart.value + 1,
+);
+const showTo = computed(() =>
+    Math.min(pageStart.value + pageSize.value, totalFiltered.value),
+);
+
+const selectableKeysFiltered = computed(() =>
+    filteredRows.value
+        .filter((r) => isRowSelectable(r))
+        .map((r) => r.passengerKey),
+);
+
+function isRowSelectable(row: PassengerRow) {
+    return !!(props.canEditList && row.editable && row.editMeta);
+}
 
 function filterChipClass(key: StatusFilterKey): string {
     const on = statusFilter.value === key;
@@ -587,6 +913,13 @@ const filterOptions = computed(() => {
     ];
 });
 
+const tableColSpan = computed(() => {
+    let n = 4;
+    if (props.canEditList) n += 2;
+    if (props.canCheckIn) n += 1;
+    return n;
+});
+
 function initials(name: string) {
     const n = String(name ?? "").trim();
     if (!n || n === "—") return "?";
@@ -597,12 +930,12 @@ function initials(name: string) {
 
 function rolePillClass(kind: string) {
     if (kind === "staff")
-        return "bg-slate-100 text-slate-800 dark:bg-slate-700/70 dark:text-slate-100";
+        return "bg-slate-200 text-slate-800 dark:bg-slate-700/70 dark:text-slate-100";
     if (kind === "student")
         return "bg-sky-50 text-sky-800 dark:bg-sky-950/55 dark:text-sky-200";
     if (kind === "cargo")
         return "bg-amber-50 text-amber-900 dark:bg-amber-950/45 dark:text-amber-100";
-    return "bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
+    return "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200";
 }
 
 function telHref(contact: string) {
@@ -617,6 +950,11 @@ function toggleExpand(key: string) {
     rowExpanded.value = rowExpanded.value === key ? null : key;
 }
 
+function maybeToggleExpand(row: PassengerRow) {
+    if (editingKey.value) return;
+    toggleExpand(row.passengerKey);
+}
+
 function checkTimeLabel(key: string) {
     const iso = checkedAtLocal.value[key];
     if (!iso) return "";
@@ -625,6 +963,120 @@ function checkTimeLabel(key: string) {
     return d.toLocaleTimeString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
+    });
+}
+
+function onToggleAll(ev: Event) {
+    const el = ev.target as HTMLInputElement;
+    const all = selectableKeysFiltered.value;
+    if (el.checked) {
+        selectedKeys.value = [...new Set([...selectedKeys.value, ...all])];
+    } else {
+        selectedKeys.value = selectedKeys.value.filter((k) => !all.includes(k));
+    }
+}
+
+watch(
+    [selectedKeys, selectableKeysFiltered],
+    () => {
+        nextTick(() => {
+            const el = headerSelectRef.value;
+            if (!el) return;
+            const all = selectableKeysFiltered.value;
+            const picked = selectedKeys.value.filter((k) =>
+                all.includes(k),
+            ).length;
+            el.checked = picked === all.length && all.length > 0;
+            el.indeterminate = picked > 0 && picked < all.length;
+        });
+    },
+    { deep: true },
+);
+
+function startEdit(row: PassengerRow) {
+    if (!row.editFields || !row.editMeta) return;
+    editingKey.value = row.passengerKey;
+    editDraft.value = { ...row.editFields };
+}
+
+function cancelEdit() {
+    editingKey.value = null;
+    editDraft.value = null;
+}
+
+function saveEdit(row: PassengerRow) {
+    if (!row.editMeta || !editDraft.value) return;
+    listBusy.value = true;
+    emit("passenger-list-save", {
+        meta: row.editMeta,
+        draft: { ...editDraft.value },
+        resolve(ok) {
+            listBusy.value = false;
+            if (ok) {
+                editingKey.value = null;
+                editDraft.value = null;
+            }
+        },
+    });
+}
+
+async function deleteRow(row: PassengerRow) {
+    if (!row.editable || !row.editMeta) return;
+    const okC = await confirmAction({
+        title: t("trip_detail.passengers.dt_delete_confirm_title"),
+        message: t("trip_detail.passengers.dt_delete_confirm_body"),
+        confirmLabel: t("trip_detail.passengers.dt_delete"),
+        cancelLabel: t("trip_detail.passengers.cancel_edit"),
+    });
+    if (!okC) return;
+    listBusy.value = true;
+    emit("passenger-list-delete", {
+        keys: [row.passengerKey],
+        resolve(ok) {
+            listBusy.value = false;
+            if (ok) {
+                editingKey.value = null;
+                editDraft.value = null;
+                selectedKeys.value = selectedKeys.value.filter(
+                    (k) => k !== row.passengerKey,
+                );
+            }
+        },
+    });
+}
+
+async function onBulkDelete() {
+    if (!selectedKeys.value.length) return;
+    const okC = await confirmAction({
+        title: t("trip_detail.passengers.dt_bulk_confirm_title"),
+        message: t("trip_detail.passengers.dt_bulk_confirm_body", {
+            n: selectedKeys.value.length,
+        }),
+        confirmLabel: t("trip_detail.passengers.dt_bulk_delete"),
+        cancelLabel: t("trip_detail.passengers.cancel_edit"),
+    });
+    if (!okC) return;
+    const keys = [...selectedKeys.value];
+    listBusy.value = true;
+    emit("passenger-list-delete", {
+        keys,
+        resolve(ok) {
+            listBusy.value = false;
+            if (ok) {
+                selectedKeys.value = [];
+                page.value = 1;
+            }
+        },
+    });
+}
+
+function onAddRow() {
+    listBusy.value = true;
+    emit("passenger-list-add", {
+        resolve(ok) {
+            listBusy.value = false;
+            if (ok) page.value = 1;
+        },
     });
 }
 

@@ -465,407 +465,12 @@
                             :rows="passengerRowsDisplay"
                             :can-check-in="canPassengerCheckIn"
                             :can-edit-list="canEditPassengerList"
-                            :edit-mode="passengersEditMode"
-                            :edit-message="passengersEditMsg"
                             :special-summary="specialNeedsSummary"
-                            @start-edit="startPassengersEdit"
                             @trip-updated="applyTripPayload"
-                        >
-                            <template #editor>
-                                <template
-                                    v-if="
-                                        passengersEditMode &&
-                                        passengersEditDraft
-                                    "
-                                >
-                                    <!-- D2D / P2P -->
-                                    <table
-                                        v-if="
-                                            passengersEditDraft.kind ===
-                                            'passenger'
-                                        "
-                                        class="min-w-full divide-y divide-slate-100 text-sm"
-                                    >
-                                        <thead class="bg-slate-50/80">
-                                            <tr>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_name",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_guests",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_notes",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                />
-                                            </tr>
-                                        </thead>
-                                        <tbody
-                                            class="divide-y divide-slate-100 bg-white"
-                                        >
-                                            <tr
-                                                v-for="(
-                                                    row, idx
-                                                ) in passengersEditDraft.passengerRows"
-                                                :key="'pe-' + idx"
-                                            >
-                                                <td class="px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="
-                                                            row.person_in_charge
-                                                        "
-                                                        type="text"
-                                                        :placeholder="t('trip_detail.passengers.ph_name')"
-                                                        :class="
-                                                            paxEditInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="w-20 px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="row.guests"
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        :placeholder="t('trip_detail.passengers.ph_guests')"
-                                                        :class="
-                                                            paxNumInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="row.notes"
-                                                        type="text"
-                                                        :placeholder="t('trip_detail.passengers.ph_notes')"
-                                                        :class="
-                                                            paxEditInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="px-3 py-2 align-top">
-                                                    <button
-                                                        v-if="
-                                                            passengersEditDraft
-                                                                .passengerRows
-                                                                .length > 1
-                                                        "
-                                                        type="button"
-                                                        class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                                        :aria-label="
-                                                            t(
-                                                                'trip_detail.passengers.remove_row',
-                                                            )
-                                                        "
-                                                        @click="
-                                                            removePassengerListRow(
-                                                                idx,
-                                                            )
-                                                        "
-                                                    >
-                                                        <TrashIcon
-                                                            class="h-4 w-4"
-                                                        />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <!-- Business -->
-                                    <table
-                                        v-else-if="
-                                            passengersEditDraft.kind ===
-                                            'business'
-                                        "
-                                        class="min-w-full divide-y divide-slate-100 text-sm"
-                                    >
-                                        <thead class="bg-slate-50/80">
-                                            <tr>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_guests",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_notes",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                />
-                                            </tr>
-                                        </thead>
-                                        <tbody
-                                            class="divide-y divide-slate-100 bg-white"
-                                        >
-                                            <tr
-                                                v-for="(
-                                                    row, idx
-                                                ) in passengersEditDraft.businessRows"
-                                                :key="'be-' + idx"
-                                            >
-                                                <td class="w-24 px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="row.guests"
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        :placeholder="t('trip_detail.passengers.ph_guests')"
-                                                        :class="
-                                                            paxNumInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="row.notes"
-                                                        type="text"
-                                                        :placeholder="t('trip_detail.passengers.ph_notes')"
-                                                        :class="
-                                                            paxEditInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="px-3 py-2 align-top">
-                                                    <button
-                                                        v-if="
-                                                            passengersEditDraft
-                                                                .businessRows
-                                                                .length > 1
-                                                        "
-                                                        type="button"
-                                                        class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                                        :aria-label="
-                                                            t(
-                                                                'trip_detail.passengers.remove_row',
-                                                            )
-                                                        "
-                                                        @click="
-                                                            removePassengerListRow(
-                                                                idx,
-                                                            )
-                                                        "
-                                                    >
-                                                        <TrashIcon
-                                                            class="h-4 w-4"
-                                                        />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <!-- Cargo -->
-                                    <table
-                                        v-else
-                                        class="min-w-full divide-y divide-slate-100 text-sm"
-                                    >
-                                        <thead class="bg-slate-50/80">
-                                            <tr>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_name",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_qty",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_notes",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                >
-                                                    {{
-                                                        t(
-                                                            "trip_detail.passengers.col_contact",
-                                                        )
-                                                    }}
-                                                </th>
-                                                <th
-                                                    class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600"
-                                                />
-                                            </tr>
-                                        </thead>
-                                        <tbody
-                                            class="divide-y divide-slate-100 bg-white"
-                                        >
-                                            <tr
-                                                v-for="(
-                                                    row, idx
-                                                ) in passengersEditDraft.cargoRows"
-                                                :key="'ce-' + idx"
-                                            >
-                                                <td class="px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="row.name"
-                                                        type="text"
-                                                        :placeholder="t('trip_detail.passengers.ph_cargo_name')"
-                                                        :class="
-                                                            paxEditInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="w-20 px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="row.qty"
-                                                        type="number"
-                                                        min="1"
-                                                        step="1"
-                                                        :placeholder="t('trip_detail.passengers.ph_qty')"
-                                                        :class="
-                                                            paxNumInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="px-3 py-2 align-top">
-                                                    <input
-                                                        v-model="row.item_notes"
-                                                        type="text"
-                                                        :placeholder="t('trip_detail.passengers.ph_notes')"
-                                                        :class="
-                                                            paxEditInputClass
-                                                        "
-                                                    />
-                                                </td>
-                                                <td class="px-3 py-2 align-top">
-                                                    <div
-                                                        class="flex min-w-[10rem] flex-col gap-1"
-                                                    >
-                                                        <input
-                                                            v-model="
-                                                                row.pickup_contact
-                                                            "
-                                                            type="text"
-                                                            :placeholder="
-                                                                t(
-                                                                    'trip_detail.passengers.ph_pickup_contact',
-                                                                )
-                                                            "
-                                                            :class="
-                                                                paxEditInputClass
-                                                            "
-                                                        />
-                                                        <input
-                                                            v-model="
-                                                                row.delivery_contact
-                                                            "
-                                                            type="text"
-                                                            :placeholder="
-                                                                t(
-                                                                    'trip_detail.passengers.ph_delivery_contact',
-                                                                )
-                                                            "
-                                                            :class="
-                                                                paxEditInputClass
-                                                            "
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td class="px-3 py-2 align-top">
-                                                    <button
-                                                        v-if="
-                                                            passengersEditDraft
-                                                                .cargoRows
-                                                                .length > 1
-                                                        "
-                                                        type="button"
-                                                        class="rounded p-1 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                                        :aria-label="
-                                                            t(
-                                                                'trip_detail.passengers.remove_row',
-                                                            )
-                                                        "
-                                                        @click="
-                                                            removePassengerListRow(
-                                                                idx,
-                                                            )
-                                                        "
-                                                    >
-                                                        <TrashIcon
-                                                            class="h-4 w-4"
-                                                        />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <div
-                                        class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700/80 dark:bg-slate-900/50"
-                                    >
-                                        <button
-                                            type="button"
-                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                                            @click="addPassengerListRow"
-                                        >
-                                            <span class="text-[10px] font-bold leading-none" aria-hidden="true">+</span>
-                                            {{ t("trip_detail.passengers.add_row") }}
-                                        </button>
-                                        <div class="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                                                @click="cancelPassengersEdit"
-                                            >
-                                                {{ t("trip_detail.passengers.cancel_edit") }}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                class="rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
-                                                :disabled="passengersSaving"
-                                                @click="submitPassengersEdit"
-                                            >
-                                                {{ t("trip_detail.passengers.save") }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </template>
-                            </template>
-                        </PassengerCheckIn>
+                            @passenger-list-save="onPassengerListSave"
+                            @passenger-list-delete="onPassengerListDelete"
+                            @passenger-list-add="onPassengerListAdd"
+                        />
 
                         <section
                             class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700/80 dark:bg-slate-950/40"
@@ -1335,11 +940,6 @@ const canRescheduleForCoordinationPanel = computed(
     () => canRescheduleTrip.value && !coordinationActionsLocked.value,
 );
 
-const passengersEditMode = ref(false);
-const passengersEditDraft = ref(null);
-const passengersSaving = ref(false);
-const passengersEditMsg = ref("");
-
 const canEditPassengerList = computed(
     () =>
         canAssign.value &&
@@ -1354,133 +954,173 @@ const canPassengerCheckIn = computed(() => {
     return canAssign.value || canUpdateStatus.value;
 });
 
-const paxEditInputClass =
-    "w-full min-w-[5rem] rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-sm text-slate-900 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900";
+function clonePassengerListArrays() {
+    const s = snap.value ?? {};
+    return {
+        passengerRows: (s.passengerRows ?? []).map((r) => ({
+            ...emptyPassengerRow(),
+            ...r,
+        })),
+        businessRows: (s.businessRows ?? []).map((r) => ({
+            ...emptyBusinessRow(),
+            ...r,
+        })),
+        cargoRows: (s.cargoRows ?? []).map((r) => ({
+            ...emptyCargoRow(),
+            ...r,
+        })),
+    };
+}
 
-const paxNumInputClass =
-    "w-full rounded-xl bg-slate-100/90 px-2 py-1.5 text-center text-sm tabular-nums text-slate-900 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900";
-
-function startPassengersEdit() {
-    passengersEditMsg.value = "";
-    const dr = trip.value?.dispatch_request;
-    if (!dr) return;
-    const tt = dr.trip_type;
-    const s = dr.wizard_snapshot;
-    if (tt === "cargo") {
-        const src =
-            Array.isArray(s?.cargoRows) && s.cargoRows.length
-                ? s.cargoRows
-                : [emptyCargoRow()];
-        passengersEditDraft.value = {
-            kind: "cargo",
-            cargoRows: src.map((r) => ({ ...emptyCargoRow(), ...r })),
+function applyPassengerDraftToArrays(arrays, meta, draft) {
+    if (!meta || !draft) return;
+    if (meta.kind === "passenger") {
+        const i = meta.rowIndex;
+        const cur = {
+            ...emptyPassengerRow(),
+            ...arrays.passengerRows[i],
         };
-    } else if (tt === "business") {
-        const src =
-            Array.isArray(s?.businessRows) && s.businessRows.length
-                ? s.businessRows
-                : [emptyBusinessRow()];
-        passengersEditDraft.value = {
-            kind: "business",
-            businessRows: src.map((r) => ({ ...emptyBusinessRow(), ...r })),
-        };
-    } else {
-        const src =
-            Array.isArray(s?.passengerRows) && s.passengerRows.length
-                ? s.passengerRows
-                : [emptyPassengerRow()];
-        passengersEditDraft.value = {
-            kind: "passenger",
-            passengerRows: src.map((r) => ({ ...emptyPassengerRow(), ...r })),
-        };
+        cur.person_in_charge = draft.person_in_charge ?? "";
+        cur.guests = String(draft.guests ?? "1");
+        cur.notes = draft.notes ?? "";
+        cur.pickup = draft.pickup ?? "";
+        arrays.passengerRows[i] = cur;
+        return;
     }
-    passengersEditMode.value = true;
-}
-
-function cancelPassengersEdit() {
-    passengersEditMode.value = false;
-    passengersEditDraft.value = null;
-    passengersEditMsg.value = "";
-}
-
-function addPassengerListRow() {
-    const d = passengersEditDraft.value;
-    if (!d) return;
-    if (d.kind === "passenger") d.passengerRows.push(emptyPassengerRow());
-    else if (d.kind === "business") d.businessRows.push(emptyBusinessRow());
-    else d.cargoRows.push(emptyCargoRow());
-}
-
-function removePassengerListRow(idx) {
-    const d = passengersEditDraft.value;
-    if (!d) return;
-    if (d.kind === "passenger") {
-        d.passengerRows.splice(idx, 1);
-        if (!d.passengerRows.length) d.passengerRows.push(emptyPassengerRow());
-    } else if (d.kind === "business") {
-        d.businessRows.splice(idx, 1);
-        if (!d.businessRows.length) d.businessRows.push(emptyBusinessRow());
-    } else {
-        d.cargoRows.splice(idx, 1);
-        if (!d.cargoRows.length) d.cargoRows.push(emptyCargoRow());
+    if (meta.kind === "business") {
+        const i = meta.rowIndex;
+        const cur = {
+            ...emptyBusinessRow(),
+            ...arrays.businessRows[i],
+        };
+        cur.guests = String(draft.guests ?? "1");
+        cur.notes = draft.notes ?? "";
+        arrays.businessRows[i] = cur;
+        return;
+    }
+    if (meta.kind === "cargo") {
+        const i = meta.rowIndex;
+        const cur = { ...emptyCargoRow(), ...arrays.cargoRows[i] };
+        cur.name = draft.name ?? "";
+        cur.qty = String(draft.qty ?? "1");
+        cur.item_notes = draft.item_notes ?? "";
+        cur.pickup_contact = draft.pickup_contact ?? "";
+        cur.delivery_contact = draft.delivery_contact ?? "";
+        arrays.cargoRows[i] = cur;
     }
 }
 
-async function submitPassengersEdit() {
-    passengersEditMsg.value = "";
-    const d = passengersEditDraft.value;
+function deleteMetasFromArrays(arrays, metas) {
+    const cargoIdx = metas
+        .filter((m) => m.kind === "cargo")
+        .map((m) => m.rowIndex)
+        .sort((a, b) => b - a);
+    const passIdx = metas
+        .filter((m) => m.kind === "passenger")
+        .map((m) => m.rowIndex)
+        .sort((a, b) => b - a);
+    const busIdx = metas
+        .filter((m) => m.kind === "business")
+        .map((m) => m.rowIndex)
+        .sort((a, b) => b - a);
+    for (const i of cargoIdx) arrays.cargoRows.splice(i, 1);
+    for (const i of passIdx) arrays.passengerRows.splice(i, 1);
+    for (const i of busIdx) arrays.businessRows.splice(i, 1);
+}
+
+async function persistPassengerListSnapshot(mutator) {
     const tid = trip.value?.id;
-    if (!d || tid == null) return;
-
-    let payload = {};
-    if (d.kind === "passenger") {
-        const filled = d.passengerRows.filter(isPassengerRowFilled);
+    const dr = trip.value?.dispatch_request;
+    if (tid == null || !dr) return false;
+    const tt = dr.trip_type;
+    const arrays = clonePassengerListArrays();
+    mutator(arrays);
+    let payload;
+    if (tt === "cargo") {
+        const filled = arrays.cargoRows.filter(isCargoRowFilled);
         if (!filled.length) {
-            passengersEditMsg.value = t(
-                "trip_detail.passengers.validation_need_one",
-            );
-            return;
+            showAppError(t("trip_detail.passengers.validation_need_one"));
+            return false;
         }
-        payload = { passenger_rows: filled };
-    } else if (d.kind === "business") {
-        const filled = d.businessRows.filter(isBusinessRowFilled);
+        payload = { cargo_rows: filled };
+    } else if (tt === "business") {
+        const filled = arrays.businessRows.filter(isBusinessRowFilled);
         if (!filled.length) {
-            passengersEditMsg.value = t(
-                "trip_detail.passengers.validation_need_one",
-            );
-            return;
+            showAppError(t("trip_detail.passengers.validation_need_one"));
+            return false;
         }
         payload = { business_rows: filled };
     } else {
-        const filled = d.cargoRows.filter(isCargoRowFilled);
+        const filled = arrays.passengerRows.filter(isPassengerRowFilled);
         if (!filled.length) {
-            passengersEditMsg.value = t(
-                "trip_detail.passengers.validation_need_one",
-            );
-            return;
+            showAppError(t("trip_detail.passengers.validation_need_one"));
+            return false;
         }
-        payload = { cargo_rows: filled };
+        payload = { passenger_rows: filled };
     }
-
-    const ok = await confirmAction({
-        title: t("trip_detail.passengers.save_confirm_title"),
-        message: t("trip_detail.passengers.save_confirm_body"),
-        confirmLabel: t("trip_detail.passengers.save"),
-        cancelLabel: t("trip_detail.passengers.cancel_edit"),
-    });
-    if (!ok) return;
-
-    passengersSaving.value = true;
     try {
         await updateTripPassengerList(tid, payload);
         await load({ silent: true });
-        passengersEditMode.value = false;
-        passengersEditDraft.value = null;
+        showAppSuccess(t("trip_detail.passengers.dt_save_ok"));
+        return true;
     } catch (e) {
-        passengersEditMsg.value = formatApiMessage(e);
-    } finally {
-        passengersSaving.value = false;
+        showAppError(formatApiMessage(e));
+        return false;
     }
+}
+
+async function onPassengerListSave({ meta, draft, resolve }) {
+    const ok = await persistPassengerListSnapshot((arrays) => {
+        applyPassengerDraftToArrays(arrays, meta, draft);
+    });
+    resolve(ok);
+}
+
+async function onPassengerListDelete({ keys, resolve }) {
+    const metaList = passengerRowsDisplay.value
+        .filter(
+            (r) =>
+                keys.includes(r.passengerKey) &&
+                r.editMeta &&
+                r.editable,
+        )
+        .map((r) => r.editMeta);
+    if (!metaList.length) {
+        resolve(false);
+        return;
+    }
+    const ok = await persistPassengerListSnapshot((arrays) => {
+        deleteMetasFromArrays(arrays, metaList);
+    });
+    resolve(ok);
+}
+
+async function onPassengerListAdd({ resolve }) {
+    const dr = trip.value?.dispatch_request;
+    if (!dr) {
+        resolve(false);
+        return;
+    }
+    const tt = dr.trip_type;
+    const ok = await persistPassengerListSnapshot((arrays) => {
+        if (tt === "cargo") {
+            arrays.cargoRows.push({
+                ...emptyCargoRow(),
+                name: t("trip_detail.passengers.new_placeholder"),
+            });
+        } else if (tt === "business") {
+            arrays.businessRows.push({
+                ...emptyBusinessRow(),
+                notes: t("trip_detail.passengers.new_placeholder"),
+            });
+        } else {
+            arrays.passengerRows.push({
+                ...emptyPassengerRow(),
+                person_in_charge: t("trip_detail.passengers.new_placeholder"),
+            });
+        }
+    });
+    resolve(ok);
 }
 
 function fmt(v) {
@@ -1723,6 +1363,12 @@ function inferRoleKind(tripType) {
     return "guest";
 }
 
+function passengerListRowEditable(tripType, metaKind) {
+    if (tripType === "cargo") return metaKind === "cargo";
+    if (tripType === "business") return metaKind === "business";
+    return metaKind === "passenger";
+}
+
 const passengerRowsDisplay = computed(() => {
     const dr = trip.value?.dispatch_request;
     const s = snap.value;
@@ -1733,7 +1379,8 @@ const passengerRowsDisplay = computed(() => {
 
     if (tripType === "cargo" && s?.cargoRows?.length) {
         let i = 0;
-        for (const r of s.cargoRows) {
+        for (let ci = 0; ci < s.cargoRows.length; ci++) {
+            const r = s.cargoRows[ci];
             if (!isCargoRowFilled(r)) continue;
             i += 1;
             const notes = [r.item_notes, r.transport_note]
@@ -1743,6 +1390,7 @@ const passengerRowsDisplay = computed(() => {
                 [r.pickup_place, r.pickup_contact]
                     .filter(Boolean)
                     .join(" · ") || "";
+            const meta = { kind: "cargo", rowIndex: ci };
             rows.push({
                 name:
                     r.name?.trim() ||
@@ -1754,6 +1402,15 @@ const passengerRowsDisplay = computed(() => {
                 pickupAddress,
                 flagWheelchair: /xe lăn|wheelchair/i.test(notes),
                 flagAllergy: /dị ứng|allergy/i.test(notes),
+                editMeta: meta,
+                editable: passengerListRowEditable(tripType, "cargo"),
+                editFields: {
+                    name: r.name ?? "",
+                    qty: String(r.qty ?? "1"),
+                    item_notes: r.item_notes ?? "",
+                    pickup_contact: r.pickup_contact ?? "",
+                    delivery_contact: r.delivery_contact ?? "",
+                },
             });
         }
         return rows.map((r, i) => ({
@@ -1763,7 +1420,8 @@ const passengerRowsDisplay = computed(() => {
     }
 
     let idx = 0;
-    for (const r of s?.passengerRows ?? []) {
+    for (let pi = 0; pi < (s?.passengerRows ?? []).length; pi++) {
+        const r = s.passengerRows[pi];
         if (!isPassengerRowFilled(r)) continue;
         idx += 1;
         const name =
@@ -1771,6 +1429,7 @@ const passengerRowsDisplay = computed(() => {
             t("trip_detail.passengers.guest", { n: idx });
         const notes = r.notes?.trim() || "";
         const kind = inferRoleKind(tripType);
+        const meta = { kind: "passenger", rowIndex: pi };
         rows.push({
             name,
             roleKind: kind,
@@ -1785,13 +1444,23 @@ const passengerRowsDisplay = computed(() => {
             pickupAddress: (r.pickup ?? "").trim(),
             flagWheelchair: /xe lăn|wheelchair/i.test(notes),
             flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(notes),
+            editMeta: meta,
+            editable: passengerListRowEditable(tripType, "passenger"),
+            editFields: {
+                person_in_charge: r.person_in_charge ?? "",
+                guests: String(r.guests ?? "1"),
+                notes: r.notes ?? "",
+                pickup: r.pickup ?? "",
+            },
         });
     }
 
-    for (const r of s?.businessRows ?? []) {
+    for (let bi = 0; bi < (s?.businessRows ?? []).length; bi++) {
+        const r = s.businessRows[bi];
         if (!isBusinessRowFilled(r)) continue;
         idx += 1;
         const notes = r.notes?.trim() || "";
+        const meta = { kind: "business", rowIndex: bi };
         rows.push({
             name: t("trip_detail.passengers.business_party", { n: idx }),
             roleKind: "staff",
@@ -1801,6 +1470,12 @@ const passengerRowsDisplay = computed(() => {
             pickupAddress: "",
             flagWheelchair: /xe lăn|wheelchair/i.test(notes),
             flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(notes),
+            editMeta: meta,
+            editable: passengerListRowEditable(tripType, "business"),
+            editFields: {
+                guests: String(r.guests ?? "1"),
+                notes: r.notes ?? "",
+            },
         });
     }
 
@@ -1819,6 +1494,9 @@ const passengerRowsDisplay = computed(() => {
             pickupAddress: "",
             flagWheelchair: false,
             flagAllergy: false,
+            editMeta: null,
+            editable: false,
+            editFields: null,
         });
     }
 
@@ -2731,9 +2409,6 @@ onMounted(load);
 watch(
     () => route.params.id,
     () => {
-        passengersEditMode.value = false;
-        passengersEditDraft.value = null;
-        passengersEditMsg.value = "";
         load();
     },
 );
