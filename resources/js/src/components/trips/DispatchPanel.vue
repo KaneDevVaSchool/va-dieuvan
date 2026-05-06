@@ -280,34 +280,24 @@
                 </div>
             </CollapsiblePanelSection>
 
-            <CollapsiblePanelSection
-                :title="t('trip_detail.coordination.section_resources_title')"
-                :summary-collapsed="resourcesSectionSummaryCollapsed"
-                :persist-key="collapseStorageKey('resources')"
-            >
-                <div class="-mx-0.5">
-                    <ResourcePanel
-                        v-if="tripId"
-                        ref="resourcePanelRef"
-                        :trip-id="tripId"
-                        :trip-date="scheduleDateKeyForList"
-                        :needed-seats="neededSeats"
-                        :available-count="suitableVehiclesCount"
-                        :busy-vehicle-ids="busyVehicleIds"
-                        :busy-driver-ids="busyDriverIds"
-                        :trip-snapshot="tripSnapshot"
-                        :can-quick-create-vendor="canQuickCreateProvider"
-                        :hide-internal-vehicle-section="showInternalVehicleCard"
-                        :hide-internal-driver-section="coordinationActionsLocked"
-                        :disabled="coordinationActionsLocked"
-                        :collapse-persist-prefix="
-                            collapseStorageKey('rp') ?? ''
-                        "
-                        @update:resources="$emit('update:resources', $event)"
-                        @create-vendor="$emit('create-vendor')"
-                    />
-                </div>
-            </CollapsiblePanelSection>
+            <div v-if="tripId" class="-mx-0.5">
+                <ResourcePanel
+                    ref="resourcePanelRef"
+                    :trip-id="tripId"
+                    :trip-date="scheduleDateKeyForList"
+                    :needed-seats="neededSeats"
+                    :available-count="suitableVehiclesCount"
+                    :busy-vehicle-ids="busyVehicleIds"
+                    :busy-driver-ids="busyDriverIds"
+                    :trip-snapshot="tripSnapshot"
+                    :can-quick-create-vendor="canQuickCreateProvider"
+                    :hide-internal-vehicle-section="showInternalVehicleCard"
+                    :hide-internal-driver-section="coordinationActionsLocked"
+                    :disabled="coordinationActionsLocked"
+                    @update:resources="$emit('update:resources', $event)"
+                    @create-vendor="$emit('create-vendor')"
+                />
+            </div>
 
             <div
                 v-if="assignMsg"
@@ -607,10 +597,6 @@ const scheduleSectionSummaryCollapsed = computed(() => {
     }
     return base;
 });
-
-const resourcesSectionSummaryCollapsed = computed(() =>
-    t("trip_detail.coordination.resources_form_collapsed_hint"),
-);
 
 const notesCollapsedSummary = computed(() => {
     const n = props.coordinationNotes?.trim()?.length ?? 0;

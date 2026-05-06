@@ -1,141 +1,143 @@
 <template>
   <div class="flex flex-col">
     <CollapsiblePanelSection
-      v-if="!hideInternalVehicleSection || !hideInternalDriverSection"
-      :title="t('trip_detail.coordination.assign_pair_title')"
-      :summary-collapsed="internalPairCollapsedSummary"
-      :persist-key="rpPersistKey('int')"
+      v-if="resourcesPanelVisible"
+      :title="t('trip_detail.coordination.section_resources_title')"
+      :summary-collapsed="unifiedCollapsedSummary"
+      :default-expanded="true"
+      :persist-key="null"
     >
       <template #header-end>
-        <span class="tabular-nums text-[11px] font-medium text-slate-500 dark:text-slate-400">{{
-          t('trip_detail.coordination.resource_fit_count', { n: availableCount })
-        }}</span>
+        <div
+          class="flex shrink-0 flex-wrap items-center justify-end gap-1.5 pb-1 pr-2 pt-1 sm:py-2"
+        >
+          <span
+            v-if="showFitCountBadge"
+            class="tabular-nums text-[11px] font-medium text-slate-500 dark:text-slate-400"
+          >{{
+            t('trip_detail.coordination.resource_fit_count', { n: availableCount })
+          }}</span>
+          <span
+            v-if="supplementBlockVisible"
+            class="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums shadow-sm"
+            :class="
+              capacityGapRemaining > 0
+                ? 'bg-[#FAEEDA] text-[#854F0B] shadow-amber-900/10 dark:bg-amber-950/45 dark:text-[#F2C07D]'
+                : 'bg-emerald-50 text-emerald-800 shadow-emerald-900/10 dark:bg-emerald-950/55 dark:text-emerald-100'
+            "
+          >
+            <template v-if="capacityGapRemaining > 0">
+              {{
+                t('trip_detail.coordination.supplement_capacity_badge_short', {
+                  n: capacityGapRemaining,
+                })
+              }}
+            </template>
+            <template v-else>
+              {{ t('trip_detail.coordination.supplement_capacity_badge_ok') }}
+            </template>
+          </span>
+        </div>
       </template>
 
       <div class="space-y-2.5 pt-0.5">
-      <div
-        v-if="!hideInternalVehicleSection"
-        class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
-      >
-        <ResourceSection
-          v-model="selected.internalVehicles"
-          :options="internalVehicleOptions"
-          :is-loading="isLoading"
-          :disabled="disabled"
-          :title="t('trip_detail.coordination.resource_section_internal_title')"
-          :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
-          :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
-          :icon="TruckIcon"
-        />
-      </div>
-
-      <div
-        v-if="!hideInternalDriverSection"
-        id="dispatch-internal-driver-section"
-        class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
-      >
-        <ResourceSection
-          v-model="selected.internalDrivers"
-          :options="internalDriverOptions"
-          :is-loading="isLoading"
-          :disabled="disabled"
-          :multiple="false"
-          :title="t('trip_detail.coordination.resource_section_driver_title')"
-          :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
-          :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
-          :icon="UserIcon"
-          :option-label-class-fn="driverOptionLabelClass"
+        <div
+          v-if="!hideInternalVehicleSection"
+          class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
         >
-          <template #body-before-search>
-            <button
-              type="button"
-              class="w-full rounded-xl bg-white px-2.5 py-1.5 text-left text-[11px] font-semibold leading-snug text-[#8B1A1A] shadow-sm shadow-slate-900/5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 dark:bg-slate-800/70 dark:text-[#e57373] dark:hover:bg-slate-800 dark:shadow-black/25"
-              :disabled="!tripDate || disabled"
-              @click="showWorkloadPanel = true"
-            >
-              {{ t('trip_detail.coordination.workload_open_panel') }}
-            </button>
-          </template>
-          <template #option-extra="{ option }">
-            <DriverWorkloadBadge
-              v-if="driverWorkloadEntry(option.id)"
-              :workload="driverWorkloadEntry(option.id)"
-              :color-fn="loadColor"
+          <ResourceSection
+            v-model="selected.internalVehicles"
+            :options="internalVehicleOptions"
+            :is-loading="isLoading"
+            :disabled="disabled"
+            :title="t('trip_detail.coordination.resource_section_internal_title')"
+            :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
+            :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
+            :icon="TruckIcon"
+          />
+        </div>
+
+        <div
+          v-if="!hideInternalDriverSection"
+          id="dispatch-internal-driver-section"
+          class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
+        >
+          <ResourceSection
+            v-model="selected.internalDrivers"
+            :options="internalDriverOptions"
+            :is-loading="isLoading"
+            :disabled="disabled"
+            :multiple="false"
+            :title="t('trip_detail.coordination.resource_section_driver_title')"
+            :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
+            :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
+            :icon="UserIcon"
+            :option-label-class-fn="driverOptionLabelClass"
+          >
+            <template #body-before-search>
+              <button
+                type="button"
+                class="w-full rounded-xl bg-white px-2.5 py-1.5 text-left text-[11px] font-semibold leading-snug text-[#8B1A1A] shadow-sm shadow-slate-900/5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 dark:bg-slate-800/70 dark:text-[#e57373] dark:hover:bg-slate-800 dark:shadow-black/25"
+                :disabled="!tripDate || disabled"
+                @click="showWorkloadPanel = true"
+              >
+                {{ t('trip_detail.coordination.workload_open_panel') }}
+              </button>
+            </template>
+            <template #option-extra="{ option }">
+              <DriverWorkloadBadge
+                v-if="driverWorkloadEntry(option.id)"
+                :workload="driverWorkloadEntry(option.id)"
+                :color-fn="loadColor"
+              />
+            </template>
+          </ResourceSection>
+        </div>
+
+        <template v-if="supplementBlockVisible">
+          <div
+            v-if="!hideTaxiSection"
+            class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
+          >
+            <SupplementTransportSection
+              v-model="selected.taxis"
+              kind="taxi"
+              :options="taxiOptions"
+              :is-loading="isLoading"
+              :default-seat="4"
+              indent-body
+              :disabled="disabled"
+              :title="t('trip_detail.coordination.resource_section_taxi_title')"
+              :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
+              :name-placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
+              :name-field-label="t('trip_detail.coordination.supplement_field_provider')"
+              :icon="MapPinIcon"
             />
-          </template>
-        </ResourceSection>
+          </div>
+
+          <div
+            v-if="!hideVendorSection"
+            class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
+          >
+            <SupplementTransportSection
+              v-model="selected.vendors"
+              kind="vendor"
+              :options="vendorOptions"
+              :is-loading="isLoading"
+              :default-seat="7"
+              indent-body
+              :can-quick-create="canQuickCreateVendor"
+              :disabled="disabled"
+              :title="t('trip_detail.coordination.resource_section_vendor_title')"
+              :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
+              :name-placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
+              :name-field-label="t('trip_detail.coordination.supplement_field_ncc_name')"
+              :icon="BuildingOfficeIcon"
+              @create-vendor="$emit('create-vendor')"
+            />
+          </div>
+        </template>
       </div>
-      </div>
-    </CollapsiblePanelSection>
-
-    <CollapsiblePanelSection
-      v-if="supplementBlockVisible"
-      :title="t('trip_detail.coordination.supplement_section_title')"
-      :summary-collapsed="supplementCollapsedSummary"
-      :persist-key="rpPersistKey('sup')"
-    >
-      <template #header-end>
-        <span
-          class="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums shadow-sm"
-          :class="
-            capacityGapRemaining > 0
-              ? 'bg-[#FAEEDA] text-[#854F0B] shadow-amber-900/10 dark:bg-amber-950/45 dark:text-[#F2C07D]'
-              : 'bg-emerald-50 text-emerald-800 shadow-emerald-900/10 dark:bg-emerald-950/55 dark:text-emerald-100'
-          "
-        >
-          <template v-if="capacityGapRemaining > 0">
-            {{ t('trip_detail.coordination.supplement_capacity_badge_short', { n: capacityGapRemaining }) }}
-          </template>
-          <template v-else>
-            {{ t('trip_detail.coordination.supplement_capacity_badge_ok') }}
-          </template>
-        </span>
-      </template>
-
-      <div class="space-y-2 pt-0.5">
-        <div
-          v-if="!hideTaxiSection"
-          class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
-        >
-          <SupplementTransportSection
-            v-model="selected.taxis"
-            kind="taxi"
-            :options="taxiOptions"
-            :is-loading="isLoading"
-            :default-seat="4"
-            indent-body
-            :disabled="disabled"
-            :title="t('trip_detail.coordination.resource_section_taxi_title')"
-            :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
-            :name-placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
-            :name-field-label="t('trip_detail.coordination.supplement_field_provider')"
-            :icon="MapPinIcon"
-          />
-        </div>
-
-        <div
-          v-if="!hideVendorSection"
-          class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
-        >
-          <SupplementTransportSection
-            v-model="selected.vendors"
-            kind="vendor"
-            :options="vendorOptions"
-            :is-loading="isLoading"
-            :default-seat="7"
-            indent-body
-            :can-quick-create="canQuickCreateVendor"
-            :disabled="disabled"
-            :title="t('trip_detail.coordination.resource_section_vendor_title')"
-            :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
-            :name-placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
-            :name-field-label="t('trip_detail.coordination.supplement_field_ncc_name')"
-            :icon="BuildingOfficeIcon"
-            @create-vendor="$emit('create-vendor')"
-          />
-        </div>
-      </div>
-
     </CollapsiblePanelSection>
 
     <Transition
@@ -212,19 +214,11 @@ const props = defineProps({
   hideVendorSection: { type: Boolean, default: false },
   /** Khóa toàn bộ thao tác (vd. sau khi đã gán trên timeline) */
   disabled: { type: Boolean, default: false },
-  /** Tiền tố `persist-key` cho các khối thu gọn bên trong (vd. collapseStorageKey('rp')) */
-  collapsePersistPrefix: { type: String, default: '' },
 })
 
 const emit = defineEmits(['create-vendor', 'update:resources'])
 
 const { t } = useI18n()
-
-function rpPersistKey(segment) {
-  const p = String(props.collapsePersistPrefix ?? '').trim()
-  if (!p) return null
-  return `${p}-${segment}`
-}
 
 const tripIdRef = toRef(props, 'tripId')
 const tripDateRef = toRef(props, 'tripDate')
@@ -295,22 +289,46 @@ const supplementTotalSeats = computed(
     sumListedSupplementSeats(selected.value.vendors),
 )
 
-const internalPairCollapsedSummary = computed(() => {
-  const vn = selected.value.internalVehicles.length
-  const dn = selected.value.internalDrivers.length
-  if (!vn && !dn) {
-    return t('trip_detail.coordination.pick_internal_hint')
-  }
-  return t('trip_detail.coordination.assign_pair_counts', { vn, dn })
-})
-
-const supplementCollapsedSummary = computed(() =>
-  t('trip_detail.coordination.supplement_summary_compact', {
-    taxi: selected.value.taxis.length,
-    ncc: selected.value.vendors.length,
-    total: supplementTotalSeats.value,
-  }),
+const supplementBlockVisible = computed(
+  () =>
+    (!props.hideTaxiSection || !props.hideVendorSection) &&
+    !props.hideInternalDriverSection,
 )
+
+const resourcesPanelVisible = computed(
+  () =>
+    !props.hideInternalVehicleSection ||
+    !props.hideInternalDriverSection ||
+    supplementBlockVisible.value,
+)
+
+const showFitCountBadge = computed(
+  () =>
+    !props.hideInternalVehicleSection || !props.hideInternalDriverSection,
+)
+
+const unifiedCollapsedSummary = computed(() => {
+  const parts = []
+  if (!props.hideInternalVehicleSection || !props.hideInternalDriverSection) {
+    const vn = selected.value.internalVehicles.length
+    const dn = selected.value.internalDrivers.length
+    if (!vn && !dn) {
+      parts.push(t('trip_detail.coordination.pick_internal_hint'))
+    } else {
+      parts.push(t('trip_detail.coordination.assign_pair_counts', { vn, dn }))
+    }
+  }
+  if (supplementBlockVisible.value) {
+    parts.push(
+      t('trip_detail.coordination.supplement_summary_compact', {
+        taxi: selected.value.taxis.length,
+        ncc: selected.value.vendors.length,
+        total: supplementTotalSeats.value,
+      }),
+    )
+  }
+  return parts.filter(Boolean).join(' · ')
+})
 
 const internalSeatCapacity = computed(() => {
   const v = selected.value.internalVehicles[0]
@@ -323,12 +341,6 @@ const capacityGapRemaining = computed(() => {
   const covered = internalSeatCapacity.value + supplementTotalSeats.value
   return Math.max(0, need - covered)
 })
-
-const supplementBlockVisible = computed(
-  () =>
-    (!props.hideTaxiSection || !props.hideVendorSection) &&
-    !props.hideInternalDriverSection,
-)
 
 const showValidation = ref(false)
 
