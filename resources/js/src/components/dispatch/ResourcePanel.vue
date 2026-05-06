@@ -1,18 +1,21 @@
 <template>
   <div class="flex flex-col">
-    <template v-if="!hideInternalVehicleSection || !hideInternalDriverSection">
-      <div class="mb-2 flex items-center justify-between gap-2 px-0.5">
-        <span class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{
-          t('trip_detail.coordination.assign_pair_title')
-        }}</span>
-        <span class="text-[11px] font-normal tabular-nums text-slate-500 dark:text-slate-400">{{
+    <CollapsiblePanelSection
+      v-if="!hideInternalVehicleSection || !hideInternalDriverSection"
+      :title="t('trip_detail.coordination.assign_pair_title')"
+      :summary-collapsed="internalPairCollapsedSummary"
+      :persist-key="rpPersistKey('int')"
+    >
+      <template #header-end>
+        <span class="tabular-nums text-[11px] font-medium text-slate-500 dark:text-slate-400">{{
           t('trip_detail.coordination.resource_fit_count', { n: availableCount })
         }}</span>
-      </div>
+      </template>
 
+      <div class="space-y-2.5 pt-0.5">
       <div
         v-if="!hideInternalVehicleSection"
-        class="mb-2 overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
+        class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
       >
         <ResourceSection
           v-model="selected.internalVehicles"
@@ -29,7 +32,7 @@
       <div
         v-if="!hideInternalDriverSection"
         id="dispatch-internal-driver-section"
-        class="mb-2 overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
+        class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
       >
         <ResourceSection
           v-model="selected.internalDrivers"
@@ -46,7 +49,7 @@
           <template #body-before-search>
             <button
               type="button"
-              class="w-full rounded-lg border border-slate-200/80 bg-slate-50/60 px-2.5 py-1.5 text-left text-[11px] font-medium text-[#8B1A1A] disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-[#e57373]"
+              class="w-full rounded-xl bg-white px-2.5 py-1.5 text-left text-[11px] font-semibold leading-snug text-[#8B1A1A] shadow-sm shadow-slate-900/5 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 dark:bg-slate-800/70 dark:text-[#e57373] dark:hover:bg-slate-800 dark:shadow-black/25"
               :disabled="!tripDate || disabled"
               @click="showWorkloadPanel = true"
             >
@@ -62,22 +65,22 @@
           </template>
         </ResourceSection>
       </div>
-    </template>
+      </div>
+    </CollapsiblePanelSection>
 
-    <div
+    <CollapsiblePanelSection
       v-if="supplementBlockVisible"
-      class="mb-1"
+      :title="t('trip_detail.coordination.supplement_section_title')"
+      :summary-collapsed="supplementCollapsedSummary"
+      :persist-key="rpPersistKey('sup')"
     >
-      <div class="mb-3 flex items-center justify-between gap-2 px-0.5">
-        <span class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{
-          t('trip_detail.coordination.supplement_section_title')
-        }}</span>
+      <template #header-end>
         <span
-          class="shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tabular-nums"
+          class="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums shadow-sm"
           :class="
             capacityGapRemaining > 0
-              ? 'border-amber-200/60 bg-[#FAEEDA] text-[#854F0B] dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-[#F2C07D]'
-              : 'border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-800/45 dark:bg-emerald-950/40 dark:text-emerald-200'
+              ? 'bg-[#FAEEDA] text-[#854F0B] shadow-amber-900/10 dark:bg-amber-950/45 dark:text-[#F2C07D]'
+              : 'bg-emerald-50 text-emerald-800 shadow-emerald-900/10 dark:bg-emerald-950/55 dark:text-emerald-100'
           "
         >
           <template v-if="capacityGapRemaining > 0">
@@ -87,12 +90,12 @@
             {{ t('trip_detail.coordination.supplement_capacity_badge_ok') }}
           </template>
         </span>
-      </div>
+      </template>
 
-      <div class="space-y-2">
+      <div class="space-y-2 pt-0.5">
         <div
           v-if="!hideTaxiSection"
-          class="overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
+          class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
         >
           <SupplementTransportSection
             v-model="selected.taxis"
@@ -112,7 +115,7 @@
 
         <div
           v-if="!hideVendorSection"
-          class="overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
+          class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
         >
           <SupplementTransportSection
             v-model="selected.vendors"
@@ -133,15 +136,7 @@
         </div>
       </div>
 
-      <div class="mt-1.5 flex items-center justify-between border-t border-slate-200/60 pt-2.5 dark:border-slate-700/60">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{
-          t('trip_detail.coordination.supplement_total_label')
-        }}</span>
-        <span class="text-[15px] font-medium tabular-nums text-slate-800 dark:text-slate-100">{{
-          t('trip_detail.coordination.supplement_total_value', { n: supplementTotalSeats })
-        }}</span>
-      </div>
-    </div>
+    </CollapsiblePanelSection>
 
     <Transition
       enter-active-class="transition duration-150 ease-out"
@@ -151,7 +146,7 @@
     >
       <div
         v-if="showValidation && panelErrorMessage"
-        class="mt-2 rounded-[12px] border-[0.5px] border-rose-200/80 bg-rose-50 px-2.5 py-1.5 text-[12px] font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200"
+        class="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-[12px] font-medium leading-snug text-rose-800 shadow-sm dark:bg-rose-950/45 dark:text-rose-200"
         role="alert"
       >
         {{ panelErrorMessage }}
@@ -188,6 +183,7 @@ import {
   TruckIcon,
   UserIcon,
 } from '@heroicons/vue/24/outline'
+import CollapsiblePanelSection from './CollapsiblePanelSection.vue'
 import ResourceSection from './ResourceSection.vue'
 import SupplementTransportSection from './SupplementTransportSection.vue'
 import DriverWorkloadBadge from './DriverWorkloadBadge.vue'
@@ -216,11 +212,19 @@ const props = defineProps({
   hideVendorSection: { type: Boolean, default: false },
   /** Khóa toàn bộ thao tác (vd. sau khi đã gán trên timeline) */
   disabled: { type: Boolean, default: false },
+  /** Tiền tố `persist-key` cho các khối thu gọn bên trong (vd. collapseStorageKey('rp')) */
+  collapsePersistPrefix: { type: String, default: '' },
 })
 
 const emit = defineEmits(['create-vendor', 'update:resources'])
 
 const { t } = useI18n()
+
+function rpPersistKey(segment) {
+  const p = String(props.collapsePersistPrefix ?? '').trim()
+  if (!p) return null
+  return `${p}-${segment}`
+}
 
 const tripIdRef = toRef(props, 'tripId')
 const tripDateRef = toRef(props, 'tripDate')
@@ -289,6 +293,23 @@ const supplementTotalSeats = computed(
   () =>
     sumListedSupplementSeats(selected.value.taxis) +
     sumListedSupplementSeats(selected.value.vendors),
+)
+
+const internalPairCollapsedSummary = computed(() => {
+  const vn = selected.value.internalVehicles.length
+  const dn = selected.value.internalDrivers.length
+  if (!vn && !dn) {
+    return t('trip_detail.coordination.pick_internal_hint')
+  }
+  return t('trip_detail.coordination.assign_pair_counts', { vn, dn })
+})
+
+const supplementCollapsedSummary = computed(() =>
+  t('trip_detail.coordination.supplement_summary_compact', {
+    taxi: selected.value.taxis.length,
+    ncc: selected.value.vendors.length,
+    total: supplementTotalSeats.value,
+  }),
 )
 
 const internalSeatCapacity = computed(() => {

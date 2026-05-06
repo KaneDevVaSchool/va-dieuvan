@@ -1,31 +1,30 @@
 <template>
   <div
-    class="border-b border-slate-200/60 last:border-b-0 dark:border-slate-700/60"
+    class="mb-0"
   >
     <div
-      class="flex items-center justify-between gap-2 border-b border-slate-200/60 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700/60 dark:bg-slate-900/35"
+      class="flex items-center justify-between gap-2 rounded-t-2xl bg-white/70 px-3 py-2.5 dark:bg-white/5"
     >
-      <div class="flex min-w-0 flex-1 items-center gap-2">
+      <div class="flex min-w-0 flex-1 items-center gap-2.5">
         <div
           v-if="icon"
-          class="flex size-6 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-slate-500 dark:border-slate-700/60 dark:bg-slate-800/70 dark:text-slate-400"
+          class="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 shadow-inner shadow-slate-900/5 dark:bg-slate-800/90 dark:text-slate-400 dark:shadow-black/20"
         >
           <component :is="icon" class="size-3.5" aria-hidden="true" />
         </div>
         <div class="min-w-0">
-          <div class="text-[12px] font-medium text-slate-800 dark:text-slate-100">{{ title }}</div>
-          <div class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ subtitle }}</div>
+          <div class="text-[12px] font-semibold tracking-tight text-slate-800 dark:text-slate-100">{{ title }}</div>
         </div>
       </div>
       <span
         v-if="modelValue.length > 0"
-        class="shrink-0 rounded-full border border-slate-200/80 bg-white px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500 dark:border-slate-700/60 dark:bg-slate-800/70 dark:text-slate-400"
+        class="shrink-0 rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-600 shadow-sm dark:bg-slate-700/80 dark:text-slate-300"
       >
         {{ modelValue.length }}
       </span>
     </div>
 
-    <div class="space-y-2 bg-white px-3 py-2.5 dark:bg-slate-950/40">
+    <div class="space-y-2 rounded-b-2xl bg-white/50 px-3 pb-2.5 pt-1.5 dark:bg-slate-950/25">
       <slot name="body-before-search" />
 
       <div
@@ -37,7 +36,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            class="w-full rounded-lg border border-slate-200/80 bg-slate-50/60 py-1.5 pl-2.5 pr-2 text-[12px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-slate-100 dark:placeholder:text-slate-500"
+            class="w-full rounded-xl bg-slate-100/90 py-2 pl-3 pr-2 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900 dark:focus:shadow-black/35"
             :disabled="disabled"
             :placeholder="placeholder"
             @focus="onSearchFocus"
@@ -53,14 +52,14 @@
           >
             <div
               v-if="isOpen"
-              class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-lg border border-slate-200/80 bg-white shadow-sm dark:border-slate-700/60 dark:bg-slate-900"
+              class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[240px] overflow-y-auto rounded-xl bg-white py-1 shadow-lg shadow-slate-900/15 dark:bg-slate-900 dark:shadow-black/40"
             >
               <template v-if="filteredOptions.length > 0">
                 <button
                   v-for="opt in filteredOptions"
                   :key="opt.id"
                   type="button"
-                  class="flex w-full items-start gap-2 border-b border-slate-100 px-3 py-2 text-left text-slate-900 last:border-b-0 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-800 dark:text-slate-100 dark:hover:bg-slate-800/80"
+                  class="mx-0.5 mb-0.5 flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left text-slate-900 hover:bg-slate-100/80 disabled:cursor-not-allowed disabled:opacity-55 dark:text-slate-100 dark:hover:bg-slate-800/90"
                   :class="isSelected(opt) ? 'cursor-default bg-rose-50/80 dark:bg-rose-950/30' : ''"
                   :disabled="disabled || opt.available === false || isSelected(opt)"
                   @mousedown.prevent="select(opt)"
@@ -87,19 +86,8 @@
                   <span v-if="isSelected(opt)" class="text-[13px] font-medium text-[#8B1A1A] dark:text-[#e57373]">✓</span>
                 </button>
               </template>
-              <div v-else class="px-3 py-2.5 text-center text-[12px] text-slate-500 dark:text-slate-400">
-                <template v-if="allowCustomEntry && searchQuery.trim()">
-                  {{ customAddHint }}
-                </template>
-                <template v-else>
-                  {{ emptySearchLabel }}
-                </template>
-              </div>
-              <div
-                v-if="allowCustomEntry && searchQuery.trim() && filteredOptions.length > 0"
-                class="border-t border-slate-100 px-3 py-2 text-center text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400"
-              >
-                {{ customAddHint }}
+              <div v-else class="rounded-lg bg-slate-50 px-3 py-2.5 text-center text-[12px] leading-snug text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
+                {{ emptySearchLabel }}
               </div>
             </div>
           </Transition>
@@ -111,7 +99,7 @@
           type="number"
           min="0"
           step="1"
-          class="w-[4.25rem] shrink-0 rounded-lg border border-slate-200/80 bg-slate-50/60 px-1.5 py-1.5 text-center text-[12px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 disabled:opacity-55 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-slate-100"
+          class="w-[4.25rem] shrink-0 rounded-xl bg-slate-100/90 px-1 py-1.5 text-center text-[12px] font-normal tabular-nums text-slate-900 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
           :disabled="disabled"
           :aria-label="supplementSeatsAria"
           :placeholder="supplementSeatsPlaceholder"
@@ -125,14 +113,14 @@
         <div
           v-for="item in modelValue"
           :key="item.id"
-          class="inline-flex max-w-full items-center gap-1 rounded-[10px] border border-slate-200/80 bg-slate-50/70 px-2 py-0.5 text-[12px] font-normal text-slate-900 dark:border-slate-700/60 dark:bg-slate-800/70 dark:text-slate-100"
+          class="inline-flex max-w-full items-center gap-1 rounded-xl bg-slate-100/95 px-2 py-1 text-[12px] font-medium text-slate-800 shadow-sm dark:bg-slate-800/80 dark:text-slate-100"
         >
           <span class="min-w-0 truncate">{{ chipLabel(item) }}</span>
           <button
             type="button"
             class="shrink-0 px-0.5 text-[14px] leading-none text-slate-500 hover:text-[#8B1A1A] disabled:cursor-not-allowed disabled:opacity-45 dark:text-slate-400 dark:hover:text-[#e57373]"
             :disabled="disabled"
-            aria-label="Remove"
+            :aria-label="t('trip_detail.coordination.supplement_remove_aria')"
             @click="remove(item)"
           >
             ×

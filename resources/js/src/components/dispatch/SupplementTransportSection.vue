@@ -1,166 +1,169 @@
 <template>
-  <div class="border-b border-slate-200/60 last:border-b-0 dark:border-slate-700/60">
+  <div class="mb-0">
     <div
-      class="flex items-center justify-between gap-2 border-b border-slate-200/60 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700/60 dark:bg-slate-900/35"
+      class="flex items-center gap-1 rounded-t-2xl bg-white/70 px-3 py-2.5 dark:bg-white/5"
+      :class="expanded ? '' : 'rounded-b-2xl'"
     >
-      <div class="flex min-w-0 flex-1 items-start gap-2">
+      <button
+        type="button"
+        class="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+        :aria-expanded="expanded"
+        @click="toggle"
+      >
+        <ChevronDownIcon
+          class="size-4 shrink-0 text-slate-400 transition-transform duration-200 motion-reduce:transition-none dark:text-slate-500"
+          :class="expanded ? '-rotate-180' : ''"
+          aria-hidden="true"
+        />
         <div
           v-if="icon"
-          class="flex size-6 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-slate-500 dark:border-slate-700/60 dark:bg-slate-800/70 dark:text-slate-400"
+          class="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 shadow-inner shadow-slate-900/5 dark:bg-slate-800/90 dark:text-slate-400"
         >
           <component :is="icon" class="size-3.5" aria-hidden="true" />
         </div>
-        <div class="min-w-0 flex-1">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <div class="text-[12px] font-medium text-slate-900 dark:text-slate-100">{{ title }}</div>
-              <div v-if="subtitle" class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ subtitle }}</div>
-            </div>
-            <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
-              <template v-if="kind === 'vendor' && canQuickCreate && !disabled">
-                <button
-                  type="button"
-                  class="whitespace-nowrap text-[12px] font-normal text-[#8B1A1A] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#e57373]"
-                  :disabled="disabled"
-                  @click="$emit('create-vendor')"
-                >
-                  {{ t('trip_detail.coordination.provider_quick_add_inline') }}
-                </button>
-              </template>
-              <span
-                v-if="modelValue.length > 0"
-                class="rounded-full border border-slate-200/80 bg-white px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-500 dark:border-slate-700/60 dark:bg-slate-800/70 dark:text-slate-400"
-              >
-                {{ modelValue.length }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        <span class="text-[12px] font-semibold tracking-tight text-slate-900 dark:text-slate-100">{{ title }}</span>
+      </button>
 
-    <div class="bg-white px-3 py-2.5 dark:bg-slate-950/40">
-      <div class="mt-2 flex flex-wrap items-end gap-2" :class="indentBody ? 'ml-[38px]' : ''">
-        <div class="min-w-0 flex-1">
-          <label class="mb-1 block text-[10px] font-medium text-slate-500 dark:text-slate-400">{{ nameFieldLabel }}</label>
-          <input
-            v-model="nameDraft"
-            type="text"
-            class="w-full rounded-lg border border-slate-200/80 bg-slate-50/60 px-2.5 py-1.5 text-[12px] font-normal text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-slate-100 dark:placeholder:text-slate-500"
-            :placeholder="namePlaceholder"
+      <div class="flex shrink-0 items-center gap-2">
+        <template v-if="kind === 'vendor' && canQuickCreate && !disabled">
+          <button
+            type="button"
+            class="whitespace-nowrap text-[11px] font-semibold text-[#8B1A1A] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#e57373]"
             :disabled="disabled"
-            :aria-busy="disabled"
-            @keydown.enter.prevent="onAdd"
-          />
-        </div>
-        <div class="w-16 shrink-0">
-          <label class="mb-1 block text-[10px] font-medium text-slate-500 dark:text-slate-400">{{
-            t('trip_detail.coordination.supplement_seats_field_label')
-          }}</label>
-          <input
-            v-model="seatDraft"
-            type="number"
-            min="1"
-            step="1"
-            inputmode="numeric"
-            class="w-full rounded-lg border border-slate-200/80 bg-slate-50/60 px-1.5 py-1.5 text-center text-[12px] font-normal tabular-nums text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-slate-100"
-            :disabled="disabled"
-            :aria-label="t('trip_detail.coordination.supplement_seats_aria')"
-          />
-        </div>
-        <button
-          type="button"
-          class="shrink-0 rounded-lg bg-[#8B1A1A] px-3 py-1.5 text-[12px] font-normal text-white hover:bg-[#7a1717] disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-[#9a2323]"
-          :disabled="disabled"
-          @click="onAdd"
+            @click.stop="$emit('create-vendor')"
+          >
+            {{ t('trip_detail.coordination.provider_quick_add_inline') }}
+          </button>
+        </template>
+        <span
+          v-if="modelValue.length > 0"
+          class="rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-600 shadow-sm dark:bg-slate-700/90 dark:text-slate-300"
         >
-          {{ t('trip_detail.coordination.supplement_add_btn') }}
-        </button>
+          {{ modelValue.length }}
+        </span>
       </div>
+    </div>
 
-      <div v-if="isLoading" class="mt-2 h-8 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/60" />
-
-      <div v-if="!isLoading && modelValue.length > 0" class="mt-3 space-y-2">
-        <div v-for="(item, idx) in modelValue" :key="String(item.id) + '-' + idx" class="space-y-2">
-          <div
-            class="flex min-h-[38px] items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-50/50 px-2.5 py-2 dark:border-slate-700/60 dark:bg-slate-900/30"
-          >
-            <span class="min-w-0 flex-1 truncate text-[13px] font-normal text-slate-900 dark:text-slate-100">{{
-              item.label
-            }}</span>
-            <span
-              v-if="seatBadgeText(item)"
-              class="shrink-0 rounded-full border border-emerald-300/40 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium tabular-nums text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300"
-            >
-              {{ seatBadgeText(item) }}
-            </span>
-            <button
-              type="button"
-              class="flex size-7 shrink-0 items-center justify-center rounded-lg border border-slate-200/70 text-[16px] font-normal leading-none text-slate-400 hover:border-rose-200 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700/60 dark:text-slate-400 dark:hover:border-rose-800 dark:hover:text-rose-400"
+    <Transition
+      enter-active-class="transition duration-200 ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0 -translate-y-0.5"
+      leave-active-class="transition duration-150 ease-in motion-reduce:transition-none"
+      leave-to-class="opacity-0 -translate-y-0.5"
+    >
+      <div v-show="expanded" class="rounded-b-2xl bg-white/50 px-3 pb-3 pt-2 dark:bg-slate-950/25">
+        <div class="flex flex-wrap items-center gap-2" :class="indentBody ? 'ml-[38px]' : ''">
+          <div class="min-w-0 flex-1">
+            <input
+              v-model="nameDraft"
+              type="text"
+              class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+              :placeholder="namePlaceholder"
               :disabled="disabled"
-              :aria-label="t('trip_detail.coordination.supplement_remove_aria')"
-              @click="removeAt(idx)"
-            >
-              ×
-            </button>
+              :aria-busy="disabled"
+              @keydown.enter.prevent="onAdd"
+            />
           </div>
-          <div
-            v-if="kind === 'vendor'"
-            class="ml-0 overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
-          >
-            <button
-              type="button"
-              class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[11px] font-normal text-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900/35 dark:text-slate-400"
-              :aria-expanded="refsOpen[itemId(item)]"
+          <div class="w-16 shrink-0">
+            <input
+              v-model="seatDraft"
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              class="w-full rounded-xl bg-slate-100/90 px-1 py-1.5 text-center text-[12px] font-normal tabular-nums text-slate-800 shadow-inner outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
               :disabled="disabled"
-              @click="toggleRefs(itemId(item))"
-            >
-              <span>{{ t('trip_detail.coordination.supplement_ncc_refs_toggle') }}</span>
-              <span class="tabular-nums text-slate-400" aria-hidden="true">{{
-                refsOpen[itemId(item)] ? '▾' : '▸'
-              }}</span>
-            </button>
+              :aria-label="t('trip_detail.coordination.supplement_seats_aria')"
+            />
+          </div>
+          <button
+            type="button"
+            class="shrink-0 rounded-xl bg-[#8B1A1A] px-3 py-1.5 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/20 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40 dark:shadow-[#8B1A1A]/25"
+            :disabled="disabled"
+            @click="onAdd"
+          >
+            {{ t('trip_detail.coordination.supplement_add_btn') }}
+          </button>
+        </div>
+
+        <div v-if="isLoading" class="mt-2 h-8 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/70" />
+
+        <div v-if="!isLoading && modelValue.length > 0" class="mt-3 space-y-2">
+          <div v-for="(item, idx) in modelValue" :key="String(item.id) + '-' + idx" class="space-y-2">
             <div
-              v-show="refsOpen[itemId(item)]"
-              class="space-y-2 border-t border-slate-200/70 bg-slate-50/40 px-3 pb-2.5 pt-2 dark:border-slate-700/60 dark:bg-slate-900/35"
+              class="flex min-h-[38px] items-center gap-2 rounded-xl bg-slate-100/80 px-3 py-2 shadow-sm shadow-slate-900/5 dark:bg-slate-800/55 dark:shadow-black/20"
             >
-              <div>
-                <label class="mb-1 block text-[10px] font-medium text-slate-500 dark:text-slate-400">{{
-                  t('trip_detail.coordination.external_vehicle')
-                }}</label>
-                <input
-                  :value="item.externalVehicleRef ?? ''"
-                  type="text"
-                  class="w-full rounded-lg border border-slate-200/80 bg-slate-50/60 px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-slate-100"
-                  :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
-                  :disabled="disabled"
-                  @input="onExternalVehicleInput(idx, $event)"
-                />
-              </div>
-              <div>
-                <label class="mb-1 block text-[10px] font-medium text-slate-500 dark:text-slate-400">{{
-                  t('trip_detail.coordination.external_driver')
-                }}</label>
-                <input
-                  :value="item.externalDriverRef ?? ''"
-                  type="text"
-                  class="w-full rounded-lg border border-slate-200/80 bg-slate-50/60 px-2.5 py-1.5 text-[13px] font-normal text-slate-900 outline-none ring-0 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-slate-100"
-                  :placeholder="t('trip_detail.coordination.external_driver_ph')"
-                  :disabled="disabled"
-                  @input="onExternalDriverInput(idx, $event)"
-                />
+              <span class="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-900 dark:text-slate-100">{{
+                item.label
+              }}</span>
+              <span
+                v-if="seatBadgeText(item)"
+                class="shrink-0 rounded-full bg-emerald-100/95 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-900 shadow-sm dark:bg-emerald-950/65 dark:text-emerald-100"
+              >
+                {{ seatBadgeText(item) }}
+              </span>
+              <button
+                type="button"
+                class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-slate-200/70 text-[16px] font-normal leading-none text-slate-500 hover:bg-rose-100 hover:text-rose-600 disabled:opacity-35 dark:bg-slate-700/70 dark:text-slate-400 dark:hover:bg-rose-950/70 dark:hover:text-rose-300"
+                :disabled="disabled"
+                :aria-label="t('trip_detail.coordination.supplement_remove_aria')"
+                @click="removeAt(idx)"
+              >
+                ×
+              </button>
+            </div>
+            <div
+              v-if="kind === 'vendor'"
+              class="ml-0 overflow-hidden rounded-xl bg-slate-100/55 shadow-inner shadow-slate-900/10 dark:bg-slate-900/35 dark:shadow-black/30"
+            >
+              <button
+                type="button"
+                class="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400"
+                :aria-expanded="refsOpen[itemId(item)]"
+                :disabled="disabled"
+                @click="toggleRefs(itemId(item))"
+              >
+                <span>{{ t('trip_detail.coordination.supplement_ncc_refs_toggle') }}</span>
+                <span class="tabular-nums text-slate-400" aria-hidden="true">{{
+                  refsOpen[itemId(item)] ? '▾' : '▸'
+                }}</span>
+              </button>
+              <div
+                v-show="refsOpen[itemId(item)]"
+                class="space-y-2 bg-slate-50/80 px-3 pb-2.5 pt-1 dark:bg-slate-950/40"
+              >
+                <div>
+                  <input
+                    :value="item.externalVehicleRef ?? ''"
+                    type="text"
+                    class="w-full rounded-xl bg-white/70 px-2.5 py-1.5 text-[13px] font-normal text-slate-800 shadow-inner shadow-slate-900/10 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
+                    :placeholder="t('trip_detail.coordination.external_vehicle_ph')"
+                    :disabled="disabled"
+                    @input="onExternalVehicleInput(idx, $event)"
+                  />
+                </div>
+                <div>
+                  <input
+                    :value="item.externalDriverRef ?? ''"
+                    type="text"
+                    class="w-full rounded-xl bg-white/70 px-2.5 py-1.5 text-[13px] font-normal text-slate-800 shadow-inner shadow-slate-900/10 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
+                    :placeholder="t('trip_detail.coordination.external_driver_ph')"
+                    :disabled="disabled"
+                    @input="onExternalDriverInput(idx, $event)"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import type { ResourceItem } from '../../types/dispatch'
 
 const props = defineProps<{
@@ -186,9 +189,22 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+const expanded = ref(false)
 const nameDraft = ref('')
 const seatDraft = ref(String(props.defaultSeat))
 const refsOpen = ref<Record<string, boolean>>({})
+
+watch(
+  () => props.modelValue.length,
+  (n) => {
+    if (n > 0) expanded.value = true
+  },
+  { immediate: true },
+)
+
+function toggle() {
+  expanded.value = !expanded.value
+}
 
 function itemId(item: ResourceItem) {
   return String(item.id)
