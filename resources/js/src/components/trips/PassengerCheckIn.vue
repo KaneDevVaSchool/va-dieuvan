@@ -465,6 +465,22 @@
                                     </template>
                                     <template
                                         v-else-if="
+                                            row.editMeta?.kind === 'named_tp'
+                                        "
+                                    >
+                                        <input
+                                            v-model="editDraft.phone"
+                                            type="tel"
+                                            class="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.passengers.ph_phone',
+                                                )
+                                            "
+                                        />
+                                    </template>
+                                    <template
+                                        v-else-if="
                                             row.editMeta?.kind === 'passenger'
                                         "
                                     >
@@ -1264,7 +1280,7 @@ const WheelchairGlyph = {
 };
 
 export type PassengerEditMeta = {
-    kind: "passenger" | "business" | "cargo";
+    kind: "passenger" | "business" | "cargo" | "named_tp";
     rowIndex: number;
 };
 

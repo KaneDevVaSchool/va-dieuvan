@@ -1688,6 +1688,7 @@
             "ph_name": "Full name",
             "ph_guests": "e.g. 8",
             "ph_notes": "Optional notes…",
+            "ph_phone": "Phone / contact…",
             "ph_cargo_name": "Item name",
             "ph_qty": "1",
             "ph_pickup_contact": "Pickup contact",

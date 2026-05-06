@@ -1553,6 +1553,7 @@
             "ph_unit_price": "VD: 500.000",
             "ph_extra_fee": "VD: 50.000",
             "ph_notes": "Ghi chú tuỳ chọn…",
+            "ph_phone": "SĐT / liên hệ…",
             "ph_cargo_name": "Tên mặt hàng",
             "ph_qty": "1",
             "ph_pickup_contact": "Liên hệ lấy hàng",

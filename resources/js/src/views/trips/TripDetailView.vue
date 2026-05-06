@@ -459,15 +459,6 @@
                         </section>
                     </div>
                     <div class="min-w-0 space-y-4 xl:col-span-12">
-                        <TripNamedPassengersEditor
-                            v-if="showNamedPassengersEditor"
-                            class="hidden md:block"
-                            v-model:passenger-count="namedPassengerCount"
-                            v-model:passengers="namedPassengers"
-                            :saving="namedPassengersSaving"
-                            @save="submitNamedPassengerList"
-                        />
-
                         <PassengerCheckIn
                             :trip-id="trip.id"
                             :trip="trip"
@@ -755,118 +746,6 @@
             </Teleport>
         </template>
 
-        <Teleport to="body">
-            <template v-if="showNamedPassengersEditor && trip">
-                <!-- Mobile: nút trong cột phải giống NotificationCenter (stack dưới chuông) -->
-                <div
-                    class="pointer-events-none fixed right-0 top-0 z-[105] p-2 pl-6 print:hidden md:hidden sm:p-3"
-                    :style="namedPassengersMobileFabOffsetStyle"
-                >
-                    <div
-                        class="pointer-events-auto flex flex-col items-end gap-2"
-                    >
-                        <button
-                            type="button"
-                            class="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200/90 bg-white/95 text-slate-800 shadow-md backdrop-blur transition hover:bg-slate-50 dark:border-slate-700/80 dark:bg-slate-900/95 dark:text-slate-100 dark:hover:bg-slate-800"
-                            :title="
-                                t('trip_detail.passengers.named_mobile_fab_aria')
-                            "
-                            :aria-expanded="namedPassengersMobileOpen"
-                            aria-controls="trip-named-passengers-mobile-sheet"
-                            @click="
-                                namedPassengersMobileOpen =
-                                    !namedPassengersMobileOpen
-                            "
-                        >
-                            <UserGroupIcon
-                                class="h-6 w-6"
-                                aria-hidden="true"
-                            />
-                            <span
-                                v-if="namedPassengerCount > 0"
-                                class="absolute -bottom-1 -left-1 min-w-[1.25rem] rounded-full bg-[#8B1A1A] px-1 py-0.5 text-center text-[10px] font-bold leading-none text-white"
-                            >
-                                {{ namedPassengerCount }}
-                            </span>
-                        </button>
-                    </div>
-                </div>
-
-                <Transition
-                    enter-active-class="transition-opacity duration-200 ease-out motion-reduce:transition-none"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition-opacity duration-150 ease-in motion-reduce:transition-none"
-                    leave-to-class="opacity-0"
-                >
-                    <div
-                        v-show="namedPassengersMobileOpen"
-                        class="fixed inset-0 z-[210] md:hidden print:hidden"
-                        role="dialog"
-                        aria-modal="true"
-                        :aria-label="
-                            t('trip_detail.passengers.named_section_title')
-                        "
-                    >
-                        <button
-                            type="button"
-                            class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
-                            :aria-label="
-                                t(
-                                    'trip_detail.passengers.named_sheet_close_overlay',
-                                )
-                            "
-                            @click="namedPassengersMobileOpen = false"
-                        />
-                        <div
-                            id="trip-named-passengers-mobile-sheet"
-                            class="absolute inset-x-0 bottom-0 max-h-[min(92dvh,920px)] overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950"
-                            :style="{
-                                paddingBottom:
-                                    'max(0.75rem, env(safe-area-inset-bottom, 0px))',
-                            }"
-                            @click.stop
-                        >
-                            <div
-                                class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700"
-                            >
-                                <h2
-                                    class="text-sm font-semibold text-slate-900 dark:text-slate-50"
-                                >
-                                    {{
-                                        t(
-                                            "trip_detail.passengers.named_section_title",
-                                        )
-                                    }}
-                                </h2>
-                                <button
-                                    type="button"
-                                    class="rounded-xl px-3 py-1.5 text-xs font-medium text-[#8B1A1A] hover:bg-rose-50 dark:text-[#e57373] dark:hover:bg-rose-950/40"
-                                    @click="namedPassengersMobileOpen = false"
-                                >
-                                    {{
-                                        t(
-                                            "trip_detail.passengers.named_sheet_close",
-                                        )
-                                    }}
-                                </button>
-                            </div>
-                            <div
-                                class="max-h-[calc(min(92dvh,920px)-4rem)] overflow-y-auto overscroll-contain p-4"
-                            >
-                                <TripNamedPassengersEditor
-                                    v-model:passenger-count="
-                                        namedPassengerCount
-                                    "
-                                    v-model:passengers="namedPassengers"
-                                    :saving="namedPassengersSaving"
-                                    @save="onNamedPassengersMobileSave"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </Transition>
-            </template>
-        </Teleport>
     </div>
 </template>
 
@@ -877,7 +756,6 @@ import { useI18n } from "vue-i18n";
 import {
     ArrowDownTrayIcon,
     TrashIcon,
-    UserGroupIcon,
 } from "@heroicons/vue/24/outline";
 import Button from "../../components/ui/Button.vue";
 import Input from "../../components/ui/Input.vue";
@@ -885,7 +763,6 @@ import Select from "../../components/ui/Select.vue";
 import CostTracker from "../../components/trips/CostTracker.vue";
 import StatusActions from "../../components/trips/StatusActions.vue";
 import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
-import TripNamedPassengersEditor from "../../components/trips/TripNamedPassengersEditor.vue";
 import StickyTripHeader from "../../components/trips/StickyTripHeader.vue";
 import TripTimeline from "../../components/trips/TripTimeline.vue";
 import TripInfoCard from "../../components/trips/TripInfoCard.vue";
@@ -924,7 +801,6 @@ import { useAuthStore } from "../../store";
 import { buildStaffPrefixedPath as staffPath } from "../../config/dispatchWebBase";
 import { confirmAction } from "../../composables/useConfirm";
 import { fetchDriversCatalog } from "../../composables/useOperationalDriversCatalog";
-import { useTripNamedPassengersForm } from "../../composables/useTripNamedPassengersForm";
 import { showAppSuccess, showAppError } from "../../composables/appMessage";
 import { useTripDetail } from "../../composables/useTripDetail";
 
@@ -1094,48 +970,6 @@ const isSimplePassengerTripType = computed(() => {
     return tt === "door_to_door" || tt === "point_to_point";
 });
 
-const showNamedPassengersEditor = computed(
-    () => canEditPassengerList.value && isSimplePassengerTripType.value,
-);
-
-const {
-    passengerCount: namedPassengerCount,
-    passengers: namedPassengers,
-    saving: namedPassengersSaving,
-    submitNamedPassengerList,
-} = useTripNamedPassengersForm({
-    tripRef: trip,
-    updateTripPassengerList,
-    load,
-    showAppError,
-    showAppSuccess,
-    formatApiMessage,
-    t,
-});
-
-const namedPassengersMobileOpen = ref(false);
-
-const namedPassengersMobileFabOffsetStyle = computed(() => ({
-    paddingTop:
-        "calc(max(0.5rem, env(safe-area-inset-top, 0px)) + 3.25rem)",
-}));
-
-watch(
-    () => route.params.id,
-    () => {
-        namedPassengersMobileOpen.value = false;
-    },
-);
-
-watch(showNamedPassengersEditor, (v) => {
-    if (!v) namedPassengersMobileOpen.value = false;
-});
-
-async function onNamedPassengersMobileSave() {
-    const ok = await submitNamedPassengerList();
-    if (ok) namedPassengersMobileOpen.value = false;
-}
-
 const canPassengerCheckIn = computed(() => {
     if (!trip.value) return false;
     const s = trip.value.status;
@@ -1264,7 +1098,50 @@ async function persistPassengerListSnapshot(mutator) {
     }
 }
 
+async function saveNamedPassengerSlot(rowIndex, draft) {
+    const tid = trip.value?.id;
+    const dr = trip.value?.dispatch_request;
+    if (!tid || !dr) return false;
+    const count = Number(dr.passenger_count) || 0;
+    const totalSlots = Math.max(count, rowIndex + 1);
+    const tplist = Array.isArray(trip.value?.trip_passengers)
+        ? trip.value.trip_passengers
+        : [];
+    const list = Array.from({ length: totalSlots }, (_, i) => {
+        if (i === rowIndex) {
+            return {
+                name: String(draft.person_in_charge ?? "").trim() || null,
+                phone: String(draft.phone ?? "").trim() || null,
+                note: String(draft.notes ?? "").trim() || null,
+            };
+        }
+        const existing = tplist[i];
+        return {
+            name: String(existing?.name ?? "").trim() || null,
+            phone: String(existing?.phone ?? "").trim() || null,
+            note: String(existing?.note ?? "").trim() || null,
+        };
+    });
+    try {
+        await updateTripPassengerList(tid, {
+            passenger_count: count,
+            passengers: list,
+        });
+        await load({ silent: true });
+        showAppSuccess(t("trip_detail.passengers.dt_save_ok"));
+        return true;
+    } catch (e) {
+        showAppError(formatApiMessage(e));
+        return false;
+    }
+}
+
 async function onPassengerListSave({ meta, draft, resolve }) {
+    if (meta.kind === "named_tp") {
+        const ok = await saveNamedPassengerSlot(meta.rowIndex, draft);
+        resolve(ok);
+        return;
+    }
     const ok = await persistPassengerListSnapshot((arrays) => {
         applyPassengerDraftToArrays(arrays, meta, draft);
     });
@@ -1559,87 +1436,41 @@ const passengerRowsDisplay = computed(() => {
 
     /** @type {Array<Record<string, unknown>> | undefined} */
     const tplist = trip.value?.trip_passengers;
-    if (
-        (tripType === "door_to_door" || tripType === "point_to_point") &&
-        Array.isArray(tplist) &&
-        tplist.length > 0
-    ) {
+    if (tripType === "door_to_door" || tripType === "point_to_point") {
         const drCountRaw = Number(dr?.passenger_count);
-        const targetN = Math.max(
-            tplist.length,
-            Number.isFinite(drCountRaw) && drCountRaw > 0 ? drCountRaw : 0,
-        );
-        const snapRows = Array.isArray(s?.passengerRows)
-            ? s.passengerRows
-            : [];
+        const targetN =
+            Number.isFinite(drCountRaw) && drCountRaw > 0 ? drCountRaw : 0;
+        if (targetN === 0) return [];
+        const kind = inferRoleKind(tripType);
+        const roleLabel =
+            kind === "student"
+                ? t("trip_detail.passengers.role_student")
+                : kind === "staff"
+                  ? t("trip_detail.passengers.role_staff")
+                  : t("trip_detail.passengers.role_guest");
         const built = [];
         for (let i = 0; i < targetN; i++) {
-            const tp = tplist[i];
-            if (tp) {
-                const nameRaw = String(tp.name ?? "").trim();
-                const name =
-                    nameRaw || t("trip_detail.passengers.guest", { n: i + 1 });
-                const phone = String(tp.phone ?? "").trim();
-                const note = String(tp.note ?? "").trim();
-                const kind = inferRoleKind(tripType);
-                built.push({
-                    passengerKey: `tp_${tp.id}`,
-                    name,
-                    roleKind: kind,
-                    roleLabel:
-                        kind === "student"
-                            ? t("trip_detail.passengers.role_student")
-                            : kind === "staff"
-                              ? t("trip_detail.passengers.role_staff")
-                              : t("trip_detail.passengers.role_guest"),
-                    contact: phone,
-                    notes: note,
-                    pickupAddress: "",
-                    flagWheelchair: /xe lăn|wheelchair/i.test(note),
-                    flagAllergy:
-                        /dị ứng|allergy|đậu phộng|peanut/i.test(note),
-                    editMeta: null,
-                    editable: false,
-                    editFields: null,
-                });
-                continue;
-            }
-            const sr = snapRows[i];
-            const pic = String(sr?.person_in_charge ?? "").trim();
-            const snote = String(sr?.notes ?? "").trim();
-            const spickup = String(sr?.pickup ?? "").trim();
-            const named = namedPassengers.value?.[i];
-            const nameFromNamed = String(named?.name ?? "").trim();
-            const phoneFromNamed = String(named?.phone ?? "").trim();
-            const noteFromNamed = String(named?.note ?? "").trim();
-            const name =
-                nameFromNamed ||
-                pic ||
-                t("trip_detail.passengers.guest", { n: i + 1 });
-            const kind = inferRoleKind(tripType);
+            const tp = Array.isArray(tplist) ? tplist[i] : undefined;
+            const name = String(tp?.name ?? "").trim();
+            const phone = String(tp?.phone ?? "").trim();
+            const note = String(tp?.note ?? "").trim();
             built.push({
-                passengerKey: `named_slot_${i}`,
-                name,
+                passengerKey: `tp_slot_${i}`,
+                name: name || t("trip_detail.passengers.guest", { n: i + 1 }),
                 roleKind: kind,
-                roleLabel:
-                    kind === "student"
-                        ? t("trip_detail.passengers.role_student")
-                        : kind === "staff"
-                          ? t("trip_detail.passengers.role_staff")
-                          : t("trip_detail.passengers.role_guest"),
-                contact: phoneFromNamed,
-                notes: noteFromNamed || snote,
-                pickupAddress: spickup,
-                flagWheelchair: /xe lăn|wheelchair/i.test(
-                    `${noteFromNamed} ${snote}`,
-                ),
-                flagAllergy:
-                    /dị ứng|allergy|đậu phộng|peanut/i.test(
-                        `${noteFromNamed} ${snote}`,
-                    ),
-                editMeta: null,
-                editable: false,
-                editFields: null,
+                roleLabel,
+                contact: phone,
+                notes: note,
+                pickupAddress: "",
+                flagWheelchair: /xe lăn|wheelchair/i.test(note),
+                flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(note),
+                editMeta: canEditPassengerList.value
+                    ? { kind: "named_tp", rowIndex: i }
+                    : null,
+                editable: canEditPassengerList.value,
+                editFields: canEditPassengerList.value
+                    ? { person_in_charge: name, phone, notes: note }
+                    : null,
             });
         }
         return built;
