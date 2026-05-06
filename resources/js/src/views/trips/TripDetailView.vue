@@ -1564,16 +1564,61 @@ const passengerRowsDisplay = computed(() => {
         Array.isArray(tplist) &&
         tplist.length > 0
     ) {
-        let ti = 0;
-        for (const tp of tplist) {
-            ti += 1;
-            const nameRaw = String(tp.name ?? "").trim();
+        const drCountRaw = Number(dr?.passenger_count);
+        const targetN = Math.max(
+            tplist.length,
+            Number.isFinite(drCountRaw) && drCountRaw > 0 ? drCountRaw : 0,
+        );
+        const snapRows = Array.isArray(s?.passengerRows)
+            ? s.passengerRows
+            : [];
+        const built = [];
+        for (let i = 0; i < targetN; i++) {
+            const tp = tplist[i];
+            if (tp) {
+                const nameRaw = String(tp.name ?? "").trim();
+                const name =
+                    nameRaw || t("trip_detail.passengers.guest", { n: i + 1 });
+                const phone = String(tp.phone ?? "").trim();
+                const note = String(tp.note ?? "").trim();
+                const kind = inferRoleKind(tripType);
+                built.push({
+                    passengerKey: `tp_${tp.id}`,
+                    name,
+                    roleKind: kind,
+                    roleLabel:
+                        kind === "student"
+                            ? t("trip_detail.passengers.role_student")
+                            : kind === "staff"
+                              ? t("trip_detail.passengers.role_staff")
+                              : t("trip_detail.passengers.role_guest"),
+                    contact: phone,
+                    notes: note,
+                    pickupAddress: "",
+                    flagWheelchair: /xe lăn|wheelchair/i.test(note),
+                    flagAllergy:
+                        /dị ứng|allergy|đậu phộng|peanut/i.test(note),
+                    editMeta: null,
+                    editable: false,
+                    editFields: null,
+                });
+                continue;
+            }
+            const sr = snapRows[i];
+            const pic = String(sr?.person_in_charge ?? "").trim();
+            const snote = String(sr?.notes ?? "").trim();
+            const spickup = String(sr?.pickup ?? "").trim();
+            const named = namedPassengers.value?.[i];
+            const nameFromNamed = String(named?.name ?? "").trim();
+            const phoneFromNamed = String(named?.phone ?? "").trim();
+            const noteFromNamed = String(named?.note ?? "").trim();
             const name =
-                nameRaw || t("trip_detail.passengers.guest", { n: ti });
-            const phone = String(tp.phone ?? "").trim();
-            const note = String(tp.note ?? "").trim();
+                nameFromNamed ||
+                pic ||
+                t("trip_detail.passengers.guest", { n: i + 1 });
             const kind = inferRoleKind(tripType);
-            rows.push({
+            built.push({
+                passengerKey: `named_slot_${i}`,
                 name,
                 roleKind: kind,
                 roleLabel:
@@ -1582,21 +1627,22 @@ const passengerRowsDisplay = computed(() => {
                         : kind === "staff"
                           ? t("trip_detail.passengers.role_staff")
                           : t("trip_detail.passengers.role_guest"),
-                contact: phone,
-                notes: note,
-                pickupAddress: "",
-                flagWheelchair: /xe lăn|wheelchair/i.test(note),
+                contact: phoneFromNamed,
+                notes: noteFromNamed || snote,
+                pickupAddress: spickup,
+                flagWheelchair: /xe lăn|wheelchair/i.test(
+                    `${noteFromNamed} ${snote}`,
+                ),
                 flagAllergy:
-                    /dị ứng|allergy|đậu phộng|peanut/i.test(note),
+                    /dị ứng|allergy|đậu phộng|peanut/i.test(
+                        `${noteFromNamed} ${snote}`,
+                    ),
                 editMeta: null,
                 editable: false,
                 editFields: null,
             });
         }
-        return rows.map((r, i) => ({
-            ...r,
-            passengerKey: `tp_${tplist[i].id}`,
-        }));
+        return built;
     }
 
     if (tripType === "cargo" && s?.cargoRows?.length) {
