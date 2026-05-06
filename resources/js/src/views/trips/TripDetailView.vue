@@ -1837,9 +1837,7 @@ const assignReady = computed(() => {
         return false;
     if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id)))
         return false;
-    const s = coordinationSeatTotals.value;
-    if (!s) return false;
-    return s.total >= s.need;
+    return true;
 });
 
 const showInternalVehicleCard = computed(
@@ -1932,11 +1930,19 @@ const coordinationScheduleLines = computed(() => {
 const coordinationCapacityBanner = computed(() => {
     const s = coordinationSeatTotals.value;
     if (!s || !dispatchResources.value) return "";
-    if (s.total >= s.need) return "";
-    return t("trip_detail.coordination.capacity_banner_shortfall", {
-        need: s.need,
-        internal: s.internalCap,
-    });
+    if (s.total < s.need) {
+        return t("trip_detail.coordination.capacity_banner_shortfall", {
+            need: s.need,
+            total: s.total,
+        });
+    }
+    if (s.total > s.need) {
+        return t("trip_detail.coordination.capacity_banner_overcapacity", {
+            total: s.total,
+            need: s.need,
+        });
+    }
+    return "";
 });
 
 const showCoordinationAssignFooter = computed(() => {

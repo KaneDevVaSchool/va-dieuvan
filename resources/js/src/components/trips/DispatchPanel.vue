@@ -351,18 +351,10 @@
                 v-if="showAssignFooter"
                 class="sticky bottom-0 z-10 -mx-3.5 -mb-3.5 mt-2 bg-white/92 px-3.5 py-3 shadow-[0_-12px_32px_-8px_rgba(15,23,42,0.1)] backdrop-blur-md supports-[backdrop-filter]:bg-white/80 dark:bg-slate-950/92 dark:shadow-[0_-12px_32px_-8px_rgba(0,0,0,0.45)]"
             >
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-col gap-2">
                     <button
                         type="button"
-                        class="rounded-xl bg-slate-100 px-3 py-2 text-[12px] font-medium text-slate-700 shadow-sm hover:bg-slate-200/80 disabled:opacity-55 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                        :disabled="assigning"
-                        @click="emit('cancel')"
-                    >
-                        {{ t("trip_detail.coordination.footer_cancel") }}
-                    </button>
-                    <button
-                        type="button"
-                        class="min-w-0 flex-1 rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 outline-none hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[12rem] sm:flex-initial dark:shadow-[#8B1A1A]/30"
+                        class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/25 outline-none hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-45 dark:shadow-[#8B1A1A]/30"
                         :disabled="assigning || !assignReady"
                         @click="emit('assign')"
                     >
@@ -374,6 +366,14 @@
                         {{
                             t("trip_detail.coordination.footer_confirm_assign")
                         }}
+                    </button>
+                    <button
+                        type="button"
+                        class="w-full rounded-xl bg-slate-100 px-3 py-2 text-[12px] font-medium text-slate-700 shadow-sm hover:bg-slate-200/80 disabled:opacity-55 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        :disabled="assigning"
+                        @click="emit('cancel')"
+                    >
+                        {{ t("trip_detail.coordination.footer_cancel") }}
                     </button>
                 </div>
             </div>
