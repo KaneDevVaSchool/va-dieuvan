@@ -15,6 +15,7 @@ import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { parseMoneyVnd } from '../util/money'
 import { newIdempotencyKey } from '../util/idempotency'
+import { formatDatetimeLocalAmPm } from '../util/datetime'
 import {
   LEGACY_DRAFT_KEY,
   TARGET_OPTIONS,
@@ -510,19 +511,7 @@ export function useDispatchRequestWizard() {
     return t('dispatch_wizard.draft.new_session')
   })
 
-  function formatRequestedDateTimeDisplay(v) {
-    const s = v != null ? String(v).trim() : ''
-    if (!s) return ''
-    const [dPart, tPartRaw] = s.split('T')
-    if (!dPart) return ''
-    const ymd = dPart.split('-')
-    if (ymd.length !== 3) return ''
-    const [y, m, day] = ymd
-    const hm = tPartRaw ? tPartRaw.slice(0, 5) : ''
-    return hm ? `${day}/${m}/${y} ${hm}` : `${day}/${m}/${y}`
-  }
-
-  const formattedRequestedDateTime = computed(() => formatRequestedDateTimeDisplay(requestedDateTime.value))
+  const formattedRequestedDateTime = computed(() => formatDatetimeLocalAmPm(requestedDateTime.value))
 
   const computedDepartAt = computed(() => requestedDateTime.value?.trim() || '')
 

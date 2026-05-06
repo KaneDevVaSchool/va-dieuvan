@@ -248,6 +248,7 @@
             "row_total": "Tổng dòng",
             "notes": "Ghi chú",
             "time": "Thời gian",
+            "time_ampm_readout": "Hiển thị 12 giờ (AM/PM): {time}",
             "place": "Địa điểm",
             "priority_col": "Ưu tiên điền",
             "e1_title": "Bảng chi tiết hành khách / chương trình (e.1)",

@@ -1,3 +1,33 @@
+/**
+ * Parse datetime-local (YYYY-MM-DDTHH:mm) as local wall time.
+ * @param {string | null | undefined} isoLocal
+ * @returns {Date | null}
+ */
+export function parseDatetimeLocalToDate(isoLocal) {
+  const m = String(isoLocal ?? '').trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
+  if (!m) return null
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+/**
+ * Hiển thị ngày giờ từ giá trị input datetime-local: DD/MM/YYYY h:mm AM/PM.
+ * @param {string | null | undefined} isoLocal
+ */
+export function formatDatetimeLocalAmPm(isoLocal) {
+  const d = parseDatetimeLocalToDate(isoLocal)
+  if (!d) return ''
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  const h24 = d.getHours()
+  const min = String(d.getMinutes()).padStart(2, '0')
+  const isAm = h24 < 12
+  const h12 = h24 % 12 || 12
+  const suf = isAm ? 'AM' : 'PM'
+  return `${day}/${month}/${year} ${h12}:${min} ${suf}`
+}
+
 /** @param {Date} d */
 export function toDatetimeLocalValue(d) {
   const pad = (n) => String(n).padStart(2, '0')

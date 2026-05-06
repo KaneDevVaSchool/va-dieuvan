@@ -72,6 +72,9 @@
             :error="errs.returnTime"
             @update:model-value="setReturn"
           />
+          <p v-if="returnTimeAmPmDisplay" class="text-xs text-slate-500">
+            {{ t('dispatch_wizard.s3.time_ampm_readout', { time: returnTimeAmPmDisplay }) }}
+          </p>
           <p v-if="tripDurationLabel" class="text-xs font-medium text-slate-600">
             {{ tripDurationLabel }}
           </p>
@@ -224,6 +227,7 @@ import BaseInput from '../../../components/base/BaseInput.vue'
 import BaseDateTime from '../../../components/base/BaseDateTime.vue'
 import { dispatchScheduleRowErrors } from '../../../composables/dispatchScheduleRowErrors'
 import { formatVndWhileTyping } from '../../../util/money'
+import { formatDatetimeLocalAmPm } from '../../../util/datetime'
 import { DISPATCH_WIZARD_KEY } from './injectionKeys'
 
 const props = defineProps({
@@ -243,6 +247,12 @@ const { t } = useI18n()
 const wizard = inject(DISPATCH_WIZARD_KEY, null)
 
 const formattedTripStart = computed(() => wizard?.formattedRequestedDateTime?.value ?? '')
+
+const returnModel = computed(() =>
+  props.variant === 'cargo' ? props.row.delivery_at ?? '' : props.row.return_at ?? '',
+)
+
+const returnTimeAmPmDisplay = computed(() => formatDatetimeLocalAmPm(returnModel.value))
 
 const tripDurationLabel = computed(() => {
   const startRaw = wizard?.requestedDateTime?.value?.trim() ?? ''
@@ -277,10 +287,6 @@ const notesPh = computed(() =>
   props.variant === 'business'
     ? t('dispatch_wizard.s3.row_notes_biz_ph')
     : t('dispatch_wizard.s3.row_notes_ph'),
-)
-
-const returnModel = computed(() =>
-  props.variant === 'cargo' ? props.row.delivery_at ?? '' : props.row.return_at ?? '',
 )
 
 const pickupModel = computed(() =>
