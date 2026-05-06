@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 class DispatchRequest extends Model
 {
@@ -36,6 +37,8 @@ class DispatchRequest extends Model
         'paper_reference',
         'rejection_reason',
         'wizard_snapshot',
+        'urgent_reason',
+        'urgent_trigger',
     ];
 
     protected $casts = [
@@ -69,5 +72,31 @@ class DispatchRequest extends Model
     public function attachments(): MorphMany
     {
         return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    public static function wouldBeAutoUrgent(string $tripType, Carbon $departAt): bool
+    {
+        $threshold = DispatchSetting::urgentThresholdHoursForTripType($tripType);
+        $hoursUntil = $departAt->diffInMinutes(Carbon::now(), true) / 60;
+
+        return $hoursUntil >= 0 && $hoursUntil <= $threshold;
+    }
+
+    /** @return array{0: bool, 1: 'auto'|'manual'|null} */
+    public static function resolveUrgentTrigger(string $tripType, Carbon $departAt, bool $clientWantsUrgent): array
+    {
+        if (static::wouldBeAutoUrgent($tripType, $departAt)) {
+            return [true, 'auto'];
+        }
+        if ($clientWantsUrgent) {
+            return [true, 'manual'];
+        }
+
+        return [false, null];
+    }
+
+    public function isUrgentAuto(): bool
+    {
+        return $this->urgent_trigger === 'auto';
     }
 }

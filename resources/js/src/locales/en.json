@@ -47,6 +47,7 @@
         "system_permissions": "Permissions",
         "system_user_roles": "User roles",
         "system_feature_toggles": "Menu toggles",
+        "system_dispatch_settings": "Priority thresholds",
         "audit": "Activity log",
         "bottom_home": "Home",
         "bottom_dispatcher": "Dispatch",
@@ -68,6 +69,7 @@
             "system_permissions": "Perms",
             "system_user_roles": "Users",
             "system_feature_toggles": "Toggles",
+            "system_dispatch_settings": "Urgent",
             "audit": "Log",
             "resources": "Resources",
             "resources_overview": "Resources"
@@ -2326,6 +2328,17 @@
             "cargo.pod.upload": "POD uploaded",
             "cargo.sla_breached": "SLA breach alert"
         }
+    },
+    "dispatch_settings": {
+        "title": "Urgent-by-time thresholds",
+        "lead": "If departure / pickup time is within N hours from now (per type below), requests are flagged urgent automatically; a reason is still required.",
+        "passenger_hours": "Passenger / business / door-to-door (hours)",
+        "cargo_hours": "Cargo (hours)",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved_hint": "Saved.",
+        "load_error": "Could not load settings.",
+        "save_error": "Could not save."
     },
     "pwa": {
         "install_title": "Install VA Dispatch",

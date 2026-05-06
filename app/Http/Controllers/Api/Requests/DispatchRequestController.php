@@ -11,6 +11,7 @@ use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
 use App\Models\DispatchRequest;
+use App\Models\DispatchSetting;
 use App\Models\Role;
 use App\Models\Trip;
 use App\Models\User;
@@ -43,7 +44,7 @@ class DispatchRequestController extends Controller
 
         $dispatchRequest->makeVisible(['wizard_snapshot']);
 
-        return $this->ok($dispatchRequest);
+        return $this->ok($this->presentDispatchRequest($dispatchRequest));
     }
 
     public function store(CreateDispatchRequestRequest $request)
@@ -51,8 +52,13 @@ class DispatchRequestController extends Controller
         $data = $request->validated();
 
         $departAt = Carbon::parse($data['depart_at']);
-        $isUrgent = (bool) ($data['is_urgent'] ?? false);
-        if (! $isUrgent && $departAt->lt(now()->addHours(2))) {
+        $clientUrgent = (bool) ($data['is_urgent'] ?? false);
+        [$finalUrgent, $urgentTrigger] = DispatchRequest::resolveUrgentTrigger(
+            $data['trip_type'],
+            $departAt,
+            $clientUrgent,
+        );
+        if (! $finalUrgent && $departAt->lt(now()->addHours(2))) {
             abort(422, Messages::REQUEST_MUST_BE_2H_AHEAD);
         }
 
@@ -63,12 +69,16 @@ class DispatchRequestController extends Controller
             $requesterId = (int) $data['requester_id'];
         }
 
+        $urgentReasonTrim = isset($data['urgent_reason']) ? trim((string) $data['urgent_reason']) : '';
+
         $dispatchRequest = DispatchRequest::create([
             ...$data,
             'requester_id' => $requesterId,
             'status' => 'pending',
             'source_channel' => $data['source_channel'] ?? 'portal',
-            'is_urgent' => $isUrgent,
+            'is_urgent' => $finalUrgent,
+            'urgent_reason' => $finalUrgent ? ($urgentReasonTrim !== '' ? $urgentReasonTrim : null) : null,
+            'urgent_trigger' => $urgentTrigger,
             'paper_status' => 'pending',
         ]);
 
@@ -80,6 +90,20 @@ class DispatchRequestController extends Controller
             after: $dispatchRequest->toArray(),
         );
 
+        if ($dispatchRequest->is_urgent) {
+            app(AuditLogger::class)->log(
+                actorId: $user->id,
+                event: 'request.urgent_marked',
+                auditable: $dispatchRequest,
+                before: null,
+                after: null,
+                metadata: [
+                    'trigger' => $dispatchRequest->urgent_trigger,
+                    'requester_id' => $dispatchRequest->requester_id,
+                ],
+            );
+        }
+
         if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
             $recipients = User::query()
                 ->role('dispatcher')
@@ -88,12 +112,16 @@ class DispatchRequestController extends Controller
                 $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
                 Notification::send(
                     $recipients,
-                    new NewDispatchRequestNotification($dispatchRequest->id, $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id),
+                    new NewDispatchRequestNotification(
+                        $dispatchRequest->id,
+                        $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
+                        $dispatchRequest->is_urgent,
+                    ),
                 );
             }
         }
 
-        return $this->created($dispatchRequest);
+        return $this->created($this->presentDispatchRequest($dispatchRequest));
     }
 
     public function exportPdf(ExportDispatchRequestPdfRequest $request, DispatchRequest $dispatchRequest)
@@ -271,5 +299,17 @@ class DispatchRequestController extends Controller
 
             return $this->ok(['request' => $dispatchRequest, 'trip' => $trip]);
         });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function presentDispatchRequest(DispatchRequest $dispatchRequest): array
+    {
+        $arr = $dispatchRequest->toArray();
+        $arr['threshold_hours'] = DispatchSetting::urgentThresholdHoursForTripType((string) $dispatchRequest->trip_type);
+        $arr['is_urgent_auto'] = $dispatchRequest->isUrgentAuto();
+
+        return $arr;
     }
 }

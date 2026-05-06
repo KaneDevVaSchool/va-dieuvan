@@ -5,6 +5,7 @@
  * Chi tiết quyền từng hành động vẫn nằm ở FormRequest / policy.
  */
 
+use App\Http\Controllers\Api\Admin\DispatchSettingController;
 use App\Http\Controllers\Api\Admin\FeatureToggleController;
 use App\Http\Controllers\Api\Admin\PermissionController;
 use App\Http\Controllers\Api\Admin\RoleController;
@@ -53,6 +54,8 @@ Route::controller(AuditLogController::class)->group(function () {
     Route::get('/audit-logs', 'index')->middleware('throttle:60,1');
 });
 
+Route::get('/dispatch-form-settings', [DispatchSettingController::class, 'indexForWizard']);
+
 Route::prefix('admin')->group(function () {
     Route::get('users', [UserListController::class, 'index'])->middleware('throttle:60,1');
     Route::get('users/search', UserSearchController::class)->middleware('throttle:60,1');
@@ -62,4 +65,7 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('roles', RoleController::class)->except(['create', 'edit']);
     Route::apiResource('permissions', PermissionController::class)->except(['create', 'edit']);
     Route::apiResource('feature-toggles', FeatureToggleController::class)->except(['create', 'edit']);
+
+    Route::get('dispatch-settings', [DispatchSettingController::class, 'show']);
+    Route::put('dispatch-settings', [DispatchSettingController::class, 'update']);
 });

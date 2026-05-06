@@ -1,7 +1,18 @@
 <template>
   <div
     class="dispatch-wizard space-y-6 text-slate-900"
-    :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
+    :class="
+      step === 3 && !created
+        ? form.is_urgent
+          ? 'rounded-xl pb-28 ring-2 ring-rose-200/90 ring-offset-2 ring-offset-slate-100 sm:pb-24'
+          : 'pb-28 sm:pb-24'
+        : form.is_urgent
+          ? 'rounded-xl pb-10 ring-2 ring-rose-200/90 ring-offset-2 ring-offset-slate-100'
+          : 'pb-10'
+    "
+    :aria-label="
+      form.is_urgent && !loading ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined
+    "
   >
     <!-- Header -->
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -12,7 +23,15 @@
           <span class="text-slate-400"> • </span>
           {{ draftLabel }}
         </p>
-     
+        <p v-if="dispatchFormSettingsError && !dispatchFormSettingsLoading" class="mt-1 text-xs text-amber-700">
+          {{ dispatchFormSettingsError }}
+        </p>
+        <p v-if="form.is_urgent" class="mt-2 inline-flex flex-wrap items-center gap-2 text-sm text-rose-700">
+          <span class="inline-flex shrink-0" aria-hidden="true" title="">⚠️</span>
+          <span class="inline-flex shrink-0 cursor-help items-center gap-1" :title="urgentExplainTooltip">{{
+            t('dispatch_wizard.create.urgent')
+          }}</span>
+        </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button
@@ -291,7 +310,16 @@
                     <div class="flex items-center gap-2">
                       <span class="text-sm font-semibold text-slate-900">{{ t('dispatch_wizard.create.urgent') }}</span>
                       <span
-                        class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                        class="inline-flex cursor-help text-slate-500 hover:text-slate-700"
+                        tabindex="0"
+                        role="tooltip"
+                        :title="urgentExplainTooltip"
+                        aria-label="⚠️"
+                      >
+                        <span aria-hidden="true">⚠️</span>
+                      </span>
+                      <span
+                        class="hidden cursor-help text-slate-400 hover:text-slate-600 sm:inline-flex"
                         :title="t('dispatch_wizard.create.urgent_title')"
                       >
                         <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
@@ -301,9 +329,10 @@
                       type="button"
                       role="switch"
                       :aria-checked="form.is_urgent"
-                      class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-va-800/30"
+                      :disabled="urgentAutoActive || loading || dispatchFormSettingsLoading"
+                      class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-va-800/30 disabled:cursor-not-allowed disabled:opacity-60"
                       :class="form.is_urgent ? 'justify-end bg-va-800' : 'justify-start bg-slate-300'"
-                      @click="form.is_urgent = !form.is_urgent"
+                      @click="toggleUrgentManual"
                     >
                       <span class="pointer-events-none h-7 w-7 rounded-full bg-white shadow-sm ring-1 ring-black/5" />
                     </button>
@@ -311,16 +340,23 @@
                   <div class="min-w-0 flex-1">
                     <label class="block">
                       <span class="dw-label-text">{{ t('dispatch_wizard.create.reason') }} <span v-if="form.is_urgent" class="dw-req" aria-hidden="true">*</span></span>
-                      <input
+                      <textarea
                         v-model="form.urgent_reason"
-                        type="text"
+                        rows="3"
                         :placeholder="t('dispatch_wizard.create.reason_ph')"
                         :disabled="!form.is_urgent"
-                        class="dw-input disabled:cursor-not-allowed disabled:opacity-45"
+                        class="dw-input mt-1 min-h-[4.75rem] resize-y disabled:cursor-not-allowed disabled:opacity-45"
                       />
                     </label>
                   </div>
                 </div>
+                <p v-if="urgentAutoActive" class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium leading-relaxed text-rose-800 ring-1 ring-rose-100">
+                  {{
+                    t('dispatch_wizard.create.urgent_auto_banner', {
+                      hours: appliedUrgentThresholdHours,
+                    })
+                  }}
+                </p>
               </div>
             </div>
           </div>
@@ -741,7 +777,7 @@
 </template>
 
 <script setup>
-import { defineAsyncComponent, provide } from 'vue'
+import { computed, defineAsyncComponent, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
@@ -813,6 +849,11 @@ const {
   clearBasisFile,
   draftLabel,
   formatFileSize,
+  dispatchFormSettingsLoading,
+  dispatchFormSettingsError,
+  urgentAutoActive,
+  toggleUrgentManual,
+  appliedUrgentThresholdHours,
   canGoNext,
   goStep,
   nextStep,
@@ -830,6 +871,12 @@ const {
   closeDraftsModal,
   onCancel,
 } = wizard
+
+const urgentExplainTooltip = computed(() =>
+  t('dispatch_wizard.create.urgent_explain_tooltip', {
+    hours: appliedUrgentThresholdHours.value ?? '—',
+  }),
+)
 
 function formatDraftTime(ts) {
   try {

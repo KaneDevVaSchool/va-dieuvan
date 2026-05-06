@@ -30,5 +30,6 @@
   "system.roles.manage": "Quản lý vai trò (role) và quyền gán cho role.",
   "system.permissions.manage": "Quản lý danh sách permission (quyền chi tiết).",
   "system.user_roles.manage": "Gán hoặc thay đổi vai trò của người dùng.",
-  "system.feature_toggles.manage": "Bật/tắt tính năng (feature toggle) trên hệ thống."
+  "system.feature_toggles.manage": "Bật/tắt tính năng (feature toggle) trên hệ thống.",
+  "dispatch.settings.manage": "Điều chỉnh ngưỡng \"Gấp\" theo thời gian (điều vận)."
 }

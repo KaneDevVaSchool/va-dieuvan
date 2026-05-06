@@ -43,6 +43,9 @@
         "emp_code": "Mã NV: {code}",
         "file_too_large": "Tệp vượt quá 10MB.",
         "search_staff_fail": "Không tìm kiếm được nhân sự.",
+        "errors": {
+            "dispatch_settings_loading": "Không tải được cài đặt ngưỡng gấp; hệ thống dùng mặc định."
+        },
         "draft": {
             "submitted": "Đã gửi",
             "draft": "Bản nháp",
@@ -164,6 +167,9 @@
             "date_order_error": "Ngày cần sử dụng xe không được sớm hơn ngày đề xuất.",
             "urgent": "Gấp",
             "urgent_title": "Bật khi cần xử lý nhanh hơn quy định; ghi rõ lý do.",
+            "urgent_explain_tooltip": "Gấp: báo điều vận ưu tiên xử lý. Hệ thống tự bật nếu thời điểm chuyến nằm trong ngưỡng do quản trị cấu hình ({hours} giờ đối với loại hình này). Ngoài ngưỡng, bạn có thể bật thủ công và phải nhập lý do.",
+            "urgent_auto_banner": "Đánh dấu Gấp tự động: thời điểm chuyến quá gần (≤ {hours} giờ theo cấu hình). Vui lòng nhập lý do bên dưới.",
+            "form_priority_frame_aria": "Form đang ở trạng thái ưu tiên — Gấp",
             "reason": "Lý do",
             "reason_ph": "Bắt buộc khi bật Gấp",
             "sec_purpose": "Mục đích sử dụng",

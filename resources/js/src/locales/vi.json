@@ -51,6 +51,7 @@
         "system_permissions": "Quyền thao tác",
         "system_user_roles": "Gán vai trò",
         "system_feature_toggles": "Bật tắt menu",
+        "system_dispatch_settings": "Ngưỡng Gấp",
         "audit": "Nhật ký hoạt động",
         "bottom_home": "Trang chủ",
         "bottom_dispatcher": "Điều vận",
@@ -72,6 +73,7 @@
             "system_permissions": "Perms",
             "system_user_roles": "Users",
             "system_feature_toggles": "Bật/tắt",
+            "system_dispatch_settings": "Gấp",
             "audit": "Nhật ký",
             "resources": "Nguồn lực",
             "resources_overview": "Nguồn lực"
@@ -2410,6 +2412,17 @@
         "reload_success": "Đã tải danh sách theo bộ lọc.",
         "reload_success_title": "Thành công",
         "meta_status": "trạng thái {status}"
+    },
+    "dispatch_settings": {
+        "title": "Ngưỡng Gấp theo loại",
+        "lead": "Nếu thời điểm chuyến cách hiện tại ≤ ngưỡng (giờ), form tự đánh dấu Gấp; người tạo vẫn phải ghi lý do.",
+        "passenger_hours": "Hành khách — công tác — đưa đón (giờ)",
+        "cargo_hours": "Hàng hóa (giờ)",
+        "save": "Lưu",
+        "saving": "Đang lưu…",
+        "saved_hint": "Đã lưu.",
+        "load_error": "Không đọc được cài đặt.",
+        "save_error": "Không lưu được."
     },
     "pwa": {
         "install_title": "Cài VA Dispatch lên thiết bị",

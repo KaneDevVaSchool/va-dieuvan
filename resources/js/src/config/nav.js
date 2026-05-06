@@ -104,6 +104,13 @@ export const NAV_SECTIONS = [
             permissionKey: 'system.feature_toggles.manage',
           },
           {
+            to: `${DISPATCH_WEB_BASE}/system/dispatch-settings`,
+            labelKey: 'nav.system_dispatch_settings',
+            icon: 'feature_toggle',
+            featureKey: 'module.system.dispatch_settings',
+            permissionKey: 'dispatch.settings.manage',
+          },
+          {
             to: `${DISPATCH_WEB_BASE}/audit-logs`,
             labelKey: 'nav.audit',
             icon: 'audit',

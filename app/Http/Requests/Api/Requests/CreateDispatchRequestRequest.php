@@ -3,7 +3,10 @@
 namespace App\Http\Requests\Api\Requests;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use App\Models\DispatchRequest;
+use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class CreateDispatchRequestRequest extends ApiFormRequest
 {
@@ -24,8 +27,33 @@ class CreateDispatchRequestRequest extends ApiFormRequest
             'notes' => ['nullable', 'string'],
             'source_channel' => ['nullable', Rule::in(['portal', 'zalo', 'paper'])],
             'is_urgent' => ['nullable', 'boolean'],
+            'urgent_reason' => ['nullable', 'string', 'max:500'],
             'requester_id' => ['nullable', 'integer', 'min:1'],
             'wizard_snapshot' => ['nullable', 'array'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v) {
+            $departRaw = $this->input('depart_at');
+            $tripType = (string) $this->input('trip_type', '');
+            if (! $departRaw || $tripType === '') {
+                return;
+            }
+            try {
+                $depart = Carbon::parse($departRaw);
+            } catch (\Throwable) {
+                return;
+            }
+            [$mustUrgent] = DispatchRequest::resolveUrgentTrigger(
+                $tripType,
+                $depart,
+                $this->boolean('is_urgent'),
+            );
+            if ($mustUrgent && ! $this->filled('urgent_reason')) {
+                $v->errors()->add('urgent_reason', __('validation.required', ['attribute' => 'urgent_reason']));
+            }
+        });
     }
 }

@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from '../store'
 import { uploadAttachment } from '../api/attachments'
 import { createDispatchRequest, exportDispatchRequestPdf } from '../api/requests'
+import { getDispatchFormSettings } from '../api/dispatchSettings'
 import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
 import { parseMoneyVnd } from '../util/money'
@@ -143,6 +144,12 @@ export function useDispatchRequestWizard() {
     trimBusinessRowsInPlace()
     trimCargoRowsInPlace()
     hasDraftSnapshot.value = true
+    queueMicrotask(() => {
+      syncUrgentFromSchedule()
+      if (!urgentAutoActive.value) {
+        urgentManualDesired.value = !!form.value.is_urgent
+      }
+    })
   }
 
   const step = ref(0)
@@ -165,6 +172,18 @@ export function useDispatchRequestWizard() {
   const draftsModalOpen = ref(false)
 
   const form = ref(createInitialForm())
+
+  /** Ngưỡng gấp (giờ): từ API `dispatch-form-settings`. */
+  const urgentThresholds = ref({
+    passenger: 72,
+    cargo: 24,
+  })
+  const dispatchFormSettingsLoading = ref(false)
+  const dispatchFormSettingsError = ref('')
+  /** Theo lịch: trong ngưỡng → ép Gấp, khoá tắt. */
+  const urgentAutoActive = ref(false)
+  /** Ý định thủ công khi không bị auto. */
+  const urgentManualDesired = ref(false)
 
   const basisFile = ref(null)
   const basisFileInput = ref(null)
@@ -514,6 +533,54 @@ export function useDispatchRequestWizard() {
     }
     return minDatetimeLocalFromValues(vals)
   })
+
+  function thresholdHoursForTripType(tripType) {
+    return tripType === 'cargo' ? urgentThresholds.value.cargo : urgentThresholds.value.passenger
+  }
+
+  /** Đồng bộ với backend `DispatchRequest::wouldBeAutoUrgent` (absolute khoảng cách đến `depart_at`). */
+  function syncUrgentFromSchedule() {
+    const departRaw = computedDepartAt.value?.trim()
+    if (!departRaw) {
+      if (urgentAutoActive.value) {
+        urgentAutoActive.value = false
+        form.value.is_urgent = urgentManualDesired.value
+      }
+      return
+    }
+    const departMs = new Date(departRaw).getTime()
+    if (!Number.isFinite(departMs)) return
+    const hoursApart = Math.abs(departMs - Date.now()) / (3600 * 1000)
+    const threshold = thresholdHoursForTripType(form.value.trip_type)
+    if (hoursApart <= threshold) {
+      urgentAutoActive.value = true
+      form.value.is_urgent = true
+    } else {
+      urgentAutoActive.value = false
+      form.value.is_urgent = urgentManualDesired.value
+    }
+  }
+
+  function toggleUrgentManual() {
+    if (urgentAutoActive.value) return
+    urgentManualDesired.value = !urgentManualDesired.value
+    form.value.is_urgent = urgentManualDesired.value
+  }
+
+  const appliedUrgentThresholdHours = computed(() =>
+    thresholdHoursForTripType(form.value.trip_type),
+  )
+
+  watch(
+    () => ({
+      depart: computedDepartAt.value,
+      trip_type: form.value.trip_type,
+      pTh: urgentThresholds.value.passenger,
+      cTh: urgentThresholds.value.cargo,
+    }),
+    syncUrgentFromSchedule,
+    { flush: 'post', immediate: true },
+  )
 
   function parseMoney(v) {
     return parseMoneyVnd(v)
@@ -907,6 +974,7 @@ export function useDispatchRequestWizard() {
             : null,
         notes: freeNotes || undefined,
         is_urgent: !!form.value.is_urgent,
+        urgent_reason: form.value.is_urgent ? (form.value.urgent_reason?.trim() || undefined) : undefined,
         wizard_snapshot,
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
@@ -1187,6 +1255,8 @@ export function useDispatchRequestWizard() {
     requesterSearchError.value = ''
     coordinatorSearchQ.value = ''
     coordinatorSearchError.value = ''
+    urgentAutoActive.value = false
+    urgentManualDesired.value = false
   }
 
   function openClearDraftModal() {
@@ -1270,6 +1340,23 @@ export function useDispatchRequestWizard() {
       if (!auth.user) await auth.fetchMe()
     } catch {
       /* router guard / 401 */
+    }
+    dispatchFormSettingsLoading.value = true
+    dispatchFormSettingsError.value = ''
+    try {
+      const s = await getDispatchFormSettings()
+      urgentThresholds.value = {
+        passenger: Number(s.passenger_urgent_threshold_hours) || 72,
+        cargo: Number(s.cargo_urgent_threshold_hours) || 24,
+      }
+      syncUrgentFromSchedule()
+    } catch (e) {
+      dispatchFormSettingsError.value = formatApiError(
+        e,
+        t('dispatch_wizard.errors.dispatch_settings_loading'),
+      )
+    } finally {
+      dispatchFormSettingsLoading.value = false
     }
     migrateLegacyDraft()
     loadDraftFromStorage()
@@ -1369,6 +1456,11 @@ export function useDispatchRequestWizard() {
     onBasisDrop,
     clearBasisFile,
     draftLabel,
+    dispatchFormSettingsLoading,
+    dispatchFormSettingsError,
+    urgentAutoActive,
+    appliedUrgentThresholdHours,
+    toggleUrgentManual,
     computedDepartAt,
     rowLineTotal,
     passengerE1Total,

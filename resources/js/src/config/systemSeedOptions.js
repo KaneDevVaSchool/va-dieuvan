@@ -45,6 +45,7 @@ export const SEED_PERMISSION_PRESETS = [
     { name: 'system.permissions.manage', display_name: 'system.permissions.manage' },
     { name: 'system.user_roles.manage', display_name: 'system.user_roles.manage' },
     { name: 'system.feature_toggles.manage', display_name: 'system.feature_toggles.manage' },
+    { name: 'dispatch.settings.manage', display_name: 'dispatch.settings.manage' },
 ]
 
 export const SEED_FEATURE_TOGGLE_PRESETS = [
@@ -58,6 +59,7 @@ export const SEED_FEATURE_TOGGLE_PRESETS = [
     { key: 'module.system.permissions', name: 'Quyền hạn — Quản lý Permission', module: 'system' },
     { key: 'module.system.user_roles', name: 'Quyền hạn — Gán quyền người dùng', module: 'system' },
     { key: 'module.system.feature_toggles', name: 'Quyền hạn — Feature toggle', module: 'system' },
+    { key: 'module.system.dispatch_settings', name: 'Quyền hạn — Ngưỡng Gấp', module: 'system' },
     { key: 'module.system.audit', name: 'Quyền hạn — Activity log', module: 'system' },
 ]
 

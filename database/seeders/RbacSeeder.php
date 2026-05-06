@@ -63,6 +63,7 @@ class RbacSeeder extends Seeder
             'system.permissions.manage',
             'system.user_roles.manage',
             'system.feature_toggles.manage',
+            'dispatch.settings.manage',
         ];
 
         foreach ($permissions as $p) {
@@ -126,6 +127,7 @@ class RbacSeeder extends Seeder
                 'attachment.upload',
             ],
             'admin' => $permissions,
+            'superadmin' => $permissions,
         ];
 
         foreach ($map as $roleName => $perms) {

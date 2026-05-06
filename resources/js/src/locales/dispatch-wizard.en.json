@@ -43,6 +43,9 @@
         "emp_code": "Emp. code: {code}",
         "file_too_large": "File exceeds 10MB.",
         "search_staff_fail": "Could not search staff.",
+        "errors": {
+            "dispatch_settings_loading": "Could not load urgency threshold settings — defaults are used."
+        },
         "draft": {
             "submitted": "Submitted",
             "draft": "Draft",
@@ -164,6 +167,9 @@
             "date_order_error": "Vehicle date cannot be before proposal date.",
             "urgent": "Priority",
             "urgent_title": "On when faster handling is needed; explain why.",
+            "urgent_explain_tooltip": "Priority alerts dispatch to handle faster. The system turns this on automatically when the trip time falls within the admin threshold ({hours} hours for this service type). Outside the threshold you can toggle it manually and must enter a reason.",
+            "urgent_auto_banner": "Marked Priority automatically: trip time is very soon (within {hours} hours per settings). Enter a reason below.",
+            "form_priority_frame_aria": "Form in priority urgency mode",
             "reason": "Reason",
             "reason_ph": "Required when Priority is on",
             "sec_purpose": "Purpose of use",

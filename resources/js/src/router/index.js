@@ -240,15 +240,26 @@ const staffChildRoutes = [
         },
     },
     {
-        path: "system/feature-toggles",
-        name: "systemFeatureToggles",
-        component: () => import("../views/system/SystemFeatureTogglesView.vue"),
-        meta: {
-            title: "Bật tắt tính năng menu",
-            subtitle: "Quản trị",
-            permission: "system.feature_toggles.manage",
-            featureKey: "module.system.feature_toggles",
-        },
+      path: "system/feature-toggles",
+      name: "systemFeatureToggles",
+      component: () => import("../views/system/SystemFeatureTogglesView.vue"),
+      meta: {
+        title: "Bật tắt tính năng menu",
+        subtitle: "Quản trị",
+        permission: "system.feature_toggles.manage",
+        featureKey: "module.system.feature_toggles",
+      },
+    },
+    {
+      path: "system/dispatch-settings",
+      name: "systemDispatchSettings",
+      component: () => import("../views/system/SystemDispatchSettingsView.vue"),
+      meta: {
+        title: "Ngưỡng Gấp",
+        subtitle: "Quản trị",
+        permission: "dispatch.settings.manage",
+        featureKey: "module.system.dispatch_settings",
+      },
     },
 ];
 
