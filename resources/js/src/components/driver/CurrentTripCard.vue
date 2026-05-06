@@ -158,7 +158,7 @@ const props = defineProps({
     loading: { type: Boolean, default: false },
 });
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 function formatHm(iso) {
     if (!iso) return "";
@@ -215,16 +215,20 @@ const passengerCount = computed(() => {
     return props.trip?.dispatch_request?.passenger_count || null;
 });
 
-const status = computed(() => props.trip?.status || "");
+const status = computed(() =>
+    String(props.trip?.status ?? "").trim().toLowerCase(),
+);
 
 const statusLabel = computed(() => {
-    const key = `trips_page.trip_status.${status.value}`;
-    const val = t(key);
-    return val === key ? t("driver_home.trip_pending") : val;
+    const st = status.value;
+    const key = `labels.trip_status.${st}`;
+    if (st && te(key)) return t(key);
+    return t("driver_home.trip_pending");
 });
 
 const badgeClass = computed(() => {
-    if (status.value === "in_progress") return "bg-amber-400/20 text-amber-300";
+    if (status.value === "in_progress")
+        return "bg-amber-400/20 text-amber-300";
     return "bg-slate-700 text-slate-300";
 });
 

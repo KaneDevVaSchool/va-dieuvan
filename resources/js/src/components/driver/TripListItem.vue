@@ -60,7 +60,7 @@ const props = defineProps({
   trip: { type: Object, required: true },
 })
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 function formatHm(iso) {
   if (!iso) return ''
@@ -107,10 +107,9 @@ const subline = computed(() => {
 })
 
 const statusStyle = computed(() => {
-  const st = props.trip.status
-  const key = `trips_page.trip_status.${st}`
-  const translated = t(key)
-  const label = translated === key ? t('driver_home.trip_pending') : translated
+  const st = String(props.trip.status ?? '').trim().toLowerCase()
+  const key = `labels.trip_status.${st}`
+  const label = st && te(key) ? t(key) : t('driver_home.trip_pending')
   if (st === 'in_progress') {
     return { label, badge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200' }
   }
@@ -118,14 +117,15 @@ const statusStyle = computed(() => {
 })
 
 const ctaLabel = computed(() => {
-  const st = props.trip.status
+  const st = String(props.trip.status ?? '').trim().toLowerCase()
   if (st === 'in_progress') return t('driver_home.btn_continue')
   if (st === 'completed') return t('driver_home.btn_view')
   return t('driver_home.btn_start')
 })
 
 const ctaClass = computed(() => {
-  if (props.trip.status === 'in_progress') {
+  const st = String(props.trip.status ?? '').trim().toLowerCase()
+  if (st === 'in_progress') {
     return 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
   }
   return 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'

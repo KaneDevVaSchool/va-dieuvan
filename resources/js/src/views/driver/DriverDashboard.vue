@@ -131,26 +131,42 @@ function ymd(d) {
 const doneStatuses = new Set(['completed', 'cancelled'])
 const pendingStatuses = new Set(['assigned', 'driver_confirmed', 'pending', 'approved'])
 
+function tripStatusNorm(t) {
+  return String(t?.status ?? '').trim().toLowerCase()
+}
+
 // Trips chờ xác nhận (chưa in_progress)
 const pendingTrips = computed(() =>
-  rawTrips.value.filter((x) => pendingStatuses.has(x.status)),
+  rawTrips.value.filter((x) => pendingStatuses.has(tripStatusNorm(x))),
 )
 
-// Trips đang thực hiện hoặc sắp tới (loại trừ pending chờ xác nhận)
-const upcomingTrips = computed(() => {
+// Chuyến hiện tại = chỉ khi đã thực sự in_progress (đang chạy)
+const heroTrip = computed(() => {
+  const list = rawTrips.value.filter((x) => tripStatusNorm(x) === 'in_progress')
+  return list
+    .slice()
+    .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))[0] ?? null
+})
+
+// Các chuyến khác (không huỉ/xong, không chờ xác nhận, không phải chuyến hero)
+const queueTrips = computed(() => {
+  const heroId = heroTrip.value?.id
   return rawTrips.value
-    .filter((x) => !doneStatuses.has(x.status) && !pendingStatuses.has(x.status))
+    .filter((x) => {
+      const st = tripStatusNorm(x)
+      if (doneStatuses.has(st)) return false
+      if (pendingStatuses.has(st)) return false
+      if (heroId != null && x.id === heroId) return false
+      return true
+    })
     .slice()
     .sort((a, b) => {
-      if (a.status === 'in_progress' && b.status !== 'in_progress') return -1
-      if (b.status === 'in_progress' && a.status !== 'in_progress') return 1
+      if (tripStatusNorm(a) === 'in_progress' && tripStatusNorm(b) !== 'in_progress') return -1
+      if (tripStatusNorm(b) === 'in_progress' && tripStatusNorm(a) !== 'in_progress') return 1
       return (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0)
     })
     .slice(0, 6)
 })
-
-const heroTrip = computed(() => upcomingTrips.value[0] ?? null)
-const queueTrips = computed(() => upcomingTrips.value.slice(1))
 
 const heroTripDestination = computed(
   () => heroTrip.value?.dispatch_request?.destination?.trim() || null,
