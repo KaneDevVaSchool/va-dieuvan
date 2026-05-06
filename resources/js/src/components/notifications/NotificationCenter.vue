@@ -75,6 +75,7 @@
         </div>
 
         <div
+          v-if="!isDriverApp"
           class="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/95 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40"
         >
           <label
@@ -116,62 +117,82 @@
             aria-hidden="true"
           />
           <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
-            …
+            {{ t('notify.loading') }}
           </p>
         </div>
         <template v-else>
           <div
             v-if="!notifStore.items.length"
-            class="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-14 text-center"
+            class="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-14 text-center"
           >
             <div
               class="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
             >
               <BellIcon class="h-7 w-7" aria-hidden="true" />
             </div>
-            <p class="max-w-[240px] text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+            <p class="max-w-[260px] text-sm font-semibold leading-relaxed text-slate-700 dark:text-slate-200">
               {{ t('notify.empty') }}
+            </p>
+            <p class="max-w-[260px] text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+              {{ t('notify.empty_hint') }}
             </p>
           </div>
           <ul
             v-else
-            class="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-3 py-3"
+            class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3"
           >
-            <li
-              v-for="n in notifStore.items"
-              :key="n.id"
-              class="rounded-2xl border px-3.5 py-3 text-sm shadow-sm transition active:scale-[0.99]"
-              :class="n.read
-                ? 'border-slate-100 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-800/40'
-                : 'border-sky-200/90 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/60 dark:from-sky-950/30 dark:to-slate-900/80'"
-            >
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {{ n.type }}
-                <span class="font-normal text-slate-400 dark:text-slate-500">·</span>
-                {{ formatTime(n.created_at) }}
-              </p>
-              <p class="mt-1.5 text-[15px] leading-snug text-slate-800 dark:text-slate-100">
-                {{ lineText(n) }}
-              </p>
-              <div class="mt-2.5 flex flex-wrap gap-2">
-                <button
-                  v-if="actionLink(n)"
-                  type="button"
-                  class="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white active:bg-sky-700 dark:bg-sky-500 dark:active:bg-sky-600"
-                  @click="onOpenNotif(n)"
+            <template v-for="section in groupedSections" :key="section.key">
+              <li
+                class="list-none px-1 pb-2 pt-3 text-[11px] font-bold uppercase tracking-wide text-slate-400 first:pt-0 dark:text-slate-500"
+                role="presentation"
+              >
+                {{ section.label }}
+              </li>
+              <li
+                v-for="n in section.items"
+                :key="n.id"
+                class="mb-2 list-none rounded-2xl border px-3.5 py-3 text-sm shadow-sm transition active:scale-[0.99]"
+                :class="n.read
+                  ? 'cursor-pointer border-slate-100 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-800/40'
+                  : 'cursor-pointer border-sky-200/90 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/60 dark:from-sky-950/30 dark:to-slate-900/80'"
+                role="button"
+                tabindex="0"
+                @click="onOpenNotif(n)"
+                @keydown.enter.prevent="onOpenNotif(n)"
+                @keydown.space.prevent="onOpenNotif(n)"
+              >
+                <p class="text-[11px] font-medium tracking-wide text-slate-500 dark:text-slate-400">
+                  {{ formatRelativeTime(n.created_at) }}
+                </p>
+                <p class="mt-1.5 text-[15px] font-semibold leading-snug text-slate-800 dark:text-slate-100">
+                  {{ linesFor(n).primary }}
+                </p>
+                <p
+                  v-if="linesFor(n).sub"
+                  class="mt-1 text-[13px] leading-snug text-slate-600 dark:text-slate-300"
                 >
-                  {{ t('notify.open') }}
-                </button>
-                <button
-                  v-else
-                  type="button"
-                  class="rounded-lg px-3 py-1.5 text-xs font-bold text-sky-600 active:bg-sky-50 dark:text-sky-400 dark:active:bg-sky-950/40"
-                  @click="onOpenNotif(n)"
-                >
-                  {{ t('notify.mark_read') }}
-                </button>
-              </div>
-            </li>
+                  {{ linesFor(n).sub }}
+                </p>
+                <div class="mt-2.5 flex flex-wrap gap-2">
+                  <button
+                    v-if="resolveNavLink(n)"
+                    type="button"
+                    class="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white active:bg-sky-700 dark:bg-sky-500 dark:active:bg-sky-600"
+                    @click.stop="onOpenNotif(n)"
+                  >
+                    {{ t('notify.open') }}
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="rounded-lg px-3 py-1.5 text-xs font-bold text-sky-600 active:bg-sky-50 dark:text-sky-400 dark:active:bg-sky-950/40"
+                    @click.stop="onOpenNotif(n)"
+                  >
+                    {{ t('notify.mark_read') }}
+                  </button>
+                </div>
+              </li>
+            </template>
           </ul>
         </template>
         <div
@@ -196,10 +217,11 @@ import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
 import { useNotificationStore } from '../../store/notificationCenter'
 import { useAuthStore } from '../../store'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const notifStore = useNotificationStore()
 const router = useRouter()
@@ -207,32 +229,187 @@ const route = useRoute()
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isProd = import.meta.env.PROD
 
-function formatTime(iso) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+function startOfLocalDay(d) {
+  const x = new Date(d)
+  x.setHours(0, 0, 0, 0)
+  return x.getTime()
 }
 
-function lineText(n) {
-  const d = n.data
-  if (d && typeof d === 'object') {
-    if (d.message) return String(d.message)
-    if (d.body) return String(d.body)
-    if (d.title) return String(d.title)
+const groupedSections = computed(() => {
+  const list = notifStore.items || []
+  const now = new Date()
+  const todayStart = startOfLocalDay(now)
+  const y = new Date(now)
+  y.setDate(y.getDate() - 1)
+  const yesterdayStart = startOfLocalDay(y)
+  const today = []
+  const yesterday = []
+  const earlier = []
+  for (const n of list) {
+    const ts = new Date(n.created_at).getTime()
+    if (Number.isNaN(ts)) {
+      continue
+    }
+    if (ts >= todayStart) {
+      today.push(n)
+    } else if (ts >= yesterdayStart) {
+      yesterday.push(n)
+    } else {
+      earlier.push(n)
+    }
   }
-  return t('notify.fallback')
+  const out = []
+  if (today.length) {
+    out.push({ key: 'today', label: t('notify.group_today'), items: today })
+  }
+  if (yesterday.length) {
+    out.push({ key: 'yesterday', label: t('notify.group_yesterday'), items: yesterday })
+  }
+  if (earlier.length) {
+    out.push({ key: 'earlier', label: t('notify.group_earlier'), items: earlier })
+  }
+  return out
+})
+
+function formatRelativeTime(iso) {
+  if (!iso) {
+    return ''
+  }
+  const d = new Date(iso)
+  const sec = Math.floor((Date.now() - d.getTime()) / 1000)
+  if (Number.isNaN(sec) || sec < 0) {
+    return ''
+  }
+  if (sec < 60) {
+    return t('notify.rel_just_now')
+  }
+  if (sec < 3600) {
+    return t('notify.rel_minutes_ago', { n: Math.floor(sec / 60) })
+  }
+  if (sec < 86400) {
+    return t('notify.rel_hours_ago', { n: Math.floor(sec / 3600) })
+  }
+  if (sec < 604800) {
+    return t('notify.rel_days_ago', { n: Math.floor(sec / 86400) })
+  }
+  const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
+  return d.toLocaleDateString(loc, { day: 'numeric', month: 'short' })
 }
 
-function actionLink(n) {
-  const d = n.data
-  if (d && typeof d === 'object' && d.url) return d.url
-  if (d && typeof d === 'object' && d.action_url) return d.action_url
+function rawParts(n) {
+  const d = n.data && typeof n.data === 'object' ? n.data : {}
+  const title = d.title != null ? String(d.title).trim() : ''
+  const body = d.body != null ? String(d.body).trim() : ''
+  const message = d.message != null ? String(d.message).trim() : ''
+  const combined = [message, body, title].filter(Boolean).join(' ').trim()
+  return { d, title, body, message, combined, lower: combined.toLowerCase() }
+}
+
+function isNoiseOrDebug(combined, lower) {
+  if (!combined) {
+    return false
+  }
+  return (
+    /dev mode|test notification|mock data|internal server|stack trace/.test(lower)
+    || /api\s*error|request failed due to server|error:\s*5\d\d/.test(lower)
+    || /fetched successfully|notification fetched|loaded successfully/.test(lower)
+  )
+}
+
+function looksTechnical(text) {
+  return /https?:\/\/|\bapi\b|\bjson\b|status\s*:\s*\d{3}|exception|undefined/.test(
+    String(text).toLowerCase(),
+  )
+}
+
+function classifyKind(n) {
+  const { d, combined, lower } = rawParts(n)
+  const type = String(n.type || '')
+  if (isNoiseOrDebug(combined, lower)) {
+    return 'noise'
+  }
+  if (d.event === 'dispatch_request.created' || type === 'NewDispatchRequestNotification') {
+    return 'new_trip'
+  }
+  if (
+    /new dispatch request|dispatch request|điều xe mới|yêu cầu điều xe/.test(lower)
+  ) {
+    return 'new_trip'
+  }
+  if (
+    /trip status updated|status updated|trạng thái chuyến|cập nhật trạng thái/.test(lower)
+    || (/chuyến/.test(lower) && /cập nhật/.test(lower))
+  ) {
+    return 'status'
+  }
+  if (
+    /request failed|server error|could not|không thể|lỗi máy chủ|thử lại|timeout|network error/.test(
+      lower,
+    )
+    || /\b5\d\d\b/.test(combined)
+  ) {
+    return 'error'
+  }
+  return 'generic'
+}
+
+function clipText(s, max) {
+  const str = String(s).replace(/\s+/g, ' ').trim()
+  if (str.length <= max) {
+    return str
+  }
+  return `${str.slice(0, max - 1)}…`
+}
+
+function linesFor(n) {
+  const kind = classifyKind(n)
+  if (kind === 'noise') {
+    return { primary: t('notify.fallback'), sub: '' }
+  }
+  if (kind === 'new_trip') {
+    return { primary: t('notify.trip_new'), sub: t('notify.trip_new_sub') }
+  }
+  if (kind === 'status') {
+    return { primary: t('notify.trip_status'), sub: t('notify.trip_status_sub') }
+  }
+  if (kind === 'error') {
+    return { primary: t('notify.trip_error'), sub: t('notify.trip_error_sub') }
+  }
+  const { message, body, title, combined } = rawParts(n)
+  const text = message || body || title
+  if (text && !looksTechnical(text)) {
+    const sub = resolveNavLink(n) ? t('notify.trip_new_sub') : ''
+    return { primary: clipText(text, 100), sub }
+  }
+  return {
+    primary: t('notify.fallback'),
+    sub: resolveNavLink(n) ? t('notify.trip_new_sub') : '',
+  }
+}
+
+function resolveNavLink(n) {
+  const d = n.data && typeof n.data === 'object' ? n.data : {}
+  if (d.url) {
+    return String(d.url)
+  }
+  if (d.action_url) {
+    return String(d.action_url)
+  }
+  const tripId = d.trip_id ?? d.tripId
+  if (tripId != null && tripId !== '') {
+    const id = String(tripId)
+    return isDriverApp.value ? `/driver/trips/${id}` : buildStaffPrefixedPath(`/trips/${id}`)
+  }
+  const drId = d.dispatch_request_id
+  if (drId != null && drId !== '') {
+    const id = String(drId)
+    return isDriverApp.value ? '/driver/trips' : buildStaffPrefixedPath(`/requests/${id}`)
+  }
   return null
 }
 
 async function onOpenNotif(n) {
-  const link = actionLink(n)
+  const link = resolveNavLink(n)
   await notifStore.onReadOne(n.id)
   if (link) {
     notifStore.closePanel()

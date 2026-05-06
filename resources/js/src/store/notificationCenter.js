@@ -8,6 +8,7 @@ import {
   markNotificationRead,
 } from '../api/notifications'
 import { getVapidPublicKey, storePushSubscription } from '../api/push'
+import { i18n } from '../i18n'
 import { useAuthStore } from './index'
 
 const SOUND_KEY = 'va_notify_sound'
@@ -117,7 +118,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
           if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             try {
               new Notification(document.title, {
-                body: 'Bạn có thông báo mới',
+                body: i18n.global.t('notify.os_toast'),
                 tag: 'va-bell',
                 icon: '/images/logo/logo_pwa_v1.png',
               })
@@ -172,7 +173,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
   }
 
   /**
-   * Đăng ký Web Push (PWA) khi trình duyệt hỗ trợ.
+   * Đăng ký Web Push khi trình duyệt hỗ trợ (chỉ môi trường production).
    */
   async function registerWebPush() {
     const auth = useAuthStore()
