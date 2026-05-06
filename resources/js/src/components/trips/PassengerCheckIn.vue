@@ -54,10 +54,10 @@
 
         <!-- DataTable toolbar -->
         <div
-            v-if="rows.length"
+            v-if="rows.length || canEditList"
             class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
         >
-            <div class="relative w-full sm:w-64">
+            <div v-if="rows.length" class="relative w-full sm:w-64">
                 <MagnifyingGlassIcon
                     class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                     aria-hidden="true"
@@ -80,8 +80,10 @@
                     <XMarkIcon class="h-4 w-4" aria-hidden="true" />
                 </button>
             </div>
+            <div v-else class="min-h-0 flex-1" />
             <div class="flex flex-wrap items-center gap-2">
                 <select
+                    v-if="rows.length"
                     v-model.number="pageSize"
                     :aria-label="t('trip_detail.passengers.dt_page_size_aria')"
                     class="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm outline-none focus:ring-2 focus:ring-sky-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
@@ -110,6 +112,7 @@
                     {{ t("trip_detail.passengers.dt_add_row") }}
                 </button>
                 <button
+                    v-if="rows.length"
                     type="button"
                     class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                     :aria-label="t('trip_detail.passengers.export_csv_aria')"
