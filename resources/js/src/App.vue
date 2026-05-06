@@ -10,7 +10,10 @@
       @done="completeOnboarding"
     />
     <template v-else>
-      <AppShell v-if="!isLoginLayout">
+      <LayoutDriver v-if="isDriverApp">
+        <RouterView />
+      </LayoutDriver>
+      <AppShell v-else-if="!isLoginLayout">
         <RouterView />
       </AppShell>
       <RouterView v-else />
@@ -60,6 +63,7 @@ import { useAuthStore } from './store'
 import { useOnboarding } from './composables/useOnboarding'
 import { usePwaUpdate } from './composables/usePwaUpdate'
 import AppShell from './components/layout/AppShell.vue'
+import LayoutDriver from './components/layout/LayoutDriver.vue'
 import AppMessageModal from './components/ui/AppMessageModal.vue'
 import ConfirmModal from './components/ui/ConfirmModal.vue'
 import SplashScreen from './components/SplashScreen.vue'
@@ -73,6 +77,7 @@ const { hasOnboarded, completeOnboarding } = useOnboarding()
 const { updateAvailable, applyUpdate, dismissUpdate } = usePwaUpdate()
 
 const isLoginLayout = computed(() => route.name === 'login')
+const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isAuthenticated = computed(() => auth.isAuthenticated)
 
 const showSplash = ref(true)

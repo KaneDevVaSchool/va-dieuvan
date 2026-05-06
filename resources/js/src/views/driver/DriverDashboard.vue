@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-lg mx-auto w-full space-y-4 pb-2 sm:max-w-2xl">
     <!-- Header: mobile-first, full-bleed trong vùng scroll -->
-    <div class="-mx-3 rounded-b-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 px-4 pb-5 pt-4 text-white shadow-lg sm:-mx-4 sm:px-5">
+    <div class="-mx-3 rounded-b-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 px-4 pb-5 text-white shadow-lg sm:-mx-4 sm:px-5" style="padding-top: max(1rem, env(safe-area-inset-top))">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0 flex-1">
           <p class="text-sm text-white/80">{{ t('driver_home.hello') }}</p>
@@ -9,7 +9,8 @@
             {{ user?.name || '—' }}
           </h1>
         </div>
-        <div class="shrink-0">
+        <div class="flex items-center gap-2 shrink-0">
+          <NotificationBell />
           <img
             v-if="avatarUrl"
             :src="avatarUrl"
@@ -193,6 +194,7 @@ import {
 import { getDriverSummary } from '../../api/driver'
 import { listTrips } from '../../api/trips'
 import { useAuthStore } from '../../store'
+import NotificationBell from '../../components/notifications/NotificationBell.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()

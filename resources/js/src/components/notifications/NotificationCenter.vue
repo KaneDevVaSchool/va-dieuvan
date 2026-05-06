@@ -2,7 +2,7 @@
   <Teleport to="body">
     <!-- Chuông: floating, mobile + desktop -->
     <div
-      v-if="auth.isLoggedIn"
+      v-if="auth.isLoggedIn && !isDriverApp"
       class="pointer-events-none fixed right-0 top-0 z-[100] p-2 pl-6 sm:p-3 print:hidden md:hidden"
       :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
     >
@@ -148,9 +148,9 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useNotificationStore } from '../../store/notificationCenter'
 import { useAuthStore } from '../../store'
@@ -159,6 +159,8 @@ const { t } = useI18n()
 const auth = useAuthStore()
 const notifStore = useNotificationStore()
 const router = useRouter()
+const route = useRoute()
+const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isProd = import.meta.env.PROD
 
 function formatTime(iso) {
