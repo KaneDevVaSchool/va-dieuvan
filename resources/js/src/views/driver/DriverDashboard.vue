@@ -5,7 +5,6 @@
       :user="user"
       :avatarUrl="avatarUrl"
       :initials="initials"
-      :driverStatus="driverStatus"
     />
 
     <!-- 2 — Error banner -->
@@ -15,6 +14,13 @@
     >
       {{ errorMsg }}
     </p>
+
+    <!-- 2b — Chuyến chờ xác nhận -->
+    <PendingConfirmationBanner
+      v-if="!loading && pendingTrips.length"
+      :trips="pendingTrips"
+      @updated="refreshTrips"
+    />
 
     <!-- 3 — Hero: chuyến hiện tại / tiếp theo -->
     <section class="px-0">
@@ -97,6 +103,7 @@ import { useAuthStore } from '../../store'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
 import CurrentTripCard from '../../components/driver/CurrentTripCard.vue'
 import TripListItem from '../../components/driver/TripListItem.vue'
+import PendingConfirmationBanner from '../../components/driver/PendingConfirmationBanner.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -122,10 +129,17 @@ function ymd(d) {
 }
 
 const doneStatuses = new Set(['completed', 'cancelled'])
+const pendingStatuses = new Set(['assigned', 'driver_confirmed', 'pending', 'approved'])
 
+// Trips chờ xác nhận (chưa in_progress)
+const pendingTrips = computed(() =>
+  rawTrips.value.filter((x) => pendingStatuses.has(x.status)),
+)
+
+// Trips đang thực hiện hoặc sắp tới (loại trừ pending chờ xác nhận)
 const upcomingTrips = computed(() => {
   return rawTrips.value
-    .filter((x) => !doneStatuses.has(x.status))
+    .filter((x) => !doneStatuses.has(x.status) && !pendingStatuses.has(x.status))
     .slice()
     .sort((a, b) => {
       if (a.status === 'in_progress' && b.status !== 'in_progress') return -1
@@ -138,23 +152,18 @@ const upcomingTrips = computed(() => {
 const heroTrip = computed(() => upcomingTrips.value[0] ?? null)
 const queueTrips = computed(() => upcomingTrips.value.slice(1))
 
-const driverStatus = computed(() =>
-  upcomingTrips.value.some((t) => t.status === 'in_progress') ? 'running' : 'idle',
-)
-
 const heroTripDestination = computed(
   () => heroTrip.value?.dispatch_request?.destination?.trim() || null,
 )
 
 const dispatcherPhone = import.meta.env.VITE_DISPATCHER_PHONE || null
 
-onMounted(async () => {
-  loading.value = true
+async function fetchData(showLoader = true) {
+  if (showLoader) loading.value = true
   errorMsg.value = ''
   const now = new Date()
   const horizon = new Date(now)
   horizon.setDate(horizon.getDate() + 21)
-
   try {
     const [, listRes] = await Promise.all([
       getDriverSummary(),
@@ -165,7 +174,13 @@ onMounted(async () => {
     errorMsg.value = t('driver_home.load_error')
     rawTrips.value = []
   } finally {
-    loading.value = false
+    if (showLoader) loading.value = false
   }
-})
+}
+
+async function refreshTrips() {
+  await fetchData(false)
+}
+
+onMounted(() => fetchData(true))
 </script>

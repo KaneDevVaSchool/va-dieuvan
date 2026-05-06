@@ -109,7 +109,11 @@
         "no_current_trip": "Chưa có chuyến sắp tới",
         "btn_arrived": "Đã đến điểm đón",
         "float_maps": "Chỉ đường",
-        "float_call": "Gọi điều phối"
+        "float_call": "Gọi điều phối",
+        "pending_banner_title": "Bạn có {n} chuyến chờ xác nhận",
+        "pending_banner_sub": "Vui lòng xác nhận hoặc báo bận trước 2 giờ",
+        "btn_confirm": "Xác nhận",
+        "btn_decline": "Từ chối"
     },
     "driver_schedule": {
         "title": "Lịch hôm nay",

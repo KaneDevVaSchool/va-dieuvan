@@ -126,7 +126,7 @@ const ctaLabel = computed(() => {
 
 const ctaClass = computed(() => {
   if (props.trip.status === 'in_progress') {
-    return 'bg-[#78001e] text-white'
+    return 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
   }
   return 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white'
 })
