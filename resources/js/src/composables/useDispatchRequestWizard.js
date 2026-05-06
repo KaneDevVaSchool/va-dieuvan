@@ -538,20 +538,33 @@ export function useDispatchRequestWizard() {
     return tripType === 'cargo' ? urgentThresholds.value.cargo : urgentThresholds.value.passenger
   }
 
-  /** Đồng bộ với backend `DispatchRequest::wouldBeAutoUrgent` (absolute khoảng cách đến `depart_at`). */
+  /** Auto Gấp theo ngưỡng dispatch-settings: ưu tiên `depart_at`; chưa có thì dùng 00:00 ngày `date_needed` (cùng quy tắc khoảng cách như backend). */
   function syncUrgentFromSchedule() {
+    const threshold = thresholdHoursForTripType(form.value.trip_type)
     const departRaw = computedDepartAt.value?.trim()
-    if (!departRaw) {
+    if (departRaw) {
+      const departMs = new Date(departRaw).getTime()
+      if (!Number.isFinite(departMs)) return
+      const hoursApart = Math.abs(departMs - Date.now()) / (3600 * 1000)
+      if (hoursApart <= threshold) {
+        urgentAutoActive.value = true
+        form.value.is_urgent = true
+      } else {
+        urgentAutoActive.value = false
+        form.value.is_urgent = urgentManualDesired.value
+      }
+      return
+    }
+
+    const dayStartMs = isoLocalDateMs(form.value.date_needed)
+    if (dayStartMs == null) {
       if (urgentAutoActive.value) {
         urgentAutoActive.value = false
         form.value.is_urgent = urgentManualDesired.value
       }
       return
     }
-    const departMs = new Date(departRaw).getTime()
-    if (!Number.isFinite(departMs)) return
-    const hoursApart = Math.abs(departMs - Date.now()) / (3600 * 1000)
-    const threshold = thresholdHoursForTripType(form.value.trip_type)
+    const hoursApart = Math.abs(dayStartMs - Date.now()) / (3600 * 1000)
     if (hoursApart <= threshold) {
       urgentAutoActive.value = true
       form.value.is_urgent = true
@@ -574,6 +587,7 @@ export function useDispatchRequestWizard() {
   watch(
     () => ({
       depart: computedDepartAt.value,
+      date_needed: form.value.date_needed,
       trip_type: form.value.trip_type,
       pTh: urgentThresholds.value.passenger,
       cTh: urgentThresholds.value.cargo,
