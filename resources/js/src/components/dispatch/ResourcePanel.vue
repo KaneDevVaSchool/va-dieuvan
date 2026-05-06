@@ -1,133 +1,145 @@
 <template>
   <div class="flex flex-col">
-    <div
-      v-if="!hideInternalVehicleSection || !hideInternalDriverSection"
-      class="mb-1 flex items-center justify-between gap-2"
-    >
-      <span class="text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">{{
-        t('trip_detail.coordination.assign_pair_title')
-      }}</span>
-      <span class="text-[11px] font-normal text-slate-500 dark:text-slate-400">{{
-        t('trip_detail.coordination.resource_fit_count', { n: availableCount })
-      }}</span>
-    </div>
+    <template v-if="!hideInternalVehicleSection || !hideInternalDriverSection">
+      <div class="mb-2 flex items-center justify-between gap-2 px-0.5">
+        <span class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{
+          t('trip_detail.coordination.assign_pair_title')
+        }}</span>
+        <span class="text-[11px] font-normal tabular-nums text-slate-500 dark:text-slate-400">{{
+          t('trip_detail.coordination.resource_fit_count', { n: availableCount })
+        }}</span>
+      </div>
 
-    <ResourceSection
-      v-if="!hideInternalVehicleSection"
-      v-model="selected.internalVehicles"
-      :options="internalVehicleOptions"
-      :is-loading="isLoading"
-      :disabled="disabled"
-      :title="t('trip_detail.coordination.resource_section_internal_title')"
-      :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
-      :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
-      :icon="TruckIcon"
-    />
-
-    <div
-      v-if="!hideInternalDriverSection"
-      id="dispatch-internal-driver-section"
-      class="rounded-[12px]"
-    >
-      <button
-        type="button"
-        class="mb-2 w-full rounded-[12px] border-[0.5px] border-slate-200/90 bg-white px-2.5 py-1.5 text-left text-[11px] font-medium text-[#8B1A1A] hover:bg-rose-50/80 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:hover:bg-rose-950/30"
-        :disabled="!tripDate || disabled"
-        @click="showWorkloadPanel = true"
+      <div
+        v-if="!hideInternalVehicleSection"
+        class="mb-2 overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
       >
-        {{ t('trip_detail.coordination.workload_open_panel') }}
-      </button>
-      <ResourceSection
-        v-model="selected.internalDrivers"
-        :options="internalDriverOptions"
-        :is-loading="isLoading"
-        :disabled="disabled"
-        :multiple="false"
-        :title="t('trip_detail.coordination.resource_section_driver_title')"
-        :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
-        :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
-        :icon="UserIcon"
-        :option-label-class-fn="driverOptionLabelClass"
-      >
-        <template #option-extra="{ option }">
-          <DriverWorkloadBadge
-            v-if="driverWorkloadEntry(option.id)"
-            :workload="driverWorkloadEntry(option.id)"
-            :color-fn="loadColor"
-          />
-        </template>
-      </ResourceSection>
-    </div>
-
-    <div
-      v-if="!hideTaxiSection || !hideVendorSection"
-      class="mt-2 px-1.5 pb-2 pt-3.5"
-    >
-      <div class="mb-2 rounded-[12px] bg-white/50 p-2.5 dark:bg-slate-900/25">
-        <div class="mb-3 flex items-center justify-between gap-2">
-          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">{{
-            t('trip_detail.coordination.supplement_section_title')
-          }}</span>
-          <span
-            v-if="showCapacityBadge"
-            class="shrink-0 rounded-[100px] px-2 py-0.5 text-[11px] font-medium tabular-nums"
-            :class="
-              capacityGapRemaining > 0
-                ? 'bg-[#FAEEDA] text-[#854F0B] dark:bg-amber-950/35 dark:text-[#F2C07D]'
-                : 'bg-[#E1F5EE] text-[#0F6E56] dark:bg-emerald-950/40 dark:text-emerald-200'
-            "
-          >
-            <template v-if="capacityGapRemaining > 0">
-              {{ t('trip_detail.coordination.supplement_capacity_badge_short', { n: capacityGapRemaining }) }}
-            </template>
-            <template v-else>
-              {{ t('trip_detail.coordination.supplement_capacity_badge_ok') }}
-            </template>
-          </span>
-        </div>
-
-        <SupplementTransportSection
-          v-if="!hideTaxiSection"
-          v-model="selected.taxis"
-          kind="taxi"
-          :options="taxiOptions"
+        <ResourceSection
+          v-model="selected.internalVehicles"
+          :options="internalVehicleOptions"
           :is-loading="isLoading"
-          :default-seat="4"
-          indent-body
           :disabled="disabled"
-          :title="t('trip_detail.coordination.resource_section_taxi_title')"
-          :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
-          :name-placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
-          :name-field-label="t('trip_detail.coordination.supplement_field_provider')"
+          :title="t('trip_detail.coordination.resource_section_internal_title')"
+          :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
+          :placeholder="t('trip_detail.coordination.resource_section_internal_ph')"
           :icon="TruckIcon"
         />
+      </div>
 
-        <SupplementTransportSection
-          v-if="!hideVendorSection"
-          v-model="selected.vendors"
-          kind="vendor"
-          :options="vendorOptions"
+      <div
+        v-if="!hideInternalDriverSection"
+        id="dispatch-internal-driver-section"
+        class="mb-2 overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
+      >
+        <ResourceSection
+          v-model="selected.internalDrivers"
+          :options="internalDriverOptions"
           :is-loading="isLoading"
-          :default-seat="7"
-          indent-body
-          :can-quick-create="canQuickCreateVendor"
           :disabled="disabled"
-          :title="t('trip_detail.coordination.resource_section_vendor_title')"
-          :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
-          :name-placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
-          :name-field-label="t('trip_detail.coordination.supplement_field_ncc_name')"
-          :icon="BuildingOffice2Icon"
-          @create-vendor="$emit('create-vendor')"
-        />
+          :multiple="false"
+          :title="t('trip_detail.coordination.resource_section_driver_title')"
+          :subtitle="t('trip_detail.coordination.resource_section_driver_sub')"
+          :placeholder="t('trip_detail.coordination.resource_section_driver_ph')"
+          :icon="UserIcon"
+          :option-label-class-fn="driverOptionLabelClass"
+        >
+          <template #body-before-search>
+            <button
+              type="button"
+              class="w-full rounded-lg border border-slate-200/80 bg-slate-50/60 px-2.5 py-1.5 text-left text-[11px] font-medium text-[#8B1A1A] disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700/60 dark:bg-slate-900/35 dark:text-[#e57373]"
+              :disabled="!tripDate || disabled"
+              @click="showWorkloadPanel = true"
+            >
+              {{ t('trip_detail.coordination.workload_open_panel') }}
+            </button>
+          </template>
+          <template #option-extra="{ option }">
+            <DriverWorkloadBadge
+              v-if="driverWorkloadEntry(option.id)"
+              :workload="driverWorkloadEntry(option.id)"
+              :color-fn="loadColor"
+            />
+          </template>
+        </ResourceSection>
+      </div>
+    </template>
 
-        <div class="mt-3 flex items-center justify-between gap-2 pt-2.5 text-[11px]">
-          <span class="font-medium text-slate-600 dark:text-slate-400">{{
-            t('trip_detail.coordination.supplement_total_label')
-          }}</span>
-          <span class="tabular-nums text-[13px] font-normal text-slate-800 dark:text-slate-200">{{
-            t('trip_detail.coordination.supplement_total_value', { n: supplementTotalSeats })
-          }}</span>
+    <div
+      v-if="supplementBlockVisible"
+      class="mb-1"
+    >
+      <div class="mb-3 flex items-center justify-between gap-2 px-0.5">
+        <span class="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">{{
+          t('trip_detail.coordination.supplement_section_title')
+        }}</span>
+        <span
+          class="shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tabular-nums"
+          :class="
+            capacityGapRemaining > 0
+              ? 'border-amber-200/60 bg-[#FAEEDA] text-[#854F0B] dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-[#F2C07D]'
+              : 'border-emerald-200/60 bg-emerald-50 text-emerald-700 dark:border-emerald-800/45 dark:bg-emerald-950/40 dark:text-emerald-200'
+          "
+        >
+          <template v-if="capacityGapRemaining > 0">
+            {{ t('trip_detail.coordination.supplement_capacity_badge_short', { n: capacityGapRemaining }) }}
+          </template>
+          <template v-else>
+            {{ t('trip_detail.coordination.supplement_capacity_badge_ok') }}
+          </template>
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        <div
+          v-if="!hideTaxiSection"
+          class="overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
+        >
+          <SupplementTransportSection
+            v-model="selected.taxis"
+            kind="taxi"
+            :options="taxiOptions"
+            :is-loading="isLoading"
+            :default-seat="4"
+            indent-body
+            :disabled="disabled"
+            :title="t('trip_detail.coordination.resource_section_taxi_title')"
+            :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
+            :name-placeholder="t('trip_detail.coordination.resource_section_taxi_ph')"
+            :name-field-label="t('trip_detail.coordination.supplement_field_provider')"
+            :icon="MapPinIcon"
+          />
         </div>
+
+        <div
+          v-if="!hideVendorSection"
+          class="overflow-hidden rounded-xl border border-slate-200/70 dark:border-slate-700/60"
+        >
+          <SupplementTransportSection
+            v-model="selected.vendors"
+            kind="vendor"
+            :options="vendorOptions"
+            :is-loading="isLoading"
+            :default-seat="7"
+            indent-body
+            :can-quick-create="canQuickCreateVendor"
+            :disabled="disabled"
+            :title="t('trip_detail.coordination.resource_section_vendor_title')"
+            :subtitle="t('trip_detail.coordination.resource_section_vendor_sub')"
+            :name-placeholder="t('trip_detail.coordination.resource_section_vendor_ph')"
+            :name-field-label="t('trip_detail.coordination.supplement_field_ncc_name')"
+            :icon="BuildingOfficeIcon"
+            @create-vendor="$emit('create-vendor')"
+          />
+        </div>
+      </div>
+
+      <div class="mt-1.5 flex items-center justify-between border-t border-slate-200/60 pt-2.5 dark:border-slate-700/60">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{
+          t('trip_detail.coordination.supplement_total_label')
+        }}</span>
+        <span class="text-[15px] font-medium tabular-nums text-slate-800 dark:text-slate-100">{{
+          t('trip_detail.coordination.supplement_total_value', { n: supplementTotalSeats })
+        }}</span>
       </div>
     </div>
 
@@ -170,7 +182,12 @@
 <script setup>
 import { computed, nextTick, ref, toRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { BuildingOffice2Icon, TruckIcon, UserIcon } from '@heroicons/vue/24/outline'
+import {
+  BuildingOfficeIcon,
+  MapPinIcon,
+  TruckIcon,
+  UserIcon,
+} from '@heroicons/vue/24/outline'
 import ResourceSection from './ResourceSection.vue'
 import SupplementTransportSection from './SupplementTransportSection.vue'
 import DriverWorkloadBadge from './DriverWorkloadBadge.vue'
@@ -286,8 +303,10 @@ const capacityGapRemaining = computed(() => {
   return Math.max(0, need - covered)
 })
 
-const showCapacityBadge = computed(
-  () => !props.hideTaxiSection || !props.hideVendorSection,
+const supplementBlockVisible = computed(
+  () =>
+    (!props.hideTaxiSection || !props.hideVendorSection) &&
+    !props.hideInternalDriverSection,
 )
 
 const showValidation = ref(false)

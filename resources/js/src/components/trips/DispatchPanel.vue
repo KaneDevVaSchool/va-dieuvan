@@ -4,32 +4,51 @@
         :aria-label="t('trip_detail.coordination.title')"
     >
         <div class="space-y-3 p-3">
-            <!-- Header: title + shortfall badge -->
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="shrink-0 text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <!-- Header: chip label + badges + frozen status -->
+            <div class="flex items-center justify-between gap-2">
+                <span
+                    class="shrink-0 rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-400"
+                >
                     {{ t("trip_detail.coordination.title") }}
                 </span>
-                <div class="flex-1" />
-                <span
-                    v-if="capacityBannerText"
-                    class="shrink-0 rounded-[100px] border-[0.5px] border-[#EF9F27]/70 bg-[#FAEEDA] px-2 py-0.5 text-[11px] font-medium text-[#854F0B] dark:border-[#EF9F27]/45 dark:bg-amber-950/30 dark:text-[#F2C07D]"
-                >
-                    ⚠ {{ t("trip_detail.coordination.capacity_short_badge") }}
-                </span>
+                <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                    <span
+                        v-if="capacityBannerText"
+                        class="shrink-0 rounded-[100px] border-[0.5px] border-[#EF9F27]/70 bg-[#FAEEDA] px-2 py-0.5 text-[11px] font-medium text-[#854F0B] dark:border-[#EF9F27]/45 dark:bg-amber-950/30 dark:text-[#F2C07D]"
+                    >
+                        ⚠ {{ t("trip_detail.coordination.capacity_short_badge") }}
+                    </span>
+                    <span
+                        v-if="coordinationActionsLocked"
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-1 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300"
+                        role="img"
+                        :aria-label="
+                            t('trip_detail.coordination.actions_locked_after_assign')
+                        "
+                    >
+                        <LockClosedIcon class="size-3 shrink-0" aria-hidden="true" />
+                    </span>
+                </div>
             </div>
 
-            <p
+            <div
                 v-if="coordinationActionsLocked"
-                class="rounded-[12px] bg-slate-100/90 px-2.5 py-2 text-[12px] font-normal text-slate-600 dark:bg-slate-800/70 dark:text-slate-300"
+                class="flex items-center gap-2 rounded-xl border border-slate-200/60 bg-slate-50 px-3 py-2.5 dark:border-slate-700/60 dark:bg-slate-900/40"
                 role="status"
             >
-                {{ t("trip_detail.coordination.actions_locked_after_assign") }}
-            </p>
+                <InformationCircleIcon
+                    class="size-4 shrink-0 text-slate-400 dark:text-slate-500"
+                    aria-hidden="true"
+                />
+                <p class="text-[12px] font-normal text-slate-500 dark:text-slate-400">
+                    {{ t("trip_detail.coordination.actions_locked_after_assign") }}
+                </p>
+            </div>
 
             <!-- Departure datetime row (grouped card) -->
             <div
                 v-if="canRescheduleTrip"
-                class="rounded-[12px] border-[0.5px] bg-slate-50/40 p-2.5 dark:border-slate-700/50Z dark:bg-slate-900/25"
+                class="rounded-[12px] border-[0.5px] bg-slate-50/40 p-2.5 dark:border-slate-700/50 dark:bg-slate-900/25"
             >
                 <div
                     class="flex flex-nowrap items-center gap-2 overflow-x-auto"
@@ -84,34 +103,85 @@
                 <span class="min-w-0 leading-snug">{{ capacityBannerText }}</span>
             </div>
 
-            <!-- Schedule & alerts (surfaced, not collapsed) -->
-            <div
-                class="rounded-[12px] border-[0.5px] border-slate-200/80 bg-slate-50/50 px-2.5 py-2 dark:border-slate-700/60 dark:bg-slate-900/30"
-            >
+            <!-- Schedule summary + overlapping trips -->
+            <div>
                 <div
-                    class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                    class="flex items-center gap-3 rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 dark:border-slate-700/60 dark:bg-slate-950/35"
                 >
-                    {{ t("trip_detail.coordination.schedule_alerts_heading") }}
+                    <CalendarDaysIcon
+                        class="size-4 shrink-0 text-slate-400 dark:text-slate-500"
+                        aria-hidden="true"
+                    />
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                        <strong
+                            class="text-[13px] font-medium leading-snug text-slate-800 dark:text-slate-100"
+                        >
+                            {{
+                                scheduleInfoLines.length
+                                    ? scheduleInfoLines[0]
+                                    : t(
+                                          "trip_detail.coordination.toolbar_funnel_empty",
+                                      )
+                            }}
+                        </strong>
+                        <span
+                            v-if="secondaryScheduleHint.length"
+                            class="text-[11px] leading-snug text-slate-400 dark:text-slate-500"
+                            >{{ secondaryScheduleHint }}</span
+                        >
+                    </div>
                 </div>
-                <ul
-                    class="mt-1.5 space-y-1 text-[13px] font-normal text-slate-700 dark:text-slate-300"
+                <div
+                    v-if="canAssign && overlappingOtherTrips.length"
+                    class="mt-2 rounded-xl border border-red-200/50 bg-red-50/40 px-3 py-2 dark:border-red-900/50 dark:bg-red-950/25"
                 >
-                    <li
-                        v-for="(line, idx) in scheduleInfoLines"
-                        :key="'sched-' + idx"
-                        class="leading-snug"
+                    <div
+                        class="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400"
                     >
-                        {{ line }}
-                    </li>
-                    <li
-                        v-if="!scheduleInfoLines.length"
-                        class="text-slate-400 dark:text-slate-500"
-                    >
+                        <ExclamationTriangleIcon
+                            class="size-3.5 shrink-0"
+                            aria-hidden="true"
+                        />
                         {{
-                            t("trip_detail.coordination.toolbar_funnel_empty")
+                            t("trip_detail.coordination.overlap_section_title")
                         }}
-                    </li>
-                </ul>
+                    </div>
+                    <ul class="space-y-1.5 overflow-y-auto pr-0.5 text-[12px]">
+                        <li
+                            v-for="row in overlappingOtherTrips"
+                            :key="row.id"
+                            class="flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-600 dark:text-slate-400"
+                        >
+                            <RouterLink
+                                :to="tripDetailPathFor(row.id)"
+                                class="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
+                            >
+                                #{{ row.id }}
+                            </RouterLink>
+                            <span
+                                class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-500 dark:bg-slate-800/70 dark:text-slate-400"
+                                >{{ fmtTime(row.depart_at) }}</span
+                            >
+                            <span class="text-slate-600 dark:text-slate-400">{{
+                                row.label
+                            }}</span>
+                            <span
+                                v-if="row.driverName || row.vehiclePlate"
+                                class="text-slate-500 dark:text-slate-500"
+                            >
+                                <template v-if="row.driverName">{{
+                                    row.driverName
+                                }}</template>
+                                <template v-if="row.driverName && row.vehiclePlate"
+                                    >&nbsp;·&nbsp;</template
+                                >
+                                <template v-if="row.vehiclePlate">{{
+                                    row.vehiclePlate
+                                }}</template>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div
@@ -160,6 +230,40 @@
                             @change="$emit('driver-card-change')"
                         />
                     </div>
+                    <div
+                        v-if="showAssignmentSupplementsPanel"
+                        class="mt-3 rounded-xl border border-emerald-200/60 bg-emerald-50/25 px-3 py-2.5 dark:border-emerald-900/45 dark:bg-emerald-950/20"
+                        role="status"
+                        :aria-label="
+                            t(
+                                'trip_detail.coordination.supplement_section_title',
+                            )
+                        "
+                    >
+                        <div
+                            class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-400"
+                        >
+                            {{
+                                t(
+                                    "trip_detail.coordination.supplement_section_title",
+                                )
+                            }}
+                        </div>
+                        <ul class="flex flex-wrap gap-1.5">
+                            <li
+                                v-for="item in supplementAssignmentsFlattened"
+                                :key="`${item.prefix}-${item.id ?? item.label}-${item.idx}`"
+                                class="inline-flex max-w-full items-center rounded-full border border-emerald-300/40 bg-emerald-50 px-2 py-0.5 text-[12px] font-normal text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+                            >
+                                <span class="truncate"
+                                    ><span class="font-medium">{{
+                                        item.prefix
+                                    }}</span
+                                    >&nbsp;{{ item.line }}</span
+                                >
+                            </li>
+                        </ul>
+                    </div>
                     <ConflictBanner
                         class="mt-3"
                         :conflict="vehicleConflictBanner"
@@ -170,7 +274,7 @@
                 </div>
 
                 <div
-                    class="rounded-[12px] border-[0.5px] border-slate-200/80 bg-slate-50/30 p-3 dark:border-slate-700/60 dark:bg-slate-900/35"
+                    class="rounded-xl border border-slate-200/70 bg-transparent p-0 dark:border-slate-700/60"
                 >
                     <ResourcePanel
                         v-if="tripId"
@@ -193,53 +297,6 @@
             </div>
 
             <div
-                v-if="canAssign && overlappingOtherTrips.length"
-                class="rounded-[12px] border-[0.5px] border-slate-200/80 bg-white p-2.5 dark:border-slate-700/60 dark:bg-slate-900/40"
-            >
-                <div
-                    class="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                >
-                    {{ t("trip_detail.coordination.overlap_section_title") }}
-                </div>
-                <ul
-                    class="mt-1.5 max-h-36 space-y-1 overflow-y-auto text-[11px] font-normal"
-                >
-                    <li
-                        v-for="row in overlappingOtherTrips"
-                        :key="row.id"
-                        class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
-                    >
-                        <RouterLink
-                            :to="tripDetailPathFor(row.id)"
-                            class="font-medium text-sky-700 underline-offset-2 hover:underline"
-                        >
-                            #{{ row.id }}
-                        </RouterLink>
-                        <span class="tabular-nums text-slate-600">{{
-                            fmtTime(row.depart_at)
-                        }}</span>
-                        <span class="min-w-0 text-slate-700">{{
-                            row.label
-                        }}</span>
-                        <span
-                            v-if="row.driverName || row.vehiclePlate"
-                            class="text-slate-500"
-                        >
-                            <template v-if="row.driverName">{{
-                                row.driverName
-                            }}</template>
-                            <template v-if="row.driverName && row.vehiclePlate">
-                                ·
-                            </template>
-                            <template v-if="row.vehiclePlate">{{
-                                row.vehiclePlate
-                            }}</template>
-                        </span>
-                    </li>
-                </ul>
-            </div>
-
-            <div
                 v-if="assignMsg"
                 class="rounded-[12px] border-[0.5px] px-3 py-2 text-sm font-medium"
                 :class="
@@ -255,17 +312,19 @@
             </div>
 
             <div
-                class="border-t border-[0.5px] border-slate-100 pt-2.5 dark:border-slate-700/60"
+                class="mt-1 border-t border-slate-100 pt-3 dark:border-slate-700/60"
             >
                 <label
-                    class="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                    class="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500"
+                    for="dispatch-internal-notes-field"
                 >
                     {{ t("trip_detail.coordination.internal_notes") }}
                 </label>
                 <textarea
+                    id="dispatch-internal-notes-field"
                     :value="coordinationNotes"
                     rows="3"
-                    class="w-full rounded-[12px] border-[0.5px] bg-white px-2.5 py-2 text-sm font-normal outline-none ring-0 focus:border-[#8B1A1A]/35 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    class="w-full resize-none rounded-xl border border-slate-200/70 bg-slate-50/60 px-3 py-2.5 text-[13px] font-normal text-slate-700 outline-none ring-0 placeholder:text-slate-400 focus:border-[#8B1A1A]/40 disabled:cursor-not-allowed disabled:opacity-55 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-100 dark:placeholder:text-slate-500"
                     :placeholder="
                         t('trip_detail.coordination.internal_notes_ph')
                     "
@@ -317,14 +376,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { ClockIcon } from "@heroicons/vue/24/outline";
+import {
+    CalendarDaysIcon,
+    ClockIcon,
+    ExclamationTriangleIcon,
+    InformationCircleIcon,
+    LockClosedIcon,
+} from "@heroicons/vue/24/outline";
 import ResourcePanel from "../dispatch/ResourcePanel.vue";
 import ConflictBanner, { type VehicleConflict } from "./ConflictBanner.vue";
 import DriverCard from "./DriverCard.vue";
 import VehicleCard from "./VehicleCard.vue";
+import type { SupplementItem } from "../../types/dispatch";
 import { buildStaffPrefixedPath as staffPath } from "../../config/dispatchWebBase";
 
 const props = withDefaults(
@@ -368,9 +434,13 @@ const props = withDefaults(
     showAssignFooter: boolean;
     assignReady: boolean;
     assigning: boolean;
+    supplementAssignments?:
+        | { taxis: SupplementItem[]; vendors: SupplementItem[] }
+        | null;
 }>(),
     {
         coordinationActionsLocked: false,
+        supplementAssignments: null,
     },
 );
 
@@ -393,6 +463,69 @@ const route = useRoute();
 
 const resourcePanelRef = ref<InstanceType<typeof ResourcePanel> | null>(null);
 defineExpose({ resourcePanel: resourcePanelRef });
+
+const secondaryScheduleHint = computed(() => {
+    const lines = props.scheduleInfoLines ?? [];
+    if (lines.length <= 1) return "";
+    return lines.slice(1).join(" · ");
+});
+
+function formatSupplementLine(it: SupplementItem): string {
+    const lab = String(it.label ?? "").trim();
+    const n = Number(it.supplementSeats);
+    if (Number.isFinite(n) && n > 0) {
+        return `${lab} — ${t("trip_detail.coordination.seats_n", {
+            n: Math.floor(n),
+        })}`;
+    }
+    return lab;
+}
+
+type SupplementFlatten = {
+    idx: number;
+    prefix: string;
+    line: string;
+    id: string | number | null | undefined;
+    label?: string | null;
+};
+
+const supplementAssignmentsFlattened = computed<SupplementFlatten[]>(() => {
+    const s = props.supplementAssignments;
+    const out: SupplementFlatten[] = [];
+    if (!s) return out;
+    let idx = 0;
+    const taxiLbl = t("trip_detail.coordination.resource_section_taxi_title");
+    const vendorLbl = t(
+        "trip_detail.coordination.resource_section_vendor_title",
+    );
+    for (const it of s.taxis ?? []) {
+        idx++;
+        out.push({
+            idx,
+            prefix: taxiLbl,
+            line: formatSupplementLine(it),
+            id: it.id,
+            label: it.label,
+        });
+    }
+    for (const it of s.vendors ?? []) {
+        idx++;
+        out.push({
+            idx,
+            prefix: vendorLbl,
+            line: formatSupplementLine(it),
+            id: it.id,
+            label: it.label,
+        });
+    }
+    return out;
+});
+
+/** Khi đã chọn & hiển thị tài xế nội bộ — bổ sung phương tiện gộp vào khối phân công. */
+const showAssignmentSupplementsPanel = computed(() => {
+    if (!props.showInternalDriverCard) return false;
+    return supplementAssignmentsFlattened.value.length > 0;
+});
 
 function tripDetailPathFor(id: number) {
     return route.path.startsWith("/driver")

@@ -148,6 +148,9 @@
                             :busy-driver-ids="busyDriverIdList"
                             :trip-snapshot="coordinationTripSnapshot"
                             :overlapping-other-trips="overlappingOtherTrips"
+                            :supplement-assignments="
+                                coordinationSupplementsForAssignment
+                            "
                             :coordination-notes="coordinationNotes"
                             :assign-msg="assignMsg"
                             :assign-feedback-kind="assignFeedbackKind"
@@ -1967,6 +1970,16 @@ const coordinationTripSnapshot = computed(() => {
 function onDispatchResourcesUpdate(p) {
     dispatchResources.value = p;
 }
+
+/** Bổ sung phương tiện (taxi/NCC) hiển thị trong khối phân công khi đã chọn tài xế — đồng bộ payload panel. */
+const coordinationSupplementsForAssignment = computed(() => {
+    const p = dispatchResources.value;
+    const st = p?.supplementTransports;
+    const taxis = Array.isArray(st?.taxis) ? st.taxis : [];
+    const vendors = Array.isArray(st?.vendors) ? st.vendors : [];
+    if (!taxis.length && !vendors.length) return null;
+    return { taxis, vendors };
+});
 
 const overlappingOtherTrips = computed(() => {
     const w = scheduleWindowForConflicts.value;
