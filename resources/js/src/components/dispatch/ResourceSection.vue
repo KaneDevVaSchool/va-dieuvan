@@ -171,6 +171,15 @@ const customAddHint = computed(() =>
   t('trip_detail.coordination.resource_press_enter_add', { name: searchQuery.value.trim() }),
 )
 
+/** Gom ký tự để tìm biển số / tên dễ khớp (51F-123.45 ↔ 51f 12345). */
+function normalizeSearchText(s) {
+  return String(s ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\s·.,\-_/|]/g, '')
+}
+
 function optionLabelClass(opt) {
   const fn = props.optionLabelClassFn
   if (typeof fn !== 'function') return undefined
@@ -178,12 +187,14 @@ function optionLabelClass(opt) {
 }
 
 const filteredOptions = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
+  const qRaw = searchQuery.value.trim()
   const list = props.options || []
+  if (!qRaw) return list
+  const q = normalizeSearchText(qRaw)
   if (!q) return list
   return list.filter((opt) => {
-    const label = String(opt.label ?? '').toLowerCase()
-    const sub = String(opt.sublabel ?? '').toLowerCase()
+    const label = normalizeSearchText(opt.label)
+    const sub = normalizeSearchText(opt.sublabel)
     return label.includes(q) || sub.includes(q)
   })
 })
@@ -235,17 +246,30 @@ function remove(opt) {
 
 function onEnterKey() {
   if (props.disabled) return
-  if (!props.allowCustomEntry) return
   const q = searchQuery.value.trim()
+  if (q) {
+    const selectable = filteredOptions.value.filter(
+      (o) => o.available !== false && !isSelected(o),
+    )
+    if (selectable.length === 1) {
+      select(selectable[0])
+      return
+    }
+  }
+  if (!props.allowCustomEntry) return
   if (!q) return
-  const qLower = q.toLowerCase()
+  const qNorm = normalizeSearchText(q)
   const exactLabel = filteredOptions.value.filter(
-    (o) => o.available !== false && !isSelected(o) && String(o.label).toLowerCase() === qLower,
+    (o) =>
+      o.available !== false &&
+      !isSelected(o) &&
+      normalizeSearchText(String(o.label ?? '')) === qNorm,
   )
   if (exactLabel.length === 1) {
     select(exactLabel[0])
     return
   }
+  const qLower = q.toLowerCase()
   if (
     props.modelValue.some((v) => v.isCustom === true && String(v.label).toLowerCase() === qLower)
   ) {
