@@ -469,7 +469,7 @@
                             @trip-updated="applyTripPayload"
                             @passenger-list-save="onPassengerListSave"
                             @passenger-list-delete="onPassengerListDelete"
-                            @passenger-list-add="onPassengerListAdd"
+                            @passenger-list-add-submit="onPassengerListAddSubmit"
                         />
 
                         <section
@@ -1095,29 +1095,14 @@ async function onPassengerListDelete({ keys, resolve }) {
     resolve(ok);
 }
 
-async function onPassengerListAdd({ resolve }) {
-    const dr = trip.value?.dispatch_request;
-    if (!dr) {
-        resolve(false);
-        return;
-    }
-    const tt = dr.trip_type;
+async function onPassengerListAddSubmit({ kind, draft, resolve }) {
     const ok = await persistPassengerListSnapshot((arrays) => {
-        if (tt === "cargo") {
-            arrays.cargoRows.push({
-                ...emptyCargoRow(),
-                name: t("trip_detail.passengers.new_placeholder"),
-            });
-        } else if (tt === "business") {
-            arrays.businessRows.push({
-                ...emptyBusinessRow(),
-                notes: t("trip_detail.passengers.new_placeholder"),
-            });
+        if (kind === "cargo") {
+            arrays.cargoRows.push({ ...emptyCargoRow(), ...draft });
+        } else if (kind === "business") {
+            arrays.businessRows.push({ ...emptyBusinessRow(), ...draft });
         } else {
-            arrays.passengerRows.push({
-                ...emptyPassengerRow(),
-                person_in_charge: t("trip_detail.passengers.new_placeholder"),
-            });
+            arrays.passengerRows.push({ ...emptyPassengerRow(), ...draft });
         }
     });
     resolve(ok);

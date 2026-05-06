@@ -107,7 +107,7 @@
                     type="button"
                     class="rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 py-1.5 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
                     :disabled="listBusy"
-                    @click="onAddRow"
+                    @click="openAddModal"
                 >
                     {{ t("trip_detail.passengers.dt_add_row") }}
                 </button>
@@ -217,7 +217,7 @@
                                     ? 'bg-sky-50/50 dark:bg-sky-950/20'
                                     : '',
                             ]"
-                            @click.self="maybeToggleExpand(row)"
+                            @click.self="onRowBackgroundClick(row)"
                         >
                             <td
                                 v-if="canEditList"
@@ -248,7 +248,7 @@
                             </td>
                             <td
                                 class="px-3 py-2.5 align-top"
-                                @click="maybeToggleExpand(row)"
+                                @click="onRowContentClick(row)"
                             >
                                 <template
                                     v-if="editingKey === row.passengerKey && editDraft"
@@ -306,11 +306,46 @@
                                         >
                                             {{ initials(row.name) }}
                                         </div>
-                                        <div>
-                                            <div
-                                                class="font-medium text-slate-900 dark:text-slate-100"
-                                            >
-                                                {{ row.name }}
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-1">
+                                                <div
+                                                    class="font-medium text-slate-900 dark:text-slate-100"
+                                                >
+                                                    {{ row.name }}
+                                                </div>
+                                                <button
+                                                    v-if="
+                                                        row.pickupAddress?.trim() ||
+                                                        row.notes?.trim()
+                                                    "
+                                                    type="button"
+                                                    class="shrink-0 rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                                    :aria-expanded="
+                                                        rowExpanded ===
+                                                        row.passengerKey
+                                                    "
+                                                    :aria-label="
+                                                        t(
+                                                            'trip_detail.passengers.checkin_expand_pickup',
+                                                        )
+                                                    "
+                                                    @click.stop="
+                                                        toggleExpand(
+                                                            row.passengerKey,
+                                                        )
+                                                    "
+                                                >
+                                                    <ChevronDownIcon
+                                                        class="h-4 w-4 transition-transform"
+                                                        :class="
+                                                            rowExpanded ===
+                                                            row.passengerKey
+                                                                ? 'rotate-180'
+                                                                : ''
+                                                        "
+                                                        aria-hidden="true"
+                                                    />
+                                                </button>
                                             </div>
                                             <div
                                                 v-if="
@@ -330,7 +365,7 @@
                             </td>
                             <td
                                 class="px-3 py-2.5 align-top"
-                                @click="maybeToggleExpand(row)"
+                                @click="onRowContentClick(row)"
                             >
                                 <template
                                     v-if="editingKey === row.passengerKey && editDraft"
@@ -386,7 +421,7 @@
                             </td>
                             <td
                                 class="max-w-[220px] min-w-[9rem] px-3 py-2.5 align-top"
-                                @click.stop
+                                @click="onRowContentClick(row)"
                             >
                                 <template
                                     v-if="editingKey === row.passengerKey && editDraft"
@@ -441,6 +476,7 @@
                                                 undefined
                                             "
                                             class="text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
+                                            @click.stop
                                         >
                                             {{ row.contact }}
                                         </a>
@@ -452,7 +488,7 @@
                             </td>
                             <td
                                 class="min-w-0 px-3 py-2.5 align-top text-slate-600 dark:text-slate-300"
-                                @click="maybeToggleExpand(row)"
+                                @click="onRowContentClick(row)"
                             >
                                 <template
                                     v-if="editingKey === row.passengerKey && editDraft"
@@ -552,32 +588,20 @@
                                         v-if="editingKey !== row.passengerKey"
                                         class="flex justify-end"
                                     >
-                                        <AppRowActionsMenu
-                                            :aria-label="
-                                                t(
-                                                    'trip_detail.passengers.dt_col_actions',
-                                                )
-                                            "
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center justify-center rounded-lg border border-slate-200/90 bg-white p-1.5 text-rose-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/35"
                                             :disabled="listBusy"
-                                            align="end"
+                                            :aria-label="
+                                                t('trip_detail.passengers.dt_delete')
+                                            "
+                                            @click="deleteRow(row)"
                                         >
-                                            <button
-                                                type="button"
-                                                role="menuitem"
-                                                class="flex w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800"
-                                                @click="startEdit(row)"
-                                            >
-                                                {{ t("trip_detail.passengers.dt_edit") }}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="menuitem"
-                                                class="flex w-full px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
-                                                @click="deleteRow(row)"
-                                            >
-                                                {{ t("trip_detail.passengers.dt_delete") }}
-                                            </button>
-                                        </AppRowActionsMenu>
+                                            <TrashIcon
+                                                class="h-4 w-4"
+                                                aria-hidden="true"
+                                            />
+                                        </button>
                                     </div>
                                 </template>
                             </td>
@@ -675,6 +699,479 @@
             </div>
             <p class="mt-1 whitespace-pre-wrap">{{ specialSummary }}</p>
         </div>
+
+        <Teleport to="body">
+            <div
+                v-if="addModalOpen"
+                class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[1px]"
+                role="dialog"
+                aria-modal="true"
+                @click.self="closeAddModal"
+            >
+                <div
+                    class="max-h-[min(90vh,44rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                >
+                    <h3
+                        class="text-sm font-semibold text-slate-900 dark:text-slate-100"
+                    >
+                        {{ t("trip_detail.passengers.add_modal_title") }}
+                    </h3>
+
+                    <div
+                        v-if="listKind === 'passenger'"
+                        class="mt-4 grid gap-3 sm:grid-cols-2"
+                    >
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_name")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.person_in_charge"
+                                type="text"
+                                class="inp"
+                                :placeholder="t('trip_detail.passengers.ph_name')"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_guests")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.guests"
+                                type="number"
+                                min="1"
+                                step="1"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_depart_at")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.depart_at"
+                                type="datetime-local"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_return_at")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.return_at"
+                                type="datetime-local"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_pickup")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.pickup"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_dropoff")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.dropoff"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_unit_price")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.unit_price"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_extra_fee")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.extra_fee"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_notes")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.notes"
+                                type="text"
+                                class="inp"
+                                :placeholder="t('trip_detail.passengers.ph_notes')"
+                            />
+                        </label>
+                    </div>
+
+                    <div
+                        v-else-if="listKind === 'business'"
+                        class="mt-4 grid gap-3 sm:grid-cols-2"
+                    >
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_guests")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.guests"
+                                type="number"
+                                min="1"
+                                step="1"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_depart_at")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.depart_at"
+                                type="datetime-local"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_pickup")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.pickup"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_waypoint")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.waypoint"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_dropoff")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.dropoff"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_return_at")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.return_at"
+                                type="datetime-local"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_unit_price")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.unit_price"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_extra_fee")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.extra_fee"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_notes")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.notes"
+                                type="text"
+                                class="inp"
+                                :placeholder="t('trip_detail.passengers.ph_notes')"
+                            />
+                        </label>
+                    </div>
+
+                    <div v-else class="mt-4 grid gap-3 sm:grid-cols-2">
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_name")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.name"
+                                type="text"
+                                class="inp"
+                                :placeholder="
+                                    t('trip_detail.passengers.ph_cargo_name')
+                                "
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_qty")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.qty"
+                                type="number"
+                                min="1"
+                                step="1"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_cost")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.cost"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_dimensions")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.dimensions"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_weight")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.weight"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.col_notes")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.item_notes"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_pickup_at")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.pickup_at"
+                                type="datetime-local"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_delivery_at")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.delivery_at"
+                                type="datetime-local"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_pickup_place")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.pickup_place"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t(
+                                        'trip_detail.passengers.m_delivery_place',
+                                    )
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.delivery_place"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.ph_pickup_contact")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.pickup_contact"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t(
+                                        'trip_detail.passengers.ph_delivery_contact',
+                                    )
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.delivery_contact"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                        <label class="block sm:col-span-2">
+                            <span
+                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
+                                >{{
+                                    t("trip_detail.passengers.m_transport_note")
+                                }}</span
+                            >
+                            <input
+                                v-model="addForm.transport_note"
+                                type="text"
+                                class="inp"
+                            />
+                        </label>
+                    </div>
+
+                    <div class="mt-5 flex flex-wrap justify-end gap-2">
+                        <button
+                            type="button"
+                            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                            :disabled="listBusy"
+                            @click="closeAddModal"
+                        >
+                            {{ t("trip_detail.passengers.cancel_edit") }}
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
+                            :disabled="listBusy"
+                            @click="submitAddModal"
+                        >
+                            {{ t("trip_detail.passengers.save") }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </section>
 </template>
 
@@ -684,11 +1181,21 @@ import { useI18n } from "vue-i18n";
 import {
     ArrowDownTrayIcon,
     CheckIcon,
+    ChevronDownIcon,
     MagnifyingGlassIcon,
+    TrashIcon,
     XMarkIcon,
 } from "@heroicons/vue/24/outline";
 import { ExclamationTriangleIcon } from "@heroicons/vue/24/solid";
-import AppRowActionsMenu from "../ui/AppRowActionsMenu.vue";
+import {
+    emptyPassengerRow,
+    emptyBusinessRow,
+    emptyCargoRow,
+    isPassengerRowFilled,
+    isBusinessRowFilled,
+    isCargoRowFilled,
+} from "../../composables/dispatchWizardConstants";
+import { showAppError } from "../../composables/appMessage";
 import { togglePassengerCheckInApi } from "../../composables/usePassengerCheckIn";
 import { confirmAction } from "../../composables/useConfirm";
 
@@ -742,7 +1249,13 @@ const emit = defineEmits<{
             resolve: (ok: boolean) => void;
         },
     ];
-    "passenger-list-add": [payload: { resolve: (ok: boolean) => void }];
+    "passenger-list-add-submit": [
+        payload: {
+            kind: "passenger" | "business" | "cargo";
+            draft: Record<string, string>;
+            resolve: (ok: boolean) => void;
+        },
+    ];
 }>();
 
 const { t } = useI18n();
@@ -762,6 +1275,8 @@ const editingKey = ref<string | null>(null);
 const editDraft = ref<Record<string, string> | null>(null);
 const listBusy = ref(false);
 const headerSelectRef = ref<HTMLInputElement | null>(null);
+const addModalOpen = ref(false);
+const addForm = ref<Record<string, string>>({});
 
 function syncFromTrip() {
     const m = props.trip?.passenger_check_ins as
@@ -818,6 +1333,16 @@ watch([() => props.rows.length, pageSize], () => {
 const passengerTableScroll = computed(
     () => props.rows.length >= 10,
 );
+
+const listKind = computed((): "passenger" | "business" | "cargo" => {
+    const dr = props.trip?.dispatch_request as
+        | { trip_type?: string }
+        | undefined;
+    const tt = String(dr?.trip_type ?? "");
+    if (tt === "cargo") return "cargo";
+    if (tt === "business") return "business";
+    return "passenger";
+});
 
 const waitingCount = computed(
     () => props.rows.filter((r) => !checkedLocal.value[r.passengerKey]).length,
@@ -953,9 +1478,18 @@ function toggleExpand(key: string) {
     rowExpanded.value = rowExpanded.value === key ? null : key;
 }
 
-function maybeToggleExpand(row: PassengerRow) {
-    if (editingKey.value) return;
+function onRowContentClick(row: PassengerRow) {
+    if (listBusy.value) return;
+    if (editingKey.value === row.passengerKey) return;
+    if (row.editable && row.editMeta) {
+        startEdit(row);
+        return;
+    }
     toggleExpand(row.passengerKey);
+}
+
+function onRowBackgroundClick(row: PassengerRow) {
+    onRowContentClick(row);
 }
 
 function checkTimeLabel(key: string) {
@@ -998,6 +1532,7 @@ watch(
 
 function startEdit(row: PassengerRow) {
     if (!row.editFields || !row.editMeta) return;
+    rowExpanded.value = null;
     editingKey.value = row.passengerKey;
     editDraft.value = { ...row.editFields };
 }
@@ -1073,12 +1608,41 @@ async function onBulkDelete() {
     });
 }
 
-function onAddRow() {
+function openAddModal() {
+    if (listKind.value === "cargo")
+        addForm.value = { ...emptyCargoRow() };
+    else if (listKind.value === "business")
+        addForm.value = { ...emptyBusinessRow() };
+    else addForm.value = { ...emptyPassengerRow() };
+    addModalOpen.value = true;
+}
+
+function closeAddModal() {
+    if (listBusy.value) return;
+    addModalOpen.value = false;
+}
+
+function submitAddModal() {
+    const draft = { ...addForm.value };
+    let filled = false;
+    if (listKind.value === "cargo") filled = isCargoRowFilled(draft as never);
+    else if (listKind.value === "business")
+        filled = isBusinessRowFilled(draft as never);
+    else filled = isPassengerRowFilled(draft as never);
+    if (!filled) {
+        showAppError(t("trip_detail.passengers.validation_need_one"));
+        return;
+    }
     listBusy.value = true;
-    emit("passenger-list-add", {
+    emit("passenger-list-add-submit", {
+        kind: listKind.value,
+        draft,
         resolve(ok) {
             listBusy.value = false;
-            if (ok) page.value = 1;
+            if (ok) {
+                addModalOpen.value = false;
+                page.value = 1;
+            }
         },
     });
 }
@@ -1162,3 +1726,9 @@ async function onToggleCheck(row: PassengerRow) {
     if (res.data) emit("trip-updated", res.data);
 }
 </script>
+
+<style scoped>
+.inp {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-500/25 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100;
+}
+</style>
