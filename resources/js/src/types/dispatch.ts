@@ -1,5 +1,7 @@
 export interface ResourceItem {
   id: string | number
+  /** Đồng bộ id số cho select / payload (optional, mặc định dùng id). */
+  value?: string | number
   label: string
   sublabel?: string
   /** undefined/true = có thể chọn; false = bận / không chọn */

@@ -1,6 +1,7 @@
 import { type Ref, ref, unref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { listDrivers, listTransportProviders, listVehicles } from '../api/operational'
+import { listTransportProviders, listVehicles } from '../api/operational'
+import { fetchDriversCatalog } from '../composables/useOperationalDriversCatalog'
 import type {
   ResourceDispatchPayload,
   ResourceItem,
@@ -36,13 +37,16 @@ function toResourceVehicle(v: Record<string, unknown>, busy: Set<number>): Resou
 
 function toResourceDriver(d: Record<string, unknown>, busy: Set<number>): ResourceItem {
   const id = d.id as number
+  const numId = Number(id)
+  const safeId = Number.isFinite(numId) ? numId : id
   const name = String(d.full_name ?? '')
   const phone = d.phone != null ? String(d.phone) : ''
   return {
     id,
+    value: safeId,
     label: name,
     sublabel: phone || undefined,
-    available: !busy.has(id),
+    available: !busy.has(Number(id)),
   }
 }
 
@@ -89,7 +93,9 @@ export function useResourceSelector(
     vendors: [],
   })
 
-  async function fetchOptions() {
+  let fetchOptionsToken = 0
+
+  async function fetchOptions(force = false) {
     const tid = unref(tripId)
     if (tid == null || tid === '') {
       internalVehicleOptions.value = []
@@ -98,20 +104,22 @@ export function useResourceSelector(
       vendorOptions.value = []
       return
     }
+    const token = ++fetchOptionsToken
     isLoading.value = true
     try {
       const bv = busyVehicleIds.value
       const bd = busyDriverIds.value
-      const [vr, dr, pr] = await Promise.all([
+      const [vr, dItems, pr] = await Promise.all([
         listVehicles({ status: 'ready', per_page: 150 }),
-        listDrivers({ employment_status: 'active', availability_status: 'available', per_page: 150 }),
+        fetchDriversCatalog(force),
         listTransportProviders({ is_active: true, per_page: 200 }),
       ])
+      if (token !== fetchOptionsToken) return
       const vItems = (vr?.items ?? []) as Record<string, unknown>[]
-      const dItems = (dr?.items ?? []) as Record<string, unknown>[]
+      const dList = (dItems ?? []) as Record<string, unknown>[]
       const pItems = (pr?.items ?? []) as Record<string, unknown>[]
       internalVehicleOptions.value = vItems.map((v) => toResourceVehicle(v, bv))
-      internalDriverOptions.value = dItems.map((d) => toResourceDriver(d, bd))
+      internalDriverOptions.value = dList.map((d) => toResourceDriver(d, bd))
       const taxis: ResourceItem[] = []
       const vendors: ResourceItem[] = []
       for (const p of pItems) {
@@ -282,7 +290,9 @@ export function useResourceSelector(
     }
 
     const vehicleId = hasV ? Number(intV[0].id) : null
-    const driverId = hasD ? Number(intD[0].id) : null
+    const drv = intD[0]
+    const rawDriverId = drv ? (drv.value ?? drv.id) : null
+    const driverId = hasD ? Number(rawDriverId) : null
     const safeVehicleId = Number.isFinite(vehicleId) ? vehicleId : null
     const safeDriverId = Number.isFinite(driverId) ? driverId : null
 
@@ -370,7 +380,7 @@ export function useResourceSelector(
       const found = internalDriverOptions.value.find((x) => Number(x.id) === Number(did))
       if (found) selected.value.internalDrivers = [found]
       else {
-        selected.value.internalDrivers = [{ id: did, label: `#${did}`, available: true }]
+        selected.value.internalDrivers = [{ id: did, value: Number(did), label: `#${did}`, available: true }]
       }
     }
 

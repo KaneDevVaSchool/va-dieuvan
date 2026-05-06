@@ -443,7 +443,7 @@ watch(
     if (!snap?.tripId) return
     hydratingFromSnapshot.value = true
     try {
-      await fetchOptions()
+      await fetchOptions(true)
       applyHydration({
         vehicleId: snap.vehicleId,
         driverId: snap.driverId,
@@ -480,7 +480,7 @@ function validate() {
 }
 
 async function refreshOptions() {
-  await fetchOptions()
+  await fetchOptions(true)
 }
 
 function pickProvider(providerId, kind) {

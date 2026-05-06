@@ -298,7 +298,7 @@
                         :trip-snapshot="tripSnapshot"
                         :can-quick-create-vendor="canQuickCreateProvider"
                         :hide-internal-vehicle-section="showInternalVehicleCard"
-                        :hide-internal-driver-section="showInternalDriverCard"
+                        :hide-internal-driver-section="coordinationActionsLocked"
                         :disabled="coordinationActionsLocked"
                         :collapse-persist-prefix="
                             collapseStorageKey('rp') ?? ''

@@ -16,6 +16,7 @@ use App\Models\DispatchRequest;
 use App\Models\Trip;
 use App\Services\Auditing\AuditLogger;
 use App\Services\Dispatching\DispatchingService;
+use App\Services\Trips\TripNamedPassengerSyncService;
 use App\Support\FinancialDataLock;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
@@ -194,6 +195,7 @@ class TripController extends Controller
             'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
+            'tripPassengers' => fn ($q) => $q->orderBy('id'),
         ]);
 
         if ($trip->relationLoaded('dispatchRequest') && $trip->dispatchRequest) {
@@ -252,6 +254,68 @@ class TripController extends Controller
 
         $data = $request->validated();
         $type = (string) $dr->trip_type;
+
+        if (array_key_exists('passengers', $data)) {
+            if (! in_array($type, ['door_to_door', 'point_to_point'], true)) {
+                abort(422, 'Loại chuyến không hỗ trợ danh sách hành khách dạng passengers.');
+            }
+
+            $beforeSnap = is_array($dr->wizard_snapshot) ? $dr->wizard_snapshot : null;
+            $beforePassengerCount = $dr->passenger_count;
+            $beforeNamedCount = $trip->tripPassengers()->count();
+
+            /** @var array<int, array{name: string, phone?: ?string, note?: ?string}> $passengers */
+            $passengers = $data['passengers'];
+
+            app(TripNamedPassengerSyncService::class)->replace(
+                $trip,
+                $dr,
+                (int) $data['passenger_count'],
+                $passengers,
+            );
+
+            $trip->refresh();
+            $trip->loadMissing('dispatchRequest');
+            $dr = $trip->dispatchRequest;
+
+            app(AuditLogger::class)->log(
+                actorId: $request->user()->id,
+                event: 'dispatch_request.passenger_list_update',
+                auditable: $dr,
+                before: [
+                    'trip_id' => $trip->id,
+                    'wizard_snapshot' => $beforeSnap,
+                    'passenger_count' => $beforePassengerCount,
+                    'trip_passengers_count' => $beforeNamedCount,
+                ],
+                after: [
+                    'trip_id' => $trip->id,
+                    'wizard_snapshot' => $dr->wizard_snapshot,
+                    'passenger_count' => $dr->passenger_count,
+                    'trip_passengers_count' => $trip->tripPassengers()->count(),
+                ],
+            );
+
+            $trip->load([
+                'dispatcher:id,name,email,employee_code',
+                'vehicle:id,license_plate,status,type,seat_count',
+                'driver:id,full_name,phone',
+                'transportProvider:id,name',
+                'record:id,trip_id,distance_km',
+                'dispatchRequest',
+                'dispatchRequest.requester:id,name,phone,email,employee_code,avatar_url',
+                'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
+                'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
+                'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
+                'tripPassengers' => fn ($q) => $q->orderBy('id'),
+            ]);
+
+            if ($trip->relationLoaded('dispatchRequest') && $trip->dispatchRequest) {
+                $trip->dispatchRequest->makeVisible(['wizard_snapshot']);
+            }
+
+            return $this->ok($trip);
+        }
 
         $passengerIn = $data['passenger_rows'] ?? null;
         $businessIn = $data['business_rows'] ?? null;
@@ -328,6 +392,7 @@ class TripController extends Controller
             'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
+            'tripPassengers' => fn ($q) => $q->orderBy('id'),
         ]);
 
         if ($trip->relationLoaded('dispatchRequest') && $trip->dispatchRequest) {
@@ -557,6 +622,7 @@ class TripController extends Controller
             'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
+            'tripPassengers' => fn ($q) => $q->orderBy('id'),
         ]);
 
         if ($fresh->relationLoaded('dispatchRequest') && $fresh->dispatchRequest) {
@@ -591,6 +657,7 @@ class TripController extends Controller
             'dispatchRequest.attachments' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'costs' => fn ($q) => $q->orderByDesc('id')->limit(50),
             'events' => fn ($q) => $q->orderByDesc('id')->limit(50)->with('creator:id,name'),
+            'tripPassengers' => fn ($q) => $q->orderBy('id'),
         ]);
 
         if ($fresh->relationLoaded('dispatchRequest') && $fresh->dispatchRequest) {

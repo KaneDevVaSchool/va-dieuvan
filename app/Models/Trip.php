@@ -82,6 +82,11 @@ class Trip extends Model
         return $this->hasMany(TripCost::class);
     }
 
+    public function tripPassengers(): HasMany
+    {
+        return $this->hasMany(TripPassenger::class)->orderBy('id');
+    }
+
     public function events(): HasMany
     {
         return $this->hasMany(TripEvent::class);

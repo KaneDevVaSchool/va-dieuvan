@@ -1770,7 +1770,19 @@
             "m_delivery_at": "Delivery time",
             "m_delivery_place": "Delivery location",
             "m_transport_note": "Transport note",
-            "m_cost": "Cost"
+            "m_cost": "Cost",
+            "named_section_aria": "Named passenger list",
+            "named_section_title": "Passenger list",
+            "named_save": "Save list",
+            "named_count_label": "Passenger count",
+            "named_row_label": "Passenger {n}",
+            "named_field_name": "Full name",
+            "named_field_phone": "Phone",
+            "named_field_note": "Note",
+            "named_save_ok": "Passenger list saved.",
+            "named_count_mismatch": "Passenger count must match the number of rows.",
+            "named_invalid_count": "Invalid passenger count (1–50).",
+            "named_name_required": "Enter full name for passenger {n}."
         },
         "costs_block": {
             "title": "Trip costs",

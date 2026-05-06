@@ -1630,7 +1630,19 @@
             "m_delivery_at": "Thời gian giao hàng",
             "m_delivery_place": "Nơi giao hàng",
             "m_transport_note": "Ghi chú vận chuyển",
-            "m_cost": "Chi phí"
+            "m_cost": "Chi phí",
+            "named_section_aria": "Danh sách hành khách có họ tên và liên hệ",
+            "named_section_title": "Danh sách hành khách",
+            "named_save": "Lưu danh sách",
+            "named_count_label": "Số khách",
+            "named_row_label": "Hành khách {n}",
+            "named_field_name": "Họ tên",
+            "named_field_phone": "Số điện thoại",
+            "named_field_note": "Ghi chú",
+            "named_save_ok": "Đã lưu danh sách hành khách.",
+            "named_count_mismatch": "Số khách phải khớp với số hành khách đã nhập.",
+            "named_invalid_count": "Số khách không hợp lệ (1–50).",
+            "named_name_required": "Vui lòng nhập họ tên cho hành khách {n}."
         },
         "costs_block": {
             "title": "Chi phí phát sinh",

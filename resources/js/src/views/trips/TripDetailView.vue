@@ -459,12 +459,23 @@
                         </section>
                     </div>
                     <div class="min-w-0 space-y-4 xl:col-span-12">
+                        <TripNamedPassengersEditor
+                            v-if="showNamedPassengersEditor"
+                            v-model:passenger-count="namedPassengerCount"
+                            v-model:passengers="namedPassengers"
+                            :saving="namedPassengersSaving"
+                            @save="submitNamedPassengerList"
+                        />
+
                         <PassengerCheckIn
                             :trip-id="trip.id"
                             :trip="trip"
                             :rows="passengerRowsDisplay"
                             :can-check-in="canPassengerCheckIn"
-                            :can-edit-list="canEditPassengerList"
+                            :can-edit-list="
+                                canEditPassengerList &&
+                                !isSimplePassengerTripType
+                            "
                             :special-summary="specialNeedsSummary"
                             @trip-updated="applyTripPayload"
                             @passenger-list-save="onPassengerListSave"
@@ -756,6 +767,7 @@ import Select from "../../components/ui/Select.vue";
 import CostTracker from "../../components/trips/CostTracker.vue";
 import StatusActions from "../../components/trips/StatusActions.vue";
 import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
+import TripNamedPassengersEditor from "../../components/trips/TripNamedPassengersEditor.vue";
 import StickyTripHeader from "../../components/trips/StickyTripHeader.vue";
 import TripTimeline from "../../components/trips/TripTimeline.vue";
 import TripInfoCard from "../../components/trips/TripInfoCard.vue";
@@ -772,7 +784,6 @@ import {
 import {
     listVehicles,
     createTransportProvider,
-    listDrivers,
     getVehicleScheduleConflicts,
 } from "../../api/operational";
 import { uploadAttachment, deleteAttachment } from "../../api/attachments";
@@ -794,6 +805,8 @@ import {
 import { useAuthStore } from "../../store";
 import { buildStaffPrefixedPath as staffPath } from "../../config/dispatchWebBase";
 import { confirmAction } from "../../composables/useConfirm";
+import { fetchDriversCatalog } from "../../composables/useOperationalDriversCatalog";
+import { useTripNamedPassengersForm } from "../../composables/useTripNamedPassengersForm";
 import { showAppSuccess, showAppError } from "../../composables/appMessage";
 import { useTripDetail } from "../../composables/useTripDetail";
 
@@ -956,6 +969,30 @@ const canEditPassengerList = computed(() => {
         trip.value?.dispatch_request?.id != null &&
         (trip.value?.payment_status ?? "unpaid") !== "paid"
     );
+});
+
+const isSimplePassengerTripType = computed(() => {
+    const tt = trip.value?.dispatch_request?.trip_type;
+    return tt === "door_to_door" || tt === "point_to_point";
+});
+
+const showNamedPassengersEditor = computed(
+    () => canEditPassengerList.value && isSimplePassengerTripType.value,
+);
+
+const {
+    passengerCount: namedPassengerCount,
+    passengers: namedPassengers,
+    saving: namedPassengersSaving,
+    submitNamedPassengerList,
+} = useTripNamedPassengersForm({
+    tripRef: trip,
+    updateTripPassengerList,
+    load,
+    showAppError,
+    showAppSuccess,
+    formatApiMessage,
+    t,
 });
 
 const canPassengerCheckIn = computed(() => {
@@ -1378,6 +1415,48 @@ const passengerRowsDisplay = computed(() => {
 
     const tripType = dr.trip_type;
     const rows = [];
+
+    /** @type {Array<Record<string, unknown>> | undefined} */
+    const tplist = trip.value?.trip_passengers;
+    if (
+        (tripType === "door_to_door" || tripType === "point_to_point") &&
+        Array.isArray(tplist) &&
+        tplist.length > 0
+    ) {
+        let ti = 0;
+        for (const tp of tplist) {
+            ti += 1;
+            const nameRaw = String(tp.name ?? "").trim();
+            const name =
+                nameRaw || t("trip_detail.passengers.guest", { n: ti });
+            const phone = String(tp.phone ?? "").trim();
+            const note = String(tp.note ?? "").trim();
+            const kind = inferRoleKind(tripType);
+            rows.push({
+                name,
+                roleKind: kind,
+                roleLabel:
+                    kind === "student"
+                        ? t("trip_detail.passengers.role_student")
+                        : kind === "staff"
+                          ? t("trip_detail.passengers.role_staff")
+                          : t("trip_detail.passengers.role_guest"),
+                contact: phone,
+                notes: note,
+                pickupAddress: "",
+                flagWheelchair: /xe lăn|wheelchair/i.test(note),
+                flagAllergy:
+                    /dị ứng|allergy|đậu phộng|peanut/i.test(note),
+                editMeta: null,
+                editable: false,
+                editFields: null,
+            });
+        }
+        return rows.map((r, i) => ({
+            ...r,
+            passengerKey: `tp_${tplist[i].id}`,
+        }));
+    }
 
     if (tripType === "cargo" && s?.cargoRows?.length) {
         let i = 0;
@@ -2175,19 +2254,17 @@ async function onAttachmentFile(ev) {
     }
 }
 
-async function loadResources() {
+async function loadResources(opts = {}) {
+    const bustDrivers = opts.bustDrivers === true;
     resourceHint.value = "";
     try {
-        const [vr, dr] = await Promise.all([
+        const silent = opts.silent === true;
+        const [vr, drItems] = await Promise.all([
             listVehicles({ status: "ready", per_page: 150 }),
-            listDrivers({
-                employment_status: "active",
-                availability_status: "available",
-                per_page: 150,
-            }),
+            fetchDriversCatalog(bustDrivers || !silent),
         ]);
         vehicles.value = vr.items ?? [];
-        driversList.value = dr.items ?? [];
+        driversList.value = drItems ?? [];
     } catch {
         resourceHint.value = t("trip_detail.ops.messages.vehicles_load_failed");
         vehicles.value = [];
@@ -2212,7 +2289,7 @@ async function load(opts = {}) {
             trip.value.depart_at,
         );
         coordinationNotes.value = "";
-        await loadResources();
+        await loadResources({ silent });
         if (!silent) loadError.value = "";
     } catch (e) {
         const msg = e?.response?.data?.message ?? t("trip_detail.load_error");
