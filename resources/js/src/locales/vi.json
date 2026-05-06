@@ -102,7 +102,14 @@
         "btn_view": "Xem chi tiết",
         "line_route": "Tuyến",
         "load_error": "Không tải được dữ liệu. Thử lại sau.",
-        "empty_trips": "Không có chuyến sắp tới."
+        "empty_trips": "Không có chuyến sắp tới.",
+        "status_running": "Đang chạy",
+        "status_idle": "Sẵn sàng",
+        "current_trip": "Chuyến hiện tại",
+        "no_current_trip": "Chưa có chuyến sắp tới",
+        "btn_arrived": "Đã đến điểm đón",
+        "float_maps": "Chỉ đường",
+        "float_call": "Gọi điều phối"
     },
     "driver_schedule": {
         "title": "Lịch hôm nay",
