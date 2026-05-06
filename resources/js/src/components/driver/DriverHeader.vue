@@ -1,6 +1,6 @@
 <template>
   <div
-    class="-mx-3 rounded-b-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 px-4 pb-5 text-white shadow-lg sm:-mx-4 sm:px-5"
+    class="-mx-3 rounded-b-2xl bg-gradient-to-br from-[#78001e] via-[#78001e] to-[#5a0016] px-4 pb-5 text-white shadow-lg sm:-mx-4 sm:px-5"
     :style="{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }"
   >
     <div class="flex items-start justify-between gap-3">

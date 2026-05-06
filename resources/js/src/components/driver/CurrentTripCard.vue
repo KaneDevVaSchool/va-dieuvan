@@ -7,7 +7,7 @@
   <!-- Hero trip card -->
   <div
     v-else-if="trip"
-    class="overflow-hidden rounded-2xl bg-slate-900 text-white shadow-lg"
+    class="overflow-hidden rounded-2xl bg-[#78001e] text-white shadow-lg"
   >
     <!-- Header row: status + time -->
     <div class="flex items-center justify-between gap-2 px-4 pt-4">
@@ -90,13 +90,18 @@
   <!-- Empty state -->
   <div
     v-else
-    class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/80 py-12 text-center dark:border-slate-700 dark:bg-slate-900/40"
+    class="flex flex-col items-center justify-center rounded-2xl bg-[#78001e]/8 px-6 py-10 text-center border border-[#78001e]/20 dark:bg-[#78001e]/10 dark:border-[#78001e]/30"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="h-16 w-16 text-slate-300 dark:text-slate-600">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-    </svg>
-    <p class="mt-3 text-base font-semibold text-slate-500 dark:text-slate-400">
+    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#78001e]/15 dark:bg-[#78001e]/20">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.4" stroke="currentColor" class="h-9 w-9 text-[#78001e] dark:text-rose-400">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+      </svg>
+    </div>
+    <p class="mt-3 text-base font-semibold text-slate-700 dark:text-slate-200">
       {{ t('driver_home.no_current_trip') }}
+    </p>
+    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      Hệ thống sẽ thông báo khi có chuyến mới
     </p>
   </div>
 </template>
