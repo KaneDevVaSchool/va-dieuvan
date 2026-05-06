@@ -10,7 +10,8 @@
         "open": "Open",
         "mark_read": "Mark as read",
         "mark_all": "Mark all read",
-        "fallback": "You have a new notification"
+        "fallback": "You have a new notification",
+        "unread_line": "{n} unread"
     },
     "nav": {
         "section_ops": "Dispatch",

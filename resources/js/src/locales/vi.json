@@ -10,7 +10,8 @@
         "open": "Mở",
         "mark_read": "Đánh dấu đã đọc",
         "mark_all": "Đọc tất cả",
-        "fallback": "Bạn có thông báo mới"
+        "fallback": "Bạn có thông báo mới",
+        "unread_line": "{n} chưa đọc"
     },
     "nav": {
         "section_ops": "Điều vận",
