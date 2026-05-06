@@ -478,42 +478,6 @@
                                         passengersEditDraft
                                     "
                                 >
-                                    <div
-                                        class="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2"
-                                    >
-                                        <button
-                                            type="button"
-                                            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                                            @click="addPassengerListRow"
-                                        >
-                                            {{
-                                                t(
-                                                    "trip_detail.passengers.add_row",
-                                                )
-                                            }}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                                            @click="cancelPassengersEdit"
-                                        >
-                                            {{
-                                                t(
-                                                    "trip_detail.passengers.cancel_edit",
-                                                )
-                                            }}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
-                                            :disabled="passengersSaving"
-                                            @click="submitPassengersEdit"
-                                        >
-                                            {{
-                                                t("trip_detail.passengers.save")
-                                            }}
-                                        </button>
-                                    </div>
                                     <!-- D2D / P2P -->
                                     <table
                                         v-if="
@@ -571,19 +535,21 @@
                                                             row.person_in_charge
                                                         "
                                                         type="text"
+                                                        :placeholder="t('trip_detail.passengers.ph_name')"
                                                         :class="
                                                             paxEditInputClass
                                                         "
                                                     />
                                                 </td>
-                                                <td class="px-3 py-2 align-top">
+                                                <td class="w-20 px-3 py-2 align-top">
                                                     <input
                                                         v-model="row.guests"
                                                         type="number"
                                                         min="1"
                                                         step="1"
+                                                        :placeholder="t('trip_detail.passengers.ph_guests')"
                                                         :class="
-                                                            paxEditInputClass
+                                                            paxNumInputClass
                                                         "
                                                     />
                                                 </td>
@@ -591,6 +557,7 @@
                                                     <input
                                                         v-model="row.notes"
                                                         type="text"
+                                                        :placeholder="t('trip_detail.passengers.ph_notes')"
                                                         :class="
                                                             paxEditInputClass
                                                         "
@@ -666,14 +633,15 @@
                                                 ) in passengersEditDraft.businessRows"
                                                 :key="'be-' + idx"
                                             >
-                                                <td class="px-3 py-2 align-top">
+                                                <td class="w-24 px-3 py-2 align-top">
                                                     <input
                                                         v-model="row.guests"
                                                         type="number"
                                                         min="1"
                                                         step="1"
+                                                        :placeholder="t('trip_detail.passengers.ph_guests')"
                                                         :class="
-                                                            paxEditInputClass
+                                                            paxNumInputClass
                                                         "
                                                     />
                                                 </td>
@@ -681,6 +649,7 @@
                                                     <input
                                                         v-model="row.notes"
                                                         type="text"
+                                                        :placeholder="t('trip_detail.passengers.ph_notes')"
                                                         :class="
                                                             paxEditInputClass
                                                         "
@@ -775,19 +744,21 @@
                                                     <input
                                                         v-model="row.name"
                                                         type="text"
+                                                        :placeholder="t('trip_detail.passengers.ph_cargo_name')"
                                                         :class="
                                                             paxEditInputClass
                                                         "
                                                     />
                                                 </td>
-                                                <td class="px-3 py-2 align-top">
+                                                <td class="w-20 px-3 py-2 align-top">
                                                     <input
                                                         v-model="row.qty"
                                                         type="number"
                                                         min="1"
                                                         step="1"
+                                                        :placeholder="t('trip_detail.passengers.ph_qty')"
                                                         :class="
-                                                            paxEditInputClass
+                                                            paxNumInputClass
                                                         "
                                                     />
                                                 </td>
@@ -795,6 +766,7 @@
                                                     <input
                                                         v-model="row.item_notes"
                                                         type="text"
+                                                        :placeholder="t('trip_detail.passengers.ph_notes')"
                                                         :class="
                                                             paxEditInputClass
                                                         "
@@ -862,6 +834,35 @@
                                             </tr>
                                         </tbody>
                                     </table>
+                                    <div
+                                        class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700/80 dark:bg-slate-900/50"
+                                    >
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                            @click="addPassengerListRow"
+                                        >
+                                            <span class="text-[10px] font-bold leading-none" aria-hidden="true">+</span>
+                                            {{ t("trip_detail.passengers.add_row") }}
+                                        </button>
+                                        <div class="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                                @click="cancelPassengersEdit"
+                                            >
+                                                {{ t("trip_detail.passengers.cancel_edit") }}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
+                                                :disabled="passengersSaving"
+                                                @click="submitPassengersEdit"
+                                            >
+                                                {{ t("trip_detail.passengers.save") }}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </template>
                             </template>
                         </PassengerCheckIn>
@@ -964,7 +965,7 @@
                                 class="hidden gap-6 p-5 xl:grid xl:grid-cols-2"
                             >
                                 <div
-                                    class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/60 p-4 dark:border-slate-700/90 dark:bg-slate-900/35"
+                                    class="min-w-0 border-r border-slate-100 p-4 dark:border-slate-700/60"
                                 >
                                     <StatusActions
                                         embedded
@@ -982,7 +983,7 @@
                                     />
                                 </div>
                                 <div
-                                    class="min-w-0 rounded-xl border border-slate-100 bg-slate-50/60 p-4 dark:border-slate-700/90 dark:bg-slate-900/35"
+                                    class="min-w-0 p-4"
                                 >
                                     <CostTracker
                                         embedded
@@ -1354,7 +1355,10 @@ const canPassengerCheckIn = computed(() => {
 });
 
 const paxEditInputClass =
-    "w-full min-w-[6rem] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400/30 dark:border-slate-600 dark:bg-slate-900 dark:text-white";
+    "w-full min-w-[5rem] rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-sm text-slate-900 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900";
+
+const paxNumInputClass =
+    "w-full rounded-xl bg-slate-100/90 px-2 py-1.5 text-center text-sm tabular-nums text-slate-900 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900";
 
 function startPassengersEdit() {
     passengersEditMsg.value = "";

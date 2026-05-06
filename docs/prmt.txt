@@ -1,4 +1,5 @@
 Apply:
+.curso
 - @core.mdc
 - @vue.mdc
 - @ui.mdc

@@ -1683,6 +1683,11 @@
             "col_qty": "Qty",
             "col_contact": "Contact",
             "col_notes": "Notes",
+            "ph_name": "Full name",
+            "ph_guests": "1",
+            "ph_notes": "Optional notes…",
+            "ph_cargo_name": "Item name",
+            "ph_qty": "1",
             "ph_pickup_contact": "Pickup contact",
             "ph_delivery_contact": "Delivery contact",
             "empty": "No passenger rows from the submitted form.",
@@ -2036,6 +2041,7 @@
             "pick": "Pick",
             "note": "Note",
             "note_ph": "Reason / handoff…",
+            "note_hint": "Optional – helps driver and dispatcher.",
             "update": "Update"
         },
         "costs": {
@@ -2286,5 +2292,8 @@
         "install_hint": "Launch like an app; data is cached when online.",
         "install_cta": "Install",
         "install_later": "Not now"
+    },
+    "common": {
+        "processing": "Processing…"
     }
 }

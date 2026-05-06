@@ -1543,6 +1543,11 @@
             "col_qty": "SL",
             "col_contact": "Liên hệ",
             "col_notes": "Ghi chú",
+            "ph_name": "Họ và tên",
+            "ph_guests": "1",
+            "ph_notes": "Ghi chú tuỳ chọn…",
+            "ph_cargo_name": "Tên mặt hàng",
+            "ph_qty": "1",
             "ph_pickup_contact": "Liên hệ lấy hàng",
             "ph_delivery_contact": "Liên hệ giao hàng",
             "empty": "Chưa có danh sách chi tiết từ biểu mẫu.",
@@ -1909,6 +1914,7 @@
             "pick": "Chọn",
             "note": "Ghi chú",
             "note_ph": "Lý do / bàn giao…",
+            "note_hint": "Tùy chọn – hỗ trợ tài xế và điều phối viên.",
             "update": "Cập nhật"
         },
         "costs": {
@@ -2370,5 +2376,8 @@
         "install_hint": "Mở nhanh như app; dữ liệu được cache khi có mạng.",
         "install_cta": "Cài đặt",
         "install_later": "Để sau"
+    },
+    "common": {
+        "processing": "Đang xử lý…"
     }
 }
