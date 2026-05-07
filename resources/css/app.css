@@ -35,9 +35,11 @@
   }
 }
 
-/* Smooth defaults */
-html, body {
+/* Smooth defaults — nền tối khớp app tài xế / PWA, tránh flash trắng khi cuộn hoặc vùng system UI */
+html,
+body {
   height: 100%;
+  background-color: #020b0b;
 }
 
 /* Splash PWA — ẩn sau khi Vue mount (main.js) */

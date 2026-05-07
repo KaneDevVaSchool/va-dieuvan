@@ -20,8 +20,8 @@ export default defineConfig({
                 short_name: 'Điều Vận',
                 description:
                     'Điều vận VAS — mở nhanh, làm việc mọi lúc.',
-                theme_color: '#8B1A1A',
-                background_color: '#8B1A1A',
+                theme_color: '#020B0B',
+                background_color: '#020B0B',
                 display: 'standalone',
                 orientation: 'portrait',
                 start_url: '/',

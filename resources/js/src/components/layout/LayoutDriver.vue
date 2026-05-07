@@ -1,6 +1,6 @@
 <template>
   <div
-    class="driver-pwa-shell flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#070f0d] text-[#eaf8f5] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]"
+    class="driver-pwa-shell flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#020B0B] text-[#eaf8f5] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]"
   >
     <main
       id="app-main-scroll"
