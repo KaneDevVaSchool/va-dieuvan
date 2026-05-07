@@ -1,33 +1,30 @@
 <template>
-  <section>
-    <!-- Loading -->
+  <section class="rounded-3xl border border-slate-700/60 bg-[#111827] p-4 shadow-lg shadow-black/20 ring-1 ring-white/5">
     <div v-if="loading" class="grid grid-cols-4 gap-3">
       <div v-for="n in 4" :key="n" class="flex flex-col items-center gap-2">
-        <div class="h-14 w-14 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-        <div class="h-4 w-8 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-        <div class="h-3 w-10 animate-pulse rounded bg-slate-100 dark:bg-slate-700" />
+        <div class="h-14 w-14 animate-pulse rounded-full bg-slate-700/50" />
+        <div class="h-4 w-8 animate-pulse rounded bg-slate-700/50" />
+        <div class="h-3 w-10 animate-pulse rounded bg-slate-700/40" />
       </div>
     </div>
 
-    <!-- Pills -->
     <div v-else class="grid grid-cols-4 gap-2">
       <button
         v-for="card in cards"
         :key="card.key"
         type="button"
-        class="flex flex-col items-center gap-1.5 active:scale-95 transition-transform duration-150"
+        class="flex min-h-[44px] flex-col items-center gap-1.5 rounded-xl py-1 transition-transform duration-150 active:scale-95"
       >
         <div
-          class="flex h-14 w-14 items-center justify-center rounded-full"
+          class="flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full"
           :class="card.circleCls"
-          :style="card.circleStyle"
           aria-hidden="true"
           v-html="card.iconSvg"
         />
-        <span class="text-xl font-bold tabular-nums leading-none text-slate-900 dark:text-white">
+        <span class="text-xl font-bold tabular-nums leading-none text-white">
           {{ card.value }}
         </span>
-        <span class="text-[10px] font-medium leading-tight text-center text-slate-500 dark:text-slate-400 px-0.5">
+        <span class="px-0.5 text-center text-[10px] font-medium leading-tight text-slate-400">
           {{ card.label }}
         </span>
       </button>
@@ -62,29 +59,28 @@ const cards = computed(() => [
     value: props.stats?.completed ?? 0,
     label: t('driver_home.stats_completed'),
     iconSvg: ICONS.completed,
-    circleCls: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300',
+    circleCls: 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/35',
   },
   {
     key: 'inProgress',
     value: props.stats?.inProgress ?? 0,
     label: t('driver_home.stats_in_progress'),
     iconSvg: ICONS.inProgress,
-    circleCls: 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300',
+    circleCls: 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30',
   },
   {
     key: 'pending',
     value: props.stats?.pending ?? 0,
     label: t('driver_home.stats_pending_confirm'),
     iconSvg: ICONS.pending,
-    circleCls: '',
-    circleStyle: 'background-color: rgba(154,0,54,0.12); color: #9A0036',
+    circleCls: 'bg-[#9A0036]/20 text-[#F47294] ring-1 ring-[#9A0036]/35',
   },
   {
     key: 'cancelled',
     value: props.stats?.cancelled ?? 0,
     label: t('driver_home.stats_cancelled'),
     iconSvg: ICONS.cancelled,
-    circleCls: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+    circleCls: 'bg-slate-700 text-slate-300 ring-1 ring-slate-600/80',
   },
 ])
 </script>

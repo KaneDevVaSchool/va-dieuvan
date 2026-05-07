@@ -1,57 +1,51 @@
 <template>
-  <div class="max-w-lg mx-auto w-full pb-28 sm:max-w-2xl">
-    <!-- Header -->
-    <DriverHeader
-      :user="user"
-      :avatarUrl="avatarUrl"
-      :initials="initials"
-    />
-
-    <div class="space-y-6">
-      <!-- Error banner -->
-      <p
-        v-if="errorMsg"
-        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
-      >
-        {{ errorMsg }}
-      </p>
-
-      <!-- Chuyến chờ xác nhận -->
-      <PendingConfirmationBanner
-        v-if="!loading && pendingTrips.length"
-        :trips="pendingTrips"
-        @updated="refreshTrips"
+  <div
+    class="min-h-screen w-full overflow-x-hidden bg-[#0F172A] text-white pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]"
+  >
+    <div class="mx-auto w-full max-w-lg px-4 sm:max-w-2xl sm:px-5">
+      <DriverHeader
+        :user="user"
+        :avatarUrl="avatarUrl"
+        :initials="initials"
       />
 
-      <!-- 4 stat pills -->
-      <DriverStatsGrid :stats="stats" :loading="loading" />
+      <div class="space-y-5">
+        <p
+          v-if="errorMsg"
+          class="rounded-2xl border border-amber-700/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-600/30"
+        >
+          {{ errorMsg }}
+        </p>
 
-      <!-- Divider -->
-      <div class="border-t border-slate-100 dark:border-slate-800" />
+        <PendingConfirmationBanner
+          v-if="myDriverId != null && (loading || pendingTrips.length)"
+          :trips="pendingTrips"
+          :loading="loading"
+          @updated="refreshTrips"
+        />
 
-      <!-- Mini week calendar -->
-      <DriverWeekCalendar :raw-trips="rawTrips" :loading="loading" />
+        <DriverStatsGrid :stats="stats" :loading="loading" />
 
-      <!-- Divider -->
-      <div class="border-t border-slate-100 dark:border-slate-800" />
+        <div class="border-t border-slate-700/60" />
 
-      <!-- Analytics -->
-      <DriverAnalyticsSection :raw-trips="rawTrips" :loading="loading" />
-    </div>
+        <DriverWeekCalendar :raw-trips="rawTrips" :loading="loading" />
+      </div>
 
-    <!-- Floating call button -->
-    <div class="pointer-events-none fixed bottom-24 right-4 z-30 flex flex-col items-end gap-3">
-      <a
-        v-if="dispatcherPhone"
-        :href="`tel:${dispatcherPhone}`"
-        class="pointer-events-auto flex items-center gap-2 rounded-2xl px-4 text-white shadow-lg active:scale-95"
-        style="min-height: 48px; background-color: #9A0036;"
+      <!-- Sticky-ish FAB zone + safe area above tab bar -->
+      <div
+        class="pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-30 flex max-w-[100vw] flex-col items-end gap-3 pr-[env(safe-area-inset-right)]"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0">
-          <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 16.352V17.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5z" clip-rule="evenodd" />
-        </svg>
-        <span class="text-sm font-semibold">{{ t('driver_home.float_call') }}</span>
-      </a>
+        <a
+          v-if="dispatcherPhone"
+          :href="`tel:${dispatcherPhone}`"
+          class="pointer-events-auto flex min-h-[48px] min-w-[44px] items-center gap-2 rounded-2xl bg-[#9A0036] px-4 text-white shadow-xl shadow-black/40 ring-1 ring-white/10 transition hover:bg-[#850030] active:scale-[0.98]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0" aria-hidden="true">
+            <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 16.352V17.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5z" clip-rule="evenodd" />
+          </svg>
+          <span class="text-sm font-semibold">{{ t('driver_home.float_call') }}</span>
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -67,7 +61,6 @@ import DriverHeader from '../../components/driver/DriverHeader.vue'
 import PendingConfirmationBanner from '../../components/driver/PendingConfirmationBanner.vue'
 import DriverStatsGrid from '../../components/driver/DriverStatsGrid.vue'
 import DriverWeekCalendar from '../../components/driver/DriverWeekCalendar.vue'
-import DriverAnalyticsSection from '../../components/driver/DriverAnalyticsSection.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -98,8 +91,8 @@ function ymd(d) {
 
 const pendingStatuses = new Set(['assigned', 'driver_confirmed', 'pending', 'approved'])
 
-function tripStatusNorm(t) {
-  return String(t?.status ?? '').trim().toLowerCase()
+function tripStatusNorm(x) {
+  return String(x?.status ?? '').trim().toLowerCase()
 }
 
 /** Chỉ chuyến đã gán cho tài xế đăng nhập (`trip.driver_id` khớp hồ sơ tài xế). */
@@ -107,7 +100,7 @@ const rawTrips = computed(() => {
   const id = myDriverId.value
   if (id == null) return []
   return rawListItems.value.filter(
-    (t) => t.driver_id != null && Number(t.driver_id) === Number(id),
+    (x) => x.driver_id != null && Number(x.driver_id) === Number(id),
   )
 })
 
@@ -162,7 +155,6 @@ async function refreshTrips() {
   await fetchData(false)
 }
 
-// Làm mới badge thông báo khi có chuyến chờ gấp (đồng bộ với inbox / PWA)
 watch(
   () => pendingTrips.value.some((x) => x.dispatch_request?.is_urgent),
   (urgent) => {

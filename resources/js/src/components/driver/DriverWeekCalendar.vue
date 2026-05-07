@@ -1,50 +1,43 @@
 <template>
-  <section>
-    <h2 class="mb-3 text-base font-bold" style="color: #9A0036">
+  <section class="rounded-3xl border border-slate-700/60 bg-[#1E293B] p-4 shadow-lg shadow-black/20 ring-1 ring-white/5">
+    <h2 class="mb-3 text-base font-bold text-[#E04676]">
       {{ t('driver_home.calendar_title') }}
     </h2>
 
-    <!-- Loading -->
     <div v-if="loading" class="grid grid-cols-7 gap-1">
       <div v-for="n in 7" :key="n" class="flex flex-col items-center gap-1.5">
-        <div class="h-3.5 w-5 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-        <div class="h-9 w-9 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-        <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-100 dark:bg-slate-700" />
+        <div class="h-3.5 w-5 animate-pulse rounded bg-slate-700/60" />
+        <div class="h-9 w-9 animate-pulse rounded-full bg-slate-700/60" />
+        <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-600/60" />
       </div>
     </div>
 
-    <!-- Week row -->
     <div v-else class="grid grid-cols-7 gap-1">
       <div
         v-for="day in weekDays"
         :key="day.iso"
         class="flex flex-col items-center gap-1"
       >
-        <!-- Day abbreviation -->
         <span
           class="text-[10px] font-semibold uppercase leading-none"
-          :class="day.isToday ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'"
+          :class="day.isToday ? 'text-white' : 'text-slate-500'"
         >
           {{ day.abbr }}
         </span>
 
-        <!-- Date circle -->
         <div
-          class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold leading-none transition-colors"
-          :class="day.isToday ? 'text-white' : 'text-slate-700 dark:text-slate-200'"
-          :style="day.isToday ? 'background-color: #9A0036' : ''"
+          class="flex h-9 min-h-[36px] w-9 min-w-[36px] items-center justify-center rounded-full text-sm font-bold tabular-nums leading-none transition-colors"
+          :class="day.isToday ? 'bg-[#9A0036] text-white' : 'bg-slate-800 text-slate-200'"
         >
           {{ day.date }}
         </div>
 
-        <!-- Trip dots (max 3) -->
-        <div class="flex items-center gap-0.5 h-2">
+        <div class="flex h-2 items-center gap-0.5">
           <span
             v-for="i in Math.min(day.tripCount, 3)"
             :key="i"
             class="block h-1.5 w-1.5 rounded-full"
-            :style="day.isToday ? 'background-color: #9A0036' : ''"
-            :class="!day.isToday ? 'bg-slate-400 dark:bg-slate-500' : ''"
+            :class="day.isToday ? 'bg-white/90' : 'bg-slate-500'"
           />
         </div>
       </div>
@@ -88,8 +81,7 @@ const DAY_ABBR_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const weekDays = computed(() => {
   const today = new Date()
   const todayIso = ymd(today)
-  // Monday-start: find Monday of current week
-  const dow = today.getDay() // 0=Sun
+  const dow = today.getDay()
   const monday = new Date(today)
   monday.setDate(today.getDate() - ((dow + 6) % 7))
 
