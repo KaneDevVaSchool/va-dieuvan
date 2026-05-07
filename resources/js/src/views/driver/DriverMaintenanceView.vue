@@ -298,7 +298,7 @@ const newReminder = reactive({ title: '', repeat_type: 'once', remind_at: '' })
 const vehiclePill = computed(() => {
   const v = vehicle.value
   if (!v) return ''
-  const parts = [v.type, v.seat_count ? `${v.seat_count} chỗ`, v.license_plate].filter(Boolean)
+  const parts = [v.type, v.seat_count ? `${v.seat_count} chỗ` : '', v.license_plate].filter(Boolean)
   return parts.join(' · ')
 })
 
