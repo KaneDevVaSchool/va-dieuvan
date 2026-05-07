@@ -128,7 +128,13 @@
         "label_cancelled": "Cancelled",
         "calendar_title": "This week",
         "calendar_timeline_hint": "Schedule",
-        "calendar_no_trips_day": "No trips on this day."
+        "calendar_no_trips_day": "No trips on this day.",
+        "calendar_svc_d2d": "D2D",
+        "calendar_svc_p2p": "P2P",
+        "calendar_svc_cargo": "Cargo",
+        "calendar_svc_business": "Business trip",
+        "calendar_svc_other": "Trip",
+        "calendar_time_sep": "–"
     },
     "driver_trip_detail": {
         "title": "Trip details",

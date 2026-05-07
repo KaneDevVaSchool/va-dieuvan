@@ -124,7 +124,7 @@
                 v-for="block in layout.blocks"
                 :key="block.trip.id"
                 :to="`/driver/trips/${block.trip.id}`"
-                class="group absolute z-[2] flex min-h-[46px] flex-col justify-center rounded-xl px-2 py-1.5 transition hover:z-10 hover:brightness-110 active:scale-[0.99]"
+                class="group absolute z-[2] flex min-h-[58px] flex-col justify-center gap-0.5 rounded-xl px-2 py-1.5 transition hover:z-10 hover:brightness-110 active:scale-[0.99]"
                 :class="block.variant === 'blue' ? cardBlue : cardTeal"
                 :style="{
                   left: `${block.leftPct}%`,
@@ -132,14 +132,26 @@
                   top: `${block.lane * LANE_STRIDE}px`,
                 }"
               >
-                <p class="truncate text-[11px] font-bold leading-tight text-white sm:text-xs">
-                  {{ block.title }}
-                </p>
+                <div class="flex min-w-0 items-center justify-between gap-1">
+                  <span
+                    class="max-w-[58%] truncate rounded-md bg-white/12 px-1 py-px text-[9px] font-extrabold uppercase tracking-wide text-white ring-1 ring-white/15 sm:text-[10px]"
+                  >
+                    {{ block.serviceLabel }}
+                  </span>
+                  <span
+                    class="min-w-0 shrink truncate text-right font-mono text-[9px] font-semibold tabular-nums opacity-90 sm:text-[10px]"
+                    :class="block.variant === 'blue' ? 'text-sky-200/95' : 'text-cyan-100/95'"
+                  >
+                    {{ block.refLabel }}
+                  </span>
+                </div>
                 <p
-                  class="truncate font-mono text-[10px] font-semibold sm:text-[11px]"
-                  :class="block.variant === 'blue' ? 'text-sky-300/90' : 'text-cyan-200/90'"
+                  class="truncate font-mono text-[10px] font-bold tabular-nums leading-tight text-white/95 sm:text-[11px]"
                 >
-                  {{ block.refLabel }}
+                  {{ block.timeRange }}
+                </p>
+                <p class="line-clamp-2 text-[10px] font-bold leading-snug text-white sm:text-[11px]">
+                  {{ block.routeLine }}
                 </p>
               </RouterLink>
             </div>
@@ -162,6 +174,11 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
+import {
+  tripOutboundInboundTimeRange,
+  tripServiceTypeCalendarLabel,
+  tripTimelineRouteLine,
+} from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
   rawTrips: { type: Array, default: () => [] },
@@ -171,7 +188,7 @@ const props = defineProps({
 const { t, locale } = useI18n()
 
 const selectedIso = ref('')
-const LANE_STRIDE = 54
+const LANE_STRIDE = 66
 const MIN_WIDTH_PCT = 13
 
 const cardTeal =
@@ -354,12 +371,6 @@ function tripVariant(trip) {
   return 'teal'
 }
 
-function tripTitle(trip) {
-  const o = (trip.dispatch_request?.origin || '').trim()
-  if (!o) return t('driver_home.line_route')
-  return o.length > 26 ? `${o.slice(0, 24)}…` : o
-}
-
 function tripRefLabel(trip) {
   const code = trip.trip_code
   if (code != null && String(code).trim() !== '') return `#${String(code).trim()}`
@@ -388,9 +399,12 @@ const layout = computed(() => {
       widthPct = Math.max(MIN_WIDTH_PCT, widthPct)
       const widthAdj = Math.min(widthPct, 100 - leftPct)
 
+      const localeTag = locale.value === 'vi' ? 'vi' : 'en'
       return {
         trip,
-        title: tripTitle(trip),
+        serviceLabel: tripServiceTypeCalendarLabel(trip, t),
+        timeRange: tripOutboundInboundTimeRange(trip, localeTag, t),
+        routeLine: tripTimelineRouteLine(trip, t),
         refLabel: tripRefLabel(trip),
         variant: tripVariant(trip),
         leftPct: Math.max(0, Math.min(leftPct, 100 - MIN_WIDTH_PCT)),

@@ -169,7 +169,13 @@
         "trend_trips_suffix": "chuyến",
         "calendar_title": "Lịch tuần này",
         "calendar_timeline_hint": "Khung giờ",
-        "calendar_no_trips_day": "Không có chuyến trong ngày này."
+        "calendar_no_trips_day": "Không có chuyến trong ngày này.",
+        "calendar_svc_d2d": "D2D",
+        "calendar_svc_p2p": "P2P",
+        "calendar_svc_cargo": "Hàng hóa",
+        "calendar_svc_business": "Công tác",
+        "calendar_svc_other": "Chuyến",
+        "calendar_time_sep": "–"
     },
     "driver_schedule": {
         "title": "Lịch hôm nay",

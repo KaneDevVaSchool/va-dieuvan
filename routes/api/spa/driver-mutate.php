@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('trips')->group(function () {
     Route::controller(TripOpsController::class)->group(function () {
-        Route::post('/{trip}/status', 'updateStatus')->middleware('throttle:30,1');
+        Route::post('/{trip}/status', 'updateStatus')->middleware('throttle:120,1');
         Route::post('/{trip}/events', 'addEvent')->middleware('throttle:60,1');
         Route::put('/{trip}/record', 'upsertRecord')->middleware('throttle:30,1');
     });

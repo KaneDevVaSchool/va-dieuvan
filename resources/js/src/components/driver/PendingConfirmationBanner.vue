@@ -22,6 +22,13 @@
             <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400/90" />
             {{ t('driver_home.pending_urgent_hint') }}
           </p>
+          <p
+            v-if="actionError"
+            class="mt-3 rounded-xl border border-rose-500/45 bg-rose-950/55 px-3 py-2 text-xs font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25"
+            role="alert"
+          >
+            {{ actionError }}
+          </p>
         </div>
       </div>
     </div>
@@ -73,9 +80,13 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { formatApiError } from '../../api/http'
 import { updateTripStatus } from '../../api/trips'
 import { isTripUrgent } from '../../composables/useDriverTripDisplay'
 import TripGroupSection from './TripGroupSection.vue'
+
+/** Tránh spam POST /trips/:id/status khi server trả 429 (throttle). */
+let tripStatusCooldownUntil = 0
 
 const props = defineProps({
   trips: { type: Array, required: true },
@@ -87,6 +98,7 @@ const emit = defineEmits(['updated'])
 const { t } = useI18n()
 
 const busyId = ref(null)
+const actionError = ref('')
 
 /** Sau khi user chỉnh collapse, không ép auto-collapse lại khi danh sách đổi nhẹ */
 let userTouchedCollapse = false
@@ -148,22 +160,34 @@ function toggle(key) {
 }
 
 async function onConfirm(trip) {
-  if (busyId.value) return
+  if (busyId.value || Date.now() < tripStatusCooldownUntil) return
   busyId.value = trip.id
+  actionError.value = ''
   try {
     await updateTripStatus(trip.id, { status: 'in_progress' })
     emit('updated')
+  } catch (e) {
+    actionError.value = formatApiError(e)
+    if (e?.response?.status === 429) {
+      tripStatusCooldownUntil = Date.now() + 8000
+    }
   } finally {
     busyId.value = null
   }
 }
 
 async function onDecline(trip) {
-  if (busyId.value) return
+  if (busyId.value || Date.now() < tripStatusCooldownUntil) return
   busyId.value = trip.id
+  actionError.value = ''
   try {
     await updateTripStatus(trip.id, { status: 'cancelled' })
     emit('updated')
+  } catch (e) {
+    actionError.value = formatApiError(e)
+    if (e?.response?.status === 429) {
+      tripStatusCooldownUntil = Date.now() + 8000
+    }
   } finally {
     busyId.value = null
   }
