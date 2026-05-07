@@ -284,7 +284,7 @@ const router = createRouter({
             component: () => import("../views/layout/StaffRouteOutlet.vue"),
             children: staffChildRoutes,
         },
-        /** Chỉ tài xế: /profile (nhân viên điều vận dùng /mng/profile). */
+        /** Chỉ tài xế: hồ sơ / chỉnh sửa không dùng /profile — vào `/driver/account` + liên hệ phòng mua hàng. */
         {
             path: "/profile",
             component: () => import("../views/profile/ProfileView.vue"),
@@ -397,11 +397,10 @@ router.beforeEach(async (to) => {
         !auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp();
     if (driverOnly) {
         const p = to.path;
-        const allowed =
-            p === "/profile" ||
-            p.startsWith("/profile/") ||
-            p === "/driver" ||
-            p.startsWith("/driver/");
+        if (p === "/profile" || p.startsWith("/profile/")) {
+            return { path: "/driver/account", replace: true };
+        }
+        const allowed = p === "/driver" || p.startsWith("/driver/");
         if (!allowed) {
             return { path: "/driver", replace: true };
         }

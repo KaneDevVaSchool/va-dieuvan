@@ -19,9 +19,9 @@ const LEGACY_STAFF_PREFIXES = [
   '/system',
 ]
 
-/** Hồ sơ: nhân viên điều vận → dưới /mng; chỉ tài xế → /profile. */
+/** Hồ sơ: nhân viên điều vận → `/mng/profile`; chỉ tài xế → `/driver/account`. */
 export function profilePathForAuth(canAccessDispatchWebApp) {
-  return canAccessDispatchWebApp ? `${DISPATCH_WEB_BASE}/profile` : '/profile'
+  return canAccessDispatchWebApp ? `${DISPATCH_WEB_BASE}/profile` : '/driver/account'
 }
 
 /** true nếu URL gốc (không có /mng) là màn điều vận — cần rewrite cho tài khoản nhân viên. */

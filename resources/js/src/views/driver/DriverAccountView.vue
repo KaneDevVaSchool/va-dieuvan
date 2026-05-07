@@ -7,7 +7,7 @@
     >
       <!-- Header chrome -->
       <div class="flex items-center justify-between gap-3 pt-1">
-        <h1 class="text-xl font-bold tracking-tight text-white">
+        <h1 class="text-2xl font-bold tracking-tight text-white md:text-[1.75rem]">
           {{ t('nav.bottom_driver_account') }}
         </h1>
         <NotificationBell />
@@ -15,7 +15,7 @@
 
       <p
         v-if="errorMsg"
-        class="rounded-2xl border border-amber-700/40 bg-amber-950/30 px-3 py-2 text-xs text-amber-100/90"
+        class="rounded-2xl border border-amber-700/40 bg-amber-950/30 px-4 py-3 text-sm leading-relaxed text-amber-100/90"
       >
         {{ errorMsg }}
       </p>
@@ -42,11 +42,11 @@
             </div>
             <button
               type="button"
-              class="absolute -bottom-0.5 -right-0.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#2dd4a0] text-[#09180f] ring-2 ring-[#0f2318] transition active:scale-95"
+              class="absolute -bottom-0.5 -right-0.5 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[#2dd4a0] text-[#09180f] ring-2 ring-[#0f2318] transition active:scale-95"
               :aria-label="t('driver_account.update_photo_a11y')"
-              @click="onCameraClick"
+              @click="contactProcurement"
             >
-              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -58,19 +58,19 @@
           </div>
         </div>
 
-        <p class="mt-4 text-center text-[20px] font-bold leading-tight text-white">
+        <p class="mt-4 text-center text-[22px] font-bold leading-tight text-white">
           {{ user?.name || '—' }}
         </p>
 
         <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
           <span
             v-if="employeeCodeDisplay"
-            class="rounded-full border border-[#2dd4a0] px-2.5 py-0.5 text-[11px] font-medium leading-none text-[#2dd4a0]"
+            class="rounded-full border border-[#2dd4a0] px-3 py-1 text-sm font-medium leading-none text-[#2dd4a0]"
           >
             {{ employeeCodeDisplay }}
           </span>
           <span
-            class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#09180f]/60 px-2.5 py-0.5 text-[11px] font-medium text-white"
+            class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#09180f]/60 px-3 py-1 text-sm font-medium text-white"
           >
             <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
             {{ t('driver_account.active_status') }}
@@ -82,11 +82,11 @@
         <div class="grid grid-cols-3 gap-2 text-center">
           <div v-for="col in headerCols" :key="col.k" class="min-w-0 px-0.5">
             <p
-              class="text-[10px] font-medium uppercase leading-tight tracking-[0.5px] text-[#4ade80]/85"
+              class="text-[11px] font-semibold uppercase leading-tight tracking-[0.06em] text-[#4ade80]/90 sm:text-xs"
             >
               {{ col.label }}
             </p>
-            <p class="mt-1.5 text-[13px] font-bold leading-tight text-white">
+            <p class="mt-2 text-base font-bold leading-snug text-white tabular-nums">
               {{ col.value }}
             </p>
           </div>
@@ -109,13 +109,13 @@
             class="flex min-h-[120px] flex-col items-center justify-start gap-2 px-1 py-2 text-center first:pl-0 last:pr-0"
           >
             <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2dd4a0]/15 text-[#2dd4a0] [&_svg]:h-5 [&_svg]:w-5"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2dd4a0]/15 text-[#2dd4a0] [&_svg]:h-6 [&_svg]:w-6"
               v-html="cell.iconSvg"
             />
-            <span class="text-[32px] font-bold tabular-nums leading-none text-white">
+            <span class="text-[32px] font-bold tabular-nums leading-none text-white sm:text-4xl">
               {{ cell.value }}
             </span>
-            <span class="text-[11px] leading-tight text-[#94a3b8]">
+            <span class="text-sm leading-snug text-[#94a3b8]">
               {{ cell.label }}
             </span>
           </div>
@@ -125,8 +125,8 @@
       <!-- S3: Work info -->
       <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
         <div class="mb-4 flex items-center gap-2">
-          <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#2dd4a0]" />
-          <h2 class="text-[13px] font-medium text-white">
+          <span class="h-2 w-2 shrink-0 rounded-full bg-[#2dd4a0]" />
+          <h2 class="text-base font-semibold text-white">
             {{ t('driver_account.work_info_title') }}
           </h2>
         </div>
@@ -134,11 +134,11 @@
           <li
             v-for="row in workRows"
             :key="row.k"
-            class="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+            class="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0"
           >
-            <component :is="row.icon" class="h-5 w-5 shrink-0 text-[#2dd4a0]" aria-hidden="true" />
-            <span class="min-w-0 flex-1 text-[13px] text-[#94a3b8]">{{ row.label }}</span>
-            <span class="max-w-[55%] text-right text-[13px] font-bold text-white truncate">{{
+            <component :is="row.icon" class="h-6 w-6 shrink-0 text-[#2dd4a0]" aria-hidden="true" />
+            <span class="min-w-0 flex-1 text-[15px] leading-snug text-[#cbd5e1]">{{ row.label }}</span>
+            <span class="max-w-[58%] text-right text-[15px] font-bold leading-snug text-white truncate">{{
               row.value
             }}</span>
           </li>
@@ -147,29 +147,44 @@
 
       <!-- S4: Documents -->
       <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
-        <div class="mb-3 flex items-start justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#2dd4a0]" />
-            <h2 class="text-[13px] font-medium text-white">
-              {{ t('driver_account.documents_title') }}
-            </h2>
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 shrink-0 rounded-full bg-[#2dd4a0]" />
+              <h2 class="text-base font-semibold text-white">
+                {{ t('driver_account.documents_title') }}
+              </h2>
+            </div>
+            <p class="mt-2 text-[15px] leading-relaxed text-[#cbd5e1]">
+              {{ t('driver_account.contact_procurement_hint') }}
+            </p>
           </div>
-          <RouterLink
-            to="/profile"
-            class="shrink-0 text-[13px] font-medium text-[#2dd4a0] transition hover:text-[#4ade80]"
+          <a
+            v-if="procurementTelHref"
+            :href="procurementTelHref"
+            class="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2dd4a0] px-5 text-base font-bold text-[#09180f] shadow-lg shadow-black/20 transition hover:bg-[#4ade80] active:scale-[0.99] sm:mt-0"
           >
-            {{ t('driver_account.update_cta') }} ›
-          </RouterLink>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
+              <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 16.352V17.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clip-rule="evenodd" />
+            </svg>
+            {{ t('driver_account.contact_procurement_cta') }}
+          </a>
+          <p
+            v-else
+            class="text-[15px] leading-relaxed text-amber-200/90 sm:max-w-[16rem] sm:text-right"
+          >
+            {{ t('driver_account.procurement_phone_missing') }}
+          </p>
         </div>
         <ul class="space-y-0 divide-y divide-white/[0.06]">
-          <li v-for="doc in documentRows" :key="doc.id" class="flex gap-3 py-3 first:pt-0 last:pb-0">
-            <DocumentTextIcon class="h-5 w-5 shrink-0 text-[#2dd4a0]" aria-hidden="true" />
+          <li v-for="doc in documentRows" :key="doc.id" class="flex gap-3 py-3.5 first:pt-0 last:pb-0">
+            <DocumentTextIcon class="h-6 w-6 shrink-0 text-[#2dd4a0]" aria-hidden="true" />
             <div class="min-w-0 flex-1">
-              <p class="text-[13px] font-bold text-white">{{ doc.title }}</p>
-              <p class="mt-0.5 text-[11px] leading-snug text-[#94a3b8]">{{ doc.subtitle }}</p>
+              <p class="text-[15px] font-bold leading-snug text-white">{{ doc.title }}</p>
+              <p class="mt-1 text-[13px] leading-relaxed text-[#94a3b8]">{{ doc.subtitle }}</p>
             </div>
             <span
-              class="h-fit shrink-0 self-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-tight"
+              class="h-fit shrink-0 self-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-tight"
               :class="doc.badgeClass"
             >
               {{ doc.badgeText }}
@@ -180,23 +195,23 @@
 
       <!-- S5: Recent trips -->
       <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
-        <div class="mb-3 flex items-start justify-between gap-3">
+        <div class="mb-4 flex items-start justify-between gap-3">
           <div class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#2dd4a0]" />
-            <h2 class="text-[13px] font-medium text-white">
+            <span class="h-2 w-2 shrink-0 rounded-full bg-[#2dd4a0]" />
+            <h2 class="text-base font-semibold text-white">
               {{ t('driver_account.recent_trips_title') }}
             </h2>
           </div>
           <RouterLink
             to="/driver/schedule"
-            class="shrink-0 text-[13px] font-medium text-[#2dd4a0] transition hover:text-[#4ade80]"
+            class="shrink-0 text-[15px] font-semibold text-[#2dd4a0] transition hover:text-[#4ade80]"
           >
             {{ t('driver_account.see_all') }} ›
           </RouterLink>
         </div>
         <p
           v-if="!loading && recentTrips.length === 0"
-          class="py-4 text-center text-sm text-[#94a3b8]"
+          class="py-6 text-center text-base text-[#cbd5e1]"
         >
           {{ t('driver_account.empty_trips') }}
         </p>
@@ -211,26 +226,26 @@
               :to="`/driver/trips/${trip.id}`"
               class="flex gap-2 text-left transition active:opacity-90"
             >
-              <div class="w-[52px] shrink-0">
-                <p class="text-[14px] font-bold tabular-nums text-white">{{ tripTime(trip) }}</p>
-                <p class="mt-0.5 text-[11px] text-[#94a3b8]">{{ tripDateShort(trip) }}</p>
+              <div class="w-[56px] shrink-0">
+                <p class="text-base font-bold tabular-nums text-white">{{ tripTime(trip) }}</p>
+                <p class="mt-1 text-xs text-[#94a3b8] sm:text-sm">{{ tripDateShort(trip) }}</p>
               </div>
               <div class="flex min-w-0 flex-1 items-start gap-1.5">
                 <span
-                  class="mt-0.5 shrink-0 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300"
+                  class="mt-0.5 shrink-0 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300 sm:text-xs"
                 >
                   {{ tripTypeBadgeText(trip) }}
                 </span>
-                <div class="min-w-0 flex-1 space-y-1">
+                <div class="min-w-0 flex-1 space-y-1.5">
                   <div class="flex items-start gap-2">
                     <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
-                    <p class="min-w-0 text-[13px] font-medium leading-snug text-white">
+                    <p class="min-w-0 text-[15px] font-medium leading-snug text-white">
                       {{ tripOrigin(trip) }}
                     </p>
                   </div>
                   <div class="flex items-start gap-2">
                     <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#3b82f6]" />
-                    <p class="min-w-0 text-[13px] font-medium leading-snug text-white">
+                    <p class="min-w-0 text-[15px] font-medium leading-snug text-white">
                       {{ tripDestination(trip) }}
                     </p>
                   </div>
@@ -238,39 +253,28 @@
               </div>
               <div class="shrink-0 text-right">
                 <span
-                  class="inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                  class="inline-block rounded-full px-2.5 py-1 text-[12px] font-semibold sm:text-sm"
                   :class="tripStatusBadgeClass(trip)"
                 >
                   {{ tripStatusLabel(trip) }}
                 </span>
-                <p class="mt-1 text-[11px] text-[#94a3b8]">#{{ trip.id }}</p>
+                <p class="mt-1 text-xs text-[#94a3b8] tabular-nums sm:text-sm">#{{ trip.id }}</p>
               </div>
             </RouterLink>
           </li>
         </ul>
       </section>
 
-      <!-- S6: Actions -->
+      <!-- Đăng xuất -->
       <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
-        <div class="flex flex-col gap-3">
-          <a
-            :href="passwordChangeUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] border border-[#2dd4a0] bg-transparent px-4 text-sm font-semibold text-[#2dd4a0] transition hover:bg-[#2dd4a0]/10 active:scale-[0.99]"
-          >
-            <LockClosedIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-            {{ t('driver_account.change_password') }}
-          </a>
-          <button
-            type="button"
-            class="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[10px] border border-[#f43f5e] bg-transparent px-4 text-sm font-semibold text-[#f43f5e] transition hover:bg-[#f43f5e]/10 active:scale-[0.99]"
-            @click="logoutConfirmOpen = true"
-          >
-            <ArrowRightOnRectangleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-            {{ t('driver_account.logout') }}
-          </button>
-        </div>
+        <button
+          type="button"
+          class="inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-xl border-2 border-[#f43f5e] bg-transparent px-4 text-base font-bold text-[#f43f5e] transition hover:bg-[#f43f5e]/12 active:scale-[0.99]"
+          @click="logoutConfirmOpen = true"
+        >
+          <ArrowRightOnRectangleIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
+          {{ t('driver_account.logout') }}
+        </button>
       </section>
     </div>
 
@@ -288,23 +292,23 @@
           aria-labelledby="driver-logout-title"
           class="w-full max-w-md rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-5 text-white"
         >
-          <h2 id="driver-logout-title" class="text-base font-semibold">
+          <h2 id="driver-logout-title" class="text-lg font-bold sm:text-xl">
             {{ t('app.logout_confirm_title') }}
           </h2>
-          <p class="mt-2 text-sm leading-relaxed text-[#94a3b8]">
+          <p class="mt-3 text-base leading-relaxed text-[#cbd5e1]">
             {{ t('app.logout_confirm_body') }}
           </p>
-          <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-3">
             <button
               type="button"
-              class="inline-flex w-full items-center justify-center rounded-[10px] border border-white/[0.08] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/5 sm:w-auto"
+              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl border border-white/[0.12] px-4 text-base font-semibold text-white transition hover:bg-white/5 sm:w-auto"
               @click="logoutConfirmOpen = false"
             >
               {{ t('app.cancel') }}
             </button>
             <button
               type="button"
-              class="inline-flex w-full items-center justify-center rounded-[10px] bg-[#f43f5e] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#e11d48] sm:w-auto"
+              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl bg-[#f43f5e] px-4 text-base font-bold text-white transition hover:bg-[#e11d48] sm:w-auto"
               @click="confirmLogout"
             >
               {{ t('app.logout_confirm_action') }}
@@ -326,7 +330,6 @@ import {
   CalendarDaysIcon,
   DocumentTextIcon,
   IdentificationIcon,
-  LockClosedIcon,
   MapPinIcon,
   UserIcon,
 } from '@heroicons/vue/24/outline'
@@ -352,7 +355,20 @@ const myDriverId = ref(null)
 const summary = ref(null)
 const logoutConfirmOpen = ref(false)
 
-const passwordChangeUrl = 'https://myaccount.google.com/signinoptions/password'
+const procurementTelHref = computed(() => {
+  const raw = import.meta.env.VITE_PROCUREMENT_PHONE
+  if (raw == null || String(raw).trim() === '') return null
+  const compact = String(raw).replace(/[\s()-]/g, '')
+  if (!compact) return null
+  return `tel:${compact}`
+})
+
+function contactProcurement() {
+  const h = procurementTelHref.value
+  if (h) {
+    window.location.href = h
+  }
+}
 
 const STAT_SVG = {
   completed: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>`,
@@ -657,10 +673,6 @@ function tripStatusBadgeClass(trip) {
   if (s === 'cancelled') return 'bg-[#f43f5e]/20 text-[#f43f5e]'
   if (s === 'in_progress') return 'bg-[#3b82f6]/20 text-[#3b82f6]'
   return 'bg-amber-500/20 text-amber-200'
-}
-
-function onCameraClick() {
-  router.push('/profile')
 }
 
 async function fetchData() {

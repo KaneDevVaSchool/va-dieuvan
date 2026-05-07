@@ -103,10 +103,10 @@ onMounted(async () => {
     }
     let target = q.redirect != null && q.redirect !== '' ? String(q.redirect) : '/'
     if (!auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp()) {
-      const ok =
-        target.startsWith('/driver') ||
-        target === '/profile' ||
-        target.startsWith('/profile/')
+      if (target === '/profile' || target.startsWith('/profile/')) {
+        target = '/driver/account'
+      }
+      const ok = target.startsWith('/driver')
       if (!ok) {
         target = '/driver'
       }
