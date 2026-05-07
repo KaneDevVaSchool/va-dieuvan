@@ -152,7 +152,17 @@
         "pending_vehicle_label": "Vehicle",
         "pending_distance": "{km} km · ~{min} min",
         "pending_notes_label": "Notes",
-        "status_confirmed": "Confirmed"
+        "status_confirmed": "Confirmed",
+        "svc_name_d2d": "Door to Door",
+        "svc_name_p2p": "Point to Point",
+        "svc_name_cargo": "Cargo",
+        "svc_name_business": "Business trip",
+        "pending_confirm_modal_title": "Confirm this trip?",
+        "pending_confirm_modal_hint": "The trip will move to in-progress.",
+        "pending_confirm_modal_btn": "Confirm",
+        "pending_confirm_modal_cancel": "Cancel",
+        "notif_new_trip_title": "New trip!",
+        "notif_new_trip_body": "You have {n} new trip(s) to confirm."
     },
     "driver_trip_detail": {
         "title": "Trip details",

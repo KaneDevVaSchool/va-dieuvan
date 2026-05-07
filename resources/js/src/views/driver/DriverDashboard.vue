@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getDriverSummary } from '../../api/driver'
 import { listTripsAll } from '../../api/trips'
@@ -170,5 +170,42 @@ async function refreshTrips() {
   await fetchData(false)
 }
 
-onMounted(() => fetchData(true))
+// ─── Push notifications ───────────────────────────────────────
+/** null = initial load chưa xong; Set<number> = IDs đã biết sau load đầu */
+let knownPendingIds = null
+
+async function requestNotifPermission() {
+  if (!('Notification' in window) || Notification.permission !== 'default') return
+  await Notification.requestPermission()
+}
+
+function pushNewTripNotif(count) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return
+  new Notification(t('driver_home.notif_new_trip_title'), {
+    body: t('driver_home.notif_new_trip_body', { n: count }),
+    icon: '/icons/pwa-192.png',
+    badge: '/icons/pwa-192.png',
+    tag: 'new-trip',
+    renotify: true,
+  })
+}
+
+watch(
+  () => pendingTrips.value.map((x) => x.id).join(','),
+  (newKey) => {
+    const ids = new Set(newKey ? newKey.split(',').map(Number) : [])
+    if (knownPendingIds === null) {
+      knownPendingIds = ids
+      return
+    }
+    const added = [...ids].filter((id) => !knownPendingIds.has(id))
+    if (added.length > 0) pushNewTripNotif(added.length)
+    knownPendingIds = ids
+  },
+)
+
+onMounted(async () => {
+  await requestNotifPermission()
+  await fetchData(true)
+})
 </script>

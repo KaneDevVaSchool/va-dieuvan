@@ -193,7 +193,17 @@
         "pending_vehicle_label": "Xe",
         "pending_distance": "{km} km · ~{min} phút",
         "pending_notes_label": "Ghi chú",
-        "status_confirmed": "Đã xác nhận"
+        "status_confirmed": "Đã xác nhận",
+        "svc_name_d2d": "Cửa đến cửa",
+        "svc_name_p2p": "Điểm đến điểm",
+        "svc_name_cargo": "Hàng hóa",
+        "svc_name_business": "Công tác",
+        "pending_confirm_modal_title": "Xác nhận nhận chuyến này?",
+        "pending_confirm_modal_hint": "Chuyến sẽ chuyển sang trạng thái đang thực hiện.",
+        "pending_confirm_modal_btn": "Xác nhận",
+        "pending_confirm_modal_cancel": "Hủy",
+        "notif_new_trip_title": "Chuyến mới!",
+        "notif_new_trip_body": "Bạn có {n} chuyến mới cần xác nhận."
     },
     "driver_schedule": {
         "title": "Lịch hôm nay",

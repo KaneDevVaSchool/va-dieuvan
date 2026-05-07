@@ -1,20 +1,23 @@
 <template>
   <article class="overflow-hidden rounded-2xl bg-[#0a1c1a] ring-1 ring-[#7fdcc8]/15 shadow-lg shadow-black/25">
-    <!-- Top bar: service type + trip code + confirmed chip -->
+    <!-- Top bar: service badge + full name + code + confirmed chip -->
     <div
       class="flex items-center gap-2.5 border-b border-[#7fdcc8]/10 bg-[#061210]/70 px-5 py-3"
     >
       <span
-        class="rounded-lg bg-[#7fdcc8]/15 px-2.5 py-1 text-sm font-extrabold uppercase tracking-wide text-[#7fdcc8]"
+        class="shrink-0 rounded-lg bg-[#7fdcc8]/15 px-2.5 py-1 text-sm font-extrabold uppercase tracking-wide text-[#7fdcc8]"
       >
         {{ tripTypeBadgeText(trip) }}
       </span>
-      <span class="text-base font-bold tabular-nums text-white/50">
+      <span v-if="serviceFullName" class="min-w-0 flex-1 truncate text-sm font-semibold text-white/65">
+        {{ serviceFullName }}
+      </span>
+      <span class="shrink-0 text-sm font-bold tabular-nums text-white/40">
         {{ tripRef }}
       </span>
       <span
         v-if="isConfirmed"
-        class="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/12 px-2.5 py-1 text-sm font-bold text-emerald-300 ring-1 ring-emerald-500/25"
+        class="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/12 px-2.5 py-1 text-sm font-bold text-emerald-300 ring-1 ring-emerald-500/25"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -210,7 +213,7 @@
           type="button"
           :disabled="busy"
           class="flex min-h-[60px] flex-1 items-center justify-center gap-2.5 rounded-2xl bg-[#7fdcc8] px-4 text-lg font-extrabold text-[#070f0d] shadow-md shadow-[#7fdcc8]/25 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-          @click="$emit('confirm', trip)"
+          @click="openConfirmModal"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -268,10 +271,74 @@
       </RouterLink>
     </div>
   </article>
+
+  <!-- Confirm modal -->
+  <Teleport to="body">
+    <div
+      v-if="confirmModalOpen"
+      class="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-12 sm:items-center sm:p-6"
+      @click.self="confirmModalOpen = false"
+    >
+      <div
+        class="w-full max-w-md overflow-hidden rounded-3xl bg-[#0f1816] shadow-2xl shadow-black/60"
+        @click.stop
+      >
+        <div class="px-5 pt-6 pb-4">
+          <div class="flex items-start gap-4">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#7fdcc8]/12 ring-1 ring-[#7fdcc8]/20"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="h-6 w-6 text-[#7fdcc8]"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-lg font-bold text-white">
+                {{ t('driver_home.pending_confirm_modal_title') }}
+              </h2>
+              <p class="mt-1 text-base font-medium text-[#7fdcc8]/70">
+                {{ confirmSummary }}
+              </p>
+              <p class="mt-1 text-sm text-slate-500">
+                {{ t('driver_home.pending_confirm_modal_hint') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-row gap-2.5 px-5 pb-5">
+          <button
+            type="button"
+            class="flex min-h-[52px] flex-1 items-center justify-center rounded-xl border border-white/10 bg-transparent text-base font-semibold text-slate-400 transition active:bg-white/5"
+            @click="confirmModalOpen = false"
+          >
+            {{ t('driver_home.pending_confirm_modal_cancel') }}
+          </button>
+          <button
+            type="button"
+            class="flex min-h-[52px] flex-1 items-center justify-center rounded-xl bg-[#7fdcc8] text-base font-extrabold text-[#070f0d] shadow-md shadow-[#7fdcc8]/20 transition active:scale-[0.98]"
+            @click="doConfirm"
+          >
+            {{ t('driver_home.pending_confirm_modal_btn') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import {
@@ -288,7 +355,7 @@ const props = defineProps({
   busy: { type: Boolean, default: false },
 })
 
-defineEmits(['confirm', 'decline'])
+const emit = defineEmits(['confirm', 'decline'])
 
 const { t, locale } = useI18n()
 
@@ -305,6 +372,33 @@ const tripRef = computed(() => {
 const isConfirmed = computed(() =>
   String(props.trip?.status ?? '').trim().toLowerCase() === 'driver_confirmed',
 )
+
+const serviceFullName = computed(() => {
+  const tt = props.trip?.dispatch_request?.trip_type
+  if (tt === 'door_to_door') return t('driver_home.svc_name_d2d')
+  if (tt === 'point_to_point') return t('driver_home.svc_name_p2p')
+  if (tt === 'cargo') return t('driver_home.svc_name_cargo')
+  if (tt === 'business') return t('driver_home.svc_name_business')
+  return ''
+})
+
+// ─── Confirm modal ────────────────────────────────────────────
+const confirmModalOpen = ref(false)
+
+const confirmSummary = computed(() => {
+  const time = depart.value.time
+  const origin = tripOrigin(props.trip)
+  return time && time !== '—' ? `${time} · ${origin}` : origin
+})
+
+function openConfirmModal() {
+  confirmModalOpen.value = true
+}
+
+function doConfirm() {
+  confirmModalOpen.value = false
+  emit('confirm', props.trip)
+}
 
 const requester = computed(() => tripRequesterLine(props.trip))
 
