@@ -1,15 +1,40 @@
 <template>
   <div
-    class="min-h-full w-full overflow-x-hidden bg-[#070f0d] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#eaf8f5]"
+    class="min-h-full w-full overflow-x-hidden bg-[#020B0B] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#eaf8f5]"
   >
-    <DriverHeader
-      :user="user"
-      :avatarUrl="avatarUrl"
-      :initials="initials"
-    />
+    <!-- Full-bleed hero: gradient từ sát mép trên màn hình; safe-area chỉ trên nội dung con -->
+    <div
+      class="relative isolate w-full overflow-hidden rounded-b-[1.75rem] shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#020B0B] to-[#031818]"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute -top-10 right-0 h-44 w-44 rounded-full bg-[#5eead4]/[0.07] blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute -bottom-28 left-1/2 h-52 w-[min(130vw,26rem)] -translate-x-1/2 rounded-[100%] bg-[#7fdcc8]/[0.11] blur-[52px]"
+        aria-hidden="true"
+      />
+
+      <div class="relative z-[1]">
+        <DriverHeader
+          :user="user"
+          :avatarUrl="avatarUrl"
+          :initials="initials"
+        />
+        <div
+          class="mx-auto w-full min-w-0 max-w-full pb-5 pt-0 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] sm:pl-[max(1rem,env(safe-area-inset-left))] sm:pr-[max(1rem,env(safe-area-inset-right))]"
+        >
+          <DriverStatsGrid variant="hero" :stats="stats" :loading="loading" />
+        </div>
+      </div>
+    </div>
 
     <div class="mx-auto w-full min-w-0 max-w-full px-3 sm:px-4">
-      <div class="min-w-0 space-y-5">
+      <div class="min-w-0 space-y-5 pt-5">
         <p
           v-if="errorMsg"
           class="rounded-2xl border border-amber-700/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-600/30"
@@ -23,8 +48,6 @@
           :loading="loading"
           @updated="refreshTrips"
         />
-
-        <DriverStatsGrid :stats="stats" :loading="loading" />
 
         <div class="border-t border-[#7fdcc8]/12" />
 
