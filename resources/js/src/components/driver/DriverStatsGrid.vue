@@ -1,10 +1,10 @@
 <template>
-  <section class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] px-4 py-4 shadow-lg shadow-black/15 ring-1 ring-[#86c2b5]/10">
+  <section class="rounded-3xl bg-[#0f1816] px-3 py-4 shadow-xl shadow-black/25 sm:px-4">
     <div v-if="loading" class="grid grid-cols-4 gap-2">
       <div v-for="n in 4" :key="n" class="flex min-w-0 flex-col items-center gap-2">
-        <div class="w-12 max-w-full animate-pulse rounded-full bg-[#86c2b5]/10 aspect-square" />
-        <div class="h-4 w-8 animate-pulse rounded bg-[#86c2b5]/15" />
-        <div class="h-3 w-10 animate-pulse rounded bg-[#86c2b5]/10" />
+        <div class="w-12 max-w-full animate-pulse rounded-full bg-[#7fdcc8]/10 aspect-square" />
+        <div class="h-4 w-8 animate-pulse rounded bg-[#7fdcc8]/15" />
+        <div class="h-3 w-10 animate-pulse rounded bg-[#7fdcc8]/10" />
       </div>
     </div>
 
@@ -59,28 +59,28 @@ const cards = computed(() => [
     value: props.stats?.completed ?? 0,
     label: t('driver_home.stats_completed'),
     iconSvg: ICONS.completed,
-    circleCls: 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/35',
+    circleCls: 'bg-emerald-500/15 text-emerald-300',
   },
   {
     key: 'inProgress',
     value: props.stats?.inProgress ?? 0,
     label: t('driver_home.stats_in_progress'),
     iconSvg: ICONS.inProgress,
-    circleCls: 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30',
+    circleCls: 'bg-amber-500/15 text-amber-300',
   },
   {
     key: 'pending',
     value: props.stats?.pending ?? 0,
     label: t('driver_home.stats_pending_confirm'),
     iconSvg: ICONS.pending,
-    circleCls: 'bg-[#86c2b5]/15 text-[#86c2b5] ring-1 ring-[#86c2b5]/35',
+    circleCls: 'bg-[#7fdcc8]/15 text-[#7fdcc8]',
   },
   {
     key: 'cancelled',
     value: props.stats?.cancelled ?? 0,
     label: t('driver_home.stats_cancelled'),
     iconSvg: ICONS.cancelled,
-    circleCls: 'bg-slate-700 text-slate-300 ring-1 ring-slate-600/80',
+    circleCls: 'bg-slate-700 text-slate-300',
   },
 ])
 </script>

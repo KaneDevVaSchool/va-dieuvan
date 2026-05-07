@@ -1,19 +1,19 @@
 <template>
-  <section class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] px-4 py-4 shadow-lg shadow-black/15 ring-1 ring-[#86c2b5]/10">
+  <section class="rounded-3xl bg-[#0f1816] px-3 py-4 shadow-xl shadow-black/25 sm:px-4">
     <div class="mb-4 flex min-w-0 flex-wrap items-start justify-between gap-2">
-      <h2 class="min-w-0 text-base font-bold text-[#86c2b5]">
+      <h2 class="min-w-0 text-base font-bold text-[#7fdcc8]">
         {{ t('driver_home.calendar_title') }}
       </h2>
-      <p class="shrink-0 text-sm tabular-nums font-semibold text-[#86c2b5]/80">
+      <p class="shrink-0 text-sm tabular-nums font-semibold text-[#7fdcc8]/85">
         {{ weekRangeLabel }}
       </p>
     </div>
 
     <div v-if="loading" class="grid grid-cols-7 gap-0">
       <div v-for="n in 7" :key="n" class="flex min-w-0 w-full flex-col items-center gap-1.5 py-1">
-        <div class="h-2.5 w-full max-w-[2rem] animate-pulse rounded bg-[#86c2b5]/15" />
-        <div class="w-9 max-w-full animate-pulse rounded-full bg-[#0d1f1c]/80 aspect-square" />
-        <div class="h-3 w-4 animate-pulse rounded bg-[#86c2b5]/10" />
+        <div class="h-2.5 w-full max-w-[2rem] animate-pulse rounded bg-[#7fdcc8]/15" />
+        <div class="w-9 max-w-full animate-pulse rounded-full bg-[#070f0d]/90 aspect-square" />
+        <div class="h-3 w-4 animate-pulse rounded bg-[#7fdcc8]/10" />
       </div>
     </div>
 
@@ -22,15 +22,15 @@
         v-for="day in weekDays"
         :key="day.iso"
         type="button"
-        class="flex min-w-0 w-full flex-col items-center gap-1 rounded-lg py-1 text-center transition hover:bg-[#86c2b5]/5 active:scale-[0.98]"
-        :class="selectedIso === day.iso ? 'ring-2 ring-[#86c2b5]/60 ring-offset-1 ring-offset-[#142421] sm:ring-offset-2' : ''"
+        class="flex min-w-0 w-full flex-col items-center gap-1 rounded-lg py-1 text-center transition hover:bg-[#7fdcc8]/8 active:scale-[0.98]"
+        :class="selectedIso === day.iso ? 'bg-[#7fdcc8]/10' : ''"
         :aria-pressed="selectedIso === day.iso"
         @click="selectedIso = day.iso"
       >
         <span
           class="text-[10px] font-bold uppercase leading-none tracking-wide"
           :class="
-            day.isToday ? 'text-[#86c2b5]' : selectedIso === day.iso ? 'text-[#86c2b5]/90' : 'text-slate-400'
+            day.isToday ? 'text-[#7fdcc8]' : selectedIso === day.iso ? 'text-[#7fdcc8]/90' : 'text-slate-400'
           "
         >
           {{ day.abbr }}
@@ -41,13 +41,13 @@
           :class="
             selectedIso === day.iso
               ? day.isToday
-                ? 'bg-[#86c2b5] text-[#0d1f1c] shadow-lg shadow-[#86c2b5]/30 ring-2 ring-[#86c2b5]/50'
-                : 'bg-[#1a2f2b] text-white shadow-md ring-2 ring-[#86c2b5]/45'
+                ? 'bg-[#7fdcc8] text-[#070f0d] shadow-md shadow-[#7fdcc8]/25'
+                : 'bg-[#1a2826] text-white shadow-inner shadow-black/20'
               : day.isToday
-                ? 'bg-[#86c2b5]/35 text-[#86c2b5] ring-1 ring-[#86c2b5]/35'
+                ? 'bg-[#7fdcc8]/30 text-[#7fdcc8]'
                 : day.tripCount > 0
-                  ? 'bg-[#1a2f2b] text-white ring-1 ring-[#86c2b5]/35'
-                  : 'bg-[#0d1f1c]/70 text-slate-500'
+                  ? 'bg-[#1a2826] text-white'
+                  : 'bg-[#070f0d]/80 text-slate-500'
           "
         >
           {{ day.date }}
@@ -56,7 +56,7 @@
         <span
           class="min-h-[12px] text-[10px] font-bold tabular-nums leading-none"
           :class="
-            day.tripCount > 0 ? 'text-[#86c2b5]' : 'invisible text-transparent'
+            day.tripCount > 0 ? 'text-[#7fdcc8]' : 'invisible text-transparent'
           "
           :aria-hidden="day.tripCount === 0"
         >
@@ -71,13 +71,13 @@
         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
           {{ t('driver_home.calendar_timeline_hint') }}
         </p>
-        <p class="text-[11px] tabular-nums text-[#86c2b5]/70">
+        <p class="text-[11px] tabular-nums text-[#7fdcc8]/75">
           {{ selectedDayShortLabel }}
         </p>
       </div>
 
       <div
-        class="w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-2xl border border-slate-700/40 bg-[#070f18] touch-pan-x [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        class="w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-2xl border border-white/10 bg-[#050a09] touch-pan-x [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <div
           class="relative flex min-h-[140px] min-w-[520px] flex-col px-2 pb-3 pt-2 sm:min-w-full"
@@ -134,7 +134,7 @@
               >
                 <div class="flex min-w-0 items-center justify-between gap-1">
                   <span
-                    class="max-w-[58%] truncate rounded-md bg-white/12 px-1 py-px text-[9px] font-extrabold uppercase tracking-wide text-white ring-1 ring-white/15 sm:text-[10px]"
+                    class="max-w-[58%] truncate rounded-md bg-white/12 px-1 py-px text-[9px] font-extrabold uppercase tracking-wide text-white sm:text-[10px]"
                   >
                     {{ block.serviceLabel }}
                   </span>

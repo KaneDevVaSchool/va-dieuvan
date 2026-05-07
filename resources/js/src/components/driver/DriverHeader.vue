@@ -8,7 +8,7 @@
         <h1 class="mt-0.5 truncate text-2xl font-bold tracking-tight text-white sm:text-3xl">
           {{ user?.name || '—' }}
         </h1>
-        <p class="mt-1 text-sm font-semibold text-[#86c2b5]">
+        <p class="mt-1 text-sm font-semibold text-[#7fdcc8]">
           {{ todayLabel }}
         </p>
       </div>
@@ -19,11 +19,11 @@
           v-if="avatarUrl"
           :src="avatarUrl"
           alt=""
-          class="h-11 min-h-[44px] w-11 min-w-[44px] rounded-full border-2 border-[#86c2b5]/40 object-cover"
+          class="h-11 min-h-[44px] w-11 min-w-[44px] rounded-full border-2 border-[#7fdcc8]/45 object-cover"
         />
         <div
           v-else
-          class="flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full border-2 border-[#86c2b5]/40 bg-[#142421] text-base font-bold text-[#86c2b5]"
+          class="flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full border-2 border-[#7fdcc8]/45 bg-[#0f1816] text-base font-bold text-[#7fdcc8]"
         >
           {{ initials }}
         </div>

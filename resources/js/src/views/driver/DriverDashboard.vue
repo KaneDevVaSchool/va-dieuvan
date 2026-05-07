@@ -1,8 +1,8 @@
 <template>
   <div
-    class="min-h-screen w-full overflow-x-hidden bg-[#0d1f1c] text-white pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]"
+    class="min-h-full w-full overflow-x-hidden bg-[#070f0d] pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] text-[#eaf8f5]"
   >
-    <div class="mx-auto w-full min-w-0 max-w-lg px-4 sm:max-w-2xl sm:px-5">
+    <div class="mx-auto w-full min-w-0 max-w-full px-3 sm:px-4">
       <DriverHeader
         :user="user"
         :avatarUrl="avatarUrl"
@@ -26,11 +26,11 @@
 
         <DriverStatsGrid :stats="stats" :loading="loading" />
 
-        <div class="border-t border-[#86c2b5]/15" />
+        <div class="border-t border-[#7fdcc8]/12" />
 
         <DriverWeekCalendar :raw-trips="rawTrips" :loading="loading" />
 
-        <div class="border-t border-[#86c2b5]/15" />
+        <div class="border-t border-[#7fdcc8]/12" />
 
         <DriverAnalyticsSection :raw-trips="rawTrips" :loading="loading" />
       </div>

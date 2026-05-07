@@ -1,17 +1,17 @@
 <template>
   <article
-    class="rounded-2xl border border-[#86c2b5]/20 bg-[#142421] p-4 shadow-lg shadow-black/15"
+    class="rounded-2xl bg-[#0f1816] p-4 shadow-lg shadow-black/25"
   >
     <!-- Priority 1: pickup time + type -->
     <div class="flex flex-wrap items-start gap-2 gap-y-2">
       <div class="min-w-0 flex-1">
-        <p class="text-[11px] font-semibold uppercase tracking-wide text-[#86c2b5]/60">
+        <p class="text-[11px] font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
           {{ t('driver_home.pending_pickup_time_label') }}
         </p>
         <p class="mt-0.5 text-2xl font-bold tabular-nums tracking-tight text-white">
           {{ depart.time }}
         </p>
-        <p v-if="depart.dateLine" class="mt-0.5 text-sm text-[#86c2b5]/80">
+        <p v-if="depart.dateLine" class="mt-0.5 text-sm text-[#7fdcc8]/80">
           {{ depart.dateLine }}
         </p>
       </div>
@@ -24,7 +24,7 @@
           <span class="h-2 w-2 animate-pulse rounded-full bg-rose-400/90" aria-hidden="true" />
           {{ t('driver_home.urgent_badge') }}
         </span>
-        <span class="rounded-lg bg-[#0d1f1c]/80 px-2 py-1 text-xs font-bold tabular-nums text-[#86c2b5] ring-1 ring-[#86c2b5]/25">
+        <span class="rounded-lg bg-[#070f0d]/90 px-2 py-1 text-xs font-bold tabular-nums text-[#7fdcc8]">
           {{ tripTypeBadgeText(trip) }}
         </span>
       </div>
@@ -39,7 +39,7 @@
           </svg>
         </span>
         <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-[#86c2b5]/60">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
             {{ t('driver_home.pending_pickup') }}
           </p>
           <p class="mt-0.5 line-clamp-2 text-base font-semibold leading-snug text-white">
@@ -54,7 +54,7 @@
           </svg>
         </span>
         <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-[#86c2b5]/60">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
             {{ t('driver_home.pending_dropoff') }}
           </p>
           <p class="mt-0.5 line-clamp-2 text-base font-semibold leading-snug text-white">
@@ -64,10 +64,10 @@
       </div>
     </div>
 
-    <p v-if="tripRequesterLine(trip)" class="mt-3 text-sm text-[#86c2b5]/75">
+    <p v-if="tripRequesterLine(trip)" class="mt-3 text-sm text-[#7fdcc8]/75">
       {{ t('driver_home.pending_requester', { name: tripRequesterLine(trip) }) }}
     </p>
-    <p v-if="passengerLine" class="text-sm text-[#86c2b5]/55">
+    <p v-if="passengerLine" class="text-sm text-[#7fdcc8]/55">
       {{ passengerLine }}
     </p>
 
@@ -75,7 +75,7 @@
       <button
         type="button"
         :disabled="busy"
-        class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#86c2b5] px-4 text-base font-bold text-[#0d1f1c] shadow-md shadow-[#86c2b5]/25 transition-colors hover:bg-[#6aae9f] active:bg-[#5a9e90] disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#7fdcc8] px-4 text-base font-bold text-[#070f0d] shadow-md shadow-[#7fdcc8]/20 transition-colors hover:bg-[#6bcfb8] active:bg-[#5ec4aa] disabled:cursor-not-allowed disabled:opacity-50"
         @click="$emit('confirm', trip)"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0" aria-hidden="true">
@@ -86,7 +86,7 @@
       <button
         type="button"
         :disabled="busy"
-        class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#86c2b5]/35 bg-transparent px-4 text-base font-bold text-[#86c2b5]/90 transition-colors hover:bg-[#86c2b5]/10 active:bg-[#86c2b5]/15 disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#7fdcc8]/40 bg-transparent px-4 text-base font-bold text-[#7fdcc8] transition-colors hover:bg-[#7fdcc8]/10 active:bg-[#7fdcc8]/18 disabled:cursor-not-allowed disabled:opacity-50"
         @click="$emit('decline', trip)"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0" aria-hidden="true">
@@ -98,7 +98,7 @@
 
     <RouterLink
       :to="`/driver/trips/${trip.id}`"
-      class="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl py-2 text-sm font-semibold text-[#86c2b5]/85 underline-offset-2 hover:text-[#86c2b5] active:opacity-80"
+      class="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl py-2 text-sm font-semibold text-[#7fdcc8]/85 underline-offset-2 hover:text-[#7fdcc8] active:opacity-80"
     >
       {{ t('driver_home.pending_view_detail') }}
     </RouterLink>

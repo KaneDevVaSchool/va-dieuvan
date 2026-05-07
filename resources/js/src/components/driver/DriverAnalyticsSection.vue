@@ -1,18 +1,18 @@
 <template>
   <section class="space-y-4 transition-opacity duration-300 ease-out">
-    <h2 class="text-base font-bold tracking-tight text-[#86c2b5] sm:text-lg">
+    <h2 class="text-base font-bold tracking-tight text-[#7fdcc8] sm:text-lg">
       {{ t('driver_home.analytics_title') }}
     </h2>
 
     <div v-if="loading" class="grid grid-cols-1 gap-4">
-      <div class="h-[260px] animate-pulse rounded-3xl border border-[#86c2b5]/15 bg-[#142421]/90 md:h-[280px]" />
+      <div class="h-[260px] animate-pulse rounded-3xl bg-[#0f1816]/90 md:h-[280px]" />
     </div>
 
     <div v-else class="grid grid-cols-1 gap-4">
       <div
-        class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] p-4 shadow-lg shadow-black/15 md:min-h-0"
+        class="rounded-3xl bg-[#0f1816] p-4 shadow-xl shadow-black/20 md:min-h-0"
       >
-        <h3 class="mb-3 text-sm font-semibold text-[#86c2b5]/90">
+        <h3 class="mb-3 text-sm font-semibold text-[#7fdcc8]/90">
           {{ t('driver_home.chart_donut_title') }}
         </h3>
         <DashboardEChart
@@ -29,10 +29,10 @@
           <div
             v-for="row in pillRows"
             :key="row.key"
-            class="flex items-center gap-2 rounded-full border border-[#86c2b5]/20 bg-[#0d1f1c]/70 px-3 py-1.5 text-xs font-semibold text-[#f1f5f9]"
+            class="flex items-center gap-2 rounded-full bg-[#070f0d]/80 px-3 py-1.5 text-xs font-semibold text-[#f1f5f9]"
           >
             <span class="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-white/10" :style="{ backgroundColor: row.color }" />
-            <span class="text-[#86c2b5]/90">{{ row.label }}</span>
+            <span class="text-[#7fdcc8]/90">{{ row.label }}</span>
             <span class="tabular-nums text-white">{{ row.value }}</span>
           </div>
         </div>

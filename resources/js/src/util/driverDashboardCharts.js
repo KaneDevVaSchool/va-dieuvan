@@ -17,7 +17,7 @@ export const DRIVER_DONUT_ORDER = ['completed', 'in_progress', 'pending', 'cance
 export const DRIVER_DONUT_COLORS = {
   completed: '#10b981',
   in_progress: '#f59e0b',
-  pending: '#0ea5e9',
+  pending: '#5eead4',
   cancelled: '#f43f5e',
 }
 
@@ -76,7 +76,7 @@ export function computeDriverTripCounts(rawTrips) {
 /**
  * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
  */
-const DRIVER_DONUT_PAGE_BG = '#0d1f1c'
+const DRIVER_DONUT_PAGE_BG = '#070f0d'
 
 /**
  * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
@@ -136,14 +136,14 @@ export function driverStatusDonutOption({
           borderWidth: 3,
         },
         label: {
-          color: 'rgba(134,194,181,0.88)',
+          color: 'rgba(127,220,200,0.9)',
           fontSize: 11,
           formatter: '{b}\n{d}%',
         },
         emphasis: {
           scale: true,
           scaleSize: 8,
-          itemStyle: { shadowBlur: 18, shadowColor: 'rgba(134,194,181,0.28)' },
+          itemStyle: { shadowBlur: 18, shadowColor: 'rgba(127,220,200,0.25)' },
         },
         data,
       },

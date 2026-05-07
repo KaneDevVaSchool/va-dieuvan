@@ -55,6 +55,10 @@ const props = defineProps({
     default: 'default',
     validator: (v) => ['default', 'brand'].includes(v),
   },
+  driverBottomNav: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 defineEmits(['navigate'])
@@ -132,6 +136,14 @@ const badgeClass = computed(() => {
   } else if (props.variant === 'bottom') {
     base.push('absolute -right-0.5 top-0.5 h-4 min-w-[1rem] px-0.5 text-[9px]')
   }
+  if (props.driverBottomNav && props.variant === 'bottom') {
+    if (isActive.value) {
+      base.push('bg-[#050a09] text-[#7fdcc8] ring-1 ring-[#7fdcc8]/40')
+    } else {
+      base.push('bg-rose-600 text-white ring-1 ring-white/15')
+    }
+    return base.join(' ')
+  }
   if (props.tone === 'brand') {
     if (isActive.value) {
       base.push('bg-white text-[color:var(--va-brand)]')
@@ -157,6 +169,18 @@ const linkClass = computed(() => {
   const brand = props.tone === 'brand'
 
   if (v === 'bottom') {
+    if (props.driverBottomNav) {
+      const base = [
+        'relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-0.5 py-1 transition-colors',
+        'text-[#7fdcc8]/65',
+      ]
+      if (isActive.value) {
+        base.push('border-[#7fdcc8] bg-[#7fdcc8]/12 font-semibold text-[#7fdcc8]')
+      } else {
+        base.push('active:bg-white/5')
+      }
+      return base.join(' ')
+    }
     const base = [
       'relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 border-t-2 border-transparent px-0.5 py-1 transition-colors',
       'text-slate-600 dark:text-slate-300',

@@ -1,10 +1,10 @@
 <template>
   <div
-    class="h-dvh min-h-0 w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]"
+    class="driver-pwa-shell flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-[#070f0d] text-[#eaf8f5] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)]"
   >
     <main
       id="app-main-scroll"
-      class="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:px-4"
+      class="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pb-[calc(3.5rem+env(safe-area-inset-bottom))] scrollbar-hidden"
     >
       <slot />
     </main>
