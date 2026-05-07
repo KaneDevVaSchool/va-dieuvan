@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-lg mx-auto w-full space-y-5 pb-28 sm:max-w-2xl">
+  <div class="max-w-lg mx-auto w-full space-y-6 pb-28 sm:max-w-2xl">
     <!-- 1 — Gradient header -->
     <DriverHeader
       :user="user"
@@ -22,15 +22,9 @@
       @updated="refreshTrips"
     />
 
-    <!-- 3 — Hero: chuyến hiện tại / tiếp theo -->
-    <section class="px-0">
-      <div class="mb-3 flex items-center justify-between gap-2">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white">
-          {{ t('driver_home.current_trip') }}
-        </h2>
-      </div>
-      <CurrentTripCard :trip="heroTrip" :loading="loading" />
-    </section>
+    <!-- 3 — Tổng quan & analytics -->
+    <DriverStatsGrid :stats="stats" :loading="loading" />
+    <DriverAnalyticsSection :raw-trips="rawTrips" :loading="loading" />
 
     <!-- 4 — Danh sách chuyến sắp tới -->
     <section v-if="!loading && queueTrips.length" class="px-0">
@@ -62,21 +56,6 @@
 
     <!-- 6 — Floating actions -->
     <div class="pointer-events-none fixed bottom-24 right-4 z-30 flex flex-col items-end gap-3">
-      <!-- Google Maps -->
-      <a
-        v-if="heroTripDestination"
-        :href="`https://maps.google.com/?q=${encodeURIComponent(heroTripDestination)}`"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="pointer-events-auto flex items-center gap-2 rounded-2xl bg-sky-600 px-4 text-white shadow-lg active:scale-95"
-        style="min-height: 48px;"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0">
-          <path fill-rule="evenodd" d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .757.433c.12.065.227.115.315.142.162.04.343.04.506 0a1.16 1.16 0 0 0 .315-.142c.088-.027.195-.077.315-.142z" clip-rule="evenodd" />
-        </svg>
-        <span class="text-sm font-semibold">{{ t('driver_home.float_maps') }}</span>
-      </a>
-
       <!-- Call dispatcher -->
       <a
         v-if="dispatcherPhone"
@@ -102,9 +81,10 @@ import { listTrips } from '../../api/trips'
 import { useAuthStore } from '../../store'
 import { useNotificationStore } from '../../store/notificationCenter'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
-import CurrentTripCard from '../../components/driver/CurrentTripCard.vue'
 import TripListItem from '../../components/driver/TripListItem.vue'
 import PendingConfirmationBanner from '../../components/driver/PendingConfirmationBanner.vue'
+import DriverStatsGrid from '../../components/driver/DriverStatsGrid.vue'
+import DriverAnalyticsSection from '../../components/driver/DriverAnalyticsSection.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -162,23 +142,13 @@ const pendingTrips = computed(() => {
     })
 })
 
-// Chuyến hiện tại = chỉ khi đã thực sự in_progress (đang chạy)
-const heroTrip = computed(() => {
-  const list = rawTrips.value.filter((x) => tripStatusNorm(x) === 'in_progress')
-  return list
-    .slice()
-    .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))[0] ?? null
-})
-
-// Các chuyến khác (không huỉ/xong, không chờ xác nhận, không phải chuyến hero)
+// Các chuyến (không huỉ/xong, không chờ xác nhận); gồm cả in_progress trong danh sách
 const queueTrips = computed(() => {
-  const heroId = heroTrip.value?.id
   return rawTrips.value
     .filter((x) => {
       const st = tripStatusNorm(x)
       if (doneStatuses.has(st)) return false
       if (pendingStatuses.has(st)) return false
-      if (heroId != null && x.id === heroId) return false
       return true
     })
     .slice()
@@ -190,9 +160,13 @@ const queueTrips = computed(() => {
     .slice(0, 6)
 })
 
-const heroTripDestination = computed(
-  () => heroTrip.value?.dispatch_request?.destination?.trim() || null,
-)
+const stats = computed(() => ({
+  total: rawTrips.value.length,
+  completed: rawTrips.value.filter((x) => tripStatusNorm(x) === 'completed').length,
+  inProgress: rawTrips.value.filter((x) => tripStatusNorm(x) === 'in_progress').length,
+  pending: pendingTrips.value.length,
+  cancelled: rawTrips.value.filter((x) => tripStatusNorm(x) === 'cancelled').length,
+}))
 
 const dispatcherPhone = import.meta.env.VITE_DISPATCHER_PHONE || null
 
@@ -200,12 +174,14 @@ async function fetchData(showLoader = true) {
   if (showLoader) loading.value = true
   errorMsg.value = ''
   const now = new Date()
+  const past = new Date(now)
+  past.setDate(past.getDate() - 30)
   const horizon = new Date(now)
   horizon.setDate(horizon.getDate() + 21)
   try {
     const [sum, listRes] = await Promise.all([
       getDriverSummary(),
-      listTrips({ from: ymd(now), to: ymd(horizon), per_page: 60 }),
+      listTrips({ from: ymd(past), to: ymd(horizon), per_page: 200 }),
     ])
     myDriverId.value = sum?.driver?.id ?? null
     rawListItems.value = listRes?.items ?? []

@@ -1,0 +1,264 @@
+/**
+ * ECharts options cho driver dashboard (dữ liệu client-side từ danh sách chuyến).
+ */
+
+import * as echarts from 'echarts'
+import { emptyDashboardChartOption } from './transportDashboardCharts'
+
+export const DRIVER_PENDING_STATUS_SET = new Set([
+  'assigned',
+  'driver_confirmed',
+  'pending',
+  'approved',
+])
+
+export const DRIVER_DONUT_ORDER = ['completed', 'in_progress', 'pending', 'cancelled']
+
+export const DRIVER_DONUT_COLORS = {
+  completed: '#10b981',
+  in_progress: '#f59e0b',
+  pending: '#0ea5e9',
+  cancelled: '#f43f5e',
+}
+
+function tripStatusNorm(trip) {
+  return String(trip?.status ?? '')
+    .trim()
+    .toLowerCase()
+}
+
+function parseDepartMs(trip) {
+  const iso = trip?.depart_at
+  if (!iso) return null
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : d.getTime()
+}
+
+function localYmd(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function parseYmdToLocalDate(s) {
+  if (!s || typeof s !== 'string') return null
+  const [y, m, d] = s.split('-').map(Number)
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null
+  const dt = new Date(y, m - 1, d)
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null
+  return dt
+}
+
+/**
+ * Đếm 4 nhóm hiển thị trên donut (trạng thái khác bốn nhóm không tính).
+ */
+export function computeDriverTripCounts(rawTrips) {
+  let completed = 0
+  let inProgress = 0
+  let pending = 0
+  let cancelled = 0
+  for (const trip of rawTrips ?? []) {
+    const st = tripStatusNorm(trip)
+    if (st === 'completed') completed++
+    else if (st === 'in_progress') inProgress++
+    else if (st === 'cancelled') cancelled++
+    else if (DRIVER_PENDING_STATUS_SET.has(st)) pending++
+  }
+  return {
+    completed,
+    in_progress: inProgress,
+    pending,
+    cancelled,
+  }
+}
+
+/**
+ * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
+ */
+export function driverStatusDonutOption({ countsByStatus, labelMap, emptyText }) {
+  const data = DRIVER_DONUT_ORDER.map((k) => ({
+    value: Number(countsByStatus?.[k] ?? 0),
+    name: labelMap?.[k] ?? k,
+    itemStyle: { color: DRIVER_DONUT_COLORS[k] },
+  })).filter((d) => d.value > 0)
+
+  if (!data.length) {
+    return emptyDashboardChartOption(emptyText ?? '—')
+  }
+
+  return {
+    animationDuration: 400,
+    tooltip: {
+      trigger: 'item',
+      confine: true,
+      formatter: (p) => `${p.name}: ${p.value} (${p.percent}%)`,
+    },
+    legend: {
+      bottom: 4,
+      itemGap: 12,
+      textStyle: { color: '#64748b', fontSize: 11 },
+    },
+    series: [
+      {
+        type: 'pie',
+        radius: ['46%', '72%'],
+        center: ['50%', '46%'],
+        avoidLabelOverlap: true,
+        itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+        label: { color: '#334155', fontSize: 11 },
+        emphasis: {
+          scale: true,
+          scaleSize: 8,
+          itemStyle: { shadowBlur: 14, shadowColor: 'rgba(15,23,42,0.15)' },
+        },
+        data,
+      },
+    ],
+  }
+}
+
+function buildTrendBuckets(rawTrips, period, customFrom, customTo) {
+  const now = new Date()
+
+  if (period === 'today') {
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const endMs = start.getTime() + 86400000
+    const values = Array.from({ length: 24 }, () => 0)
+    const categories = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`)
+    for (const trip of rawTrips ?? []) {
+      const ms = parseDepartMs(trip)
+      if (ms == null || ms < start.getTime() || ms >= endMs) continue
+      values[new Date(ms).getHours()] += 1
+    }
+    return { categories, values }
+  }
+
+  let startDay
+  let endDay
+
+  if (period === '7d') {
+    endDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    startDay = new Date(endDay)
+    startDay.setDate(startDay.getDate() - 6)
+  } else if (period === '30d') {
+    endDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    startDay = new Date(endDay)
+    startDay.setDate(startDay.getDate() - 29)
+  } else if (period === 'custom') {
+    const a = parseYmdToLocalDate(customFrom)
+    const b = parseYmdToLocalDate(customTo)
+    if (!a || !b || a.getTime() > b.getTime()) {
+      return { categories: [], values: [] }
+    }
+    startDay = new Date(a.getFullYear(), a.getMonth(), a.getDate())
+    endDay = new Date(b.getFullYear(), b.getMonth(), b.getDate())
+  } else {
+    return { categories: [], values: [] }
+  }
+
+  const ymds = []
+  const categories = []
+  const values = []
+  const cur = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate())
+  const end = new Date(endDay.getFullYear(), endDay.getMonth(), endDay.getDate())
+
+  while (cur.getTime() <= end.getTime()) {
+    ymds.push(localYmd(cur))
+    categories.push(
+      cur.toLocaleDateString('vi-VN', { day: 'numeric', month: 'short' }),
+    )
+    values.push(0)
+    cur.setDate(cur.getDate() + 1)
+  }
+
+  const idxByYmd = new Map(ymds.map((k, i) => [k, i]))
+  const startMs = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate()).getTime()
+  const endExclusive = end.getTime() + 86400000
+
+  for (const trip of rawTrips ?? []) {
+    const ms = parseDepartMs(trip)
+    if (ms == null || ms < startMs || ms >= endExclusive) continue
+    const idx = idxByYmd.get(localYmd(new Date(ms)))
+    if (idx != null) values[idx] += 1
+  }
+
+  return { categories, values }
+}
+
+/**
+ * Xu hướng số chuyến theo giờ (today) hoặc theo ngày (7d/30d/custom).
+ */
+export function driverTrendOption({
+  rawTrips,
+  period,
+  customFrom,
+  customTo,
+  emptyText,
+  yAxisName,
+  tripsSuffix = '',
+  lineColor = '#2563eb',
+}) {
+  const { categories, values } = buildTrendBuckets(rawTrips, period, customFrom, customTo)
+  const total = values.reduce((a, b) => a + Number(b ?? 0), 0)
+  if (!categories.length || total <= 0) {
+    return emptyDashboardChartOption(emptyText ?? '—')
+  }
+
+  const showSymbols = values.length <= 14
+  const suffix = (tripsSuffix && String(tripsSuffix).trim()) || ''
+
+  return {
+    animationDuration: 450,
+    tooltip: {
+      trigger: 'axis',
+      confine: true,
+      axisPointer: { type: 'line', lineStyle: { color: '#818cf8', width: 1 } },
+      formatter(params) {
+        const p = Array.isArray(params) ? params[0] : params
+        if (!p) return ''
+        const n = Number(p.value ?? 0)
+        const unit = suffix ? ` ${suffix}` : ''
+        return `${p.name}<br/>${n}${unit}`
+      },
+    },
+    grid: { left: 8, right: 10, top: 32, bottom: 28, containLabel: true },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: categories,
+      axisLabel: {
+        color: '#64748b',
+        fontSize: period === 'today' ? 9 : 10,
+        interval: period === 'today' ? 3 : undefined,
+      },
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+    },
+    yAxis: {
+      type: 'value',
+      minInterval: 1,
+      name: yAxisName ?? '',
+      nameTextStyle: { color: '#64748b', fontSize: 10 },
+      axisLabel: { color: '#64748b', fontSize: 10 },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
+    },
+    series: [
+      {
+        type: 'line',
+        smooth: 0.3,
+        symbol: 'circle',
+        symbolSize: showSymbols ? 5 : 0,
+        showSymbol: showSymbols,
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(37,99,235,0.32)' },
+            { offset: 1, color: 'rgba(37,99,235,0.04)' },
+          ]),
+        },
+        lineStyle: { width: 2, color: lineColor },
+        itemStyle: { color: lineColor },
+        data: values,
+      },
+    ],
+  }
+}
