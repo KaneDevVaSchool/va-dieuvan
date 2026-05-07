@@ -168,7 +168,6 @@
         "trend_y_label": "Chuyến",
         "trend_trips_suffix": "chuyến",
         "calendar_title": "Lịch tuần này",
-        "calendar_legend_trips": "Chọn ngày trong tuần. Thanh giờ: một ô là một chuyến — vuốt ngang nếu có nhiều chuyến.",
         "calendar_timeline_hint": "Khung giờ",
         "calendar_no_trips_day": "Không có chuyến trong ngày này."
     },

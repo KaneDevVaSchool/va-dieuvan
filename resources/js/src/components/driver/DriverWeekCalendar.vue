@@ -77,7 +77,7 @@
       </div>
 
       <div
-        class="w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-2xl border border-slate-700/40 bg-[#070f18] touch-pan-x [-webkit-overflow-scrolling:touch]"
+        class="w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-2xl border border-slate-700/40 bg-[#070f18] touch-pan-x [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <div
           class="relative flex min-h-[140px] min-w-[520px] flex-col px-2 pb-3 pt-2 sm:min-w-full"
@@ -155,10 +155,6 @@
         </div>
       </div>
     </div>
-
-    <p class="mt-3 border-t border-[#86c2b5]/15 pt-3 text-center text-xs leading-relaxed text-[#86c2b5]/70">
-      {{ t('driver_home.calendar_legend_trips') }}
-    </p>
   </section>
 </template>
 

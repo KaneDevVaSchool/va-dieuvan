@@ -127,7 +127,6 @@
         "label_pending": "Pending confirm",
         "label_cancelled": "Cancelled",
         "calendar_title": "This week",
-        "calendar_legend_trips": "Pick a day. Each bar is a trip along the clock bar — swipe horizontally when crowded.",
         "calendar_timeline_hint": "Schedule",
         "calendar_no_trips_day": "No trips on this day."
     },
