@@ -21,14 +21,13 @@ function toResourceVehicle(v: Record<string, unknown>, busy: Set<number>): Resou
   const type = v.type != null ? String(v.type) : '—'
   const seatsRaw = v.seat_count != null ? Number(v.seat_count) : 0
   const seats = Number.isFinite(seatsRaw) && seatsRaw > 0 ? seatsRaw : 0
-  const subParts: string[] = []
   const def = v.default_driver as { id?: number; full_name?: string } | undefined
-  if (def?.full_name) subParts.push(String(def.full_name))
   const defId = def?.id != null && Number.isFinite(Number(def.id)) ? Number(def.id) : null
   return {
     id,
     label: `${plate} · ${type}${seats ? ` (${seats})` : ''}`,
-    sublabel: subParts.length ? subParts.join(' · ') : undefined,
+    /** Tài xế mặc định không hiển thị ở select xe; chọn tài xế ở khối riêng. */
+    sublabel: undefined,
     available: !busy.has(id),
     defaultDriverId: defId,
     seatCount: seats > 0 ? seats : null,
