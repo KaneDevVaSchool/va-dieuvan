@@ -9,32 +9,9 @@
         <TruckIcon class="h-5 w-5" aria-hidden="true" />
       </div>
       <div class="min-w-0 flex-1">
-        <div
-          class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5"
-        >
-          <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-            <div class="min-w-0 truncate text-[13px] font-medium tabular-nums text-slate-900 dark:text-slate-100">
-              {{ vehicle?.license_plate ?? '—' }}
-            </div>
-            <div class="flex shrink-0 flex-nowrap items-center gap-1.5">
-              <span
-                class="rounded-full border-[0.5px] border-[#378ADD]/45 px-2 py-0.5 text-[12px] font-normal text-[#378ADD] dark:border-[#378ADD]/40 dark:text-[#6cb3f5]"
-              >
-                GPS
-              </span>
-              <span
-                v-if="seatChipText"
-                class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[12px] font-normal text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
-              >
-                {{ seatChipText }}
-              </span>
-              <span
-                v-if="vehicle?.status === 'ready'"
-                class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[12px] font-normal text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
-              >
-                {{ t('trip_detail.coordination.vehicle_ready_chip') }}
-              </span>
-            </div>
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1 truncate text-[13px] font-medium tabular-nums text-slate-900 dark:text-slate-100">
+            {{ vehicle?.license_plate ?? '—' }}
           </div>
           <button
             v-if="props.allowChange"
@@ -44,6 +21,25 @@
           >
             {{ t('trip_detail.coordination.card_change') }} →
           </button>
+        </div>
+        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <span
+            class="rounded-full border-[0.5px] border-[#378ADD]/45 px-2 py-0.5 text-[12px] font-normal text-[#378ADD] dark:border-[#378ADD]/40 dark:text-[#6cb3f5]"
+          >
+            GPS
+          </span>
+          <span
+            v-if="seatChipText"
+            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[12px] font-normal text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
+          >
+            {{ seatChipText }}
+          </span>
+          <span
+            v-if="vehicle?.status === 'ready'"
+            class="rounded-full border-[0.5px] border-[#1D9E75]/45 px-2 py-0.5 text-[12px] font-normal text-[#1D9E75] dark:border-[#1D9E75]/40 dark:text-[#4dcf9a]"
+          >
+            {{ t('trip_detail.coordination.vehicle_ready_chip') }}
+          </span>
         </div>
         <div class="mt-0.5 text-[13px] font-normal text-slate-600 dark:text-slate-400">
           {{ typeLabel }}
