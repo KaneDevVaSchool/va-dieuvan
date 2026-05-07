@@ -40,6 +40,7 @@ class UpdateUserProfileRequest extends ApiFormRequest
             'company_id' => 'nullable|integer|min:0',
             'health_insurance_code' => 'nullable|string|max:50',
             'unemployment_insurance_number' => 'nullable|string|max:50',
+            'avatar' => ['sometimes', 'nullable', 'image', 'max:4096'],
         ];
     }
 }

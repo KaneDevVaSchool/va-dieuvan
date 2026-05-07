@@ -8,6 +8,7 @@ use App\Services\CmsUserInfoService;
 use App\Services\FeatureToggleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class UserProfileController extends Controller
@@ -48,12 +49,26 @@ class UserProfileController extends Controller
                 : $validated['employee_code'];
         }
 
+        if ($request->hasFile('avatar')) {
+            $disk = Storage::disk('public');
+            $dir = 'avatars/'.$user->id;
+            if ($disk->exists($dir)) {
+                foreach ($disk->files($dir) as $existing) {
+                    $disk->delete($existing);
+                }
+            }
+            $storedPath = $disk->putFile($dir, $request->file('avatar'));
+            $localUpdates['avatar_url'] = $disk->url($storedPath);
+        }
+
         $cmsUserId = $cms->findCmsUserIdByEmail($user->email);
 
         $cmsSyncWarning = null;
         try {
             if ($cmsUserId !== null && $cms->isAvailable()) {
-                $cms->updateUserInfo($cmsUserId, $validated);
+                $cmsPayload = $validated;
+                unset($cmsPayload['avatar']);
+                $cms->updateUserInfo($cmsUserId, $cmsPayload);
             }
         } catch (Throwable $e) {
             report($e);

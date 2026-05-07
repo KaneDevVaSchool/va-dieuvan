@@ -26,7 +26,7 @@
       >
         <div class="relative mx-auto flex w-fit flex-col items-center">
           <div
-            class="relative -mt-2 h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full border border-white/[0.08] bg-[#051a12]"
+            class="relative -mt-2 h-[92px] w-[92px] shrink-0 overflow-hidden rounded-full border border-white/[0.08] bg-[#051a12]"
           >
             <img
               v-if="avatarUrl"
@@ -36,24 +36,46 @@
             />
             <div
               v-else
-              class="flex h-full w-full items-center justify-center text-lg font-bold text-[#2dd4a0]"
+              class="flex h-full w-full items-center justify-center text-2xl font-bold text-[#2dd4a0]"
             >
               {{ initials }}
             </div>
+            <div
+              v-if="avatarUploading"
+              class="absolute inset-0 flex items-center justify-center rounded-full bg-black/55"
+              aria-live="polite"
+            >
+              <span class="sr-only">{{ t('driver_account.avatar_uploading_a11y') }}</span>
+              <svg
+                class="h-8 w-8 animate-spin text-[#2dd4a0]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+            </div>
+            <input
+              ref="avatarFileInput"
+              type="file"
+              class="sr-only"
+              accept="image/jpeg,image/png,image/webp"
+              @change="onAvatarFileChange"
+            />
             <button
               type="button"
-              class="absolute -bottom-0.5 -right-0.5 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-[#2dd4a0] text-[#09180f] ring-2 ring-[#0f2318] transition active:scale-95"
+              class="absolute -bottom-1 -right-1 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#2dd4a0] text-[#09180f] ring-2 ring-[#0f2318] transition hover:brightness-105 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
+              :disabled="avatarUploading"
               :aria-label="t('driver_account.update_photo_a11y')"
-              @click="contactProcurement"
+              @click="openAvatarPicker"
             >
-              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <ArrowUpTrayIcon class="h-[18px] w-[18px]" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -194,24 +216,24 @@
       </section>
 
       <!-- S5: Recent trips -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
-        <div class="mb-4 flex items-start justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <span class="h-2 w-2 shrink-0 rounded-full bg-[#2dd4a0]" />
-            <h2 class="text-base font-semibold text-white">
+      <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] px-4 py-5 sm:px-6 sm:py-6">
+        <div class="mb-5 flex items-start justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-[#2dd4a0]" />
+            <h2 class="text-lg font-bold text-white sm:text-xl">
               {{ t('driver_account.recent_trips_title') }}
             </h2>
           </div>
           <RouterLink
             to="/driver/schedule"
-            class="shrink-0 text-[15px] font-semibold text-[#2dd4a0] transition hover:text-[#4ade80]"
+            class="shrink-0 text-lg font-bold text-[#2dd4a0] transition hover:text-[#4ade80] sm:text-xl"
           >
             {{ t('driver_account.see_all') }} ›
           </RouterLink>
         </div>
         <p
           v-if="!loading && recentTrips.length === 0"
-          class="py-6 text-center text-base text-[#cbd5e1]"
+          class="py-8 text-center text-lg text-[#cbd5e1]"
         >
           {{ t('driver_account.empty_trips') }}
         </p>
@@ -219,33 +241,33 @@
           <li
             v-for="(trip, idx) in recentTrips"
             :key="trip.id"
-            class="border-b border-white/[0.06] py-3 last:border-b-0 last:pb-0"
+            class="border-b border-white/[0.06] py-4 last:border-b-0 last:pb-0"
             :class="idx === 0 ? 'pt-0' : ''"
           >
             <RouterLink
               :to="`/driver/trips/${trip.id}`"
-              class="flex gap-2 text-left transition active:opacity-90"
+              class="flex gap-3 text-left transition active:opacity-90 sm:gap-4"
             >
-              <div class="w-[56px] shrink-0">
-                <p class="text-base font-bold tabular-nums text-white">{{ tripTime(trip) }}</p>
-                <p class="mt-1 text-xs text-[#94a3b8] sm:text-sm">{{ tripDateShort(trip) }}</p>
+              <div class="w-[68px] shrink-0 sm:w-[76px]">
+                <p class="text-lg font-bold tabular-nums leading-tight text-white sm:text-xl">{{ tripTime(trip) }}</p>
+                <p class="mt-1.5 text-sm text-[#94a3b8] sm:text-base">{{ tripDateShort(trip) }}</p>
               </div>
-              <div class="flex min-w-0 flex-1 items-start gap-1.5">
+              <div class="flex min-w-0 flex-1 items-start gap-2">
                 <span
-                  class="mt-0.5 shrink-0 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300 sm:text-xs"
+                  class="mt-1 shrink-0 rounded-lg bg-emerald-500/20 px-2 py-1 text-xs font-bold uppercase tracking-wide text-emerald-300 sm:text-sm"
                 >
                   {{ tripTypeBadgeText(trip) }}
                 </span>
-                <div class="min-w-0 flex-1 space-y-1.5">
-                  <div class="flex items-start gap-2">
-                    <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
-                    <p class="min-w-0 text-[15px] font-medium leading-snug text-white">
+                <div class="min-w-0 flex-1 space-y-2">
+                  <div class="flex items-start gap-2.5">
+                    <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" />
+                    <p class="min-w-0 text-base font-semibold leading-snug text-white sm:text-lg">
                       {{ tripOrigin(trip) }}
                     </p>
                   </div>
-                  <div class="flex items-start gap-2">
-                    <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#3b82f6]" />
-                    <p class="min-w-0 text-[15px] font-medium leading-snug text-white">
+                  <div class="flex items-start gap-2.5">
+                    <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-[#3b82f6]" />
+                    <p class="min-w-0 text-base font-semibold leading-snug text-white sm:text-lg">
                       {{ tripDestination(trip) }}
                     </p>
                   </div>
@@ -253,12 +275,12 @@
               </div>
               <div class="shrink-0 text-right">
                 <span
-                  class="inline-block rounded-full px-2.5 py-1 text-[12px] font-semibold sm:text-sm"
+                  class="inline-block rounded-full px-3 py-1.5 text-sm font-bold sm:text-base"
                   :class="tripStatusBadgeClass(trip)"
                 >
                   {{ tripStatusLabel(trip) }}
                 </span>
-                <p class="mt-1 text-xs text-[#94a3b8] tabular-nums sm:text-sm">#{{ trip.id }}</p>
+                <p class="mt-2 text-sm text-[#94a3b8] tabular-nums sm:text-base">#{{ trip.id }}</p>
               </div>
             </RouterLink>
           </li>
@@ -326,6 +348,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightOnRectangleIcon,
+  ArrowUpTrayIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
   DocumentTextIcon,
@@ -354,6 +377,8 @@ const rawListItems = ref([])
 const myDriverId = ref(null)
 const summary = ref(null)
 const logoutConfirmOpen = ref(false)
+const avatarFileInput = ref(null)
+const avatarUploading = ref(false)
 
 const procurementTelHref = computed(() => {
   const raw = import.meta.env.VITE_PROCUREMENT_PHONE
@@ -367,6 +392,33 @@ function contactProcurement() {
   const h = procurementTelHref.value
   if (h) {
     window.location.href = h
+  }
+}
+
+function openAvatarPicker() {
+  avatarFileInput.value?.click()
+}
+
+async function onAvatarFileChange(ev) {
+  const input = ev.target
+  if (!(input instanceof HTMLInputElement)) return
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  if (file.size > 4 * 1024 * 1024) {
+    errorMsg.value = t('driver_account.avatar_too_big')
+    return
+  }
+  avatarUploading.value = true
+  errorMsg.value = ''
+  try {
+    const fd = new FormData()
+    fd.append('avatar', file)
+    await auth.patchProfile(fd)
+  } catch {
+    errorMsg.value = t('driver_account.avatar_upload_error')
+  } finally {
+    avatarUploading.value = false
   }
 }
 
@@ -551,7 +603,7 @@ const documentRows = computed(() => {
     }
   }
 
-  const licClass = (drv?.license_class && String(drv.license_class).trim()) || 'B2'
+  const licClass = (drv?.license_class && String(drv.license_class).trim()) || 'GPLX'
   const licExp = drv?.license_expires_at || null
   const licBucket = expiryBucket(licExp)
   let licStatusKey = 'missing'
