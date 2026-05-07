@@ -1,15 +1,7 @@
 <template>
   <div
     class="dispatch-wizard space-y-6 text-slate-900"
-    :class="
-      step === 3 && !created
-        ? form.is_urgent
-          ? 'rounded-xl pb-28 ring-2 ring-rose-200/90 ring-offset-2 ring-offset-slate-100 sm:pb-24'
-          : 'pb-28 sm:pb-24'
-        : form.is_urgent
-          ? 'rounded-xl pb-10 ring-2 ring-rose-200/90 ring-offset-2 ring-offset-slate-100'
-          : 'pb-10'
-    "
+    :class="step === 3 && !created ? 'pb-28 sm:pb-24' : 'pb-10'"
     :aria-label="
       form.is_urgent && !loading ? t('dispatch_wizard.create.form_priority_frame_aria') : undefined
     "
@@ -33,51 +25,63 @@
           }}</span>
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-          @click="onCancel"
-        >
-          {{ t('dispatch_wizard.create.cancel') }}
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-          @click="saveDraft"
-        >
-          <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
-          {{ t('dispatch_wizard.create.save_draft') }}
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-          :title="t('dispatch_wizard.create.drafts_tooltip')"
-          @click="openDraftsModal"
-        >
-          <ClipboardDocumentListIcon class="h-4 w-4 text-slate-500" />
-          {{ t('dispatch_wizard.create.drafts_title') }}
-        </button>
-        <button
-          v-if="activeDraftId"
-          type="button"
-          class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
-          :title="t('dispatch_wizard.create.clear_draft_tooltip')"
-          @click="openClearDraftModal"
-        >
-          {{ t('dispatch_wizard.create.clear_draft') }}
-        </button>
-        <button
-          v-if="!(step === 3 && !created)"
-          type="button"
-          class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="headerPrimaryDisabled"
-          @click="primaryAction"
-        >
-          <span v-if="loading" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          {{ headerPrimaryLabel }}
-          <ArrowRightIcon v-if="!loading" class="h-4 w-4" />
-        </button>
+      <div class="flex flex-col items-stretch gap-2 sm:items-end">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            @click="onCancel"
+          >
+            {{ t('dispatch_wizard.create.cancel') }}
+          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+              @click="saveDraft"
+            >
+              <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
+              {{ t('dispatch_wizard.create.save_draft') }}
+            </button>
+            <span
+              v-if="draftSaveFlash"
+              role="status"
+              class="text-xs font-semibold text-emerald-700"
+            >
+              {{ t('dispatch_wizard.create.draft_saved_flash') }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+            :title="t('dispatch_wizard.create.drafts_tooltip')"
+            @click="openDraftsModal"
+          >
+            <ClipboardDocumentListIcon class="h-4 w-4 text-slate-500" />
+            {{ t('dispatch_wizard.create.drafts_title') }}
+          </button>
+          <button
+            v-if="activeDraftId"
+            type="button"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
+            :title="t('dispatch_wizard.create.clear_draft_tooltip')"
+            @click="openClearDraftModal"
+          >
+            {{ t('dispatch_wizard.create.clear_draft') }}
+          </button>
+          <button
+            v-if="!(step === 3 && !created)"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="headerPrimaryDisabled"
+            @click="primaryAction"
+          >
+            <span v-if="loading" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            {{ headerPrimaryLabel }}
+            <ArrowRightIcon v-if="!loading" class="h-4 w-4" />
+          </button>
+        </div>
+        <p v-if="draftSaveError" class="text-xs font-medium text-rose-600 sm:text-right">{{ draftSaveError }}</p>
       </div>
     </header>
 
@@ -201,6 +205,9 @@
                   v-model="requesterSearchQ"
                   type="search"
                   autocomplete="off"
+                  role="combobox"
+                  :aria-expanded="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
+                  aria-controls="dw-requester-search-list"
                   :placeholder="t('dispatch_wizard.create.search_ph')"
                   class="dw-input"
                   @input="scheduleRequesterSearch"
@@ -213,6 +220,7 @@
                 />
                 <ul
                   v-if="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
+                  id="dw-requester-search-list"
                   class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
                   role="listbox"
                 >
@@ -245,6 +253,7 @@
                     type="email"
                     :placeholder="t('dispatch_wizard.create.requester_email_ph')"
                     :class="['dw-input', step2RequesterEmailInvalid ? 'ring-1 ring-rose-300' : '']"
+                    @blur="onRequesterEmailBlur"
                   />
                 </label>
                 <label class="block min-w-0">
@@ -492,6 +501,9 @@
                   v-model="coordinatorSearchQ"
                   type="search"
                   autocomplete="off"
+                  role="combobox"
+                  :aria-expanded="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
+                  aria-controls="dw-coordinator-search-list"
                   :placeholder="t('dispatch_wizard.create.coord_search_ph')"
                   class="dw-input"
                   @input="scheduleCoordinatorSearch"
@@ -504,6 +516,7 @@
                 />
                 <ul
                   v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
+                  id="dw-coordinator-search-list"
                   class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
                   role="listbox"
                 >
@@ -541,6 +554,7 @@
                     type="email"
                     :class="['dw-input', step2CoordinatorEmailInvalid ? 'ring-1 ring-rose-300' : '']"
                     :placeholder="t('dispatch_wizard.create.coord_email_ph')"
+                    @blur="onCoordinatorEmailBlur"
                   />
                 </label>
                 <label class="block min-w-0">
@@ -686,6 +700,100 @@
       leave-to-class="opacity-0"
     >
       <div
+        v-if="submitResultModalOpen"
+        class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="submit-result-modal-title"
+        @click.self="closeSubmitResultModal"
+      >
+        <div
+          class="w-full max-w-[420px] overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          @click.stop
+        >
+          <div
+            class="border-b border-slate-100 px-5 pb-4 pt-5"
+            :class="
+              submitResultOk
+                ? 'bg-gradient-to-br from-emerald-50 via-white to-slate-50/80'
+                : 'bg-gradient-to-br from-rose-50 via-white to-slate-50/80'
+            "
+          >
+            <div class="flex gap-4">
+              <div
+                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-inner"
+                :class="
+                  submitResultOk
+                    ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-700 shadow-emerald-900/5'
+                    : 'bg-gradient-to-br from-rose-100 to-rose-50 text-rose-700 shadow-rose-900/5'
+                "
+              >
+                <CheckCircleIcon v-if="submitResultOk" class="h-6 w-6" aria-hidden="true" />
+                <XCircleIcon v-else class="h-6 w-6" aria-hidden="true" />
+              </div>
+              <div class="min-w-0 pt-0.5">
+                <h3 id="submit-result-modal-title" class="text-base font-semibold leading-snug text-slate-900">
+                  {{
+                    submitResultOk
+                      ? t('dispatch_wizard.confirm.submit_modal_success_title')
+                      : t('dispatch_wizard.confirm.submit_modal_fail_title')
+                  }}
+                </h3>
+                <p v-if="submitResultOk" class="mt-2 text-sm leading-relaxed text-slate-600">
+                  {{ t('dispatch_wizard.confirm.submit_modal_success_body', { id: created?.id ?? '—' }) }}
+                </p>
+                <p v-else class="mt-2 text-sm leading-relaxed text-slate-600">
+                  {{ submitResultDetail || t('dispatch_wizard.confirm.submit_modal_fail_body') }}
+                </p>
+                <p
+                  v-if="submitResultOk && submitResultDetail"
+                  class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium leading-relaxed text-amber-950 ring-1 ring-amber-100"
+                >
+                  {{ submitResultDetail }}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-2 bg-slate-50/90 px-4 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:gap-3">
+            <template v-if="submitResultOk && created?.id">
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-va-800/25 focus:ring-offset-2 sm:w-auto"
+                @click="navigateToSubmittedRequestDetail"
+              >
+                {{ t('dispatch_wizard.confirm.submit_modal_view_request') }}
+              </button>
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-va-800/25 focus:ring-offset-2 sm:w-auto"
+                @click="closeSubmitModalAndStartNewDraft"
+              >
+                {{ t('dispatch_wizard.confirm.submit_modal_new_request') }}
+              </button>
+            </template>
+            <button
+              type="button"
+              class="inline-flex w-full items-center justify-center rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/30 focus:ring-offset-2 sm:w-auto"
+              @click="closeSubmitResultModal"
+            >
+              {{ t('dispatch_wizard.confirm.submit_modal_close') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
         v-if="draftsModalOpen"
         class="fixed inset-0 z-[201] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
         role="dialog"
@@ -780,6 +888,7 @@ import { computed, defineAsyncComponent, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
+  CheckCircleIcon,
   CheckIcon,
   ClipboardDocumentListIcon,
   CloudArrowUpIcon,
@@ -787,12 +896,13 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   PaperClipIcon,
+  XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from './dispatch-wizard/injectionKeys'
 import ConfirmSummary from './dispatch-wizard/ConfirmSummary.vue'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const wizard = useDispatchRequestWizard()
 provide(DISPATCH_WIZARD_KEY, wizard)
 
@@ -830,12 +940,16 @@ const {
   coordinatorSearchError,
   step2DateOrderInvalid,
   step2RequesterEmailInvalid,
+  draftSaveFlash,
+  draftSaveError,
   step2CoordinatorEmailInvalid,
   requestedDateTime,
   tripTypeOptions,
   openDatePickerFromInput,
   onRequesterPhoneInput,
   onCoordinatorPhoneInput,
+  onRequesterEmailBlur,
+  onCoordinatorEmailBlur,
   scheduleRequesterSearch,
   onRequesterSearchFocus,
   onRequesterSearchBlur,
@@ -849,6 +963,7 @@ const {
   clearBasisFile,
   draftLabel,
   formatFileSize,
+  formatDraftTime,
   dispatchFormSettingsLoading,
   dispatchFormSettingsError,
   urgentAutoActive,
@@ -869,7 +984,13 @@ const {
   startNewDraftSession,
   openDraftsModal,
   closeDraftsModal,
+  navigateToSubmittedRequestDetail,
+  closeSubmitModalAndStartNewDraft,
   onCancel,
+  submitResultModalOpen,
+  submitResultOk,
+  submitResultDetail,
+  closeSubmitResultModal,
 } = wizard
 
 const urgentExplainTooltip = computed(() =>
@@ -877,15 +998,6 @@ const urgentExplainTooltip = computed(() =>
     hours: appliedUrgentThresholdHours.value ?? '—',
   }),
 )
-
-function formatDraftTime(ts) {
-  try {
-    const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
-    return new Date(ts).toLocaleString(loc)
-  } catch {
-    return '—'
-  }
-}
 </script>
 
 <style src="./dispatch-wizard/dispatchWizard.styles.css"></style>

@@ -130,7 +130,7 @@
         "btn_arrived": "Đã đến điểm đón",
         "float_maps": "Chỉ đường",
         "float_call": "Gọi điều phối",
-        "pending_banner_title": "Bạn có {n} chuyến chờ xác nhận",
+        "pending_banner_title": "{n} chuyến cần xác nhận",
         "pending_banner_sub": "Vui lòng xác nhận hoặc báo bận trước 2 giờ",
         "btn_confirm": "Xác nhận",
         "btn_decline": "Từ chối",
@@ -153,8 +153,7 @@
         "pending_requester": "Người đặt: {name}",
         "pending_passengers": "{n} khách",
         "pending_view_detail": "Xem chi tiết chuyến",
-        "group_urgent": "Gấp",
-        "group_upcoming": "Sắp tới",
+        "group_pending": "Chưa xác nhận",
         "group_confirmed": "Đã xác nhận",
         "pending_collapsed_count": "{n} chuyến",
         "pending_show_more": "Xem thêm",
@@ -189,7 +188,12 @@
         "calendar_svc_cargo": "Hàng hóa",
         "calendar_svc_business": "Công tác",
         "calendar_svc_other": "Chuyến",
-        "calendar_time_sep": "–"
+        "calendar_time_sep": "–",
+        "pending_banner_confirmed": "{n} đã xác nhận",
+        "pending_vehicle_label": "Xe",
+        "pending_distance": "{km} km · ~{min} phút",
+        "pending_notes_label": "Ghi chú",
+        "status_confirmed": "Đã xác nhận"
     },
     "driver_schedule": {
         "title": "Lịch hôm nay",

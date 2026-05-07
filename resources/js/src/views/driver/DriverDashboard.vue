@@ -74,12 +74,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getDriverSummary } from '../../api/driver'
 import { listTripsAll } from '../../api/trips'
 import { useAuthStore } from '../../store'
-import { useNotificationStore } from '../../store/notificationCenter'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
 import PendingConfirmationBanner from '../../components/driver/PendingConfirmationBanner.vue'
 import DriverStatsGrid from '../../components/driver/DriverStatsGrid.vue'
@@ -87,7 +86,6 @@ import DriverWeekCalendar from '../../components/driver/DriverWeekCalendar.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
-const notifStore = useNotificationStore()
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -127,17 +125,11 @@ const rawTrips = computed(() => {
   )
 })
 
-// Trips chờ xác nhận (chưa in_progress); chuyến gấp lên trước
 const pendingTrips = computed(() => {
-  const list = rawTrips.value.filter((x) => pendingStatuses.has(tripStatusNorm(x)))
-  return list
+  return rawTrips.value
+    .filter((x) => pendingStatuses.has(tripStatusNorm(x)))
     .slice()
-    .sort((a, b) => {
-      const ua = a.dispatch_request?.is_urgent ? 1 : 0
-      const ub = b.dispatch_request?.is_urgent ? 1 : 0
-      if (ub !== ua) return ub - ua
-      return (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0)
-    })
+    .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))
 })
 
 const stats = computed(() => ({
@@ -177,13 +169,6 @@ async function fetchData(showLoader = true) {
 async function refreshTrips() {
   await fetchData(false)
 }
-
-watch(
-  () => pendingTrips.value.some((x) => x.dispatch_request?.is_urgent),
-  (urgent) => {
-    if (urgent) void notifStore.refreshBadges()
-  },
-)
 
 onMounted(() => fetchData(true))
 </script>

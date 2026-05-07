@@ -42,6 +42,7 @@
         },
         "emp_code": "Mã NV: {code}",
         "file_too_large": "Tệp vượt quá 10MB.",
+        "file_type_not_allowed": "Chỉ chấp nhận PDF hoặc ảnh (JPG, PNG, WebP).",
         "search_staff_fail": "Không tìm kiếm được nhân sự.",
         "errors": {
             "dispatch_settings_loading": "Không tải được cài đặt ngưỡng gấp; hệ thống dùng mặc định."
@@ -51,7 +52,8 @@
             "draft": "Bản nháp",
             "new_session": "Phiên mới (chưa lưu)",
             "label_with_trip": "Bản nháp • {trip} • {time}",
-            "label_saved": "Bản nháp • Lưu {time}"
+            "label_saved": "Bản nháp • Lưu {time}",
+            "save_quota_error": "Không thể lưu — bộ nhớ trình duyệt có thể đã đầy. Hãy giải phóng dung lượng hoặc xóa bớt bản nháp cũ."
         },
         "header": {
             "sending": "Đang gửi…",
@@ -109,6 +111,13 @@
             "back_edit": "← Quay lại chỉnh sửa",
             "submit_primary": "Gửi yêu cầu",
             "submit_loading": "Đang gửi…",
+            "submit_modal_success_title": "Gửi thành công",
+            "submit_modal_success_body": "Yêu cầu #{id} đã được tạo.",
+            "submit_modal_fail_title": "Gửi không thành công",
+            "submit_modal_fail_body": "Đã có lỗi khi gửi. Vui lòng kiểm tra và thử lại.",
+            "submit_modal_close": "Đóng",
+            "submit_modal_view_request": "Xem phiếu",
+            "submit_modal_new_request": "Tạo phiếu mới",
             "success_meta": "Đã tạo yêu cầu #{id}",
             "view_list": "Xem danh sách",
             "issue_requester_name": "Chưa nhập họ tên người đề nghị.",
@@ -135,6 +144,7 @@
             "badge_new": "Yêu cầu mới",
             "cancel": "Hủy",
             "save_draft": "Lưu nháp",
+            "draft_saved_flash": "Đã lưu",
             "drafts_title": "Bản nháp đã lưu",
             "drafts_tooltip": "Xem và mở các bản nháp đã lưu trên trình duyệt",
             "clear_draft": "Xóa nháp",

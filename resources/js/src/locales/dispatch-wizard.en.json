@@ -42,6 +42,7 @@
         },
         "emp_code": "Emp. code: {code}",
         "file_too_large": "File exceeds 10MB.",
+        "file_type_not_allowed": "Only PDF or image files (JPG, PNG, WebP) are allowed.",
         "search_staff_fail": "Could not search staff.",
         "errors": {
             "dispatch_settings_loading": "Could not load urgency threshold settings — defaults are used."
@@ -51,7 +52,8 @@
             "draft": "Draft",
             "new_session": "New session (unsaved)",
             "label_with_trip": "Draft • {trip} • {time}",
-            "label_saved": "Draft • Saved {time}"
+            "label_saved": "Draft • Saved {time}",
+            "save_quota_error": "Could not save — browser storage may be full. Free space or delete old drafts."
         },
         "header": {
             "sending": "Sending…",
@@ -109,6 +111,13 @@
             "back_edit": "← Back to edit",
             "submit_primary": "Submit request",
             "submit_loading": "Sending…",
+            "submit_modal_success_title": "Submitted successfully",
+            "submit_modal_success_body": "Request #{id} has been created.",
+            "submit_modal_fail_title": "Submission failed",
+            "submit_modal_fail_body": "Something went wrong while sending. Please check and try again.",
+            "submit_modal_close": "Close",
+            "submit_modal_view_request": "View request",
+            "submit_modal_new_request": "New request",
             "success_meta": "Request #{id} created",
             "view_list": "View list",
             "issue_requester_name": "Requester name is missing.",
@@ -135,6 +144,7 @@
             "badge_new": "New request",
             "cancel": "Cancel",
             "save_draft": "Save draft",
+            "draft_saved_flash": "Saved",
             "drafts_title": "Saved drafts",
             "drafts_tooltip": "View and open drafts saved in this browser",
             "clear_draft": "Clear draft",

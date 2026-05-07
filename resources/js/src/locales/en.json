@@ -99,7 +99,7 @@
         "good_evening": "Good evening 🌙",
         "load_error": "Could not load data. Try again later.",
         "float_call": "Call dispatch",
-        "pending_banner_title": "You have {n} trip(s) to confirm",
+        "pending_banner_title": "{n} trip(s) need confirmation",
         "pending_banner_sub": "Please confirm or decline at least 2 hours ahead",
         "btn_confirm": "Confirm",
         "btn_decline": "Decline",
@@ -122,8 +122,7 @@
         "pending_requester": "Booked by: {name}",
         "pending_passengers": "{n} passenger(s)",
         "pending_view_detail": "Trip details",
-        "group_urgent": "Urgent",
-        "group_upcoming": "Upcoming",
+        "group_pending": "Awaiting Confirmation",
         "group_confirmed": "Confirmed",
         "pending_collapsed_count": "{n} trip(s)",
         "pending_show_more": "Show more",
@@ -148,7 +147,12 @@
         "calendar_svc_cargo": "Cargo",
         "calendar_svc_business": "Business trip",
         "calendar_svc_other": "Trip",
-        "calendar_time_sep": "–"
+        "calendar_time_sep": "–",
+        "pending_banner_confirmed": "{n} confirmed",
+        "pending_vehicle_label": "Vehicle",
+        "pending_distance": "{km} km · ~{min} min",
+        "pending_notes_label": "Notes",
+        "status_confirmed": "Confirmed"
     },
     "driver_trip_detail": {
         "title": "Trip details",

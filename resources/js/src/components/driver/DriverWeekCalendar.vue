@@ -1,162 +1,207 @@
 <template>
-  <section class="rounded-3xl bg-[#0f1816] px-3 py-4 shadow-xl shadow-black/25 sm:px-4">
-    <div class="mb-4 flex min-w-0 flex-wrap items-start justify-between gap-2">
-      <h2 class="min-w-0 text-lg font-bold text-[#7fdcc8]">
+  <section class="rounded-3xl bg-[#0f1816] shadow-xl shadow-black/25">
+    <!-- Section header -->
+    <div class="flex min-w-0 flex-wrap items-center justify-between gap-2 px-5 pt-5 pb-4">
+      <h2 class="text-xl font-bold text-[#7fdcc8]">
         {{ t('driver_home.calendar_title') }}
       </h2>
-      <p class="shrink-0 text-base tabular-nums font-semibold text-[#7fdcc8]/85">
+      <p class="shrink-0 text-base font-semibold tabular-nums text-[#7fdcc8]/70">
         {{ weekRangeLabel }}
       </p>
     </div>
 
-    <div v-if="loading" class="grid grid-cols-7 gap-0">
-      <div v-for="n in 7" :key="n" class="flex min-w-0 w-full flex-col items-center gap-1.5 py-1">
-        <div class="h-2.5 w-full max-w-[2rem] animate-pulse rounded bg-[#7fdcc8]/15" />
-        <div class="w-11 max-w-full animate-pulse rounded-full bg-[#070f0d]/90 aspect-square" />
-        <div class="h-3 w-4 animate-pulse rounded bg-[#7fdcc8]/10" />
+    <!-- Day picker -->
+    <div class="px-3 pb-4 sm:px-4">
+      <div v-if="loading" class="grid grid-cols-7 gap-1">
+        <div v-for="n in 7" :key="n" class="flex flex-col items-center gap-2 py-1">
+          <div class="h-3 w-6 animate-pulse rounded bg-[#7fdcc8]/15" />
+          <div
+            class="h-14 w-14 max-w-full animate-pulse rounded-full bg-[#070f0d]/90"
+          />
+          <div class="h-2 w-2 animate-pulse rounded-full bg-[#7fdcc8]/10" />
+        </div>
+      </div>
+
+      <div v-else class="grid grid-cols-7 gap-0.5">
+        <button
+          v-for="day in weekDays"
+          :key="day.iso"
+          type="button"
+          class="flex min-h-[72px] w-full flex-col items-center gap-1.5 rounded-xl py-2 transition active:scale-[0.95]"
+          :class="selectedIso === day.iso ? 'bg-[#7fdcc8]/10' : 'hover:bg-[#7fdcc8]/5'"
+          :aria-pressed="selectedIso === day.iso"
+          @click="selectedIso = day.iso"
+        >
+          <!-- Day abbreviation -->
+          <span
+            class="text-xs font-bold uppercase leading-none tracking-wide"
+            :class="
+              day.isToday
+                ? 'text-[#7fdcc8]'
+                : selectedIso === day.iso
+                  ? 'text-[#7fdcc8]/80'
+                  : 'text-slate-400'
+            "
+          >
+            {{ day.abbr }}
+          </span>
+
+          <!-- Date circle -->
+          <div
+            class="flex h-12 w-12 max-w-full items-center justify-center rounded-full text-lg font-bold tabular-nums leading-none transition-colors"
+            :class="
+              selectedIso === day.iso
+                ? day.isToday
+                  ? 'bg-[#7fdcc8] text-[#070f0d] shadow-md shadow-[#7fdcc8]/30'
+                  : 'bg-[#1a2826] text-white ring-1 ring-[#7fdcc8]/30'
+                : day.isToday
+                  ? 'bg-[#7fdcc8]/25 text-[#7fdcc8]'
+                  : day.tripCount > 0
+                    ? 'bg-[#142421] text-white'
+                    : 'text-slate-500'
+            "
+          >
+            {{ day.date }}
+          </div>
+
+          <!-- Trip count dot -->
+          <span
+            class="h-2 w-2 rounded-full transition-colors"
+            :class="
+              day.tripCount > 0
+                ? selectedIso === day.iso
+                  ? 'bg-[#7fdcc8]'
+                  : 'bg-[#7fdcc8]/50'
+                : 'bg-transparent'
+            "
+            :aria-hidden="true"
+          />
+        </button>
       </div>
     </div>
 
-    <div v-else class="grid grid-cols-7 gap-0">
-      <button
-        v-for="day in weekDays"
-        :key="day.iso"
-        type="button"
-        class="flex min-w-0 w-full flex-col items-center gap-1 rounded-lg py-1 text-center transition hover:bg-[#7fdcc8]/8 active:scale-[0.98]"
-        :class="selectedIso === day.iso ? 'bg-[#7fdcc8]/10' : ''"
-        :aria-pressed="selectedIso === day.iso"
-        @click="selectedIso = day.iso"
-      >
-        <span
-          class="text-xs font-bold uppercase leading-none tracking-wide"
-          :class="
-            day.isToday ? 'text-[#7fdcc8]' : selectedIso === day.iso ? 'text-[#7fdcc8]/90' : 'text-slate-400'
-          "
-        >
-          {{ day.abbr }}
-        </span>
+    <!-- Divider -->
+    <div class="mx-4 border-t border-[#7fdcc8]/10 sm:mx-5" />
 
+    <!-- Day's trip list (vertical) -->
+    <div class="px-4 py-4 sm:px-5">
+      <!-- Loading skeleton -->
+      <div v-if="loading" class="space-y-3">
         <div
-          class="flex w-11 max-w-full items-center justify-center rounded-full text-base font-bold tabular-nums leading-none transition-colors aspect-square"
-          :class="
-            selectedIso === day.iso
-              ? day.isToday
-                ? 'bg-[#7fdcc8] text-[#070f0d] shadow-md shadow-[#7fdcc8]/25'
-                : 'bg-[#1a2826] text-white shadow-inner shadow-black/20'
-              : day.isToday
-                ? 'bg-[#7fdcc8]/30 text-[#7fdcc8]'
-                : day.tripCount > 0
-                  ? 'bg-[#1a2826] text-white'
-                  : 'bg-[#070f0d]/80 text-slate-500'
-          "
+          v-for="n in 3"
+          :key="n"
+          class="flex gap-3 rounded-2xl bg-[#0a1c1a]/60 p-4 ring-1 ring-[#7fdcc8]/8"
         >
-          {{ day.date }}
+          <div class="h-14 w-[60px] animate-pulse rounded-xl bg-[#7fdcc8]/10" />
+          <div class="flex-1 space-y-2 pt-1">
+            <div class="flex gap-2">
+              <div class="h-5 w-14 animate-pulse rounded-md bg-[#7fdcc8]/15" />
+              <div class="h-5 w-10 animate-pulse rounded-md bg-[#7fdcc8]/8" />
+            </div>
+            <div class="h-4 w-3/4 animate-pulse rounded bg-[#7fdcc8]/10" />
+            <div class="h-4 w-2/4 animate-pulse rounded bg-[#7fdcc8]/8" />
+          </div>
         </div>
+      </div>
 
-        <span
-          class="min-h-[12px] text-xs font-bold tabular-nums leading-none"
-          :class="
-            day.tripCount > 0 ? 'text-[#7fdcc8]' : 'invisible text-transparent'
-          "
-          :aria-hidden="day.tripCount === 0"
-        >
-          {{ day.tripCount > 0 ? day.tripCount : '0' }}
-        </span>
-      </button>
-    </div>
-
-    <!-- Horizontal timeline -->
-    <div v-if="!loading" class="mt-5 w-full min-w-0 max-w-full">
+      <!-- Empty state -->
       <div
-        class="w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-2xl border border-white/10 bg-[#050a09] touch-pan-x [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        v-else-if="tripsForDay.length === 0"
+        class="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-[#7fdcc8]/18 bg-[#070f0d]/40 px-4 py-10 text-center"
       >
-        <div
-          class="relative flex min-h-[140px] min-w-[520px] flex-col px-2 pb-3 pt-2 sm:min-w-full"
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          class="h-14 w-14 text-[#7fdcc8]/30"
+          aria-hidden="true"
         >
-          <!-- Hour axis: flex, ticks không co -->
-          <div class="mb-2 flex min-h-5 w-full shrink-0">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+          />
+        </svg>
+        <p class="text-base font-semibold text-[#7fdcc8]/55">
+          {{ t('driver_home.calendar_no_trips_day') }}
+        </p>
+      </div>
+
+      <!-- Trip cards (vertical list) -->
+      <div v-else class="space-y-3">
+        <RouterLink
+          v-for="trip in tripsForDay"
+          :key="trip.id"
+          :to="`/driver/trips/${trip.id}`"
+          class="flex items-start gap-4 rounded-2xl bg-[#0a1c1a] p-4 ring-1 transition active:scale-[0.99]"
+          :class="
+            tripVariant(trip) === 'blue'
+              ? 'ring-sky-400/20 hover:ring-sky-400/35'
+              : 'ring-teal-400/20 hover:ring-teal-400/35'
+          "
+        >
+          <!-- Time column -->
+          <div class="flex shrink-0 flex-col items-center gap-2">
             <div
-              class="shrink-0"
-              :style="{ width: `${hourTickFlexSegments.leadingPct}%` }"
-              aria-hidden="true"
-            />
-            <div
-              v-for="seg in hourTickFlexSegments.segments"
-              :key="'seg-' + seg.minutes"
-              class="flex shrink-0 justify-center"
-              :style="{ width: `${seg.flexWidthPct}%` }"
+              class="min-w-[60px] rounded-xl px-3 py-2.5 text-center"
+              :class="
+                tripVariant(trip) === 'blue'
+                  ? 'bg-sky-500/12 ring-1 ring-sky-400/20'
+                  : 'bg-teal-500/12 ring-1 ring-teal-400/20'
+              "
             >
-              <span class="text-xs font-medium tabular-nums text-slate-500 sm:text-sm">
-                {{ seg.label }}
+              <span class="text-2xl font-extrabold tabular-nums leading-none text-white">
+                {{ formatTripTime(trip) }}
               </span>
             </div>
+            <!-- Arrive time if available -->
+            <span v-if="formatTripArriveTime(trip)" class="text-xs font-semibold tabular-nums text-slate-500">
+              → {{ formatTripArriveTime(trip) }}
+            </span>
           </div>
 
-          <div class="relative min-h-[96px] flex-1">
-            <!-- Vertical grid -->
-            <div
-              class="pointer-events-none absolute inset-x-2 inset-y-0 flex"
-              aria-hidden="true"
-            >
-              <div
-                v-for="tick in hourTicks"
-                :key="tick.minutes"
-                class="absolute top-0 bottom-0 w-px bg-slate-600/25"
-                :style="{ left: `${tick.pct}%` }"
-              />
-            </div>
-
-            <!-- Trip bars -->
-            <div
-              class="relative mx-0"
-              :style="{ minHeight: `${Math.max(72, layout.laneCount * LANE_STRIDE + 8)}px` }"
-            >
-              <RouterLink
-                v-for="block in layout.blocks"
-                :key="block.trip.id"
-                :to="`/driver/trips/${block.trip.id}`"
-                class="group absolute z-[2] flex min-h-[64px] flex-col justify-center gap-0.5 rounded-xl px-2 py-1.5 transition hover:z-10 hover:brightness-110 active:scale-[0.99]"
-                :class="block.variant === 'blue' ? cardBlue : cardTeal"
-                :style="{
-                  left: `${block.leftPct}%`,
-                  width: `${block.widthPct}%`,
-                  top: `${block.lane * LANE_STRIDE}px`,
-                }"
+          <!-- Info column -->
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span
+                class="rounded-md bg-white/10 px-2 py-0.5 text-sm font-extrabold uppercase tracking-wide text-white"
               >
-                <div class="flex min-w-0 items-center justify-between gap-1">
-                  <span
-                    class="max-w-[58%] truncate rounded-md bg-white/12 px-1 py-px text-xs font-extrabold uppercase tracking-wide text-white sm:text-sm"
-                  >
-                    {{ block.serviceLabel }}
-                  </span>
-                  <span
-                    class="min-w-0 shrink truncate text-right font-mono text-xs font-semibold tabular-nums opacity-90 sm:text-sm"
-                  >
-                    :class="block.variant === 'blue' ? 'text-sky-200/95' : 'text-cyan-100/95'"
-                  >
-                    {{ block.refLabel }}
-                  </span>
-                </div>
-                <p
-                  class="truncate font-mono text-xs font-bold tabular-nums leading-tight text-white/95 sm:text-sm"
-                >
-                  {{ block.timeRange }}
-                </p>
-                <p class="line-clamp-2 text-xs font-bold leading-snug text-white sm:text-sm">
-                  {{ block.routeLine }}
-                </p>
-              </RouterLink>
+                {{ tripServiceTypeCalendarLabel(trip, t) }}
+              </span>
+              <span
+                class="text-sm font-bold tabular-nums"
+                :class="
+                  tripVariant(trip) === 'blue' ? 'text-sky-300/70' : 'text-teal-300/70'
+                "
+              >
+                {{ tripRefLabel(trip) }}
+              </span>
             </div>
-
-            <!-- Empty day -->
-            <div
-              v-if="!layout.blocks.length && tripsForDay.length === 0"
-              class="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center px-4 text-center text-base text-slate-500"
-            >
-              {{ t('driver_home.calendar_no_trips_day') }}
-            </div>
+            <p class="mt-2 line-clamp-1 text-base font-bold text-white">
+              {{ tripOrigin(trip) }}
+            </p>
+            <p class="mt-0.5 line-clamp-1 text-base font-medium text-[#7fdcc8]/60">
+              → {{ tripDestination(trip) }}
+            </p>
           </div>
-        </div>
+
+          <!-- Chevron -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            class="mt-1 h-5 w-5 shrink-0 text-[#7fdcc8]/30"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </RouterLink>
       </div>
     </div>
   </section>
@@ -167,9 +212,9 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import {
-  tripOutboundInboundTimeRange,
+  tripDestination,
+  tripOrigin,
   tripServiceTypeCalendarLabel,
-  tripTimelineRouteLine,
 } from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
@@ -180,19 +225,31 @@ const props = defineProps({
 const { t, locale } = useI18n()
 
 const selectedIso = ref('')
-const LANE_STRIDE = 74
-const MIN_WIDTH_PCT = 13
 
-const cardTeal =
-  'border border-cyan-400/45 bg-gradient-to-b from-teal-500/20 to-[#081820]/95 shadow-[0_0_14px_rgba(34,211,238,0.14)]'
-const cardBlue =
-  'border border-sky-400/50 bg-gradient-to-b from-sky-600/18 to-[#081528]/95 shadow-[0_0_14px_rgba(56,189,248,0.14)]'
+const DAY_ABBR_VI = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+const DAY_ABBR_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 function ymd(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
+}
+
+function hhmm(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
+  return d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+function formatTripTime(trip) {
+  return hhmm(trip?.depart_at || trip?.dispatch_request?.depart_at) || '—'
+}
+
+function formatTripArriveTime(trip) {
+  return hhmm(trip?.arrive_by || trip?.dispatch_request?.arrive_by)
 }
 
 const tripCountByDate = computed(() => {
@@ -205,9 +262,6 @@ const tripCountByDate = computed(() => {
   }
   return map
 })
-
-const DAY_ABBR_VI = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
-const DAY_ABBR_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 const weekDays = computed(() => {
   const today = new Date()
@@ -264,84 +318,9 @@ const tripsForDay = computed(() => {
   return props.rawTrips
     .filter((trip) => trip.depart_at && trip.depart_at.slice(0, 10) === iso)
     .slice()
-    .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))
-})
-
-function durationMinutes(trip) {
-  const dep = new Date(trip.depart_at).getTime()
-  const arrRaw = trip.arrive_by || trip.dispatch_request?.arrive_by
-  const arr = arrRaw ? new Date(arrRaw).getTime() : NaN
-  if (!Number.isFinite(dep)) return 45
-  if (!Number.isFinite(arr) || arr <= dep) return 45
-  return Math.min(Math.round((arr - dep) / 60000), 240)
-}
-
-function departMinutes(trip) {
-  const d = new Date(trip.depart_at)
-  if (Number.isNaN(d.getTime())) return null
-  return d.getHours() * 60 + d.getMinutes()
-}
-
-function computeTimeWindow(trips) {
-  const DEF_START = 8 * 60
-  const DEF_END = 18 * 60
-  if (!trips.length) return { start: DEF_START, end: DEF_END }
-  let min = Infinity
-  let max = -Infinity
-  for (const trip of trips) {
-    const startMin = departMinutes(trip)
-    if (startMin == null) continue
-    const endMin = startMin + durationMinutes(trip)
-    min = Math.min(min, startMin)
-    max = Math.max(max, endMin)
-  }
-  if (!Number.isFinite(min)) return { start: DEF_START, end: DEF_END }
-  min = Math.max(0, min - 45)
-  max = Math.min(24 * 60, max + 45)
-  if (max - min < 180) {
-    const mid = (min + max) / 2
-    min = Math.max(0, mid - 90)
-    max = Math.min(24 * 60, mid + 90)
-  }
-  return { start: Math.floor(min / 30) * 30, end: Math.ceil(max / 30) * 30 }
-}
-
-const timeWindow = computed(() => computeTimeWindow(tripsForDay.value))
-
-const hourTicks = computed(() => {
-  const { start, end } = timeWindow.value
-  const span = Math.max(end - start, 60)
-  const step = span <= 240 ? 60 : 120
-  const ticks = []
-  let m = Math.ceil(start / step) * step
-  if (m < start) m += step
-  for (; m <= end; m += step) {
-    ticks.push({
-      minutes: m,
-      label: `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`,
-      pct: ((m - start) / span) * 100,
-    })
-  }
-  if (!ticks.length) {
-    ticks.push({
-      minutes: start,
-      label: `${String(Math.floor(start / 60)).padStart(2, '0')}:${String(start % 60).padStart(2, '0')}`,
-      pct: 0,
-    })
-  }
-  return ticks
-})
-
-const hourTickFlexSegments = computed(() => {
-  const ticks = hourTicks.value
-  if (!ticks.length) return { leadingPct: 0, segments: [] }
-  const leadingPct = ticks[0].pct
-  const segments = ticks.map((tick, i) => ({
-    ...tick,
-    flexWidthPct:
-      i + 1 < ticks.length ? ticks[i + 1].pct - ticks[i].pct : 100 - ticks[i].pct,
-  }))
-  return { leadingPct, segments }
+    .sort(
+      (a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0),
+    )
 })
 
 function tripVariant(trip) {
@@ -355,59 +334,4 @@ function tripRefLabel(trip) {
   if (code != null && String(code).trim() !== '') return `#${String(code).trim()}`
   return `#${trip.id}`
 }
-
-const layout = computed(() => {
-  const trips = tripsForDay.value
-  const { start, end } = timeWindow.value
-  const spanSafe = Math.max(end - start, 1)
-
-  const rawBlocks = trips
-    .map((trip) => {
-      const startMin = departMinutes(trip)
-      if (startMin == null) return null
-
-      const dur = durationMinutes(trip)
-      const endMin = startMin + dur
-
-      const overlapStart = Math.max(startMin, start)
-      const overlapEnd = Math.min(endMin, end)
-      if (overlapEnd <= overlapStart) return null
-
-      const leftPct = ((overlapStart - start) / spanSafe) * 100
-      let widthPct = ((overlapEnd - overlapStart) / spanSafe) * 100
-      widthPct = Math.max(MIN_WIDTH_PCT, widthPct)
-      const widthAdj = Math.min(widthPct, 100 - leftPct)
-
-      const localeTag = locale.value === 'vi' ? 'vi' : 'en'
-      return {
-        trip,
-        serviceLabel: tripServiceTypeCalendarLabel(trip, t),
-        timeRange: tripOutboundInboundTimeRange(trip, localeTag, t),
-        routeLine: tripTimelineRouteLine(trip, t),
-        refLabel: tripRefLabel(trip),
-        variant: tripVariant(trip),
-        leftPct: Math.max(0, Math.min(leftPct, 100 - MIN_WIDTH_PCT)),
-        widthPct: Math.max(MIN_WIDTH_PCT, widthAdj),
-        startMin: overlapStart,
-        endMin: overlapEnd,
-      }
-    })
-    .filter(Boolean)
-
-  rawBlocks.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin)
-
-  const laneEnds = []
-  for (const block of rawBlocks) {
-    let lane = 0
-    while (lane < laneEnds.length && laneEnds[lane] > block.startMin) lane++
-    if (lane === laneEnds.length) laneEnds.push(block.endMin)
-    else laneEnds[lane] = Math.max(laneEnds[lane], block.endMin)
-    block.lane = lane
-  }
-
-  return {
-    blocks: rawBlocks,
-    laneCount: Math.max(1, laneEnds.length),
-  }
-})
 </script>

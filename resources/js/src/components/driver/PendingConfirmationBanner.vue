@@ -1,62 +1,88 @@
 <template>
-  <div class="rounded-3xl bg-[#0f1816] shadow-xl shadow-black/30">
-    <!-- Header -->
-    <div class="border-b border-[#7fdcc8]/12 px-4 py-4 sm:px-5">
-      <div class="flex items-start gap-3">
-        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#7fdcc8]/12">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-7 w-7 text-[#7fdcc8]" aria-hidden="true">
-            <path d="M10 2a6 6 0 0 0-6 6v3.586l-.707.707A1 1 0 0 0 4 14h12a1 1 0 0 0 .707-1.707L16 11.586V8a6 6 0 0 0-6-6zM10 18a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3z" />
-          </svg>
-        </span>
-        <div class="min-w-0 flex-1">
-          <p class="text-xl font-bold leading-snug text-white sm:text-2xl">
-            {{ t('driver_home.pending_banner_title', { n: trips.length }) }}
-          </p>
-          <p
-            v-if="hasUrgent && !loading"
-            class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-rose-950/70 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-rose-100 ring-1 ring-rose-600/40"
-          >
-            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400/90" />
-            {{ t('driver_home.pending_urgent_hint') }}
-          </p>
-          <p
-            v-if="actionError"
-            class="mt-3 rounded-xl border border-rose-500/45 bg-rose-950/55 px-3 py-2 text-sm font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25"
-            role="alert"
-          >
-            {{ actionError }}
-          </p>
+  <div class="overflow-hidden rounded-3xl bg-[#0f1816] shadow-xl shadow-black/30">
+    <!-- Header: operation-style count display -->
+    <div class="px-5 pt-6 pb-5">
+      <template v-if="loading">
+        <div class="flex items-center gap-4">
+          <div class="h-14 w-14 animate-pulse rounded-2xl bg-[#7fdcc8]/10" />
+          <div class="flex-1 space-y-2">
+            <div class="h-8 w-36 animate-pulse rounded-xl bg-[#7fdcc8]/10" />
+            <div class="h-5 w-28 animate-pulse rounded-lg bg-[#7fdcc8]/8" />
+          </div>
         </div>
+      </template>
+      <template v-else>
+        <div class="flex items-start gap-4">
+          <!-- Truck icon -->
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#7fdcc8]/10 ring-1 ring-[#7fdcc8]/18"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              class="h-8 w-8 text-[#7fdcc8]"
+              aria-hidden="true"
+            >
+              <path d="M6.5 3c-1.051 0-2.093.04-3.125.117A1.49 1.49 0 0 0 2 4.607V10.5h9V4.607c0-.727-.57-1.44-1.375-1.49A41.568 41.568 0 0 0 6.5 3ZM2 12v2.5A1.5 1.5 0 0 0 3.5 16h.041a3 3 0 0 1 5.918 0h.791a.75.75 0 0 0 .75-.75V12H2Z" />
+              <path d="M6.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM13.25 5a.75.75 0 0 0-.75.75v8.514a3.001 3.001 0 0 1 4.893 1.486c.077-.111.157-.22.237-.328.075-.103.119-.22.119-.344V10.5a1.5 1.5 0 0 0-.265-.848l-2.154-3.23A1.5 1.5 0 0 0 14.115 6h-.865ZM14.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+            </svg>
+          </div>
+
+          <!-- Count text -->
+          <div class="min-w-0 flex-1">
+            <p class="text-3xl font-extrabold leading-none text-white">
+              {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
+            </p>
+            <p
+              v-if="confirmedCount > 0"
+              class="mt-2.5 flex items-center gap-1.5 text-base font-semibold text-emerald-400/80"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="h-4 w-4 shrink-0"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              {{ t('driver_home.pending_banner_confirmed', { n: confirmedCount }) }}
+            </p>
+          </div>
+        </div>
+
+        <p
+          v-if="actionError"
+          class="mt-4 rounded-xl border border-rose-500/45 bg-rose-950/55 px-4 py-3 text-sm font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25"
+          role="alert"
+        >
+          {{ actionError }}
+        </p>
+      </template>
+    </div>
+
+    <!-- Loading skeleton for trip groups -->
+    <div v-if="loading" class="space-y-3 px-5 pb-5">
+      <div v-for="s in 2" :key="s" class="rounded-2xl bg-[#070f0d]/80 p-4">
+        <div class="h-5 w-32 animate-pulse rounded bg-[#7fdcc8]/12" />
+        <div class="mt-3 h-28 animate-pulse rounded-xl bg-[#7fdcc8]/8" />
       </div>
     </div>
 
-    <!-- Loading skeleton -->
-    <div v-if="loading" class="space-y-4 px-4 py-4 sm:px-5">
-      <div v-for="s in 3" :key="s" class="rounded-2xl bg-[#070f0d]/80 p-4">
-        <div class="h-5 w-40 animate-pulse rounded bg-[#7fdcc8]/12" />
-        <div class="mt-4 space-y-3">
-          <div class="h-24 animate-pulse rounded-xl bg-[#7fdcc8]/8" />
-          <div class="h-24 animate-pulse rounded-xl bg-[#7fdcc8]/8" />
-        </div>
-      </div>
-    </div>
-
-    <div v-else class="divide-y divide-[#7fdcc8]/12">
+    <!-- Two sections: pending + confirmed -->
+    <div v-else class="divide-y divide-[#7fdcc8]/10 border-t border-[#7fdcc8]/10">
       <TripGroupSection
-        :title="t('driver_home.group_urgent')"
-        :trips="sortedUrgent"
-        :open="open.urgent"
+        :title="t('driver_home.group_pending')"
+        :trips="sortedPending"
+        :open="open.pending"
         :busy-id="busyId"
-        @toggle="toggle('urgent')"
-        @confirm="onConfirm"
-        @decline="openDeclineModal"
-      />
-      <TripGroupSection
-        :title="t('driver_home.group_upcoming')"
-        :trips="sortedUpcoming"
-        :open="open.upcoming"
-        :busy-id="busyId"
-        @toggle="toggle('upcoming')"
+        accent="mint"
+        @toggle="toggle('pending')"
         @confirm="onConfirm"
         @decline="openDeclineModal"
       />
@@ -65,12 +91,14 @@
         :trips="sortedConfirmed"
         :open="open.confirmed"
         :busy-id="busyId"
+        accent="emerald"
         @toggle="toggle('confirmed')"
         @confirm="onConfirm"
         @decline="openDeclineModal"
       />
     </div>
 
+    <!-- Decline modal -->
     <Teleport to="body">
       <div
         v-if="declineModalOpen"
@@ -95,7 +123,9 @@
             <p class="mt-4 text-sm text-slate-400">
               {{ t('driver_home.pending_decline_subtitle') }}
             </p>
-            <label class="mt-3 block text-xs font-semibold uppercase tracking-wide text-[#7fdcc8]/70">
+            <label
+              class="mt-3 block text-xs font-semibold uppercase tracking-wide text-[#7fdcc8]/70"
+            >
               {{ t('driver_home.pending_decline_reason_label') }}
             </label>
             <textarea
@@ -166,10 +196,9 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { updateTripStatus } from '../../api/trips'
-import { formatDepartForTrip, isTripUrgent, tripOrigin } from '../../composables/useDriverTripDisplay'
+import { formatDepartForTrip, tripOrigin } from '../../composables/useDriverTripDisplay'
 import TripGroupSection from './TripGroupSection.vue'
 
-/** Tránh spam POST /trips/:id/status khi server trả 429 (throttle). */
 let tripStatusCooldownUntil = 0
 
 const DECLINE_REASON_MIN = 10
@@ -192,7 +221,6 @@ const declineStep = ref('reason')
 const declineReason = ref('')
 const declineModalError = ref('')
 
-/** Sau khi user chỉnh collapse, không ép auto-collapse lại khi danh sách đổi nhẹ */
 let userTouchedCollapse = false
 
 function tripStatusNorm(x) {
@@ -200,15 +228,12 @@ function tripStatusNorm(x) {
 }
 
 function bucketFor(trip) {
-  if (isTripUrgent(trip)) return 'urgent'
-  const s = tripStatusNorm(trip)
-  if (s === 'driver_confirmed') return 'confirmed'
-  return 'upcoming'
+  if (tripStatusNorm(trip) === 'driver_confirmed') return 'confirmed'
+  return 'pending'
 }
 
-const urgentTrips = computed(() => props.trips.filter((x) => bucketFor(x) === 'urgent'))
-const upcomingTrips = computed(() => props.trips.filter((x) => bucketFor(x) === 'upcoming'))
-const confirmedTrips = computed(() => props.trips.filter((x) => bucketFor(x) === 'confirmed'))
+const pendingBucket = computed(() => props.trips.filter((x) => bucketFor(x) === 'pending'))
+const confirmedBucket = computed(() => props.trips.filter((x) => bucketFor(x) === 'confirmed'))
 
 function sortByDepart(list) {
   return list
@@ -216,11 +241,11 @@ function sortByDepart(list) {
     .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))
 }
 
-const sortedUrgent = computed(() => sortByDepart(urgentTrips.value))
-const sortedUpcoming = computed(() => sortByDepart(upcomingTrips.value))
-const sortedConfirmed = computed(() => sortByDepart(confirmedTrips.value))
+const sortedPending = computed(() => sortByDepart(pendingBucket.value))
+const sortedConfirmed = computed(() => sortByDepart(confirmedBucket.value))
 
-const hasUrgent = computed(() => urgentTrips.value.length > 0)
+const pendingCount = computed(() => pendingBucket.value.length)
+const confirmedCount = computed(() => confirmedBucket.value.length)
 
 const declineTripSummary = computed(() => {
   const tr = declineTrip.value
@@ -232,19 +257,13 @@ const declineTripSummary = computed(() => {
   return `#${tag} · ${time} · ${origin}`
 })
 
-const open = reactive({
-  urgent: true,
-  upcoming: true,
-  confirmed: true,
-})
+const open = reactive({ pending: true, confirmed: true })
 
 function applyAutoCollapse() {
   if (userTouchedCollapse) return
-  const n = props.trips.length
-  if (n > 10) {
-    open.upcoming = false
+  if (props.trips.length > 10) {
+    open.pending = true
     open.confirmed = false
-    open.urgent = true
   }
 }
 

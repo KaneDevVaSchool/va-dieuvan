@@ -152,6 +152,8 @@ export function useDispatchRequestWizard() {
         urgentManualDesired.value = !!form.value.is_urgent
       }
     })
+    requesterEmailTouched.value = false
+    coordinatorEmailTouched.value = false
   }
 
   const step = ref(0)
@@ -167,11 +169,21 @@ export function useDispatchRequestWizard() {
   const draftSavedAt = ref(null)
   const hasDraftSnapshot = ref(false)
   const clearDraftModalOpen = ref(false)
+  const submitResultModalOpen = ref(false)
+  const submitResultOk = ref(false)
+  const submitResultDetail = ref('')
+
+  function closeSubmitResultModal() {
+    submitResultModalOpen.value = false
+  }
   /** Id bản nháp đang mở (chuỗi); null = phiên làm việc mới, lưu sẽ tạo bản mới. */
   const activeDraftId = ref(null)
   /** Meta cho danh sách (mới nhất trước). */
   const savedDraftsList = ref([])
   const draftsModalOpen = ref(false)
+  const draftSaveError = ref('')
+  const draftSaveFlash = ref(false)
+  let draftSaveFlashTimer = null
 
   const form = ref(createInitialForm())
   const requestedDateTime = ref(
@@ -197,6 +209,11 @@ export function useDispatchRequestWizard() {
   const basisFileInput = ref(null)
   const basisDragOver = ref(false)
   const basisFileError = ref('')
+
+  /** Chỉ hiện lỗi định dạng sau blur (ô email coordinator). Logic chặn bước vẫn dùng `coordinatorEmailFormatInvalid`. */
+  const coordinatorEmailTouched = ref(false)
+  /** Chỉ hiện lỗi định dạng sau blur (ô email người đề nghị). Logic chặn bước vẫn dùng `requesterEmailFormatInvalid`. */
+  const requesterEmailTouched = ref(false)
 
   let requesterSearchTimer = null
   const requesterSearchQ = ref('')
@@ -319,6 +336,15 @@ export function useDispatchRequestWizard() {
     return `${(n / (1024 * 1024)).toFixed(1)} MB`
   }
 
+  function formatDraftTime(ts) {
+    try {
+      const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
+      return new Date(ts).toLocaleString(loc)
+    } catch {
+      return '—'
+    }
+  }
+
   function openDatePickerFromInput(evt) {
     const inp = evt?.currentTarget
     if (!inp || inp.type !== 'date') return
@@ -349,6 +375,14 @@ export function useDispatchRequestWizard() {
 
   function onCoordinatorPhoneInput(e) {
     form.value.coordinator_phone = sanitizeVnPhoneDigits(e?.target?.value)
+  }
+
+  function onRequesterEmailBlur() {
+    requesterEmailTouched.value = true
+  }
+
+  function onCoordinatorEmailBlur() {
+    coordinatorEmailTouched.value = true
   }
 
   function scheduleRequesterSearch() {
@@ -400,6 +434,7 @@ export function useDispatchRequestWizard() {
     requesterSearchQ.value = u.name || ''
     requesterSearchResults.value = []
     requesterDropdownOpen.value = false
+    requesterEmailTouched.value = false
   }
 
   function scheduleCoordinatorSearch() {
@@ -450,6 +485,28 @@ export function useDispatchRequestWizard() {
     coordinatorSearchQ.value = u.name || ''
     coordinatorSearchResults.value = []
     coordinatorDropdownOpen.value = false
+    coordinatorEmailTouched.value = false
+  }
+
+  const ALLOWED_BASIS_MIME = new Set([
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/pjpeg',
+  ])
+  const ALLOWED_BASIS_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp'])
+
+  function isAllowedBasisFile(f) {
+    if (!f) return false
+    const type = String(f.type || '')
+      .trim()
+      .toLowerCase()
+    if (type && ALLOWED_BASIS_MIME.has(type)) return true
+    const name = String(f.name || '')
+    const dot = name.lastIndexOf('.')
+    if (dot < 0) return false
+    return ALLOWED_BASIS_EXT.has(name.slice(dot).toLowerCase())
   }
 
   function onBasisFileChange(e) {
@@ -459,6 +516,12 @@ export function useDispatchRequestWizard() {
     if (f.size > 10 * 1024 * 1024) {
       basisFile.value = null
       basisFileError.value = t('dispatch_wizard.file_too_large')
+      if (basisFileInput.value) basisFileInput.value.value = ''
+      return
+    }
+    if (!isAllowedBasisFile(f)) {
+      basisFile.value = null
+      basisFileError.value = t('dispatch_wizard.file_type_not_allowed')
       if (basisFileInput.value) basisFileInput.value.value = ''
       return
     }
@@ -472,6 +535,10 @@ export function useDispatchRequestWizard() {
     if (!f) return
     if (f.size > 10 * 1024 * 1024) {
       basisFileError.value = t('dispatch_wizard.file_too_large')
+      return
+    }
+    if (!isAllowedBasisFile(f)) {
+      basisFileError.value = t('dispatch_wizard.file_type_not_allowed')
       return
     }
     basisFile.value = f
@@ -557,6 +624,8 @@ export function useDispatchRequestWizard() {
     requestedDateTime.value = d ? `${d}T00:00` : ''
   }
 
+  // Đồng bộ form.date_needed và giờ trên các dòng khi đổi requestedDateTime;
+  // chỉ theo dõi độ dài mảng dòng để không ghi đè chỉnh sửa chi tiết từng ô.
   watch(
     () => ({
       dt: requestedDateTime.value,
@@ -581,8 +650,8 @@ export function useDispatchRequestWizard() {
     if (departRaw) {
       const departMs = new Date(departRaw).getTime()
       if (!Number.isFinite(departMs)) return
-      const hoursApart = Math.abs(departMs - Date.now()) / (3600 * 1000)
-      if (hoursApart <= threshold) {
+      const hoursUntilDepart = (departMs - Date.now()) / (3600 * 1000)
+      if (hoursUntilDepart >= 0 && hoursUntilDepart <= threshold) {
         urgentAutoActive.value = true
         form.value.is_urgent = true
       } else {
@@ -600,8 +669,8 @@ export function useDispatchRequestWizard() {
       }
       return
     }
-    const hoursApart = Math.abs(dayStartMs - Date.now()) / (3600 * 1000)
-    if (hoursApart <= threshold) {
+    const hoursUntilDayStart = (dayStartMs - Date.now()) / (3600 * 1000)
+    if (hoursUntilDayStart >= 0 && hoursUntilDayStart <= threshold) {
       urgentAutoActive.value = true
       form.value.is_urgent = true
     } else {
@@ -689,12 +758,21 @@ export function useDispatchRequestWizard() {
     isDateNeededBeforeProposed(form.value.proposed_date, form.value.date_needed),
   )
 
-  const step2RequesterEmailInvalid = computed(
+  const requesterEmailFormatInvalid = computed(
     () => !!form.value.requester_email?.trim() && !isPlausibleEmail(form.value.requester_email),
   )
 
-  const step2CoordinatorEmailInvalid = computed(
+  const coordinatorEmailFormatInvalid = computed(
     () => !!form.value.coordinator_email?.trim() && !isPlausibleEmail(form.value.coordinator_email),
+  )
+
+  /** Viền/ gợi ý chỉ sau blur. Logic chặn bước dùng *FormatInvalid tương ứng. */
+  const step2RequesterEmailInvalid = computed(
+    () => requesterEmailTouched.value && requesterEmailFormatInvalid.value,
+  )
+
+  const step2CoordinatorEmailInvalid = computed(
+    () => coordinatorEmailTouched.value && coordinatorEmailFormatInvalid.value,
   )
 
   const canGoNext = computed(() => {
@@ -703,8 +781,8 @@ export function useDispatchRequestWizard() {
       return (
         !!form.value.requester_name?.trim() &&
         !!form.value.requester_email?.trim() &&
-        isPlausibleEmail(form.value.requester_email) &&
-        !step2CoordinatorEmailInvalid.value &&
+        !requesterEmailFormatInvalid.value &&
+        !coordinatorEmailFormatInvalid.value &&
         !!form.value.purpose?.trim() &&
         !!form.value.proposed_date &&
         !!form.value.date_needed &&
@@ -794,7 +872,7 @@ export function useDispatchRequestWizard() {
     if (!f.requester_name?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_requester_name'))
     if (!f.requester_email?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_requester_email'))
     else if (!isPlausibleEmail(f.requester_email)) msgs.push(t('dispatch_wizard.confirm.issue_requester_email'))
-    if (step2CoordinatorEmailInvalid.value) msgs.push(t('dispatch_wizard.validate.coord_email'))
+    if (coordinatorEmailFormatInvalid.value) msgs.push(t('dispatch_wizard.validate.coord_email'))
     if (!f.purpose?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_purpose'))
     if (!f.proposed_date || !f.date_needed) msgs.push(t('dispatch_wizard.confirm.issue_dates'))
     if (step2DateOrderInvalid.value) msgs.push(t('dispatch_wizard.validate.date_order'))
@@ -869,6 +947,7 @@ export function useDispatchRequestWizard() {
   let submitInFlight = false
 
   function primaryAction() {
+    if (loading.value || submitInFlight) return
     if (step.value < 3) nextStep()
     else doSubmit()
   }
@@ -889,7 +968,7 @@ export function useDispatchRequestWizard() {
       step.value = 1
       return t('dispatch_wizard.validate.step2')
     }
-    if (step2CoordinatorEmailInvalid.value) {
+    if (coordinatorEmailFormatInvalid.value) {
       step.value = 1
       return t('dispatch_wizard.validate.coord_email')
     }
@@ -983,21 +1062,26 @@ export function useDispatchRequestWizard() {
 
   onUnmounted(() => {
     revokePdfPreviewUrl()
+    clearTimeout(draftSaveFlashTimer)
   })
 
   async function doSubmit() {
-    if (submitInFlight || loading.value) return
-    const v = validateBeforeApi()
-    if (v) {
-      error.value = v
-      return
-    }
-    error.value = ''
-    created.value = null
+    if (created.value?.id || submitInFlight || loading.value) return
     submitInFlight = true
     loading.value = true
-    const idempotencyKey = newIdempotencyKey()
     try {
+      const v = validateBeforeApi()
+      if (v) {
+        error.value = v
+        submitResultOk.value = false
+        submitResultDetail.value = v
+        submitResultModalOpen.value = true
+        return
+      }
+      error.value = ''
+      created.value = null
+      const idempotencyKey = newIdempotencyKey()
+      try {
       const { origin, destination } = computeApiOriginDestination()
       const freeNotes = form.value.free_notes?.trim() || ''
       const formSnap = { ...form.value }
@@ -1063,8 +1147,18 @@ export function useDispatchRequestWizard() {
         const u = uidOrNull()
         hasDraftSnapshot.value = u != null && readDraftList(u).items.length > 0
       }
-    } catch (e) {
-      error.value = formatApiError(e, t('dispatch_wizard.validate.create_fail'))
+      } catch (e) {
+        error.value = formatApiError(e, t('dispatch_wizard.validate.create_fail'))
+      }
+      if (created.value?.id) {
+        submitResultOk.value = true
+        submitResultDetail.value = (error.value && String(error.value).trim()) || ''
+        submitResultModalOpen.value = true
+      } else if (error.value) {
+        submitResultOk.value = false
+        submitResultDetail.value = error.value
+        submitResultModalOpen.value = true
+      }
     } finally {
       loading.value = false
       submitInFlight = false
@@ -1110,12 +1204,29 @@ export function useDispatchRequestWizard() {
     writeDraftList(uid, items)
     try {
       localStorage.setItem(draftItemStorageKey(uid, meta.id), dataJson)
-    } catch {
-      /* ignore */
+    } catch (e) {
+      if (isQuotaExceededError(e)) throw e
     }
   }
 
+  function isQuotaExceededError(err) {
+    if (!err) return false
+    if (err.name === 'QuotaExceededError') return true
+    if (err.code === 22 || err.code === 1014) return true
+    return false
+  }
+
+  function flashDraftSaved() {
+    draftSaveFlash.value = true
+    clearTimeout(draftSaveFlashTimer)
+    draftSaveFlashTimer = window.setTimeout(() => {
+      draftSaveFlash.value = false
+      draftSaveFlashTimer = null
+    }, 2000)
+  }
+
   function saveDraft() {
+    draftSaveError.value = ''
     try {
       trimPassengerRowsInPlace()
       trimBusinessRowsInPlace()
@@ -1135,6 +1246,7 @@ export function useDispatchRequestWizard() {
         localStorage.setItem(currentDraftStorageKey(), JSON.stringify(data))
         draftSavedAt.value = savedAt
         hasDraftSnapshot.value = true
+        flashDraftSaved()
         return
       }
       let id = activeDraftId.value
@@ -1158,8 +1270,11 @@ export function useDispatchRequestWizard() {
       draftSavedAt.value = savedAt
       hasDraftSnapshot.value = true
       refreshDraftsList()
-    } catch {
-      /* ignore */
+      flashDraftSaved()
+    } catch (e) {
+      if (isQuotaExceededError(e)) {
+        draftSaveError.value = t('dispatch_wizard.draft.save_quota_error')
+      }
     }
   }
 
@@ -1287,6 +1402,18 @@ export function useDispatchRequestWizard() {
     draftsModalOpen.value = false
   }
 
+  function navigateToSubmittedRequestDetail() {
+    const id = created.value?.id
+    if (!id) return
+    router.push(staffPath(`/requests/${id}`))
+    closeSubmitResultModal()
+  }
+
+  function closeSubmitModalAndStartNewDraft() {
+    closeSubmitResultModal()
+    startNewDraftSession()
+  }
+
   function resetWizardForm() {
     form.value = createInitialForm()
     passengerRows.value = [emptyPassengerRow()]
@@ -1305,6 +1432,12 @@ export function useDispatchRequestWizard() {
     requesterSearchError.value = ''
     coordinatorSearchQ.value = ''
     coordinatorSearchError.value = ''
+    requesterEmailTouched.value = false
+    coordinatorEmailTouched.value = false
+    draftSaveError.value = ''
+    draftSaveFlash.value = false
+    clearTimeout(draftSaveFlashTimer)
+    draftSaveFlashTimer = null
     urgentAutoActive.value = false
     urgentManualDesired.value = false
     hydrateRequestedDateTimeFromState()
@@ -1333,48 +1466,29 @@ export function useDispatchRequestWizard() {
       }
       resetWizardForm()
     }
-    try {
-      localStorage.removeItem(currentDraftStorageKey())
-      localStorage.removeItem(LEGACY_DRAFT_KEY)
-    } catch {
-      /* ignore */
-    }
     refreshDraftsList()
   }
 
   watchEffect((onCleanup) => {
     if (typeof document === 'undefined') return
-    if (!clearDraftModalOpen.value) {
-      document.body.style.overflow = ''
-      return
-    }
-    document.body.style.overflow = 'hidden'
-    if (typeof window === 'undefined') return
-    const onKey = (e) => {
-      if (e.key === 'Escape') closeClearDraftModal()
-    }
-    window.addEventListener('keydown', onKey)
-    onCleanup(() => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKey)
-    })
-  })
+    const overlayOpen =
+      submitResultModalOpen.value || draftsModalOpen.value || clearDraftModalOpen.value
+    document.body.style.overflow = overlayOpen ? 'hidden' : ''
 
-  watchEffect((onCleanup) => {
-    if (typeof document === 'undefined') return
-    if (!draftsModalOpen.value) {
-      document.body.style.overflow = ''
-      return
+    let onKey
+    if (typeof window !== 'undefined' && overlayOpen) {
+      onKey = (e) => {
+        if (e.key !== 'Escape') return
+        if (submitResultModalOpen.value) closeSubmitResultModal()
+        else if (draftsModalOpen.value) closeDraftsModal()
+        else closeClearDraftModal()
+      }
+      window.addEventListener('keydown', onKey)
     }
-    document.body.style.overflow = 'hidden'
-    if (typeof window === 'undefined') return
-    const onKey = (e) => {
-      if (e.key === 'Escape') closeDraftsModal()
-    }
-    window.addEventListener('keydown', onKey)
+
     onCleanup(() => {
       document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKey)
+      if (onKey) window.removeEventListener('keydown', onKey)
     })
   })
 
@@ -1463,6 +1577,10 @@ export function useDispatchRequestWizard() {
     draftSavedAt,
     hasDraftSnapshot,
     clearDraftModalOpen,
+    submitResultModalOpen,
+    submitResultOk,
+    submitResultDetail,
+    closeSubmitResultModal,
     activeDraftId,
     savedDraftsList,
     draftsModalOpen,
@@ -1484,6 +1602,8 @@ export function useDispatchRequestWizard() {
     coordinatorSearchError,
     step2DateOrderInvalid,
     step2RequesterEmailInvalid,
+    draftSaveError,
+    draftSaveFlash,
     step2CoordinatorEmailInvalid,
     passengerRows,
     businessRows,
@@ -1497,6 +1617,8 @@ export function useDispatchRequestWizard() {
     toggleE1Weekday,
     onRequesterPhoneInput,
     onCoordinatorPhoneInput,
+    onRequesterEmailBlur,
+    onCoordinatorEmailBlur,
     scheduleRequesterSearch,
     onRequesterSearchFocus,
     onRequesterSearchBlur,
@@ -1526,6 +1648,7 @@ export function useDispatchRequestWizard() {
     extraCosts,
     formatCurrency,
     formatFileSize,
+    formatDraftTime,
     canGoNext,
     goStep,
     nextStep,
@@ -1551,6 +1674,8 @@ export function useDispatchRequestWizard() {
     startNewDraftSession,
     openDraftsModal,
     closeDraftsModal,
+    navigateToSubmittedRequestDetail,
+    closeSubmitModalAndStartNewDraft,
     onCancel,
   }
 }
