@@ -65,6 +65,9 @@ class DriverContextController extends Controller
             'driver' => $driver ? [
                 'id' => $driver->id,
                 'full_name' => $driver->full_name,
+                'national_id' => $driver->national_id,
+                'license_class' => $driver->license_class,
+                'license_expires_at' => $driver->license_expires_at?->format('Y-m-d'),
             ] : null,
             'vehicle' => $this->serializeVehicle($vehicle),
             'stats' => [

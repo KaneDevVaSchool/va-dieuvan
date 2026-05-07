@@ -58,7 +58,7 @@ export function useNavSections() {
               icon: 'wrench',
             },
             {
-              to: '/profile',
+              to: '/driver/account',
               labelKey: 'nav.bottom_driver_account',
               icon: 'user',
             },
@@ -80,7 +80,7 @@ export function useNavSections() {
         { to: '/driver/schedule', labelKey: 'nav.bottom_driver_schedule', icon: 'calendar' },
         { to: '/driver/costs', labelKey: 'nav.bottom_driver_costs', icon: 'costs' },
         { to: '/driver/maintenance', labelKey: 'nav.bottom_driver_maintenance', icon: 'wrench' },
-        { to: '/profile', labelKey: 'nav.bottom_driver_account', icon: 'user' },
+        { to: '/driver/account', labelKey: 'nav.bottom_driver_account', icon: 'user' },
       ]
     }
     return BOTTOM_NAV

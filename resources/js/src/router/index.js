@@ -305,7 +305,7 @@ const router = createRouter({
             name: "driverSchedule",
             component: () => import("../views/driver/DriverScheduleView.vue"),
             meta: {
-                title: "Lịch hôm nay",
+                title: "Lịch sử chuyến",
                 subtitle: "Tài xế",
                 driverApp: true,
             },
@@ -340,6 +340,16 @@ const router = createRouter({
             component: () => import("../views/driver/DriverMaintenanceView.vue"),
             meta: {
                 title: "Bảo trì xe",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/account",
+            name: "driverAccount",
+            component: () => import("../views/driver/DriverAccountView.vue"),
+            meta: {
+                title: "Tài khoản",
                 subtitle: "Tài xế",
                 driverApp: true,
             },

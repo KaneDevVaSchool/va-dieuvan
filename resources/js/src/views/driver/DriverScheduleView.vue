@@ -1,464 +1,276 @@
 <template>
-  <div class="driver-schedule -mx-3 w-[calc(100%+1.5rem)] max-w-lg sm:-mx-4 sm:mx-auto sm:w-full sm:max-w-2xl">
-    <!-- Header -->
-    <div class="bg-gradient-to-br from-slate-900 via-[#0d1f3a] to-slate-900 px-4 pb-5 pt-3 text-white sm:rounded-2xl sm:shadow-md">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex min-w-0 flex-1 items-center gap-2.5">
-          <div
-            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-400/20 ring-1 ring-sky-300/30"
-          >
-            <TruckIcon class="h-7 w-7 text-sky-200" aria-hidden="true" />
-          </div>
-          <div class="min-w-0">
-            <p class="text-sm text-white/80">{{ t('driver_schedule_page.hello') }}</p>
-            <p class="truncate text-lg font-bold">{{ user?.name || '—' }}</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-amber-200 ring-1 ring-white/20"
-          :title="t('driver_schedule_page.notifications_hint')"
-          @click="onOpenNotifications"
+  <div
+    class="min-h-full w-full max-w-[390px] overflow-x-hidden bg-[#09180f] pb-2 text-white sm:max-w-none"
+    :style="{ '--accent': '#7fdcc8' }"
+  >
+    <header
+      class="sticky top-0 z-[25] flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.06)] bg-[#09180f]/90 px-3 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
+      style="padding-top: max(0.75rem, env(safe-area-inset-top))"
+    >
+      <div class="flex min-w-0 flex-1 items-center gap-2">
+        <RouterLink
+          to="/driver"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] transition hover:bg-white/5 active:scale-95"
+          :title="t('trip_history_page.back')"
         >
-          <BellIcon class="h-5 w-5" aria-hidden="true" />
-        </button>
+          <span class="sr-only">{{ t('trip_history_page.back') }}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+          </svg>
+        </RouterLink>
+        <h1 class="min-w-0 truncate text-lg font-bold tracking-tight">
+          {{ t('trip_history_page.title') }}
+        </h1>
       </div>
-
-      <p class="mt-3 text-sm text-slate-300">
-        {{ longDateLabel }}
-      </p>
-      <h1 class="mt-1 text-2xl font-bold tracking-tight">
-        {{ t('driver_schedule_page.title') }}
-      </h1>
-
-      <!-- Tiến độ -->
-      <div
-        v-if="!loading"
-        class="mt-4 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 backdrop-blur"
+      <button
+        type="button"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#7fdcc8] ring-1 ring-[rgba(255,255,255,0.08)] transition hover:bg-white/5"
+        :aria-pressed="searchOpen ? 'true' : 'false'"
+        :title="t('trip_history_page.search')"
+        @click="searchOpen = !searchOpen"
       >
-        <div class="flex items-center justify-between gap-2 text-sm">
-          <span class="text-white/80">{{ t('driver_schedule_page.progress_label') }}</span>
-          <span class="shrink-0 text-right font-bold tabular-nums">
-            {{ doneCount }} / {{ activeTotal }} {{ t('driver_schedule_page.trip_unit') }}
-            <span v-if="activeTotal" class="ml-1 text-emerald-300"
-              >{{ progressPct }}%</span
-            >
-          </span>
-        </div>
-        <div class="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
-          <div
-            class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
-            :style="{ width: progressPct + '%' }"
-          />
-        </div>
-      </div>
-    </div>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="h-5 w-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+      </button>
+    </header>
 
-    <div class="mt-0 space-y-4 bg-slate-50/90 px-3 pb-6 pt-4 dark:bg-slate-950/40 sm:px-0">
+    <div class="space-y-3 px-3 pt-3 pb-6">
+      <div v-if="searchOpen" class="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0f2318] px-3 py-2">
+        <input
+          v-model.trim="searchQ"
+          type="search"
+          autocomplete="off"
+          class="w-full rounded-lg bg-transparent px-2 py-2 text-sm text-white placeholder:text-[#64748b] focus:outline-none focus:ring-1 focus:ring-[#7fdcc8]/50"
+          :placeholder="t('trip_history_page.search_placeholder')"
+        />
+      </div>
+
+      <TripStatsCard :stats="stats" :loading="statsLoading" />
+
+      <TripFilterPills v-model="filterStatus" />
+
+      <WeekCalendar v-model="selectedDate" :trip-dates="weekTripDateKeys" />
+
       <p
-        v-if="errorMsg"
-        class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+        v-if="displayErrorMsg"
+        class="rounded-xl border border-amber-700/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"
       >
-        {{ errorMsg }}
+        {{ displayErrorMsg }}
       </p>
 
-      <!-- TIMELINE -->
-      <div v-if="!loading" class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-        <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {{ t('driver_schedule_page.timeline') }}
-        </p>
-        <div class="flex justify-between gap-0.5 overflow-x-auto pb-1">
-          <div
-            v-for="h in timelineHours"
-            :key="h"
-            class="flex min-w-[2.5rem] flex-1 flex-col items-center"
-          >
-            <div
-              class="mb-0.5 flex h-5 w-5 items-center justify-center rounded"
-              :class="hourHasTrip(h) ? 'text-amber-500' : 'text-transparent'"
-            >
-              <MapPinIcon v-if="hourHasTrip(h)" class="h-3.5 w-3.5" />
+      <div v-if="isLoading && filteredTrips.length === 0" class="space-y-3 pt-2">
+        <div v-for="n in 3" :key="n" class="animate-pulse rounded-2xl border border-white/5 bg-[#0f2318] p-4">
+          <div class="flex gap-3">
+            <div class="h-12 w-12 rounded-lg bg-[#7fdcc8]/10" />
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="h-3 w-28 rounded bg-white/10" />
+              <div class="h-3 w-full rounded bg-white/[0.07]" />
+              <div class="h-3 w-4/5 rounded bg-white/[0.05]" />
             </div>
-            <div
-              class="h-1.5 w-full max-w-10 rounded-full"
-              :class="hourHasTrip(h) ? 'bg-amber-400' : 'bg-slate-200 dark:bg-slate-700'"
-            />
-            <span class="mt-1.5 text-[9px] font-medium tabular-nums text-slate-500 dark:text-slate-400">
-              {{ String(h).padStart(2, '0') }}:00
-            </span>
           </div>
         </div>
       </div>
 
-      <!-- Cảnh báo chuyến đang chạy -->
-      <div
-        v-if="inProgressTrip"
-        class="overflow-hidden rounded-2xl border-2 border-amber-300/80 bg-amber-50/95 shadow-sm dark:border-amber-700/60 dark:bg-amber-950/40"
-      >
-        <div class="flex gap-2 px-3 py-2.5">
-          <BoltIcon class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-          <div class="min-w-0">
-            <p class="text-sm font-bold text-amber-900 dark:text-amber-100">
-              {{ t('driver_schedule_page.active_trip_title') }}
-            </p>
-            <p class="mt-0.5 text-xs text-amber-800/90 dark:text-amber-200/90">
-              {{ activeTripLine(inProgressTrip) }}
-            </p>
-          </div>
-        </div>
-      </div>
+      <TripEmptyState v-else-if="!isLoading && filteredTrips.length === 0" @reset="onResetFilters" />
 
-      <!-- Bộ lọc -->
-      <div class="flex gap-1.5 overflow-x-auto pb-0.5">
-        <button
-          v-for="tab in filterTabs"
-          :key="tab.id"
-          type="button"
-          class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-          :class="
-            filterId === tab.id
-              ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
-              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300'
-          "
-          @click="filterId = tab.id"
-        >
-          {{ tab.label }} ({{ tab.count }})
-        </button>
-      </div>
-
-      <!-- Danh sách -->
-      <div>
-        <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {{ t('driver_schedule_page.list_header', { n: filteredTrips.length }) }}
+      <template v-else>
+        <p class="pt-2 text-sm font-semibold text-white">
+          {{ dayGroupTitle }}
+          <span v-if="filteredTrips.length" class="tabular-nums text-[#94a3b8]"> ({{ filteredTrips.length }}) </span>
         </p>
-        <p
-          v-if="!loading && !filteredTrips.length"
-          class="rounded-2xl border border-dashed border-slate-200 bg-white px-3 py-8 text-center text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-900/50"
-        >
-          {{ t('driver_schedule_page.empty') }}
-        </p>
-        <ul v-else class="space-y-3">
-          <li
-            v-for="trip in filteredTrips"
-            :key="trip.id"
-            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/70"
-          >
-            <div class="flex items-start justify-between gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-700/80">
-              <div class="flex flex-wrap items-center gap-1.5">
-                <span
-                  class="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold"
-                  :class="statusBadgeClass(trip.status)"
-                >
-                  {{ statusLabelTr(trip.status) }}
-                </span>
-                <span
-                  class="inline-flex rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                >
-                  {{ tripTypeShort(trip) }}
-                </span>
-              </div>
-              <span class="shrink-0 text-[11px] font-medium text-slate-400">#TR-{{ trip.id }}</span>
-            </div>
-
-            <div class="flex gap-3 px-3 py-2.5">
-              <img
-                v-if="requesterAvatar(trip)"
-                :src="requesterAvatar(trip)"
-                alt=""
-                class="h-12 w-12 rounded-full object-cover"
-              />
-              <div
-                v-else
-                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-200"
-              >
-                {{ requesterInitials(trip) }}
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="font-semibold text-slate-900 dark:text-white">
-                  {{ requesterName(trip) }}
-                </p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">
-                  {{ requesterSub(trip) }}
-                </p>
-              </div>
-              <a
-                v-if="requesterPhone(trip)"
-                :href="`tel:${requesterPhone(trip)}`"
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-800 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                :title="t('driver_schedule_page.call')"
-              >
-                <PhoneIcon class="h-5 w-5" />
-              </a>
-            </div>
-
-            <div class="border-t border-slate-100 px-3 py-2 dark:border-slate-700/80">
-              <div class="relative pl-1">
-                <div class="absolute left-[7px] top-1 bottom-1 w-px bg-slate-200 dark:bg-slate-600" />
-                <div class="space-y-3 pl-4">
-                  <div class="relative">
-                    <span
-                      class="absolute -left-4 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-slate-300 bg-white dark:border-slate-500 dark:bg-slate-800"
-                    />
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                      {{ timeHm(trip.depart_at) }} · {{ t('driver_schedule_page.pickup') }}
-                    </p>
-                    <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      {{ trip.dispatch_request?.origin || '—' }}
-                    </p>
-                  </div>
-                  <div class="relative">
-                    <span
-                      class="absolute -left-4 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-slate-800 bg-slate-800 dark:border-sky-400 dark:bg-sky-400"
-                    />
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                      {{ timeHm(trip.arrive_by || trip.dispatch_request?.arrive_by) }} ·
-                      {{ t('driver_schedule_page.dropoff') }}
-                    </p>
-                    <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      {{ trip.dispatch_request?.destination || '—' }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="px-3 pb-3">
-              <RouterLink
-                :to="`/driver/trips/${trip.id}`"
-                class="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition active:scale-[0.99]"
-                :class="
-                  trip.status === 'in_progress'
-                    ? 'bg-slate-900 hover:bg-slate-800 dark:bg-sky-800 dark:hover:bg-sky-700'
-                    : 'bg-slate-800 hover:bg-slate-700 dark:bg-slate-700'
-                "
-              >
-                {{ ctaLabel(trip.status) }}
-                <ArrowRightIcon class="h-4 w-4" />
-              </RouterLink>
-            </div>
+        <ul class="mt-2 space-y-3">
+          <li v-for="trip in filteredTrips" :key="trip.id">
+            <TripCard :trip="trip" />
           </li>
         </ul>
-      </div>
+
+        <div ref="sentinelEl" class="h-px w-full shrink-0" aria-hidden="true" />
+
+        <button
+          v-if="showLoadMoreFallback"
+          type="button"
+          class="mt-4 flex w-full min-h-[48px] items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#0f2318] py-3 text-sm font-semibold text-[#7fdcc8] transition hover:bg-[#0f2318]/80 disabled:opacity-50"
+          :disabled="isLoading"
+          @click="() => loadMore(fetchParams)"
+        >
+          {{ isLoading ? t('trip_history_page.loading') : t('trip_history_page.load_more') }}
+        </button>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import {
-  ArrowRightIcon,
-  BoltIcon,
-  BellIcon,
-  MapPinIcon,
-  PhoneIcon,
-  TruckIcon,
-} from '@heroicons/vue/24/outline'
-import { listTrips } from '../../api/trips'
-import { useAuthStore } from '../../store'
-import { useNotificationStore } from '../../store/notificationCenter'
+import { useI18n } from 'vue-i18n'
+import { useTripHistory } from '../../composables/useTripHistory'
+import TripStatsCard from '../../components/trips/TripStatsCard.vue'
+import TripFilterPills from '../../components/trips/TripFilterPills.vue'
+import WeekCalendar from '../../components/trips/WeekCalendar.vue'
+import TripCard from '../../components/trips/TripCard.vue'
+import TripEmptyState from '../../components/trips/TripEmptyState.vue'
 
 const { t } = useI18n()
-const auth = useAuthStore()
-const notif = useNotificationStore()
 
-function onOpenNotifications() {
-  notif.openPanel()
-  void notif.requestBrowserNotificationPermission()
-  void notif.refreshBadges()
-}
+const { trips, stats, isLoading, error, hasMore, fetch: fetchTrips, loadMore } = useTripHistory()
 
-const user = computed(() => auth.user)
-const loading = ref(true)
-const errorMsg = ref('')
-const raw = ref([])
+const selectedDate = ref(new Date())
+const filterStatus = ref('all')
+const searchOpen = ref(false)
+const searchQ = ref('')
+const sentinelEl = ref(null)
 
-const filterId = ref('all')
+/** @type {IntersectionObserver | null} */
+let listObserver = null
 
 function ymd(d) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
+  const x = d instanceof Date ? d : new Date(d)
+  const y = x.getFullYear()
+  const m = String(x.getMonth() + 1).padStart(2, '0')
+  const day = String(x.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
 
-const longDateLabel = computed(() => {
-  const d = new Date()
-  return d.toLocaleDateString('vi-VN', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-})
-
-const todayTrips = computed(() => {
-  const list = raw.value || []
-  return list
-    .filter((x) => x.status !== 'cancelled')
-    .slice()
-    .sort((a, b) => {
-      const ta = new Date(a.depart_at).getTime() || 0
-      const tb = new Date(b.depart_at).getTime() || 0
-      return ta - tb
-    })
-})
-
-const activeTotal = computed(() => todayTrips.value.length)
-const doneCount = computed(
-  () => todayTrips.value.filter((x) => x.status === 'completed').length,
-)
-const progressPct = computed(() => {
-  if (!activeTotal.value) return 0
-  return Math.min(100, Math.round((doneCount.value / activeTotal.value) * 100))
-})
-
-const inProgressTrip = computed(() => todayTrips.value.find((x) => x.status === 'in_progress'))
-
-const timelineHours = computed(() => {
-  const out = []
-  for (let h = 6; h <= 13; h += 1) out.push(h)
-  return out
-})
-
-function tripDepartHour(t) {
-  if (!t.depart_at) return null
-  const d = new Date(t.depart_at)
-  if (Number.isNaN(d.getTime())) return null
-  return d.getHours()
+function startOfWeekMonday(d) {
+  const x = new Date(d)
+  x.setHours(12, 0, 0, 0)
+  const dow = x.getDay()
+  const diff = dow === 0 ? -6 : 1 - dow
+  x.setDate(x.getDate() + diff)
+  x.setHours(0, 0, 0, 0)
+  return x
 }
 
-function hourHasTrip(h) {
-  return todayTrips.value.some((t) => tripDepartHour(t) === h)
+function endOfWeekSundayDay(d) {
+  const start = startOfWeekMonday(d)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  return end
 }
 
-const pendingStatuses = new Set(['assigned', 'driver_confirmed', 'pending', 'approved'])
+const selectedYmd = computed(() => ymd(selectedDate.value))
 
-function kindOf(t) {
-  if (t.status === 'in_progress') return 'running'
-  if (t.status === 'completed') return 'done'
-  if (pendingStatuses.has(t.status)) return 'pending'
-  return 'other'
-}
+const fetchParams = computed(() => {
+  const from = ymd(startOfWeekMonday(selectedDate.value))
+  const to = ymd(endOfWeekSundayDay(selectedDate.value))
+  const p = { date_from: from, date_to: to }
+  if (filterStatus.value !== 'all') {
+    p.status = filterStatus.value
+  }
+  return p
+})
 
-const filterTabs = computed(() => {
-  const trips = todayTrips.value
-  return [
-    { id: 'all', count: trips.length, label: t('driver_schedule_page.tab_all') },
-    {
-      id: 'pending',
-      count: trips.filter((x) => kindOf(x) === 'pending').length,
-      label: t('driver_schedule_page.tab_pending'),
-    },
-    {
-      id: 'running',
-      count: trips.filter((x) => x.status === 'in_progress').length,
-      label: t('driver_schedule_page.tab_running'),
-    },
-  ]
+const weekTripDateKeys = computed(() => {
+  const fromY = ymd(startOfWeekMonday(selectedDate.value))
+  const toY = ymd(endOfWeekSundayDay(selectedDate.value))
+  const set = new Set()
+  for (const tr of trips.value) {
+    const key = tr.depart_date
+    if (!key || key < fromY || key > toY) continue
+    set.add(key)
+  }
+  return [...set]
 })
 
 const filteredTrips = computed(() => {
-  const trips = todayTrips.value
-  if (filterId.value === 'pending') return trips.filter((x) => kindOf(x) === 'pending')
-  if (filterId.value === 'running') return trips.filter((x) => x.status === 'in_progress')
-  return trips
+  const q = searchQ.value.trim().toLowerCase()
+  const day = selectedYmd.value
+  let list = trips.value.filter((x) => (x.depart_date || '') === day)
+  if (q) {
+    list = list.filter((x) => {
+      const blob = [
+        x.pickup_location,
+        x.dropoff_location,
+        x.trip_number,
+        String(x.id),
+        x.type,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return blob.includes(q)
+    })
+  }
+  return list.slice().sort((a, b) => {
+    const cmp = String(b.pickup_time || '').localeCompare(String(a.pickup_time || ''))
+    if (cmp !== 0) return cmp
+    return (b.id || 0) - (a.id || 0)
+  })
 })
 
-function timeHm(iso) {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: true })
+const dayGroupTitle = computed(() =>
+  selectedDate.value.toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  }),
+)
+
+const displayErrorMsg = computed(() => {
+  if (error.value === 'fetch_failed') return t('trip_history_page.load_error')
+  return ''
+})
+
+const statsLoading = computed(() => isLoading.value && stats.value == null)
+
+const observerAvailable = computed(() => typeof IntersectionObserver !== 'undefined')
+
+const showLoadMoreFallback = computed(
+  () => hasMore.value && !observerAvailable.value && filteredTrips.value.length > 0,
+)
+
+function teardownObserver() {
+  listObserver?.disconnect()
+  listObserver = null
 }
 
-function statusLabelTr(st) {
-  const k = `trips_page.trip_status.${st}`
-  const tr = t(k)
-  return tr === k ? st : tr
+function setupIntersectionObserver() {
+  teardownObserver()
+  if (!observerAvailable.value || !hasMore.value) return
+  const el = sentinelEl.value
+  const rootEl = typeof document !== 'undefined' ? document.getElementById('app-main-scroll') : null
+  if (!el || filteredTrips.value.length === 0) return
+  listObserver = new IntersectionObserver(
+    (entries) => {
+      const hit = entries.some((e) => e.isIntersecting)
+      if (hit && hasMore.value && !isLoading.value) {
+        void loadMore(fetchParams.value)
+      }
+    },
+    { root: rootEl || null, rootMargin: '120px', threshold: 0 },
+  )
+  listObserver.observe(el)
 }
 
-function statusBadgeClass(st) {
-  if (st === 'in_progress') return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200'
-  if (st === 'completed') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200'
-  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+async function reload() {
+  await fetchTrips(fetchParams.value, false)
+  await nextTick()
+  setupIntersectionObserver()
 }
 
-function tripTypeShort(trip) {
-  const x = trip.dispatch_request?.trip_type
-  if (x === 'door_to_door') return 'D2D'
-  if (x === 'point_to_point') return 'P2P'
-  if (x === 'business') return t('trips_page.trip_type.business').split(' ')[0] || 'CT'
-  if (x === 'cargo') return 'Cargo'
-  return '—'
+function onResetFilters() {
+  filterStatus.value = 'all'
+  searchQ.value = ''
+  selectedDate.value = new Date()
+  searchOpen.value = false
 }
 
-function requesterName(trip) {
-  return trip.dispatch_request?.requester?.name?.trim() || trip.dispatch_request?.origin || '—'
-}
+watch([selectedDate, filterStatus], () => {
+  void reload()
+})
 
-function requesterAvatar(trip) {
-  return trip.dispatch_request?.requester?.avatar_url || null
-}
+watch([hasMore, () => sentinelEl.value, () => filteredTrips.length], () => {
+  void nextTick(() => setupIntersectionObserver())
+})
 
-function requesterInitials(trip) {
-  const n = requesterName(trip)
-  if (n === '—') return '?'
-  const p = n.split(/\s+/)
-  if (p.length >= 2) return (p[0][0] + p[p.length - 1][0]).toUpperCase()
-  return n.slice(0, 2).toUpperCase()
-}
+onMounted(() => {
+  void reload()
+})
 
-function requesterSub(trip) {
-  const phone =
-    trip.dispatch_request?.requester?.phone || trip.dispatch_request?.requester?.employee_code
-  const extra = trip.dispatch_request?.notes
-  if (phone && extra) return `${phone} · ${String(extra).slice(0, 40)}`
-  if (phone) return String(phone)
-  if (extra) return String(extra).slice(0, 64)
-  return trip.dispatch_request?.destination || ''
-}
-
-function requesterPhone(trip) {
-  return trip.dispatch_request?.requester?.phone || null
-}
-
-function activeTripLine(trip) {
-  const t = tripTypeLabel(trip)
-  const a = (trip.dispatch_request?.origin || '').trim()
-  const b = (trip.dispatch_request?.destination || '').trim()
-  if (a && b) return `${t} · ${a} → ${b}`
-  return t
-}
-
-function tripTypeLabel(trip) {
-  const raw = trip.dispatch_request?.trip_type
-  if (!raw) return 'P2P'
-  const k = `trips_page.trip_type.${raw}`
-  const tr = t(k)
-  return tr === k ? raw : tr
-}
-
-function ctaLabel(st) {
-  if (st === 'in_progress') return t('driver_schedule_page.btn_continue')
-  if (st === 'completed') return t('driver_schedule_page.btn_view')
-  return t('driver_schedule_page.btn_start')
-}
-
-onMounted(async () => {
-  loading.value = true
-  errorMsg.value = ''
-  const now = new Date()
-  const d = ymd(now)
-  try {
-    const res = await listTrips({ from: d, to: d, per_page: 100 })
-    raw.value = res?.items ?? []
-  } catch {
-    errorMsg.value = t('driver_home.load_error')
-    raw.value = []
-  } finally {
-    loading.value = false
-  }
+onBeforeUnmount(() => {
+  teardownObserver()
 })
 </script>
