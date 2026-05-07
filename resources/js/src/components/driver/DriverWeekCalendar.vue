@@ -1,7 +1,7 @@
 <template>
   <section class="rounded-3xl bg-[#0f1816] shadow-xl shadow-black/25">
     <!-- Section header -->
-    <div class="flex min-w-0 flex-wrap items-center justify-between gap-2 px-5 pt-5 pb-4">
+    <div class="flex min-w-0 flex-wrap items-center justify-between gap-2 px-5 pb-4 pt-5">
       <h2 class="text-xl font-bold text-[#7fdcc8]">
         {{ t('driver_home.calendar_title') }}
       </h2>
@@ -15,10 +15,8 @@
       <div v-if="loading" class="grid grid-cols-7 gap-1">
         <div v-for="n in 7" :key="n" class="flex flex-col items-center gap-2 py-1">
           <div class="h-3 w-6 animate-pulse rounded bg-[#7fdcc8]/15" />
-          <div
-            class="h-14 w-14 max-w-full animate-pulse rounded-full bg-[#070f0d]/90"
-          />
-          <div class="h-2 w-2 animate-pulse rounded-full bg-[#7fdcc8]/10" />
+          <div class="h-14 w-14 max-w-full animate-pulse rounded-full bg-[#070f0d]/90" />
+          <div class="h-4 w-5 animate-pulse rounded-md bg-[#7fdcc8]/10" />
         </div>
       </div>
 
@@ -27,7 +25,7 @@
           v-for="day in weekDays"
           :key="day.iso"
           type="button"
-          class="flex min-h-[72px] w-full flex-col items-center gap-1.5 rounded-xl py-2 transition active:scale-[0.95]"
+          class="flex min-h-[76px] w-full flex-col items-center gap-1.5 rounded-xl py-2 transition active:scale-[0.95]"
           :class="selectedIso === day.iso ? 'bg-[#7fdcc8]/10' : 'hover:bg-[#7fdcc8]/5'"
           :aria-pressed="selectedIso === day.iso"
           @click="selectedIso = day.iso"
@@ -64,18 +62,16 @@
             {{ day.date }}
           </div>
 
-          <!-- Trip count dot -->
+          <!-- Trip count badge -->
           <span
-            class="h-2 w-2 rounded-full transition-colors"
+            class="tabular-nums text-xs font-bold leading-none"
             :class="
-              day.tripCount > 0
-                ? selectedIso === day.iso
-                  ? 'bg-[#7fdcc8]'
-                  : 'bg-[#7fdcc8]/50'
-                : 'bg-transparent'
+              day.tripCount > 0 ? 'text-[#7fdcc8]' : 'text-transparent'
             "
-            :aria-hidden="true"
-          />
+            :aria-hidden="day.tripCount === 0"
+          >
+            {{ day.tripCount > 0 ? day.tripCount : '\u00a0' }}
+          </span>
         </button>
       </div>
     </div>
@@ -83,24 +79,23 @@
     <!-- Divider -->
     <div class="mx-4 border-t border-[#7fdcc8]/10 sm:mx-5" />
 
-    <!-- Day's trip list (vertical) -->
+    <!-- Day's timeline -->
     <div class="px-4 py-4 sm:px-5">
-      <!-- Loading skeleton -->
+      <!-- Loading skeleton (timeline-ish) -->
       <div v-if="loading" class="space-y-3">
         <div
           v-for="n in 3"
           :key="n"
-          class="flex gap-3 rounded-2xl bg-[#0a1c1a]/60 p-4 ring-1 ring-[#7fdcc8]/8"
+          class="flex items-stretch gap-3"
         >
-          <div class="h-14 w-[60px] animate-pulse rounded-xl bg-[#7fdcc8]/10" />
-          <div class="flex-1 space-y-2 pt-1">
-            <div class="flex gap-2">
-              <div class="h-5 w-14 animate-pulse rounded-md bg-[#7fdcc8]/15" />
-              <div class="h-5 w-10 animate-pulse rounded-md bg-[#7fdcc8]/8" />
+          <div class="flex w-14 shrink-0 flex-col items-center pt-4">
+            <div class="h-4 w-10 animate-pulse rounded bg-[#7fdcc8]/15" />
+            <div class="mt-2 h-3 w-3 animate-pulse rounded-full bg-[#7fdcc8]/10" />
+            <div class="mt-2 flex min-h-[24px] w-full flex-1 justify-center">
+              <div class="w-px flex-1 animate-pulse bg-[#7fdcc8]/8" />
             </div>
-            <div class="h-4 w-3/4 animate-pulse rounded bg-[#7fdcc8]/10" />
-            <div class="h-4 w-2/4 animate-pulse rounded bg-[#7fdcc8]/8" />
           </div>
+          <div class="mb-3 min-h-[100px] flex-1 animate-pulse rounded-2xl bg-[#0a1c1a]/60 ring-1 ring-[#7fdcc8]/8" />
         </div>
       </div>
 
@@ -129,79 +124,99 @@
         </p>
       </div>
 
-      <!-- Trip cards (vertical list) -->
-      <div v-else class="space-y-3">
-        <RouterLink
-          v-for="trip in tripsForDay"
+      <!-- Timeline spine -->
+      <div v-else class="flex flex-col">
+        <div
+          v-for="(trip, i) in tripsForDay"
           :key="trip.id"
-          :to="`/driver/trips/${trip.id}`"
-          class="flex items-start gap-4 rounded-2xl bg-[#0a1c1a] p-4 ring-1 transition active:scale-[0.99]"
-          :class="
-            tripVariant(trip) === 'blue'
-              ? 'ring-sky-400/20 hover:ring-sky-400/35'
-              : 'ring-teal-400/20 hover:ring-teal-400/35'
-          "
+          class="flex items-stretch gap-0"
         >
-          <!-- Time column -->
-          <div class="flex shrink-0 flex-col items-center gap-2">
-            <div
-              class="min-w-[60px] rounded-xl px-3 py-2.5 text-center"
-              :class="
-                tripVariant(trip) === 'blue'
-                  ? 'bg-sky-500/12 ring-1 ring-sky-400/20'
-                  : 'bg-teal-500/12 ring-1 ring-teal-400/20'
-              "
-            >
-              <span class="text-2xl font-extrabold tabular-nums leading-none text-white">
-                {{ formatTripTime(trip) }}
-              </span>
-            </div>
-            <!-- Arrive time if available -->
-            <span v-if="formatTripArriveTime(trip)" class="text-xs font-semibold tabular-nums text-slate-500">
-              → {{ formatTripArriveTime(trip) }}
+          <!-- Left column: time + dot + connector -->
+          <div class="flex h-full w-14 shrink-0 flex-col items-center pt-4">
+            <span class="shrink-0 text-sm font-extrabold tabular-nums leading-none text-white/90">
+              {{ formatTripTime(trip) }}
             </span>
+            <div
+              class="mt-2 h-3 w-3 shrink-0 rounded-full ring-2 ring-[#0f1816]"
+              :class="statusDotClass(trip)"
+              aria-hidden="true"
+            />
+            <div
+              v-if="i < tripsForDay.length - 1"
+              class="mt-1 flex min-h-[20px] w-full flex-1 justify-center"
+            >
+              <div class="w-px flex-1 bg-[#7fdcc8]/15" />
+            </div>
           </div>
 
-          <!-- Info column -->
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
+          <!-- Card -->
+          <RouterLink
+            :to="`/driver/trips/${trip.id}`"
+            class="mb-3 ml-3 min-w-0 flex-1 overflow-hidden rounded-2xl bg-[#0a1c1a] ring-1 ring-[#7fdcc8]/12 transition active:scale-[0.99]"
+            :class="
+              tripVariant(trip) === 'blue'
+                ? 'hover:ring-sky-400/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/35'
+                : 'hover:ring-teal-400/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/35'
+            "
+          >
+            <!-- Top row -->
+            <div class="flex flex-wrap items-center gap-2 border-b border-[#7fdcc8]/10 px-4 py-3">
               <span
-                class="rounded-md bg-white/10 px-2 py-0.5 text-sm font-extrabold uppercase tracking-wide text-white"
+                class="shrink-0 rounded-md bg-white/10 px-2 py-0.5 text-sm font-extrabold uppercase tracking-wide text-white"
               >
-                {{ tripServiceTypeCalendarLabel(trip, t) }}
+                {{ tripTypeBadgeText(trip) }}
+              </span>
+              <span class="min-w-0 flex-1 truncate text-sm font-semibold text-white/65">
+                {{ tripServiceFullName(trip) }}
               </span>
               <span
-                class="text-sm font-bold tabular-nums"
-                :class="
-                  tripVariant(trip) === 'blue' ? 'text-sky-300/70' : 'text-teal-300/70'
-                "
+                class="shrink-0 rounded-lg px-2 py-1 text-xs font-bold"
+                :class="statusChipClass(trip)"
               >
-                {{ tripRefLabel(trip) }}
+                {{ statusLabelForTrip(trip) }}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="h-4 w-4 shrink-0 text-[#7fdcc8]/35 sm:hidden"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+
+            <!-- Route -->
+            <div class="space-y-2 px-4 py-3">
+              <div class="flex items-start gap-2.5">
+                <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
+                <p class="line-clamp-2 text-base font-bold leading-snug text-white">
+                  {{ tripOrigin(trip) }}
+                </p>
+              </div>
+              <div class="flex items-start gap-2.5">
+                <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-400" aria-hidden="true" />
+                <p class="line-clamp-2 text-base font-medium leading-snug text-[#7fdcc8]/65">
+                  {{ tripDestination(trip) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+              class="flex flex-wrap items-center gap-3 border-t border-[#7fdcc8]/10 px-4 py-2.5 text-sm tabular-nums text-slate-500"
+            >
+              <span class="font-semibold">{{ tripRefLabel(trip) }}</span>
+              <span v-if="formatTripArriveTime(trip)">
+                → {{ formatTripArriveTime(trip) }}
               </span>
             </div>
-            <p class="mt-2 line-clamp-1 text-base font-bold text-white">
-              {{ tripOrigin(trip) }}
-            </p>
-            <p class="mt-0.5 line-clamp-1 text-base font-medium text-[#7fdcc8]/60">
-              → {{ tripDestination(trip) }}
-            </p>
-          </div>
-
-          <!-- Chevron -->
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            class="mt-1 h-5 w-5 shrink-0 text-[#7fdcc8]/30"
-            aria-hidden="true"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </RouterLink>
+          </RouterLink>
+        </div>
       </div>
     </div>
   </section>
@@ -214,7 +229,7 @@ import { RouterLink } from 'vue-router'
 import {
   tripDestination,
   tripOrigin,
-  tripServiceTypeCalendarLabel,
+  tripTypeBadgeText,
 } from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
@@ -250,6 +265,46 @@ function formatTripTime(trip) {
 
 function formatTripArriveTime(trip) {
   return hhmm(trip?.arrive_by || trip?.dispatch_request?.arrive_by)
+}
+
+function tripStatusNorm(trip) {
+  return String(trip?.status ?? '').trim().toLowerCase()
+}
+
+function statusDotClass(trip) {
+  const s = tripStatusNorm(trip)
+  if (s === 'in_progress') return 'bg-sky-400'
+  if (s === 'driver_confirmed') return 'bg-amber-400'
+  if (s === 'completed') return 'bg-emerald-400'
+  if (s === 'cancelled') return 'bg-slate-500'
+  return 'bg-[#7fdcc8]'
+}
+
+function statusChipClass(trip) {
+  const s = tripStatusNorm(trip)
+  if (s === 'in_progress') return 'bg-sky-500/15 text-sky-200 ring-1 ring-sky-400/30'
+  if (s === 'driver_confirmed') return 'bg-amber-500/15 text-amber-200 ring-1 ring-amber-400/30'
+  if (s === 'completed') return 'bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-400/30'
+  if (s === 'cancelled') return 'bg-slate-600/25 text-slate-300 ring-1 ring-slate-500/35'
+  return 'bg-[#7fdcc8]/12 text-[#7fdcc8] ring-1 ring-[#7fdcc8]/35'
+}
+
+function statusLabelForTrip(trip) {
+  const s = tripStatusNorm(trip)
+  if (s === 'in_progress') return t('driver_home.calendar_status_running')
+  if (s === 'driver_confirmed') return t('driver_home.calendar_status_confirmed')
+  if (s === 'completed') return t('driver_home.calendar_status_done')
+  if (s === 'cancelled') return t('driver_home.calendar_status_cancelled')
+  return t('driver_home.calendar_status_waiting')
+}
+
+function tripServiceFullName(trip) {
+  const tt = trip?.dispatch_request?.trip_type
+  if (tt === 'door_to_door') return t('driver_home.svc_name_d2d')
+  if (tt === 'point_to_point') return t('driver_home.svc_name_p2p')
+  if (tt === 'cargo') return t('driver_home.svc_name_cargo')
+  if (tt === 'business') return t('driver_home.svc_name_business')
+  return t('driver_home.calendar_svc_other')
 }
 
 const tripCountByDate = computed(() => {
