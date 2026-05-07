@@ -1,10 +1,10 @@
 <template>
   <section class="rounded-3xl bg-[#0f1816] px-3 py-4 shadow-xl shadow-black/25 sm:px-4">
     <div class="mb-4 flex min-w-0 flex-wrap items-start justify-between gap-2">
-      <h2 class="min-w-0 text-base font-bold text-[#7fdcc8]">
+      <h2 class="min-w-0 text-lg font-bold text-[#7fdcc8]">
         {{ t('driver_home.calendar_title') }}
       </h2>
-      <p class="shrink-0 text-sm tabular-nums font-semibold text-[#7fdcc8]/85">
+      <p class="shrink-0 text-base tabular-nums font-semibold text-[#7fdcc8]/85">
         {{ weekRangeLabel }}
       </p>
     </div>
@@ -12,7 +12,7 @@
     <div v-if="loading" class="grid grid-cols-7 gap-0">
       <div v-for="n in 7" :key="n" class="flex min-w-0 w-full flex-col items-center gap-1.5 py-1">
         <div class="h-2.5 w-full max-w-[2rem] animate-pulse rounded bg-[#7fdcc8]/15" />
-        <div class="w-9 max-w-full animate-pulse rounded-full bg-[#070f0d]/90 aspect-square" />
+        <div class="w-11 max-w-full animate-pulse rounded-full bg-[#070f0d]/90 aspect-square" />
         <div class="h-3 w-4 animate-pulse rounded bg-[#7fdcc8]/10" />
       </div>
     </div>
@@ -28,7 +28,7 @@
         @click="selectedIso = day.iso"
       >
         <span
-          class="text-[10px] font-bold uppercase leading-none tracking-wide"
+          class="text-xs font-bold uppercase leading-none tracking-wide"
           :class="
             day.isToday ? 'text-[#7fdcc8]' : selectedIso === day.iso ? 'text-[#7fdcc8]/90' : 'text-slate-400'
           "
@@ -37,7 +37,7 @@
         </span>
 
         <div
-          class="flex w-9 max-w-full items-center justify-center rounded-full text-sm font-bold tabular-nums leading-none transition-colors aspect-square"
+          class="flex w-11 max-w-full items-center justify-center rounded-full text-base font-bold tabular-nums leading-none transition-colors aspect-square"
           :class="
             selectedIso === day.iso
               ? day.isToday
@@ -54,7 +54,7 @@
         </div>
 
         <span
-          class="min-h-[12px] text-[10px] font-bold tabular-nums leading-none"
+          class="min-h-[12px] text-xs font-bold tabular-nums leading-none"
           :class="
             day.tripCount > 0 ? 'text-[#7fdcc8]' : 'invisible text-transparent'
           "
@@ -67,15 +67,6 @@
 
     <!-- Horizontal timeline -->
     <div v-if="!loading" class="mt-5 w-full min-w-0 max-w-full">
-      <div class="mb-2 flex min-w-0 items-center justify-between gap-2">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {{ t('driver_home.calendar_timeline_hint') }}
-        </p>
-        <p class="text-[11px] tabular-nums text-[#7fdcc8]/75">
-          {{ selectedDayShortLabel }}
-        </p>
-      </div>
-
       <div
         class="w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-2xl border border-white/10 bg-[#050a09] touch-pan-x [-webkit-overflow-scrolling:touch] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
@@ -95,7 +86,7 @@
               class="flex shrink-0 justify-center"
               :style="{ width: `${seg.flexWidthPct}%` }"
             >
-              <span class="text-[10px] font-medium tabular-nums text-slate-500 sm:text-[11px]">
+              <span class="text-xs font-medium tabular-nums text-slate-500 sm:text-sm">
                 {{ seg.label }}
               </span>
             </div>
@@ -124,7 +115,7 @@
                 v-for="block in layout.blocks"
                 :key="block.trip.id"
                 :to="`/driver/trips/${block.trip.id}`"
-                class="group absolute z-[2] flex min-h-[58px] flex-col justify-center gap-0.5 rounded-xl px-2 py-1.5 transition hover:z-10 hover:brightness-110 active:scale-[0.99]"
+                class="group absolute z-[2] flex min-h-[64px] flex-col justify-center gap-0.5 rounded-xl px-2 py-1.5 transition hover:z-10 hover:brightness-110 active:scale-[0.99]"
                 :class="block.variant === 'blue' ? cardBlue : cardTeal"
                 :style="{
                   left: `${block.leftPct}%`,
@@ -134,23 +125,24 @@
               >
                 <div class="flex min-w-0 items-center justify-between gap-1">
                   <span
-                    class="max-w-[58%] truncate rounded-md bg-white/12 px-1 py-px text-[9px] font-extrabold uppercase tracking-wide text-white sm:text-[10px]"
+                    class="max-w-[58%] truncate rounded-md bg-white/12 px-1 py-px text-xs font-extrabold uppercase tracking-wide text-white sm:text-sm"
                   >
                     {{ block.serviceLabel }}
                   </span>
                   <span
-                    class="min-w-0 shrink truncate text-right font-mono text-[9px] font-semibold tabular-nums opacity-90 sm:text-[10px]"
+                    class="min-w-0 shrink truncate text-right font-mono text-xs font-semibold tabular-nums opacity-90 sm:text-sm"
+                  >
                     :class="block.variant === 'blue' ? 'text-sky-200/95' : 'text-cyan-100/95'"
                   >
                     {{ block.refLabel }}
                   </span>
                 </div>
                 <p
-                  class="truncate font-mono text-[10px] font-bold tabular-nums leading-tight text-white/95 sm:text-[11px]"
+                  class="truncate font-mono text-xs font-bold tabular-nums leading-tight text-white/95 sm:text-sm"
                 >
                   {{ block.timeRange }}
                 </p>
-                <p class="line-clamp-2 text-[10px] font-bold leading-snug text-white sm:text-[11px]">
+                <p class="line-clamp-2 text-xs font-bold leading-snug text-white sm:text-sm">
                   {{ block.routeLine }}
                 </p>
               </RouterLink>
@@ -159,7 +151,7 @@
             <!-- Empty day -->
             <div
               v-if="!layout.blocks.length && tripsForDay.length === 0"
-              class="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center px-4 text-center text-sm text-slate-500"
+              class="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center px-4 text-center text-base text-slate-500"
             >
               {{ t('driver_home.calendar_no_trips_day') }}
             </div>
@@ -188,7 +180,7 @@ const props = defineProps({
 const { t, locale } = useI18n()
 
 const selectedIso = ref('')
-const LANE_STRIDE = 66
+const LANE_STRIDE = 74
 const MIN_WIDTH_PCT = 13
 
 const cardTeal =
@@ -264,19 +256,6 @@ const weekRangeLabel = computed(() => {
     return dt.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' })
   }
   return `${fmt(start)} – ${fmt(end)}`
-})
-
-const selectedDayShortLabel = computed(() => {
-  const iso = selectedIso.value
-  if (!iso) return ''
-  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
-  const [y, m, d] = iso.split('-').map(Number)
-  const dt = new Date(y, m - 1, d)
-  return dt.toLocaleDateString(loc, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'numeric',
-  })
 })
 
 const tripsForDay = computed(() => {

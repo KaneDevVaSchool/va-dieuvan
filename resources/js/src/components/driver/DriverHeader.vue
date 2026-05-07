@@ -1,35 +1,37 @@
 <template>
-  <div class="pb-4 pt-1">
+  <header
+    class="-mx-3 bg-[#070f0d] px-3 pb-5 pt-[env(safe-area-inset-top)] sm:-mx-4 sm:px-4"
+  >
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0 flex-1">
-        <p class="text-sm text-slate-400">
+        <p class="text-base text-slate-400">
           {{ t('driver_home.hello') }}
         </p>
-        <h1 class="mt-0.5 truncate text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <h1 class="mt-1 truncate text-4xl font-bold tracking-tight text-white">
           {{ user?.name || '—' }}
         </h1>
-        <p class="mt-1 text-sm font-semibold text-[#7fdcc8]">
+        <p class="mt-2 text-base font-semibold text-[#7fdcc8]">
           {{ todayLabel }}
         </p>
       </div>
 
-      <div class="mt-1 flex shrink-0 items-center gap-2">
+      <div class="flex shrink-0 items-center gap-2 pt-1">
         <NotificationBell />
         <img
           v-if="avatarUrl"
           :src="avatarUrl"
           alt=""
-          class="h-11 min-h-[44px] w-11 min-w-[44px] rounded-full border-2 border-[#7fdcc8]/45 object-cover"
+          class="h-16 min-h-[48px] w-16 min-w-[48px] rounded-full border-2 border-[#7fdcc8]/45 object-cover"
         />
         <div
           v-else
-          class="flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full border-2 border-[#7fdcc8]/45 bg-[#0f1816] text-base font-bold text-[#7fdcc8]"
+          class="flex h-16 min-h-[48px] w-16 min-w-[48px] items-center justify-center rounded-full border-2 border-[#7fdcc8]/45 bg-[#0f1816] text-xl font-bold text-[#7fdcc8]"
         >
           {{ initials }}
         </div>
       </div>
     </div>
-  </div>
+  </header>
 </template>
 
 <script setup>

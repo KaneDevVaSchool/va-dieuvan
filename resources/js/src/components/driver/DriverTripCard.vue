@@ -1,17 +1,17 @@
 <template>
   <article
-    class="rounded-2xl bg-[#0f1816] p-4 shadow-lg shadow-black/25"
+    class="rounded-2xl bg-[#0f1816] p-5 shadow-lg shadow-black/25"
   >
     <!-- Priority 1: pickup time + type -->
     <div class="flex flex-wrap items-start gap-2 gap-y-2">
       <div class="min-w-0 flex-1">
-        <p class="text-[11px] font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
+        <p class="text-xs font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
           {{ t('driver_home.pending_pickup_time_label') }}
         </p>
-        <p class="mt-0.5 text-2xl font-bold tabular-nums tracking-tight text-white">
+        <p class="mt-0.5 text-3xl font-bold tabular-nums tracking-tight text-white">
           {{ depart.time }}
         </p>
-        <p v-if="depart.dateLine" class="mt-0.5 text-sm text-[#7fdcc8]/80">
+        <p v-if="depart.dateLine" class="mt-0.5 text-base text-[#7fdcc8]/80">
           {{ depart.dateLine }}
         </p>
       </div>
@@ -19,12 +19,12 @@
         <!-- Priority 2: GẤP -->
         <span
           v-if="isTripUrgent(trip)"
-          class="inline-flex items-center gap-1.5 rounded-lg bg-rose-950/80 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-rose-100 ring-1 ring-rose-600/50"
+          class="inline-flex items-center gap-1.5 rounded-lg bg-rose-950/80 px-3 py-1.5 text-sm font-extrabold uppercase tracking-wide text-rose-100 ring-1 ring-rose-600/50"
         >
           <span class="h-2 w-2 animate-pulse rounded-full bg-rose-400/90" aria-hidden="true" />
           {{ t('driver_home.urgent_badge') }}
         </span>
-        <span class="rounded-lg bg-[#070f0d]/90 px-2 py-1 text-xs font-bold tabular-nums text-[#7fdcc8]">
+        <span class="rounded-lg bg-[#070f0d]/90 px-2.5 py-1 text-sm font-bold tabular-nums text-[#7fdcc8]">
           {{ tripTypeBadgeText(trip) }}
         </span>
       </div>
@@ -33,41 +33,41 @@
     <!-- Pickup / destination -->
     <div class="mt-4 space-y-3">
       <div class="flex gap-3">
-        <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-emerald-400" aria-hidden="true">
+        <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 text-emerald-400" aria-hidden="true">
             <path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .757.433c.12.065.227.115.315.142.162.04.343.04.506 0a1.16 1.16 0 0 0 .315-.142c.088-.027.195-.077.315-.142z" clip-rule="evenodd" />
           </svg>
         </span>
         <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
             {{ t('driver_home.pending_pickup') }}
           </p>
-          <p class="mt-0.5 line-clamp-2 text-base font-semibold leading-snug text-white">
+          <p class="mt-0.5 line-clamp-2 text-lg font-semibold leading-snug text-white">
             {{ tripOrigin(trip) }}
           </p>
         </div>
       </div>
       <div class="flex gap-3">
-        <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500/20">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-sky-400" aria-hidden="true">
+        <span class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500/20">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 text-sky-400" aria-hidden="true">
             <path fill-rule="evenodd" d="M10 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 1ZM5.05 3.05a.75.75 0 0 1 1.06 0l1.062 1.06A.75.75 0 1 1 6.11 5.173L5.05 4.11a.75.75 0 0 1 0-1.06Zm9.9 0a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.061l1.061-1.061a.75.75 0 0 1 1.06 0ZM10 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-7.75 2a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5Zm14.5 0a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5ZM5.05 16.95a.75.75 0 0 1 1.06-1.06l-1.06-1.062a.75.75 0 0 0-1.061 1.06l1.06 1.062Zm9.9-1.06a.75.75 0 0 0-1.061-1.061l-1.062 1.06a.75.75 0 0 1 1.06 1.062l1.062-1.061ZM10 16a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 16Z" clip-rule="evenodd" />
           </svg>
         </span>
         <div class="min-w-0 flex-1">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#7fdcc8]/60">
             {{ t('driver_home.pending_dropoff') }}
           </p>
-          <p class="mt-0.5 line-clamp-2 text-base font-semibold leading-snug text-white">
+          <p class="mt-0.5 line-clamp-2 text-lg font-semibold leading-snug text-white">
             {{ tripDestination(trip) }}
           </p>
         </div>
       </div>
     </div>
 
-    <p v-if="tripRequesterLine(trip)" class="mt-3 text-sm text-[#7fdcc8]/75">
+    <p v-if="tripRequesterLine(trip)" class="mt-3 text-base text-[#7fdcc8]/75">
       {{ t('driver_home.pending_requester', { name: tripRequesterLine(trip) }) }}
     </p>
-    <p v-if="passengerLine" class="text-sm text-[#7fdcc8]/55">
+    <p v-if="passengerLine" class="text-base text-[#7fdcc8]/55">
       {{ passengerLine }}
     </p>
 
@@ -75,7 +75,7 @@
       <button
         type="button"
         :disabled="busy"
-        class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#7fdcc8] px-4 text-base font-bold text-[#070f0d] shadow-md shadow-[#7fdcc8]/20 transition-colors hover:bg-[#6bcfb8] active:bg-[#5ec4aa] disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#7fdcc8] px-4 text-lg font-bold text-[#070f0d] shadow-md shadow-[#7fdcc8]/20 transition-colors hover:bg-[#6bcfb8] active:bg-[#5ec4aa] disabled:cursor-not-allowed disabled:opacity-50"
         @click="$emit('confirm', trip)"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0" aria-hidden="true">
@@ -86,7 +86,7 @@
       <button
         type="button"
         :disabled="busy"
-        class="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#7fdcc8]/40 bg-transparent px-4 text-base font-bold text-[#7fdcc8] transition-colors hover:bg-[#7fdcc8]/10 active:bg-[#7fdcc8]/18 disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#7fdcc8]/40 bg-transparent px-4 text-lg font-bold text-[#7fdcc8] transition-colors hover:bg-[#7fdcc8]/10 active:bg-[#7fdcc8]/18 disabled:cursor-not-allowed disabled:opacity-50"
         @click="$emit('decline', trip)"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 shrink-0" aria-hidden="true">
@@ -98,7 +98,7 @@
 
     <RouterLink
       :to="`/driver/trips/${trip.id}`"
-      class="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl py-2 text-sm font-semibold text-[#7fdcc8]/85 underline-offset-2 hover:text-[#7fdcc8] active:opacity-80"
+      class="mt-3 flex w-full min-h-[48px] items-center justify-center rounded-xl py-2 text-base font-semibold text-[#7fdcc8]/85 underline-offset-2 hover:text-[#7fdcc8] active:opacity-80"
     >
       {{ t('driver_home.pending_view_detail') }}
     </RouterLink>

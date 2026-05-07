@@ -3,28 +3,25 @@
     <!-- Header -->
     <div class="border-b border-[#7fdcc8]/12 px-4 py-4 sm:px-5">
       <div class="flex items-start gap-3">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#7fdcc8]/12">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 text-[#7fdcc8]" aria-hidden="true">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#7fdcc8]/12">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-7 w-7 text-[#7fdcc8]" aria-hidden="true">
             <path d="M10 2a6 6 0 0 0-6 6v3.586l-.707.707A1 1 0 0 0 4 14h12a1 1 0 0 0 .707-1.707L16 11.586V8a6 6 0 0 0-6-6zM10 18a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3z" />
           </svg>
         </span>
         <div class="min-w-0 flex-1">
-          <p class="text-lg font-bold leading-snug text-white sm:text-xl">
-            {{ loading ? t('driver_home.pending_loading_hint') : t('driver_home.pending_banner_title', { n: trips.length }) }}
-          </p>
-          <p v-if="!loading" class="mt-1 text-sm text-[#7fdcc8]/75">
-            {{ t('driver_home.pending_banner_sub') }}
+          <p class="text-xl font-bold leading-snug text-white sm:text-2xl">
+            {{ t('driver_home.pending_banner_title', { n: trips.length }) }}
           </p>
           <p
             v-if="hasUrgent && !loading"
-            class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-rose-950/70 px-3 py-1 text-xs font-bold uppercase tracking-wide text-rose-100 ring-1 ring-rose-600/40"
+            class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-rose-950/70 px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-rose-100 ring-1 ring-rose-600/40"
           >
             <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400/90" />
             {{ t('driver_home.pending_urgent_hint') }}
           </p>
           <p
             v-if="actionError"
-            class="mt-3 rounded-xl border border-rose-500/45 bg-rose-950/55 px-3 py-2 text-xs font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25"
+            class="mt-3 rounded-xl border border-rose-500/45 bg-rose-950/55 px-3 py-2 text-sm font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25"
             role="alert"
           >
             {{ actionError }}
@@ -35,7 +32,6 @@
 
     <!-- Loading skeleton -->
     <div v-if="loading" class="space-y-4 px-4 py-4 sm:px-5">
-      <p class="text-sm text-[#7fdcc8]/70">{{ t('driver_home.pending_loading_hint') }}</p>
       <div v-for="s in 3" :key="s" class="rounded-2xl bg-[#070f0d]/80 p-4">
         <div class="h-5 w-40 animate-pulse rounded bg-[#7fdcc8]/12" />
         <div class="mt-4 space-y-3">

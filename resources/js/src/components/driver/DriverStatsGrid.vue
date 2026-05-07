@@ -2,7 +2,7 @@
   <section class="rounded-3xl bg-[#0f1816] px-3 py-4 shadow-xl shadow-black/25 sm:px-4">
     <div v-if="loading" class="grid grid-cols-4 gap-2">
       <div v-for="n in 4" :key="n" class="flex min-w-0 flex-col items-center gap-2">
-        <div class="w-12 max-w-full animate-pulse rounded-full bg-[#7fdcc8]/10 aspect-square" />
+        <div class="w-16 max-w-full animate-pulse rounded-full bg-[#7fdcc8]/10 aspect-square" />
         <div class="h-4 w-8 animate-pulse rounded bg-[#7fdcc8]/15" />
         <div class="h-3 w-10 animate-pulse rounded bg-[#7fdcc8]/10" />
       </div>
@@ -13,18 +13,18 @@
         v-for="card in cards"
         :key="card.key"
         type="button"
-        class="flex min-h-[44px] min-w-0 w-full flex-col items-center gap-1 rounded-xl py-1 transition-transform duration-150 active:scale-95"
+        class="flex min-h-[48px] min-w-0 w-full flex-col items-center gap-1.5 rounded-xl py-2 transition-transform duration-150 active:scale-95"
       >
         <div
-          class="flex w-12 max-w-full shrink-0 items-center justify-center rounded-full aspect-square [&_svg]:h-6 [&_svg]:w-6"
+          class="flex w-16 max-w-full shrink-0 items-center justify-center rounded-full aspect-square [&_svg]:h-8 [&_svg]:w-8"
           :class="card.circleCls"
           aria-hidden="true"
           v-html="card.iconSvg"
         />
-        <span class="text-[clamp(1rem,4.5vw,1.25rem)] font-bold tabular-nums leading-none text-white">
+        <span class="text-[clamp(1.25rem,5.5vw,1.75rem)] font-bold tabular-nums leading-none text-white">
           {{ card.value }}
         </span>
-        <span class="w-full px-0.5 text-center text-[11px] font-medium leading-tight text-slate-400">
+        <span class="w-full px-0.5 text-center text-[13px] font-medium leading-tight text-slate-400">
           {{ card.label }}
         </span>
       </button>
