@@ -2378,10 +2378,15 @@
         "save_error": "Could not save."
     },
     "pwa": {
-        "install_title": "Install VA Dispatch",
-        "install_hint": "Launch like an app; data is cached when online.",
-        "install_cta": "Install",
-        "install_later": "Not now"
+        "install_title": "Add to Home Screen",
+        "install_hint": "Open like an app, one tap. Works smoother on the go and when the network is slow.",
+        "install_cta": "Add",
+        "install_later": "Not now",
+        "update_title": "Update available",
+        "update_hint": "Get the latest version for the best experience.",
+        "update_cta": "Update now",
+        "update_later": "Later",
+        "splash_subtitle": "Dispatch"
     },
     "common": {
         "processing": "Processing…"

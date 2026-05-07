@@ -19,7 +19,7 @@ export default defineConfig({
                 name: 'VAS Dispatch',
                 short_name: 'Điều Vận',
                 description:
-                    'Hệ thống quản lý điều vận Vietnam America Schools',
+                    'Điều vận VAS — mở nhanh, làm việc mọi lúc.',
                 theme_color: '#8B1A1A',
                 background_color: '#8B1A1A',
                 display: 'standalone',

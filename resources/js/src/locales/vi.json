@@ -158,7 +158,8 @@
         "label_pending": "Chờ xác nhận",
         "label_cancelled": "Đã hủy",
         "trend_y_label": "Chuyến",
-        "trend_trips_suffix": "chuyến"
+        "trend_trips_suffix": "chuyến",
+        "calendar_title": "Lịch tuần này"
     },
     "driver_schedule": {
         "title": "Lịch hôm nay",
@@ -2501,10 +2502,15 @@
         "save_error": "Không lưu được."
     },
     "pwa": {
-        "install_title": "Cài VA Dispatch lên thiết bị",
-        "install_hint": "Mở nhanh như app; dữ liệu được cache khi có mạng.",
-        "install_cta": "Cài đặt",
-        "install_later": "Để sau"
+        "install_title": "Thêm vào màn hình chính",
+        "install_hint": "Một lần chạm là mở app. Tiện hơn khi di chuyển, vẫn dùng được khi mạng chập chờn.",
+        "install_cta": "Thêm ngay",
+        "install_later": "Để sau",
+        "update_title": "Đã có bản cập nhật",
+        "update_hint": "Tải phiên bản mới để dùng ổn định hơn.",
+        "update_cta": "Cập nhật ngay",
+        "update_later": "Nhắc sau",
+        "splash_subtitle": "Điều vận"
     },
     "common": {
         "processing": "Đang xử lý…"

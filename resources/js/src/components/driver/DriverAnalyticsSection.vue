@@ -1,6 +1,6 @@
 <template>
   <section class="space-y-4 transition-opacity duration-300 ease-out">
-    <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white sm:text-lg">
+    <h2 class="text-base font-bold tracking-tight sm:text-lg" style="color: #9A0036">
       {{ t('driver_home.analytics_title') }}
     </h2>
 

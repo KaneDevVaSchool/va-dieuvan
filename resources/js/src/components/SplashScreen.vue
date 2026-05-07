@@ -1,8 +1,9 @@
 <template>
   <Transition name="splash" @after-leave="$emit('done')">
     <div v-if="visible" class="splash-screen">
-      <img :src="logoUrl" class="splash-logo" alt="VAS" />
+      <img :src="logoUrl" class="splash-logo" alt="" />
       <div class="splash-name">Vietnam America Schools</div>
+      <div class="splash-tagline">{{ t('pwa.splash_subtitle') }}</div>
       <div class="splash-dots">
         <span
           v-for="i in 3"
@@ -16,6 +17,9 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 /** Public path — bind qua :src để tránh Vite/Rollup resolve như import. */
 const logoUrl = '/icons/pwa-192.png'
@@ -63,18 +67,35 @@ watch(
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 .splash-logo {
-  width: 96px;
-  height: 96px;
+  width: min(22vw, 96px);
+  height: min(22vw, 96px);
+  min-width: 80px;
+  min-height: 80px;
   border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 .splash-name {
   color: #fff;
-  font-size: 15px;
+  font-size: clamp(14px, 3.8vw, 16px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.35;
+  max-width: 20rem;
+}
+.splash-tagline {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: clamp(12px, 3.2vw, 14px);
   font-weight: 500;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .splash-dots {
   display: flex;

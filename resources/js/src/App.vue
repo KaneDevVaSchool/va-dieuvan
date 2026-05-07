@@ -27,26 +27,31 @@
   <Transition name="slide-up">
     <div
       v-if="updateAvailable"
-      class="fixed bottom-0 inset-x-0 z-[101] pointer-events-none p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      class="fixed bottom-0 inset-x-0 z-[101] pointer-events-none px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <div
-        class="pointer-events-auto mx-auto max-w-lg flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#78001e]/20 bg-[#78001e] text-white px-4 py-3 shadow-lg"
+        class="pointer-events-auto mx-auto max-w-lg rounded-2xl border border-white/15 bg-[#78001e] px-4 py-4 text-white shadow-lg shadow-slate-900/20"
       >
-        <span class="text-sm font-medium">Có bản cập nhật mới</span>
-        <div class="flex gap-2 shrink-0">
+        <p class="text-[15px] font-semibold leading-snug">
+          {{ t('pwa.update_title') }}
+        </p>
+        <p class="mt-1 text-[13px] leading-relaxed text-white/85">
+          {{ t('pwa.update_hint') }}
+        </p>
+        <div class="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
           <button
             type="button"
-            class="text-xs font-medium px-2 py-1 rounded-lg bg-white/15 hover:bg-white/25"
+            class="min-h-12 flex-1 touch-manipulation rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-semibold text-white active:bg-white/20"
             @click="dismissUpdate"
           >
-            Để sau
+            {{ t('pwa.update_later') }}
           </button>
           <button
             type="button"
-            class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white text-[#78001e] hover:bg-white/95"
+            class="min-h-12 flex-1 touch-manipulation rounded-xl bg-white px-4 text-sm font-bold text-[#78001e] shadow-sm active:opacity-95"
             @click="applyUpdate"
           >
-            Cập nhật
+            {{ t('pwa.update_cta') }}
           </button>
         </div>
       </div>
@@ -59,6 +64,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from './store'
 import { useOnboarding } from './composables/useOnboarding'
 import { usePwaUpdate } from './composables/usePwaUpdate'
@@ -72,6 +78,7 @@ import PwaInstallBanner from './components/PwaInstallBanner.vue'
 import NotificationCenter from './components/notifications/NotificationCenter.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 const auth = useAuthStore()
 const { hasOnboarded, completeOnboarding } = useOnboarding()
 const { updateAvailable, applyUpdate, dismissUpdate } = usePwaUpdate()

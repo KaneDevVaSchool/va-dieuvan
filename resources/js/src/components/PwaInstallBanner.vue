@@ -1,31 +1,33 @@
 <template>
   <div
     v-if="visible"
-    class="fixed bottom-0 inset-x-0 z-[100] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none"
+    class="fixed bottom-0 inset-x-0 z-[100] pointer-events-none px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     role="region"
-    :aria-label="$t('pwa.install_title')"
+    :aria-label="t('pwa.install_title')"
   >
     <div
-      class="pointer-events-auto mx-auto max-w-lg rounded-xl border border-[#78001e]/20 bg-white/95 shadow-lg backdrop-blur-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
+      class="pointer-events-auto mx-auto max-w-lg rounded-2xl border border-[#78001e]/18 bg-white px-4 py-4 shadow-lg shadow-slate-900/10 backdrop-blur-md dark:border-slate-600/40 dark:bg-slate-900/95 dark:shadow-black/40"
     >
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-[#78001e]">{{ $t('pwa.install_title') }}</p>
-        <p class="text-xs text-gray-600 mt-0.5">{{ $t('pwa.install_hint') }}</p>
-      </div>
-      <div class="flex gap-2 shrink-0">
+      <p class="text-[15px] font-semibold leading-snug text-[#78001e] dark:text-white">
+        {{ t('pwa.install_title') }}
+      </p>
+      <p class="mt-1.5 text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+        {{ t('pwa.install_hint') }}
+      </p>
+      <div class="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
         <button
           type="button"
-          class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+          class="min-h-12 flex-1 touch-manipulation rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 active:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:active:bg-slate-700"
           @click="dismiss"
         >
-          {{ $t('pwa.install_later') }}
+          {{ t('pwa.install_later') }}
         </button>
         <button
           type="button"
-          class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#78001e] text-white hover:opacity-95"
+          class="min-h-12 flex-1 touch-manipulation rounded-xl bg-[#78001e] px-4 text-sm font-bold text-white shadow-sm active:opacity-95 dark:bg-va-700"
           @click="install"
         >
-          {{ $t('pwa.install_cta') }}
+          {{ t('pwa.install_cta') }}
         </button>
       </div>
     </div>
@@ -34,8 +36,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const INSTALL_DELAY_MS = 30_000
+const { t } = useI18n()
+
+const INSTALL_DELAY_DESKTOP_MS = 26_000
+const INSTALL_DELAY_MOBILE_MS = 12_000
 const DISMISS_DAYS = 7
 const DISMISS_KEY = 'vas_install_dismissed'
 const INSTALLED_KEY = 'vas_pwa_installed'
@@ -82,9 +88,17 @@ onMounted(() => {
     if (dismissedWithinCooldown()) return
     e.preventDefault()
     deferredPrompt.value = e
+    if (delayTimer != null) {
+      window.clearTimeout(delayTimer)
+      delayTimer = null
+    }
+    const delay =
+      typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches
+        ? INSTALL_DELAY_MOBILE_MS
+        : INSTALL_DELAY_DESKTOP_MS
     delayTimer = window.setTimeout(() => {
       delayElapsed.value = true
-    }, INSTALL_DELAY_MS)
+    }, delay)
   }
   window.addEventListener('beforeinstallprompt', installListener)
 })
