@@ -31,7 +31,7 @@
 
           <!-- Count text -->
           <div class="min-w-0 flex-1">
-            <p class="text-3xl font-extrabold leading-none text-white">
+            <p class="truncate text-xl font-extrabold leading-snug text-white">
               {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
             </p>
             <p

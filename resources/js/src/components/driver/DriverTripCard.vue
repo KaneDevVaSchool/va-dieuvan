@@ -35,17 +35,19 @@
 
     <!-- Main body -->
     <div class="px-5 py-5">
-      <!-- Pickup time — largest element -->
-      <div>
-        <p class="text-[0.65rem] font-bold uppercase tracking-widest text-[#7fdcc8]/50">
-          {{ t('driver_home.pending_pickup_time_label') }}
-        </p>
-        <p class="mt-1 text-4xl font-extrabold tabular-nums leading-none tracking-tight text-white">
+      <!-- Pickup time — horizontal: big time left, label+date right -->
+      <div class="flex items-end gap-3">
+        <p class="shrink-0 text-4xl font-extrabold tabular-nums leading-none tracking-tight text-white">
           {{ depart.time }}
         </p>
-        <p v-if="depart.dateLine" class="mt-1.5 text-base font-medium text-[#7fdcc8]/70">
-          {{ depart.dateLine }}
-        </p>
+        <div class="min-w-0 flex-1 pb-0.5">
+          <p class="text-[0.65rem] font-bold uppercase tracking-widest text-[#7fdcc8]/50">
+            {{ t('driver_home.pending_pickup_time_label') }}
+          </p>
+          <p v-if="depart.dateLine" class="mt-0.5 truncate text-sm font-medium text-[#7fdcc8]/70">
+            {{ depart.dateLine }}
+          </p>
+        </div>
       </div>
 
       <!-- Origin / Destination -->
@@ -203,7 +205,7 @@
       </div>
 
       <!-- CTA buttons (pending only) -->
-      <div v-if="!isConfirmed" class="mt-5 flex flex-col gap-3 sm:flex-row">
+      <div v-if="!isConfirmed" class="mt-5 flex flex-row gap-2.5">
         <button
           type="button"
           :disabled="busy"
