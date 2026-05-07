@@ -1,8 +1,39 @@
 import { http } from './http'
 
+/** Khớp max trong `ListTripsRequest` (Laravel) — vượt sẽ 422. */
+export const TRIPS_LIST_MAX_PER_PAGE = 100
+
 export async function listTrips(params = {}) {
   const { data } = await http.get('/trips', { params })
   return data.data
+}
+
+/**
+ * Lấy toàn bộ mục theo filter đã cho (paginate phía server cho đến hết).
+ * @param {Record<string, unknown>} params from/to/status/… (per_page clamp ≤ 100)
+ */
+export async function listTripsAll(params = {}) {
+  const { page: _drop, per_page: perPageRequested, ...rest } = params
+  const perPage = Math.min(
+    TRIPS_LIST_MAX_PER_PAGE,
+    Math.max(1, Number(perPageRequested) || TRIPS_LIST_MAX_PER_PAGE),
+  )
+  let page = 1
+  const allItems = []
+  let lastMeta = null
+  const maxPages = 50
+
+  while (page <= maxPages) {
+    const res = await listTrips({ ...rest, per_page: perPage, page })
+    const batch = res?.items ?? []
+    lastMeta = res?.meta ?? lastMeta
+    allItems.push(...batch)
+    const lastPage = Number(res?.meta?.last_page ?? 1)
+    if (page >= lastPage || batch.length === 0) break
+    page += 1
+  }
+
+  return { items: allItems, meta: lastMeta }
 }
 
 export async function getTripStats(params = {}) {

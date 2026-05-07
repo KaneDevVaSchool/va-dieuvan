@@ -77,7 +77,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { getDriverSummary } from '../../api/driver'
-import { listTrips } from '../../api/trips'
+import { listTripsAll } from '../../api/trips'
 import { useAuthStore } from '../../store'
 import { useNotificationStore } from '../../store/notificationCenter'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
@@ -181,7 +181,7 @@ async function fetchData(showLoader = true) {
   try {
     const [sum, listRes] = await Promise.all([
       getDriverSummary(),
-      listTrips({ from: ymd(past), to: ymd(horizon), per_page: 200 }),
+      listTripsAll({ from: ymd(past), to: ymd(horizon), per_page: 100 }),
     ])
     myDriverId.value = sum?.driver?.id ?? null
     rawListItems.value = listRes?.items ?? []
