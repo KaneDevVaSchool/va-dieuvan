@@ -76,7 +76,18 @@ export function computeDriverTripCounts(rawTrips) {
 /**
  * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
  */
-export function driverStatusDonutOption({ countsByStatus, labelMap, emptyText }) {
+const DRIVER_DONUT_PAGE_BG = '#0d1f1c'
+
+/**
+ * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
+ * @param {{ countsByStatus?: object, labelMap?: object, emptyText?: string, centerSuffix?: string }} opts — centerSuffix: ví dụ "chuyến" (i18n)
+ */
+export function driverStatusDonutOption({
+  countsByStatus,
+  labelMap,
+  emptyText,
+  centerSuffix = '',
+}) {
   const data = DRIVER_DONUT_ORDER.map((k) => ({
     value: Number(countsByStatus?.[k] ?? 0),
     name: labelMap?.[k] ?? k,
@@ -87,6 +98,10 @@ export function driverStatusDonutOption({ countsByStatus, labelMap, emptyText })
     return emptyDashboardChartOption(emptyText ?? '—')
   }
 
+  const total = data.reduce((acc, d) => acc + d.value, 0)
+  const suffixLine = String(centerSuffix ?? '').trim()
+  const centerText = suffixLine ? `${total}\n${suffixLine}` : String(total)
+
   return {
     animationDuration: 400,
     tooltip: {
@@ -94,23 +109,41 @@ export function driverStatusDonutOption({ countsByStatus, labelMap, emptyText })
       confine: true,
       formatter: (p) => `${p.name}: ${p.value} (${p.percent}%)`,
     },
-    legend: {
-      bottom: 4,
-      itemGap: 12,
-      textStyle: { color: '#64748b', fontSize: 11 },
-    },
+    legend: { show: false },
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: '42%',
+        style: {
+          text: centerText,
+          fill: '#f1f5f9',
+          font: '600 22px system-ui, ui-sans-serif, sans-serif',
+          textAlign: 'center',
+          lineHeight: 26,
+        },
+      },
+    ],
     series: [
       {
         type: 'pie',
-        radius: ['46%', '72%'],
+        radius: ['48%', '74%'],
         center: ['50%', '46%'],
         avoidLabelOverlap: true,
-        itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
-        label: { color: '#334155', fontSize: 11 },
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: DRIVER_DONUT_PAGE_BG,
+          borderWidth: 3,
+        },
+        label: {
+          color: 'rgba(134,194,181,0.88)',
+          fontSize: 11,
+          formatter: '{b}\n{d}%',
+        },
         emphasis: {
           scale: true,
           scaleSize: 8,
-          itemStyle: { shadowBlur: 14, shadowColor: 'rgba(15,23,42,0.15)' },
+          itemStyle: { shadowBlur: 18, shadowColor: 'rgba(134,194,181,0.28)' },
         },
         data,
       },

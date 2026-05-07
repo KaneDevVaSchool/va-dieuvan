@@ -1,10 +1,10 @@
 <template>
-  <section class="rounded-3xl border border-slate-700/60 bg-[#111827] p-4 shadow-lg shadow-black/20 ring-1 ring-white/5">
+  <section class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] p-4 shadow-lg shadow-black/15 ring-1 ring-[#86c2b5]/10">
     <div v-if="loading" class="grid grid-cols-4 gap-3">
       <div v-for="n in 4" :key="n" class="flex flex-col items-center gap-2">
-        <div class="h-14 w-14 animate-pulse rounded-full bg-slate-700/50" />
-        <div class="h-4 w-8 animate-pulse rounded bg-slate-700/50" />
-        <div class="h-3 w-10 animate-pulse rounded bg-slate-700/40" />
+        <div class="h-14 w-14 animate-pulse rounded-full bg-[#86c2b5]/10" />
+        <div class="h-4 w-8 animate-pulse rounded bg-[#86c2b5]/15" />
+        <div class="h-3 w-10 animate-pulse rounded bg-[#86c2b5]/10" />
       </div>
     </div>
 
@@ -73,7 +73,7 @@ const cards = computed(() => [
     value: props.stats?.pending ?? 0,
     label: t('driver_home.stats_pending_confirm'),
     iconSvg: ICONS.pending,
-    circleCls: 'bg-[#9A0036]/20 text-[#F47294] ring-1 ring-[#9A0036]/35',
+    circleCls: 'bg-[#86c2b5]/15 text-[#86c2b5] ring-1 ring-[#86c2b5]/35',
   },
   {
     key: 'cancelled',

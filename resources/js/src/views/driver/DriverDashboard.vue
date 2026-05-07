@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen w-full overflow-x-hidden bg-[#0F172A] text-white pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]"
+    class="min-h-screen w-full overflow-x-hidden bg-[#0d1f1c] text-white pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]"
   >
     <div class="mx-auto w-full max-w-lg px-4 sm:max-w-2xl sm:px-5">
       <DriverHeader
@@ -26,9 +26,13 @@
 
         <DriverStatsGrid :stats="stats" :loading="loading" />
 
-        <div class="border-t border-slate-700/60" />
+        <div class="border-t border-[#86c2b5]/15" />
 
         <DriverWeekCalendar :raw-trips="rawTrips" :loading="loading" />
+
+        <div class="border-t border-[#86c2b5]/15" />
+
+        <DriverAnalyticsSection :raw-trips="rawTrips" :loading="loading" />
       </div>
 
       <!-- Sticky-ish FAB zone + safe area above tab bar -->
@@ -61,6 +65,7 @@ import DriverHeader from '../../components/driver/DriverHeader.vue'
 import PendingConfirmationBanner from '../../components/driver/PendingConfirmationBanner.vue'
 import DriverStatsGrid from '../../components/driver/DriverStatsGrid.vue'
 import DriverWeekCalendar from '../../components/driver/DriverWeekCalendar.vue'
+import DriverAnalyticsSection from '../../components/driver/DriverAnalyticsSection.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
