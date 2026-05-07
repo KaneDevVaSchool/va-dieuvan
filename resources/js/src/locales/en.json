@@ -94,6 +94,9 @@
     },
     "driver_home": {
         "hello": "Hello,",
+        "good_morning": "Good morning ☀️",
+        "good_afternoon": "Good afternoon 🌤",
+        "good_evening": "Good evening 🌙",
         "load_error": "Could not load data. Try again later.",
         "float_call": "Call dispatch",
         "pending_banner_title": "You have {n} trip(s) to confirm",
