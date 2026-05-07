@@ -2,13 +2,13 @@
   <div
     class="min-h-full w-full overflow-x-hidden bg-[#070f0d] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#eaf8f5]"
   >
-    <div class="mx-auto w-full min-w-0 max-w-full px-3 sm:px-4">
-      <DriverHeader
-        :user="user"
-        :avatarUrl="avatarUrl"
-        :initials="initials"
-      />
+    <DriverHeader
+      :user="user"
+      :avatarUrl="avatarUrl"
+      :initials="initials"
+    />
 
+    <div class="mx-auto w-full min-w-0 max-w-full px-3 sm:px-4">
       <div class="min-w-0 space-y-5">
         <p
           v-if="errorMsg"

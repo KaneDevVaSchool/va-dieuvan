@@ -1,21 +1,13 @@
 <template>
   <header
-    class="-mx-3 bg-[#070f0d] px-3 pb-5 pt-[env(safe-area-inset-top)] sm:-mx-4 sm:px-4"
+    class="w-full bg-[#070f0d] pt-[env(safe-area-inset-top)] pb-5 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] sm:pl-[max(1rem,env(safe-area-inset-left))] sm:pr-[max(1rem,env(safe-area-inset-right))]"
   >
     <div class="flex items-start justify-between gap-3">
-      <div class="min-w-0 flex-1">
-        <p class="text-base text-slate-400">
-          {{ t('driver_home.hello') }}
-        </p>
-        <h1 class="mt-1 truncate text-4xl font-bold tracking-tight text-white">
-          {{ user?.name || '—' }}
-        </h1>
-        <p class="mt-2 text-base font-semibold text-[#7fdcc8]">
-          {{ todayLabel }}
-        </p>
-      </div>
+      <p class="text-base text-slate-400">
+        {{ t('driver_home.hello') }}
+      </p>
 
-      <div class="flex shrink-0 items-center gap-2 pt-1">
+      <div class="flex shrink-0 items-center gap-2">
         <NotificationBell />
         <img
           v-if="avatarUrl"
@@ -31,6 +23,13 @@
         </div>
       </div>
     </div>
+
+    <h1 class="mt-3 w-full break-words text-4xl font-bold leading-snug tracking-tight text-white text-balance">
+      {{ user?.name || '—' }}
+    </h1>
+    <p class="mt-2 text-base font-semibold text-[#7fdcc8]">
+      {{ todayLabel }}
+    </p>
   </header>
 </template>
 
