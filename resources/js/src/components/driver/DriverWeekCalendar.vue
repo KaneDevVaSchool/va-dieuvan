@@ -1,34 +1,34 @@
 <template>
-  <section class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] p-4 shadow-lg shadow-black/15 ring-1 ring-[#86c2b5]/10">
-    <div class="mb-4 flex flex-wrap items-start justify-between gap-2">
-      <h2 class="text-base font-bold text-[#86c2b5]">
+  <section class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] px-4 py-4 shadow-lg shadow-black/15 ring-1 ring-[#86c2b5]/10">
+    <div class="mb-4 flex min-w-0 flex-wrap items-start justify-between gap-2">
+      <h2 class="min-w-0 text-base font-bold text-[#86c2b5]">
         {{ t('driver_home.calendar_title') }}
       </h2>
-      <p class="text-sm tabular-nums font-semibold text-[#86c2b5]/80">
+      <p class="shrink-0 text-sm tabular-nums font-semibold text-[#86c2b5]/80">
         {{ weekRangeLabel }}
       </p>
     </div>
 
-    <div v-if="loading" class="grid grid-cols-7 gap-1.5">
-      <div v-for="n in 7" :key="n" class="flex flex-col items-center gap-2 py-1">
-        <div class="h-3 w-6 animate-pulse rounded bg-[#86c2b5]/15" />
-        <div class="h-10 w-10 animate-pulse rounded-full bg-[#0d1f1c]/80" />
-        <div class="h-3.5 w-4 animate-pulse rounded bg-[#86c2b5]/10" />
+    <div v-if="loading" class="grid grid-cols-7 gap-0">
+      <div v-for="n in 7" :key="n" class="flex min-w-0 w-full flex-col items-center gap-1.5 py-1">
+        <div class="h-2.5 w-full max-w-[2rem] animate-pulse rounded bg-[#86c2b5]/15" />
+        <div class="w-9 max-w-full animate-pulse rounded-full bg-[#0d1f1c]/80 aspect-square" />
+        <div class="h-3 w-4 animate-pulse rounded bg-[#86c2b5]/10" />
       </div>
     </div>
 
-    <div v-else class="grid grid-cols-7 gap-1 sm:gap-1.5">
+    <div v-else class="grid grid-cols-7 gap-0">
       <button
         v-for="day in weekDays"
         :key="day.iso"
         type="button"
-        class="flex flex-col items-center gap-1.5 rounded-xl py-1 text-center transition hover:bg-[#86c2b5]/5 active:scale-[0.98]"
-        :class="selectedIso === day.iso ? 'ring-2 ring-[#86c2b5]/60 ring-offset-2 ring-offset-[#142421]' : ''"
+        class="flex min-w-0 w-full flex-col items-center gap-1 rounded-lg py-1 text-center transition hover:bg-[#86c2b5]/5 active:scale-[0.98]"
+        :class="selectedIso === day.iso ? 'ring-2 ring-[#86c2b5]/60 ring-offset-1 ring-offset-[#142421] sm:ring-offset-2' : ''"
         :aria-pressed="selectedIso === day.iso"
         @click="selectedIso = day.iso"
       >
         <span
-          class="text-[11px] font-bold uppercase leading-none tracking-wide sm:text-xs"
+          class="text-[10px] font-bold uppercase leading-none tracking-wide"
           :class="
             day.isToday ? 'text-[#86c2b5]' : selectedIso === day.iso ? 'text-[#86c2b5]/90' : 'text-slate-400'
           "
@@ -37,7 +37,7 @@
         </span>
 
         <div
-          class="flex h-10 min-h-[40px] w-10 min-w-[40px] items-center justify-center rounded-full text-sm font-bold tabular-nums leading-none transition-colors"
+          class="flex w-9 max-w-full items-center justify-center rounded-full text-sm font-bold tabular-nums leading-none transition-colors aspect-square"
           :class="
             selectedIso === day.iso
               ? day.isToday
@@ -54,7 +54,7 @@
         </div>
 
         <span
-          class="min-h-[14px] text-[11px] font-bold tabular-nums leading-none sm:text-xs"
+          class="min-h-[12px] text-[10px] font-bold tabular-nums leading-none"
           :class="
             day.tripCount > 0 ? 'text-[#86c2b5]' : 'invisible text-transparent'
           "
@@ -66,8 +66,8 @@
     </div>
 
     <!-- Horizontal timeline -->
-    <div v-if="!loading" class="mt-5">
-      <div class="mb-2 flex items-center justify-between gap-2">
+    <div v-if="!loading" class="mt-5 w-full min-w-0 max-w-full">
+      <div class="mb-2 flex min-w-0 items-center justify-between gap-2">
         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
           {{ t('driver_home.calendar_timeline_hint') }}
         </p>
@@ -77,69 +77,81 @@
       </div>
 
       <div
-        class="relative overflow-x-auto rounded-2xl border border-slate-700/40 bg-[#070f18] [-webkit-overflow-scrolling:touch]"
+        class="w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain rounded-2xl border border-slate-700/40 bg-[#070f18] touch-pan-x [-webkit-overflow-scrolling:touch]"
       >
-        <div class="relative min-h-[120px] min-w-[min(100%,520px)] px-2 pb-3 pt-8 sm:min-w-full">
-          <!-- Vertical grid -->
-          <div
-            class="pointer-events-none absolute inset-x-2 top-8 bottom-3 flex"
-            aria-hidden="true"
-          >
+        <div
+          class="relative flex min-h-[140px] min-w-[520px] flex-col px-2 pb-3 pt-2 sm:min-w-full"
+        >
+          <!-- Hour axis: flex, ticks không co -->
+          <div class="mb-2 flex min-h-5 w-full shrink-0">
             <div
-              v-for="tick in hourTicks"
-              :key="tick.minutes"
-              class="absolute top-0 bottom-0 w-px bg-slate-600/25"
-              :style="{ left: `${tick.pct}%` }"
+              class="shrink-0"
+              :style="{ width: `${hourTickFlexSegments.leadingPct}%` }"
+              aria-hidden="true"
             />
+            <div
+              v-for="seg in hourTickFlexSegments.segments"
+              :key="'seg-' + seg.minutes"
+              class="flex shrink-0 justify-center"
+              :style="{ width: `${seg.flexWidthPct}%` }"
+            >
+              <span class="text-[10px] font-medium tabular-nums text-slate-500 sm:text-[11px]">
+                {{ seg.label }}
+              </span>
+            </div>
           </div>
 
-          <!-- Hour labels -->
-          <div class="absolute inset-x-2 top-2 flex h-5">
-            <span
-              v-for="tick in hourTicks"
-              :key="'l-' + tick.minutes"
-              class="absolute -translate-x-1/2 text-[10px] font-medium tabular-nums text-slate-500 sm:text-[11px]"
-              :style="{ left: `${tick.pct}%` }"
+          <div class="relative min-h-[96px] flex-1">
+            <!-- Vertical grid -->
+            <div
+              class="pointer-events-none absolute inset-x-2 inset-y-0 flex"
+              aria-hidden="true"
             >
-              {{ tick.label }}
-            </span>
-          </div>
+              <div
+                v-for="tick in hourTicks"
+                :key="tick.minutes"
+                class="absolute top-0 bottom-0 w-px bg-slate-600/25"
+                :style="{ left: `${tick.pct}%` }"
+              />
+            </div>
 
-          <!-- Trip bars -->
-          <div
-            class="relative mx-0 mt-1"
-            :style="{ minHeight: `${Math.max(72, layout.laneCount * LANE_STRIDE + 8)}px` }"
-          >
-            <RouterLink
-              v-for="block in layout.blocks"
-              :key="block.trip.id"
-              :to="`/driver/trips/${block.trip.id}`"
-              class="group absolute flex min-h-[46px] flex-col justify-center rounded-xl px-2 py-1.5 transition hover:z-10 hover:brightness-110 active:scale-[0.99]"
-              :class="block.variant === 'blue' ? cardBlue : cardTeal"
-              :style="{
-                left: `${block.leftPct}%`,
-                width: `${block.widthPct}%`,
-                top: `${block.lane * LANE_STRIDE}px`,
-              }"
+            <!-- Trip bars -->
+            <div
+              class="relative mx-0"
+              :style="{ minHeight: `${Math.max(72, layout.laneCount * LANE_STRIDE + 8)}px` }"
             >
-              <p class="truncate text-[11px] font-bold leading-tight text-white sm:text-xs">
-                {{ block.title }}
-              </p>
-              <p
-                class="truncate font-mono text-[10px] font-semibold sm:text-[11px]"
-                :class="block.variant === 'blue' ? 'text-sky-300/90' : 'text-cyan-200/90'"
+              <RouterLink
+                v-for="block in layout.blocks"
+                :key="block.trip.id"
+                :to="`/driver/trips/${block.trip.id}`"
+                class="group absolute z-[2] flex min-h-[46px] flex-col justify-center rounded-xl px-2 py-1.5 transition hover:z-10 hover:brightness-110 active:scale-[0.99]"
+                :class="block.variant === 'blue' ? cardBlue : cardTeal"
+                :style="{
+                  left: `${block.leftPct}%`,
+                  width: `${block.widthPct}%`,
+                  top: `${block.lane * LANE_STRIDE}px`,
+                }"
               >
-                {{ block.refLabel }}
-              </p>
-            </RouterLink>
-          </div>
+                <p class="truncate text-[11px] font-bold leading-tight text-white sm:text-xs">
+                  {{ block.title }}
+                </p>
+                <p
+                  class="truncate font-mono text-[10px] font-semibold sm:text-[11px]"
+                  :class="block.variant === 'blue' ? 'text-sky-300/90' : 'text-cyan-200/90'"
+                >
+                  {{ block.refLabel }}
+                </p>
+              </RouterLink>
+            </div>
 
-          <p
-            v-if="!layout.blocks.length && tripsForDay.length === 0"
-            class="px-2 pb-6 pt-4 text-center text-sm text-slate-500"
-          >
-            {{ t('driver_home.calendar_no_trips_day') }}
-          </p>
+            <!-- Empty day -->
+            <div
+              v-if="!layout.blocks.length && tripsForDay.length === 0"
+              class="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center px-4 text-center text-sm text-slate-500"
+            >
+              {{ t('driver_home.calendar_no_trips_day') }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -326,6 +338,18 @@ const hourTicks = computed(() => {
     })
   }
   return ticks
+})
+
+const hourTickFlexSegments = computed(() => {
+  const ticks = hourTicks.value
+  if (!ticks.length) return { leadingPct: 0, segments: [] }
+  const leadingPct = ticks[0].pct
+  const segments = ticks.map((tick, i) => ({
+    ...tick,
+    flexWidthPct:
+      i + 1 < ticks.length ? ticks[i + 1].pct - ticks[i].pct : 100 - ticks[i].pct,
+  }))
+  return { leadingPct, segments }
 })
 
 function tripVariant(trip) {

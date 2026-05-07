@@ -1,30 +1,30 @@
 <template>
-  <section class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] p-4 shadow-lg shadow-black/15 ring-1 ring-[#86c2b5]/10">
-    <div v-if="loading" class="grid grid-cols-4 gap-3">
-      <div v-for="n in 4" :key="n" class="flex flex-col items-center gap-2">
-        <div class="h-14 w-14 animate-pulse rounded-full bg-[#86c2b5]/10" />
+  <section class="rounded-3xl border border-[#86c2b5]/20 bg-[#142421] px-4 py-4 shadow-lg shadow-black/15 ring-1 ring-[#86c2b5]/10">
+    <div v-if="loading" class="grid grid-cols-4 gap-2">
+      <div v-for="n in 4" :key="n" class="flex min-w-0 flex-col items-center gap-2">
+        <div class="w-12 max-w-full animate-pulse rounded-full bg-[#86c2b5]/10 aspect-square" />
         <div class="h-4 w-8 animate-pulse rounded bg-[#86c2b5]/15" />
         <div class="h-3 w-10 animate-pulse rounded bg-[#86c2b5]/10" />
       </div>
     </div>
 
-    <div v-else class="grid grid-cols-4 gap-2">
+    <div v-else class="grid grid-cols-4 gap-1 sm:gap-2">
       <button
         v-for="card in cards"
         :key="card.key"
         type="button"
-        class="flex min-h-[44px] flex-col items-center gap-1.5 rounded-xl py-1 transition-transform duration-150 active:scale-95"
+        class="flex min-h-[44px] min-w-0 w-full flex-col items-center gap-1 rounded-xl py-1 transition-transform duration-150 active:scale-95"
       >
         <div
-          class="flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full"
+          class="flex w-12 max-w-full shrink-0 items-center justify-center rounded-full aspect-square [&_svg]:h-6 [&_svg]:w-6"
           :class="card.circleCls"
           aria-hidden="true"
           v-html="card.iconSvg"
         />
-        <span class="text-xl font-bold tabular-nums leading-none text-white">
+        <span class="text-[clamp(1rem,4.5vw,1.25rem)] font-bold tabular-nums leading-none text-white">
           {{ card.value }}
         </span>
-        <span class="px-0.5 text-center text-[10px] font-medium leading-tight text-slate-400">
+        <span class="w-full px-0.5 text-center text-[11px] font-medium leading-tight text-slate-400">
           {{ card.label }}
         </span>
       </button>
@@ -47,10 +47,10 @@ const props = defineProps({
 const { t } = useI18n()
 
 const ICONS = {
-  completed: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>`,
-  inProgress: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-12.75a.75.75 0 0 0-1.5 0v4.59l-1.95 2.1a.75.75 0 1 0 1.1 1.02l2.25-2.43a.75.75 0 0 0 .1-.38v-5Z" clip-rule="evenodd" /></svg>`,
-  pending: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6"><path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm1-6a1 1 0 1 0-2 0v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2h-1V8Z" clip-rule="evenodd" /></svg>`,
-  cancelled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clip-rule="evenodd" /></svg>`,
+  completed: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>`,
+  inProgress: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-12.75a.75.75 0 0 0-1.5 0v4.59l-1.95 2.1a.75.75 0 1 0 1.1 1.02l2.25-2.43a.75.75 0 0 0 .1-.38v-5Z" clip-rule="evenodd" /></svg>`,
+  pending: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7 4a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm1-6a1 1 0 1 0-2 0v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2h-1V8Z" clip-rule="evenodd" /></svg>`,
+  cancelled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clip-rule="evenodd" /></svg>`,
 }
 
 const cards = computed(() => [

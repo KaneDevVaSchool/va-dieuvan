@@ -2,14 +2,14 @@
   <div
     class="min-h-screen w-full overflow-x-hidden bg-[#0d1f1c] text-white pb-[calc(7rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)]"
   >
-    <div class="mx-auto w-full max-w-lg px-4 sm:max-w-2xl sm:px-5">
+    <div class="mx-auto w-full min-w-0 max-w-lg px-4 sm:max-w-2xl sm:px-5">
       <DriverHeader
         :user="user"
         :avatarUrl="avatarUrl"
         :initials="initials"
       />
 
-      <div class="space-y-5">
+      <div class="min-w-0 space-y-5">
         <p
           v-if="errorMsg"
           class="rounded-2xl border border-amber-700/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-600/30"
