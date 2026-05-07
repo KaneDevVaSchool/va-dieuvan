@@ -1,22 +1,25 @@
 <template>
-  <div class="driver-trip-detail -mx-3 flex min-h-[calc(100dvh-6rem)] w-[calc(100%+1.5rem)] flex-col bg-[#ECEEF1] sm:mx-auto sm:min-h-0 sm:w-full sm:max-w-lg sm:pb-0">
-    <div class="relative shrink-0 bg-[#001a2e] px-3 pb-6 pt-2 text-white sm:rounded-b-3xl sm:px-4">
-      <div class="flex items-start justify-between gap-2">
+  <div
+    class="driver-trip-detail -mx-3 flex min-h-[calc(100dvh-6rem)] w-[calc(100%+1.5rem)] flex-col bg-[#f4f6f8] sm:mx-auto sm:min-h-0 sm:w-full sm:max-w-lg sm:pb-0"
+  >
+    <!-- ─── Dark header ────────────────────────────────────── -->
+    <div class="relative shrink-0 bg-[#0d1f2d] px-4 pb-5 pt-3 text-white sm:rounded-b-3xl">
+      <!-- Row 1: back / title / menu -->
+      <div class="flex items-center justify-between gap-2">
         <RouterLink
           :to="{ name: 'driverSchedule' }"
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/20"
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/20 active:bg-white/20"
           :aria-label="t('driver_trip_detail.back')"
         >
           <ArrowLeftIcon class="h-5 w-5" />
         </RouterLink>
-        <div class="min-w-0 flex-1 text-center">
-          <h1 class="text-base font-bold tracking-tight">{{ t('driver_trip_detail.title') }}</h1>
-          <p class="text-sm font-medium text-amber-400">{{ headerStatusText }}</p>
-        </div>
+        <h1 class="flex-1 text-center text-base font-bold tracking-tight">
+          {{ trip ? t('driver_trip_detail.header_title', { id: trip.id }) : t('driver_trip_detail.title') }}
+        </h1>
         <div class="relative" ref="moreRoot">
           <button
             type="button"
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20 active:bg-white/20"
             :aria-label="t('driver_trip_detail.more')"
             @click="moreOpen = !moreOpen"
           >
@@ -45,296 +48,545 @@
         </div>
       </div>
 
-      <div
-        v-if="trip"
-        class="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
-      >
-        <div class="min-w-0">
-          <p class="text-sm font-bold leading-snug text-white">
-            {{ t('driver_trip_detail.trip_headline', { type: tripHeadlineType }) }}
-          </p>
-          <p class="mt-0.5 text-xs text-white/70">
-            {{ t('driver_trip_detail.request_from', { name: requesterLine }) }}
-          </p>
+      <template v-if="trip">
+        <!-- Row 2: status badge -->
+        <div class="mt-3 flex justify-center">
+          <span
+            class="rounded-full px-4 py-1 text-sm font-semibold"
+            :class="statusBadgeClass"
+          >{{ headerStatusText }}</span>
         </div>
-        <div
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-500/20 ring-1 ring-sky-400/40"
-        >
-          <BriefcaseIcon class="h-5 w-5 text-sky-200" />
-        </div>
-      </div>
 
+        <!-- Row 3: date-time -->
+        <p class="mt-2 text-center text-sm text-white/70">{{ formattedDateLine }}</p>
+
+        <!-- Row 4: stats strip -->
+        <div class="mt-3 grid grid-cols-3 divide-x divide-white/15 rounded-2xl bg-white/10 py-3">
+          <div class="flex flex-col items-center gap-0.5 px-2">
+            <UserGroupIcon class="h-5 w-5 text-[#7fdcc8]" />
+            <span class="text-[10px] text-white/60">{{ t('driver_trip_detail.stats_students') }}</span>
+            <span class="text-base font-bold text-white">{{ statsStudentCount }}</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5 px-2">
+            <MapPinIcon class="h-5 w-5 text-[#7fdcc8]" />
+            <span class="text-[10px] text-white/60">{{ t('driver_trip_detail.stats_distance') }}</span>
+            <span class="text-base font-bold text-white">{{ statsDistance }}</span>
+          </div>
+          <div class="flex flex-col items-center gap-0.5 px-2">
+            <ClockIcon class="h-5 w-5 text-[#7fdcc8]" />
+            <span class="text-[10px] text-white/60">{{ t('driver_trip_detail.stats_duration') }}</span>
+            <span class="text-base font-bold text-white">{{ statsDuration }}</span>
+          </div>
+        </div>
+      </template>
+
+      <!-- Warning banner -->
       <div
         v-if="warningBanner"
         class="mt-3 flex gap-3 rounded-2xl border border-amber-400/50 bg-gradient-to-r from-amber-500/95 to-amber-600/90 px-3 py-3 text-amber-950 shadow-md"
       >
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/30">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/30">
           <ClockIcon class="h-5 w-5 text-amber-950" />
         </div>
         <div class="min-w-0">
           <p class="text-sm font-bold">{{ t('driver_trip_detail.warn_title', { n: warningBanner.minutes }) }}</p>
-          <p class="mt-0.5 text-xs leading-snug text-amber-950/90">
-            {{ warningBanner.body }}
-          </p>
+          <p class="mt-0.5 text-xs leading-snug text-amber-950/90">{{ warningBanner.body }}</p>
         </div>
       </div>
     </div>
 
-    <div class="relative z-10 -mt-3 flex-1 space-y-3 px-3 pb-36 sm:px-0 sm:pb-8">
-      <p v-if="loadError" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-        {{ loadError }}
-      </p>
+    <!-- ─── Scrollable content ─────────────────────────────── -->
+    <div class="relative z-10 -mt-3 flex-1 space-y-3 px-3 pb-40 sm:px-0 sm:pb-12">
+      <p
+        v-if="loadError"
+        class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+      >{{ loadError }}</p>
 
-      <div v-if="loading && !trip" class="space-y-3">
+      <div v-if="loading && !trip" class="mt-3 space-y-3">
         <div class="h-40 animate-pulse rounded-2xl bg-slate-200" />
         <div class="h-48 animate-pulse rounded-2xl bg-slate-200" />
+        <div class="h-32 animate-pulse rounded-2xl bg-slate-200" />
       </div>
 
       <template v-else-if="trip">
-        <!-- Bản đồ -->
-        <div v-if="embedMapSrc" class="overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-200 shadow-md">
-          <div class="relative h-[9.5rem] w-full sm:h-44">
-            <iframe
-              :title="t('driver_trip_detail.map_frame')"
-              class="absolute inset-0 h-full w-full border-0"
-              :src="embedMapSrc"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
+
+        <!-- 1. Route accordion -->
+        <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
+            @click="routeExpanded = !routeExpanded"
+          >
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7fdcc8]/20">
+              <MapIcon class="h-4 w-4 text-[#0d9488]" />
+            </div>
+            <span class="flex-1 text-sm font-bold text-slate-900">{{ t('driver_trip_detail.route_section') }}</span>
+            <ChevronDownIcon
+              class="h-5 w-5 text-slate-400 transition-transform"
+              :class="routeExpanded ? 'rotate-180' : ''"
             />
+          </button>
+
+          <div v-show="routeExpanded" class="px-4 pb-4">
+            <!-- Start point -->
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm">
+                <MapPinIcon class="h-5 w-5" />
+              </div>
+              <div class="min-w-0 flex-1 pt-0.5">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ t('driver_trip_detail.point_start') }}</p>
+                <p class="text-sm font-bold text-slate-900">{{ originMain }}</p>
+                <p v-if="originSub" class="text-xs text-slate-500">{{ originSub }}</p>
+                <span class="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#7fdcc8]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[#0d9488]">
+                  <CheckCircleIcon class="h-3.5 w-3.5" />
+                  {{ t('driver_trip_detail.route_start_ready') }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Connector: stops count -->
+            <div class="my-1 ml-5 flex items-center gap-2">
+              <div class="flex h-full w-0 flex-col items-center">
+                <div class="h-10 w-px border-l-2 border-dashed border-slate-200" />
+              </div>
+              <span
+                v-if="paxKind === 'student' && paxList.length > 0"
+                class="ml-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-0.5 text-[11px] font-semibold text-slate-600"
+              >
+                <UserGroupIcon class="mr-1 inline h-3.5 w-3.5 text-slate-400" />
+                {{ t('driver_trip_detail.route_stops', { n: paxList.length }) }}
+              </span>
+            </div>
+
+            <!-- End point -->
+            <div class="flex items-start gap-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-sm">
+                <FlagIcon class="h-5 w-5" />
+              </div>
+              <div class="min-w-0 flex-1 pt-0.5">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ t('driver_trip_detail.point_end') }}</p>
+                <p class="text-sm font-bold text-slate-900">{{ destMain }}</p>
+                <p v-if="destSub" class="text-xs text-slate-500">{{ destSub }}</p>
+                <p class="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                  <ClockIcon class="h-3.5 w-3.5" />
+                  {{ t('driver_trip_detail.planned', { t: timeHm(trip.arrive_by || dr?.arrive_by) }) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Map button -->
             <a
               v-if="mapUrl"
               :href="mapUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1.5 text-xs font-bold text-slate-900 shadow-md ring-1 ring-slate-200/80"
+              class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-sky-600 bg-sky-600 py-2.5 text-sm font-bold text-white transition active:opacity-80"
             >
-              <MapIcon class="h-4 w-4 text-[#001a2e]" />
-              {{ t('driver_trip_detail.map_nav') }}
+              <MapIcon class="h-4 w-4" />
+              {{ t('driver_trip_detail.route_map_btn') }}
             </a>
           </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-md">
-          <div class="flex justify-between gap-3">
-            <div>
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                {{ t('driver_trip_detail.trip_code') }}
-              </p>
-              <p class="text-lg font-bold text-[#001a2e]">{{ tripCodeDisplay }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                {{ t('driver_trip_detail.route') }}
-              </p>
-              <p class="text-sm font-bold text-[#001a2e]">{{ routeTitle }}</p>
-            </div>
-          </div>
-
-          <div class="relative mt-4 pl-1">
-            <div class="absolute left-[7px] top-2 bottom-2 w-px bg-slate-200" />
-            <div class="space-y-4 pl-4">
-              <div class="relative">
-                <span
-                  class="absolute -left-4 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-slate-300 bg-white"
-                />
-                <p class="text-[11px] text-slate-500">
-                  {{ t('driver_trip_detail.point_start') }} · {{ timeHm(trip.depart_at) }}
-                </p>
-                <p class="text-sm font-semibold text-slate-900">{{ originMain }}</p>
-                <p v-if="originSub" class="text-xs text-slate-500">{{ originSub }}</p>
-              </div>
-              <div class="relative">
-                <span
-                  class="absolute -left-4 top-1.5 h-2.5 w-2.5 rounded-full border-[3px] border-[#001a2e] bg-white"
-                />
-                <p class="text-[11px] text-slate-500">
-                  {{ t('driver_trip_detail.point_end') }} ·
-                  {{ t('driver_trip_detail.planned', { t: timeHm(trip.arrive_by || dr?.arrive_by) }) }}
-                </p>
-                <p class="text-sm font-semibold text-slate-900">{{ destMain }}</p>
-                <p v-if="destSub" class="text-xs text-slate-500">{{ destSub }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-if="dispatchNotes"
-            class="mt-4 flex gap-2 rounded-xl border border-slate-100 bg-slate-50/95 px-3 py-2.5 text-xs text-slate-700"
-          >
-            <InformationCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-            <div>
-              <p class="font-semibold text-slate-800">{{ t('driver_trip_detail.trip_notes_title') }}</p>
-              <p class="mt-0.5 whitespace-pre-wrap text-slate-600">{{ dispatchNotes }}</p>
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          class="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-200/90 bg-white px-3 py-3 text-left shadow-sm"
-          @click="openKmModal()"
-        >
-          <div class="flex min-w-0 items-center gap-2.5">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
-              <ChartBarIcon class="h-5 w-5" />
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm font-semibold text-slate-900">{{ t('driver_trip_detail.km_row_title') }}</p>
-              <p v-if="!hasEndOdometer" class="text-xs text-amber-600">
-                {{ t('driver_trip_detail.km_end_missing') }}
-              </p>
-              <p v-else class="text-xs text-slate-500">
-                {{ t('driver_trip_detail.km_end_value', { km: formatKm(trip.record.end_odometer_km) }) }}
-              </p>
-            </div>
-          </div>
-          <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400" />
-        </button>
-
-        <div class="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-          <div class="mb-2 flex items-center justify-between">
-            <h2 class="text-sm font-bold text-slate-900">{{ t('driver_trip_detail.costs_title') }}</h2>
-            <button
-              v-if="canAddCost"
-              type="button"
-              class="text-sm font-semibold text-sky-700"
-              @click="openCostModal"
-            >
-              {{ t('driver_trip_detail.costs_add') }}
-            </button>
-          </div>
-          <p v-if="!tripCosts.length" class="px-0.5 py-2 text-xs text-slate-500">
-            {{ t('driver_trip_detail.costs_empty') }}
-          </p>
-          <ul v-else class="space-y-2">
-            <li v-for="c in tripCosts" :key="c.id">
-              <RouterLink
-                :to="`/driver/costs/${c.id}`"
-                class="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/60 px-2.5 py-2.5 transition active:bg-slate-100"
-              >
-                <div
-                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-slate-700 ring-1 ring-slate-200/80"
+        <!-- 2. Student list (D2D / P2P) -->
+        <template v-if="paxKind === 'student'">
+          <div v-if="paxList.length" class="overflow-hidden rounded-2xl bg-white shadow-sm">
+            <!-- Header -->
+            <div class="flex items-center justify-between gap-2 px-4 py-3.5">
+              <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                <UserGroupIcon class="h-4 w-4 text-slate-400" />
+                {{ t('driver_trip_detail.students_title', { n: displayedPaxList.length }) }}
+              </h2>
+              <div class="flex gap-1.5">
+                <button
+                  type="button"
+                  class="flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition"
+                  :class="studentFilterStatus !== 'all' ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-[#0d9488]' : 'border-slate-200 bg-slate-50 text-slate-600'"
+                  @click="cycleFilter"
                 >
-                  <FireIcon v-if="c.type === 'fuel'" class="h-4 w-4" />
-                  <BanknotesIcon v-else class="h-4 w-4" />
-                </div>
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-semibold text-slate-900">
-                    {{ costTypeLabel(c.type) }}
-                    <span v-if="c.description" class="font-normal text-slate-600">· {{ c.description }}</span>
-                  </p>
-                  <p class="text-[11px] text-slate-500">{{ formatCostTime(c.created_at) }}</p>
-                </div>
-                <div class="flex items-center gap-0.5 text-sm font-bold tabular-nums text-slate-900">
-                  {{ formatVnd(c.amount) }}
-                  <ChevronRightIcon class="h-4 w-4 text-slate-300" />
-                </div>
-              </RouterLink>
-            </li>
-          </ul>
-        </div>
+                  <FunnelIcon class="h-3.5 w-3.5" />
+                  {{ t('driver_trip_detail.filter_btn') }}
+                  <span v-if="studentFilterStatus !== 'all'" class="ml-0.5 font-bold text-[#0d9488]">·</span>
+                </button>
+                <button
+                  type="button"
+                  class="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 transition"
+                  @click="cycleSort"
+                >
+                  <ArrowsUpDownIcon class="h-3.5 w-3.5" />
+                  {{ t('driver_trip_detail.sort_btn') }}
+                </button>
+              </div>
+            </div>
 
-        <div v-if="paxList.length" class="mt-1">
-          <div class="mb-2 flex items-center justify-between gap-2">
+            <!-- Student cards -->
+            <ul class="divide-y divide-slate-100">
+              <li
+                v-for="p in displayedPaxList"
+                :key="p._origIndex"
+                class="transition"
+                :class="isPaused ? 'opacity-50' : ''"
+              >
+                <!-- Main row -->
+                <div
+                  class="flex cursor-pointer items-start gap-3 px-4 py-3"
+                  @click="toggleStudent(p._origIndex)"
+                >
+                  <!-- Avatar with number badge -->
+                  <div class="relative shrink-0">
+                    <div
+                      class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600"
+                    >
+                      {{ studentInitials(p.name) }}
+                    </div>
+                    <!-- Number badge -->
+                    <div
+                      class="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold"
+                      :class="rowState(p._origIndex) === 'picked_up' ? 'bg-emerald-500 text-white' : rowState(p._origIndex) === 'absent' ? 'bg-slate-400 text-white' : 'bg-[#0d1f2d] text-white'"
+                    >
+                      {{ p._origIndex + 1 }}
+                    </div>
+                    <!-- Picked check -->
+                    <div
+                      v-if="rowState(p._origIndex) === 'picked_up'"
+                      class="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white"
+                    >
+                      <CheckIcon class="h-3.5 w-3.5" />
+                    </div>
+                  </div>
+
+                  <!-- Info -->
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <span class="font-semibold text-slate-900">{{ p.name }}</span>
+                      <span
+                        v-if="isNextIndex(p._origIndex) && canMarkPickup"
+                        class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-700"
+                      >{{ t('driver_trip_detail.tag_next') }}</span>
+                    </div>
+                    <p class="mt-0.5 text-xs text-slate-500">{{ p.subtitle }}</p>
+                    <p v-if="p.address" class="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
+                      <MapPinIcon class="h-3 w-3 shrink-0" />
+                      {{ p.address }}
+                    </p>
+                  </div>
+
+                  <!-- Right: status + time + chevron -->
+                  <div class="flex shrink-0 flex-col items-end gap-1">
+                    <span
+                      class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                      :class="rowState(p._origIndex) === 'picked_up' ? 'bg-emerald-100 text-emerald-700' : rowState(p._origIndex) === 'absent' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'"
+                    >
+                      {{ rowState(p._origIndex) === 'picked_up' ? t('driver_trip_detail.state_picked') : rowState(p._origIndex) === 'absent' ? t('driver_trip_detail.btn_absent') : t('driver_trip_detail.status_waiting') }}
+                    </span>
+                    <span v-if="p.time" class="text-[11px] font-semibold tabular-nums text-slate-500">{{ p.time }}</span>
+                    <ChevronDownIcon
+                      class="h-4 w-4 text-slate-300 transition-transform"
+                      :class="expandedStudentIdx === p._origIndex ? 'rotate-180' : ''"
+                    />
+                  </div>
+                </div>
+
+                <!-- Expanded: action buttons -->
+                <div
+                  v-if="expandedStudentIdx === p._origIndex"
+                  class="flex gap-2 border-t border-slate-100 bg-slate-50/50 px-4 py-3"
+                >
+                  <a
+                    v-if="p.phone"
+                    :href="`tel:${p.phone}`"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white active:opacity-80"
+                  >
+                    <PhoneIcon class="h-4 w-4" />
+                    {{ t('driver_trip_detail.call') }}
+                  </a>
+                  <button
+                    v-if="canMarkPickup && rowState(p._origIndex) !== 'picked_up'"
+                    type="button"
+                    :disabled="eventPosting"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#7fdcc8] py-2.5 text-sm font-bold text-[#0d1f2d] disabled:opacity-50 active:opacity-80"
+                    @click.stop="setRowState(p._origIndex, 'picked_up')"
+                  >
+                    <CheckIcon class="h-4 w-4" />
+                    {{ t('driver_trip_detail.btn_picked') }}
+                  </button>
+                  <button
+                    v-if="canMarkPickup && rowState(p._origIndex) !== 'absent'"
+                    type="button"
+                    :disabled="eventPosting"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-200 py-2.5 text-sm font-semibold text-slate-700 disabled:opacity-50 active:opacity-80"
+                    @click.stop="setRowState(p._origIndex, 'absent')"
+                  >
+                    {{ t('driver_trip_detail.btn_absent') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 active:bg-slate-50"
+                  >
+                    <InformationCircleIcon class="h-4 w-4" />
+                    {{ t('driver_trip_detail.btn_detail') }}
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <p
+            v-else
+            class="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-3 py-5 text-center text-sm text-slate-500"
+          >{{ t('driver_trip_detail.no_pax') }}</p>
+        </template>
+
+        <!-- Other pax types (cargo / business / unlisted) -->
+        <div v-else-if="paxList.length" class="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <div class="mb-2 flex items-center justify-between px-4 pt-3.5">
             <h2 class="text-sm font-bold text-slate-900">
               {{ t('driver_trip_detail.students_title', { n: paxList.length }) }}
             </h2>
-            <span v-if="showPickupBar" class="shrink-0 text-xs text-slate-500">
-              {{ pickedCount }}/{{ paxList.length }} {{ t('driver_trip_detail.picked') }}
-            </span>
           </div>
-          <ul class="space-y-3">
+          <ul class="divide-y divide-slate-100 px-4 pb-3">
             <li
               v-for="(p, i) in paxList"
               :key="i"
-              class="overflow-hidden rounded-2xl border bg-white shadow-sm"
-              :class="
-                isNextIndex(i) && paxKind === 'student'
-                  ? 'border-2 border-amber-400 border-l-[6px] border-l-amber-500'
-                  : 'border-slate-200/90'
-              "
+              class="flex items-start gap-3 py-3"
             >
-              <div class="flex items-start gap-3 p-3">
-                <div class="relative shrink-0">
-                  <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-700"
-                  >
-                    {{ studentInitials(p.name) }}
-                  </div>
-                  <div
-                    v-if="paxKind === 'student' && rowState(i) === 'picked_up'"
-                    class="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white"
-                  >
-                    <CheckIcon class="h-3.5 w-3.5" />
-                  </div>
-                  <div
-                    v-else-if="paxKind === 'student' && isNextIndex(i) && canMarkPickup"
-                    class="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-white ring-2 ring-white"
-                  >
-                    <MapPinIcon class="h-3 w-3" />
-                  </div>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-1.5">
-                    <span class="font-semibold text-slate-900">{{ p.name }}</span>
-                    <span
-                      v-if="paxKind === 'student' && isNextIndex(i) && canMarkPickup"
-                      class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-800"
-                    >
-                      {{ t('driver_trip_detail.tag_next') }}
-                    </span>
-                  </div>
-                  <p class="text-xs text-slate-500">{{ p.subtitle }}</p>
-                </div>
-                <a
-                  v-if="p.phone"
-                  :href="`tel:${p.phone}`"
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[#001a2e] hover:bg-slate-100"
-                >
-                  <PhoneIcon class="h-5 w-5" />
-                </a>
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                {{ studentInitials(p.name) }}
               </div>
-              <div
-                v-if="paxKind === 'student' && isNextIndex(i) && canMarkPickup"
-                class="flex gap-2 border-t border-slate-100 px-3 py-2.5"
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-slate-900">{{ p.name }}</p>
+                <p class="text-xs text-slate-500">{{ p.subtitle }}</p>
+              </div>
+              <a
+                v-if="p.phone"
+                :href="`tel:${p.phone}`"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600"
               >
-                <button
-                  type="button"
-                  :disabled="eventPosting"
-                  class="min-w-0 flex-1 rounded-xl bg-[#27AE60] py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                  @click="setRowState(i, 'picked_up')"
-                >
-                  {{ t('driver_trip_detail.btn_picked') }}
-                </button>
-                <button
-                  type="button"
-                  :disabled="eventPosting"
-                  class="w-[4.5rem] shrink-0 rounded-xl bg-slate-200 py-2.5 text-sm font-semibold text-slate-700 disabled:opacity-50"
-                  @click="setRowState(i, 'absent')"
-                >
-                  {{ t('driver_trip_detail.btn_absent') }}
-                </button>
-              </div>
+                <PhoneIcon class="h-4 w-4" />
+              </a>
             </li>
           </ul>
         </div>
-        <p
-          v-else-if="paxKind === 'student'"
-          class="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-3 py-5 text-center text-sm text-slate-500"
+
+        <!-- 3. KM row -->
+        <button
+          type="button"
+          class="flex w-full items-center justify-between gap-2 rounded-2xl bg-white px-4 py-3.5 text-left shadow-sm"
+          @click="openKmModal()"
         >
-          {{ t('driver_trip_detail.no_pax') }}
-        </p>
+          <div class="flex min-w-0 items-center gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+              <ChartBarIcon class="h-4 w-4" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-slate-900">{{ t('driver_trip_detail.km_row_title') }}</p>
+              <p v-if="!hasEndOdometer" class="text-xs text-amber-600">{{ t('driver_trip_detail.km_end_missing') }}</p>
+              <p v-else class="text-xs text-slate-500">{{ t('driver_trip_detail.km_end_value', { km: formatKm(trip.record.end_odometer_km) }) }}</p>
+            </div>
+          </div>
+          <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-300" />
+        </button>
+
+        <!-- 4. Costs accordion -->
+        <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
+            @click="costsExpanded = !costsExpanded"
+          >
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-50">
+              <BanknotesIcon class="h-4 w-4 text-orange-500" />
+            </div>
+            <span class="flex-1 text-sm font-bold text-slate-900">{{ t('driver_trip_detail.costs_section') }}</span>
+            <span v-if="tripCosts.length" class="mr-1 text-xs font-semibold text-slate-500">{{ formatVnd(costsTotalAmount) }}</span>
+            <ChevronDownIcon
+              class="h-5 w-5 text-slate-400 transition-transform"
+              :class="costsExpanded ? 'rotate-180' : ''"
+            />
+          </button>
+
+          <div v-show="costsExpanded" class="px-4 pb-4">
+            <div class="mb-3 flex items-center justify-between">
+              <span class="text-xs text-slate-500">
+                {{ tripCosts.length ? t('driver_trip_detail.costs_total', { amount: formatVnd(costsTotalAmount) }) : t('driver_trip_detail.costs_empty') }}
+              </span>
+              <button
+                v-if="canAddCost"
+                type="button"
+                class="flex items-center gap-1 rounded-full bg-[#0d1f2d] px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                @click="openCostModal"
+              >
+                <PlusIcon class="h-3.5 w-3.5" />
+                {{ t('driver_trip_detail.costs_add') }}
+              </button>
+            </div>
+            <ul v-if="tripCosts.length" class="space-y-2">
+              <li v-for="c in tripCosts" :key="c.id">
+                <RouterLink
+                  :to="`/driver/costs/${c.id}`"
+                  class="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5 transition active:bg-slate-100"
+                >
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-slate-600 ring-1 ring-slate-200/80">
+                    <FireIcon v-if="c.type === 'fuel'" class="h-4 w-4 text-orange-500" />
+                    <WrenchScrewdriverIcon v-else-if="c.type === 'repair'" class="h-4 w-4 text-blue-500" />
+                    <SparklesIcon v-else-if="c.type === 'wash'" class="h-4 w-4 text-sky-500" />
+                    <BanknotesIcon v-else class="h-4 w-4 text-slate-500" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-slate-900">
+                      {{ costTypeLabel(c.type) }}
+                      <span v-if="c.description" class="font-normal text-slate-500"> · {{ c.description }}</span>
+                    </p>
+                    <div class="mt-0.5 flex items-center gap-2">
+                      <p class="text-[11px] text-slate-400">{{ formatCostTime(c.created_at) }}</p>
+                      <span
+                        class="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                        :class="c.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : c.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'"
+                      >
+                        {{ costStatusLabel(c.status) }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-0.5 text-sm font-bold tabular-nums text-slate-900">
+                    {{ formatVnd(c.amount) }}
+                    <ChevronRightIcon class="h-4 w-4 text-slate-300" />
+                  </div>
+                </RouterLink>
+              </li>
+            </ul>
+            <p v-else class="py-2 text-center text-xs text-slate-400">{{ t('driver_trip_detail.costs_empty') }}</p>
+          </div>
+        </div>
+
+        <!-- 5. Trip notes accordion -->
+        <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
+            @click="notesExpanded = !notesExpanded"
+          >
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-50">
+              <ChatBubbleLeftEllipsisIcon class="h-4 w-4 text-orange-500" />
+            </div>
+            <span class="flex-1 text-sm font-bold text-slate-900">{{ t('driver_trip_detail.notes_section') }}</span>
+            <ChevronDownIcon
+              class="h-5 w-5 text-slate-400 transition-transform"
+              :class="notesExpanded ? 'rotate-180' : ''"
+            />
+          </button>
+
+          <div v-show="notesExpanded" class="px-4 pb-4">
+            <!-- Dispatch notes -->
+            <div
+              v-if="dispatchNotes"
+              class="mb-3 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-2.5"
+            >
+              <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-blue-800">
+                <InformationCircleIcon class="h-3.5 w-3.5" />
+                {{ t('driver_trip_detail.notes_important') }}
+              </p>
+              <ul class="list-disc pl-4 text-xs leading-relaxed text-blue-700">
+                <li
+                  v-for="(line, li) in dispatchNoteLines"
+                  :key="li"
+                >{{ line }}</li>
+              </ul>
+            </div>
+
+            <!-- Driver note input -->
+            <textarea
+              v-model="notesDraft"
+              rows="3"
+              class="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
+              :placeholder="t('driver_trip_detail.notes_driver_ph')"
+            />
+            <div class="mt-2 flex justify-end">
+              <button
+                type="button"
+                :disabled="notesSaving || !notesDraft.trim()"
+                class="flex items-center gap-1.5 rounded-xl bg-[#0d1f2d] px-4 py-2 text-xs font-bold text-white disabled:opacity-40 active:opacity-80"
+                @click="saveDriverNote"
+              >
+                <CheckIcon v-if="notesSaved" class="h-3.5 w-3.5 text-[#7fdcc8]" />
+                {{ notesSaved ? t('driver_trip_detail.notes_saved') : t('driver_trip_detail.notes_save') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Emergency contact accordion -->
+        <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <button
+            type="button"
+            class="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
+            @click="contactExpanded = !contactExpanded"
+          >
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-50">
+              <PhoneArrowUpRightIcon class="h-4 w-4 text-rose-500" />
+            </div>
+            <span class="flex-1 text-sm font-bold text-slate-900">{{ t('driver_trip_detail.contact_section') }}</span>
+            <ChevronDownIcon
+              class="h-5 w-5 text-slate-400 transition-transform"
+              :class="contactExpanded ? 'rotate-180' : ''"
+            />
+          </button>
+
+          <div v-show="contactExpanded" class="px-4 pb-4">
+            <div class="flex items-center gap-3 rounded-xl bg-rose-50/60 px-3 py-3">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-500/90 text-white shadow-sm">
+                <UserIcon class="h-5 w-5" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{{ t('driver_trip_detail.contact_dispatcher_role') }}</p>
+                <p class="text-sm font-bold text-slate-900">{{ requesterLine }}</p>
+              </div>
+              <a
+                v-if="dispatcherPhone"
+                :href="`tel:${dispatcherPhone}`"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm"
+              >
+                <PhoneIcon class="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+
       </template>
     </div>
 
+    <!-- ─── Sticky bottom bar ──────────────────────────────── -->
     <div
-      class="safe-pb fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/95 px-3 py-3 backdrop-blur sm:static sm:mt-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0"
+      class="safe-pb fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/97 px-3 pt-2 backdrop-blur sm:static sm:mt-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0"
     >
+      <!-- Progress row (only while in-progress + student trips) -->
+      <div
+        v-if="showPickupBar && trip?.status === 'in_progress'"
+        class="mb-2 flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2"
+      >
+        <span class="flex-1 text-sm font-semibold text-slate-700">
+          {{ t('driver_trip_detail.bottom_picked', { n: pickedCount, total: paxList.length }) }}
+        </span>
+        <span class="text-sm font-bold text-orange-500">
+          {{ t('driver_trip_detail.bottom_remaining', { n: paxList.length - pickedCount }) }}
+        </span>
+        <button
+          type="button"
+          class="ml-1 flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition active:bg-slate-100"
+          :class="isPaused ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-[#0d9488]' : ''"
+          @click="isPaused = !isPaused"
+        >
+          <PauseIcon v-if="!isPaused" class="h-3.5 w-3.5" />
+          <PlayIcon v-else class="h-3.5 w-3.5" />
+          {{ isPaused ? t('driver_trip_detail.btn_resume_trip') : t('driver_trip_detail.btn_pause') }}
+        </button>
+      </div>
+
+      <!-- Main action -->
       <button
         v-if="canStart"
         type="button"
         :disabled="actionBusy"
-        class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#27AE60] py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-50"
+        class="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-50 active:opacity-80"
         @click="startTrip"
       >
         <PlayIcon class="h-5 w-5" />
@@ -344,8 +596,7 @@
         v-else-if="canEndTrip"
         type="button"
         :disabled="actionBusy"
-        class="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-50"
-        style="background: #001a2e"
+        class="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0d1f2d] py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-50 active:opacity-80"
         @click="onEndTrip"
       >
         <FlagIcon class="h-5 w-5" />
@@ -353,28 +604,26 @@
       </button>
       <p
         v-else-if="trip?.status === 'completed'"
-        class="rounded-2xl border border-emerald-200 bg-emerald-50 py-3 text-center text-sm font-medium text-emerald-900"
+        class="mb-2 rounded-2xl border border-emerald-200 bg-emerald-50 py-3 text-center text-sm font-medium text-emerald-900"
       >
         {{ t('driver_trip_detail.done') }}
       </p>
     </div>
 
+    <!-- ─── Modals (Teleport) ──────────────────────────────── -->
     <Teleport to="body">
+      <!-- KM modal -->
       <div
         v-if="kmModalOpen"
         class="fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
         @click.self="kmModalOpen = false"
       >
-        <div
-          class="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl"
-          @click.stop
-        >
+        <div class="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl" @click.stop>
           <div class="mb-3 flex items-start justify-between gap-2">
-            <h3 class="pr-6 text-base font-bold text-[#001a2e]">{{ t('driver_trip_detail.km_modal_title') }}</h3>
+            <h3 class="pr-6 text-base font-bold text-[#0d1f2d]">{{ t('driver_trip_detail.km_modal_title') }}</h3>
             <button
               type="button"
               class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600"
-              :aria-label="t('driver_trip_detail.close')"
               @click="kmModalOpen = false"
             >
               <XMarkIcon class="h-5 w-5" />
@@ -384,32 +633,28 @@
             <div>
               <label class="text-[11px] font-medium text-slate-500">{{ t('driver_trip_detail.km_start') }}</label>
               <div class="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-slate-800">
-                <input
-                  class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm"
-                  :value="formatKmInput(startKmModel)"
-                  readonly
-                />
-                <span class="ml-1 text-xs text-slate-500">km</span>
+                <input class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm" :value="formatKmInput(startKmModel)" readonly />
+                <span class="ml-1 text-xs text-slate-400">km</span>
               </div>
             </div>
             <div>
               <label class="text-[11px] font-medium text-slate-500">{{ t('driver_trip_detail.km_end') }}</label>
-              <div class="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white px-2 py-2 focus-within:ring-2 focus-within:ring-sky-300/50">
+              <div class="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white px-2 py-2 focus-within:ring-2 focus-within:ring-[#7fdcc8]/50">
                 <input
                   v-model="endKmModel"
                   type="text"
                   inputmode="numeric"
-                  class="min-w-0 flex-1 border-0 p-0 text-sm"
+                  class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm"
                   :placeholder="t('driver_trip_detail.km_placeholder')"
                   @input="onEndKmInput"
                 />
-                <span class="ml-1 text-xs text-slate-500">km</span>
+                <span class="ml-1 text-xs text-slate-400">km</span>
               </div>
             </div>
           </div>
-          <div class="mt-3 flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm text-slate-800">
-            <MapIcon class="h-4 w-4 text-slate-500" />
-            <span class="text-slate-600">{{ t('driver_trip_detail.km_distance') }}</span>
+          <div class="mt-3 flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5 text-sm text-slate-700">
+            <MapIcon class="h-4 w-4 text-slate-400" />
+            <span class="text-slate-500">{{ t('driver_trip_detail.km_distance') }}</span>
             <span class="ml-auto font-bold tabular-nums">{{ distancePreview }}</span>
           </div>
           <div class="mt-3">
@@ -417,23 +662,20 @@
             <textarea
               v-model="kmNoteModel"
               rows="3"
-              class="mt-0.5 w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              class="mt-0.5 w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
               :placeholder="t('driver_trip_detail.km_note_ph')"
             />
           </div>
           <div class="mt-4 flex gap-2">
             <button
               type="button"
-              class="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-800"
+              class="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700"
               @click="kmModalOpen = false"
-            >
-              {{ t('driver_trip_detail.cancel') }}
-            </button>
+            >{{ t('driver_trip_detail.cancel') }}</button>
             <button
               type="button"
               :disabled="kmSaving || !canSubmitKm"
-              class="inline-flex flex-1 items-center justify-center gap-1 rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-50"
-              style="background: #001a2e"
+              class="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-[#0d1f2d] py-2.5 text-sm font-bold text-white disabled:opacity-50"
               @click="submitKmModal"
             >
               {{ t('driver_trip_detail.confirm') }}
@@ -443,68 +685,71 @@
         </div>
       </div>
 
+      <!-- Cost modal -->
       <div
         v-if="costModalOpen"
         class="fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
         @click.self="costModalOpen = false"
       >
-        <div
-          class="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl"
-          @click.stop
-        >
+        <div class="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl" @click.stop>
           <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-base font-bold text-[#001a2e]">{{ t('driver_trip_detail.cost_modal_title') }}</h3>
+            <h3 class="text-base font-bold text-[#0d1f2d]">{{ t('driver_trip_detail.cost_modal_title') }}</h3>
             <button
               type="button"
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100"
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600"
               @click="costModalOpen = false"
             >
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
+
+          <!-- Type selector (pill grid) -->
           <label class="text-[11px] font-medium text-slate-500">{{ t('driver_trip_detail.cost_type') }}</label>
-          <select
-            v-model="costForm.type"
-            class="mt-0.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-          >
-            <option value="fuel">{{ costTypeLabel('fuel') }}</option>
-            <option value="toll">{{ costTypeLabel('toll') }}</option>
-            <option value="parking">{{ costTypeLabel('parking') }}</option>
-            <option value="other">{{ costTypeLabel('other') }}</option>
-          </select>
-          <label class="mt-2 block text-[11px] font-medium text-slate-500">{{ t('driver_trip_detail.cost_amount') }}</label>
+          <div class="mt-1.5 grid grid-cols-4 gap-1.5">
+            <button
+              v-for="ct in costTypes"
+              :key="ct.value"
+              type="button"
+              class="flex flex-col items-center gap-1 rounded-xl border py-2 text-[11px] font-semibold transition"
+              :class="costForm.type === ct.value ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-[#0d9488]' : 'border-slate-200 bg-slate-50 text-slate-600'"
+              @click="costForm.type = ct.value"
+            >
+              <span class="text-base">{{ ct.icon }}</span>
+              <span>{{ ct.label }}</span>
+            </button>
+          </div>
+
+          <label class="mt-3 block text-[11px] font-medium text-slate-500">{{ t('driver_trip_detail.cost_amount') }}</label>
           <input
             v-model="costForm.amount"
             type="text"
             inputmode="numeric"
-            class="mt-0.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            class="mt-0.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
             :placeholder="t('driver_trip_detail.cost_amount_ph')"
           />
-          <label class="mt-2 block text-[11px] font-medium text-slate-500">{{ t('driver_trip_detail.cost_desc') }}</label>
+
+          <label class="mt-2.5 block text-[11px] font-medium text-slate-500">{{ t('driver_trip_detail.cost_desc') }}</label>
           <input
             v-model="costForm.description"
             type="text"
-            class="mt-0.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            class="mt-0.5 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
             :placeholder="t('driver_trip_detail.cost_desc_ph')"
           />
+
           <p v-if="costError" class="mt-2 text-xs text-rose-600">{{ costError }}</p>
+
           <div class="mt-4 flex gap-2">
             <button
               type="button"
-              class="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold"
+              class="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700"
               @click="costModalOpen = false"
-            >
-              {{ t('driver_trip_detail.cancel') }}
-            </button>
+            >{{ t('driver_trip_detail.cancel') }}</button>
             <button
               type="button"
               :disabled="costSaving"
-              class="flex-1 rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-50"
-              style="background: #001a2e"
+              class="flex-1 rounded-xl bg-[#0d1f2d] py-2.5 text-sm font-bold text-white disabled:opacity-50"
               @click="submitCost"
-            >
-              {{ t('driver_trip_detail.confirm') }}
-            </button>
+            >{{ t('driver_trip_detail.confirm') }}</button>
           </div>
         </div>
       </div>
@@ -519,20 +764,31 @@ import { RouterLink, useRoute } from 'vue-router'
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  ArrowsUpDownIcon,
   BanknotesIcon,
-  BriefcaseIcon,
   ChartBarIcon,
+  ChatBubbleLeftEllipsisIcon,
+  CheckCircleIcon,
   CheckIcon,
+  ChevronDownIcon,
   ChevronRightIcon,
   ClockIcon,
   EllipsisVerticalIcon,
   FireIcon,
   FlagIcon,
+  FunnelIcon,
   InformationCircleIcon,
   MapIcon,
   MapPinIcon,
+  PauseIcon,
+  PhoneArrowUpRightIcon,
   PhoneIcon,
   PlayIcon,
+  PlusIcon,
+  SparklesIcon,
+  UserGroupIcon,
+  UserIcon,
+  WrenchScrewdriverIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { addTripEvent, getTrip, updateTripStatus, upsertTripRecord } from '../../api/trips'
@@ -545,6 +801,7 @@ const route = useRoute()
 
 const PASSENGER_PICKUP_EVENT = 'passenger_pickup'
 
+// ─── Core state ───────────────────────────────────────────
 const trip = ref(null)
 const loading = ref(true)
 const loadError = ref('')
@@ -553,17 +810,49 @@ const moreRoot = ref(null)
 const eventPosting = ref(false)
 const actionBusy = ref(false)
 
+// ─── KM modal state ───────────────────────────────────────
 const kmModalOpen = ref(false)
 const kmAfterSave = ref(null)
 const kmSaving = ref(false)
 const endKmModel = ref('')
 const kmNoteModel = ref('')
 
+// ─── Cost modal state ─────────────────────────────────────
 const costModalOpen = ref(false)
 const costSaving = ref(false)
 const costError = ref('')
 const costForm = ref({ type: 'fuel', amount: '', description: '' })
 
+// ─── UI accordion & interaction state ────────────────────
+const routeExpanded = ref(true)
+const costsExpanded = ref(false)
+const notesExpanded = ref(false)
+const contactExpanded = ref(false)
+const expandedStudentIdx = ref(null)
+const isPaused = ref(false)
+
+// ─── Notes draft state ────────────────────────────────────
+const notesDraft = ref('')
+const notesSaving = ref(false)
+const notesSaved = ref(false)
+
+// ─── Student filter / sort ────────────────────────────────
+const studentFilterStatus = ref('all')   // 'all' | 'waiting' | 'picked_up' | 'absent'
+const studentSortOrder = ref('default')  // 'default' | 'time_asc' | 'time_desc'
+
+// ─── Cost types list (for pill selector) ─────────────────
+const costTypes = computed(() => [
+  { value: 'fuel',    icon: '⛽', label: costTypeLabel('fuel') },
+  { value: 'toll',    icon: '🛣️', label: costTypeLabel('toll') },
+  { value: 'parking', icon: '🅿️', label: costTypeLabel('parking') },
+  { value: 'meal',    icon: '🍜', label: costTypeLabel('meal') },
+  { value: 'wash',    icon: '🚿', label: costTypeLabel('wash') },
+  { value: 'fine',    icon: '🚨', label: costTypeLabel('fine') },
+  { value: 'repair',  icon: '🔧', label: costTypeLabel('repair') },
+  { value: 'other',   icon: '💼', label: costTypeLabel('other') },
+])
+
+// ─── Click-outside for overflow menu ─────────────────────
 function onDocClick(e) {
   const el = moreRoot.value
   if (el && !el.contains(e.target)) moreOpen.value = false
@@ -578,6 +867,7 @@ onUnmounted(() => {
   document.removeEventListener('click', onDocClick)
 })
 
+// ─── Route param ─────────────────────────────────────────
 const tripId = computed(() => {
   const id = route.params.id
   const n = Number(id)
@@ -586,14 +876,14 @@ const tripId = computed(() => {
 
 watch(
   () => route.params.id,
-  () => {
-    void load()
-  },
+  () => { void load() },
 )
 
+// ─── Trip data shortcuts ──────────────────────────────────
 const dr = computed(() => trip.value?.dispatch_request ?? null)
 const snap = computed(() => dr.value?.wizard_snapshot ?? null)
 
+// ─── Header computeds ─────────────────────────────────────
 const tripHeadlineType = computed(() => {
   const tt = dr.value?.trip_type
   if (tt === 'door_to_door') return 'D2D'
@@ -602,7 +892,9 @@ const tripHeadlineType = computed(() => {
   if (tt === 'cargo') return 'Cargo'
   return '—'
 })
+
 const requesterLine = computed(() => dr.value?.requester?.name?.trim() || '—')
+
 const tripCodeDisplay = computed(() => {
   const id = trip.value?.id
   if (!id) return '—'
@@ -611,6 +903,59 @@ const tripCodeDisplay = computed(() => {
   return `#${pre}-${id}`
 })
 
+const statusBadgeClass = computed(() => {
+  const s = trip.value?.status
+  if (s === 'in_progress') return 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30'
+  if (s === 'completed') return 'bg-[#7fdcc8]/20 text-[#7fdcc8] ring-1 ring-[#7fdcc8]/30'
+  if (s === 'cancelled') return 'bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/30'
+  return 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30'
+})
+
+function statusLabelTr(st) {
+  const k = `trips_page.trip_status.${st}`
+  const tr = t(k)
+  return tr === k ? st : tr
+}
+
+const headerStatusText = computed(() => {
+  if (!trip.value) return '—'
+  if (trip.value.status === 'in_progress') return t('driver_trip_detail.status_running')
+  return statusLabelTr(trip.value.status)
+})
+
+const formattedDateLine = computed(() => {
+  const tr = trip.value
+  if (!tr?.depart_at) return '—'
+  const d = new Date(tr.depart_at)
+  if (Number.isNaN(d.getTime())) return '—'
+  const datePart = d.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const start = timeHm(tr.depart_at)
+  const end = timeHm(tr.arrive_by || dr.value?.arrive_by)
+  return `${datePart} • ${start} – ${end}`
+})
+
+// ─── Stats strip ──────────────────────────────────────────
+const statsStudentCount = computed(() => paxList.value.length || 0)
+
+const statsDistance = computed(() => {
+  const rec = trip.value?.record
+  if (rec?.distance_km != null) return `${Number(rec.distance_km).toLocaleString('vi-VN')} km`
+  const dr2 = dr.value
+  if (dr2?.estimated_distance_km != null) return `${Number(dr2.estimated_distance_km).toLocaleString('vi-VN')} km`
+  return '— km'
+})
+
+const statsDuration = computed(() => {
+  const tr = trip.value
+  if (!tr?.depart_at) return `— ${t('driver_trip_detail.stats_duration_unit')}`
+  const end = tr.arrive_by || dr.value?.arrive_by
+  if (!end) return `— ${t('driver_trip_detail.stats_duration_unit')}`
+  const mins = Math.round((new Date(end).getTime() - new Date(tr.depart_at).getTime()) / 60000)
+  if (!Number.isFinite(mins) || mins < 0) return `— ${t('driver_trip_detail.stats_duration_unit')}`
+  return `${mins} ${t('driver_trip_detail.stats_duration_unit')}`
+})
+
+// ─── Address helpers ──────────────────────────────────────
 function splitAddress(s) {
   const t0 = (s || '').trim()
   if (!t0) return { main: '—', sub: '' }
@@ -628,12 +973,17 @@ const destSub = computed(() => destLines.value.sub)
 
 const dispatchNotes = computed(() => (dr.value?.notes || '').trim() || null)
 
+const dispatchNoteLines = computed(() => {
+  const raw = dispatchNotes.value
+  if (!raw) return []
+  return raw.split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
+})
+
+// ─── Map helpers ──────────────────────────────────────────
 const embedMapSrc = computed(() => {
   const o = dr.value?.origin?.trim()
   const d = dr.value?.destination?.trim()
-  if (o && d) {
-    return `https://maps.google.com/maps?q=${encodeURIComponent(`${o} → ${d}`)}&output=embed`
-  }
+  if (o && d) return `https://maps.google.com/maps?q=${encodeURIComponent(`${o} → ${d}`)}&output=embed`
   if (d) return `https://maps.google.com/maps?q=${encodeURIComponent(d)}&output=embed`
   if (o) return `https://maps.google.com/maps?q=${encodeURIComponent(o)}&output=embed`
   return ''
@@ -642,9 +992,7 @@ const embedMapSrc = computed(() => {
 const mapUrl = computed(() => {
   const a = (dr.value?.origin || '').trim()
   const b = (dr.value?.destination || '').trim()
-  if (a && b) {
-    return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(a)}&destination=${encodeURIComponent(b)}&travelmode=driving`
-  }
+  if (a && b) return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(a)}&destination=${encodeURIComponent(b)}&travelmode=driving`
   if (a) return `https://maps.google.com/maps?q=${encodeURIComponent(a)}`
   if (b) return `https://maps.google.com/maps?q=${encodeURIComponent(b)}`
   return ''
@@ -665,16 +1013,32 @@ const routeTitle = computed(() => {
   return `${short} ${part}`
 })
 
+// ─── Costs ────────────────────────────────────────────────
 const tripCosts = computed(() => {
   const c = trip.value?.costs
   if (!Array.isArray(c)) return []
   return c.slice().sort((a, b) => (b.id || 0) - (a.id || 0))
 })
 
+const costsTotalAmount = computed(() => tripCosts.value.reduce((s, c) => s + (Number(c.amount) || 0), 0))
+
 const canAddCost = computed(
   () => trip.value && ['in_progress', 'assigned', 'driver_confirmed', 'pending', 'approved'].includes(trip.value.status),
 )
 
+function costTypeLabel(type) {
+  const k = `driver_trip_detail.cost_type_${String(type || 'other')}`
+  if (te(k)) return t(k)
+  return type
+}
+
+function costStatusLabel(status) {
+  const map = { submitted: 'cost_status_submitted', confirmed: 'cost_status_confirmed', rejected: 'cost_status_rejected' }
+  const k = `driver_trip_detail.${map[status] || 'cost_status_submitted'}`
+  return te(k) ? t(k) : status
+}
+
+// ─── Time helpers ─────────────────────────────────────────
 function timeHm(iso) {
   if (!iso) return '—'
   const d = new Date(iso)
@@ -693,26 +1057,9 @@ function formatCostTime(iso) {
   return d.toLocaleString('vi-VN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
 
-function costTypeLabel(type) {
-  const k = `driver_trip_detail.cost_type_${String(type || 'other')}`
-  if (te(k)) return t(k)
-  return type
-}
-
 const dispatcherPhone = computed(() => null)
 
-function statusLabelTr(st) {
-  const k = `trips_page.trip_status.${st}`
-  const tr = t(k)
-  return tr === k ? st : tr
-}
-
-const headerStatusText = computed(() => {
-  if (!trip.value) return '—'
-  if (trip.value.status === 'in_progress') return t('driver_trip_detail.status_running')
-  return statusLabelTr(trip.value.status)
-})
-
+// ─── KM modal ─────────────────────────────────────────────
 const startKmModel = computed(() => {
   const r = trip.value?.record
   if (r?.start_odometer_km != null) return r.start_odometer_km
@@ -785,9 +1132,7 @@ async function submitKmModal() {
   kmSaving.value = true
   try {
     const s = startKmModel.value
-    const payload = {
-      end_odometer_km: e,
-    }
+    const payload = { end_odometer_km: e }
     const note = kmNoteModel.value?.trim()
     if (note) payload.driver_notes = note
     if (s != null && trip.value?.record?.start_odometer_km == null) {
@@ -805,6 +1150,7 @@ async function submitKmModal() {
   }
 }
 
+// ─── Cost modal ───────────────────────────────────────────
 function openCostModal() {
   costError.value = ''
   costForm.value = { type: 'fuel', amount: '', description: '' }
@@ -835,13 +1181,32 @@ async function submitCost() {
     )
     costModalOpen.value = false
     await refresh()
-  } catch (e) {
+  } catch {
     costError.value = t('driver_trip_detail.cost_err_submit')
   } finally {
     costSaving.value = false
   }
 }
 
+// ─── Driver note save ─────────────────────────────────────
+async function saveDriverNote() {
+  const id = tripId.value
+  if (id == null || notesSaving.value || !notesDraft.value.trim()) return
+  notesSaving.value = true
+  notesSaved.value = false
+  try {
+    await upsertTripRecord(id, { driver_notes: notesDraft.value.trim() })
+    notesSaved.value = true
+    await refresh()
+    setTimeout(() => { notesSaved.value = false }, 2000)
+  } catch {
+    loadError.value = t('driver_trip_detail.km_err')
+  } finally {
+    notesSaving.value = false
+  }
+}
+
+// ─── Warning banner ───────────────────────────────────────
 const warningBanner = computed(() => {
   const tr = trip.value
   if (!tr) return null
@@ -856,6 +1221,7 @@ const warningBanner = computed(() => {
   return { minutes: min, body: t('driver_trip_detail.warn_body', { place: firstDrop }) }
 })
 
+// ─── Passenger / student list ─────────────────────────────
 const pickupStateByIndex = computed(() => {
   const evs = trip.value?.events
   if (!Array.isArray(evs) || !evs.length) return new Map()
@@ -894,11 +1260,12 @@ const paxList = computed(() => {
     let i = 0
     for (const r of s.cargoRows) {
       if (!isCargoRowFilled(r)) continue
-      i += 1
       out.push({
-        name: r.name?.trim() || t('driver_trip_detail.cargo_item', { n: i }),
+        name: r.name?.trim() || t('driver_trip_detail.cargo_item', { n: ++i }),
         subtitle: [r.pickup_at, r.pickup_place].filter(Boolean).join(' · ') || '—',
         phone: (r.pickup_contact || r.delivery_contact || '').replace(/\D/g, '') || null,
+        address: null,
+        time: null,
       })
     }
     return out
@@ -908,11 +1275,12 @@ const paxList = computed(() => {
     let i = 0
     for (const r of s.businessRows) {
       if (!isBusinessRowFilled(r)) continue
-      i += 1
       out.push({
-        name: t('driver_trip_detail.biz_party', { n: i }),
+        name: t('driver_trip_detail.biz_party', { n: ++i }),
         subtitle: r.notes?.trim() || r.pickup || '—',
         phone: null,
+        address: null,
+        time: null,
       })
     }
     if (out.length) return out
@@ -924,13 +1292,18 @@ const paxList = computed(() => {
     idx += 1
     const name = r.person_in_charge?.trim() || t('driver_trip_detail.guest_n', { n: idx })
     const classGuess = classFromNotes(r.notes)
-    const timePart = r.depart_at
-      ? t('driver_trip_detail.expected', { t: timeHm(r.depart_at) })
-      : timeHm(ttr.depart_at) !== '—'
-        ? t('driver_trip_detail.expected', { t: timeHm(ttr.depart_at) })
-        : ''
-    const sub = [classGuess, timePart].filter(Boolean).join(' • ') || (r.notes || '').trim() || '—'
-    out.push({ name, subtitle: sub, phone: null })
+    const rawTime = r.depart_at || ttr.depart_at
+    const timePart = rawTime
+      ? t('driver_trip_detail.expected', { t: timeHm(rawTime) })
+      : ''
+    const sub = classGuess || (r.notes || '').trim() || '—'
+    out.push({
+      name,
+      subtitle: sub,
+      phone: (r.phone || '').replace(/\D/g, '') || null,
+      address: (r.pickup || '').trim() || null,
+      time: rawTime ? timeHm(rawTime) : null,
+    })
   }
 
   for (const r of s?.businessRows ?? []) {
@@ -941,6 +1314,8 @@ const paxList = computed(() => {
       name: t('driver_trip_detail.biz_party', { n: idx }),
       subtitle: r.notes?.trim() || '—',
       phone: null,
+      address: null,
+      time: null,
     })
   }
 
@@ -949,10 +1324,55 @@ const paxList = computed(() => {
       name: t('driver_trip_detail.unlisted', { n: ttr.passenger_count }),
       subtitle: '—',
       phone: ttr.requester?.phone || null,
+      address: null,
+      time: null,
     })
   }
   return out
 })
+
+// Indexed paxList for preserving original indices after filter/sort
+const indexedPaxList = computed(() =>
+  paxList.value.map((p, i) => ({ ...p, _origIndex: i })),
+)
+
+const displayedPaxList = computed(() => {
+  let list = indexedPaxList.value
+
+  // Filter
+  if (studentFilterStatus.value !== 'all') {
+    list = list.filter(p => {
+      const st = rowState(p._origIndex)
+      if (studentFilterStatus.value === 'waiting') return st == null
+      return st === studentFilterStatus.value
+    })
+  }
+
+  // Sort
+  if (studentSortOrder.value === 'time_asc') {
+    list = [...list].sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+  } else if (studentSortOrder.value === 'time_desc') {
+    list = [...list].sort((a, b) => (b.time || '').localeCompare(a.time || ''))
+  }
+
+  return list
+})
+
+function cycleFilter() {
+  const cycle = ['all', 'waiting', 'picked_up', 'absent']
+  const idx = cycle.indexOf(studentFilterStatus.value)
+  studentFilterStatus.value = cycle[(idx + 1) % cycle.length]
+}
+
+function cycleSort() {
+  const cycle = ['default', 'time_asc', 'time_desc']
+  const idx = cycle.indexOf(studentSortOrder.value)
+  studentSortOrder.value = cycle[(idx + 1) % cycle.length]
+}
+
+function toggleStudent(origIdx) {
+  expandedStudentIdx.value = expandedStudentIdx.value === origIdx ? null : origIdx
+}
 
 function classFromNotes(notes) {
   const s = (notes || '').trim()
@@ -1025,6 +1445,7 @@ async function doCompleteTrip() {
   }
 }
 
+// ─── Data loading ─────────────────────────────────────────
 async function load() {
   const id = tripId.value
   if (id == null) {
@@ -1036,7 +1457,7 @@ async function load() {
   loadError.value = ''
   try {
     trip.value = await getTrip(id)
-  } catch (e) {
+  } catch {
     loadError.value = t('driver_home.load_error')
     trip.value = null
   } finally {
@@ -1050,7 +1471,7 @@ async function refresh() {
   try {
     trip.value = await getTrip(id)
   } catch {
-    /* keep */
+    /* keep stale data */
   }
 }
 

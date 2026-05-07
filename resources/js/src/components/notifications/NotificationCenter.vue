@@ -75,6 +75,47 @@
         </div>
 
         <div
+          v-if="isDriverApp"
+          class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/95 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40"
+        >
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {{ t('notify.driver_setup_title') }}
+          </p>
+          <template v-if="notificationPermission === 'granted'">
+            <p
+              class="rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-sm font-medium text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200"
+            >
+              {{ t('notify.driver_step_done') }}
+            </p>
+          </template>
+          <ol
+            v-else
+            class="list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-slate-600 dark:text-slate-300"
+          >
+            <li>{{ t('notify.driver_step1') }}</li>
+            <li>{{ t('notify.driver_step2') }}</li>
+            <li>{{ t('notify.driver_step3') }}</li>
+          </ol>
+          <div class="flex flex-col gap-2">
+            <button
+              type="button"
+              class="w-full rounded-xl border border-sky-700/20 bg-sky-600 py-2.5 text-sm font-bold text-white shadow-sm active:bg-sky-700 dark:bg-sky-600 dark:active:bg-sky-500"
+              @click="enableDesktopNotifyDriver"
+            >
+              {{ t('notify.driver_allow_notif') }}
+            </button>
+            <button
+              v-if="isProd"
+              type="button"
+              class="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-sky-700 shadow-sm active:bg-slate-50 dark:border-slate-600 dark:bg-slate-900/60 dark:text-sky-400 dark:active:bg-slate-800"
+              @click="onDriverRegisterPush"
+            >
+              {{ t('notify.push_reg') }}
+            </button>
+          </div>
+        </div>
+
+        <div
           v-if="!isDriverApp"
           class="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/95 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40"
         >
@@ -164,6 +205,12 @@
                 <p class="text-[11px] font-medium tracking-wide text-slate-500 dark:text-slate-400">
                   {{ formatRelativeTime(n.created_at) }}
                 </p>
+                <span
+                  v-if="tripTypeLabelFor(n)"
+                  class="mt-2 inline-flex max-w-full rounded-lg bg-sky-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-sky-800 dark:bg-sky-900/50 dark:text-sky-200"
+                >
+                  {{ tripTypeLabelFor(n) }}
+                </span>
                 <p class="mt-1.5 text-[15px] font-semibold leading-snug text-slate-800 dark:text-slate-100">
                   {{ linesFor(n).primary }}
                 </p>
@@ -196,6 +243,21 @@
           </ul>
         </template>
         <div
+          v-if="isDriverApp && isProd && notifStore.pushState !== 'subscribed'"
+          class="shrink-0 border-t border-dashed border-amber-200/80 bg-amber-50/90 px-4 py-3 dark:border-amber-900/40 dark:bg-amber-950/30"
+        >
+          <p class="text-xs font-medium leading-snug text-amber-950 dark:text-amber-100/90">
+            {{ t('notify.driver_upgrade_hint') }}
+          </p>
+          <button
+            type="button"
+            class="mt-2 w-full rounded-xl bg-amber-600 py-2.5 text-sm font-bold text-white shadow-sm active:bg-amber-700 dark:bg-amber-700 dark:active:bg-amber-600"
+            @click="onDriverRegisterPush"
+          >
+            {{ t('notify.driver_upgrade_btn') }}
+          </button>
+        </div>
+        <div
           v-if="!notifStore.loading && notifStore.items.length"
           class="shrink-0 border-t border-slate-100 bg-white/95 px-4 pt-3 dark:border-slate-800 dark:bg-slate-900/95"
         >
@@ -213,7 +275,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
@@ -228,6 +290,23 @@ const router = useRouter()
 const route = useRoute()
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isProd = import.meta.env.PROD
+
+const notificationPermission = ref('default')
+
+function syncNotifPerm() {
+  notificationPermission.value = typeof Notification !== 'undefined'
+    ? Notification.permission
+    : 'denied'
+}
+
+async function enableDesktopNotifyDriver() {
+  await notifStore.requestBrowserNotificationPermission()
+  syncNotifPerm()
+}
+
+function onDriverRegisterPush() {
+  void notifStore.registerWebPush()
+}
 
 function startOfLocalDay(d) {
   const x = new Date(d)
@@ -328,6 +407,9 @@ function classifyKind(n) {
   if (isNoiseOrDebug(combined, lower)) {
     return 'noise'
   }
+  if (d.event === 'trip.assigned' || type === 'TripAssignedNotification') {
+    return 'trip_assigned'
+  }
   if (d.event === 'dispatch_request.created' || type === 'NewDispatchRequestNotification') {
     return 'new_trip'
   }
@@ -361,10 +443,35 @@ function clipText(s, max) {
   return `${str.slice(0, max - 1)}…`
 }
 
+function tripTypeLabelFor(n) {
+  if (classifyKind(n) !== 'trip_assigned') {
+    return ''
+  }
+  const d = n.data && typeof n.data === 'object' ? n.data : {}
+  const tt = String(d.trip_type || 'unspecified')
+  const keys = {
+    door_to_door: 'notify.trip_type_door_to_door',
+    point_to_point: 'notify.trip_type_point_to_point',
+    business: 'notify.trip_type_business',
+    cargo: 'notify.trip_type_cargo',
+    unspecified: 'notify.trip_type_unspecified',
+  }
+  return t(keys[tt] || 'notify.trip_type_unspecified')
+}
+
 function linesFor(n) {
   const kind = classifyKind(n)
   if (kind === 'noise') {
     return { primary: t('notify.fallback'), sub: '' }
+  }
+  if (kind === 'trip_assigned') {
+    const { d } = rawParts(n)
+    const o = d.origin != null ? String(d.origin).trim() : ''
+    const dest = d.destination != null ? String(d.destination).trim() : ''
+    const routeLine = o && dest ? `${o} → ${dest}` : (o || dest)
+    const sub = routeLine || (d.body != null ? String(d.body).trim() : '') || t('notify.trip_assigned_sub')
+
+    return { primary: t('notify.trip_assigned'), sub }
   }
   if (kind === 'new_trip') {
     return { primary: t('notify.trip_new'), sub: t('notify.trip_new_sub') }
@@ -444,6 +551,7 @@ function enableDesktopNotify() {
 }
 
 onMounted(() => {
+  syncNotifPerm()
   if (auth.isLoggedIn) {
     notifStore.startPolling()
     void notifStore.refreshBadges()
@@ -462,6 +570,15 @@ watch(
       void notifStore.refreshBadges()
     } else {
       notifStore.stopPolling()
+    }
+  },
+)
+
+watch(
+  () => [notifStore.panelOpen, route.path],
+  () => {
+    if (notifStore.panelOpen && isDriverApp.value) {
+      syncNotifPerm()
     }
   },
 )

@@ -345,6 +345,16 @@ const router = createRouter({
             },
         },
         {
+            path: "/driver/maintenance/:id",
+            name: "driverMaintenanceDetail",
+            component: () => import("../views/driver/DriverMaintenanceDetailView.vue"),
+            meta: {
+                title: "Chi tiết bảo trì",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
             path: "/driver/account",
             name: "driverAccount",
             component: () => import("../views/driver/DriverAccountView.vue"),

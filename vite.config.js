@@ -11,10 +11,19 @@ export default defineConfig({
         }),
         vue(),
         VitePWA({
+            strategies: 'injectManifest',
+            srcDir: 'resources/js/src',
+            filename: 'sw.js',
             registerType: 'prompt',
             injectRegister: false,
             scope: '/',
             includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
+            injectManifest: {
+                globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
+                additionalManifestEntries: [
+                    { url: '/', revision: `laravel-shell-${Date.now()}` },
+                ],
+            },
             manifest: {
                 name: 'VAS Dispatch',
                 short_name: 'Điều Vận',
@@ -45,41 +54,34 @@ export default defineConfig({
                         purpose: 'maskable',
                     },
                 ],
-            },
-            workbox: {
-                globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
-                additionalManifestEntries: [
-                    { url: '/', revision: `laravel-shell-${Date.now()}` },
-                ],
-                runtimeCaching: [
+                shortcuts: [
                     {
-                        urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'google-fonts',
-                            expiration: {
-                                maxEntries: 20,
-                                maxAgeSeconds: 60 * 60 * 24 * 365,
+                        name: 'Chuyến của tôi',
+                        short_name: 'Chuyến',
+                        description: 'Mở trang tài xế',
+                        url: '/driver',
+                        icons: [
+                            {
+                                src: '/icons/pwa-192.png',
+                                sizes: '192x192',
+                                type: 'image/png',
                             },
-                        },
+                        ],
                     },
                     {
-                        urlPattern:
-                            /\/api\/(targets|config|lookup|reference-pricing)\b/,
-                        handler: 'StaleWhileRevalidate',
-                        options: {
-                            cacheName: 'api-lookup',
-                            expiration: {
-                                maxEntries: 50,
-                                maxAgeSeconds: 60 * 60 * 24,
+                        name: 'Lịch',
+                        short_name: 'Lịch',
+                        description: 'Lịch chuyến tài xế',
+                        url: '/driver/schedule',
+                        icons: [
+                            {
+                                src: '/icons/pwa-192.png',
+                                sizes: '192x192',
+                                type: 'image/png',
                             },
-                        },
+                        ],
                     },
                 ],
-                navigateFallback: '/',
-                navigateFallbackDenylist: [/^\/api\//],
-                skipWaiting: false,
-                clientsClaim: true,
             },
             devOptions: {
                 enabled: true,

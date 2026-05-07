@@ -45,11 +45,16 @@ class SendWebPushOnDatabaseNotification
             return;
         }
 
-        $this->webPush->sendToUser($event->notifiable, [
+        $payload = [
             'title' => $title,
             'body' => $body,
             'url' => $data['url'] ?? $data['action_url'] ?? '/',
             'tag' => 'va-'.($data['id'] ?? uniqid('n', true)),
-        ]);
+        ];
+        if (array_key_exists('is_urgent', $data)) {
+            $payload['is_urgent'] = (bool) $data['is_urgent'];
+        }
+
+        $this->webPush->sendToUser($event->notifiable, $payload);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Dispatching;
 
 use App\Models\Trip;
+use App\Notifications\TripAssignedNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Support\FinancialDataLock;
 use Illuminate\Support\Carbon;
@@ -121,6 +122,24 @@ class DispatchingService
                     'supplement_transports' => $supplementJson ? json_decode($supplementJson, true) : null,
                 ],
             );
+
+            $trip->loadMissing(['driver.user', 'dispatchRequest']);
+            $driverUser = $trip->driver?->user;
+            if ($driverUser !== null) {
+                $dr = $trip->dispatchRequest;
+                $driverUser->notify(new TripAssignedNotification(
+                    tripId: $trip->id,
+                    tripType: is_string($dr?->trip_type) && $dr->trip_type !== ''
+                        ? $dr->trip_type
+                        : 'unspecified',
+                    origin: (string) ($dr?->origin ?? ''),
+                    destination: (string) ($dr?->destination ?? ''),
+                    departAt: $trip->depart_at instanceof Carbon
+                        ? $trip->depart_at->toIso8601String()
+                        : (string) ($trip->depart_at ?? ''),
+                    isUrgent: (bool) ($dr?->is_urgent ?? false),
+                ));
+            }
 
             return $trip;
         });

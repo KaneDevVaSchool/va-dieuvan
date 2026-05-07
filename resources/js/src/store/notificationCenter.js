@@ -22,6 +22,38 @@ function readSoundPref() {
   }
 }
 
+function syncAppBadge(count) {
+  if (typeof navigator === 'undefined') {
+    return
+  }
+  if (!('setAppBadge' in navigator) || typeof navigator.setAppBadge !== 'function') {
+    return
+  }
+  try {
+    if (count > 0) {
+      void navigator.setAppBadge(count > 99 ? 99 : count)
+    } else if ('clearAppBadge' in navigator && typeof navigator.clearAppBadge === 'function') {
+      void navigator.clearAppBadge()
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearAppBadgeSafe() {
+  if (typeof navigator === 'undefined') {
+    return
+  }
+  if (!('clearAppBadge' in navigator) || typeof navigator.clearAppBadge !== 'function') {
+    return
+  }
+  try {
+    void navigator.clearAppBadge()
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
  * @param {string} b64
  * @returns {Uint8Array}
@@ -54,6 +86,11 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     } catch {
       /* ignore */
     }
+  })
+
+  watch(lastUnread, (n) => {
+    const num = Number(n)
+    syncAppBadge(Number.isFinite(num) && num > 0 ? num : 0)
   })
 
   function setPanel(open) {
@@ -156,6 +193,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     lastUnread.value = 0
     badgePrimed = false
     panelOpen.value = false
+    clearAppBadgeSafe()
   }
 
   async function requestBrowserNotificationPermission() {

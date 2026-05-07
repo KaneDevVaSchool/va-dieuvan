@@ -7,6 +7,7 @@
 
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Costs\TripCostController;
+use App\Http\Controllers\Api\Driver\DriverMaintenanceController;
 use App\Http\Controllers\Api\Trips\TripOpsController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,13 @@ Route::prefix('trips')->group(function () {
 Route::prefix('trip-costs')->controller(TripCostController::class)->group(function () {
     Route::patch('/{tripCost}', 'updateByDriver')->middleware('throttle:30,1');
     Route::delete('/{tripCost}', 'destroyByDriver')->middleware('throttle:20,1');
+});
+
+Route::prefix('driver/maintenance')->controller(DriverMaintenanceController::class)->group(function () {
+    Route::put('/{item}', 'update')->whereNumber('item')->middleware('throttle:30,1');
+    Route::post('/{item}/images', 'uploadImage')->whereNumber('item')->middleware('throttle:20,1');
+    Route::post('/reminders', 'storeReminder')->middleware('throttle:30,1');
+    Route::delete('/reminders/{reminder}', 'destroyReminder')->whereNumber('reminder')->middleware('throttle:20,1');
 });
 
 Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {
