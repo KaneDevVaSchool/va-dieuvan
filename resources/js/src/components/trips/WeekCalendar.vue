@@ -4,7 +4,7 @@
     @touchstart.passive="onTouchStart"
     @touchend.passive="onTouchEnd"
   >
-    <p class="mb-3 px-1 text-[10px] font-bold uppercase tracking-wider text-[#7fdcc8]">
+    <p class="mb-3 px-1 text-sm font-bold uppercase tracking-wider text-[#7fdcc8] sm:text-base">
       {{ t('trip_history_page.week_calendar_title') }}
     </p>
     <div class="grid grid-cols-7 gap-0.5">
@@ -12,18 +12,18 @@
         v-for="day in weekDays"
         :key="day.iso"
         type="button"
-        class="flex min-h-[4.75rem] w-full flex-col items-center gap-1 py-2 transition active:scale-[0.96]"
+        class="flex min-h-[5.25rem] w-full flex-col items-center gap-1.5 py-2 transition active:scale-[0.96]"
         :aria-pressed="isSelected(day.iso)"
         @click="selectDay(day)"
       >
         <span
-          class="text-[10px] font-bold uppercase leading-none tracking-wide"
+          class="text-xs font-bold uppercase leading-none tracking-wide sm:text-sm"
           :class="dayAbbrevClass(day)"
         >
           {{ day.abbr }}
         </span>
         <div
-          class="flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold tabular-nums transition-colors"
+          class="flex h-12 w-12 items-center justify-center rounded-full text-base font-bold tabular-nums transition-colors sm:h-14 sm:w-14 sm:text-lg"
           :class="dayCircleClass(day)"
         >
           {{ day.dayNum }}

@@ -3,15 +3,15 @@
     class="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-driver-card px-4 py-3 shadow-lg shadow-black/20"
     style="border-radius: var(--radius-card, 16px)"
   >
-    <p class="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-[#7fdcc8]">
+    <p class="mb-3 text-sm font-bold uppercase tracking-wider text-[#7fdcc8] sm:text-base">
       {{ t('trip_history_page.stats_month_title') }}
     </p>
 
     <!-- Skeleton -->
     <div v-if="loading" class="flex items-center gap-0">
-      <div v-for="i in 3" :key="i" class="flex flex-1 flex-col items-center gap-1.5 py-1">
-        <div class="h-6 w-10 animate-pulse rounded-md bg-white/[0.07]" />
-        <div class="h-2.5 w-8 animate-pulse rounded bg-white/[0.04]" />
+      <div v-for="i in 3" :key="i" class="flex flex-1 flex-col items-center gap-2 py-1">
+        <div class="h-8 w-12 animate-pulse rounded-md bg-white/[0.07]" />
+        <div class="h-3 w-10 animate-pulse rounded bg-white/[0.04]" />
       </div>
     </div>
 
@@ -24,12 +24,12 @@
         :class="idx < statItems.length - 1 ? 'border-r border-white/[0.08]' : ''"
       >
         <span
-          class="text-[22px] font-bold tabular-nums leading-tight"
+          class="text-3xl font-bold tabular-nums leading-tight sm:text-4xl"
           :style="{ color: stat.color }"
         >
           {{ stat.value }}
         </span>
-        <span class="text-[10px] font-medium tracking-wide text-driver-muted/70">
+        <span class="text-xs font-medium tracking-wide text-driver-muted/80 sm:text-sm">
           {{ stat.label }}
         </span>
       </div>
@@ -45,7 +45,7 @@
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
         fill="currentColor"
-        class="h-4 w-4 shrink-0 text-amber-400"
+        class="mt-0.5 h-5 w-5 shrink-0 text-amber-400"
         aria-hidden="true"
       >
         <path
@@ -54,7 +54,7 @@
           clip-rule="evenodd"
         />
       </svg>
-      <p class="min-w-0 text-[11px] font-medium leading-snug text-amber-100">
+      <p class="min-w-0 text-sm font-medium leading-snug text-amber-100 sm:text-base">
         {{ t('trip_history_page.stats_overdue_notice', { n: overdueCount }) }}
       </p>
     </div>

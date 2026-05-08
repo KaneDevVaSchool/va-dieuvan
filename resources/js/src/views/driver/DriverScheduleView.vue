@@ -45,7 +45,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </RouterLink>
-        <h1 class="min-w-0 truncate text-xl font-bold tracking-tight sm:text-2xl">
+        <h1 class="min-w-0 truncate text-2xl font-bold tracking-tight sm:text-3xl">
           {{ t('trip_history_page.title') }}
         </h1>
       </div>
@@ -107,9 +107,9 @@
 
       <template v-else>
         <!-- Day section header -->
-        <p class="pt-2 text-lg font-semibold text-driver-ink">
+        <p class="pt-2 text-xl font-semibold text-driver-ink sm:text-2xl">
           {{ dayGroupTitle }}
-          <span v-if="filteredTrips.length" class="tabular-nums text-base text-driver-muted"> ({{ filteredTrips.length }}) </span>
+          <span v-if="filteredTrips.length" class="tabular-nums text-lg text-driver-muted sm:text-xl"> ({{ filteredTrips.length }}) </span>
         </p>
 
         <!-- Trip cards -->
