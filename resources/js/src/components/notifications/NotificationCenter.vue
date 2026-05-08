@@ -104,24 +104,6 @@
             </p>
           </div>
 
-          <!-- Quyền OK nhưng đăng ký push server lỗi (thường do mạng/timeout sau thử nền) -->
-          <div
-            v-else-if="notificationPermission === 'granted' && isProd && notifStore.pushState === 'error'"
-            class="flex flex-col gap-2 rounded-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 dark:border-amber-900/50 dark:bg-amber-950/25"
-          >
-            <p class="text-sm font-medium leading-snug text-amber-900 dark:text-amber-100">
-              {{ t('notify.driver_push_sync_soft_fail') }}
-            </p>
-            <button
-              type="button"
-              :disabled="pushLoading || notifStore.pushRegisterLoading"
-              class="min-h-[48px] w-full rounded-xl bg-sky-600 text-sm font-bold text-white shadow-sm active:bg-sky-700 disabled:opacity-60 dark:bg-sky-600"
-              @click="retryDriverPushFromPanel"
-            >
-              {{ t('notify.driver_retry_push') }}
-            </button>
-          </div>
-
           <!-- Setup flow: chưa granted hoặc dev -->
           <div v-else class="flex flex-col gap-2.5">
             <!-- Step 1: Request browser permission (or combined flow if prod) -->
@@ -345,17 +327,6 @@ async function onEnableAll() {
       const result = await notifStore.registerWebPush()
       showPushResult(result)
     }
-  } finally {
-    pushLoading.value = false
-    syncNotifPerm()
-  }
-}
-
-async function retryDriverPushFromPanel() {
-  pushLoading.value = true
-  try {
-    const result = await notifStore.registerWebPush()
-    showPushResult(result)
   } finally {
     pushLoading.value = false
     syncNotifPerm()

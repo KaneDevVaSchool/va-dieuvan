@@ -41,8 +41,6 @@
         "driver_enable_push": "Get alerts after closing app",
         "driver_denied_title": "Notifications are blocked",
         "driver_denied_body": "Go to your browser settings and allow notifications to keep receiving alerts.",
-        "driver_push_sync_soft_fail": "Push alerts could not finish registering with the server (often a network blip). You can still read your notifications below.",
-        "driver_retry_push": "Try registering again",
         "push_ok": "Notifications enabled successfully",
         "push_err_denied": "Notifications are blocked. Go to browser settings to allow them.",
         "push_err_network": "Could not connect. Check your network and try again.",
