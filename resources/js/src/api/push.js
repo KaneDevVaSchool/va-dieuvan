@@ -2,9 +2,33 @@ import { http } from './http'
 
 const PUSH_HTTP_TIMEOUT_MS = 20000
 
+/** Tránh gọi lặp /push/vapid-public-key (nhiều màn driver + thử lại đăng ký push). */
+let vapidInflight = null
+/** @type {boolean} */
+let vapidResolved = false
+/** @type {unknown} */
+let vapidPayload = null
+
 export async function getVapidPublicKey() {
-  const { data } = await http.get('/push/vapid-public-key', { timeout: PUSH_HTTP_TIMEOUT_MS })
-  return data.data
+  if (vapidResolved) {
+    return vapidPayload
+  }
+  if (vapidInflight) {
+    return vapidInflight
+  }
+  vapidInflight = http
+    .get('/push/vapid-public-key', { timeout: PUSH_HTTP_TIMEOUT_MS })
+    .then(({ data }) => {
+      vapidPayload = data.data
+      vapidResolved = true
+      vapidInflight = null
+      return vapidPayload
+    })
+    .catch((e) => {
+      vapidInflight = null
+      throw e
+    })
+  return vapidInflight
 }
 
 /**

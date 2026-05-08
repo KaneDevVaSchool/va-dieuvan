@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Route;
 
 // Lightweight: không LogApiActivity
 Route::get('/user', [UserProfileController::class, 'show']);
-Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey'])
-    ->middleware('throttle:30,1');
+// Chỉ đọc key công khai; nhóm cha đã throttle:120,1 — không throttle:30 riêng (dễ 429 NAT / thử lại push).
+Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
 Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store'])->middleware('throttle:20,1');
 Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:20,1');
 
