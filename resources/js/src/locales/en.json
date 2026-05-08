@@ -127,6 +127,8 @@
         "pending_banner_sub": "Please confirm or decline at least 2 hours ahead",
         "pending_banner_expand_list": "Show trip list",
         "pending_banner_collapse_list": "Collapse list",
+        "pending_item_expand_details": "Show route details",
+        "pending_item_collapse_details": "Hide route details",
         "btn_confirm": "Confirm",
         "btn_decline": "Decline",
         "pending_decline_title": "Decline trip",

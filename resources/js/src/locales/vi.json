@@ -158,6 +158,8 @@
         "pending_banner_sub": "Vui lòng xác nhận hoặc báo bận trước 2 giờ",
         "pending_banner_expand_list": "Mở danh sách chuyến",
         "pending_banner_collapse_list": "Thu gọn danh sách",
+        "pending_item_expand_details": "Mở chi tiết lộ trình",
+        "pending_item_collapse_details": "Thu gọn chi tiết",
         "btn_confirm": "Xác nhận",
         "btn_decline": "Từ chối",
         "pending_decline_title": "Từ chối chuyến",
