@@ -82,7 +82,10 @@ function driverTripDepartYmdKey(trip) {
   return Number.isNaN(d.getTime()) ? null : localYmd(d)
 }
 
-function tripInProgressIsPastScheduledDayForDonut(trip) {
+/** Giống DriverAccountView `isTripOverdueForStats`: chưa xong/hủy và đã qua ngày (local) khởi hành. */
+function tripIsOverdueForDriverDonut(trip) {
+  const st = tripStatusNorm(trip)
+  if (st === 'completed' || st === 'cancelled') return false
   const ms = driverTripDepartAtMs(trip)
   if (Number.isFinite(ms)) return ms < startOfLocalTodayMs()
   const key = driverTripDepartYmdKey(trip)
@@ -108,7 +111,7 @@ function parseYmdToLocalDate(s) {
 
 /**
  * Đếm nhóm hiển thị trên donut (trạng thái khác các nhóm trên không tính).
- * `in_progress` quá ngày khởi hành (local) gộp vào `overdue`, đồng bộ UX với DriverAccountView.
+ * Mọi chuyến trễ (chưa hoàn thành/hủy, quá ngày khởi hành local) → `overdue`, khớp DriverAccountView & `overdue_count` API.
  */
 export function computeDriverTripCounts(rawTrips) {
   let completed = 0
@@ -119,11 +122,9 @@ export function computeDriverTripCounts(rawTrips) {
   for (const trip of rawTrips ?? []) {
     const st = tripStatusNorm(trip)
     if (st === 'completed') completed++
-    else if (st === 'in_progress') {
-      if (tripInProgressIsPastScheduledDayForDonut(trip)) overdue++
-      else inProgress++
-    }
     else if (st === 'cancelled') cancelled++
+    else if (tripIsOverdueForDriverDonut(trip)) overdue++
+    else if (st === 'in_progress') inProgress++
     else if (DRIVER_PENDING_STATUS_SET.has(st)) pending++
   }
   return {
