@@ -170,126 +170,6 @@
         </ul>
       </section>
 
-      <!-- S4: Documents -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="h-2 w-2 shrink-0 rounded-full bg-driver-accent" />
-              <h2 class="text-base font-semibold text-driver-ink">
-                {{ t('driver_account.documents_title') }}
-              </h2>
-            </div>
-            <p class="mt-2 text-[15px] leading-relaxed text-driver-muted">
-              {{ t('driver_account.contact_procurement_hint') }}
-            </p>
-          </div>
-          <a
-            v-if="procurementTelHref"
-            :href="procurementTelHref"
-            class="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-xl bg-driver-accent px-5 text-base font-bold text-driver-bg shadow-lg shadow-black/20 transition hover:bg-driver-accent-bright active:scale-[0.99] sm:mt-0"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-              <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 16.352V17.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clip-rule="evenodd" />
-            </svg>
-            {{ t('driver_account.contact_procurement_cta') }}
-          </a>
-          <p
-            v-else
-            class="text-[15px] leading-relaxed text-amber-200/90 sm:max-w-[16rem] sm:text-right"
-          >
-            {{ t('driver_account.procurement_phone_missing') }}
-          </p>
-        </div>
-        <ul class="space-y-0 divide-y divide-white/[0.06]">
-          <li v-for="doc in documentRows" :key="doc.id" class="flex gap-3 py-3.5 first:pt-0 last:pb-0">
-            <DocumentTextIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
-            <div class="min-w-0 flex-1">
-              <p class="text-[15px] font-bold leading-snug text-driver-ink">{{ doc.title }}</p>
-              <p class="mt-1 text-[13px] leading-relaxed text-driver-muted">{{ doc.subtitle }}</p>
-            </div>
-            <span
-              class="h-fit shrink-0 self-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-tight"
-              :class="doc.badgeClass"
-            >
-              {{ doc.badgeText }}
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      <!-- S5: Recent trips -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card px-4 py-5 sm:px-6 sm:py-6">
-        <div class="mb-5 flex items-start justify-between gap-3">
-          <div class="flex items-center gap-2.5">
-            <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-driver-accent" />
-            <h2 class="text-lg font-bold text-driver-ink sm:text-xl">
-              {{ t('driver_account.recent_trips_title') }}
-            </h2>
-          </div>
-          <RouterLink
-            to="/driver/schedule"
-            class="shrink-0 text-lg font-bold text-driver-accent transition hover:text-driver-accent-bright sm:text-xl"
-          >
-            {{ t('driver_account.see_all') }} ›
-          </RouterLink>
-        </div>
-        <p
-          v-if="!loading && recentTrips.length === 0"
-          class="py-8 text-center text-lg text-driver-muted"
-        >
-          {{ t('driver_account.empty_trips') }}
-        </p>
-        <ul v-else class="space-y-0">
-          <li
-            v-for="(trip, idx) in recentTrips"
-            :key="trip.id"
-            class="border-b border-white/[0.06] py-4 last:border-b-0 last:pb-0"
-            :class="idx === 0 ? 'pt-0' : ''"
-          >
-            <RouterLink
-              :to="`/driver/trips/${trip.id}`"
-              class="flex gap-3 text-left transition active:opacity-90 sm:gap-4"
-            >
-              <div class="w-[68px] shrink-0 sm:w-[76px]">
-                <p class="text-lg font-bold tabular-nums leading-tight text-driver-ink sm:text-xl">{{ tripTime(trip) }}</p>
-                <p class="mt-1.5 text-sm text-driver-muted sm:text-base">{{ tripDateShort(trip) }}</p>
-              </div>
-              <div class="flex min-w-0 flex-1 items-start gap-2">
-                <span
-                  class="mt-1 shrink-0 rounded-lg bg-emerald-500/20 px-2 py-1 text-xs font-bold uppercase tracking-wide text-emerald-300 sm:text-sm"
-                >
-                  {{ tripTypeBadgeText(trip) }}
-                </span>
-                <div class="min-w-0 flex-1 space-y-2">
-                  <div class="flex items-start gap-2.5">
-                    <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" />
-                    <p class="min-w-0 text-base font-semibold leading-snug text-driver-ink sm:text-lg">
-                      {{ tripOrigin(trip) }}
-                    </p>
-                  </div>
-                  <div class="flex items-start gap-2.5">
-                    <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-[#3b82f6]" />
-                    <p class="min-w-0 text-base font-semibold leading-snug text-driver-ink sm:text-lg">
-                      {{ tripDestination(trip) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div class="shrink-0 text-right">
-                <span
-                  class="inline-block rounded-full px-3 py-1.5 text-sm font-bold sm:text-base"
-                  :class="tripStatusBadgeClass(trip)"
-                >
-                  {{ tripStatusLabel(trip) }}
-                </span>
-                <p class="mt-2 text-sm text-driver-muted tabular-nums sm:text-base">#{{ trip.id }}</p>
-              </div>
-            </RouterLink>
-          </li>
-        </ul>
-      </section>
-
       <!-- Đăng xuất -->
       <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
         <button
@@ -347,14 +227,13 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
-  DocumentTextIcon,
   IdentificationIcon,
   MapPinIcon,
   UserIcon,
@@ -363,14 +242,7 @@ import { getDriverSummary } from '../../api/driver'
 import { listTripsAll } from '../../api/trips'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import { useAuthStore } from '../../store'
-import {
-  formatDepartForTrip,
-  tripDestination,
-  tripOrigin,
-  tripTypeBadgeText,
-} from '../../composables/useDriverTripDisplay'
-
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -378,25 +250,9 @@ const loading = ref(true)
 const errorMsg = ref('')
 const rawListItems = ref([])
 const myDriverId = ref(null)
-const summary = ref(null)
 const logoutConfirmOpen = ref(false)
 const avatarFileInput = ref(null)
 const avatarUploading = ref(false)
-
-const procurementTelHref = computed(() => {
-  const raw = import.meta.env.VITE_PROCUREMENT_PHONE
-  if (raw == null || String(raw).trim() === '') return null
-  const compact = String(raw).replace(/[\s()-]/g, '')
-  if (!compact) return null
-  return `tel:${compact}`
-})
-
-function contactProcurement() {
-  const h = procurementTelHref.value
-  if (h) {
-    window.location.href = h
-  }
-}
 
 function openAvatarPicker() {
   avatarFileInput.value?.click()
@@ -601,173 +457,6 @@ const workRows = computed(() => {
   ]
 })
 
-/** @returns {'ok'|'soon'|'missing'|'expired'} */
-function expiryBucket(ymdStr) {
-  if (!ymdStr) return 'missing'
-  const d = new Date(`${String(ymdStr).slice(0, 10)}T12:00:00`)
-  if (Number.isNaN(d.getTime())) return 'missing'
-  const today = new Date()
-  today.setHours(12, 0, 0, 0)
-  if (d < today) return 'expired'
-  const days = Math.ceil((d.getTime() - today.getTime()) / 86400000)
-  if (days <= 90) return 'soon'
-  return 'ok'
-}
-
-function formatMonthYearFromYmd(ymdStr) {
-  if (!ymdStr) return ''
-  const p = String(ymdStr).slice(0, 10).split('-')
-  if (p.length !== 3) return ''
-  return `${p[1]}/${p[0]}`
-}
-
-const documentRows = computed(() => {
-  const ci = user.value?.cms_user_info || {}
-  const drv = summary.value?.driver || null
-  const vehicle = summary.value?.vehicle || null
-
-  const idNum =
-    (isNonEmpty(ci.identity) ? String(ci.identity).trim() : null) ||
-    (drv?.national_id ? String(drv.national_id).trim() : '')
-  const hasCccd = !!idNum
-
-  let cccdBadgeKey = 'missing'
-  let cccdSubtitle = t('driver_account.expiry_na')
-  if (hasCccd) {
-    cccdBadgeKey = 'valid'
-    if (ci.identity_date) {
-      cccdSubtitle = t('driver_account.issue_date', { date: formatDisplayDate(ci.identity_date) })
-    } else {
-      cccdSubtitle = t('driver_account.cccd_on_file')
-    }
-  }
-
-  const licClass = (drv?.license_class && String(drv.license_class).trim()) || 'GPLX'
-  const licExp = drv?.license_expires_at || null
-  const licBucket = expiryBucket(licExp)
-  let licStatusKey = 'missing'
-  let licSubtitle = t('driver_account.expiry_na')
-  if (licExp) {
-    licSubtitle = t('driver_account.expiry_label', { date: formatMonthYearFromYmd(licExp) })
-    if (licBucket === 'ok') licStatusKey = 'valid'
-    else if (licBucket === 'soon') licStatusKey = 'soon'
-    else if (licBucket === 'expired') licStatusKey = 'expired'
-  }
-
-  const inspExp = vehicle?.inspection_expires_at || null
-  const inspBucket = expiryBucket(inspExp)
-  let inspStatusKey = 'missing'
-  let inspSubtitle = t('driver_account.expiry_na')
-  if (inspExp) {
-    inspSubtitle = t('driver_account.expiry_label', { date: formatMonthYearFromYmd(inspExp) })
-    if (inspBucket === 'ok') inspStatusKey = 'valid'
-    else if (inspBucket === 'soon') inspStatusKey = 'soon'
-    else if (inspBucket === 'expired') inspStatusKey = 'expired'
-  }
-
-  const badge = (key) => {
-    if (key === 'valid')
-      return {
-        badgeText: t('driver_account.status_valid'),
-        badgeClass: 'bg-driver-accent/20 text-driver-accent',
-      }
-    if (key === 'soon')
-      return {
-        badgeText: t('driver_account.status_soon'),
-        badgeClass: 'bg-amber-500/20 text-amber-200',
-      }
-    if (key === 'expired')
-      return {
-        badgeText: t('driver_account.status_expired'),
-        badgeClass: 'bg-[#f43f5e]/20 text-[#f43f5e]',
-      }
-    return {
-      badgeText: t('driver_account.status_missing'),
-      badgeClass:
-        'border border-dashed border-[#64748b]/50 bg-slate-600/20 text-driver-muted',
-    }
-  }
-
-  return [
-    {
-      id: 'cccd',
-      title: t('driver_account.doc_cccd'),
-      subtitle: cccdSubtitle,
-      ...badge(cccdBadgeKey === 'valid' ? 'valid' : 'missing'),
-    },
-    {
-      id: 'license',
-      title: t('driver_account.doc_license_class', { rank: licClass }),
-      subtitle: licSubtitle,
-      ...badge(
-        licStatusKey === 'valid'
-          ? 'valid'
-          : licStatusKey === 'soon'
-            ? 'soon'
-            : licStatusKey === 'expired'
-              ? 'expired'
-              : 'missing',
-      ),
-    },
-    {
-      id: 'insp',
-      title: t('driver_account.doc_inspection'),
-      subtitle: inspSubtitle,
-      ...badge(
-        inspStatusKey === 'valid'
-          ? 'valid'
-          : inspStatusKey === 'soon'
-            ? 'soon'
-            : inspStatusKey === 'expired'
-              ? 'expired'
-              : 'missing',
-      ),
-    },
-  ]
-})
-
-const recentTrips = computed(() => {
-  return rawTrips.value
-    .slice()
-    .sort((a, b) => (new Date(b.depart_at).getTime() || 0) - (new Date(a.depart_at).getTime() || 0))
-    .slice(0, 3)
-})
-
-const localeTag = computed(() => (locale.value === 'vi' ? 'vi' : 'en'))
-
-function tripTime(trip) {
-  return formatDepartForTrip(trip, localeTag.value).time
-}
-
-function tripDateShort(trip) {
-  const line = formatDepartForTrip(trip, localeTag.value).dateLine
-  if (!line) return ''
-  const iso = trip?.depart_at || trip?.dispatch_request?.depart_at
-  if (!iso) return line
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return line
-  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
-  return d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' })
-}
-
-function tripStatusLabel(trip) {
-  const s = tripStatusNorm(trip)
-  if (s === 'completed') return t('driver_home.calendar_status_done')
-  if (s === 'cancelled') return t('driver_home.calendar_status_cancelled')
-  if (isTripOverdueForStats(trip)) return t('trip_history_page.status_overdue')
-  if (s === 'in_progress') return t('driver_home.calendar_status_running')
-  return t('driver_home.calendar_status_waiting')
-}
-
-function tripStatusBadgeClass(trip) {
-  const s = tripStatusNorm(trip)
-  if (s === 'completed') return 'bg-driver-accent/20 text-driver-accent'
-  if (s === 'cancelled') return 'bg-[#f43f5e]/20 text-[#f43f5e]'
-  if (isTripOverdueForStats(trip)) return 'bg-orange-500/25 text-orange-200'
-  if (s === 'in_progress') return 'bg-[#3b82f6]/20 text-[#3b82f6]'
-  return 'bg-amber-500/20 text-amber-200'
-}
-
 async function fetchData() {
   loading.value = true
   errorMsg.value = ''
@@ -781,12 +470,10 @@ async function fetchData() {
       getDriverSummary(),
       listTripsAll({ from: ymd(past), to: ymd(horizon), per_page: 100 }),
     ])
-    summary.value = sum
     myDriverId.value = sum?.driver?.id ?? null
     rawListItems.value = listRes?.items ?? []
   } catch {
     errorMsg.value = t('driver_home.load_error')
-    summary.value = null
     myDriverId.value = null
     rawListItems.value = []
   } finally {

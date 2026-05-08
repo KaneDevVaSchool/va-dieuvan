@@ -169,3 +169,5 @@ export const useAuthStore = defineStore('auth', {
     },
   },
 })
+
+export { useDriverDashboardStore } from './driverDashboard'

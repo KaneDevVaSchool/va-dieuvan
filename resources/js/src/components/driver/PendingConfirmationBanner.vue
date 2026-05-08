@@ -36,12 +36,7 @@
           </div>
           <div class="min-w-0 flex-1 pt-0.5">
             <p class="text-base font-extrabold leading-snug text-amber-50 sm:text-lg">
-              <template v-if="pendingCount > 0">
-                {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
-              </template>
-              <template v-else>
-                {{ t('driver_home.pending_banner_confirmed', { n: confirmedCount }) }}
-              </template>
+              {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
             </p>
             <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
               {{ t('driver_home.pending_banner_sub') }}
@@ -106,26 +101,31 @@
     </div>
 
     <!-- Trip rows -->
-    <ul
+    <div
       v-else
-      :id="tripListId"
       v-show="listExpanded"
-      class="divide-y divide-amber-500/20 border-t border-amber-500/25"
+      class="border-t border-amber-500/25"
     >
-      <li
-        v-for="{ trip, mode, dateLine } in bannerRows"
-        :key="`${mode}-${trip.id}`"
-        class="flex flex-col gap-3 px-4 py-3.5 sm:px-5"
+      <TransitionGroup
+        :id="tripListId"
+        name="pending-banner"
+        tag="ul"
+        class="divide-y divide-amber-500/20"
       >
+        <li
+          v-for="{ trip, dateLine } in bannerRows"
+          :key="trip.id"
+          class="pending-banner-item flex flex-col gap-3 px-4 py-3.5 sm:px-5"
+        >
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
           <!-- Summary + toggle chi tiết từng chuyến -->
           <div class="min-w-0 flex-1">
             <button
               type="button"
               class="flex w-full min-w-0 items-start gap-2 rounded-xl py-0.5 text-left transition hover:bg-amber-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 sm:-mx-1 sm:px-1"
-              :aria-expanded="isItemDetailsOpen(mode, trip.id)"
-              :aria-controls="itemDetailsDomId(mode, trip.id)"
-              @click="toggleItemDetails(mode, trip.id)"
+              :aria-expanded="isItemDetailsOpen(trip.id)"
+              :aria-controls="itemDetailsDomId(trip.id)"
+              @click="toggleItemDetails(trip.id)"
             >
               <div class="min-w-0 flex-1 space-y-2">
                 <div class="flex flex-wrap items-center gap-2">
@@ -164,12 +164,12 @@
               >
                 <ChevronDownIcon
                   class="h-5 w-5 transition-transform duration-200"
-                  :class="isItemDetailsOpen(mode, trip.id) ? 'rotate-180' : ''"
+                  :class="isItemDetailsOpen(trip.id) ? 'rotate-180' : ''"
                 />
               </span>
               <span class="sr-only">
                 {{
-                  isItemDetailsOpen(mode, trip.id)
+                  isItemDetailsOpen(trip.id)
                     ? t('driver_home.pending_item_collapse_details')
                     : t('driver_home.pending_item_expand_details')
                 }}
@@ -177,8 +177,8 @@
             </button>
 
             <div
-              :id="itemDetailsDomId(mode, trip.id)"
-              v-show="isItemDetailsOpen(mode, trip.id)"
+              :id="itemDetailsDomId(trip.id)"
+              v-show="isItemDetailsOpen(trip.id)"
               class="space-y-0.5 border-t border-amber-500/15 pt-3 mt-2"
               role="region"
             >
@@ -215,40 +215,29 @@
           <div
             class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:pt-0.5"
           >
-            <template v-if="mode === 'pending'">
-              <div class="grid min-h-[48px] w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-2">
-                <button
-                  type="button"
-                  class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
-                  :disabled="busyId != null"
-                  @click="onConfirm(trip)"
-                >
-                  {{ t('driver_home.btn_confirm') }}
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
-                  :disabled="busyId != null"
-                  @click="openDeclineModal(trip)"
-                >
-                  {{ t('driver_home.btn_decline') }}
-                </button>
-              </div>
-            </template>
-            <template v-else>
+            <div class="grid min-h-[48px] w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-2">
               <button
                 type="button"
-                class="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto sm:min-w-[9rem]"
+                class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
                 :disabled="busyId != null"
-                @click="onStartTrip(trip.id)"
+                @click="onConfirm(trip)"
               >
-                {{ t('driver_home.card_start') }}
+                {{ t('driver_home.btn_confirm') }}
               </button>
-            </template>
+              <button
+                type="button"
+                class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
+                :disabled="busyId != null"
+                @click="openDeclineModal(trip)"
+              >
+                {{ t('driver_home.btn_decline') }}
+              </button>
+            </div>
           </div>
         </div>
-      </li>
-    </ul>
+        </li>
+      </TransitionGroup>
+    </div>
 
     <!-- Decline modal -->
     <Teleport to="body">
@@ -344,11 +333,11 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, TransitionGroup } from 'vue'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
-import { updateTripStatus } from '../../api/trips'
+import { useDriverDashboardStore } from '../../store/driverDashboard'
 import {
   formatDepartForTrip,
   isTripUrgent,
@@ -368,7 +357,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['updated'])
+const dash = useDriverDashboardStore()
 
 const { t, locale } = useI18n()
 
@@ -380,18 +369,6 @@ const declineTrip = ref(null)
 const declineStep = ref('reason')
 const declineReason = ref('')
 const declineModalError = ref('')
-
-function tripStatusNorm(x) {
-  return String(x?.status ?? '').trim().toLowerCase()
-}
-
-function bucketFor(trip) {
-  if (tripStatusNorm(trip) === 'driver_confirmed') return 'confirmed'
-  return 'pending'
-}
-
-const pendingBucket = computed(() => props.trips.filter((x) => bucketFor(x) === 'pending'))
-const confirmedBucket = computed(() => props.trips.filter((x) => bucketFor(x) === 'confirmed'))
 
 function sortByDepart(list) {
   function departMs(t) {
@@ -411,20 +388,14 @@ function sortByDepart(list) {
   return list.slice().sort((a, b) => departMs(a) - departMs(b))
 }
 
-const sortedPending = computed(() => sortByDepart(pendingBucket.value))
-const sortedConfirmed = computed(() => sortByDepart(confirmedBucket.value))
+const sortedPending = computed(() => sortByDepart(props.trips))
 
 const bannerRows = computed(() => {
   const tag = locale.value === 'vi' ? 'vi' : 'en'
-  const row = (trip, mode) => ({
+  return sortedPending.value.map((trip) => ({
     trip,
-    mode,
     dateLine: formatDepartForTrip(trip, tag).dateLine,
-  })
-  return [
-    ...sortedPending.value.map((trip) => row(trip, 'pending')),
-    ...sortedConfirmed.value.map((trip) => row(trip, 'confirmed')),
-  ]
+  }))
 })
 
 const tripListId = 'pending-confirmation-trip-list'
@@ -438,26 +409,22 @@ function toggleListExpanded() {
 
 const itemDetailsExpanded = ref(/** @type Record<string, boolean> */ ({}))
 
-function itemRowKey(mode, tripId) {
-  return `${mode}-${tripId}`
+function itemDetailsDomId(tripId) {
+  return `pending-trip-details-${tripId}`
 }
 
-function itemDetailsDomId(mode, tripId) {
-  return `pending-trip-details-${mode}-${tripId}`
+function isItemDetailsOpen(tripId) {
+  const k = String(tripId)
+  return itemDetailsExpanded.value[k] === true
 }
 
-function isItemDetailsOpen(mode, tripId) {
-  return itemDetailsExpanded.value[itemRowKey(mode, tripId)] === true
-}
-
-function toggleItemDetails(mode, tripId) {
-  const k = itemRowKey(mode, tripId)
+function toggleItemDetails(tripId) {
+  const k = String(tripId)
   const nextOpen = !itemDetailsExpanded.value[k]
   itemDetailsExpanded.value = { ...itemDetailsExpanded.value, [k]: nextOpen }
 }
 
-const pendingCount = computed(() => pendingBucket.value.length)
-const confirmedCount = computed(() => confirmedBucket.value.length)
+const pendingCount = computed(() => props.trips.length)
 
 const declineTripSummary = computed(() => {
   const tr = declineTrip.value
@@ -552,9 +519,8 @@ async function submitDeclineConfirmed() {
   actionError.value = ''
   declineModalError.value = ''
   try {
-    await updateTripStatus(trip.id, { status: 'cancelled', message: declineReason.value.trim() })
+    await dash.declineTripOptimistic(trip, declineReason.value.trim())
     closeDeclineModal()
-    emit('updated')
   } catch (e) {
     declineModalError.value = formatApiError(e)
     if (e?.response?.status === 429) {
@@ -570,25 +536,7 @@ async function onConfirm(trip) {
   busyId.value = trip.id
   actionError.value = ''
   try {
-    await updateTripStatus(trip.id, { status: 'driver_confirmed' })
-    emit('updated')
-  } catch (e) {
-    actionError.value = formatApiError(e)
-    if (e?.response?.status === 429) {
-      tripStatusCooldownUntil = Date.now() + 8000
-    }
-  } finally {
-    busyId.value = null
-  }
-}
-
-async function onStartTrip(tripId) {
-  if (tripId == null || busyId.value != null || Date.now() < tripStatusCooldownUntil) return
-  busyId.value = tripId
-  actionError.value = ''
-  try {
-    await updateTripStatus(tripId, { status: 'in_progress' })
-    emit('updated')
+    await dash.confirmTripOptimistic(trip)
   } catch (e) {
     actionError.value = formatApiError(e)
     if (e?.response?.status === 429) {
@@ -599,3 +547,24 @@ async function onStartTrip(tripId) {
   }
 }
 </script>
+
+<style scoped>
+.pending-banner-item {
+  will-change: transform, opacity;
+}
+.pending-banner-enter-active,
+.pending-banner-leave-active {
+  transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+}
+.pending-banner-enter-from {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+.pending-banner-leave-to {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+.pending-banner-move {
+  transition: transform 0.22s ease-out;
+}
+</style>

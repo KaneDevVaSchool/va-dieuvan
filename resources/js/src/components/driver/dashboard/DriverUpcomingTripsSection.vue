@@ -1,0 +1,97 @@
+<template>
+  <section class="space-y-2 pb-2 pt-1">
+    <div class="flex items-end justify-between gap-2">
+      <h2 class="text-sm font-bold uppercase tracking-wide text-[#64748b]">
+        {{ t('driver_home.today_trips_section') }}
+      </h2>
+      <RouterLink
+        to="/driver/schedule"
+        class="shrink-0 text-base font-bold text-[#4ade80] transition hover:text-[#7fdcc8]"
+      >
+        {{ t('driver_home.view_schedule') }} →
+      </RouterLink>
+    </div>
+
+    <div v-if="listLoading && trips.length === 0" class="flex gap-3 overflow-hidden">
+      <div
+        v-for="n in 3"
+        :key="n"
+        class="h-[280px] w-[min(88vw,20rem)] shrink-0 animate-pulse rounded-2xl border border-white/5 bg-[#0f1816] p-5"
+      >
+        <div class="h-5 w-40 rounded bg-white/10" />
+        <div class="mt-4 h-8 w-24 rounded bg-white/10" />
+        <div class="mt-3 h-4 w-full rounded bg-white/[0.06]" />
+        <div class="mt-2 h-4 w-4/5 rounded bg-white/[0.05]" />
+      </div>
+    </div>
+
+    <DriverTodayEmptyState v-else-if="trips.length === 0" />
+
+    <div
+      v-else
+      class="-mx-3 snap-x snap-mandatory overflow-x-auto px-3 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style="-webkit-overflow-scrolling: touch"
+    >
+      <TransitionGroup
+        name="dash-trip-carousel"
+        tag="div"
+        class="flex w-max max-w-none snap-x snap-mandatory gap-3 pb-2"
+      >
+        <div
+          v-for="trip in trips"
+          :key="trip.id"
+          class="dash-carousel-card snap-center"
+        >
+          <DriverTripCard
+            v-memo="[trip.id, trip.status, trip.depart_at, trip.depart_date, startBusyTripId]"
+            class="w-[min(88vw,20rem)] shrink-0 will-change-transform"
+            :trip="trip"
+            :busy="startBusyTripId != null && Number(startBusyTripId) === Number(trip.id)"
+            @start="emit('start-trip', $event)"
+          />
+        </div>
+      </TransitionGroup>
+    </div>
+  </section>
+</template>
+
+<script setup>
+import { TransitionGroup } from 'vue'
+import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import DriverTripCard from '../DriverTripCard.vue'
+import DriverTodayEmptyState from '../DriverTodayEmptyState.vue'
+
+defineProps({
+  trips: { type: Array, required: true },
+  /** Skeleton khi đang tải lần đầu và chưa có dữ liệu */
+  listLoading: { type: Boolean, default: false },
+  startBusyTripId: { type: [Number, String], default: null },
+})
+
+const emit = defineEmits(['start-trip'])
+
+const { t } = useI18n()
+</script>
+
+<style scoped>
+.dash-carousel-card {
+  scroll-snap-align: center;
+  flex-shrink: 0;
+}
+.dash-trip-carousel-enter-active,
+.dash-trip-carousel-leave-active {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+.dash-trip-carousel-enter-from {
+  opacity: 0;
+  transform: translateX(12px);
+}
+.dash-trip-carousel-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.dash-trip-carousel-move {
+  transition: transform 0.2s ease-out;
+}
+</style>

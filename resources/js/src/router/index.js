@@ -284,7 +284,7 @@ const router = createRouter({
             component: () => import("../views/layout/StaffRouteOutlet.vue"),
             children: staffChildRoutes,
         },
-        /** Chỉ tài xế: hồ sơ / chỉnh sửa không dùng /profile — vào `/driver/account` + liên hệ phòng mua hàng. */
+        /** Chỉ tài xế: hồ sơ / chỉnh sửa không dùng `/profile` — vào `/driver/account`. */
         {
             path: "/profile",
             component: () => import("../views/profile/ProfileView.vue"),

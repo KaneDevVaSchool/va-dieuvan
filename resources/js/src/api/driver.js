@@ -29,24 +29,37 @@ export async function listDriverTripsAll(params = {}) {
     DRIVER_TRIPS_LIST_MAX_PER_PAGE,
     Math.max(1, Number(perPageRequested) || DRIVER_TRIPS_LIST_MAX_PER_PAGE),
   )
-  let page = 1
   const allItems = []
   let lastMeta = null
   /** @type {Record<string, unknown> | null} */
   let statsFromFirst = null
   const maxPages = 50
+  const first = await listDriverTrips({ ...rest, per_page: perPage, page: 1 })
+  const batch1 = first?.items ?? []
+  if (first?.stats != null && typeof first.stats === 'object') {
+    statsFromFirst = first.stats
+  }
+  lastMeta = first?.meta ?? lastMeta
+  allItems.push(...batch1)
+  let lastPage = Math.min(Number(first?.meta?.last_page ?? 1), maxPages)
 
-  while (page <= maxPages) {
-    const res = await listDriverTrips({ ...rest, per_page: perPage, page })
-    const batch = res?.items ?? []
-    if (page === 1 && res?.stats != null && typeof res.stats === 'object') {
-      statsFromFirst = res.stats
+  if (lastPage <= 1) {
+    return { items: allItems, meta: lastMeta, stats: statsFromFirst }
+  }
+
+  /** Fetch các trang còn lại song song (từng batch) để giảm waterfall trên PWA. */
+  const CONCURRENCY = 4
+  for (let start = 2; start <= lastPage; start += CONCURRENCY) {
+    const end = Math.min(start + CONCURRENCY - 1, lastPage)
+    const promises = []
+    for (let p = start; p <= end; p += 1) {
+      promises.push(listDriverTrips({ ...rest, per_page: perPage, page: p }))
     }
-    lastMeta = res?.meta ?? lastMeta
-    allItems.push(...batch)
-    const lastPage = Number(res?.meta?.last_page ?? 1)
-    if (page >= lastPage || batch.length === 0) break
-    page += 1
+    const pages = await Promise.all(promises)
+    for (const res of pages) {
+      allItems.push(...(res?.items ?? []))
+      lastMeta = res?.meta ?? lastMeta
+    }
   }
 
   return { items: allItems, meta: lastMeta, stats: statsFromFirst }
