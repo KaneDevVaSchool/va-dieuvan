@@ -79,11 +79,12 @@ class DriverTripController extends Controller
 
     /**
      * @param  Builder<Trip>  $base
-     * @return array{completed_this_month: int, cancelled_this_month: int, completed_growth_pct: ?int}
+     * @return array{completed_this_month: int, cancelled_this_month: int, completed_growth_pct: ?int, overdue_count: int}
      */
     private function buildMonthlyStats(Builder $base): array
     {
         $now = Carbon::now();
+        $startOfToday = $now->copy()->startOfDay();
         $monthStart = $now->copy()->startOfMonth();
         $monthEnd = $now->copy()->endOfMonth();
         $prevStart = $now->copy()->subMonth()->startOfMonth();
@@ -111,10 +112,17 @@ class DriverTripController extends Controller
             $growthPct = 100;
         }
 
+        $overdueCount = (int) (clone $base)
+            ->whereNotNull('trips.depart_at')
+            ->where('trips.depart_at', '<', $startOfToday)
+            ->whereNotIn('trips.status', ['completed', 'cancelled'])
+            ->count();
+
         return [
             'completed_this_month' => $completedThisMonth,
             'cancelled_this_month' => $cancelledThisMonth,
             'completed_growth_pct' => $growthPct,
+            'overdue_count' => $overdueCount,
         ];
     }
 

@@ -2,10 +2,14 @@
   <div
     class="min-h-full w-full overflow-x-hidden bg-[#020B0B] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#eaf8f5]"
   >
-    <!-- Full-bleed hero: gradient từ sát mép trên màn hình; safe-area chỉ trên nội dung con -->
+    <!-- Full-bleed hero: kéo nền lên dưới status bar / vùng trên Dynamic Island (viewport-fit=cover) -->
     <div
-      class="relative isolate w-full overflow-hidden rounded-b-[1.75rem] shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10"
+      class="relative isolate w-full overflow-hidden rounded-b-[1.75rem] shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10 -mt-[env(safe-area-inset-top,0px)] pt-[env(safe-area-inset-top,0px)]"
     >
+      <div
+        class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[env(safe-area-inset-top,0px)] bg-[#020B0B]"
+        aria-hidden="true"
+      />
       <div
         class="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#020B0B] to-[#031818]"
         aria-hidden="true"

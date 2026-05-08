@@ -1,11 +1,11 @@
 <template>
-  <!-- Nền gradient + glow do khối hero cha; chỉ padding safe-area cho nội dung -->
-  <div
-    class="w-full pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-[env(safe-area-inset-top)] pb-3 sm:pl-[max(1rem,env(safe-area-inset-left))] sm:pr-[max(1rem,env(safe-area-inset-right))]"
+  <!-- Top inset do hero dashboard bọc (viewport có notch); chỉ spacing nội bộ -->
+  <header
+    class="w-full pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-3 pt-1.5 sm:pt-2 sm:pl-[max(1rem,env(safe-area-inset-left))] sm:pr-[max(1rem,env(safe-area-inset-right))]"
   >
     <div class="flex items-start justify-between gap-3">
       <div
-        class="min-w-0 flex-1 space-y-1.5 px-3 py-2.5 my-1 sm:px-4 sm:py-3 sm:my-1.5"
+        class="min-w-0 flex-1 space-y-1.5 px-3 py-2 sm:px-4 sm:py-2.5 sm:my-0"
       >
         <p
           class="flex items-center gap-2 text-base font-semibold leading-snug text-[#7fdcc8]"
@@ -79,7 +79,7 @@
     <p class="mt-2.5 text-base font-semibold leading-snug text-[#7fdcc8]">
       {{ todayLabel }}
     </p>
-  </div>
+  </header>
 </template>
 
 <script setup>

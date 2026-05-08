@@ -116,7 +116,27 @@ const typeBadgeStyle = computed(() => {
 
 const normalizedStatus = computed(() => String(props.trip.status ?? '').trim().toLowerCase())
 
+function todayYmdLocal() {
+  const x = new Date()
+  const y = x.getFullYear()
+  const m = String(x.getMonth() + 1).padStart(2, '0')
+  const d = String(x.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/** Scheduled day passed (local calendar) and trip not completed/cancelled */
+const isOverdue = computed(() => {
+  const day = props.trip.depart_date
+  if (!day || typeof day !== 'string') return false
+  const ymd = day.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false
+  const s = normalizedStatus.value
+  if (s === 'completed' || s === 'cancelled') return false
+  return ymd < todayYmdLocal()
+})
+
 const statusStyle = computed(() => {
+  if (isOverdue.value) return { bg: 'rgb(245 158 11 / 0.2)', fg: '#fbbf24' }
   const s = normalizedStatus.value
   if (s === 'in_progress') return { bg: 'rgb(20 184 166 / 0.18)', fg: '#2dd4bf' }
   if (s === 'completed') return { bg: 'rgb(34 197 94 / 0.15)', fg: '#4ade80' }
@@ -128,6 +148,7 @@ const statusStyle = computed(() => {
 })
 
 const statusLabel = computed(() => {
+  if (isOverdue.value) return t('trip_history_page.status_overdue')
   const s = normalizedStatus.value
   if (s === 'in_progress') return t('trip_history_page.status_running')
   if (s === 'completed') return t('trip_history_page.status_completed')

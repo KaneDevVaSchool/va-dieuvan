@@ -57,6 +57,7 @@ export function useTripHistory() {
             completed_this_month: s.completed_this_month ?? s.completed ?? 0,
             cancelled_this_month: s.cancelled_this_month ?? s.cancelled ?? 0,
             completed_growth_pct: s.completed_growth_pct ?? null,
+            overdue_count: s.overdue_count ?? 0,
           }
         } else {
           stats.value = {
@@ -67,6 +68,7 @@ export function useTripHistory() {
             completed_this_month: 0,
             cancelled_this_month: 0,
             completed_growth_pct: null,
+            overdue_count: 0,
           }
         }
       } else {
