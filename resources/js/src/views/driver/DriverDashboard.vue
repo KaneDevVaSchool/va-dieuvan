@@ -33,6 +33,8 @@
 
     <div class="mx-auto w-full min-w-0 max-w-full px-3 pt-4 sm:px-4">
       <div class="min-w-0 space-y-4">
+        <TripStatsCard :stats="monthlyTripStats" :loading="statsLoadingDisplay" />
+
         <p
           v-if="errorMsg"
           class="rounded-2xl border border-amber-700/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-600/30"
@@ -111,7 +113,9 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getDriverSummary } from '../../api/driver'
 import { listTripsAll, updateTripStatus } from '../../api/trips'
+import { useTripHistory } from '../../composables/useTripHistory'
 import { useAuthStore } from '../../store'
+import TripStatsCard from '../../components/trips/TripStatsCard.vue'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
 import PendingConfirmationBanner from '../../components/driver/PendingConfirmationBanner.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
@@ -126,6 +130,12 @@ const errorMsg = ref('')
 const rawListItems = ref([])
 const myDriverId = ref(null)
 const startBusy = ref(false)
+
+const {
+  stats: monthlyTripStats,
+  isLoading: monthlyTripHistoryLoading,
+  fetch: fetchDriverTripHistorySlice,
+} = useTripHistory()
 
 const user = computed(() => auth.user)
 const avatarUrl = computed(() => user.value?.avatar_url || null)
@@ -227,6 +237,22 @@ const upcomingDepartIso = computed(() => {
 
 const dispatcherPhone = import.meta.env.VITE_DISPATCHER_PHONE || null
 
+const statsLoadingDisplay = computed(
+  () => monthlyTripHistoryLoading.value && monthlyTripStats.value == null,
+)
+
+function driverTripHistoryParamsForStats() {
+  const d = ymd(new Date())
+  return { date_from: d, date_to: d }
+}
+
+async function fetchMonthlyDriverStats() {
+  try {
+    await fetchDriverTripHistorySlice(driverTripHistoryParamsForStats(), false)
+  } catch {
+  }
+}
+
 async function fetchData(showLoader = true) {
   if (showLoader) loading.value = true
   errorMsg.value = ''
@@ -249,6 +275,7 @@ async function fetchData(showLoader = true) {
   } finally {
     if (showLoader) loading.value = false
   }
+  await fetchMonthlyDriverStats()
 }
 
 async function refreshTrips() {
