@@ -1,64 +1,57 @@
 <template>
-  <div class="overflow-hidden rounded-3xl bg-[#0f1816] shadow-xl shadow-black/30">
-    <!-- Header: operation-style count display -->
-    <div class="px-5 pt-6 pb-5">
+  <div
+    class="overflow-hidden rounded-2xl border-2 border-amber-500/65 bg-[#141008]/95 shadow-lg shadow-black/35 ring-1 ring-amber-400/35"
+    role="region"
+    :aria-label="t('driver_home.group_pending')"
+  >
+    <!-- Header -->
+    <div class="px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
       <template v-if="loading">
-        <div class="flex items-center gap-4">
-          <div class="h-14 w-14 animate-pulse rounded-2xl bg-[#7fdcc8]/10" />
-          <div class="flex-1 space-y-2">
-            <div class="h-8 w-36 animate-pulse rounded-xl bg-[#7fdcc8]/10" />
-            <div class="h-5 w-28 animate-pulse rounded-lg bg-[#7fdcc8]/8" />
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-amber-500/20" />
+          <div class="min-w-0 flex-1 space-y-2">
+            <div class="h-5 w-48 max-w-full animate-pulse rounded-lg bg-amber-500/15" />
+            <div class="h-4 w-32 animate-pulse rounded bg-amber-500/10" />
           </div>
         </div>
       </template>
       <template v-else>
-        <div class="flex items-start gap-4">
-          <!-- Truck icon -->
+        <div class="flex items-start gap-3">
           <div
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#7fdcc8]/10 ring-1 ring-[#7fdcc8]/18"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 ring-1 ring-amber-400/35"
+            aria-hidden="true"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              class="h-8 w-8 text-[#7fdcc8]"
-              aria-hidden="true"
+              class="h-5 w-5 text-amber-200"
             >
-              <path d="M6.5 3c-1.051 0-2.093.04-3.125.117A1.49 1.49 0 0 0 2 4.607V10.5h9V4.607c0-.727-.57-1.44-1.375-1.49A41.568 41.568 0 0 0 6.5 3ZM2 12v2.5A1.5 1.5 0 0 0 3.5 16h.041a3 3 0 0 1 5.918 0h.791a.75.75 0 0 0 .75-.75V12H2Z" />
-              <path d="M6.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM13.25 5a.75.75 0 0 0-.75.75v8.514a3.001 3.001 0 0 1 4.893 1.486c.077-.111.157-.22.237-.328.075-.103.119-.22.119-.344V10.5a1.5 1.5 0 0 0-.265-.848l-2.154-3.23A1.5 1.5 0 0 0 14.115 6h-.865ZM14.5 18a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+              <path
+                fill-rule="evenodd"
+                d="M10 2a.75.75 0 0 1 .75.75v.258a33.186 33.186 0 0 1 9.665 5.571.75.75 0 0 1-.372 1.347A31.033 31.033 0 0 0 18 12c0 1.684.264 3.29.733 4.774a.75.75 0 0 1-.37 1.007 24.988 24.988 0 0 1-4.866 2.395.75.75 0 0 1-.82-.37 13.082 13.082 0 0 0-8.634-5.495.75.75 0 0 1-.74-.18 13.082 13.082 0 0 0-8.634 5.495.75.75 0 0 1-.82.37 24.983 24.983 0 0 1-4.865-2.396.75.75 0 0 1-.37-1.006A31.343 31.343 0 0 0 2 12c0-1.684.264-3.29.733-4.774a.75.75 0 0 1-.372-1.347 33.156 33.156 0 0 1 9.665-5.571V2.75A.75.75 0 0 1 10 2Zm-3.03 15.273a15.45 15.45 0 0 1 6.03 0 .762.762 0 0 1 .314.148.73.73 0 0 1 .272.323 22.005 22.005 0 0 1-6.59 1.077c-2.308 0-4.498-.466-6.59-1.077a.723.723 0 0 1 .586-1.47 15.445 15.445 0 0 1 6.03 0Z"
+                clip-rule="evenodd"
+              />
             </svg>
           </div>
-
-          <!-- Count text -->
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-xl font-extrabold leading-snug text-white">
-              {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
+          <div class="min-w-0 flex-1 pt-0.5">
+            <p class="text-sm font-extrabold leading-snug text-amber-50 sm:text-base">
+              <template v-if="pendingCount > 0">
+                {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
+              </template>
+              <template v-else>
+                {{ t('driver_home.pending_banner_confirmed', { n: confirmedCount }) }}
+              </template>
             </p>
-            <p
-              v-if="confirmedCount > 0"
-              class="mt-2.5 flex items-center gap-1.5 text-base font-semibold text-emerald-400/80"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                class="h-4 w-4 shrink-0"
-                aria-hidden="true"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              {{ t('driver_home.pending_banner_confirmed', { n: confirmedCount }) }}
+            <p v-if="pendingCount > 0" class="mt-0.5 text-xs font-medium text-amber-200/75 sm:text-sm">
+              {{ t('driver_home.pending_banner_sub') }}
             </p>
           </div>
         </div>
 
         <p
           v-if="actionError"
-          class="mt-4 rounded-xl border border-rose-500/45 bg-rose-950/55 px-4 py-3 text-sm font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25"
+          class="mt-2 rounded-xl border border-rose-500/45 bg-rose-950/55 px-3 py-2 text-xs font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25 sm:text-sm"
           role="alert"
         >
           {{ actionError }}
@@ -66,37 +59,86 @@
       </template>
     </div>
 
-    <!-- Loading skeleton for trip groups -->
-    <div v-if="loading" class="space-y-3 px-5 pb-5">
-      <div v-for="s in 2" :key="s" class="rounded-2xl bg-[#070f0d]/80 p-4">
-        <div class="h-5 w-32 animate-pulse rounded bg-[#7fdcc8]/12" />
-        <div class="mt-3 h-28 animate-pulse rounded-xl bg-[#7fdcc8]/8" />
+    <!-- Loading rows -->
+    <div v-if="loading" class="space-y-2 border-t border-amber-500/25 px-3 py-3 sm:px-4">
+      <div v-for="s in 2" :key="s" class="flex animate-pulse gap-2 rounded-lg bg-amber-950/30 py-2.5 pl-2 pr-2">
+        <div class="h-6 w-9 rounded bg-amber-500/15" />
+        <div class="h-6 w-12 rounded bg-amber-500/10" />
+        <div class="min-w-0 flex-1 rounded bg-amber-500/10" />
+        <div class="h-8 w-20 shrink-0 rounded-lg bg-amber-500/15" />
       </div>
     </div>
 
-    <!-- Two sections: pending + confirmed -->
-    <div v-else class="divide-y divide-[#7fdcc8]/10 border-t border-[#7fdcc8]/10">
-      <TripGroupSection
-        :title="t('driver_home.group_pending')"
-        :trips="sortedPending"
-        :open="open.pending"
-        :busy-id="busyId"
-        accent="mint"
-        show-pending-actions
-        @toggle="toggle('pending')"
-        @confirm="onConfirm"
-        @decline="openDeclineModal"
-      />
-      <TripGroupSection
-        :title="t('driver_home.group_confirmed')"
-        :trips="sortedConfirmed"
-        :open="open.confirmed"
-        :busy-id="busyId"
-        accent="emerald"
-        @toggle="toggle('confirmed')"
-        @start="onStartTrip"
-      />
-    </div>
+    <!-- Trip rows -->
+    <ul
+      v-else
+      class="divide-y divide-amber-500/20 border-t border-amber-500/25"
+    >
+      <li
+        v-for="trip in sortedPending"
+        :key="`p-${trip.id}`"
+        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:px-4"
+      >
+        <span
+          class="inline-flex shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide sm:text-xs"
+          :class="tripTypeBadgeClass(trip)"
+        >
+          {{ tripTypeShortLabel(trip) }}
+        </span>
+        <span class="shrink-0 text-xs font-bold tabular-nums text-white sm:text-sm">
+          {{ departTime(trip) }}
+        </span>
+        <span class="min-w-0 flex-1 basis-[8rem] truncate text-xs font-medium text-[#e2e8f0] sm:text-sm">
+          {{ tripDestination(trip) }}
+        </span>
+        <div class="ml-auto flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-2.5 text-xs font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
+            :disabled="busyId != null"
+            @click="onConfirm(trip)"
+          >
+            {{ t('driver_home.btn_confirm') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] min-w-[44px] items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-2.5 text-xs font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45"
+            :disabled="busyId != null"
+            @click="openDeclineModal(trip)"
+          >
+            {{ t('driver_home.btn_decline') }}
+          </button>
+        </div>
+      </li>
+      <li
+        v-for="trip in sortedConfirmed"
+        :key="`c-${trip.id}`"
+        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:px-4"
+      >
+        <span
+          class="inline-flex shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide sm:text-xs"
+          :class="tripTypeBadgeClass(trip)"
+        >
+          {{ tripTypeShortLabel(trip) }}
+        </span>
+        <span class="shrink-0 text-xs font-bold tabular-nums text-white sm:text-sm">
+          {{ departTime(trip) }}
+        </span>
+        <span class="min-w-0 flex-1 basis-[8rem] truncate text-xs font-medium text-[#e2e8f0] sm:text-sm">
+          {{ tripDestination(trip) }}
+        </span>
+        <div class="ml-auto flex shrink-0">
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
+            :disabled="busyId != null"
+            @click="onStartTrip(trip.id)"
+          >
+            {{ t('driver_home.card_start') }}
+          </button>
+        </div>
+      </li>
+    </ul>
 
     <!-- Decline modal -->
     <Teleport to="body">
@@ -192,12 +234,15 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { updateTripStatus } from '../../api/trips'
-import { formatDepartForTrip, tripOrigin } from '../../composables/useDriverTripDisplay'
-import TripGroupSection from './TripGroupSection.vue'
+import {
+  formatDepartForTrip,
+  tripDestination,
+  tripOrigin,
+} from '../../composables/useDriverTripDisplay'
 
 let tripStatusCooldownUntil = 0
 
@@ -220,8 +265,6 @@ const declineTrip = ref(null)
 const declineStep = ref('reason')
 const declineReason = ref('')
 const declineModalError = ref('')
-
-let userTouchedCollapse = false
 
 function tripStatusNorm(x) {
   return String(x?.status ?? '').trim().toLowerCase()
@@ -257,27 +300,30 @@ const declineTripSummary = computed(() => {
   return `#${tag} · ${time} · ${origin}`
 })
 
-const open = reactive({ pending: true, confirmed: true })
-
-function applyAutoCollapse() {
-  if (userTouchedCollapse) return
-  if (props.trips.length > 10) {
-    open.pending = true
-    open.confirmed = false
-  }
+function tripTypeShortLabel(trip) {
+  const tt = trip?.dispatch_request?.trip_type
+  if (tt === 'door_to_door') return 'D2D'
+  if (tt === 'point_to_point') return 'P2P'
+  if (tt === 'business') return 'CT'
+  if (tt === 'cargo') return 'HH'
+  const raw = (trip?.type || '').toString()
+  const up = raw.toUpperCase()
+  if (['P2P', 'D2D', 'CT', 'HH', 'CG'].includes(up)) return up === 'CG' ? 'HH' : up
+  return raw.length <= 3 && raw ? raw.toUpperCase() : '—'
 }
 
-watch(
-  () => props.loading,
-  (isLoading) => {
-    if (!isLoading) applyAutoCollapse()
-  },
-  { immediate: true },
-)
+function tripTypeBadgeClass(trip) {
+  const lbl = tripTypeShortLabel(trip)
+  if (lbl === 'P2P') return 'bg-blue-500/25 text-blue-200 ring-1 ring-blue-400/30'
+  if (lbl === 'D2D') return 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/30'
+  if (lbl === 'CT') return 'bg-amber-500/25 text-amber-100 ring-1 ring-amber-400/35'
+  if (lbl === 'HH') return 'bg-orange-500/25 text-orange-100 ring-1 ring-orange-400/35'
+  return 'bg-slate-500/20 text-slate-200 ring-1 ring-slate-400/25'
+}
 
-function toggle(key) {
-  userTouchedCollapse = true
-  open[key] = !open[key]
+function departTime(trip) {
+  const loc = locale.value === 'vi' ? 'vi' : 'en'
+  return formatDepartForTrip(trip, loc).time
 }
 
 function closeDeclineModal() {
