@@ -140,6 +140,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTripHistory } from '../../composables/useTripHistory'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
+import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import WeekCalendar from '../../components/trips/WeekCalendar.vue'
 import TripCard from '../../components/trips/TripCard.vue'
 import TripEmptyState from '../../components/trips/TripEmptyState.vue'
@@ -337,6 +338,8 @@ async function reload() {
   setupIntersectionObserver()
 }
 
+const { start: startDriverVisiblePoll } = useDriverVisiblePoll(() => reload())
+
 function onResetFilters() {
   searchQ.value = ''
   selectedDate.value = new Date()
@@ -357,7 +360,7 @@ watch([hasMore, () => sentinelEl.value, () => filteredTrips.value.length], () =>
 
 onMounted(() => {
   void bootDriverOutboundNotifications()
-  void reload()
+  void reload().finally(() => startDriverVisiblePoll())
 })
 
 onBeforeUnmount(() => {

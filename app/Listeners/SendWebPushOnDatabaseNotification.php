@@ -35,21 +35,27 @@ class SendWebPushOnDatabaseNotification
         } else {
             return;
         }
-        $title = $data['title'] ?? (string) config('app.name');
+        $title = Str::limit((string) ($data['title'] ?? config('app.name')), 120, '…');
         $body = (string) ($data['message'] ?? $data['body'] ?? '');
         if ($body === '' && is_array($data) && $data !== []) {
             $body = Str::limit(json_encode($data, JSON_UNESCAPED_UNICODE), 180, '…');
         }
+        $body = Str::limit($body, 180, '…');
 
         if (! is_object($event->notifiable) || ! method_exists($event->notifiable, 'getKey')) {
             return;
         }
 
+        $tripId = $data['trip_id'] ?? null;
+        $tag = is_numeric($tripId)
+            ? 'va-trip-'.$tripId
+            : 'va-'.($data['id'] ?? uniqid('n', true));
+
         $payload = [
             'title' => $title,
             'body' => $body,
             'url' => $data['url'] ?? $data['action_url'] ?? '/',
-            'tag' => 'va-'.($data['id'] ?? uniqid('n', true)),
+            'tag' => $tag,
         ];
         if (array_key_exists('is_urgent', $data)) {
             $payload['is_urgent'] = (bool) $data['is_urgent'];

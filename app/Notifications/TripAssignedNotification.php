@@ -4,9 +4,12 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
-class TripAssignedNotification extends Notification implements ShouldQueue
+class TripAssignedNotification extends Notification implements ShouldQueue, ShouldQueueAfterCommit
 {
     use Queueable;
 
@@ -52,6 +55,44 @@ class TripAssignedNotification extends Notification implements ShouldQueue
     }
 
     private function summaryBody(): string
+    {
+        $bits = [];
+
+        $tt = $this->tripTypeLabel();
+        if ($tt !== '') {
+            $bits[] = $tt;
+        }
+
+        try {
+            if ($this->departAt !== '') {
+                $c = Carbon::parse($this->departAt);
+                $bits[] = 'Đón '.$c->locale('vi')->translatedFormat('d MMM, H:mm');
+            }
+        } catch (\Throwable) {
+            //
+        }
+
+        $route = $this->routeSummary();
+        $prefix = $bits !== [] ? implode(' · ', $bits).' — ' : '';
+
+        return Str::limit($prefix.$route, 180, '…');
+    }
+
+    /**
+     * Nhãn ngắn (tiếng Việt — đồng bộ với copy thông báo server).
+     */
+    private function tripTypeLabel(): string
+    {
+        return match ($this->tripType) {
+            'door_to_door' => 'Cửa–cửa',
+            'point_to_point' => 'Điểm–điểm',
+            'business' => 'Công tác',
+            'cargo' => 'Hàng hóa',
+            default => '',
+        };
+    }
+
+    private function routeSummary(): string
     {
         $o = trim($this->origin);
         $d = trim($this->destination);

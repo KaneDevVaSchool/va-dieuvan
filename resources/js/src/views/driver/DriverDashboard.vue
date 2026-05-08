@@ -126,6 +126,7 @@ import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getDriverSummary, listDriverTripsAll } from '../../api/driver'
+import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
 import { useTripHistory } from '../../composables/useTripHistory'
 import { useAuthStore } from '../../store'
@@ -136,6 +137,7 @@ import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverTripCard from '../../components/driver/DriverTripCard.vue'
 import DriverTodayEmptyState from '../../components/driver/DriverTodayEmptyState.vue'
 import { updateTripStatus } from '../../api/trips'
+import { playNotificationChime } from '../../util/notificationChime'
 
 const DriverAnalyticsSection = defineAsyncComponent(() =>
   import('../../components/driver/DriverAnalyticsSection.vue'),
@@ -320,6 +322,8 @@ async function refreshTrips() {
   await fetchData(false)
 }
 
+const { start: startDriverVisiblePoll } = useDriverVisiblePoll(() => fetchData(false))
+
 async function onStartTrip(tripId) {
   if (tripId == null || startBusy.value) return
   startBusy.value = true
@@ -333,16 +337,92 @@ async function onStartTrip(tripId) {
   }
 }
 
-let knownPendingIds = null
+const SEEN_PENDING_INIT_KEY = 'va_driver_pending_seen_init'
+const SEEN_PENDING_IDS_KEY = 'va_driver_pending_ids_seen'
 
-async function pushNewTripNotif(count) {
+function loadSeenPendingIds() {
+  try {
+    if (typeof sessionStorage === 'undefined') return null
+    if (sessionStorage.getItem(SEEN_PENDING_INIT_KEY) !== '1') return null
+    const raw = sessionStorage.getItem(SEEN_PENDING_IDS_KEY) ?? ''
+    return new Set(
+      raw.split(',').map((x) => Number.parseInt(x, 10)).filter((n) => !Number.isNaN(n)),
+    )
+  } catch {
+    return null
+  }
+}
+
+function persistSeenPendingSnapshot(ids) {
+  try {
+    if (typeof sessionStorage === 'undefined') return
+    sessionStorage.setItem(SEEN_PENDING_INIT_KEY, '1')
+    sessionStorage.setItem(SEEN_PENDING_IDS_KEY, [...ids].sort((a, b) => a - b).join(','))
+  } catch {
+    /* ignore */
+  }
+}
+
+let knownPendingIds = loadSeenPendingIds()
+
+const NOTIF_BODY_MAX = 220
+
+function routeLineForNotif(trip) {
+  const o = String(trip.origin ?? trip.pickup_location ?? '').trim()
+  const d = String(trip.destination ?? trip.dropoff_location ?? '').trim()
+  if (o !== '' && d !== '') return `${o} → ${d}`
+  if (o !== '') return o
+  if (d !== '') return d
+  return `#${trip.id}`
+}
+
+function departLabelForNotif(trip) {
+  const raw = trip.depart_at ?? trip.depart_date
+  if (!raw) return ''
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+}
+
+async function pushNewTripNotif(newTrips) {
+  if (!newTrips?.length) return
   if (!('Notification' in window) || Notification.permission !== 'granted') return
+
   const title = t('driver_home.notif_new_trip_title')
+  let body = ''
+  if (newTrips.length === 1) {
+    const tr = newTrips[0]
+    const route = routeLineForNotif(tr)
+    const time = departLabelForNotif(tr)
+    body = time
+      ? t('driver_home.notif_new_trip_detail_one', { route, time })
+      : t('driver_home.notif_new_trip_detail_one_no_time', { route })
+  } else {
+    const head = newTrips.slice(0, 2)
+    const lines = []
+    for (const tr of head) {
+      const route = routeLineForNotif(tr)
+      const time = departLabelForNotif(tr)
+      lines.push(time ? `${route} (${time})` : route)
+    }
+    body = lines.join(' · ')
+    const extra = newTrips.length - head.length
+    if (extra > 0) {
+      body = `${body} — ${t('driver_home.notif_new_trip_more', { n: extra })}`
+    }
+  }
+  if (body.length > NOTIF_BODY_MAX) {
+    body = `${body.slice(0, NOTIF_BODY_MAX - 1)}…`
+  }
+
+  const tag =
+    newTrips.length === 1 && newTrips[0]?.id != null ? `new-trip-${newTrips[0].id}` : 'new-trip-batch'
+
   const options = {
-    body: t('driver_home.notif_new_trip_body', { n: count }),
+    body,
     icon: '/icons/pwa-192.png',
     badge: '/icons/pwa-192.png',
-    tag: 'new-trip',
+    tag,
     renotify: true,
   }
   try {
@@ -364,19 +444,26 @@ async function pushNewTripNotif(count) {
 watch(
   () => pendingTrips.value.map((x) => x.id).join(','),
   (newKey) => {
-    const ids = new Set(newKey ? newKey.split(',').map(Number) : [])
+    const ids = new Set(newKey ? newKey.split(',').map(Number).filter((n) => !Number.isNaN(n)) : [])
     if (knownPendingIds === null) {
       knownPendingIds = ids
+      persistSeenPendingSnapshot(ids)
       return
     }
     const added = [...ids].filter((id) => !knownPendingIds.has(id))
-    if (added.length > 0) void pushNewTripNotif(added.length)
+    if (added.length > 0) {
+      const objs = pendingTrips.value.filter((x) => added.includes(Number(x.id)))
+      void pushNewTripNotif(objs)
+      playNotificationChime()
+    }
     knownPendingIds = ids
+    persistSeenPendingSnapshot(ids)
   },
 )
 
 onMounted(async () => {
   await bootDriverOutboundNotifications()
   await fetchData(true)
+  startDriverVisiblePoll()
 })
 </script>
