@@ -38,7 +38,7 @@ Mỗi card hiển thị:
 - **Mã chuyến**: `#36`
 - **Badge trạng thái**: `Đang thực hiện` / `Hoàn thành` / `Chờ XN` / `Đã hủy`
 - **Điểm đi → điểm đến** (2 dòng, icon dot đầu dòng, màu phân biệt điểm đi/đến)
-- **Thông tin phụ**: số khách / học sinh / kiện hàng (icon người hoặc kiện)
+- **Thông tin phụ**: số khách / hành khách / kiện hàng (icon người hoặc kiện)
 - **Km thực tế** (nếu đã hoàn thành)
 - Tap vào card → navigate đến `/driver/trips/{id}`
 

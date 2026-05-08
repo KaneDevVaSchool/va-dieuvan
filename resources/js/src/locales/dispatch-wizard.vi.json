@@ -18,7 +18,7 @@
         "trip_type": {
             "door_to_door": {
                 "label": "Đưa đón",
-                "hint": "Xe chạy tuyến hoặc thuê theo lịch, đón trả tại địa chỉ cụ thể (học sinh, khách, sự kiện)."
+                "hint": "Xe chạy tuyến hoặc thuê theo lịch, đón trả tại địa chỉ cụ thể (hành khách, khách, sự kiện)."
             },
             "point_to_point": {
                 "label": "Điểm — Điểm",

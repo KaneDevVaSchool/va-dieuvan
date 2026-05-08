@@ -3,7 +3,7 @@ import { http } from './http'
 /** Khớp max trong `DriverTripHistoryRequest` (Laravel). */
 export const DRIVER_TRIPS_LIST_MAX_PER_PAGE = 100
 
-/** @returns {Promise<object>} Tổng hợp bối cảnh tài xế (xe, số liệu, bảo trì) */
+/** @returns {Promise<object>} Tổng hợp bối cảnh tài xế (xe, số liệu) */
 export async function getDriverSummary() {
   const { data } = await http.get('/driver/summary')
   return data.data

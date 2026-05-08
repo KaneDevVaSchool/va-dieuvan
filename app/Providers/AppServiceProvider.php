@@ -3,8 +3,6 @@
 namespace App\Providers;
 
 use App\Models\DispatchRequest;
-use App\Models\VehicleMaintenanceItem;
-use App\Observers\MaintenanceItemObserver;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,7 +24,5 @@ class AppServiceProvider extends ServiceProvider
         Route::bind('dispatchRequest', function (string $value) {
             return DispatchRequest::withTrashed()->findOrFail((int) $value);
         });
-
-        VehicleMaintenanceItem::observe(MaintenanceItemObserver::class);
     }
 }

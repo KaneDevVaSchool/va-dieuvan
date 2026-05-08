@@ -336,23 +336,11 @@ const router = createRouter({
         },
         {
             path: "/driver/maintenance",
-            name: "driverMaintenance",
-            component: () => import("../views/driver/DriverMaintenanceView.vue"),
-            meta: {
-                title: "Bảo trì xe",
-                subtitle: "Tài xế",
-                driverApp: true,
-            },
+            redirect: "/driver",
         },
         {
             path: "/driver/maintenance/:id",
-            name: "driverMaintenanceDetail",
-            component: () => import("../views/driver/DriverMaintenanceDetailView.vue"),
-            meta: {
-                title: "Chi tiết bảo trì",
-                subtitle: "Tài xế",
-                driverApp: true,
-            },
+            redirect: "/driver",
         },
         {
             path: "/driver/account",
