@@ -125,6 +125,8 @@
         "float_call": "Call dispatch",
         "pending_banner_title": "{n} trip(s) need confirmation",
         "pending_banner_sub": "Please confirm or decline at least 2 hours ahead",
+        "pending_banner_expand_list": "Show trip list",
+        "pending_banner_collapse_list": "Collapse list",
         "btn_confirm": "Confirm",
         "btn_decline": "Decline",
         "pending_decline_title": "Decline trip",

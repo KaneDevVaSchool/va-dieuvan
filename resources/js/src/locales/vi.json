@@ -156,6 +156,8 @@
         "float_call": "Gọi điều phối",
         "pending_banner_title": "{n} chuyến cần xác nhận",
         "pending_banner_sub": "Vui lòng xác nhận hoặc báo bận trước 2 giờ",
+        "pending_banner_expand_list": "Mở danh sách chuyến",
+        "pending_banner_collapse_list": "Thu gọn danh sách",
         "btn_confirm": "Xác nhận",
         "btn_decline": "Từ chối",
         "pending_decline_title": "Từ chối chuyến",

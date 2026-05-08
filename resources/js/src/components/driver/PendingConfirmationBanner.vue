@@ -16,7 +16,7 @@
         </div>
       </template>
       <template v-else>
-        <div class="flex items-start gap-4">
+        <div class="flex items-start gap-3 sm:gap-4">
           <div
             class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 ring-1 ring-amber-400/35"
             aria-hidden="true"
@@ -46,7 +46,31 @@
             <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
               {{ t('driver_home.pending_banner_sub') }}
             </p>
+            <p
+              v-if="!listExpanded && hasTripRows"
+              class="mt-1.5 text-xs font-medium text-amber-300/70 sm:text-sm"
+            >
+              {{ t('driver_home.pending_collapsed_count', { n: bannerRows.length }) }}
+            </p>
           </div>
+          <button
+            v-if="hasTripRows"
+            type="button"
+            class="-mr-1 flex h-11 min-w-[44px] shrink-0 items-center justify-center rounded-xl text-amber-200/90 ring-1 ring-amber-500/30 transition hover:bg-amber-500/15 hover:text-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+            :aria-expanded="listExpanded"
+            :aria-controls="tripListId"
+            @click="toggleListExpanded"
+          >
+            <ChevronDownIcon v-if="!listExpanded" class="h-6 w-6" aria-hidden="true" />
+            <ChevronUpIcon v-else class="h-6 w-6" aria-hidden="true" />
+            <span class="sr-only">
+              {{
+                listExpanded
+                  ? t('driver_home.pending_banner_collapse_list')
+                  : t('driver_home.pending_banner_expand_list')
+              }}
+            </span>
+          </button>
         </div>
 
         <p
@@ -84,6 +108,8 @@
     <!-- Trip rows -->
     <ul
       v-else
+      :id="tripListId"
+      v-show="listExpanded"
       class="divide-y divide-amber-500/20 border-t border-amber-500/25"
     >
       <li
@@ -283,6 +309,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { formatApiError } from '../../api/http'
 import { updateTripStatus } from '../../api/trips'
@@ -363,6 +390,15 @@ const bannerRows = computed(() => {
     ...sortedConfirmed.value.map((trip) => row(trip, 'confirmed')),
   ]
 })
+
+const tripListId = 'pending-confirmation-trip-list'
+const listExpanded = ref(true)
+
+const hasTripRows = computed(() => bannerRows.value.length > 0)
+
+function toggleListExpanded() {
+  listExpanded.value = !listExpanded.value
+}
 
 const pendingCount = computed(() => pendingBucket.value.length)
 const confirmedCount = computed(() => confirmedBucket.value.length)
