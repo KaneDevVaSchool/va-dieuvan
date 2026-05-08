@@ -3,7 +3,7 @@
     class="min-h-full w-full bg-driver-bg pb-[calc(7rem+env(safe-area-inset-bottom))] text-driver-ink"
   >
     <div
-      class="mx-auto w-full max-w-[390px] space-y-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4"
+      class="mx-auto w-full min-w-0 max-w-full space-y-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4"
     >
       <!-- Header chrome -->
       <div class="flex items-center justify-between gap-3 pt-1">

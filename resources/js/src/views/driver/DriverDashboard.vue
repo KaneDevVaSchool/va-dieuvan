@@ -13,12 +13,21 @@
         class="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#020B0B] to-[#031818]"
         aria-hidden="true"
       />
+      <!-- max-sm: không blur (giảm tải GPU PWA / WebView) -->
       <div
-        class="pointer-events-none absolute -top-10 right-0 h-44 w-44 rounded-full bg-[#5eead4]/[0.07] blur-3xl"
+        class="pointer-events-none absolute -top-10 right-0 h-44 w-44 rounded-full bg-[#5eead4]/[0.05] sm:hidden"
         aria-hidden="true"
       />
       <div
-        class="pointer-events-none absolute -bottom-28 left-1/2 h-52 w-[min(130vw,26rem)] -translate-x-1/2 rounded-[100%] bg-[#7fdcc8]/[0.11] blur-[52px]"
+        class="pointer-events-none absolute -bottom-28 left-1/2 h-52 w-[min(130vw,26rem)] -translate-x-1/2 rounded-[100%] bg-[#7fdcc8]/[0.08] sm:hidden"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute -top-10 right-0 hidden h-44 w-44 rounded-full bg-[#5eead4]/[0.07] blur-3xl sm:block"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute -bottom-28 left-1/2 hidden h-52 w-[min(130vw,26rem)] -translate-x-1/2 rounded-[100%] bg-[#7fdcc8]/[0.11] blur-[52px] sm:block"
         aria-hidden="true"
       />
 

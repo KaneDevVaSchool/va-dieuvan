@@ -23,22 +23,36 @@ const emit = defineEmits(['chartClick', 'chartDblclick'])
 const hostRef = ref(null)
 const chartRef = shallowRef(null)
 let resizeObs = null
+let resizeRafId = null
 
 function applyOption() {
   if (!chartRef.value) return
   if (props.option) {
-    chartRef.value.setOption(props.option, { notMerge: true })
+    chartRef.value.setOption(props.option, { notMerge: true, lazyUpdate: true })
   }
+}
+
+function scheduleResize() {
+  if (resizeRafId != null || !chartRef.value) return
+  resizeRafId = requestAnimationFrame(() => {
+    resizeRafId = null
+    chartRef.value?.resize()
+  })
 }
 
 onMounted(() => {
   if (!hostRef.value) return
-  const chart = echarts.init(hostRef.value, null, { renderer: 'canvas' })
+  const dpr =
+    typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1
+  const chart = echarts.init(hostRef.value, null, {
+    renderer: 'canvas',
+    devicePixelRatio: dpr,
+  })
   chartRef.value = chart
   chart.on('click', (p) => emit('chartClick', p))
   chart.on('dblclick', () => emit('chartDblclick'))
   applyOption()
-  resizeObs = new ResizeObserver(() => chart.resize())
+  resizeObs = new ResizeObserver(scheduleResize)
   resizeObs.observe(hostRef.value)
 })
 
@@ -49,6 +63,10 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  if (resizeRafId != null && typeof cancelAnimationFrame !== 'undefined') {
+    cancelAnimationFrame(resizeRafId)
+    resizeRafId = null
+  }
   resizeObs?.disconnect()
   resizeObs = null
   chartRef.value?.dispose()
