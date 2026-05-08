@@ -1,18 +1,27 @@
 <template>
   <button
     type="button"
-    class="flex w-full min-w-0 flex-col gap-0 rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0f2318] text-left shadow-md shadow-black/15 transition active:scale-[0.99]"
+    class="flex w-full min-w-0 flex-col gap-0 rounded-2xl border border-[rgba(255,255,255,0.06)] text-left shadow-md shadow-black/15 transition active:scale-[0.99]"
+    :class="[
+      comfortable ? 'bg-[#0f2318] p-1' : 'bg-[#0f2318]',
+    ]"
     style="border-radius: var(--radius-card, 16px)"
     @click="goDetail"
   >
     <!-- Card top row: time + badges + status -->
-    <div class="flex items-start justify-between gap-2 px-3 pt-3">
+    <div class="flex items-start justify-between gap-2" :class="comfortable ? 'px-4 pt-4' : 'px-3 pt-3'">
       <!-- Time & date -->
       <div class="shrink-0 text-center">
-        <p class="text-lg font-bold tabular-nums leading-tight text-white">
+        <p
+          class="font-bold tabular-nums leading-tight text-white"
+          :class="comfortable ? 'text-2xl' : 'text-lg'"
+        >
           {{ trip.pickup_time || '—' }}
         </p>
-        <p class="mt-0.5 text-[10px] tabular-nums text-[#64748b]">
+        <p
+          class="mt-0.5 tabular-nums text-[#64748b]"
+          :class="comfortable ? 'text-xs' : 'text-[10px]'"
+        >
           {{ trip.pickup_date || trip.depart_date || '' }}
         </p>
       </div>
@@ -20,19 +29,24 @@
       <!-- Type badge + trip number -->
       <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 pt-0.5">
         <span
-          class="inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+          class="inline-flex shrink-0 rounded-lg px-2 py-0.5 font-bold uppercase tracking-wide"
+          :class="comfortable ? 'text-xs' : 'text-[11px]'"
           :style="typeBadgeStyle"
         >
           {{ typeLabel }}
         </span>
-        <span class="text-[11px] font-medium text-[#64748b]">
+        <span
+          class="font-medium text-[#64748b]"
+          :class="comfortable ? 'text-xs' : 'text-[11px]'"
+        >
           {{ trip.trip_number || `#${trip.id}` }}
         </span>
       </div>
 
       <!-- Status badge -->
       <span
-        class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+        class="shrink-0 rounded-full px-2.5 py-1 font-semibold"
+        :class="comfortable ? 'text-xs' : 'text-[11px]'"
         :style="{ backgroundColor: statusStyle.bg, color: statusStyle.fg }"
       >
         {{ statusLabel }}
@@ -40,29 +54,41 @@
     </div>
 
     <!-- Divider -->
-    <div class="mx-3 mt-2.5 border-t border-white/[0.05]" />
+    <div class="border-t border-white/[0.05]" :class="comfortable ? 'mx-4 mt-3' : 'mx-3 mt-2.5'" />
 
     <!-- Origin / Destination -->
-    <div class="px-3 pt-2.5">
+    <div :class="comfortable ? 'px-4 pt-3' : 'px-3 pt-2.5'">
       <div class="flex min-w-0 items-start gap-2">
         <span aria-hidden="true" class="mt-0.5 shrink-0 text-[10px] text-emerald-400">●</span>
-        <p class="min-w-0 truncate text-[13px] font-medium text-white">
+        <p
+          class="min-w-0 truncate font-medium text-white"
+          :class="comfortable ? 'text-base' : 'text-[13px]'"
+        >
           {{ trip.pickup_location || trip.origin || '—' }}
         </p>
       </div>
       <!-- Connector line -->
-      <div class="ml-[7px] h-3 border-l border-dashed border-white/[0.12]" />
+      <div
+        class="ml-[7px] border-l border-dashed border-white/[0.12]"
+        :class="comfortable ? 'h-4' : 'h-3'"
+      />
       <div class="flex min-w-0 items-start gap-2">
         <span aria-hidden="true" class="mt-0.5 shrink-0 text-[10px] text-blue-400">●</span>
-        <p class="min-w-0 truncate text-[13px] font-medium text-white">
+        <p
+          class="min-w-0 truncate font-medium text-white"
+          :class="comfortable ? 'text-base' : 'text-[13px]'"
+        >
           {{ trip.dropoff_location || trip.destination || '—' }}
         </p>
       </div>
     </div>
 
     <!-- Footer: passengers + km + chevron -->
-    <div class="flex items-center justify-between px-3 pb-3 pt-2">
-      <p class="text-xs text-[#94a3b8]">
+    <div
+      class="flex items-center justify-between pt-2"
+      :class="comfortable ? 'px-4 pb-4' : 'px-3 pb-3'"
+    >
+      <p :class="comfortable ? 'text-sm text-[#94a3b8]' : 'text-xs text-[#94a3b8]'">
         <template v-if="passengerCount > 0">
           <span>👥 {{ passengerCount }} {{ passengerLabel }}</span>
           <span v-if="kmPart"> · {{ kmPart }}</span>
@@ -71,7 +97,11 @@
           <span v-if="kmPart">{{ kmPart }}</span>
         </template>
       </p>
-      <span class="text-lg font-light leading-none text-[#7fdcc8]" aria-hidden="true">›</span>
+      <span
+        class="font-light leading-none text-[#7fdcc8]"
+        :class="comfortable ? 'text-2xl' : 'text-lg'"
+        aria-hidden="true"
+      >›</span>
     </div>
   </button>
 </template>
@@ -83,6 +113,7 @@ import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   trip: { type: Object, required: true },
+  comfortable: { type: Boolean, default: false },
 })
 
 const router = useRouter()

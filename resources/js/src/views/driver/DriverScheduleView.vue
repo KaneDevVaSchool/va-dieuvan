@@ -45,7 +45,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
         </RouterLink>
-        <h1 class="min-w-0 truncate text-lg font-bold tracking-tight">
+        <h1 class="min-w-0 truncate text-xl font-bold tracking-tight sm:text-2xl">
           {{ t('trip_history_page.title') }}
         </h1>
       </div>
@@ -62,27 +62,20 @@
       </button>
     </header>
 
-    <div class="space-y-3 px-3 pt-3 pb-6">
+    <div class="space-y-4 px-3 pt-4 pb-8">
       <!-- Search box -->
       <div v-if="searchOpen" class="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-driver-card px-3 py-2">
         <input
           v-model.trim="searchQ"
           type="search"
           autocomplete="off"
-          class="w-full rounded-lg bg-transparent px-2 py-2 text-sm text-driver-ink placeholder:text-driver-muted/60 focus:outline-none focus:ring-1 focus:ring-[#7fdcc8]/50"
+          class="w-full rounded-lg bg-transparent px-2 py-3 text-base text-driver-ink placeholder:text-driver-muted/60 focus:outline-none focus:ring-1 focus:ring-[#7fdcc8]/50"
           :placeholder="t('trip_history_page.search_placeholder')"
         />
       </div>
 
       <!-- Stats header -->
       <TripStatsCard :stats="stats" :loading="statsLoading" />
-
-      <!-- Filter bar (status tabs + advanced filter) -->
-      <TripFilterPills
-        v-model="filterStatus"
-        :advanced-filter="advancedFilter"
-        @update:advanced-filter="onAdvancedFilterChange"
-      />
 
       <!-- Week calendar -->
       <WeekCalendar v-model="selectedDate" :trip-dates="weekTripDateKeys" />
@@ -96,14 +89,14 @@
       </p>
 
       <!-- Skeleton loading -->
-      <div v-if="isLoading && filteredTrips.length === 0" class="space-y-3 pt-2">
-        <div v-for="n in 3" :key="n" class="animate-pulse rounded-2xl border border-white/5 bg-driver-card p-4">
+      <div v-if="isLoading && filteredTrips.length === 0" class="space-y-4 pt-2">
+        <div v-for="n in 3" :key="n" class="animate-pulse rounded-2xl border border-white/5 bg-driver-card p-5">
           <div class="flex gap-3">
-            <div class="h-12 w-12 rounded-lg bg-[#7fdcc8]/10" />
+            <div class="h-14 w-14 rounded-xl bg-[#7fdcc8]/10" />
             <div class="min-w-0 flex-1 space-y-2">
-              <div class="h-3 w-28 rounded bg-white/10" />
-              <div class="h-3 w-full rounded bg-white/[0.07]" />
-              <div class="h-3 w-4/5 rounded bg-white/[0.05]" />
+              <div class="h-4 w-32 rounded bg-white/10" />
+              <div class="h-4 w-full rounded bg-white/[0.07]" />
+              <div class="h-4 w-4/5 rounded bg-white/[0.05]" />
             </div>
           </div>
         </div>
@@ -114,15 +107,15 @@
 
       <template v-else>
         <!-- Day section header -->
-        <p class="pt-2 text-sm font-semibold text-driver-ink">
+        <p class="pt-2 text-lg font-semibold text-driver-ink">
           {{ dayGroupTitle }}
-          <span v-if="filteredTrips.length" class="tabular-nums text-driver-muted"> ({{ filteredTrips.length }}) </span>
+          <span v-if="filteredTrips.length" class="tabular-nums text-base text-driver-muted"> ({{ filteredTrips.length }}) </span>
         </p>
 
         <!-- Trip cards -->
-        <ul class="mt-2 space-y-3">
+        <ul class="mt-3 space-y-4">
           <li v-for="trip in filteredTrips" :key="trip.id">
-            <TripCard :trip="trip" />
+            <TripCard :trip="trip" comfortable />
           </li>
         </ul>
 
@@ -133,7 +126,7 @@
         <button
           v-if="showLoadMoreFallback"
           type="button"
-          class="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.1)] bg-driver-card py-3 text-sm font-semibold text-[#7fdcc8] transition hover:bg-driver-surface disabled:opacity-50"
+          class="mt-4 flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.1)] bg-driver-card py-3.5 text-base font-semibold text-[#7fdcc8] transition hover:bg-driver-surface disabled:opacity-50"
           :disabled="isLoading"
           @click="() => loadMore(fetchParams)"
         >
@@ -145,12 +138,11 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTripHistory } from '../../composables/useTripHistory'
 import TripStatsCard from '../../components/trips/TripStatsCard.vue'
-import TripFilterPills from '../../components/trips/TripFilterPills.vue'
 import WeekCalendar from '../../components/trips/WeekCalendar.vue'
 import TripCard from '../../components/trips/TripCard.vue'
 import TripEmptyState from '../../components/trips/TripEmptyState.vue'
@@ -160,8 +152,6 @@ const { t } = useI18n()
 const { trips, stats, isLoading, error, hasMore, fetch: fetchTrips, loadMore } = useTripHistory()
 
 const selectedDate = ref(new Date())
-const filterStatus = ref('all')
-const advancedFilter = reactive({ type: '', date_from: '', date_to: '' })
 const searchOpen = ref(false)
 const searchQ = ref('')
 const sentinelEl = ref(null)
@@ -244,20 +234,12 @@ function endOfWeekSunday(d) {
 const selectedYmd = computed(() => ymd(selectedDate.value))
 
 const fetchParams = computed(() => {
-  // Date range: prefer advanced filter dates when set, otherwise current week
   const weekFrom = ymd(startOfWeekMonday(selectedDate.value))
   const weekTo = ymd(endOfWeekSunday(selectedDate.value))
-  const p = {
-    date_from: advancedFilter.date_from || weekFrom,
-    date_to: advancedFilter.date_to || weekTo,
+  return {
+    date_from: weekFrom,
+    date_to: weekTo,
   }
-  if (filterStatus.value !== 'all') {
-    p.status = filterStatus.value
-  }
-  if (advancedFilter.type) {
-    p.type = advancedFilter.type
-  }
-  return p
 })
 
 const weekTripDateKeys = computed(() => {
@@ -265,7 +247,7 @@ const weekTripDateKeys = computed(() => {
   const toY = ymd(endOfWeekSunday(selectedDate.value))
   const set = new Set()
   for (const tr of trips.value) {
-    const key = tr.depart_date || tr.pickup_date
+    const key = typeof tr.depart_date === 'string' ? tr.depart_date.slice(0, 10) : tr.depart_date
     if (!key || key < fromY || key > toY) continue
     set.add(key)
   }
@@ -276,7 +258,9 @@ const filteredTrips = computed(() => {
   const q = searchQ.value.trim().toLowerCase()
   const day = selectedYmd.value
   let list = trips.value.filter((x) => {
-    const tripDay = x.depart_date || x.pickup_date || ''
+    const raw = x.depart_date || x.pickup_date || ''
+    const tripDay =
+      typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : raw
     return tripDay === day
   })
   if (q) {
@@ -328,12 +312,6 @@ const showLoadMoreFallback = computed(
 
 // ── Methods ───────────────────────────────────────────────────────────
 
-function onAdvancedFilterChange(val) {
-  advancedFilter.type = val.type ?? ''
-  advancedFilter.date_from = val.date_from ?? ''
-  advancedFilter.date_to = val.date_to ?? ''
-}
-
 function teardownObserver() {
   listObserver?.disconnect()
   listObserver = null
@@ -364,10 +342,6 @@ async function reload() {
 }
 
 function onResetFilters() {
-  filterStatus.value = 'all'
-  advancedFilter.type = ''
-  advancedFilter.date_from = ''
-  advancedFilter.date_to = ''
   searchQ.value = ''
   selectedDate.value = new Date()
   searchOpen.value = false
@@ -375,9 +349,9 @@ function onResetFilters() {
 
 // ── Watchers ──────────────────────────────────────────────────────────
 
-watch([selectedDate, filterStatus, () => ({ ...advancedFilter })], () => {
+watch(selectedDate, () => {
   void reload()
-}, { deep: true })
+})
 
 watch([hasMore, () => sentinelEl.value, () => filteredTrips.value.length], () => {
   void nextTick(() => setupIntersectionObserver())

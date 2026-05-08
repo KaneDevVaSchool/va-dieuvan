@@ -368,8 +368,9 @@
           </ul>
         </div>
 
-        <!-- 3. KM row -->
+        <!-- 3. KM row (ẩn trên PWA tài xế theo yêu cầu — hoàn tất chuyến không bắt nhập km) -->
         <button
+          v-if="driverKmSectionEnabled"
           type="button"
           class="flex w-full items-center justify-between gap-2 rounded-2xl bg-driver-card px-4 py-3.5 text-left ring-1 ring-white/[0.06]"
           @click="openKmModal()"
@@ -497,7 +498,7 @@
             <textarea
               v-model="notesDraft"
               rows="3"
-              class="w-full resize-none rounded-xl border border-white/10 px-3 py-2 text-sm text-driver-ink placeholder:text-driver-muted/80 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
+              class="w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink placeholder:text-driver-muted/80 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
               :placeholder="t('driver_trip_detail.notes_driver_ph')"
             />
             <div class="mt-2 flex justify-end">
@@ -809,6 +810,9 @@ const moreOpen = ref(false)
 const moreRoot = ref(null)
 const eventPosting = ref(false)
 const actionBusy = ref(false)
+
+/** Ẩn nhập KM trên màn tài xế; kết thúc chuyến không mở modal odometer */
+const driverKmSectionEnabled = false
 
 // ─── KM modal state ───────────────────────────────────────
 const kmModalOpen = ref(false)
@@ -1424,7 +1428,7 @@ const canEndTrip = computed(() => trip.value?.status === 'in_progress')
 
 async function onEndTrip() {
   if (!canEndTrip.value) return
-  if (!hasEndOdometer.value) {
+  if (!hasEndOdometer.value && driverKmSectionEnabled) {
     openKmModal('complete')
     return
   }

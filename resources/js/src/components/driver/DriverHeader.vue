@@ -56,18 +56,24 @@
 
       <div class="flex shrink-0 items-center gap-2.5">
         <NotificationBell />
-        <img
-          v-if="avatarUrl"
-          :src="avatarUrl"
-          alt=""
-          class="h-14 min-h-[48px] w-14 min-w-[48px] rounded-full border-2 border-[#7fdcc8]/40 object-cover shadow-[0_0_20px_-4px_rgba(127,220,200,0.45)] ring-1 ring-[#7fdcc8]/25 sm:h-16 sm:w-16"
-        />
-        <div
-          v-else
-          class="flex h-14 min-h-[48px] w-14 min-w-[48px] items-center justify-center rounded-full border-2 border-[#7fdcc8]/40 bg-[#0a1a18]/90 text-lg font-bold text-[#7fdcc8] shadow-[0_0_18px_-4px_rgba(127,220,200,0.4)] ring-1 ring-[#7fdcc8]/20 sm:h-16 sm:w-16 sm:text-xl"
+        <RouterLink
+          to="/driver/account"
+          class="rounded-full ring-2 ring-transparent transition hover:ring-[#7fdcc8]/35 active:scale-[0.97]"
+          :title="t('nav.bottom_driver_account')"
         >
-          {{ initials }}
-        </div>
+          <img
+            v-if="avatarUrl"
+            :src="avatarUrl"
+            alt=""
+            class="h-14 min-h-[48px] w-14 min-w-[48px] rounded-full border-2 border-[#7fdcc8]/40 object-cover shadow-[0_0_20px_-4px_rgba(127,220,200,0.45)] ring-1 ring-[#7fdcc8]/25 sm:h-16 sm:w-16"
+          />
+          <div
+            v-else
+            class="flex h-14 min-h-[48px] w-14 min-w-[48px] items-center justify-center rounded-full border-2 border-[#7fdcc8]/40 bg-[#0a1a18]/90 text-lg font-bold text-[#7fdcc8] shadow-[0_0_18px_-4px_rgba(127,220,200,0.4)] ring-1 ring-[#7fdcc8]/20 sm:h-16 sm:w-16 sm:text-xl"
+          >
+            {{ initials }}
+          </div>
+        </RouterLink>
       </div>
     </div>
 
@@ -84,6 +90,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import NotificationBell from '../notifications/NotificationBell.vue'
 
