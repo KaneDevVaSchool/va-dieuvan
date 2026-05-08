@@ -138,7 +138,8 @@
                 <textarea
                   v-model="editForm.notes"
                   rows="3"
-                  class="w-full rounded-xl bg-white/8 px-4 py-3 text-base text-white placeholder:text-white/25 ring-1 ring-white/12 focus:outline-none focus:ring-[#7fdcc8]/50"
+                  autocomplete="off"
+                  class="w-full resize-y rounded-xl border border-white/10 bg-driver-surface px-4 py-3 text-base text-white placeholder:text-white/25 [-webkit-appearance:none] [appearance:none] focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50 [color-scheme:dark]"
                 />
               </div>
             </div>

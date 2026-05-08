@@ -444,6 +444,24 @@ function tripStatusNorm(x) {
   return String(x?.status ?? '').trim().toLowerCase()
 }
 
+function tripDepartYmdKey(trip) {
+  const dd = trip?.depart_date
+  if (dd && typeof dd === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dd)) {
+    return dd.slice(0, 10)
+  }
+  const iso = trip?.depart_at ?? trip?.dispatch_request?.depart_at
+  if (!iso) return null
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : ymd(d)
+}
+
+function isStaleInProgressTrip(trip) {
+  if (tripStatusNorm(trip) !== 'in_progress') return false
+  const key = tripDepartYmdKey(trip)
+  if (!key) return false
+  return key < ymd(new Date())
+}
+
 function ymd(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -494,7 +512,9 @@ const rawTrips = computed(() => {
 
 const stats = computed(() => ({
   completed: rawTrips.value.filter((x) => tripStatusNorm(x) === 'completed').length,
-  inProgress: rawTrips.value.filter((x) => tripStatusNorm(x) === 'in_progress').length,
+  inProgress: rawTrips.value.filter(
+    (x) => tripStatusNorm(x) === 'in_progress' && !isStaleInProgressTrip(x),
+  ).length,
   cancelled: rawTrips.value.filter((x) => tripStatusNorm(x) === 'cancelled').length,
 }))
 
@@ -715,6 +735,7 @@ function tripDateShort(trip) {
 }
 
 function tripStatusLabel(trip) {
+  if (isStaleInProgressTrip(trip)) return t('trip_history_page.status_overdue')
   const s = tripStatusNorm(trip)
   if (s === 'completed') return t('driver_home.calendar_status_done')
   if (s === 'cancelled') return t('driver_home.calendar_status_cancelled')
@@ -723,6 +744,7 @@ function tripStatusLabel(trip) {
 }
 
 function tripStatusBadgeClass(trip) {
+  if (isStaleInProgressTrip(trip)) return 'bg-orange-500/25 text-orange-200'
   const s = tripStatusNorm(trip)
   if (s === 'completed') return 'bg-driver-accent/20 text-driver-accent'
   if (s === 'cancelled') return 'bg-[#f43f5e]/20 text-[#f43f5e]'
