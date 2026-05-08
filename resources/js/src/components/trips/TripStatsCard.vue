@@ -93,10 +93,10 @@ const statItems = computed(() => {
       color: '#34d399',
     },
     {
-      key: 'cancelled',
-      value: s?.cancelled ?? 0,
-      label: t('trip_history_page.filter_cancelled'),
-      color: '#f43f5e',
+      key: 'overdue',
+      value: Number.isFinite(Number(s?.overdue_count)) ? Math.max(0, Math.floor(Number(s.overdue_count))) : 0,
+      label: t('trip_history_page.status_overdue'),
+      color: '#fb923c',
     },
   ]
 })

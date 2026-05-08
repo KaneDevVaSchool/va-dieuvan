@@ -188,6 +188,7 @@
         "stats_in_progress": "Đang thực hiện",
         "stats_pending_confirm": "Chờ xác nhận",
         "stats_cancelled": "Đã hủy",
+        "stats_overdue": "Trễ hẹn",
         "analytics_title": "Phân tích chuyến",
         "chart_donut_title": "Theo trạng thái",
         "chart_trend_title": "Xu hướng theo ngày khởi hành",

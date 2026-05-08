@@ -428,7 +428,7 @@ async function onAvatarFileChange(ev) {
 const STAT_SVG = {
   completed: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>`,
   inProgress: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-12.75a.75.75 0 0 0-1.5 0v4.59l-1.95 2.1a.75.75 0 1 0 1.1 1.02l2.25-2.43a.75.75 0 0 0 .1-.38v-5Z" clip-rule="evenodd" /></svg>`,
-  cancelled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z" clip-rule="evenodd" /></svg>`,
+  overdue: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0v-3.5A.75.75 0 0 0 10 5Zm1 8a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z" clip-rule="evenodd" /></svg>`,
 }
 
 const user = computed(() => auth.user)
@@ -444,6 +444,13 @@ function tripStatusNorm(x) {
   return String(x?.status ?? '').trim().toLowerCase()
 }
 
+function ymd(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 function tripDepartYmdKey(trip) {
   const dd = trip?.depart_date
   if (dd && typeof dd === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dd)) {
@@ -455,18 +462,27 @@ function tripDepartYmdKey(trip) {
   return Number.isNaN(d.getTime()) ? null : ymd(d)
 }
 
-function isStaleInProgressTrip(trip) {
-  if (tripStatusNorm(trip) !== 'in_progress') return false
+function tripDepartAtMs(trip) {
+  const iso = trip?.depart_at ?? trip?.dispatch_request?.depart_at
+  if (!iso) return NaN
+  const t = new Date(iso).getTime()
+  return Number.isFinite(t) ? t : NaN
+}
+
+function startOfLocalTodayMs() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+function isTripOverdueForStats(trip) {
+  const s = tripStatusNorm(trip)
+  if (s === 'completed' || s === 'cancelled') return false
+  const ms = tripDepartAtMs(trip)
+  if (Number.isFinite(ms)) return ms < startOfLocalTodayMs()
   const key = tripDepartYmdKey(trip)
   if (!key) return false
   return key < ymd(new Date())
-}
-
-function ymd(d) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
 }
 
 function isNonEmpty(val) {
@@ -513,9 +529,9 @@ const rawTrips = computed(() => {
 const stats = computed(() => ({
   completed: rawTrips.value.filter((x) => tripStatusNorm(x) === 'completed').length,
   inProgress: rawTrips.value.filter(
-    (x) => tripStatusNorm(x) === 'in_progress' && !isStaleInProgressTrip(x),
+    (x) => tripStatusNorm(x) === 'in_progress' && !isTripOverdueForStats(x),
   ).length,
-  cancelled: rawTrips.value.filter((x) => tripStatusNorm(x) === 'cancelled').length,
+  overdue: rawTrips.value.filter((x) => isTripOverdueForStats(x)).length,
 }))
 
 const statCells = computed(() => [
@@ -532,10 +548,10 @@ const statCells = computed(() => [
     iconSvg: STAT_SVG.inProgress,
   },
   {
-    key: 'cancelled',
-    value: stats.value.cancelled,
-    label: t('driver_home.stats_cancelled'),
-    iconSvg: STAT_SVG.cancelled,
+    key: 'overdue',
+    value: stats.value.overdue,
+    label: t('driver_home.stats_overdue'),
+    iconSvg: STAT_SVG.overdue,
   },
 ])
 
@@ -735,19 +751,19 @@ function tripDateShort(trip) {
 }
 
 function tripStatusLabel(trip) {
-  if (isStaleInProgressTrip(trip)) return t('trip_history_page.status_overdue')
   const s = tripStatusNorm(trip)
   if (s === 'completed') return t('driver_home.calendar_status_done')
   if (s === 'cancelled') return t('driver_home.calendar_status_cancelled')
+  if (isTripOverdueForStats(trip)) return t('trip_history_page.status_overdue')
   if (s === 'in_progress') return t('driver_home.calendar_status_running')
   return t('driver_home.calendar_status_waiting')
 }
 
 function tripStatusBadgeClass(trip) {
-  if (isStaleInProgressTrip(trip)) return 'bg-orange-500/25 text-orange-200'
   const s = tripStatusNorm(trip)
   if (s === 'completed') return 'bg-driver-accent/20 text-driver-accent'
   if (s === 'cancelled') return 'bg-[#f43f5e]/20 text-[#f43f5e]'
+  if (isTripOverdueForStats(trip)) return 'bg-orange-500/25 text-orange-200'
   if (s === 'in_progress') return 'bg-[#3b82f6]/20 text-[#3b82f6]'
   return 'bg-amber-500/20 text-amber-200'
 }

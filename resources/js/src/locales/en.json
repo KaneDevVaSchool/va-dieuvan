@@ -156,6 +156,7 @@
         "stats_in_progress": "Active",
         "stats_pending_confirm": "Awaiting confirm",
         "stats_cancelled": "Cancelled",
+        "stats_overdue": "Overdue",
         "analytics_title": "Trip analytics",
         "chart_donut_title": "By status",
         "chart_empty": "No data in this range",
