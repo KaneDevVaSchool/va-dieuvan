@@ -180,11 +180,16 @@ function tripStatusNorm(x) {
 }
 
 function tripDepartYmd(trip) {
-  if (trip.depart_date && typeof trip.depart_date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(trip.depart_date)) {
-    return trip.depart_date.slice(0, 10)
-  }
+  /** Khớp DriverTripCard `departDateLocal`: ưu tiên mốc thời gian thật để tránh lệch “hôm nay” vs “ngày mai”. */
   if (trip.depart_at) {
-    return ymd(new Date(trip.depart_at))
+    const d = new Date(trip.depart_at)
+    if (!Number.isNaN(d.getTime())) {
+      return ymd(d)
+    }
+  }
+  if (trip.depart_date && typeof trip.depart_date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(trip.depart_date)) {
+    const [y, m, day] = trip.depart_date.slice(0, 10).split('-').map(Number)
+    return ymd(new Date(y, m - 1, day, 12, 0, 0, 0))
   }
   return null
 }
