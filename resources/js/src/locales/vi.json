@@ -41,6 +41,8 @@
         "driver_enable_push": "Nhận thông báo đẩy",
         "driver_denied_title": "Thông báo đang bị tắt",
         "driver_denied_body": "Vào cài đặt trình duyệt và bật lại quyền thông báo để tiếp tục nhận cảnh báo.",
+        "driver_push_sync_soft_fail": "Chưa đăng ký xong thông báo đẩy với máy chủ (thường do mạng chập chờn). Bạn vẫn có thể xem danh sách thông báo bên dưới.",
+        "driver_retry_push": "Thử đăng ký lại",
         "push_ok": "Đã bật thông báo thành công",
         "push_err_denied": "Thông báo bị tắt. Vào cài đặt trình duyệt để bật lại.",
         "push_err_network": "Không kết nối được. Kiểm tra mạng và thử lại.",
