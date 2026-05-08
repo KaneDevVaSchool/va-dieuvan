@@ -82,6 +82,48 @@ function createWebPushRegisterTimeoutPromise() {
   return { promise: p, clear: () => clearTimeout(timeoutId) }
 }
 
+/**
+ * Phân loại lỗi đăng ký push — tránh gán mọi AxiosError thành lỗi mạng.
+ * @param {unknown} e
+ * @returns {'denied' | 'network' | 'api'}
+ */
+function mapPushRegisterError(e) {
+  const name = e && typeof e === 'object' && 'name' in e ? String(/** @type {{ name?: string }} */ (e).name) : ''
+  if (name === 'NotAllowedError') {
+    return 'denied'
+  }
+  if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+    return 'denied'
+  }
+  if (name === 'TimeoutError') {
+    return 'network'
+  }
+  if (name === 'AbortError') {
+    return 'network'
+  }
+  const code = e && typeof e === 'object' && 'code' in e ? String(/** @type {{ code?: string }} */ (e).code) : ''
+  const response = e && typeof e === 'object' && 'response' in e ? /** @type {{ response?: unknown }} */ (e).response : undefined
+  const isAxiosLike =
+    response != null
+    || name === 'AxiosError'
+    || (e && typeof e === 'object' && /** @type {{ isAxiosError?: boolean }} */ (e).isAxiosError === true)
+  if (isAxiosLike) {
+    if (response != null) {
+      return 'api'
+    }
+    if (
+      code === 'ECONNABORTED'
+      || code === 'ERR_NETWORK'
+      || code === 'ETIMEDOUT'
+      || code === 'ECONNRESET'
+    ) {
+      return 'network'
+    }
+    return 'api'
+  }
+  return 'api'
+}
+
 export const useNotificationStore = defineStore('notificationCenter', () => {
   const panelOpen = ref(false)
   const items = ref([])
@@ -277,14 +319,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
           } catch (e) {
             pushState.value = 'error'
             if (import.meta.env.DEV) console.warn('[push]', e)
-            const name = e?.name ?? ''
-            if (name === 'NotAllowedError' || (typeof Notification !== 'undefined' && Notification.permission === 'denied')) {
-              return { ok: false, reason: 'denied' }
-            }
-            if (name === 'AbortError' || name === 'TimeoutError' || name === 'AxiosError' || e?.code === 'ECONNABORTED') {
-              return { ok: false, reason: 'network' }
-            }
-            return { ok: false, reason: 'api' }
+            return { ok: false, reason: mapPushRegisterError(e) }
           }
         } finally {
           clearRegisterTimeout()
