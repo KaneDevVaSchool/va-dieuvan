@@ -22,7 +22,7 @@
         >
           <ArrowLeftIcon class="h-5 w-5" />
         </RouterLink>
-        <h1 class="flex-1 text-center text-base font-bold tracking-tight">
+        <h1 class="flex-1 text-center text-lg font-bold tracking-tight">
           {{ trip ? t('driver_trip_detail.header_title', { id: trip.id }) : t('driver_trip_detail.title') }}
         </h1>
         <div class="relative" ref="moreRoot">
@@ -36,7 +36,7 @@
           </button>
           <div
             v-show="moreOpen"
-            class="absolute right-0 top-11 z-20 min-w-[10rem] overflow-hidden rounded-xl border border-white/15 bg-driver-card py-1 text-left text-sm shadow-lg ring-1 ring-white/10"
+            class="absolute right-0 top-11 z-20 min-w-[10rem] overflow-hidden rounded-xl border border-white/15 bg-driver-card py-1 text-left text-base shadow-lg ring-1 ring-white/10"
           >
             <button
               type="button"
@@ -61,30 +61,30 @@
         <!-- Row 2: status badge -->
         <div class="mt-3 flex justify-center">
           <span
-            class="rounded-full px-4 py-1 text-sm font-semibold"
+            class="rounded-full px-4 py-1 text-base font-semibold"
             :class="statusBadgeClass"
           >{{ headerStatusText }}</span>
         </div>
 
         <!-- Row 3: date-time -->
-        <p class="mt-2 text-center text-sm text-driver-muted/80">{{ formattedDateLine }}</p>
+        <p class="mt-2 text-center text-base text-driver-muted/80">{{ formattedDateLine }}</p>
 
         <!-- Row 4: stats strip -->
         <div class="mt-3 grid grid-cols-3 divide-x divide-white/15 rounded-2xl bg-white/10 py-3">
           <div class="flex flex-col items-center gap-0.5 px-2">
-            <UserGroupIcon class="h-5 w-5 text-[#7fdcc8]" />
-            <span class="text-[10px] text-driver-muted/80">{{ t('driver_trip_detail.stats_students') }}</span>
-            <span class="text-base font-bold tabular-nums text-driver-ink">{{ statsStudentCount }}</span>
+            <UserGroupIcon class="h-6 w-6 text-[#7fdcc8]" />
+            <span class="text-sm text-driver-muted/80">{{ t('driver_trip_detail.stats_students') }}</span>
+            <span class="text-lg font-bold tabular-nums text-driver-ink">{{ statsStudentCount }}</span>
           </div>
           <div class="flex flex-col items-center gap-0.5 px-2">
-            <MapPinIcon class="h-5 w-5 text-[#7fdcc8]" />
-            <span class="text-[10px] text-driver-muted/80">{{ t('driver_trip_detail.stats_distance') }}</span>
-            <span class="text-base font-bold text-driver-ink">{{ statsDistance }}</span>
+            <MapPinIcon class="h-6 w-6 text-[#7fdcc8]" />
+            <span class="text-sm text-driver-muted/80">{{ t('driver_trip_detail.stats_distance') }}</span>
+            <span class="text-lg font-bold text-driver-ink">{{ statsDistance }}</span>
           </div>
           <div class="flex flex-col items-center gap-0.5 px-2">
-            <ClockIcon class="h-5 w-5 text-[#7fdcc8]" />
-            <span class="text-[10px] text-driver-muted/80">{{ t('driver_trip_detail.stats_duration') }}</span>
-            <span class="text-base font-bold text-driver-ink">{{ statsDuration }}</span>
+            <ClockIcon class="h-6 w-6 text-[#7fdcc8]" />
+            <span class="text-sm text-driver-muted/80">{{ t('driver_trip_detail.stats_duration') }}</span>
+            <span class="text-lg font-bold text-driver-ink">{{ statsDuration }}</span>
           </div>
         </div>
       </template>
@@ -98,8 +98,8 @@
           <ClockIcon class="h-5 w-5 text-amber-950" />
         </div>
         <div class="min-w-0">
-          <p class="text-sm font-bold">{{ t('driver_trip_detail.warn_title', { n: warningBanner.minutes }) }}</p>
-          <p class="mt-0.5 text-xs leading-snug text-amber-950/90">{{ warningBanner.body }}</p>
+          <p class="text-base font-bold">{{ t('driver_trip_detail.warn_title', { n: warningBanner.minutes }) }}</p>
+          <p class="mt-0.5 text-sm leading-snug text-amber-950/90">{{ warningBanner.body }}</p>
         </div>
       </div>
       </div>
@@ -111,7 +111,7 @@
     >
       <p
         v-if="loadError"
-        class="mt-3 rounded-xl border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-xs text-amber-100 ring-1 ring-amber-600/30"
+        class="mt-3 rounded-xl border border-amber-700/50 bg-amber-950/40 px-3 py-2 text-sm text-amber-100 ring-1 ring-amber-600/30"
       >{{ loadError }}</p>
 
       <div v-if="loading && !trip" class="mt-3 space-y-3">
@@ -132,7 +132,7 @@
             <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7fdcc8]/20">
               <MapIcon class="h-4 w-4 text-driver-accent" />
             </div>
-            <span class="flex-1 text-sm font-bold text-driver-ink">{{ t('driver_trip_detail.route_section') }}</span>
+            <span class="flex-1 text-base font-bold text-driver-ink">{{ t('driver_trip_detail.route_section') }}</span>
             <ChevronDownIcon
               class="h-5 w-5 text-driver-muted/80 transition-transform"
               :class="routeExpanded ? 'rotate-180' : ''"
@@ -146,13 +146,9 @@
                 <MapPinIcon class="h-5 w-5" />
               </div>
               <div class="min-w-0 flex-1 pt-0.5">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-driver-muted/80">{{ t('driver_trip_detail.point_start') }}</p>
-                <p class="text-sm font-bold text-driver-ink">{{ originMain }}</p>
-                <p v-if="originSub" class="text-xs text-driver-muted">{{ originSub }}</p>
-                <span class="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#7fdcc8]/20 px-2.5 py-0.5 text-[11px] font-semibold text-driver-accent">
-                  <CheckCircleIcon class="h-3.5 w-3.5" />
-                  {{ t('driver_trip_detail.route_start_ready') }}
-                </span>
+                <p class="text-xs font-semibold uppercase tracking-wider text-driver-muted/80">{{ t('driver_trip_detail.point_start') }}</p>
+                <p class="text-base font-bold text-driver-ink">{{ originMain }}</p>
+                <p v-if="originSub" class="text-sm text-driver-muted">{{ originSub }}</p>
               </div>
             </div>
 
@@ -163,7 +159,7 @@
               </div>
               <span
                 v-if="paxKind === 'student' && paxList.length > 0"
-                class="ml-1.5 rounded-full border border-white/10 bg-driver-surface px-3 py-0.5 text-[11px] font-semibold text-driver-muted"
+                class="ml-1.5 rounded-full border border-white/10 bg-driver-surface px-3 py-0.5 text-sm font-semibold text-driver-muted"
               >
                 <UserGroupIcon class="mr-1 inline h-3.5 w-3.5 text-driver-muted/80" />
                 {{ t('driver_trip_detail.route_stops', { n: paxList.length }) }}
@@ -176,10 +172,10 @@
                 <FlagIcon class="h-5 w-5" />
               </div>
               <div class="min-w-0 flex-1 pt-0.5">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-driver-muted/80">{{ t('driver_trip_detail.point_end') }}</p>
-                <p class="text-sm font-bold text-driver-ink">{{ destMain }}</p>
-                <p v-if="destSub" class="text-xs text-driver-muted">{{ destSub }}</p>
-                <p class="mt-1 flex items-center gap-1 text-xs text-driver-muted">
+                <p class="text-xs font-semibold uppercase tracking-wider text-driver-muted/80">{{ t('driver_trip_detail.point_end') }}</p>
+                <p class="text-base font-bold text-driver-ink">{{ destMain }}</p>
+                <p v-if="destSub" class="text-sm text-driver-muted">{{ destSub }}</p>
+                <p class="mt-1 flex items-center gap-1 text-sm text-driver-muted">
                   <ClockIcon class="h-3.5 w-3.5" />
                   {{ t('driver_trip_detail.planned', { t: timeHm(trip.arrive_by || dr?.arrive_by) }) }}
                 </p>
@@ -192,7 +188,7 @@
               :href="mapUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-sky-600 bg-sky-600 py-2.5 text-sm font-bold text-white transition active:opacity-80"
+              class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-sky-600 bg-sky-600 py-3 text-base font-bold text-white transition active:opacity-80"
             >
               <MapIcon class="h-4 w-4" />
               {{ t('driver_trip_detail.route_map_btn') }}
@@ -205,14 +201,14 @@
           <div v-if="paxList.length" class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/[0.06]">
             <!-- Header -->
             <div class="flex items-center justify-between gap-2 px-4 py-3.5">
-              <h2 class="flex items-center gap-2 text-sm font-bold text-driver-ink">
-                <UserGroupIcon class="h-4 w-4 text-driver-muted/80" />
+              <h2 class="flex items-center gap-2 text-base font-bold text-driver-ink">
+                <UserGroupIcon class="h-5 w-5 text-driver-muted/80" />
                 {{ t('driver_trip_detail.students_title', { n: displayedPaxList.length }) }}
               </h2>
               <div class="flex gap-1.5">
                 <button
                   type="button"
-                  class="flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition"
+                  class="flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-semibold transition"
                   :class="studentFilterStatus !== 'all' ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-driver-accent' : 'border-white/10 bg-driver-surface text-driver-muted'"
                   @click="cycleFilter"
                 >
@@ -222,7 +218,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex items-center gap-1 rounded-full border border-white/10 bg-driver-surface px-3 py-1 text-xs font-semibold text-driver-muted transition"
+                  class="flex items-center gap-1 rounded-full border border-white/10 bg-driver-surface px-3 py-1.5 text-sm font-semibold text-driver-muted transition"
                   @click="cycleSort"
                 >
                   <ArrowsUpDownIcon class="h-3.5 w-3.5" />
@@ -247,13 +243,13 @@
                   <!-- Avatar with number badge -->
                   <div class="relative shrink-0">
                     <div
-                      class="flex h-12 w-12 items-center justify-center rounded-full bg-driver-elevated text-sm font-bold text-driver-muted"
+                      class="flex h-12 w-12 items-center justify-center rounded-full bg-driver-elevated text-base font-bold text-driver-muted"
                     >
                       {{ studentInitials(p.name) }}
                     </div>
                     <!-- Number badge -->
                     <div
-                      class="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold"
+                      class="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-xs font-bold"
                       :class="rowState(p._origIndex) === 'picked_up' ? 'bg-emerald-500 text-white' : rowState(p._origIndex) === 'absent' ? 'bg-driver-muted/80 text-driver-ink' : 'bg-driver-accent/20 text-driver-ink'"
                     >
                       {{ p._origIndex + 1 }}
@@ -270,14 +266,14 @@
                   <!-- Info -->
                   <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-1.5">
-                      <span class="font-semibold text-driver-ink">{{ p.name }}</span>
+                      <span class="text-base font-semibold text-driver-ink">{{ p.name }}</span>
                       <span
                         v-if="isNextIndex(p._origIndex) && canMarkPickup"
-                        class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-700"
+                        class="rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-bold uppercase text-amber-700"
                       >{{ t('driver_trip_detail.tag_next') }}</span>
                     </div>
-                    <p class="mt-0.5 text-xs text-driver-muted">{{ p.subtitle }}</p>
-                    <p v-if="p.address" class="mt-0.5 flex items-center gap-1 text-xs text-driver-muted/80">
+                    <p class="mt-0.5 text-sm text-driver-muted">{{ p.subtitle }}</p>
+                    <p v-if="p.address" class="mt-0.5 flex items-center gap-1 text-sm text-driver-muted/80">
                       <MapPinIcon class="h-3 w-3 shrink-0" />
                       {{ p.address }}
                     </p>
@@ -286,12 +282,12 @@
                   <!-- Right: status + time + chevron -->
                   <div class="flex shrink-0 flex-col items-end gap-1">
                     <span
-                      class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                      class="rounded-full px-2 py-0.5 text-sm font-semibold"
                       :class="rowState(p._origIndex) === 'picked_up' ? 'bg-emerald-500/20 text-emerald-300' : rowState(p._origIndex) === 'absent' ? 'bg-driver-elevated text-driver-muted' : 'bg-amber-500/20 text-amber-200'"
                     >
                       {{ rowState(p._origIndex) === 'picked_up' ? t('driver_trip_detail.state_picked') : rowState(p._origIndex) === 'absent' ? t('driver_trip_detail.btn_absent') : t('driver_trip_detail.status_waiting') }}
                     </span>
-                    <span v-if="p.time" class="text-[11px] font-semibold tabular-nums text-driver-muted">{{ p.time }}</span>
+                    <span v-if="p.time" class="text-sm font-semibold tabular-nums text-driver-muted">{{ p.time }}</span>
                     <ChevronDownIcon
                       class="h-4 w-4 text-driver-muted/60 transition-transform"
                       :class="expandedStudentIdx === p._origIndex ? 'rotate-180' : ''"
@@ -307,7 +303,7 @@
                   <a
                     v-if="p.phone"
                     :href="`tel:${p.phone}`"
-                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white active:opacity-80"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-3 text-base font-bold text-white active:opacity-80"
                   >
                     <PhoneIcon class="h-4 w-4" />
                     {{ t('driver_trip_detail.call') }}
@@ -316,7 +312,7 @@
                     v-if="canMarkPickup && rowState(p._origIndex) !== 'picked_up'"
                     type="button"
                     :disabled="eventPosting"
-                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#7fdcc8] py-2.5 text-sm font-bold text-driver-bg disabled:opacity-50 active:opacity-80"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#7fdcc8] py-3 text-base font-bold text-driver-bg disabled:opacity-50 active:opacity-80"
                     @click.stop="setRowState(p._origIndex, 'picked_up')"
                   >
                     <CheckIcon class="h-4 w-4" />
@@ -326,14 +322,14 @@
                     v-if="canMarkPickup && rowState(p._origIndex) !== 'absent'"
                     type="button"
                     :disabled="eventPosting"
-                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-driver-surface py-2.5 text-sm font-semibold text-driver-muted disabled:opacity-50 active:opacity-80"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-driver-surface py-3 text-base font-semibold text-driver-muted disabled:opacity-50 active:opacity-80"
                     @click.stop="setRowState(p._origIndex, 'absent')"
                   >
                     {{ t('driver_trip_detail.btn_absent') }}
                   </button>
                   <button
                     type="button"
-                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-driver-surface py-2.5 text-sm font-semibold text-driver-muted active:bg-driver-elevated"
+                    class="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-driver-surface py-3 text-base font-semibold text-driver-muted active:bg-driver-elevated"
                   >
                     <InformationCircleIcon class="h-4 w-4" />
                     {{ t('driver_trip_detail.btn_detail') }}
@@ -345,14 +341,14 @@
 
           <p
             v-else
-            class="rounded-2xl border border-dashed border-white/10 bg-driver-surface/70 px-3 py-5 text-center text-sm text-driver-muted"
+            class="rounded-2xl border border-dashed border-white/10 bg-driver-surface/70 px-3 py-5 text-center text-base text-driver-muted"
           >{{ t('driver_trip_detail.no_pax') }}</p>
         </template>
 
         <!-- Other pax types (cargo / business / unlisted) -->
         <div v-else-if="paxList.length" class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/[0.06]">
           <div class="mb-2 flex items-center justify-between px-4 pt-3.5">
-            <h2 class="text-sm font-bold text-driver-ink">
+            <h2 class="text-base font-bold text-driver-ink">
               {{ t('driver_trip_detail.students_title', { n: paxList.length }) }}
             </h2>
           </div>
@@ -362,12 +358,12 @@
               :key="i"
               class="flex items-start gap-3 py-3"
             >
-              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-driver-elevated text-xs font-bold text-driver-muted">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-driver-elevated text-sm font-bold text-driver-muted">
                 {{ studentInitials(p.name) }}
               </div>
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-driver-ink">{{ p.name }}</p>
-                <p class="text-xs text-driver-muted">{{ p.subtitle }}</p>
+                <p class="text-base font-semibold text-driver-ink">{{ p.name }}</p>
+                <p class="text-sm text-driver-muted">{{ p.subtitle }}</p>
               </div>
               <a
                 v-if="p.phone"
@@ -392,9 +388,9 @@
               <ChartBarIcon class="h-4 w-4" />
             </div>
             <div class="min-w-0">
-              <p class="text-sm font-semibold text-driver-ink">{{ t('driver_trip_detail.km_row_title') }}</p>
-              <p v-if="!hasEndOdometer" class="text-xs text-amber-600">{{ t('driver_trip_detail.km_end_missing') }}</p>
-              <p v-else class="text-xs text-driver-muted">{{ t('driver_trip_detail.km_end_value', { km: formatKm(trip.record.end_odometer_km) }) }}</p>
+              <p class="text-base font-semibold text-driver-ink">{{ t('driver_trip_detail.km_row_title') }}</p>
+              <p v-if="!hasEndOdometer" class="text-sm text-amber-600">{{ t('driver_trip_detail.km_end_missing') }}</p>
+              <p v-else class="text-sm text-driver-muted">{{ t('driver_trip_detail.km_end_value', { km: formatKm(trip.record.end_odometer_km) }) }}</p>
             </div>
           </div>
           <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted/60" />
@@ -410,8 +406,8 @@
             <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-50">
               <BanknotesIcon class="h-4 w-4 text-orange-500" />
             </div>
-            <span class="flex-1 text-sm font-bold text-driver-ink">{{ t('driver_trip_detail.costs_section') }}</span>
-            <span v-if="tripCosts.length" class="mr-1 text-xs font-semibold text-driver-muted">{{ formatVnd(costsTotalAmount) }}</span>
+            <span class="flex-1 text-base font-bold text-driver-ink">{{ t('driver_trip_detail.costs_section') }}</span>
+            <span v-if="tripCosts.length" class="mr-1 text-sm font-semibold text-driver-muted">{{ formatVnd(costsTotalAmount) }}</span>
             <ChevronDownIcon
               class="h-5 w-5 text-driver-muted/80 transition-transform"
               :class="costsExpanded ? 'rotate-180' : ''"
@@ -420,13 +416,13 @@
 
           <div v-show="costsExpanded" class="px-4 pb-4">
             <div class="mb-3 flex items-center justify-between">
-              <span class="text-xs text-driver-muted">
+              <span class="text-sm text-driver-muted">
                 {{ tripCosts.length ? t('driver_trip_detail.costs_total', { amount: formatVnd(costsTotalAmount) }) : t('driver_trip_detail.costs_empty') }}
               </span>
               <button
                 v-if="canAddCost"
                 type="button"
-                class="flex items-center gap-1 rounded-full bg-driver-bg px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                class="flex items-center gap-1 rounded-full bg-driver-bg px-3 py-2 text-sm font-bold text-white active:opacity-80"
                 @click="openCostModal"
               >
                 <PlusIcon class="h-3.5 w-3.5" />
@@ -446,121 +442,28 @@
                     <BanknotesIcon v-else class="h-4 w-4 text-driver-muted" />
                   </div>
                   <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-driver-ink">
+                    <p class="text-base font-semibold text-driver-ink">
                       {{ costTypeLabel(c.type) }}
                       <span v-if="c.description" class="font-normal text-driver-muted"> · {{ c.description }}</span>
                     </p>
                     <div class="mt-0.5 flex items-center gap-2">
-                      <p class="text-[11px] text-driver-muted/80">{{ formatCostTime(c.created_at) }}</p>
+                      <p class="text-sm text-driver-muted/80">{{ formatCostTime(c.created_at) }}</p>
                       <span
-                        class="rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+                        class="rounded-full px-1.5 py-0.5 text-xs font-semibold"
                         :class="c.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-300' : c.status === 'rejected' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-200'"
                       >
                         {{ costStatusLabel(c.status) }}
                       </span>
                     </div>
                   </div>
-                  <div class="flex shrink-0 items-center gap-0.5 text-sm font-bold tabular-nums text-driver-ink">
+                  <div class="flex shrink-0 items-center gap-0.5 text-base font-bold tabular-nums text-driver-ink">
                     {{ formatVnd(c.amount) }}
                     <ChevronRightIcon class="h-4 w-4 text-driver-muted/60" />
                   </div>
                 </RouterLink>
               </li>
             </ul>
-            <p v-else class="py-2 text-center text-xs text-driver-muted/80">{{ t('driver_trip_detail.costs_empty') }}</p>
-          </div>
-        </div>
-
-        <!-- 5. Trip notes accordion -->
-        <div class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/[0.06]">
-          <button
-            type="button"
-            class="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
-            @click="notesExpanded = !notesExpanded"
-          >
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-50">
-              <ChatBubbleLeftEllipsisIcon class="h-4 w-4 text-orange-500" />
-            </div>
-            <span class="flex-1 text-sm font-bold text-driver-ink">{{ t('driver_trip_detail.notes_section') }}</span>
-            <ChevronDownIcon
-              class="h-5 w-5 text-driver-muted/80 transition-transform"
-              :class="notesExpanded ? 'rotate-180' : ''"
-            />
-          </button>
-
-          <div v-show="notesExpanded" class="px-4 pb-4">
-            <!-- Dispatch notes -->
-            <div
-              v-if="dispatchNotes"
-              class="mb-3 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-2.5"
-            >
-              <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold text-blue-800">
-                <InformationCircleIcon class="h-3.5 w-3.5" />
-                {{ t('driver_trip_detail.notes_important') }}
-              </p>
-              <ul class="list-disc pl-4 text-xs leading-relaxed text-blue-700">
-                <li
-                  v-for="(line, li) in dispatchNoteLines"
-                  :key="li"
-                >{{ line }}</li>
-              </ul>
-            </div>
-
-            <!-- Driver note input -->
-            <textarea
-              v-model="notesDraft"
-              rows="3"
-              class="w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink placeholder:text-driver-muted/80 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
-              :placeholder="t('driver_trip_detail.notes_driver_ph')"
-            />
-            <div class="mt-2 flex justify-end">
-              <button
-                type="button"
-                :disabled="notesSaving || !notesDraft.trim()"
-                class="flex items-center gap-1.5 rounded-xl bg-driver-bg px-4 py-2 text-xs font-bold text-white disabled:opacity-40 active:opacity-80"
-                @click="saveDriverNote"
-              >
-                <CheckIcon v-if="notesSaved" class="h-3.5 w-3.5 text-[#7fdcc8]" />
-                {{ notesSaved ? t('driver_trip_detail.notes_saved') : t('driver_trip_detail.notes_save') }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 6. Emergency contact accordion -->
-        <div class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/[0.06]">
-          <button
-            type="button"
-            class="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
-            @click="contactExpanded = !contactExpanded"
-          >
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-50">
-              <PhoneArrowUpRightIcon class="h-4 w-4 text-rose-500" />
-            </div>
-            <span class="flex-1 text-sm font-bold text-driver-ink">{{ t('driver_trip_detail.contact_section') }}</span>
-            <ChevronDownIcon
-              class="h-5 w-5 text-driver-muted/80 transition-transform"
-              :class="contactExpanded ? 'rotate-180' : ''"
-            />
-          </button>
-
-          <div v-show="contactExpanded" class="px-4 pb-4">
-            <div class="flex items-center gap-3 rounded-xl bg-rose-50/60 px-3 py-3">
-              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rose-500/90 text-white shadow-sm">
-                <UserIcon class="h-5 w-5" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-driver-muted">{{ t('driver_trip_detail.contact_dispatcher_role') }}</p>
-                <p class="text-sm font-bold text-driver-ink">{{ requesterLine }}</p>
-              </div>
-              <a
-                v-if="dispatcherPhone"
-                :href="`tel:${dispatcherPhone}`"
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm"
-              >
-                <PhoneIcon class="h-4 w-4" />
-              </a>
-            </div>
+            <p v-else class="py-2 text-center text-sm text-driver-muted/80">{{ t('driver_trip_detail.costs_empty') }}</p>
           </div>
         </div>
 
@@ -576,15 +479,15 @@
         v-if="showPickupBar && trip?.status === 'in_progress'"
         class="mb-2 flex items-center gap-2 rounded-2xl bg-driver-surface px-3 py-2"
       >
-        <span class="flex-1 text-sm font-semibold text-driver-muted">
+        <span class="flex-1 text-base font-semibold text-driver-muted">
           {{ t('driver_trip_detail.bottom_picked', { n: pickedCount, total: paxList.length }) }}
         </span>
-        <span class="text-sm font-bold text-orange-500">
+        <span class="text-base font-bold text-orange-500">
           {{ t('driver_trip_detail.bottom_remaining', { n: paxList.length - pickedCount }) }}
         </span>
         <button
           type="button"
-          class="ml-1 flex items-center gap-1 rounded-full border border-white/10 px-3 py-1.5 text-xs font-bold text-driver-muted transition active:bg-driver-elevated"
+          class="ml-1 flex items-center gap-1 rounded-full border border-white/10 px-3 py-2 text-sm font-bold text-driver-muted transition active:bg-driver-elevated"
           :class="isPaused ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-driver-accent' : ''"
           @click="isPaused = !isPaused"
         >
@@ -599,7 +502,7 @@
         v-if="canStart"
         type="button"
         :disabled="actionBusy"
-        class="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-50 active:opacity-80"
+        class="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-4 text-base font-bold text-white shadow-md disabled:opacity-50 active:opacity-80"
         @click="startTrip"
       >
         <PlayIcon class="h-5 w-5" />
@@ -609,7 +512,7 @@
         v-else-if="canEndTrip"
         type="button"
         :disabled="actionBusy"
-        class="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-driver-bg py-3.5 text-sm font-bold text-white shadow-md disabled:opacity-50 active:opacity-80"
+        class="mb-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-driver-bg py-4 text-base font-bold text-white shadow-md disabled:opacity-50 active:opacity-80"
         @click="onEndTrip"
       >
         <FlagIcon class="h-5 w-5" />
@@ -617,7 +520,7 @@
       </button>
       <p
         v-else-if="trip?.status === 'completed'"
-        class="mb-2 rounded-2xl border border-emerald-500/35 bg-emerald-950/35 py-3 text-center text-sm font-medium text-emerald-100 ring-1 ring-emerald-500/25"
+        class="mb-2 rounded-2xl border border-emerald-500/35 bg-emerald-950/35 py-3.5 text-center text-base font-medium text-emerald-100 ring-1 ring-emerald-500/25"
       >
         {{ t('driver_trip_detail.done') }}
       </p>
@@ -633,7 +536,7 @@
       >
         <div class="w-full max-w-md rounded-t-2xl bg-driver-card p-4 shadow-2xl ring-1 ring-white/10 sm:rounded-2xl" @click.stop>
           <div class="mb-3 flex items-start justify-between gap-2">
-            <h3 class="pr-6 text-base font-bold text-driver-ink">{{ t('driver_trip_detail.km_modal_title') }}</h3>
+            <h3 class="pr-6 text-lg font-bold text-driver-ink">{{ t('driver_trip_detail.km_modal_title') }}</h3>
             <button
               type="button"
               class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-driver-elevated text-driver-muted"
@@ -644,51 +547,51 @@
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-[11px] font-medium text-driver-muted">{{ t('driver_trip_detail.km_start') }}</label>
-              <div class="mt-0.5 flex items-center rounded-xl border border-white/10 bg-driver-surface px-2 py-2 text-sm text-driver-ink">
-                <input class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm" :value="formatKmInput(startKmModel)" readonly />
-                <span class="ml-1 text-xs text-driver-muted/80">km</span>
+              <label class="text-sm font-medium text-driver-muted">{{ t('driver_trip_detail.km_start') }}</label>
+              <div class="mt-0.5 flex items-center rounded-xl border border-white/10 bg-driver-surface px-2 py-2.5 text-base text-driver-ink">
+                <input class="min-w-0 flex-1 border-0 bg-transparent p-0 text-base" :value="formatKmInput(startKmModel)" readonly />
+                <span class="ml-1 text-sm text-driver-muted/80">km</span>
               </div>
             </div>
             <div>
-              <label class="text-[11px] font-medium text-driver-muted">{{ t('driver_trip_detail.km_end') }}</label>
-              <div class="mt-0.5 flex items-center rounded-xl border border-white/10 bg-driver-surface px-2 py-2 focus-within:ring-2 focus-within:ring-[#7fdcc8]/50">
+              <label class="text-sm font-medium text-driver-muted">{{ t('driver_trip_detail.km_end') }}</label>
+              <div class="mt-0.5 flex items-center rounded-xl border border-white/10 bg-driver-surface px-2 py-2.5 focus-within:ring-2 focus-within:ring-[#7fdcc8]/50">
                 <input
                   v-model="endKmModel"
                   type="text"
                   inputmode="numeric"
-                  class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-driver-ink placeholder:text-driver-muted/50"
+                  class="min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-driver-ink placeholder:text-driver-muted/50"
                   :placeholder="t('driver_trip_detail.km_placeholder')"
                   @input="onEndKmInput"
                 />
-                <span class="ml-1 text-xs text-driver-muted/80">km</span>
+                <span class="ml-1 text-sm text-driver-muted/80">km</span>
               </div>
             </div>
           </div>
-          <div class="mt-3 flex items-center gap-2 rounded-xl bg-driver-elevated px-3 py-2.5 text-sm text-driver-muted">
+          <div class="mt-3 flex items-center gap-2 rounded-xl bg-driver-elevated px-3 py-2.5 text-base text-driver-muted">
             <MapIcon class="h-4 w-4 text-driver-muted/80" />
             <span class="text-driver-muted">{{ t('driver_trip_detail.km_distance') }}</span>
             <span class="ml-auto font-bold tabular-nums text-driver-ink">{{ distancePreview }}</span>
           </div>
           <div class="mt-3">
-            <label class="text-[11px] font-medium text-driver-muted">{{ t('driver_trip_detail.km_note') }}</label>
+            <label class="text-sm font-medium text-driver-muted">{{ t('driver_trip_detail.km_note') }}</label>
             <textarea
               v-model="kmNoteModel"
               rows="3"
-              class="mt-0.5 w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2 text-sm text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
+              class="mt-0.5 w-full resize-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
               :placeholder="t('driver_trip_detail.km_note_ph')"
             />
           </div>
           <div class="mt-4 flex gap-2">
             <button
               type="button"
-              class="flex-1 rounded-xl border border-white/10 py-2.5 text-sm font-semibold text-driver-muted"
+              class="flex-1 rounded-xl border border-white/10 py-3 text-base font-semibold text-driver-muted"
               @click="kmModalOpen = false"
             >{{ t('driver_trip_detail.cancel') }}</button>
             <button
               type="button"
               :disabled="kmSaving || !canSubmitKm"
-              class="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-driver-accent py-2.5 text-sm font-bold text-driver-bg disabled:opacity-50"
+              class="inline-flex flex-1 items-center justify-center gap-1 rounded-xl bg-driver-accent py-3 text-base font-bold text-driver-bg disabled:opacity-50"
               @click="submitKmModal"
             >
               {{ t('driver_trip_detail.confirm') }}
@@ -706,7 +609,7 @@
       >
         <div class="w-full max-w-md rounded-t-2xl bg-driver-card p-4 shadow-2xl ring-1 ring-white/10 sm:rounded-2xl" @click.stop>
           <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-base font-bold text-driver-ink">{{ t('driver_trip_detail.cost_modal_title') }}</h3>
+            <h3 class="text-lg font-bold text-driver-ink">{{ t('driver_trip_detail.cost_modal_title') }}</h3>
             <button
               type="button"
               class="flex h-8 w-8 items-center justify-center rounded-full bg-driver-elevated text-driver-muted"
@@ -717,50 +620,50 @@
           </div>
 
           <!-- Type selector (pill grid) -->
-          <label class="text-[11px] font-medium text-driver-muted">{{ t('driver_trip_detail.cost_type') }}</label>
+          <label class="text-sm font-medium text-driver-muted">{{ t('driver_trip_detail.cost_type') }}</label>
           <div class="mt-1.5 grid grid-cols-4 gap-1.5">
             <button
               v-for="ct in costTypes"
               :key="ct.value"
               type="button"
-              class="flex flex-col items-center gap-1 rounded-xl border py-2 text-[11px] font-semibold transition"
+              class="flex flex-col items-center gap-1 rounded-xl border py-2.5 text-sm font-semibold transition"
               :class="costForm.type === ct.value ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-driver-accent' : 'border-white/10 bg-driver-surface text-driver-muted'"
               @click="costForm.type = ct.value"
             >
-              <span class="text-base">{{ ct.icon }}</span>
+              <span class="text-lg">{{ ct.icon }}</span>
               <span>{{ ct.label }}</span>
             </button>
           </div>
 
-          <label class="mt-3 block text-[11px] font-medium text-driver-muted">{{ t('driver_trip_detail.cost_amount') }}</label>
+          <label class="mt-3 block text-sm font-medium text-driver-muted">{{ t('driver_trip_detail.cost_amount') }}</label>
           <input
             v-model="costForm.amount"
             type="text"
             inputmode="numeric"
-            class="mt-0.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-sm text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
+            class="mt-0.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-3 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
             :placeholder="t('driver_trip_detail.cost_amount_ph')"
           />
 
-          <label class="mt-2.5 block text-[11px] font-medium text-driver-muted">{{ t('driver_trip_detail.cost_desc') }}</label>
+          <label class="mt-2.5 block text-sm font-medium text-driver-muted">{{ t('driver_trip_detail.cost_desc') }}</label>
           <input
             v-model="costForm.description"
             type="text"
-            class="mt-0.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-sm text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
+            class="mt-0.5 w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-3 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50"
             :placeholder="t('driver_trip_detail.cost_desc_ph')"
           />
 
-          <p v-if="costError" class="mt-2 text-xs text-rose-400">{{ costError }}</p>
+          <p v-if="costError" class="mt-2 text-sm text-rose-400">{{ costError }}</p>
 
           <div class="mt-4 flex gap-2">
             <button
               type="button"
-              class="flex-1 rounded-xl border border-white/10 py-2.5 text-sm font-semibold text-driver-muted"
+              class="flex-1 rounded-xl border border-white/10 py-3 text-base font-semibold text-driver-muted"
               @click="costModalOpen = false"
             >{{ t('driver_trip_detail.cancel') }}</button>
             <button
               type="button"
               :disabled="costSaving"
-              class="flex-1 rounded-xl bg-driver-accent py-2.5 text-sm font-bold text-driver-bg disabled:opacity-50"
+              class="flex-1 rounded-xl bg-driver-accent py-3 text-base font-bold text-driver-bg disabled:opacity-50"
               @click="submitCost"
             >{{ t('driver_trip_detail.confirm') }}</button>
           </div>
@@ -780,8 +683,6 @@ import {
   ArrowsUpDownIcon,
   BanknotesIcon,
   ChartBarIcon,
-  ChatBubbleLeftEllipsisIcon,
-  CheckCircleIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -794,13 +695,11 @@ import {
   MapIcon,
   MapPinIcon,
   PauseIcon,
-  PhoneArrowUpRightIcon,
   PhoneIcon,
   PlayIcon,
   PlusIcon,
   SparklesIcon,
   UserGroupIcon,
-  UserIcon,
   WrenchScrewdriverIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
@@ -844,15 +743,8 @@ const costForm = ref({ type: 'fuel', amount: '', description: '' })
 // ─── UI accordion & interaction state ────────────────────
 const routeExpanded = ref(true)
 const costsExpanded = ref(false)
-const notesExpanded = ref(false)
-const contactExpanded = ref(false)
 const expandedStudentIdx = ref(null)
 const isPaused = ref(false)
-
-// ─── Notes draft state ────────────────────────────────────
-const notesDraft = ref('')
-const notesSaving = ref(false)
-const notesSaved = ref(false)
 
 // ─── Student filter / sort ────────────────────────────────
 const studentFilterStatus = ref('all')   // 'all' | 'waiting' | 'picked_up' | 'absent'
@@ -911,8 +803,6 @@ const tripHeadlineType = computed(() => {
   if (tt === 'cargo') return 'Cargo'
   return '—'
 })
-
-const requesterLine = computed(() => dr.value?.requester?.name?.trim() || '—')
 
 const tripCodeDisplay = computed(() => {
   const id = trip.value?.id
@@ -989,14 +879,6 @@ const originMain = computed(() => originLines.value.main)
 const originSub = computed(() => originLines.value.sub)
 const destMain = computed(() => destLines.value.main)
 const destSub = computed(() => destLines.value.sub)
-
-const dispatchNotes = computed(() => (dr.value?.notes || '').trim() || null)
-
-const dispatchNoteLines = computed(() => {
-  const raw = dispatchNotes.value
-  if (!raw) return []
-  return raw.split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
-})
 
 // ─── Map helpers ──────────────────────────────────────────
 const embedMapSrc = computed(() => {
@@ -1204,24 +1086,6 @@ async function submitCost() {
     costError.value = t('driver_trip_detail.cost_err_submit')
   } finally {
     costSaving.value = false
-  }
-}
-
-// ─── Driver note save ─────────────────────────────────────
-async function saveDriverNote() {
-  const id = tripId.value
-  if (id == null || notesSaving.value || !notesDraft.value.trim()) return
-  notesSaving.value = true
-  notesSaved.value = false
-  try {
-    await upsertTripRecord(id, { driver_notes: notesDraft.value.trim() })
-    notesSaved.value = true
-    await refresh()
-    setTimeout(() => { notesSaved.value = false }, 2000)
-  } catch {
-    loadError.value = t('driver_trip_detail.km_err')
-  } finally {
-    notesSaving.value = false
   }
 }
 
