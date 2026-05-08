@@ -38,7 +38,7 @@
         "driver_upgrade_btn": "Đăng ký thông báo đẩy",
         "driver_status_on": "Thông báo đang bật",
         "driver_enable_btn": "Bật thông báo",
-        "driver_enable_push": "Nhận báo khi đóng app",
+        "driver_enable_push": "Nhận thông báo đẩy",
         "driver_denied_title": "Thông báo đang bị tắt",
         "driver_denied_body": "Vào cài đặt trình duyệt và bật lại quyền thông báo để tiếp tục nhận cảnh báo.",
         "push_ok": "Đã bật thông báo thành công",
