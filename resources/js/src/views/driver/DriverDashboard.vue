@@ -33,6 +33,8 @@
 
     <div class="mx-auto w-full min-w-0 max-w-full px-3 pt-4 sm:px-4">
       <div class="min-w-0 space-y-4">
+        <DriverIosPushCard />
+
         <TripStatsCard :stats="monthlyTripStats" :loading="statsLoadingDisplay" />
 
         <p
@@ -122,6 +124,7 @@ import PendingConfirmationBanner from '../../components/driver/PendingConfirmati
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverTripCard from '../../components/driver/DriverTripCard.vue'
 import DriverTodayEmptyState from '../../components/driver/DriverTodayEmptyState.vue'
+import DriverIosPushCard from '../../components/driver/DriverIosPushCard.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
