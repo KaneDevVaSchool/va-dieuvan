@@ -1,31 +1,31 @@
 <template>
   <div
-    class="overflow-hidden rounded-2xl border-2 border-amber-500/65 bg-[#141008]/95 shadow-lg shadow-black/35 ring-1 ring-amber-400/35"
+    class="overflow-hidden rounded-3xl border-2 border-amber-500/65 bg-[#141008]/95 shadow-xl shadow-black/40 ring-1 ring-amber-400/35"
     role="region"
     :aria-label="t('driver_home.group_pending')"
   >
     <!-- Header -->
-    <div class="px-3 pt-3 pb-2 sm:px-4 sm:pt-4">
+    <div class="px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
       <template v-if="loading">
-        <div class="flex items-center gap-3">
-          <div class="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-amber-500/20" />
+        <div class="flex items-center gap-4">
+          <div class="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-amber-500/20" />
           <div class="min-w-0 flex-1 space-y-2">
-            <div class="h-5 w-48 max-w-full animate-pulse rounded-lg bg-amber-500/15" />
-            <div class="h-4 w-32 animate-pulse rounded bg-amber-500/10" />
+            <div class="h-6 w-52 max-w-full animate-pulse rounded-lg bg-amber-500/15" />
+            <div class="h-5 w-36 animate-pulse rounded bg-amber-500/10" />
           </div>
         </div>
       </template>
       <template v-else>
-        <div class="flex items-start gap-3">
+        <div class="flex items-start gap-4">
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 ring-1 ring-amber-400/35"
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 ring-1 ring-amber-400/35"
             aria-hidden="true"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              class="h-5 w-5 text-amber-200"
+              class="h-6 w-6 text-amber-200"
             >
               <path
                 fill-rule="evenodd"
@@ -35,7 +35,7 @@
             </svg>
           </div>
           <div class="min-w-0 flex-1 pt-0.5">
-            <p class="text-sm font-extrabold leading-snug text-amber-50 sm:text-base">
+            <p class="text-base font-extrabold leading-snug text-amber-50 sm:text-lg">
               <template v-if="pendingCount > 0">
                 {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
               </template>
@@ -43,7 +43,7 @@
                 {{ t('driver_home.pending_banner_confirmed', { n: confirmedCount }) }}
               </template>
             </p>
-            <p v-if="pendingCount > 0" class="mt-0.5 text-xs font-medium text-amber-200/75 sm:text-sm">
+            <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
               {{ t('driver_home.pending_banner_sub') }}
             </p>
           </div>
@@ -51,7 +51,7 @@
 
         <p
           v-if="actionError"
-          class="mt-2 rounded-xl border border-rose-500/45 bg-rose-950/55 px-3 py-2 text-xs font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25 sm:text-sm"
+          class="mt-3 rounded-xl border border-rose-500/45 bg-rose-950/55 px-4 py-2.5 text-sm font-medium leading-snug text-rose-50 ring-1 ring-rose-600/25 sm:text-base"
           role="alert"
         >
           {{ actionError }}
@@ -60,12 +60,12 @@
     </div>
 
     <!-- Loading rows -->
-    <div v-if="loading" class="space-y-2 border-t border-amber-500/25 px-3 py-3 sm:px-4">
-      <div v-for="s in 2" :key="s" class="flex animate-pulse gap-2 rounded-lg bg-amber-950/30 py-2.5 pl-2 pr-2">
-        <div class="h-6 w-9 rounded bg-amber-500/15" />
-        <div class="h-6 w-12 rounded bg-amber-500/10" />
+    <div v-if="loading" class="space-y-2 border-t border-amber-500/25 px-4 py-4 sm:px-5">
+      <div v-for="s in 2" :key="s" class="flex animate-pulse gap-2 rounded-lg bg-amber-950/30 py-3.5 pl-2 pr-2">
+        <div class="h-7 w-10 rounded bg-amber-500/15" />
+        <div class="h-7 w-14 rounded bg-amber-500/10" />
         <div class="min-w-0 flex-1 rounded bg-amber-500/10" />
-        <div class="h-8 w-20 shrink-0 rounded-lg bg-amber-500/15" />
+        <div class="h-10 w-24 shrink-0 rounded-lg bg-amber-500/15" />
       </div>
     </div>
 
@@ -77,24 +77,24 @@
       <li
         v-for="trip in sortedPending"
         :key="`p-${trip.id}`"
-        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:px-4"
+        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3.5 sm:px-5"
       >
         <span
-          class="inline-flex shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide sm:text-xs"
+          class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
           :class="tripTypeBadgeClass(trip)"
         >
           {{ tripTypeShortLabel(trip) }}
         </span>
-        <span class="shrink-0 text-xs font-bold tabular-nums text-white sm:text-sm">
+        <span class="shrink-0 text-sm font-bold tabular-nums text-white sm:text-base">
           {{ departTime(trip) }}
         </span>
-        <span class="min-w-0 flex-1 basis-[8rem] truncate text-xs font-medium text-[#e2e8f0] sm:text-sm">
+        <span class="min-w-0 flex-1 basis-[8rem] truncate text-sm font-medium text-[#e2e8f0] sm:text-base">
           {{ tripDestination(trip) }}
         </span>
-        <div class="ml-auto flex shrink-0 items-center gap-1.5">
+        <div class="ml-auto flex shrink-0 items-center gap-2">
           <button
             type="button"
-            class="inline-flex min-h-[40px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-2.5 text-xs font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
+            class="inline-flex min-h-[48px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
             :disabled="busyId != null"
             @click="onConfirm(trip)"
           >
@@ -102,7 +102,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex min-h-[40px] min-w-[44px] items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-2.5 text-xs font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45"
+            class="inline-flex min-h-[48px] min-w-[44px] items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45"
             :disabled="busyId != null"
             @click="openDeclineModal(trip)"
           >
@@ -113,24 +113,24 @@
       <li
         v-for="trip in sortedConfirmed"
         :key="`c-${trip.id}`"
-        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2.5 sm:px-4"
+        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3.5 sm:px-5"
       >
         <span
-          class="inline-flex shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide sm:text-xs"
+          class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
           :class="tripTypeBadgeClass(trip)"
         >
           {{ tripTypeShortLabel(trip) }}
         </span>
-        <span class="shrink-0 text-xs font-bold tabular-nums text-white sm:text-sm">
+        <span class="shrink-0 text-sm font-bold tabular-nums text-white sm:text-base">
           {{ departTime(trip) }}
         </span>
-        <span class="min-w-0 flex-1 basis-[8rem] truncate text-xs font-medium text-[#e2e8f0] sm:text-sm">
+        <span class="min-w-0 flex-1 basis-[8rem] truncate text-sm font-medium text-[#e2e8f0] sm:text-base">
           {{ tripDestination(trip) }}
         </span>
         <div class="ml-auto flex shrink-0">
           <button
             type="button"
-            class="inline-flex min-h-[40px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
+            class="inline-flex min-h-[48px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
             :disabled="busyId != null"
             @click="onStartTrip(trip.id)"
           >

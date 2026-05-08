@@ -42,6 +42,13 @@
 
     <div class="mx-auto w-full min-w-0 max-w-full px-3 pt-4 sm:px-4">
       <div class="min-w-0 space-y-4">
+        <PendingConfirmationBanner
+          v-if="myDriverId != null && (loading || pendingTrips.length)"
+          :trips="pendingTrips"
+          :loading="loading"
+          @updated="refreshTrips"
+        />
+
         <TripStatsCard :stats="monthlyTripStats" :loading="statsLoadingDisplay" />
 
         <DriverAnalyticsSection
@@ -60,13 +67,6 @@
           v-if="upcomingBannerTrip"
           :trip-id="upcomingBannerTrip.id"
           :depart-at="upcomingDepartIso"
-        />
-
-        <PendingConfirmationBanner
-          v-if="myDriverId != null && (loading || pendingTrips.length)"
-          :trips="pendingTrips"
-          :loading="loading"
-          @updated="refreshTrips"
         />
 
         <div class="flex items-end justify-between gap-2 pt-1">
