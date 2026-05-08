@@ -2,21 +2,36 @@
  * Định dạng / đọc trường hiển thị chuyến cho giao diện tài xế (dashboard).
  * @param {string} localeTag vi hoặc en
  */
+
+function dispatchReqOf(trip) {
+  return trip?.dispatch_request ?? trip?.dispatchRequest ?? {}
+}
+
+function tripOriginRaw(trip) {
+  const dr = dispatchReqOf(trip)
+  return (trip?.pickup_location || trip?.origin || dr.origin || '').toString().trim()
+}
+
+function tripDestinationRaw(trip) {
+  const dr = dispatchReqOf(trip)
+  return (trip?.dropoff_location || trip?.destination || dr.destination || '').toString().trim()
+}
+
 export function tripDepartIso(trip) {
-  return trip?.depart_at || trip?.dispatch_request?.depart_at || null
+  return trip?.depart_at || dispatchReqOf(trip)?.depart_at || null
 }
 
 export function isTripUrgent(trip) {
-  return !!trip?.dispatch_request?.is_urgent
+  return !!dispatchReqOf(trip)?.is_urgent
 }
 
 export function tripOrigin(trip) {
-  const o = (trip?.dispatch_request?.origin || '').trim()
+  const o = tripOriginRaw(trip)
   return o || '—'
 }
 
 export function tripDestination(trip) {
-  const o = (trip?.dispatch_request?.destination || '').trim()
+  const o = tripDestinationRaw(trip)
   return o || '—'
 }
 
@@ -26,8 +41,8 @@ export function tripDestination(trip) {
  * @param {(key: string) => string} t
  */
 export function tripTimelineRouteLine(trip, t) {
-  const o = (trip?.dispatch_request?.origin || '').trim()
-  const d = (trip?.dispatch_request?.destination || '').trim()
+  const o = tripOriginRaw(trip)
+  const d = tripDestinationRaw(trip)
   if (!o && !d) return t('driver_home.line_route')
   if (!d || d === o) {
     const line = o || d
@@ -42,19 +57,20 @@ export function tripTimelineRouteLine(trip, t) {
 }
 
 export function tripRequesterLine(trip) {
-  return trip?.dispatch_request?.requester?.name?.trim() || ''
+  const dr = dispatchReqOf(trip)
+  return dr?.requester?.name?.trim() || ''
 }
 
 /** @param {(key: string, vars?: object) => string} t */
 export function tripPassengerLine(trip, t) {
-  const dr = trip?.dispatch_request
-  const n = dr?.passenger_count
+  const dr = dispatchReqOf(trip)
+  const n = dr?.passenger_count ?? trip?.passenger_count
   if (n != null && n !== '') return t('driver_home.pending_passengers', { n })
   return ''
 }
 
 export function tripTypeBadgeText(trip) {
-  const tt = trip?.dispatch_request?.trip_type
+  const tt = dispatchReqOf(trip)?.trip_type
   if (tt === 'door_to_door') return 'D2D'
   if (tt === 'point_to_point') return 'P2P'
   if (tt === 'business') return 'CT'
@@ -68,7 +84,7 @@ export function tripTypeBadgeText(trip) {
  * @param {(key: string) => string} t vue-i18n `t`
  */
 export function tripServiceTypeCalendarLabel(trip, t) {
-  const tt = trip?.dispatch_request?.trip_type
+  const tt = dispatchReqOf(trip)?.trip_type
   if (tt === 'door_to_door') return t('driver_home.calendar_svc_d2d')
   if (tt === 'point_to_point') return t('driver_home.calendar_svc_p2p')
   if (tt === 'cargo') return t('driver_home.calendar_svc_cargo')
@@ -83,8 +99,9 @@ export function tripServiceTypeCalendarLabel(trip, t) {
  * @param {(key: string) => string} t
  */
 export function tripOutboundInboundTimeRange(trip, localeTag, t) {
-  const depIso = trip?.depart_at || trip?.dispatch_request?.depart_at
-  const arrIso = trip?.arrive_by || trip?.dispatch_request?.arrive_by
+  const dr = dispatchReqOf(trip)
+  const depIso = trip?.depart_at || dr?.depart_at
+  const arrIso = trip?.arrive_by || dr?.arrive_by
   const loc = localeTag === 'vi' ? 'vi-VN' : 'en-US'
 
   function hm(iso) {

@@ -60,12 +60,24 @@
     </div>
 
     <!-- Loading rows -->
-    <div v-if="loading" class="space-y-2 border-t border-amber-500/25 px-4 py-4 sm:px-5">
-      <div v-for="s in 2" :key="s" class="flex animate-pulse gap-2 rounded-lg bg-amber-950/30 py-3.5 pl-2 pr-2">
-        <div class="h-7 w-10 rounded bg-amber-500/15" />
-        <div class="h-7 w-14 rounded bg-amber-500/10" />
-        <div class="min-w-0 flex-1 rounded bg-amber-500/10" />
-        <div class="h-10 w-24 shrink-0 rounded-lg bg-amber-500/15" />
+    <div v-if="loading" class="space-y-3 border-t border-amber-500/25 px-4 py-4 sm:px-5">
+      <div
+        v-for="s in 2"
+        :key="s"
+        class="animate-pulse space-y-2 rounded-xl bg-amber-950/30 px-3 py-3.5"
+      >
+        <div class="flex gap-2">
+          <div class="h-7 w-12 rounded bg-amber-500/15" />
+          <div class="h-7 w-16 rounded bg-amber-500/10" />
+          <div class="h-7 w-14 rounded bg-amber-500/12" />
+        </div>
+        <div class="h-6 w-28 rounded bg-amber-500/10" />
+        <div class="h-4 w-full rounded bg-amber-500/10" />
+        <div class="h-4 w-5/6 rounded bg-amber-500/08" />
+        <div class="flex gap-2 pt-1">
+          <div class="h-11 flex-1 rounded-lg bg-amber-500/15" />
+          <div class="h-11 flex-1 rounded-lg bg-amber-500/12 sm:hidden" />
+        </div>
       </div>
     </div>
 
@@ -75,67 +87,103 @@
       class="divide-y divide-amber-500/20 border-t border-amber-500/25"
     >
       <li
-        v-for="trip in sortedPending"
-        :key="`p-${trip.id}`"
-        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3.5 sm:px-5"
+        v-for="{ trip, mode, dateLine } in bannerRows"
+        :key="`${mode}-${trip.id}`"
+        class="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-start sm:gap-4 sm:px-5"
       >
-        <span
-          class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
-          :class="tripTypeBadgeClass(trip)"
-        >
-          {{ tripTypeShortLabel(trip) }}
-        </span>
-        <span class="shrink-0 text-sm font-bold tabular-nums text-white sm:text-base">
-          {{ departTime(trip) }}
-        </span>
-        <span class="min-w-0 flex-1 basis-[8rem] truncate text-sm font-medium text-[#e2e8f0] sm:text-base">
-          {{ tripDestination(trip) }}
-        </span>
-        <div class="ml-auto flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            class="inline-flex min-h-[48px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
-            :disabled="busyId != null"
-            @click="onConfirm(trip)"
-          >
-            {{ t('driver_home.btn_confirm') }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex min-h-[48px] min-w-[44px] items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45"
-            :disabled="busyId != null"
-            @click="openDeclineModal(trip)"
-          >
-            {{ t('driver_home.btn_decline') }}
-          </button>
+        <div class="min-w-0 flex-1 space-y-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span
+              class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
+              :class="tripTypeBadgeClass(trip)"
+            >
+              {{ tripTypeShortLabel(trip) }}
+            </span>
+            <span class="text-sm font-semibold text-slate-400">
+              {{ tripCodeDisplay(trip) }}
+            </span>
+            <span
+              v-if="isTripUrgent(trip)"
+              class="inline-flex shrink-0 rounded-md bg-rose-600/90 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white ring-1 ring-rose-400/40"
+            >
+              {{ t('driver_home.urgent_badge') }}
+            </span>
+          </div>
+
+          <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <span class="text-lg font-bold tabular-nums leading-none text-white sm:text-xl">
+              {{ departOrRange(trip) }}
+            </span>
+            <span
+              v-if="dateLine"
+              class="text-xs font-medium text-slate-400 sm:text-sm"
+            >
+              {{ dateLine }}
+            </span>
+          </div>
+
+          <div class="space-y-0.5 pt-0.5">
+            <div class="flex min-w-0 items-start gap-2">
+              <span class="mt-0.5 shrink-0 text-[10px] leading-none text-emerald-400" aria-hidden="true">●</span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  {{ t('driver_home.pending_pickup') }}
+                </p>
+                <p class="truncate text-[13px] font-medium leading-snug text-[#e2e8f0]">
+                  {{ tripOrigin(trip) }}
+                </p>
+              </div>
+            </div>
+            <div class="ml-[5px] h-3 w-px shrink-0 bg-white/15" aria-hidden="true" />
+            <div class="flex min-w-0 items-start gap-2">
+              <span class="mt-0.5 shrink-0 text-[10px] leading-none text-rose-400" aria-hidden="true">●</span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  {{ t('driver_home.pending_dropoff') }}
+                </p>
+                <p class="truncate text-[13px] font-medium leading-snug text-[#e2e8f0]">
+                  {{ tripDestination(trip) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p v-if="bannerMetaLine(trip)" class="text-xs leading-snug text-slate-400">
+            {{ bannerMetaLine(trip) }}
+          </p>
         </div>
-      </li>
-      <li
-        v-for="trip in sortedConfirmed"
-        :key="`c-${trip.id}`"
-        class="flex flex-wrap items-center gap-x-2 gap-y-2 px-4 py-3.5 sm:px-5"
-      >
-        <span
-          class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
-          :class="tripTypeBadgeClass(trip)"
-        >
-          {{ tripTypeShortLabel(trip) }}
-        </span>
-        <span class="shrink-0 text-sm font-bold tabular-nums text-white sm:text-base">
-          {{ departTime(trip) }}
-        </span>
-        <span class="min-w-0 flex-1 basis-[8rem] truncate text-sm font-medium text-[#e2e8f0] sm:text-base">
-          {{ tripDestination(trip) }}
-        </span>
-        <div class="ml-auto flex shrink-0">
-          <button
-            type="button"
-            class="inline-flex min-h-[48px] min-w-[44px] items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45"
-            :disabled="busyId != null"
-            @click="onStartTrip(trip.id)"
-          >
-            {{ t('driver_home.card_start') }}
-          </button>
+
+        <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:pt-0.5">
+          <template v-if="mode === 'pending'">
+            <div class="grid min-h-[48px] w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-2">
+              <button
+                type="button"
+                class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
+                :disabled="busyId != null"
+                @click="onConfirm(trip)"
+              >
+                {{ t('driver_home.btn_confirm') }}
+              </button>
+              <button
+                type="button"
+                class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
+                :disabled="busyId != null"
+                @click="openDeclineModal(trip)"
+              >
+                {{ t('driver_home.btn_decline') }}
+              </button>
+            </div>
+          </template>
+          <template v-else>
+            <button
+              type="button"
+              class="inline-flex min-h-[48px] w-full items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto sm:min-w-[9rem]"
+              :disabled="busyId != null"
+              @click="onStartTrip(trip.id)"
+            >
+              {{ t('driver_home.card_start') }}
+            </button>
+          </template>
         </div>
       </li>
     </ul>
@@ -240,8 +288,12 @@ import { formatApiError } from '../../api/http'
 import { updateTripStatus } from '../../api/trips'
 import {
   formatDepartForTrip,
+  isTripUrgent,
   tripDestination,
   tripOrigin,
+  tripOutboundInboundTimeRange,
+  tripPassengerLine,
+  tripRequesterLine,
 } from '../../composables/useDriverTripDisplay'
 
 let tripStatusCooldownUntil = 0
@@ -287,6 +339,19 @@ function sortByDepart(list) {
 const sortedPending = computed(() => sortByDepart(pendingBucket.value))
 const sortedConfirmed = computed(() => sortByDepart(confirmedBucket.value))
 
+const bannerRows = computed(() => {
+  const tag = locale.value === 'vi' ? 'vi' : 'en'
+  const row = (trip, mode) => ({
+    trip,
+    mode,
+    dateLine: formatDepartForTrip(trip, tag).dateLine,
+  })
+  return [
+    ...sortedPending.value.map((trip) => row(trip, 'pending')),
+    ...sortedConfirmed.value.map((trip) => row(trip, 'confirmed')),
+  ]
+})
+
 const pendingCount = computed(() => pendingBucket.value.length)
 const confirmedCount = computed(() => confirmedBucket.value.length)
 
@@ -300,8 +365,36 @@ const declineTripSummary = computed(() => {
   return `#${tag} · ${time} · ${origin}`
 })
 
+function drOf(trip) {
+  return trip?.dispatch_request ?? trip?.dispatchRequest ?? {}
+}
+
+function tripCodeDisplay(trip) {
+  return trip?.trip_number || `#${trip?.id ?? ''}`
+}
+
+function localeTag() {
+  return locale.value === 'vi' ? 'vi' : 'en'
+}
+
+function departOrRange(trip) {
+  const tag = localeTag()
+  const range = tripOutboundInboundTimeRange(trip, tag, t)
+  if (range) return range
+  return formatDepartForTrip(trip, tag).time
+}
+
+function bannerMetaLine(trip) {
+  const parts = []
+  const pl = tripPassengerLine(trip, t)
+  if (pl) parts.push(pl)
+  const rq = tripRequesterLine(trip)
+  if (rq) parts.push(t('driver_home.pending_requester', { name: rq }))
+  return parts.join(' · ')
+}
+
 function tripTypeShortLabel(trip) {
-  const tt = trip?.dispatch_request?.trip_type
+  const tt = drOf(trip).trip_type
   if (tt === 'door_to_door') return 'D2D'
   if (tt === 'point_to_point') return 'P2P'
   if (tt === 'business') return 'CT'
@@ -319,11 +412,6 @@ function tripTypeBadgeClass(trip) {
   if (lbl === 'CT') return 'bg-amber-500/25 text-amber-100 ring-1 ring-amber-400/35'
   if (lbl === 'HH') return 'bg-orange-500/25 text-orange-100 ring-1 ring-orange-400/35'
   return 'bg-slate-500/20 text-slate-200 ring-1 ring-slate-400/25'
-}
-
-function departTime(trip) {
-  const loc = locale.value === 'vi' ? 'vi' : 'en'
-  return formatDepartForTrip(trip, loc).time
 }
 
 function closeDeclineModal() {
