@@ -18,9 +18,21 @@ export function dispatchScheduleRowErrors(row, variant) {
 
   const hasDepart = !!(row[departKey] && String(row[departKey]).trim())
   const hasReturn = !!(row[retKey] && String(row[retKey]).trim())
+  const hasReturnPlace =
+    variant === 'cargo'
+      ? !!(row.delivery_place && String(row.delivery_place).trim())
+      : !!(row.dropoff && String(row.dropoff).trim())
 
   if (!hasDepart && !hasReturn) {
     e.time_required = true
+  }
+
+  if (hasDepart && !hasReturn) {
+    e.return_time_required = true
+  }
+
+  if (hasReturn && !hasReturnPlace) {
+    e.return_place = true
   }
 
   if (hasDepart && hasReturn && String(row[retKey]) <= String(row[departKey])) {

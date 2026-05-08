@@ -795,10 +795,12 @@ import {
 import { addTripEvent, getTrip, updateTripStatus, upsertTripRecord } from '../../api/trips'
 import { submitTripCost } from '../../api/costs'
 import { isPassengerRowFilled, isBusinessRowFilled, isCargoRowFilled } from '../../composables/dispatchWizardConstants'
+import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
 import { formatVnd } from '../../util/labels'
 
 const { t, te } = useI18n()
 const route = useRoute()
+const { bootDriverOutboundNotifications } = useDriverWebPushBoot()
 
 const PASSENGER_PICKUP_EVENT = 'passenger_pickup'
 
@@ -864,6 +866,7 @@ function onDocClick(e) {
 
 onMounted(() => {
   document.addEventListener('click', onDocClick)
+  void bootDriverOutboundNotifications()
   void load()
 })
 

@@ -67,6 +67,21 @@ function urlBase64ToUint8Array(b64) {
   return out
 }
 
+/** Tránh treo UI khi mạng / pushManager / SW không phản hồi (axios timeout + tầng race). */
+const WEB_PUSH_REGISTER_TIMEOUT_MS = 25000
+
+function createWebPushRegisterTimeoutPromise() {
+  let timeoutId
+  const p = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      const err = new Error('Web push registration timed out')
+      err.name = 'TimeoutError'
+      reject(err)
+    }, WEB_PUSH_REGISTER_TIMEOUT_MS)
+  })
+  return { promise: p, clear: () => clearTimeout(timeoutId) }
+}
+
 export const useNotificationStore = defineStore('notificationCenter', () => {
   const panelOpen = ref(false)
   const items = ref([])
@@ -233,36 +248,55 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
       return { ok: false, reason: 'denied' }
     }
     pushRegisterLoading.value = true
+    const { promise: timeoutPromise, clear: clearRegisterTimeout } = createWebPushRegisterTimeoutPromise()
     try {
-      const { publicKey: pub } = await getVapidPublicKey()
-      if (!pub) {
-        pushState.value = 'no_vapid'
-        return { ok: false, reason: 'no_vapid' }
-      }
-      const reg = await navigator.serviceWorker.ready
-      let sub = await reg.pushManager.getSubscription()
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(pub),
-        })
-      }
-      await storePushSubscription(sub)
-      pushState.value = 'subscribed'
-      try {
-        localStorage.setItem(ASKED_PUSH_KEY, '1')
-      } catch {
-        /* ignore */
-      }
-      return { ok: true }
+      const work = (async () => {
+        try {
+          try {
+            const { publicKey: pub } = await getVapidPublicKey()
+            if (!pub) {
+              pushState.value = 'no_vapid'
+              return { ok: false, reason: 'no_vapid' }
+            }
+            const reg = await navigator.serviceWorker.ready
+            let sub = await reg.pushManager.getSubscription()
+            if (!sub) {
+              sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(pub),
+              })
+            }
+            await storePushSubscription(sub)
+            pushState.value = 'subscribed'
+            try {
+              localStorage.setItem(ASKED_PUSH_KEY, '1')
+            } catch {
+              /* ignore */
+            }
+            return { ok: true }
+          } catch (e) {
+            pushState.value = 'error'
+            if (import.meta.env.DEV) console.warn('[push]', e)
+            const name = e?.name ?? ''
+            if (name === 'NotAllowedError' || (typeof Notification !== 'undefined' && Notification.permission === 'denied')) {
+              return { ok: false, reason: 'denied' }
+            }
+            if (name === 'AbortError' || name === 'TimeoutError' || name === 'AxiosError' || e?.code === 'ECONNABORTED') {
+              return { ok: false, reason: 'network' }
+            }
+            return { ok: false, reason: 'api' }
+          }
+        } finally {
+          clearRegisterTimeout()
+        }
+      })()
+
+      return await Promise.race([work, timeoutPromise])
     } catch (e) {
+      clearRegisterTimeout()
       pushState.value = 'error'
       if (import.meta.env.DEV) console.warn('[push]', e)
-      const name = e?.name ?? ''
-      if (name === 'NotAllowedError' || (typeof Notification !== 'undefined' && Notification.permission === 'denied')) {
-        return { ok: false, reason: 'denied' }
-      }
-      if (name === 'AbortError') {
+      if (e?.name === 'TimeoutError') {
         return { ok: false, reason: 'network' }
       }
       return { ok: false, reason: 'api' }

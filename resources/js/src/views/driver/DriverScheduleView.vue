@@ -139,12 +139,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTripHistory } from '../../composables/useTripHistory'
+import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
 import WeekCalendar from '../../components/trips/WeekCalendar.vue'
 import TripCard from '../../components/trips/TripCard.vue'
 import TripEmptyState from '../../components/trips/TripEmptyState.vue'
 
 const { t } = useI18n()
 
+const { bootDriverOutboundNotifications } = useDriverWebPushBoot()
 const { trips, isLoading, error, hasMore, fetch: fetchTrips, loadMore } = useTripHistory()
 
 const selectedDate = ref(new Date())
@@ -354,6 +356,7 @@ watch([hasMore, () => sentinelEl.value, () => filteredTrips.value.length], () =>
 // ── Lifecycle ─────────────────────────────────────────────────────────
 
 onMounted(() => {
+  void bootDriverOutboundNotifications()
   void reload()
 })
 

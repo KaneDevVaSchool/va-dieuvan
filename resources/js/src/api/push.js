@@ -1,7 +1,9 @@
 import { http } from './http'
 
+const PUSH_HTTP_TIMEOUT_MS = 20000
+
 export async function getVapidPublicKey() {
-  const { data } = await http.get('/push/vapid-public-key')
+  const { data } = await http.get('/push/vapid-public-key', { timeout: PUSH_HTTP_TIMEOUT_MS })
   return data.data
 }
 
@@ -10,11 +12,15 @@ export async function getVapidPublicKey() {
  */
 export async function storePushSubscription(subscription) {
   const j = subscription.toJSON()
-  const { data } = await http.post('/push/subscriptions', {
-    endpoint: j.endpoint,
-    keys: j.keys,
-    contentEncoding: 'aesgcm',
-  })
+  const { data } = await http.post(
+    '/push/subscriptions',
+    {
+      endpoint: j.endpoint,
+      keys: j.keys,
+      contentEncoding: 'aesgcm',
+    },
+    { timeout: PUSH_HTTP_TIMEOUT_MS },
+  )
   return data.data
 }
 

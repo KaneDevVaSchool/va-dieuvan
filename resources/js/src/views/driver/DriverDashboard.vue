@@ -113,6 +113,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { getDriverSummary } from '../../api/driver'
 import { listTripsAll, updateTripStatus } from '../../api/trips'
+import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
 import { useTripHistory } from '../../composables/useTripHistory'
 import { useAuthStore } from '../../store'
 import TripStatsCard from '../../components/trips/TripStatsCard.vue'
@@ -124,6 +125,7 @@ import DriverTodayEmptyState from '../../components/driver/DriverTodayEmptyState
 
 const { t } = useI18n()
 const auth = useAuthStore()
+const { bootDriverOutboundNotifications } = useDriverWebPushBoot()
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -297,20 +299,30 @@ async function onStartTrip(tripId) {
 
 let knownPendingIds = null
 
-async function requestNotifPermission() {
-  if (!('Notification' in window) || Notification.permission !== 'default') return
-  await Notification.requestPermission()
-}
-
-function pushNewTripNotif(count) {
+async function pushNewTripNotif(count) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return
-  new Notification(t('driver_home.notif_new_trip_title'), {
+  const title = t('driver_home.notif_new_trip_title')
+  const options = {
     body: t('driver_home.notif_new_trip_body', { n: count }),
     icon: '/icons/pwa-192.png',
     badge: '/icons/pwa-192.png',
     tag: 'new-trip',
     renotify: true,
-  })
+  }
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready
+      await reg.showNotification(title, options)
+      return
+    }
+  } catch {
+    /* fall through */
+  }
+  try {
+    new Notification(title, options)
+  } catch {
+    /* ignore */
+  }
 }
 
 watch(
@@ -322,13 +334,13 @@ watch(
       return
     }
     const added = [...ids].filter((id) => !knownPendingIds.has(id))
-    if (added.length > 0) pushNewTripNotif(added.length)
+    if (added.length > 0) void pushNewTripNotif(added.length)
     knownPendingIds = ids
   },
 )
 
 onMounted(async () => {
-  await requestNotifPermission()
+  await bootDriverOutboundNotifications()
   await fetchData(true)
 })
 </script>

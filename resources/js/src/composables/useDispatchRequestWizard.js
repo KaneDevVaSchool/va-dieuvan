@@ -841,6 +841,23 @@ export function useDispatchRequestWizard() {
 
   const canSubmitApi = computed(() => !!computedDepartAt.value?.trim())
 
+  /** Bước 3 đã ẩn khi vào confirm; cần tính lại để nút Submit & validate API không báo sót chuyến về. */
+  function schedulesPassDispatchErrorsSnapshot() {
+    const checkAll = (rows, variant, isFilled) =>
+      rows.every((r) => !isFilled(r) || Object.keys(dispatchScheduleRowErrors(r, variant)).length === 0)
+
+    const tt = form.value.trip_type
+    if (tt === 'cargo') return checkAll(cargoRows.value, 'cargo', isCargoRowFilled)
+    if (tt === 'point_to_point') return checkAll(passengerRows.value, 'passenger', isPassengerRowFilled)
+    if (tt === 'business') return checkAll(businessRows.value, 'business', isBusinessRowFilled)
+    return (
+      checkAll(passengerRows.value, 'passenger', isPassengerRowFilled) &&
+      checkAll(businessRows.value, 'business', isBusinessRowFilled)
+    )
+  }
+
+  const schedulesPassForSubmit = computed(() => schedulesPassDispatchErrorsSnapshot())
+
   function pushConfirmRowIssues(msgs, rows, variant, sectionKey) {
     rows.forEach((row, idx) => {
       const filled =
@@ -854,6 +871,12 @@ export function useDispatchRequestWizard() {
       const n = idx + 1
       if (err.time_required) {
         msgs.push(t('dispatch_wizard.confirm.issue_row_time_required', { section: t(sectionKey), n }))
+      }
+      if (err.return_time_required) {
+        msgs.push(t('dispatch_wizard.confirm.issue_row_return_time', { section: t(sectionKey), n }))
+      }
+      if (err.return_place) {
+        msgs.push(t('dispatch_wizard.confirm.issue_row_return_place', { section: t(sectionKey), n }))
       }
       if (err.return_time) {
         msgs.push(t('dispatch_wizard.confirm.issue_row_return_order', { section: t(sectionKey), n }))
@@ -913,7 +936,7 @@ export function useDispatchRequestWizard() {
   const headerPrimaryDisabled = computed(() => {
     if (loading.value) return true
     if (step.value < 3) return !canGoNext.value
-    return !canSubmitApi.value
+    return !canSubmitApi.value || !schedulesPassForSubmit.value
   })
 
   function computeApiOriginDestination() {
@@ -1000,6 +1023,10 @@ export function useDispatchRequestWizard() {
     if (!computedDepartAt.value?.trim()) {
       step.value = 2
       return t('dispatch_wizard.validate.depart_time')
+    }
+    if (!schedulesPassDispatchErrorsSnapshot()) {
+      step.value = 2
+      return t('dispatch_wizard.confirm.issue_schedule_invalid')
     }
     return ''
   }
