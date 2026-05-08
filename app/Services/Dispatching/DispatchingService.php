@@ -8,6 +8,7 @@ use App\Services\Auditing\AuditLogger;
 use App\Support\FinancialDataLock;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DispatchingService
 {
@@ -125,8 +126,15 @@ class DispatchingService
 
             $trip->loadMissing(['driver.user', 'dispatchRequest']);
             $driverUser = $trip->driver?->user;
+            $debugLog = config('dispatch.debug_notification_log');
+            $queueConnection = config('queue.default');
             if ($driverUser !== null) {
                 $dr = $trip->dispatchRequest;
+                $isUrgent = (bool) ($dr?->is_urgent ?? false);
+                $queueName = $isUrgent
+                    ? config('dispatch.notifications_queue_urgent')
+                    : config('dispatch.notifications_queue_default');
+
                 $driverUser->notify(new TripAssignedNotification(
                     tripId: $trip->id,
                     tripType: is_string($dr?->trip_type) && $dr->trip_type !== ''
@@ -137,8 +145,25 @@ class DispatchingService
                     departAt: $trip->depart_at instanceof Carbon
                         ? $trip->depart_at->toIso8601String()
                         : (string) ($trip->depart_at ?? ''),
-                    isUrgent: (bool) ($dr?->is_urgent ?? false),
+                    isUrgent: $isUrgent,
                 ));
+
+                if ($debugLog) {
+                    Log::info('dispatch.trip_assigned_notification_queued', [
+                        'trip_id' => $trip->id,
+                        'driver_id' => $trip->driver_id,
+                        'driver_user_id' => $driverUser->getKey(),
+                        'queue_connection' => $queueConnection,
+                        'notification_queue' => $queueName,
+                        'urgent' => $isUrgent,
+                    ]);
+                }
+            } elseif ($trip->driver_id !== null) {
+                Log::warning('dispatch.trip_assigned_no_driver_user', [
+                    'trip_id' => $trip->id,
+                    'driver_id' => $trip->driver_id,
+                    'hint' => 'Tài xế chưa có user liên kết — bỏ TripAssignedNotification.',
+                ]);
             }
 
             return $trip;

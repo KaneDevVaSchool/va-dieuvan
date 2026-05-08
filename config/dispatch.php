@@ -1,6 +1,16 @@
 <?php
 
+$defaultDebugNotify = filter_var(env('APP_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
+
 return [
+    /**
+     * Log chi tiết luồng thông báo gán chuyến / Web Push (DispatchingService + listener).
+     * Mặc định theo APP_DEBUG; có thể ép bằng DISPATCH_DEBUG_NOTIFICATION_LOG=true|false.
+     */
+    'debug_notification_log' => env('DISPATCH_DEBUG_NOTIFICATION_LOG') !== null
+        ? filter_var(env('DISPATCH_DEBUG_NOTIFICATION_LOG'), FILTER_VALIDATE_BOOLEAN)
+        : $defaultDebugNotify,
+
     /**
      * Fallback khi chưa có bản ghi `dispatch_settings` (hoặc migrate chưa chạy).
      * Hành khách: mặc định ~3 ngày; hàng hoá: 24 giờ.

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PushSubscription;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 
@@ -26,8 +27,13 @@ class WebPushSender
             return;
         }
 
+        $debug = config('dispatch.debug_notification_log');
         $subs = $user->pushSubscriptions()->get();
         if ($subs->isEmpty()) {
+            if ($debug) {
+                Log::debug('webpush.skip_no_subscriptions', ['user_id' => $user->getKey()]);
+            }
+
             return;
         }
 
@@ -57,6 +63,38 @@ class WebPushSender
             ]);
             $webPush->sendOneNotification($subscription, $json, [], []);
         }
-        $webPush->flush();
+
+        try {
+            foreach ($webPush->flush() as $report) {
+                if ($report->isSuccess()) {
+                    if ($debug) {
+                        Log::info('webpush.sent_ok', [
+                            'user_id' => $user->getKey(),
+                            'endpoint' => method_exists($report, 'getEndpoint') ? $report->getEndpoint() : null,
+                        ]);
+                    }
+
+                    continue;
+                }
+                if ($report->isSubscriptionExpired()) {
+                    Log::notice('webpush.subscription_expired', [
+                        'user_id' => $user->getKey(),
+                        'endpoint' => method_exists($report, 'getEndpoint') ? $report->getEndpoint() : null,
+                    ]);
+
+                    continue;
+                }
+                Log::warning('webpush.send_failed', [
+                    'user_id' => $user->getKey(),
+                    'reason' => $report->getReason(),
+                    'endpoint' => method_exists($report, 'getEndpoint') ? $report->getEndpoint() : null,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('webpush.flush_exception', [
+                'user_id' => $user->getKey(),
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }
