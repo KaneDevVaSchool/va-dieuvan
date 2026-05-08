@@ -11,7 +11,10 @@
 
     <!-- Bottom nav: always visible on driver layout -->
     <div class="pointer-events-none fixed inset-x-0 bottom-0 z-40 print:hidden">
-      <div class="pointer-events-auto pb-[env(safe-area-inset-bottom)]">
+      <!-- Solid fill under safe-area + during overscroll; nav alone does not paint the padded strip -->
+      <div
+        class="pointer-events-auto bg-[#080f0d] pb-[env(safe-area-inset-bottom)]"
+      >
         <MobileBottomNav />
       </div>
     </div>

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-full w-full max-w-[430px] overflow-x-hidden bg-[#09180f] pb-2 text-white sm:max-w-none"
+    class="min-h-full w-full max-w-[430px] overflow-x-hidden bg-driver-bg pb-2 text-driver-ink sm:max-w-none"
     :style="{ '--accent': '#7fdcc8' }"
     @touchstart.passive="onTouchStart"
     @touchmove.passive="onTouchMove"
@@ -31,7 +31,7 @@
 
     <!-- Header -->
     <header
-      class="sticky top-0 z-[25] flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.06)] bg-[#09180f]/90 px-3 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
+      class="sticky top-0 z-[25] flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.06)] bg-driver-bg/90 px-3 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
       style="padding-top: max(0.75rem, env(safe-area-inset-top))"
     >
       <div class="flex min-w-0 flex-1 items-center gap-2">
@@ -64,12 +64,12 @@
 
     <div class="space-y-3 px-3 pt-3 pb-6">
       <!-- Search box -->
-      <div v-if="searchOpen" class="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0f2318] px-3 py-2">
+      <div v-if="searchOpen" class="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-driver-card px-3 py-2">
         <input
           v-model.trim="searchQ"
           type="search"
           autocomplete="off"
-          class="w-full rounded-lg bg-transparent px-2 py-2 text-sm text-white placeholder:text-[#64748b] focus:outline-none focus:ring-1 focus:ring-[#7fdcc8]/50"
+          class="w-full rounded-lg bg-transparent px-2 py-2 text-sm text-driver-ink placeholder:text-driver-muted/60 focus:outline-none focus:ring-1 focus:ring-[#7fdcc8]/50"
           :placeholder="t('trip_history_page.search_placeholder')"
         />
       </div>
@@ -97,7 +97,7 @@
 
       <!-- Skeleton loading -->
       <div v-if="isLoading && filteredTrips.length === 0" class="space-y-3 pt-2">
-        <div v-for="n in 3" :key="n" class="animate-pulse rounded-2xl border border-white/5 bg-[#0f2318] p-4">
+        <div v-for="n in 3" :key="n" class="animate-pulse rounded-2xl border border-white/5 bg-driver-card p-4">
           <div class="flex gap-3">
             <div class="h-12 w-12 rounded-lg bg-[#7fdcc8]/10" />
             <div class="min-w-0 flex-1 space-y-2">
@@ -114,9 +114,9 @@
 
       <template v-else>
         <!-- Day section header -->
-        <p class="pt-2 text-sm font-semibold text-white">
+        <p class="pt-2 text-sm font-semibold text-driver-ink">
           {{ dayGroupTitle }}
-          <span v-if="filteredTrips.length" class="tabular-nums text-[#94a3b8]"> ({{ filteredTrips.length }}) </span>
+          <span v-if="filteredTrips.length" class="tabular-nums text-driver-muted"> ({{ filteredTrips.length }}) </span>
         </p>
 
         <!-- Trip cards -->
@@ -133,7 +133,7 @@
         <button
           v-if="showLoadMoreFallback"
           type="button"
-          class="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#0f2318] py-3 text-sm font-semibold text-[#7fdcc8] transition hover:bg-[#0f2318]/80 disabled:opacity-50"
+          class="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.1)] bg-driver-card py-3 text-sm font-semibold text-[#7fdcc8] transition hover:bg-driver-surface disabled:opacity-50"
           :disabled="isLoading"
           @click="() => loadMore(fetchParams)"
         >

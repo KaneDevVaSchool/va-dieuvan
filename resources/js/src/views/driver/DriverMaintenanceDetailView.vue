@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-full w-full overflow-x-hidden bg-[#0a0f0d] pb-[calc(12rem+env(safe-area-inset-bottom))] text-white">
+  <div class="min-h-full w-full overflow-x-hidden bg-driver-bg pb-[calc(12rem+env(safe-area-inset-bottom))] text-driver-ink">
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
-    <div class="sticky top-0 z-20 flex items-center gap-3 bg-[#0a0f0d]/95 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_1px_0_rgba(127,220,200,0.08)] backdrop-blur-sm">
+    <div class="sticky top-0 z-20 flex items-center gap-3 bg-driver-bg/95 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_1px_0_rgba(127,220,200,0.08)] backdrop-blur-sm">
       <RouterLink
         :to="{ name: 'driverMaintenance' }"
         class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/8 text-white ring-1 ring-white/10 active:scale-95"
@@ -13,7 +13,7 @@
         </svg>
       </RouterLink>
 
-      <h1 class="flex-1 truncate text-center text-[18px] font-bold text-white">
+      <h1 class="flex-1 truncate text-center text-[18px] font-bold text-driver-ink">
         {{ currentItem?.name ?? t('driver_maintenance.detail_title') }}
       </h1>
 
@@ -32,9 +32,9 @@
 
     <!-- ── Skeleton ──────────────────────────────────────────────── -->
     <template v-if="detailLoading">
-      <div class="h-44 animate-pulse bg-[#111d16]" />
+      <div class="h-44 animate-pulse bg-driver-card" />
       <div class="mx-auto max-w-lg space-y-3 px-4 pt-5">
-        <div v-for="i in 5" :key="i" class="h-12 animate-pulse rounded-2xl bg-[#111d16]" />
+        <div v-for="i in 5" :key="i" class="h-12 animate-pulse rounded-2xl bg-driver-card" />
       </div>
     </template>
 
@@ -90,7 +90,7 @@
       <div class="mx-auto max-w-lg space-y-4 px-4 pt-5">
 
         <!-- ── Detail Info Rows ─────────────────────────────────── -->
-        <div class="overflow-hidden rounded-2xl bg-[#111d16] ring-1 ring-white/8">
+        <div class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/8">
           <template v-if="!editMode">
             <DetailRow :label="t('driver_maintenance.detail_issued_by')" :value="currentItem.issued_by" />
             <DetailRow :label="t('driver_maintenance.detail_expires_at')" :value="formatDate(currentItem.expiry_date)" />
@@ -146,7 +146,7 @@
         </div>
 
         <!-- Renewal cost input (visible in edit mode only, separate for clarity) -->
-        <div v-if="editMode" class="overflow-hidden rounded-2xl bg-[#111d16] px-4 py-4 ring-1 ring-white/8">
+        <div v-if="editMode" class="overflow-hidden rounded-2xl bg-driver-card px-4 py-4 ring-1 ring-white/8">
           <EditField
             :label="t('driver_maintenance.history_amount') + ' (lần gia hạn này)'"
             type="number"
@@ -221,7 +221,7 @@
     >
       <button
         type="button"
-        class="flex min-h-[52px] w-full items-center justify-center rounded-[14px] bg-[#1dbc5e] text-[18px] font-bold text-white shadow-lg shadow-[#1dbc5e]/20 transition active:scale-[0.98]"
+        class="flex min-h-[52px] w-full items-center justify-center rounded-[14px] bg-driver-accent text-[18px] font-bold text-driver-bg shadow-lg shadow-[#7fdcc8]/25 transition active:scale-[0.98]"
         @click="editMode = true"
       >
         {{ t('driver_maintenance.action_renew') }}

@@ -18,6 +18,17 @@ export default {
           900: '#450011',
           brand: '#78001e',
         },
+        /** Shell / fleet UI — trùng token với LayoutDriver & DriverDashboard */
+        driver: {
+          bg: '#020B0B',
+          surface: '#0f1a17',
+          card: '#111f1b',
+          elevated: '#152722',
+          accent: '#7fdcc8',
+          'accent-bright': '#5eead4',
+          ink: '#eaf8f5',
+          muted: '#9fbdb4',
+        },
       },
     },
   },

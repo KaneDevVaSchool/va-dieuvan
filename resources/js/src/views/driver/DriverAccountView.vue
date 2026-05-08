@@ -1,13 +1,13 @@
 <template>
   <div
-    class="min-h-full w-full bg-[#09180f] pb-[calc(7rem+env(safe-area-inset-bottom))] text-white"
+    class="min-h-full w-full bg-driver-bg pb-[calc(7rem+env(safe-area-inset-bottom))] text-driver-ink"
   >
     <div
       class="mx-auto w-full max-w-[390px] space-y-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4"
     >
       <!-- Header chrome -->
       <div class="flex items-center justify-between gap-3 pt-1">
-        <h1 class="text-2xl font-bold tracking-tight text-white md:text-[1.75rem]">
+        <h1 class="text-2xl font-bold tracking-tight text-driver-ink md:text-[1.75rem]">
           {{ t('nav.bottom_driver_account') }}
         </h1>
         <NotificationBell />
@@ -22,44 +22,47 @@
 
       <!-- S1: Header card -->
       <section
-        class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] px-4 pb-5 pt-6 sm:px-5"
+        class="rounded-[20px] border border-white/[0.06] bg-driver-card px-4 pb-5 pt-6 sm:px-5"
       >
         <div class="relative mx-auto flex w-fit flex-col items-center">
-          <div
-            class="relative -mt-2 h-[92px] w-[92px] shrink-0 overflow-hidden rounded-full border border-white/[0.08] bg-[#051a12]"
-          >
-            <img
-              v-if="avatarUrl"
-              :src="avatarUrl"
-              alt=""
-              class="h-full w-full object-cover"
-            />
+          <!-- Inner circle uses overflow-hidden; FAB sits outside so it is not clipped -->
+          <div class="relative h-20 w-20 shrink-0">
             <div
-              v-else
-              class="flex h-full w-full items-center justify-center text-2xl font-bold text-[#2dd4a0]"
+              class="relative h-full w-full overflow-hidden rounded-full border border-white/[0.08] bg-driver-bg"
             >
-              {{ initials }}
-            </div>
-            <div
-              v-if="avatarUploading"
-              class="absolute inset-0 flex items-center justify-center rounded-full bg-black/55"
-              aria-live="polite"
-            >
-              <span class="sr-only">{{ t('driver_account.avatar_uploading_a11y') }}</span>
-              <svg
-                class="h-8 w-8 animate-spin text-[#2dd4a0]"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+              <img
+                v-if="avatarUrl"
+                :src="avatarUrl"
+                alt=""
+                class="h-full w-full object-cover"
+              />
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center text-xl font-bold text-driver-accent"
               >
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+                {{ initials }}
+              </div>
+              <div
+                v-if="avatarUploading"
+                class="absolute inset-0 flex items-center justify-center rounded-full bg-black/55"
+                aria-live="polite"
+              >
+                <span class="sr-only">{{ t('driver_account.avatar_uploading_a11y') }}</span>
+                <svg
+                  class="h-7 w-7 animate-spin text-driver-accent"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              </div>
             </div>
             <input
               ref="avatarFileInput"
@@ -70,29 +73,29 @@
             />
             <button
               type="button"
-              class="absolute -bottom-1 -right-1 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#2dd4a0] text-[#09180f] ring-2 ring-[#0f2318] transition hover:brightness-105 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
+              class="absolute -bottom-px -right-px z-10 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-driver-accent text-driver-bg shadow-sm shadow-black/25 ring-2 ring-driver-card transition hover:brightness-105 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
               :disabled="avatarUploading"
               :aria-label="t('driver_account.update_photo_a11y')"
               @click="openAvatarPicker"
             >
-              <ArrowUpTrayIcon class="h-[18px] w-[18px]" aria-hidden="true" />
+              <ArrowUpTrayIcon class="h-[14px] w-[14px]" aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        <p class="mt-4 text-center text-[22px] font-bold leading-tight text-white">
+        <p class="mt-4 text-center text-[22px] font-bold leading-tight text-driver-ink">
           {{ user?.name || '—' }}
         </p>
 
         <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
           <span
             v-if="employeeCodeDisplay"
-            class="rounded-full border border-[#2dd4a0] px-3 py-1 text-sm font-medium leading-none text-[#2dd4a0]"
+            class="rounded-full border border-driver-accent px-3 py-1 text-sm font-medium leading-none text-driver-accent"
           >
             {{ employeeCodeDisplay }}
           </span>
           <span
-            class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[#09180f]/60 px-3 py-1 text-sm font-medium text-white"
+            class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-driver-bg/60 px-3 py-1 text-sm font-medium text-driver-ink"
           >
             <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
             {{ t('driver_account.active_status') }}
@@ -104,11 +107,11 @@
         <div class="grid grid-cols-3 gap-2 text-center">
           <div v-for="col in headerCols" :key="col.k" class="min-w-0 px-0.5">
             <p
-              class="text-[11px] font-semibold uppercase leading-tight tracking-[0.06em] text-[#4ade80]/90 sm:text-xs"
+              class="text-[11px] font-semibold uppercase leading-tight tracking-[0.06em] text-driver-accent-bright/90 sm:text-xs"
             >
               {{ col.label }}
             </p>
-            <p class="mt-2 text-base font-bold leading-snug text-white tabular-nums">
+            <p class="mt-2 text-base font-bold leading-snug text-driver-ink tabular-nums">
               {{ col.value }}
             </p>
           </div>
@@ -116,10 +119,10 @@
       </section>
 
       <!-- S2: Stats -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] px-2 py-4 sm:px-3">
+      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card px-2 py-4 sm:px-3">
         <div v-if="loading" class="grid grid-cols-3 gap-0">
           <div v-for="n in 3" :key="n" class="flex flex-col items-center gap-2 py-2">
-            <div class="h-10 w-10 animate-pulse rounded-full bg-[#2dd4a0]/10" />
+            <div class="h-10 w-10 animate-pulse rounded-full bg-driver-accent/10" />
             <div class="h-8 w-10 animate-pulse rounded bg-white/5" />
             <div class="h-3 w-16 animate-pulse rounded bg-white/5" />
           </div>
@@ -131,13 +134,13 @@
             class="flex min-h-[120px] flex-col items-center justify-start gap-2 px-1 py-2 text-center first:pl-0 last:pr-0"
           >
             <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2dd4a0]/15 text-[#2dd4a0] [&_svg]:h-6 [&_svg]:w-6"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-driver-accent/15 text-driver-accent [&_svg]:h-6 [&_svg]:w-6"
               v-html="cell.iconSvg"
             />
-            <span class="text-[32px] font-bold tabular-nums leading-none text-white sm:text-4xl">
+            <span class="text-[32px] font-bold tabular-nums leading-none text-driver-ink sm:text-4xl">
               {{ cell.value }}
             </span>
-            <span class="text-sm leading-snug text-[#94a3b8]">
+            <span class="text-sm leading-snug text-driver-muted">
               {{ cell.label }}
             </span>
           </div>
@@ -145,10 +148,10 @@
       </section>
 
       <!-- S3: Work info -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
+      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
         <div class="mb-4 flex items-center gap-2">
-          <span class="h-2 w-2 shrink-0 rounded-full bg-[#2dd4a0]" />
-          <h2 class="text-base font-semibold text-white">
+          <span class="h-2 w-2 shrink-0 rounded-full bg-driver-accent" />
+          <h2 class="text-base font-semibold text-driver-ink">
             {{ t('driver_account.work_info_title') }}
           </h2>
         </div>
@@ -158,9 +161,9 @@
             :key="row.k"
             class="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0"
           >
-            <component :is="row.icon" class="h-6 w-6 shrink-0 text-[#2dd4a0]" aria-hidden="true" />
-            <span class="min-w-0 flex-1 text-[15px] leading-snug text-[#cbd5e1]">{{ row.label }}</span>
-            <span class="max-w-[58%] text-right text-[15px] font-bold leading-snug text-white truncate">{{
+            <component :is="row.icon" class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
+            <span class="min-w-0 flex-1 text-[15px] leading-snug text-driver-muted">{{ row.label }}</span>
+            <span class="max-w-[58%] text-right text-[15px] font-bold leading-snug text-driver-ink truncate">{{
               row.value
             }}</span>
           </li>
@@ -168,23 +171,23 @@
       </section>
 
       <!-- S4: Documents -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
+      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <span class="h-2 w-2 shrink-0 rounded-full bg-[#2dd4a0]" />
-              <h2 class="text-base font-semibold text-white">
+              <span class="h-2 w-2 shrink-0 rounded-full bg-driver-accent" />
+              <h2 class="text-base font-semibold text-driver-ink">
                 {{ t('driver_account.documents_title') }}
               </h2>
             </div>
-            <p class="mt-2 text-[15px] leading-relaxed text-[#cbd5e1]">
+            <p class="mt-2 text-[15px] leading-relaxed text-driver-muted">
               {{ t('driver_account.contact_procurement_hint') }}
             </p>
           </div>
           <a
             v-if="procurementTelHref"
             :href="procurementTelHref"
-            class="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2dd4a0] px-5 text-base font-bold text-[#09180f] shadow-lg shadow-black/20 transition hover:bg-[#4ade80] active:scale-[0.99] sm:mt-0"
+            class="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-xl bg-driver-accent px-5 text-base font-bold text-driver-bg shadow-lg shadow-black/20 transition hover:bg-driver-accent-bright active:scale-[0.99] sm:mt-0"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5" aria-hidden="true">
               <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 16.352V17.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clip-rule="evenodd" />
@@ -200,10 +203,10 @@
         </div>
         <ul class="space-y-0 divide-y divide-white/[0.06]">
           <li v-for="doc in documentRows" :key="doc.id" class="flex gap-3 py-3.5 first:pt-0 last:pb-0">
-            <DocumentTextIcon class="h-6 w-6 shrink-0 text-[#2dd4a0]" aria-hidden="true" />
+            <DocumentTextIcon class="h-6 w-6 shrink-0 text-driver-accent" aria-hidden="true" />
             <div class="min-w-0 flex-1">
-              <p class="text-[15px] font-bold leading-snug text-white">{{ doc.title }}</p>
-              <p class="mt-1 text-[13px] leading-relaxed text-[#94a3b8]">{{ doc.subtitle }}</p>
+              <p class="text-[15px] font-bold leading-snug text-driver-ink">{{ doc.title }}</p>
+              <p class="mt-1 text-[13px] leading-relaxed text-driver-muted">{{ doc.subtitle }}</p>
             </div>
             <span
               class="h-fit shrink-0 self-center rounded-full px-2.5 py-1 text-[12px] font-semibold leading-tight"
@@ -216,24 +219,24 @@
       </section>
 
       <!-- S5: Recent trips -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] px-4 py-5 sm:px-6 sm:py-6">
+      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card px-4 py-5 sm:px-6 sm:py-6">
         <div class="mb-5 flex items-start justify-between gap-3">
           <div class="flex items-center gap-2.5">
-            <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-[#2dd4a0]" />
-            <h2 class="text-lg font-bold text-white sm:text-xl">
+            <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-driver-accent" />
+            <h2 class="text-lg font-bold text-driver-ink sm:text-xl">
               {{ t('driver_account.recent_trips_title') }}
             </h2>
           </div>
           <RouterLink
             to="/driver/schedule"
-            class="shrink-0 text-lg font-bold text-[#2dd4a0] transition hover:text-[#4ade80] sm:text-xl"
+            class="shrink-0 text-lg font-bold text-driver-accent transition hover:text-driver-accent-bright sm:text-xl"
           >
             {{ t('driver_account.see_all') }} ›
           </RouterLink>
         </div>
         <p
           v-if="!loading && recentTrips.length === 0"
-          class="py-8 text-center text-lg text-[#cbd5e1]"
+          class="py-8 text-center text-lg text-driver-muted"
         >
           {{ t('driver_account.empty_trips') }}
         </p>
@@ -249,8 +252,8 @@
               class="flex gap-3 text-left transition active:opacity-90 sm:gap-4"
             >
               <div class="w-[68px] shrink-0 sm:w-[76px]">
-                <p class="text-lg font-bold tabular-nums leading-tight text-white sm:text-xl">{{ tripTime(trip) }}</p>
-                <p class="mt-1.5 text-sm text-[#94a3b8] sm:text-base">{{ tripDateShort(trip) }}</p>
+                <p class="text-lg font-bold tabular-nums leading-tight text-driver-ink sm:text-xl">{{ tripTime(trip) }}</p>
+                <p class="mt-1.5 text-sm text-driver-muted sm:text-base">{{ tripDateShort(trip) }}</p>
               </div>
               <div class="flex min-w-0 flex-1 items-start gap-2">
                 <span
@@ -261,13 +264,13 @@
                 <div class="min-w-0 flex-1 space-y-2">
                   <div class="flex items-start gap-2.5">
                     <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" />
-                    <p class="min-w-0 text-base font-semibold leading-snug text-white sm:text-lg">
+                    <p class="min-w-0 text-base font-semibold leading-snug text-driver-ink sm:text-lg">
                       {{ tripOrigin(trip) }}
                     </p>
                   </div>
                   <div class="flex items-start gap-2.5">
                     <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-[#3b82f6]" />
-                    <p class="min-w-0 text-base font-semibold leading-snug text-white sm:text-lg">
+                    <p class="min-w-0 text-base font-semibold leading-snug text-driver-ink sm:text-lg">
                       {{ tripDestination(trip) }}
                     </p>
                   </div>
@@ -280,7 +283,7 @@
                 >
                   {{ tripStatusLabel(trip) }}
                 </span>
-                <p class="mt-2 text-sm text-[#94a3b8] tabular-nums sm:text-base">#{{ trip.id }}</p>
+                <p class="mt-2 text-sm text-driver-muted tabular-nums sm:text-base">#{{ trip.id }}</p>
               </div>
             </RouterLink>
           </li>
@@ -288,7 +291,7 @@
       </section>
 
       <!-- Đăng xuất -->
-      <section class="rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-4 sm:p-5">
+      <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
         <button
           type="button"
           class="inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-xl border-2 border-[#f43f5e] bg-transparent px-4 text-base font-bold text-[#f43f5e] transition hover:bg-[#f43f5e]/12 active:scale-[0.99]"
@@ -312,25 +315,25 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="driver-logout-title"
-          class="w-full max-w-md rounded-[20px] border border-white/[0.06] bg-[#0f2318] p-5 text-white"
+          class="w-full max-w-md rounded-[20px] border border-white/[0.06] bg-driver-card p-5 text-driver-ink"
         >
           <h2 id="driver-logout-title" class="text-lg font-bold sm:text-xl">
             {{ t('app.logout_confirm_title') }}
           </h2>
-          <p class="mt-3 text-base leading-relaxed text-[#cbd5e1]">
+          <p class="mt-3 text-base leading-relaxed text-driver-muted">
             {{ t('app.logout_confirm_body') }}
           </p>
           <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-3">
             <button
               type="button"
-              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl border border-white/[0.12] px-4 text-base font-semibold text-white transition hover:bg-white/5 sm:w-auto"
+              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl border border-white/[0.12] px-4 text-base font-semibold text-driver-ink transition hover:bg-white/5 sm:w-auto"
               @click="logoutConfirmOpen = false"
             >
               {{ t('app.cancel') }}
             </button>
             <button
               type="button"
-              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl bg-[#f43f5e] px-4 text-base font-bold text-white transition hover:bg-[#e11d48] sm:w-auto"
+              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl bg-[#f43f5e] px-4 text-base font-bold text-driver-ink transition hover:bg-[#e11d48] sm:w-auto"
               @click="confirmLogout"
             >
               {{ t('app.logout_confirm_action') }}
@@ -630,7 +633,7 @@ const documentRows = computed(() => {
     if (key === 'valid')
       return {
         badgeText: t('driver_account.status_valid'),
-        badgeClass: 'bg-[#2dd4a0]/20 text-[#2dd4a0]',
+        badgeClass: 'bg-driver-accent/20 text-driver-accent',
       }
     if (key === 'soon')
       return {
@@ -645,7 +648,7 @@ const documentRows = computed(() => {
     return {
       badgeText: t('driver_account.status_missing'),
       badgeClass:
-        'border border-dashed border-[#64748b]/50 bg-slate-600/20 text-[#94a3b8]',
+        'border border-dashed border-[#64748b]/50 bg-slate-600/20 text-driver-muted',
     }
   }
 
@@ -721,7 +724,7 @@ function tripStatusLabel(trip) {
 
 function tripStatusBadgeClass(trip) {
   const s = tripStatusNorm(trip)
-  if (s === 'completed') return 'bg-[#2dd4a0]/20 text-[#2dd4a0]'
+  if (s === 'completed') return 'bg-driver-accent/20 text-driver-accent'
   if (s === 'cancelled') return 'bg-[#f43f5e]/20 text-[#f43f5e]'
   if (s === 'in_progress') return 'bg-[#3b82f6]/20 text-[#3b82f6]'
   return 'bg-amber-500/20 text-amber-200'

@@ -1,136 +1,150 @@
 <template>
-  <div class="max-w-lg mx-auto w-full space-y-4 sm:max-w-2xl">
-    <div>
-      <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
-        {{ t('driver_costs.title') }}
-      </h1>
-      <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-        {{ t('driver_costs.subtitle') }}
+  <div class="relative min-h-full w-full overflow-x-hidden bg-driver-bg text-driver-ink">
+    <!-- Pull distance indicator -->
+    <div
+      class="pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+4px)] z-40 -translate-x-1/2 transition-opacity duration-150"
+      :class="ptrRefreshing || ptrPulling ? 'opacity-100' : 'opacity-0'"
+      aria-hidden="true"
+    >
+      <div
+        class="flex items-center gap-2 rounded-full bg-driver-card px-4 py-2 text-sm font-semibold text-driver-accent shadow-lg ring-1 ring-driver-accent/25"
+      >
+        <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-driver-accent border-t-transparent" />
+        {{ ptrRefreshing ? t('driver_costs.ptr_refreshing') : t('driver_costs.ptr_pull') }}
+      </div>
+    </div>
+
+    <DriverCostStatusTabs
+      v-model="statusTab"
+      :tabs="tabItems"
+      :aria-label="t('driver_costs.filter_aria')"
+    />
+
+    <div
+      class="mx-auto w-full max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:max-w-2xl sm:px-5"
+    >
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="min-w-0">
+          <h1 class="text-2xl font-bold tracking-tight text-driver-ink sm:text-[1.65rem]">
+            {{ t('driver_costs.title') }}
+          </h1>
+        </div>
+        <RouterLink
+          to="/driver/schedule"
+          class="flex min-h-[44px] shrink-0 items-center gap-2 rounded-2xl bg-driver-accent/15 px-4 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.98]"
+        >
+          <PlusCircleIcon class="h-5 w-5" aria-hidden="true" />
+          {{ t('driver_costs.cta_add') }}
+        </RouterLink>
+      </div>
+
+      <p
+        v-if="errorMsg"
+        class="mt-4 rounded-2xl border border-amber-500/35 bg-amber-950/35 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-500/20"
+      >
+        {{ t('driver_home.load_error') }}
+      </p>
+
+      <!-- Skeleton -->
+      <div v-if="loading && !items.length" class="mt-6 space-y-4">
+        <div v-for="s in 4" :key="s" class="animate-pulse overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
+          <div class="h-36 bg-driver-surface/90" />
+          <div class="h-14 border-t border-white/[0.06] bg-driver-surface/60" />
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div
+        v-else-if="!loading && !items.length"
+        class="mt-16 rounded-[1.35rem] bg-driver-card px-6 py-14 text-center ring-1 ring-white/[0.06]"
+      >
+        <ClipboardDocumentListIcon class="mx-auto h-14 w-14 text-driver-muted/45" aria-hidden="true" />
+        <p class="mt-5 text-lg font-semibold text-driver-ink">{{ t('driver_costs.empty_title') }}</p>
+        <p class="mt-2 text-base text-driver-muted">{{ t('driver_costs.empty_hint') }}</p>
+        <RouterLink
+          to="/driver/schedule"
+          class="mt-8 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-driver-accent px-8 text-base font-bold text-driver-bg transition hover:brightness-110 active:scale-[0.99]"
+        >
+          {{ t('driver_costs.cta_add') }}
+        </RouterLink>
+      </div>
+
+      <ul v-else class="mt-6 space-y-5">
+        <li v-for="c in items" :key="c.id">
+          <DriverCostListCard
+            :cost="c"
+            :status-label="statusLabel"
+            :type-label="typeLabel"
+            :trip-cta="t('driver_costs.open_trip')"
+          />
+        </li>
+      </ul>
+
+      <div ref="sentinelRef" class="h-4 w-full shrink-0 scroll-mt-4" aria-hidden="true" />
+
+      <div v-if="loadingMore" class="flex justify-center py-8">
+        <span class="inline-block h-9 w-9 animate-spin rounded-full border-2 border-driver-accent border-t-transparent" />
+      </div>
+
+      <p v-if="items.length && noMore" class="pb-8 pt-2 text-center text-sm text-driver-muted/70">
+        {{ t('driver_costs.end_of_list') }}
       </p>
     </div>
-
-    <div class="flex flex-wrap gap-2">
-      <button
-        v-for="f in statusFilters"
-        :key="f.value || 'all'"
-        type="button"
-        class="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-        :class="
-          statusQ === f.value
-            ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
-            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200'
-        "
-        @click="setStatus(f.value)"
-      >
-        {{ f.label }}
-      </button>
-    </div>
-
-    <RouterLink
-      to="/driver/schedule"
-      class="block rounded-2xl border border-dashed border-sky-300/80 bg-sky-50/80 px-4 py-3 text-center text-sm font-semibold text-sky-800 transition hover:bg-sky-100/80 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-200"
-    >
-      {{ t('driver_costs.hint_add_from_trip') }}
-    </RouterLink>
-
-    <p
-      v-if="errorMsg"
-      class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
-    >
-      {{ errorMsg }}
-    </p>
-
-    <p v-if="!loading && !items.length" class="text-center text-sm text-slate-500 dark:text-slate-400">
-      {{ t('driver_costs.empty') }}
-    </p>
-
-    <ul v-else class="space-y-2.5">
-      <li
-        v-for="c in items"
-        :key="c.id"
-        class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
-      >
-        <RouterLink
-          :to="`/driver/costs/${c.id}`"
-          class="block border-b border-slate-100 dark:border-slate-700/80"
-        >
-          <div class="flex items-start justify-between gap-2 px-3 py-2">
-            <span
-              class="inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold"
-              :class="statusClass(c.status)"
-            >
-              {{ statusLabel(c.status) }}
-            </span>
-            <span class="text-xs text-slate-500 dark:text-slate-400">#{{ c.trip_id }}</span>
-          </div>
-          <div class="px-3 py-2.5">
-            <p class="font-semibold text-slate-900 dark:text-white">
-              {{ formatVnd(c.amount) }}
-              <span v-if="c.currency && c.currency !== 'VND'" class="ml-1 text-sm font-normal text-slate-500">
-                {{ c.currency }}
-              </span>
-            </p>
-            <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-              {{ typeLabel(c.type) }}
-              <span v-if="c.description"> · {{ c.description }}</span>
-            </p>
-            <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-500">
-              {{ t('driver_costs.trip_depart') }}: {{ formatDepart(c.trip) }}
-            </p>
-          </div>
-        </RouterLink>
-        <div class="px-3 pb-3 pt-1">
-          <RouterLink
-            :to="`/driver/trips/${c.trip_id}`"
-            class="block w-full rounded-xl bg-slate-100 py-2 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
-          >
-            {{ t('driver_costs.open_trip') }}
-          </RouterLink>
-        </div>
-      </li>
-    </ul>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { listTripCosts } from '../../api/costs'
-import { formatVnd } from '../../util/labels'
+import { ClipboardDocumentListIcon, PlusCircleIcon } from '@heroicons/vue/24/outline'
+import DriverCostStatusTabs from '../../components/driver/costs/DriverCostStatusTabs.vue'
+import DriverCostListCard from '../../components/driver/costs/DriverCostListCard.vue'
+import { useDriverCostsList } from '../../composables/useDriverCostsList'
+import { usePullToRefresh } from '../../composables/usePullToRefresh'
 
 const { t, te } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const loading = ref(true)
-const errorMsg = ref('')
-const items = ref([])
+const statusTab = computed({
+  get: () => (typeof route.query.status === 'string' ? route.query.status : ''),
+  set: (v) => {
+    router.replace({ path: '/driver/costs', query: v ? { status: v } : {} })
+  },
+})
 
-const statusQ = computed(() => (typeof route.query.status === 'string' ? route.query.status : ''))
-
-const statusFilters = computed(() => [
+const tabItems = computed(() => [
   { value: '', label: t('driver_costs.filter_all') },
   { value: 'submitted', label: t('driver_costs.filter_submitted') },
   { value: 'confirmed', label: t('driver_costs.filter_confirmed') },
   { value: 'rejected', label: t('driver_costs.filter_rejected') },
 ])
 
-function setStatus(v) {
-  router.replace({ path: '/driver/costs', query: v ? { status: v } : {} })
-}
+const statusRef = computed(() => statusTab.value)
 
-function statusClass(st) {
-  if (st === 'confirmed') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200'
-  if (st === 'rejected') return 'bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200'
-  if (st === 'submitted') return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200'
-  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-}
+const { items, loading, loadingMore, errorMsg, meta, load, refresh, loadMore } = useDriverCostsList(statusRef)
+
+const { pulling: ptrPulling, refreshing: ptrRefreshing } = usePullToRefresh(() => refresh())
+
+const sentinelRef = ref(null)
+/** @type {import('vue').Ref<IntersectionObserver | null>} */
+let io = null
+
+const noMore = computed(() => {
+  const cur = meta.value?.current_page ?? 1
+  const last = meta.value?.last_page ?? 1
+  return cur >= last && items.value.length > 0
+})
 
 function statusLabel(st) {
-  const k = `driver_costs.st_${st}`
-  const tr = t(k)
-  return tr === k && st ? st : tr
+  const map = {
+    submitted: t('driver_costs.st_submitted'),
+    confirmed: t('driver_costs.st_confirmed'),
+    rejected: t('driver_costs.st_rejected'),
+    draft: t('driver_costs.st_draft'),
+  }
+  return map[st] ?? st ?? '—'
 }
 
 function typeLabel(type) {
@@ -142,37 +156,23 @@ function typeLabel(type) {
   return raw
 }
 
-function formatDepart(trip) {
-  if (!trip?.depart_at) return '—'
-  const d = new Date(trip.depart_at)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
-async function load() {
-  loading.value = true
-  errorMsg.value = ''
-  try {
-    const p = { per_page: 50, page: 1 }
-    if (statusQ.value) p.status = statusQ.value
-    const res = await listTripCosts(p)
-    items.value = res?.items ?? []
-  } catch {
-    errorMsg.value = t('driver_home.load_error')
-    items.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
 onMounted(() => {
-  load()
+  void load({ append: false })
+  io = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((e) => e.isIntersecting)) void loadMore()
+    },
+    { rootMargin: '120px' },
+  )
+  if (sentinelRef.value) io.observe(sentinelRef.value)
 })
 
-watch(
-  () => [route.path, route.query.status],
-  () => {
-    if (route.path === '/driver/costs') load()
-  },
-)
+watch(sentinelRef, (el, prev) => {
+  if (io && prev) io.unobserve(prev)
+  if (io && el) io.observe(el)
+})
+
+onUnmounted(() => {
+  if (io) io.disconnect()
+})
 </script>

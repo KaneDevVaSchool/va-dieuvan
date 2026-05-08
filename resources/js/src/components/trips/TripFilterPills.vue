@@ -1,5 +1,5 @@
 <template>
-  <div class="sticky top-[3.25rem] z-20 -mx-3 border-b border-[rgba(255,255,255,0.06)] bg-[#09180f]/92 px-3 pb-2 pt-2 backdrop-blur-md sm:-mx-4">
+  <div class="sticky top-[3.25rem] z-20 -mx-3 border-b border-[rgba(255,255,255,0.06)] bg-driver-bg/92 px-3 pb-2 pt-2 backdrop-blur-md sm:-mx-4">
     <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#7fdcc8]">
       {{ t('trip_history_page.filters_title') }}
     </p>
@@ -14,8 +14,8 @@
           class="shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition active:scale-[0.98]"
           :class="
             modelValue === opt.id
-              ? 'bg-[#7fdcc8] text-[#09180f]'
-              : 'border border-[rgba(255,255,255,0.08)] bg-[#0f2318] text-[#94a3b8]'
+              ? 'bg-[#7fdcc8] text-driver-bg'
+              : 'border border-[rgba(255,255,255,0.08)] bg-driver-card text-driver-muted'
           "
           @click="$emit('update:modelValue', opt.id)"
         >
@@ -28,8 +28,8 @@
         type="button"
         class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition active:scale-95"
         :class="hasAdvancedFilter
-          ? 'bg-[#7fdcc8] text-[#09180f]'
-          : 'border border-[rgba(255,255,255,0.08)] bg-[#0f2318] text-[#94a3b8]'"
+          ? 'bg-[#7fdcc8] text-driver-bg'
+          : 'border border-[rgba(255,255,255,0.08)] bg-driver-card text-driver-muted'"
         :aria-label="t('trip_history_page.adv_filter_title')"
         @click="showPanel = true"
       >
@@ -74,7 +74,9 @@
         class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
         @click.self="showPanel = false"
       >
-        <div class="w-full max-w-lg rounded-t-3xl bg-[#0f2318] px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5 ring-1 ring-white/10">
+        <div
+          class="sheet-inner w-full max-w-lg max-h-[min(560px,85dvh)] overflow-y-auto overscroll-contain rounded-t-3xl bg-driver-card px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5 ring-1 ring-white/10"
+        >
           <!-- Handle -->
           <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-bold text-white">{{ t('trip_history_page.adv_filter_title') }}</h3>
@@ -89,16 +91,16 @@
             </button>
           </div>
 
-          <!-- Trip type -->
+          <!-- Trip type: single row, horizontal scroll — avoids wrapping -->
           <div class="mb-5">
-            <p class="mb-2.5 text-xs font-semibold uppercase tracking-wider text-white/50">
+            <p class="mb-2.5 text-xs font-semibold uppercase tracking-wider text-white/50 whitespace-nowrap">
               {{ t('trip_history_page.adv_filter_type_label') }}
             </p>
-            <div class="flex flex-wrap gap-2">
+            <div class="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 scrollbar-none [-webkit-overflow-scrolling:touch]">
               <button
                 type="button"
-                class="rounded-full px-4 py-2 text-sm font-semibold transition active:scale-[0.97]"
-                :class="draft.type === '' ? 'bg-[#7fdcc8] text-[#09180f]' : 'border border-white/10 bg-white/5 text-white/60'"
+                class="shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold transition active:scale-[0.97]"
+                :class="draft.type === '' ? 'bg-[#7fdcc8] text-driver-bg' : 'border border-white/10 bg-white/5 text-white/60'"
                 @click="draft.type = ''"
               >
                 {{ t('trip_history_page.adv_filter_type_all') }}
@@ -107,9 +109,9 @@
                 v-for="tp in tripTypes"
                 :key="tp.id"
                 type="button"
-                class="rounded-full px-4 py-2 text-sm font-semibold transition active:scale-[0.97]"
+                class="shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold transition active:scale-[0.97]"
                 :class="draft.type === tp.id
-                  ? 'bg-[#7fdcc8] text-[#09180f]'
+                  ? 'bg-[#7fdcc8] text-driver-bg'
                   : 'border border-white/10 bg-white/5 text-white/60'"
                 @click="draft.type = tp.id"
               >
@@ -118,42 +120,42 @@
             </div>
           </div>
 
-          <!-- Date range -->
-          <div class="mb-6 grid grid-cols-2 gap-3">
-            <div>
-              <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50">
+          <!-- Date range: stacked on narrow screens; 2 cols sm+ -->
+          <div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="min-w-0">
+              <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50 whitespace-nowrap">
                 {{ t('trip_history_page.adv_filter_date_from') }}
               </label>
               <input
                 v-model="draft.date_from"
                 type="date"
-                class="w-full rounded-xl bg-white/[0.06] px-3 py-2.5 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#7fdcc8]/50 [color-scheme:dark]"
+                class="box-border w-full min-h-[2.75rem] rounded-xl bg-white/[0.06] px-3 py-2.5 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#7fdcc8]/50 [color-scheme:dark]"
               />
             </div>
-            <div>
-              <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50">
+            <div class="min-w-0">
+              <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50 whitespace-nowrap">
                 {{ t('trip_history_page.adv_filter_date_to') }}
               </label>
               <input
                 v-model="draft.date_to"
                 type="date"
-                class="w-full rounded-xl bg-white/[0.06] px-3 py-2.5 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#7fdcc8]/50 [color-scheme:dark]"
+                class="box-border w-full min-h-[2.75rem] rounded-xl bg-white/[0.06] px-3 py-2.5 text-sm text-white ring-1 ring-white/10 focus:outline-none focus:ring-[#7fdcc8]/50 [color-scheme:dark]"
               />
             </div>
           </div>
 
-          <!-- Actions -->
-          <div class="flex gap-3">
+          <!-- Actions: equal columns, text stays one line -->
+          <div class="grid grid-cols-2 gap-2 sm:gap-3">
             <button
               type="button"
-              class="flex-1 rounded-xl py-3 text-sm font-semibold text-white/50 ring-1 ring-white/15 transition active:scale-[0.98]"
+              class="min-h-[48px] shrink-0 whitespace-nowrap rounded-xl px-2 py-2.5 text-center text-[13px] font-semibold leading-none text-white/50 ring-1 ring-white/15 transition active:scale-[0.98] sm:text-sm sm:py-3"
               @click="onReset"
             >
               {{ t('trip_history_page.adv_filter_reset') }}
             </button>
             <button
               type="button"
-              class="flex-1 rounded-xl bg-[#1dbc5e] py-3 text-sm font-bold text-white transition active:scale-[0.98]"
+              class="min-h-[48px] shrink-0 whitespace-nowrap rounded-xl bg-driver-accent px-2 py-2.5 text-center text-[13px] font-bold leading-none text-driver-bg transition active:scale-[0.98] sm:text-sm sm:py-3"
               @click="onApply"
             >
               {{ t('trip_history_page.adv_filter_apply') }}

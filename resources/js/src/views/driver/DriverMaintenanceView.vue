@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-full w-full overflow-x-hidden bg-[#0a0f0d] pb-[calc(9rem+env(safe-area-inset-bottom))] text-white">
+  <div class="min-h-full w-full overflow-x-hidden bg-driver-bg pb-[calc(9rem+env(safe-area-inset-bottom))] text-driver-ink">
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
-    <div class="sticky top-0 z-20 flex items-center gap-3 bg-[#0a0f0d]/95 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_1px_0_rgba(127,220,200,0.08)] backdrop-blur-sm">
+    <div class="sticky top-0 z-20 flex items-center gap-3 bg-driver-bg/95 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_1px_0_rgba(127,220,200,0.08)] backdrop-blur-sm">
       <RouterLink
         :to="{ name: 'driverHome' }"
         class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/8 text-white ring-1 ring-white/10 active:scale-95"
@@ -13,7 +13,7 @@
         </svg>
       </RouterLink>
 
-      <h1 class="flex-1 text-center text-[20px] font-bold leading-tight text-white">
+      <h1 class="flex-1 text-center text-[20px] font-bold leading-tight text-driver-ink">
         {{ t('driver_maintenance.title') }}
       </h1>
 
@@ -24,7 +24,7 @@
     <div class="mx-auto w-full max-w-lg px-4 pt-4">
 
       <!-- Vehicle pill -->
-      <div v-if="vehicle" class="inline-flex items-center gap-2 rounded-full bg-[#111d16] px-3.5 py-1.5 ring-1 ring-white/10">
+      <div v-if="vehicle" class="inline-flex items-center gap-2 rounded-full bg-driver-card px-3.5 py-1.5 ring-1 ring-white/10">
         <span class="h-2.5 w-2.5 rounded-full bg-[#7fdcc8]" aria-hidden="true" />
         <span class="text-base font-semibold text-white/90">
           {{ vehiclePill }}
@@ -39,7 +39,7 @@
       <!-- ── Skeleton loading ──────────────────────────────────── -->
       <template v-if="loading">
         <div class="mt-4 space-y-2.5">
-          <div v-for="i in 5" :key="i" class="h-[72px] animate-pulse rounded-2xl bg-[#111d16]" />
+          <div v-for="i in 5" :key="i" class="h-[72px] animate-pulse rounded-2xl bg-driver-card" />
         </div>
       </template>
 
@@ -61,7 +61,7 @@
         v-else-if="!vehicle"
         class="mt-12 flex flex-col items-center gap-4 text-center"
       >
-        <div class="flex h-20 w-20 items-center justify-center rounded-full bg-[#111d16] ring-1 ring-white/10">
+        <div class="flex h-20 w-20 items-center justify-center rounded-full bg-driver-card ring-1 ring-white/10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-10 w-10 text-white/20" aria-hidden="true">
             <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h12V6.375c0-1.036-.84-1.875-1.875-1.875h-8.25ZM13.5 15h-12v2.625c0 1.035.84 1.875 1.875 1.875h.375a3 3 0 1 1 6 0h3a.75.75 0 0 0 .75-.75V15Z"/>
             <path d="M8.25 19.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0ZM15.75 6.75a.75.75 0 0 0-.75.75v11.25c0 .087.015.17.042.248a3 3 0 0 1 5.958.464c.853-.175 1.522-.935 1.464-1.883a18.659 18.659 0 0 0-3.732-10.104 1.837 1.837 0 0 0-1.47-.725H15.75Z"/>
@@ -138,7 +138,7 @@
             <div
               v-for="r in reminders"
               :key="r.id"
-              class="flex items-center gap-1.5 rounded-full bg-[#111d16] px-3 py-1.5 text-sm font-medium text-white/70 ring-1 ring-white/10"
+              class="flex items-center gap-1.5 rounded-full bg-driver-card px-3 py-1.5 text-sm font-medium text-white/70 ring-1 ring-white/10"
             >
               <span>{{ r.title }}</span>
               <button
@@ -177,7 +177,7 @@
     >
       <RouterLink
         :to="{ name: 'driverAccount' }"
-        class="flex min-h-[52px] w-full items-center justify-center rounded-[14px] bg-[#1dbc5e] text-[18px] font-bold text-white shadow-lg shadow-[#1dbc5e]/20 transition active:scale-[0.98]"
+        class="flex min-h-[52px] w-full items-center justify-center rounded-[14px] bg-driver-accent text-[18px] font-bold text-driver-bg shadow-lg shadow-[#7fdcc8]/25 transition active:scale-[0.98]"
       >
         {{ t('driver_maintenance.cta_update') }}
       </RouterLink>
@@ -191,7 +191,7 @@
           class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
           @click.self="showReminderModal = false"
         >
-          <div class="w-full max-w-lg rounded-t-3xl bg-[#111d16] px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5 ring-1 ring-white/10 sm:rounded-3xl sm:pb-6">
+          <div class="w-full max-w-lg rounded-t-3xl bg-driver-card px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5 ring-1 ring-white/10 sm:rounded-3xl sm:pb-6">
             <h3 class="mb-4 text-lg font-bold text-white">{{ t('driver_maintenance.add_reminder') }}</h3>
 
             <div class="space-y-4">
@@ -246,7 +246,7 @@
               <button
                 type="button"
                 :disabled="!newReminder.title || !newReminder.remind_at || savingReminder"
-                class="flex-1 rounded-xl bg-[#1dbc5e] py-3 text-sm font-bold text-white disabled:opacity-50"
+                class="flex-1 rounded-xl bg-driver-accent py-3 text-sm font-bold text-driver-bg disabled:opacity-50"
                 @click="onSaveReminder"
               >
                 {{ savingReminder ? t('common.processing') : t('driver_maintenance.reminder_save') }}
