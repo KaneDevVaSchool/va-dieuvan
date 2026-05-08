@@ -74,9 +74,6 @@
         />
       </div>
 
-      <!-- Stats header -->
-      <TripStatsCard :stats="stats" :loading="statsLoading" />
-
       <!-- Week calendar -->
       <WeekCalendar v-model="selectedDate" :trip-dates="weekTripDateKeys" />
 
@@ -142,14 +139,13 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTripHistory } from '../../composables/useTripHistory'
-import TripStatsCard from '../../components/trips/TripStatsCard.vue'
 import WeekCalendar from '../../components/trips/WeekCalendar.vue'
 import TripCard from '../../components/trips/TripCard.vue'
 import TripEmptyState from '../../components/trips/TripEmptyState.vue'
 
 const { t } = useI18n()
 
-const { trips, stats, isLoading, error, hasMore, fetch: fetchTrips, loadMore } = useTripHistory()
+const { trips, isLoading, error, hasMore, fetch: fetchTrips, loadMore } = useTripHistory()
 
 const selectedDate = ref(new Date())
 const searchOpen = ref(false)
@@ -301,8 +297,6 @@ const displayErrorMsg = computed(() => {
   if (error.value === 'fetch_failed') return t('trip_history_page.load_error')
   return ''
 })
-
-const statsLoading = computed(() => isLoading.value && stats.value == null)
 
 const observerAvailable = computed(() => typeof IntersectionObserver !== 'undefined')
 
