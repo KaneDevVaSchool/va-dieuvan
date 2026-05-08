@@ -1,5 +1,6 @@
-#!/usr/bin/env php
 <?php
+
+// Không dùng shebang đầu file: tránh một số CLI in ra dòng "#!/usr/bin/env php". Gọi: php artisan …
 
 define('LARAVEL_START', microtime(true));
 
