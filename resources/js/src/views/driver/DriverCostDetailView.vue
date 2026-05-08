@@ -1,6 +1,6 @@
 <template>
   <div
-    class="driver-cost-detail -mx-3 min-h-[calc(100dvh-6rem)] w-[calc(100%+1.5rem)] bg-[#ECEEF1] pb-32 sm:mx-auto sm:min-h-0 sm:w-full sm:max-w-lg sm:pb-8"
+    class="driver-cost-detail mx-auto min-h-full w-full max-w-lg bg-[#ECEEF1] pb-40 sm:pb-8"
   >
     <div class="bg-[#001a2e] px-3 py-3 text-white sm:rounded-b-2xl sm:px-4">
       <div class="flex items-center gap-2">
@@ -158,7 +158,7 @@
 
     <div
       v-if="cost && canAct"
-      class="safe-pb fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/95 px-3 py-3 sm:static sm:mt-4 sm:border-0"
+      class="safe-pb fixed bottom-[calc(var(--driver-bottom-nav-height,3.5rem)+env(safe-area-inset-bottom))] left-0 right-0 z-[35] border-t border-slate-200/80 bg-white/95 px-3 py-3 sm:static sm:bottom-auto sm:z-auto sm:mt-4 sm:border-0"
     >
       <div class="mx-auto flex max-w-lg gap-2 sm:px-0">
         <button
@@ -186,7 +186,7 @@
     <Teleport to="body">
       <div
         v-if="editOpen"
-        class="fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+        class="fixed inset-0 z-[45] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
         @click.self="editOpen = false"
       >
         <div
@@ -506,6 +506,6 @@ async function onCancel() {
 
 <style scoped>
 .safe-pb {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0.75rem;
 }
 </style>

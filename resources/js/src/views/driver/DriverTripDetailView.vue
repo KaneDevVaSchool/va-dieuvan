@@ -1,6 +1,6 @@
 <template>
   <div
-    class="driver-trip-detail -mx-3 flex min-h-[calc(100dvh-6rem)] w-[calc(100%+1.5rem)] flex-col bg-[#f4f6f8] sm:mx-auto sm:min-h-0 sm:w-full sm:max-w-lg sm:pb-0"
+    class="driver-trip-detail mx-auto flex min-h-full w-full max-w-lg flex-col bg-[#f4f6f8] sm:pb-0"
   >
     <!-- ─── Dark header ────────────────────────────────────── -->
     <div class="relative shrink-0 bg-[#0d1f2d] px-4 pb-5 pt-3 text-white sm:rounded-b-3xl">
@@ -96,7 +96,7 @@
     </div>
 
     <!-- ─── Scrollable content ─────────────────────────────── -->
-    <div class="relative z-10 -mt-3 flex-1 space-y-3 px-3 pb-40 sm:px-0 sm:pb-12">
+    <div class="relative z-10 -mt-3 flex-1 space-y-3 px-3 pb-44 sm:px-0 sm:pb-12">
       <p
         v-if="loadError"
         class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
@@ -556,7 +556,7 @@
 
     <!-- ─── Sticky bottom bar ──────────────────────────────── -->
     <div
-      class="safe-pb fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/97 px-3 pt-2 backdrop-blur sm:static sm:mt-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0"
+      class="safe-pb fixed bottom-[calc(var(--driver-bottom-nav-height,3.5rem)+env(safe-area-inset-bottom))] left-0 right-0 z-[35] border-t border-slate-200/80 bg-white/97 px-3 pt-2 backdrop-blur sm:static sm:bottom-auto sm:z-auto sm:mt-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0"
     >
       <!-- Progress row (only while in-progress + student trips) -->
       <div
@@ -615,7 +615,7 @@
       <!-- KM modal -->
       <div
         v-if="kmModalOpen"
-        class="fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+        class="fixed inset-0 z-[45] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
         @click.self="kmModalOpen = false"
       >
         <div class="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl" @click.stop>
@@ -688,7 +688,7 @@
       <!-- Cost modal -->
       <div
         v-if="costModalOpen"
-        class="fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+        class="fixed inset-0 z-[45] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
         @click.self="costModalOpen = false"
       >
         <div class="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-2xl sm:rounded-2xl" @click.stop>
@@ -1509,6 +1509,6 @@ async function startTrip() {
 
 <style scoped>
 .safe-pb {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0.75rem;
 }
 </style>

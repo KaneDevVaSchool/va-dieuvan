@@ -216,7 +216,7 @@
     <!-- ── Bottom Action Buttons ──────────────────────────────────── -->
     <div
       v-if="currentItem && !editMode"
-      class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 space-y-2.5 px-4 pb-3 pt-4"
+      class="fixed bottom-[calc(var(--driver-bottom-nav-height,3.5rem)+env(safe-area-inset-bottom))] left-0 right-0 z-30 space-y-2.5 px-4 pb-3 pt-4"
       style="background: linear-gradient(to top, #0a0f0d 70%, transparent);"
     >
       <button
