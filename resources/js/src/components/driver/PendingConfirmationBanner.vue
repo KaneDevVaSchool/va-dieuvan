@@ -331,9 +331,21 @@ const pendingBucket = computed(() => props.trips.filter((x) => bucketFor(x) === 
 const confirmedBucket = computed(() => props.trips.filter((x) => bucketFor(x) === 'confirmed'))
 
 function sortByDepart(list) {
-  return list
-    .slice()
-    .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))
+  function departMs(t) {
+    if (t?.depart_at) {
+      const n = new Date(t.depart_at).getTime()
+      return Number.isFinite(n) ? n : 0
+    }
+    if (t?.depart_date && /^\d{4}-\d{2}-\d{2}/.test(String(t.depart_date))) {
+      const [y, m, d] = String(t.depart_date)
+        .slice(0, 10)
+        .split('-')
+        .map(Number)
+      return new Date(y, m - 1, d, 12, 0, 0, 0).getTime()
+    }
+    return 0
+  }
+  return list.slice().sort((a, b) => departMs(a) - departMs(b))
 }
 
 const sortedPending = computed(() => sortByDepart(pendingBucket.value))

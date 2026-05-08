@@ -22,6 +22,7 @@ export function tripDepartIso(trip) {
 }
 
 export function isTripUrgent(trip) {
+  if (trip?.is_urgent != null) return Boolean(trip.is_urgent)
   return !!dispatchReqOf(trip)?.is_urgent
 }
 

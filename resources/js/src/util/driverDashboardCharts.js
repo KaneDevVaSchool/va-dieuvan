@@ -2,7 +2,6 @@
  * ECharts options cho driver dashboard (dữ liệu client-side từ danh sách chuyến).
  */
 
-import * as echarts from 'echarts'
 import { emptyDashboardChartOption } from './transportDashboardCharts'
 
 /** Empty donut — nền tối (DriverAnalyticsSection). */
@@ -347,10 +346,7 @@ export function driverTrendOption({
         symbolSize: showSymbols ? 5 : 0,
         showSymbol: showSymbols,
         areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(37,99,235,0.32)' },
-            { offset: 1, color: 'rgba(37,99,235,0.04)' },
-          ]),
+          color: 'rgba(37,99,235,0.22)',
         },
         lineStyle: { width: 2, color: lineColor },
         itemStyle: { color: lineColor },

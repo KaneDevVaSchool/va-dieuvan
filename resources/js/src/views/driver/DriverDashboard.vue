@@ -122,11 +122,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { getDriverSummary } from '../../api/driver'
-import { listTripsAll, updateTripStatus } from '../../api/trips'
+import { getDriverSummary, listDriverTripsAll } from '../../api/driver'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
 import { useTripHistory } from '../../composables/useTripHistory'
 import { useAuthStore } from '../../store'
@@ -136,7 +135,11 @@ import PendingConfirmationBanner from '../../components/driver/PendingConfirmati
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverTripCard from '../../components/driver/DriverTripCard.vue'
 import DriverTodayEmptyState from '../../components/driver/DriverTodayEmptyState.vue'
-import DriverAnalyticsSection from '../../components/driver/DriverAnalyticsSection.vue'
+import { updateTripStatus } from '../../api/trips'
+
+const DriverAnalyticsSection = defineAsyncComponent(() =>
+  import('../../components/driver/DriverAnalyticsSection.vue'),
+)
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -151,7 +154,7 @@ const startBusy = ref(false)
 const {
   stats: monthlyTripStats,
   isLoading: monthlyTripHistoryLoading,
-  fetch: fetchDriverTripHistorySlice,
+  applyDashboardTripStats,
 } = useTripHistory()
 
 const user = computed(() => auth.user)
@@ -201,8 +204,8 @@ function sortTodayTrips(list) {
     const ta = sortTier(a.status)
     const tb = sortTier(b.status)
     if (ta !== tb) return ta - tb
-    const da = new Date(a.depart_at).getTime() || 0
-    const db = new Date(b.depart_at).getTime() || 0
+    const da = new Date(a.depart_at ?? a.depart_date ?? 0).getTime() || 0
+    const db = new Date(b.depart_at ?? b.depart_date ?? 0).getTime() || 0
     if (ta >= 3) return db - da
     return da - db
   })
@@ -220,7 +223,11 @@ const pendingTrips = computed(() => {
   return rawTrips.value
     .filter((x) => pendingStatuses.has(tripStatusNorm(x)))
     .slice()
-    .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))
+    .sort(
+      (a, b) =>
+        (new Date(a.depart_at ?? a.depart_date ?? 0).getTime() || 0) -
+        (new Date(b.depart_at ?? b.depart_date ?? 0).getTime() || 0),
+    )
 })
 
 /** Chuyến của tài xế có depart trong tháng hiện tại (local) — cho donut thống kê tháng. */
@@ -248,11 +255,18 @@ const upcomingBannerTrip = computed(() => {
   const eligible = rawTrips.value.filter((x) => {
     const s = tripStatusNorm(x)
     if (!['pending', 'assigned', 'driver_confirmed', 'approved'].includes(s)) return false
-    const dep = x.depart_at ? new Date(x.depart_at).getTime() : NaN
+    const dep = x.depart_at
+      ? new Date(x.depart_at).getTime()
+      : x.depart_date
+        ? new Date(x.depart_date).getTime()
+        : NaN
     if (!Number.isFinite(dep) || dep < now || dep > limit) return false
     return true
   })
-  eligible.sort((a, b) => new Date(a.depart_at) - new Date(b.depart_at))
+  eligible.sort(
+    (a, b) =>
+      new Date(a.depart_at ?? a.depart_date ?? 0) - new Date(b.depart_at ?? b.depart_date ?? 0),
+  )
   return eligible[0] ?? null
 })
 
@@ -269,20 +283,6 @@ const statsLoadingDisplay = computed(
   () => monthlyTripHistoryLoading.value && monthlyTripStats.value == null,
 )
 
-function driverTripHistoryParamsForStats() {
-  const now = new Date()
-  const from = ymd(new Date(now.getFullYear(), now.getMonth(), 1))
-  const to = ymd(new Date(now.getFullYear(), now.getMonth() + 1, 0))
-  return { date_from: from, date_to: to }
-}
-
-async function fetchMonthlyDriverStats() {
-  try {
-    await fetchDriverTripHistorySlice(driverTripHistoryParamsForStats(), false)
-  } catch {
-  }
-}
-
 async function fetchData(showLoader = true) {
   if (showLoader) loading.value = true
   errorMsg.value = ''
@@ -291,21 +291,24 @@ async function fetchData(showLoader = true) {
   past.setDate(past.getDate() - 30)
   const horizon = new Date(now)
   horizon.setDate(horizon.getDate() + 21)
+  const dateFrom = ymd(past)
+  const dateTo = ymd(horizon)
   try {
-    const [sum, listRes] = await Promise.all([
+    const [sum, listBundle] = await Promise.all([
       getDriverSummary(),
-      listTripsAll({ from: ymd(past), to: ymd(horizon), per_page: 100 }),
+      listDriverTripsAll({ date_from: dateFrom, date_to: dateTo }),
     ])
     myDriverId.value = sum?.driver?.id ?? null
-    rawListItems.value = listRes?.items ?? []
+    rawListItems.value = listBundle?.items ?? []
+    applyDashboardTripStats(listBundle?.stats ?? null, { resetToEmpty: true })
   } catch {
     errorMsg.value = t('driver_home.load_error')
     myDriverId.value = null
     rawListItems.value = []
+    applyDashboardTripStats(null)
   } finally {
     if (showLoader) loading.value = false
   }
-  await fetchMonthlyDriverStats()
 }
 
 async function refreshTrips() {

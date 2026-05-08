@@ -10,7 +10,31 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, shallowRef } from 'vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import {
+  DatasetComponent,
+  GraphicComponent,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+} from 'echarts/components'
+import { LabelLayout, UniversalTransition } from 'echarts/features'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
+  DatasetComponent,
+  GraphicComponent,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  BarChart,
+  LineChart,
+  PieChart,
+  LabelLayout,
+  UniversalTransition,
+  CanvasRenderer,
+])
 
 const props = defineProps({
   option: { type: Object, default: null },

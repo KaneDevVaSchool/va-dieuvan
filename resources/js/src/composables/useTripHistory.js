@@ -3,8 +3,37 @@ import { http } from '../api/http'
 
 /**
  * Driver trip history via GET /api/driver/trips
- * Params: date_from, date_to, status (optional), page, per_page (max 15)
+ * Params: date_from, date_to, status (optional), page, per_page (API max 100; lịch sử UI dùng 15)
  */
+function emptyStatsShape() {
+  return {
+    total: 0,
+    completed: 0,
+    cancelled: 0,
+    total_km: null,
+    completed_this_month: 0,
+    cancelled_this_month: 0,
+    completed_growth_pct: null,
+    overdue_count: 0,
+  }
+}
+
+/** @param {unknown} raw */
+function mapHistoryStatsFromApi(raw) {
+  if (raw == null || typeof raw !== 'object') return emptyStatsShape()
+  const s = raw
+  return {
+    total: s.total ?? 0,
+    completed: s.completed ?? s.completed_this_month ?? 0,
+    cancelled: s.cancelled ?? s.cancelled_this_month ?? 0,
+    total_km: s.total_km ?? null,
+    completed_this_month: s.completed_this_month ?? s.completed ?? 0,
+    cancelled_this_month: s.cancelled_this_month ?? s.cancelled ?? 0,
+    completed_growth_pct: s.completed_growth_pct ?? null,
+    overdue_count: s.overdue_count ?? 0,
+  }
+}
+
 export function useTripHistory() {
   const trips = ref([])
   const stats = ref(null)
@@ -25,6 +54,20 @@ export function useTripHistory() {
       delete params.status
     }
     return params
+  }
+
+  /**
+   * Gán KPI tháng từ payload GET /driver/trips (trang 1) mà không gọi API lần hai.
+   * @param {unknown} apiStats — `stats` từ JSON hoặc null khi lỗi / không có
+   * @param {{ resetToEmpty?: boolean }} opts — nếu resetToEmpty và apiStats null → object số 0
+   */
+  function applyDashboardTripStats(apiStats, opts = {}) {
+    const { resetToEmpty = false } = opts
+    if (apiStats != null && typeof apiStats === 'object') {
+      stats.value = mapHistoryStatsFromApi(apiStats)
+      return
+    }
+    stats.value = resetToEmpty ? emptyStatsShape() : null
   }
 
   /** @param {Record<string, unknown>} baseParams @param {boolean} append */
@@ -48,28 +91,9 @@ export function useTripHistory() {
       if (!append) {
         trips.value = items
         if (d.stats != null && typeof d.stats === 'object') {
-          const s = d.stats
-          stats.value = {
-            total: s.total ?? 0,
-            completed: s.completed ?? s.completed_this_month ?? 0,
-            cancelled: s.cancelled ?? s.cancelled_this_month ?? 0,
-            total_km: s.total_km ?? null,
-            completed_this_month: s.completed_this_month ?? s.completed ?? 0,
-            cancelled_this_month: s.cancelled_this_month ?? s.cancelled ?? 0,
-            completed_growth_pct: s.completed_growth_pct ?? null,
-            overdue_count: s.overdue_count ?? 0,
-          }
+          stats.value = mapHistoryStatsFromApi(d.stats)
         } else {
-          stats.value = {
-            total: 0,
-            completed: 0,
-            cancelled: 0,
-            total_km: null,
-            completed_this_month: 0,
-            cancelled_this_month: 0,
-            completed_growth_pct: null,
-            overdue_count: 0,
-          }
+          stats.value = emptyStatsShape()
         }
       } else {
         trips.value = [...trips.value, ...items]
@@ -103,5 +127,6 @@ export function useTripHistory() {
     lastPage,
     fetch,
     loadMore,
+    applyDashboardTripStats,
   }
 }

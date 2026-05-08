@@ -23,7 +23,7 @@ class DriverTripController extends Controller
         $user = $request->user();
         $data = $request->validated();
         $perPage = isset($data['per_page']) ? (int) $data['per_page'] : 15;
-        $perPage = min(15, max(1, $perPage));
+        $perPage = min(100, max(1, $perPage));
 
         $baseStats = TripVisibility::visibleTripsQuery($user)
             ->whereHas('dispatchRequest');
@@ -33,7 +33,7 @@ class DriverTripController extends Controller
         $q = TripVisibility::visibleTripsQuery($user)
             ->whereHas('dispatchRequest')
             ->with([
-                'dispatchRequest:id,trip_type,origin,destination,passenger_count',
+                'dispatchRequest:id,trip_type,origin,destination,passenger_count,is_urgent,depart_at,arrive_by',
                 'tripPassengers',
                 'record:id,trip_id,distance_km',
             ]);
@@ -148,14 +148,18 @@ class DriverTripController extends Controller
 
         return [
             'id' => $trip->id,
+            'driver_id' => $trip->driver_id,
             'trip_number' => '#'.$trip->id,
             'type' => $this->tripTypeCode($dr?->trip_type),
             'status' => $trip->status,
+            'depart_at' => $depart ? $depart->toIso8601String() : null,
             'depart_date' => $depart ? $depart->format('Y-m-d') : null,
             'pickup_time' => $depart ? $depart->format('H:i') : null,
             'pickup_date' => $depart ? $depart->format('d/m/Y') : null,
             'pickup_location' => $dr?->origin,
             'dropoff_location' => $dr?->destination,
+            'is_urgent' => (bool) ($dr?->is_urgent),
+            'arrive_by' => $dr?->arrive_by ? $dr->arrive_by->toIso8601String() : null,
             'passenger_count' => $passengerCount,
             'duration_minutes' => $durationMinutes,
             'distance_km' => $distanceKm,
