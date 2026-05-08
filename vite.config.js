@@ -14,12 +14,19 @@ export default defineConfig({
             strategies: 'injectManifest',
             srcDir: 'resources/js/src',
             filename: 'sw.js',
-            registerType: 'prompt',
+            registerType: 'autoUpdate',
             injectRegister: false,
             scope: '/',
             includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
             injectManifest: {
                 globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
+                globIgnores: [
+                    '**/*.map',
+                    '**/workbox-*.js',
+                    'sw.js',
+                ],
+                // Skip any single file larger than 3 MB; it will still load from the network.
+                maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
                 additionalManifestEntries: [
                     { url: '/', revision: `laravel-shell-${Date.now()}` },
                 ],
@@ -94,10 +101,14 @@ export default defineConfig({
             output: {
                 manualChunks(id) {
                     if (!id.includes('node_modules')) return;
+                    // Heavy charting library — split off so driver shell never loads it
+                    if (id.includes('echarts') || id.includes('zrender')) return 'echarts';
+                    // Workbox runtime (separate from the precache manifest)
+                    if (id.includes('workbox')) return 'workbox';
+                    // Core framework pieces — minimal, loaded on every page
                     if (id.includes('vue-router')) return 'vue-router';
                     if (id.includes('pinia')) return 'pinia';
                     if (id.includes('vue-i18n')) return 'vue-i18n';
-                    if (id.includes('echarts')) return 'echarts';
                     if (id.includes('@heroicons')) return 'icons';
                     if (id.includes('axios')) return 'axios';
                     if (id.includes('vue')) return 'vue-vendor';

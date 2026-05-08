@@ -47,10 +47,27 @@ export function useTripHistory() {
 
       if (!append) {
         trips.value = items
-        stats.value = d.stats != null && typeof d.stats === 'object' ? d.stats : {
-          completed_this_month: 0,
-          cancelled_this_month: 0,
-          completed_growth_pct: null,
+        if (d.stats != null && typeof d.stats === 'object') {
+          const s = d.stats
+          stats.value = {
+            total: s.total ?? 0,
+            completed: s.completed ?? s.completed_this_month ?? 0,
+            cancelled: s.cancelled ?? s.cancelled_this_month ?? 0,
+            total_km: s.total_km ?? null,
+            completed_this_month: s.completed_this_month ?? s.completed ?? 0,
+            cancelled_this_month: s.cancelled_this_month ?? s.cancelled ?? 0,
+            completed_growth_pct: s.completed_growth_pct ?? null,
+          }
+        } else {
+          stats.value = {
+            total: 0,
+            completed: 0,
+            cancelled: 0,
+            total_km: null,
+            completed_this_month: 0,
+            cancelled_this_month: 0,
+            completed_growth_pct: null,
+          }
         }
       } else {
         trips.value = [...trips.value, ...items]

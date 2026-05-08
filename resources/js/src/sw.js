@@ -23,6 +23,7 @@ registerRoute(
   }),
 )
 
+// Google Fonts: cache-first, 1 year
 registerRoute(
   ({ url }) => /^https:\/\/fonts\.(googleapis|gstatic)\.com/.test(url.href),
   new CacheFirst({
@@ -36,6 +37,23 @@ registerRoute(
   }),
 )
 
+// Static images (local + any same-origin /images/ path): cache-first, 30 days
+registerRoute(
+  ({ request, url }) =>
+    request.destination === 'image' &&
+    url.origin === self.location.origin,
+  new CacheFirst({
+    cacheName: 'local-images',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 60 * 60 * 24 * 30,
+      }),
+    ],
+  }),
+)
+
+// Safe read-only API endpoints: stale-while-revalidate, 24 h
 registerRoute(
   /\/api\/(targets|config|lookup|reference-pricing)\b/,
   new StaleWhileRevalidate({
@@ -101,6 +119,10 @@ self.addEventListener('notificationclick', (event) => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          // Navigate the existing window to the right page, then bring it to front.
+          if ('navigate' in client) {
+            return client.navigate(targetUrl).then((c) => c?.focus?.())
+          }
           return client.focus()
         }
       }

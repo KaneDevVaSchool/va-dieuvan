@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-full w-full overflow-x-hidden bg-[#0a0f0d] pb-[calc(8rem+env(safe-area-inset-bottom))] text-white">
+  <div class="min-h-full w-full overflow-x-hidden bg-[#0a0f0d] pb-[calc(12rem+env(safe-area-inset-bottom))] text-white">
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
     <div class="sticky top-0 z-20 flex items-center gap-3 bg-[#0a0f0d]/95 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_1px_0_rgba(127,220,200,0.08)] backdrop-blur-sm">
@@ -196,10 +196,27 @@
       </div>
     </template>
 
+    <!-- ── Success Toast ──────────────────────────────────────────── -->
+    <Teleport to="body">
+      <Transition name="toast">
+        <div
+          v-if="showSuccess"
+          class="fixed left-1/2 top-[calc(1rem+env(safe-area-inset-top))] z-50 -translate-x-1/2"
+        >
+          <div class="flex items-center gap-2 rounded-full bg-[#1dbc5e] px-4 py-2.5 shadow-lg shadow-[#1dbc5e]/30">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-white" aria-hidden="true">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-sm font-bold text-white">{{ t('driver_maintenance.save_success') }}</span>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- ── Bottom Action Buttons ──────────────────────────────────── -->
     <div
       v-if="currentItem && !editMode"
-      class="fixed bottom-0 left-0 right-0 z-20 space-y-2.5 px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3"
+      class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 space-y-2.5 px-4 pb-3 pt-4"
       style="background: linear-gradient(to top, #0a0f0d 70%, transparent);"
     >
       <button
@@ -243,6 +260,7 @@ const itemId = computed(() => Number(route.params.id))
 const editMode = ref(false)
 const saving = ref(false)
 const saveError = ref(null)
+const showSuccess = ref(false)
 const editForm = reactive({
   expiry_date: null,
   next_service_date: null,
@@ -292,6 +310,8 @@ async function onSave() {
       reminder_days_before: reminderDays.value,
     })
     editMode.value = false
+    showSuccess.value = true
+    setTimeout(() => { showSuccess.value = false }, 2500)
     // Refresh detail for history
     await fetchDetail(itemId.value)
   } catch (err) {
@@ -369,7 +389,7 @@ const DetailRow = {
 }
 
 const EditField = {
-  props: { label: String, type: { default: 'text' }, modelValue: [String, Number] },
+  props: { label: String, type: { default: 'text' }, modelValue: [String, Number], placeholder: String },
   emits: ['update:modelValue'],
   template: `
     <div>
@@ -377,8 +397,9 @@ const EditField = {
       <input
         :type="type"
         :value="modelValue"
+        :placeholder="placeholder ?? label"
         @input="$emit('update:modelValue', $event.target.value)"
-        class="w-full rounded-xl bg-white/8 px-4 py-3 text-base text-white ring-1 ring-white/12 focus:outline-none focus:ring-[#7fdcc8]/50 [color-scheme:dark]"
+        class="w-full rounded-xl bg-white/8 px-4 py-3 text-base text-white placeholder:text-white/25 ring-1 ring-white/12 focus:outline-none focus:ring-[#7fdcc8]/50 [color-scheme:dark]"
       />
     </div>
   `,
@@ -386,3 +407,20 @@ const EditField = {
 
 onMounted(() => fetchDetail(itemId.value))
 </script>
+
+<style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+}
+.toast-enter-to,
+.toast-leave-from {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>

@@ -75,6 +75,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
   let badgePrimed = false
   const soundEnabled = ref(true)
   const pushState = ref('unknown')
+  const pushRegisterLoading = ref(false)
   const pollHandle = ref(null)
   if (typeof window !== 'undefined') {
     soundEnabled.value = readSoundPref()
@@ -212,25 +213,31 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
 
   /**
    * Đăng ký Web Push khi trình duyệt hỗ trợ (chỉ môi trường production).
+   * @returns {{ ok: boolean, reason?: 'denied' | 'network' | 'api' | 'unsupported' | 'no_vapid' }}
    */
   async function registerWebPush() {
     const auth = useAuthStore()
     if (!auth.isLoggedIn) {
-      return
+      return { ok: false, reason: 'api' }
     }
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       pushState.value = 'unsupported'
-      return
+      return { ok: false, reason: 'unsupported' }
     }
     if (!import.meta.env.PROD) {
       pushState.value = 'dev'
-      return
+      return { ok: false, reason: 'unsupported' }
     }
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+      pushState.value = 'denied'
+      return { ok: false, reason: 'denied' }
+    }
+    pushRegisterLoading.value = true
     try {
       const { publicKey: pub } = await getVapidPublicKey()
       if (!pub) {
         pushState.value = 'no_vapid'
-        return
+        return { ok: false, reason: 'no_vapid' }
       }
       const reg = await navigator.serviceWorker.ready
       let sub = await reg.pushManager.getSubscription()
@@ -247,9 +254,20 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
       } catch {
         /* ignore */
       }
+      return { ok: true }
     } catch (e) {
       pushState.value = 'error'
-      console.warn('[push]', e)
+      if (import.meta.env.DEV) console.warn('[push]', e)
+      const name = e?.name ?? ''
+      if (name === 'NotAllowedError' || (typeof Notification !== 'undefined' && Notification.permission === 'denied')) {
+        return { ok: false, reason: 'denied' }
+      }
+      if (name === 'AbortError') {
+        return { ok: false, reason: 'network' }
+      }
+      return { ok: false, reason: 'api' }
+    } finally {
+      pushRegisterLoading.value = false
     }
   }
 
@@ -260,6 +278,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     lastUnread,
     soundEnabled,
     pushState,
+    pushRegisterLoading,
     setPanel,
     openPanel,
     closePanel,

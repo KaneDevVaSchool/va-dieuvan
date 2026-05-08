@@ -23,18 +23,18 @@
     </div>
 
     <Transition name="fade">
-      <div v-if="enabled" class="flex items-center gap-3">
-        <span class="text-sm text-white/60">{{ t('driver_maintenance.reminder_days_label') }}</span>
-        <div class="flex flex-wrap gap-2">
+      <div v-if="enabled" class="flex items-center gap-2">
+        <span class="shrink-0 text-xs text-white/50">{{ t('driver_maintenance.reminder_days_label') }}</span>
+        <div class="flex flex-1 gap-1.5">
           <button
             v-for="d in [7, 14, 30, 60]"
             :key="d"
             type="button"
             :class="[
-              'rounded-full px-3 py-1 text-sm font-semibold transition',
+              'flex-1 rounded-full py-1 text-xs font-semibold transition',
               selectedDays === d
                 ? 'bg-[#7fdcc8] text-[#0a0f0d]'
-                : 'bg-white/10 text-white/70 hover:bg-white/20',
+                : 'bg-white/10 text-white/60 hover:bg-white/20',
             ]"
             @click="selectedDays = d"
           >

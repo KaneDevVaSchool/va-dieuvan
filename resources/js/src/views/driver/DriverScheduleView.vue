@@ -1,8 +1,35 @@
 <template>
   <div
-    class="min-h-full w-full max-w-[390px] overflow-x-hidden bg-[#09180f] pb-2 text-white sm:max-w-none"
+    class="min-h-full w-full max-w-[430px] overflow-x-hidden bg-[#09180f] pb-2 text-white sm:max-w-none"
     :style="{ '--accent': '#7fdcc8' }"
+    @touchstart.passive="onTouchStart"
+    @touchmove.passive="onTouchMove"
+    @touchend.passive="onTouchEnd"
   >
+    <!-- Pull-to-refresh indicator -->
+    <Transition name="ptr">
+      <div
+        v-if="ptrVisible"
+        class="flex items-center justify-center gap-2 overflow-hidden py-2 text-xs font-semibold text-[#7fdcc8]"
+        :style="{ height: `${Math.min(ptrDelta, 56)}px` }"
+        aria-live="polite"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          class="h-4 w-4 transition-transform"
+          :class="ptrReleasing ? 'animate-spin' : ''"
+          :style="!ptrReleasing ? { transform: `rotate(${Math.min(ptrDelta / 56 * 180, 180)}deg)` } : {}"
+          aria-hidden="true"
+        >
+          <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clip-rule="evenodd" />
+        </svg>
+        <span>{{ ptrReleasing ? t('trip_history_page.releasing') : t('trip_history_page.pull_to_refresh') }}</span>
+      </div>
+    </Transition>
+
+    <!-- Header -->
     <header
       class="sticky top-0 z-[25] flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.06)] bg-[#09180f]/90 px-3 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
       style="padding-top: max(0.75rem, env(safe-area-inset-top))"
@@ -36,6 +63,7 @@
     </header>
 
     <div class="space-y-3 px-3 pt-3 pb-6">
+      <!-- Search box -->
       <div v-if="searchOpen" class="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0f2318] px-3 py-2">
         <input
           v-model.trim="searchQ"
@@ -46,12 +74,20 @@
         />
       </div>
 
+      <!-- Stats header -->
       <TripStatsCard :stats="stats" :loading="statsLoading" />
 
-      <TripFilterPills v-model="filterStatus" />
+      <!-- Filter bar (status tabs + advanced filter) -->
+      <TripFilterPills
+        v-model="filterStatus"
+        :advanced-filter="advancedFilter"
+        @update:advanced-filter="onAdvancedFilterChange"
+      />
 
+      <!-- Week calendar -->
       <WeekCalendar v-model="selectedDate" :trip-dates="weekTripDateKeys" />
 
+      <!-- Error -->
       <p
         v-if="displayErrorMsg"
         class="rounded-xl border border-amber-700/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"
@@ -59,6 +95,7 @@
         {{ displayErrorMsg }}
       </p>
 
+      <!-- Skeleton loading -->
       <div v-if="isLoading && filteredTrips.length === 0" class="space-y-3 pt-2">
         <div v-for="n in 3" :key="n" class="animate-pulse rounded-2xl border border-white/5 bg-[#0f2318] p-4">
           <div class="flex gap-3">
@@ -72,25 +109,31 @@
         </div>
       </div>
 
+      <!-- Empty state -->
       <TripEmptyState v-else-if="!isLoading && filteredTrips.length === 0" @reset="onResetFilters" />
 
       <template v-else>
+        <!-- Day section header -->
         <p class="pt-2 text-sm font-semibold text-white">
           {{ dayGroupTitle }}
           <span v-if="filteredTrips.length" class="tabular-nums text-[#94a3b8]"> ({{ filteredTrips.length }}) </span>
         </p>
+
+        <!-- Trip cards -->
         <ul class="mt-2 space-y-3">
           <li v-for="trip in filteredTrips" :key="trip.id">
             <TripCard :trip="trip" />
           </li>
         </ul>
 
+        <!-- Infinite scroll sentinel -->
         <div ref="sentinelEl" class="h-px w-full shrink-0" aria-hidden="true" />
 
+        <!-- Load more fallback -->
         <button
           v-if="showLoadMoreFallback"
           type="button"
-          class="mt-4 flex w-full min-h-[48px] items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#0f2318] py-3 text-sm font-semibold text-[#7fdcc8] transition hover:bg-[#0f2318]/80 disabled:opacity-50"
+          class="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[#0f2318] py-3 text-sm font-semibold text-[#7fdcc8] transition hover:bg-[#0f2318]/80 disabled:opacity-50"
           :disabled="isLoading"
           @click="() => loadMore(fetchParams)"
         >
@@ -102,7 +145,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTripHistory } from '../../composables/useTripHistory'
@@ -118,9 +161,55 @@ const { trips, stats, isLoading, error, hasMore, fetch: fetchTrips, loadMore } =
 
 const selectedDate = ref(new Date())
 const filterStatus = ref('all')
+const advancedFilter = reactive({ type: '', date_from: '', date_to: '' })
 const searchOpen = ref(false)
 const searchQ = ref('')
 const sentinelEl = ref(null)
+
+// ── Pull-to-refresh state ──────────────────────────────────────────────
+const ptrStartY = ref(null)
+const ptrDelta = ref(0)
+const ptrReleasing = ref(false)
+const PTR_THRESHOLD = 60
+
+const ptrVisible = computed(() => ptrDelta.value > 4 || ptrReleasing.value)
+
+function onTouchStart(ev) {
+  const scrollEl = typeof document !== 'undefined'
+    ? (document.getElementById('app-main-scroll') || document.documentElement)
+    : null
+  const scrollTop = scrollEl ? scrollEl.scrollTop : window.scrollY
+  if (scrollTop > 2) return
+  ptrStartY.value = ev.touches[0]?.clientY ?? null
+  ptrDelta.value = 0
+}
+
+function onTouchMove(ev) {
+  if (ptrStartY.value == null || isLoading.value) return
+  const dy = (ev.touches[0]?.clientY ?? 0) - ptrStartY.value
+  if (dy <= 0) {
+    ptrDelta.value = 0
+    return
+  }
+  ptrDelta.value = dy
+}
+
+function onTouchEnd() {
+  if (ptrStartY.value == null) return
+  if (ptrDelta.value >= PTR_THRESHOLD && !isLoading.value) {
+    ptrReleasing.value = true
+    ptrDelta.value = PTR_THRESHOLD
+    void reload().finally(() => {
+      ptrReleasing.value = false
+      ptrDelta.value = 0
+    })
+  } else {
+    ptrDelta.value = 0
+  }
+  ptrStartY.value = null
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
 
 /** @type {IntersectionObserver | null} */
 let listObserver = null
@@ -143,31 +232,40 @@ function startOfWeekMonday(d) {
   return x
 }
 
-function endOfWeekSundayDay(d) {
+function endOfWeekSunday(d) {
   const start = startOfWeekMonday(d)
   const end = new Date(start)
   end.setDate(start.getDate() + 6)
   return end
 }
 
+// ── Computed ──────────────────────────────────────────────────────────
+
 const selectedYmd = computed(() => ymd(selectedDate.value))
 
 const fetchParams = computed(() => {
-  const from = ymd(startOfWeekMonday(selectedDate.value))
-  const to = ymd(endOfWeekSundayDay(selectedDate.value))
-  const p = { date_from: from, date_to: to }
+  // Date range: prefer advanced filter dates when set, otherwise current week
+  const weekFrom = ymd(startOfWeekMonday(selectedDate.value))
+  const weekTo = ymd(endOfWeekSunday(selectedDate.value))
+  const p = {
+    date_from: advancedFilter.date_from || weekFrom,
+    date_to: advancedFilter.date_to || weekTo,
+  }
   if (filterStatus.value !== 'all') {
     p.status = filterStatus.value
+  }
+  if (advancedFilter.type) {
+    p.type = advancedFilter.type
   }
   return p
 })
 
 const weekTripDateKeys = computed(() => {
   const fromY = ymd(startOfWeekMonday(selectedDate.value))
-  const toY = ymd(endOfWeekSundayDay(selectedDate.value))
+  const toY = ymd(endOfWeekSunday(selectedDate.value))
   const set = new Set()
   for (const tr of trips.value) {
-    const key = tr.depart_date
+    const key = tr.depart_date || tr.pickup_date
     if (!key || key < fromY || key > toY) continue
     set.add(key)
   }
@@ -177,15 +275,21 @@ const weekTripDateKeys = computed(() => {
 const filteredTrips = computed(() => {
   const q = searchQ.value.trim().toLowerCase()
   const day = selectedYmd.value
-  let list = trips.value.filter((x) => (x.depart_date || '') === day)
+  let list = trips.value.filter((x) => {
+    const tripDay = x.depart_date || x.pickup_date || ''
+    return tripDay === day
+  })
   if (q) {
     list = list.filter((x) => {
       const blob = [
         x.pickup_location,
         x.dropoff_location,
+        x.origin,
+        x.destination,
         x.trip_number,
         String(x.id),
         x.type,
+        x.trip_type_label,
       ]
         .filter(Boolean)
         .join(' ')
@@ -194,9 +298,9 @@ const filteredTrips = computed(() => {
     })
   }
   return list.slice().sort((a, b) => {
-    const cmp = String(b.pickup_time || '').localeCompare(String(a.pickup_time || ''))
+    const cmp = String(a.pickup_time || '').localeCompare(String(b.pickup_time || ''))
     if (cmp !== 0) return cmp
-    return (b.id || 0) - (a.id || 0)
+    return (a.id || 0) - (b.id || 0)
   })
 })
 
@@ -221,6 +325,14 @@ const observerAvailable = computed(() => typeof IntersectionObserver !== 'undefi
 const showLoadMoreFallback = computed(
   () => hasMore.value && !observerAvailable.value && filteredTrips.value.length > 0,
 )
+
+// ── Methods ───────────────────────────────────────────────────────────
+
+function onAdvancedFilterChange(val) {
+  advancedFilter.type = val.type ?? ''
+  advancedFilter.date_from = val.date_from ?? ''
+  advancedFilter.date_to = val.date_to ?? ''
+}
 
 function teardownObserver() {
   listObserver?.disconnect()
@@ -253,18 +365,25 @@ async function reload() {
 
 function onResetFilters() {
   filterStatus.value = 'all'
+  advancedFilter.type = ''
+  advancedFilter.date_from = ''
+  advancedFilter.date_to = ''
   searchQ.value = ''
   selectedDate.value = new Date()
   searchOpen.value = false
 }
 
-watch([selectedDate, filterStatus], () => {
-  void reload()
-})
+// ── Watchers ──────────────────────────────────────────────────────────
 
-watch([hasMore, () => sentinelEl.value, () => filteredTrips.length], () => {
+watch([selectedDate, filterStatus, () => ({ ...advancedFilter })], () => {
+  void reload()
+}, { deep: true })
+
+watch([hasMore, () => sentinelEl.value, () => filteredTrips.value.length], () => {
   void nextTick(() => setupIntersectionObserver())
 })
+
+// ── Lifecycle ─────────────────────────────────────────────────────────
 
 onMounted(() => {
   void reload()

@@ -3,13 +3,13 @@
     <p class="text-base font-semibold text-white">{{ t('driver_maintenance.images_title') }}</p>
 
     <!-- Image grid -->
-    <div class="grid grid-cols-2 gap-2.5">
-      <!-- Existing images -->
+    <div class="grid grid-cols-3 gap-2">
+      <!-- Existing uploaded images -->
       <button
         v-for="img in images"
         :key="img.id"
         type="button"
-        class="group relative aspect-[4/3] overflow-hidden rounded-xl ring-1 ring-white/12 active:scale-95 transition-transform"
+        class="group relative aspect-square overflow-hidden rounded-xl ring-1 ring-white/12 transition-transform active:scale-95"
         @click="openFullscreen(img)"
       >
         <img
@@ -27,17 +27,34 @@
         </div>
       </button>
 
+      <!-- Pending preview tile (local blob while uploading) -->
+      <div
+        v-if="pendingPreview"
+        class="relative aspect-square overflow-hidden rounded-xl ring-1 ring-[#7fdcc8]/40"
+      >
+        <img
+          :src="pendingPreview"
+          alt="Đang tải lên..."
+          class="h-full w-full object-cover opacity-60"
+        />
+        <!-- Spinner overlay -->
+        <div class="absolute inset-0 flex items-center justify-center bg-black/40">
+          <svg class="h-7 w-7 animate-spin text-[#7fdcc8]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
+      </div>
+
       <!-- Upload tile -->
       <label
-        class="flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-[#7fdcc8]/30 bg-[#111d16] text-[#7fdcc8]/70 transition hover:border-[#7fdcc8]/60 hover:text-[#7fdcc8] active:scale-95"
+        v-if="!uploading"
+        class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-[#7fdcc8]/30 bg-[#111d16] text-[#7fdcc8]/70 transition hover:border-[#7fdcc8]/60 hover:text-[#7fdcc8] active:scale-95"
       >
-        <span v-if="uploading" class="text-center text-xs text-white/50">{{ t('driver_maintenance.image_uploading') }}</span>
-        <template v-else>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-8 w-8" aria-hidden="true">
-            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd"/>
-          </svg>
-          <span class="text-xs font-semibold">{{ t('driver_maintenance.image_add') }}</span>
-        </template>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-7 w-7" aria-hidden="true">
+          <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-[11px] font-semibold">{{ t('driver_maintenance.image_add') }}</span>
         <input
           ref="fileInput"
           type="file"
@@ -82,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -96,6 +113,8 @@ const props = defineProps({
 const emit = defineEmits(['upload'])
 
 const fullscreenImg = ref(null)
+const pendingPreview = ref(null)
+const fileInput = ref(null)
 
 function openFullscreen(img) {
   fullscreenImg.value = img
@@ -104,9 +123,20 @@ function openFullscreen(img) {
 function onFileSelected(e) {
   const file = e.target.files?.[0]
   if (!file) return
+  // Create local blob URL for immediate preview
+  if (pendingPreview.value) URL.revokeObjectURL(pendingPreview.value)
+  pendingPreview.value = URL.createObjectURL(file)
   emit('upload', file)
   e.target.value = ''
 }
+
+// Clear preview once upload resolves (success or error)
+watch(() => props.uploading, (isUploading) => {
+  if (!isUploading && pendingPreview.value) {
+    URL.revokeObjectURL(pendingPreview.value)
+    pendingPreview.value = null
+  }
+})
 </script>
 
 <style scoped>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-full w-full overflow-x-hidden bg-[#0a0f0d] pb-[calc(7rem+env(safe-area-inset-bottom))] text-white">
+  <div class="min-h-full w-full overflow-x-hidden bg-[#0a0f0d] pb-[calc(9rem+env(safe-area-inset-bottom))] text-white">
 
     <!-- ── Header ─────────────────────────────────────────────────── -->
     <div class="sticky top-0 z-20 flex items-center gap-3 bg-[#0a0f0d]/95 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-[0_1px_0_rgba(127,220,200,0.08)] backdrop-blur-sm">
@@ -18,30 +18,15 @@
       </h1>
 
       <!-- Bell -->
-      <RouterLink
-        :to="{ name: 'driverHome' }"
-        class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/8 text-white ring-1 ring-white/10"
-        aria-label="Thông báo"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5" aria-hidden="true">
-          <path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.117 5.52a.75.75 0 0 1-.439 1.227 49.98 49.98 0 0 1-9.428.589 49.978 49.978 0 0 1-9.428-.589.75.75 0 0 1-.44-1.228A8.245 8.245 0 0 0 3.75 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd" />
-        </svg>
-        <span
-          v-if="hasUrgent"
-          class="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#ff6b6b] ring-1 ring-[#0a0f0d]"
-          aria-hidden="true"
-        />
-      </RouterLink>
+      <NotificationBell />
     </div>
 
     <div class="mx-auto w-full max-w-lg px-4 pt-4">
 
-      <!-- Subtitle + vehicle pill -->
-      <p class="text-sm text-white/50">{{ t('driver_maintenance.subtitle') }}</p>
-
-      <div v-if="vehicle" class="mt-2.5 inline-flex items-center gap-2 rounded-full bg-[#111d16] px-3.5 py-1.5 ring-1 ring-white/10">
+      <!-- Vehicle pill -->
+      <div v-if="vehicle" class="inline-flex items-center gap-2 rounded-full bg-[#111d16] px-3.5 py-1.5 ring-1 ring-white/10">
         <span class="h-2.5 w-2.5 rounded-full bg-[#7fdcc8]" aria-hidden="true" />
-        <span class="text-sm font-semibold text-white/80">
+        <span class="text-base font-semibold text-white/90">
           {{ vehiclePill }}
         </span>
       </div>
@@ -187,8 +172,8 @@
     <!-- ── Sticky Bottom CTA ─────────────────────────────────────── -->
     <div
       v-if="vehicle && !loading"
-      class="fixed bottom-0 left-0 right-0 z-20 px-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm"
-      style="background: linear-gradient(to top, #0a0f0d 60%, transparent);"
+      class="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-30 px-4 pb-3 pt-4 backdrop-blur-sm"
+      style="background: linear-gradient(to top, #0a0f0d 70%, transparent);"
     >
       <RouterLink
         :to="{ name: 'driverAccount' }"
@@ -280,12 +265,13 @@ import { useI18n } from 'vue-i18n'
 import MaintenanceAlertBanner from '../../components/maintenance/MaintenanceAlertBanner.vue'
 import MaintenanceFilterChips from '../../components/maintenance/MaintenanceFilterChips.vue'
 import MaintenanceItemCard from '../../components/maintenance/MaintenanceItemCard.vue'
+import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import { useMaintenance } from '../../composables/useMaintenance'
 
 const { t } = useI18n()
 
 const {
-  items, reminders, vehicle, counts, loading, error, hasUrgent,
+  items, reminders, vehicle, counts, loading, error,
   legalItems, maintenanceItems,
   fetchList, createReminder, deleteReminder,
 } = useMaintenance()
