@@ -122,22 +122,6 @@
               <span v-else>{{ t('notify.driver_enable_btn') }}</span>
             </button>
 
-            <!-- Step 2: Push subscription (prod only, after browser permission granted) -->
-            <button
-              v-if="notificationPermission === 'granted' && isProd && notifStore.pushState !== 'subscribed'"
-              type="button"
-              :disabled="pushLoading"
-              class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 text-base font-bold text-white shadow-sm active:bg-sky-700 disabled:opacity-60 dark:bg-sky-600 dark:active:bg-sky-500"
-              @click="onDriverRegisterPush"
-            >
-              <span
-                v-if="pushLoading"
-                class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-                aria-hidden="true"
-              />
-              <span v-else>{{ t('notify.driver_enable_push') }}</span>
-            </button>
-
             <!-- Permission granted, non-prod: show done state -->
             <div
               v-if="notificationPermission === 'granted' && !isProd"
@@ -295,7 +279,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
@@ -314,6 +298,7 @@ const isProd = import.meta.env.PROD
 
 const notificationPermission = ref('default')
 const pushLoading = ref(false)
+const attemptedDriverPushThisOpen = ref(false)
 
 function syncNotifPerm() {
   notificationPermission.value = typeof Notification !== 'undefined'
@@ -342,22 +327,6 @@ async function onEnableAll() {
       const result = await notifStore.registerWebPush()
       showPushResult(result)
     }
-  } finally {
-    pushLoading.value = false
-    syncNotifPerm()
-  }
-}
-
-async function enableDesktopNotifyDriver() {
-  await notifStore.requestBrowserNotificationPermission()
-  syncNotifPerm()
-}
-
-async function onDriverRegisterPush() {
-  pushLoading.value = true
-  try {
-    const result = await notifStore.registerWebPush()
-    showPushResult(result)
   } finally {
     pushLoading.value = false
     syncNotifPerm()
@@ -634,6 +603,29 @@ watch(
   () => [notifStore.panelOpen, route.path],
   () => {
     if (notifStore.panelOpen && isDriverApp.value) {
+      syncNotifPerm()
+    }
+  },
+)
+
+watch(
+  () => notifStore.panelOpen,
+  async (open) => {
+    if (!open) {
+      attemptedDriverPushThisOpen.value = false
+      return
+    }
+    await nextTick()
+    syncNotifPerm()
+    if (!isDriverApp.value || !isProd) return
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+    if (notifStore.pushState === 'subscribed') return
+    if (attemptedDriverPushThisOpen.value) return
+    attemptedDriverPushThisOpen.value = true
+    try {
+      const result = await notifStore.registerWebPush()
+      showPushResult(result)
+    } finally {
       syncNotifPerm()
     }
   },

@@ -34,11 +34,12 @@ export const DRIVER_PENDING_STATUS_SET = new Set([
   'approved',
 ])
 
-export const DRIVER_DONUT_ORDER = ['completed', 'in_progress', 'pending', 'cancelled']
+export const DRIVER_DONUT_ORDER = ['completed', 'in_progress', 'overdue', 'pending', 'cancelled']
 
 export const DRIVER_DONUT_COLORS = {
   completed: '#10b981',
   in_progress: '#f59e0b',
+  overdue: '#f97316',
   pending: '#5eead4',
   cancelled: '#f43f5e',
 }
@@ -54,6 +55,39 @@ function parseDepartMs(trip) {
   if (!iso) return null
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? null : d.getTime()
+}
+
+/** Đồng bộ với DriverAccountView: khởi hành trước 0h hôm nay (local). */
+function startOfLocalTodayMs() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+function driverTripDepartAtMs(trip) {
+  const iso = trip?.depart_at ?? trip?.dispatch_request?.depart_at
+  if (!iso) return NaN
+  const t = new Date(iso).getTime()
+  return Number.isFinite(t) ? t : NaN
+}
+
+function driverTripDepartYmdKey(trip) {
+  const dd = trip?.depart_date
+  if (dd && typeof dd === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dd)) {
+    return dd.slice(0, 10)
+  }
+  const iso = trip?.depart_at ?? trip?.dispatch_request?.depart_at
+  if (!iso) return null
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : localYmd(d)
+}
+
+function tripInProgressIsPastScheduledDayForDonut(trip) {
+  const ms = driverTripDepartAtMs(trip)
+  if (Number.isFinite(ms)) return ms < startOfLocalTodayMs()
+  const key = driverTripDepartYmdKey(trip)
+  if (!key) return false
+  return key < localYmd(new Date())
 }
 
 function localYmd(d) {
@@ -73,36 +107,39 @@ function parseYmdToLocalDate(s) {
 }
 
 /**
- * Đếm 4 nhóm hiển thị trên donut (trạng thái khác bốn nhóm không tính).
+ * Đếm nhóm hiển thị trên donut (trạng thái khác các nhóm trên không tính).
+ * `in_progress` quá ngày khởi hành (local) gộp vào `overdue`, đồng bộ UX với DriverAccountView.
  */
 export function computeDriverTripCounts(rawTrips) {
   let completed = 0
   let inProgress = 0
+  let overdue = 0
   let pending = 0
   let cancelled = 0
   for (const trip of rawTrips ?? []) {
     const st = tripStatusNorm(trip)
     if (st === 'completed') completed++
-    else if (st === 'in_progress') inProgress++
+    else if (st === 'in_progress') {
+      if (tripInProgressIsPastScheduledDayForDonut(trip)) overdue++
+      else inProgress++
+    }
     else if (st === 'cancelled') cancelled++
     else if (DRIVER_PENDING_STATUS_SET.has(st)) pending++
   }
   return {
     completed,
     in_progress: inProgress,
+    overdue,
     pending,
     cancelled,
   }
 }
 
-/**
- * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
- */
 const DRIVER_DONUT_PAGE_BG = '#0f1816'
 
 /**
- * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
- * @param {{ countsByStatus?: object, labelMap?: object, emptyText?: string, centerSuffix?: string }} opts — centerSuffix: ví dụ "chuyến" (i18n)
+ * Donut trạng thái chuyến — slice theo DRIVER_DONUT_ORDER.
+ * @param {{ countsByStatus?: object, labelMap?: object, emptyText?: string, centerSuffix?: string }} opts — centerSuffix ví dụ "chuyến"
  */
 export function driverStatusDonutOption({
   countsByStatus,

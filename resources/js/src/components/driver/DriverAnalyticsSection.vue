@@ -81,6 +81,7 @@ const countsByStatus = computed(() => computeDriverTripCounts(props.rawTrips))
 const labelMap = computed(() => ({
   completed: t('driver_home.label_completed'),
   in_progress: t('driver_home.label_in_progress'),
+  overdue: t('driver_home.stats_overdue'),
   pending: t('driver_home.label_pending'),
   cancelled: t('driver_home.label_cancelled'),
 }))
