@@ -5,6 +5,28 @@
 import * as echarts from 'echarts'
 import { emptyDashboardChartOption } from './transportDashboardCharts'
 
+/** Empty donut — nền tối (DriverAnalyticsSection). */
+function driverDonutEmptyOption(message) {
+  return {
+    animation: false,
+    backgroundColor: 'transparent',
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: 'middle',
+        style: {
+          text: message,
+          fill: 'rgba(127,220,200,0.65)',
+          fontSize: 13,
+          fontWeight: 500,
+          textAlign: 'center',
+        },
+      },
+    ],
+  }
+}
+
 export const DRIVER_PENDING_STATUS_SET = new Set([
   'assigned',
   'driver_confirmed',
@@ -76,7 +98,7 @@ export function computeDriverTripCounts(rawTrips) {
 /**
  * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
  */
-const DRIVER_DONUT_PAGE_BG = '#070f0d'
+const DRIVER_DONUT_PAGE_BG = '#0f1816'
 
 /**
  * Donut phân loại trạng thái (4 slice cố định, chỉ hiện slice có count > 0).
@@ -95,7 +117,7 @@ export function driverStatusDonutOption({
   })).filter((d) => d.value > 0)
 
   if (!data.length) {
-    return emptyDashboardChartOption(emptyText ?? '—')
+    return driverDonutEmptyOption(emptyText ?? '—')
   }
 
   const total = data.reduce((acc, d) => acc + d.value, 0)
@@ -104,9 +126,13 @@ export function driverStatusDonutOption({
 
   return {
     animationDuration: 400,
+    backgroundColor: 'transparent',
     tooltip: {
       trigger: 'item',
       confine: true,
+      backgroundColor: 'rgba(15,24,22,0.96)',
+      borderColor: 'rgba(127,220,200,0.25)',
+      textStyle: { color: '#eaf8f5', fontSize: 12 },
       formatter: (p) => `${p.name}: ${p.value} (${p.percent}%)`,
     },
     legend: { show: false },
@@ -117,8 +143,8 @@ export function driverStatusDonutOption({
         top: '42%',
         style: {
           text: centerText,
-          fill: '#f1f5f9',
-          font: '600 22px system-ui, ui-sans-serif, sans-serif',
+          fill: '#f8fafc',
+          font: '600 20px system-ui, ui-sans-serif, sans-serif',
           textAlign: 'center',
           lineHeight: 26,
         },
@@ -127,8 +153,8 @@ export function driverStatusDonutOption({
     series: [
       {
         type: 'pie',
-        radius: ['48%', '74%'],
-        center: ['50%', '46%'],
+        radius: ['44%', '72%'],
+        center: ['50%', '47%'],
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 8,
@@ -136,7 +162,7 @@ export function driverStatusDonutOption({
           borderWidth: 3,
         },
         label: {
-          color: 'rgba(127,220,200,0.9)',
+          color: 'rgba(232,249,245,0.92)',
           fontSize: 11,
           formatter: '{b}\n{d}%',
         },

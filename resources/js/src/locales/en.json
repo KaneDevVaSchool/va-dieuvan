@@ -188,7 +188,7 @@
         "svc_name_cargo": "Cargo",
         "svc_name_business": "Business trip",
         "pending_confirm_modal_title": "Confirm this trip?",
-        "pending_confirm_modal_hint": "The trip will move to in-progress.",
+        "pending_confirm_modal_hint": "The trip will be marked as confirmed by you.",
         "pending_confirm_modal_btn": "Confirm",
         "pending_confirm_modal_cancel": "Cancel",
         "notif_new_trip_title": "New trip!",

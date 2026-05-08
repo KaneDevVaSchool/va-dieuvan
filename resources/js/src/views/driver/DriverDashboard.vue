@@ -33,9 +33,12 @@
 
     <div class="mx-auto w-full min-w-0 max-w-full px-3 pt-4 sm:px-4">
       <div class="min-w-0 space-y-4">
-        <DriverIosPushCard />
-
         <TripStatsCard :stats="monthlyTripStats" :loading="statsLoadingDisplay" />
+
+        <DriverAnalyticsSection
+          :raw-trips="tripsForMonthCharts"
+          :loading="loading"
+        />
 
         <p
           v-if="errorMsg"
@@ -124,7 +127,7 @@ import PendingConfirmationBanner from '../../components/driver/PendingConfirmati
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverTripCard from '../../components/driver/DriverTripCard.vue'
 import DriverTodayEmptyState from '../../components/driver/DriverTodayEmptyState.vue'
-import DriverIosPushCard from '../../components/driver/DriverIosPushCard.vue'
+import DriverAnalyticsSection from '../../components/driver/DriverAnalyticsSection.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -211,6 +214,17 @@ const pendingTrips = computed(() => {
     .sort((a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0))
 })
 
+/** Chuyến của tài xế có depart trong tháng hiện tại (local) — cho donut thống kê tháng. */
+const tripsForMonthCharts = computed(() => {
+  const now = new Date()
+  const startYmd = ymd(new Date(now.getFullYear(), now.getMonth(), 1))
+  const endYmd = ymd(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+  return rawTrips.value.filter((x) => {
+    const d = tripDepartYmd(x)
+    return d != null && d >= startYmd && d <= endYmd
+  })
+})
+
 const todayYmd = computed(() => ymd(new Date()))
 
 const todayTripsSorted = computed(() => {
@@ -247,8 +261,10 @@ const statsLoadingDisplay = computed(
 )
 
 function driverTripHistoryParamsForStats() {
-  const d = ymd(new Date())
-  return { date_from: d, date_to: d }
+  const now = new Date()
+  const from = ymd(new Date(now.getFullYear(), now.getMonth(), 1))
+  const to = ymd(new Date(now.getFullYear(), now.getMonth() + 1, 0))
+  return { date_from: from, date_to: to }
 }
 
 async function fetchMonthlyDriverStats() {

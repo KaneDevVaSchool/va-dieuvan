@@ -76,11 +76,13 @@
             <DriverTripCard
               v-for="trip in visibleTrips"
               :key="trip.id"
-              v-memo="[trip.id, busyId === trip.id]"
+              v-memo="[trip.id, busyId === trip.id, showPendingActions]"
               :trip="trip"
               :busy="busyId === trip.id"
+              :show-pending-actions="showPendingActions"
               @confirm="$emit('confirm', $event)"
               @decline="$emit('decline', $event)"
+              @start="$emit('start', $event)"
             />
             <button
               v-if="needsShowMore"
@@ -109,9 +111,11 @@ const props = defineProps({
   busyId: { type: [Number, String], default: null },
   /** 'mint' | 'emerald' — controls count badge color */
   accent: { type: String, default: 'mint' },
+  /** Khi true: danh sách “Chưa xác nhận” hiển thị nút Xác nhận / Từ chối */
+  showPendingActions: { type: Boolean, default: false },
 })
 
-defineEmits(['toggle', 'confirm', 'decline'])
+defineEmits(['toggle', 'confirm', 'decline', 'start'])
 
 const { t } = useI18n()
 

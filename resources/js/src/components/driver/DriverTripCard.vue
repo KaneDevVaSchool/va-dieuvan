@@ -54,8 +54,18 @@
     </div>
 
     <!-- Footer -->
-    <div class="mt-4 flex items-center justify-between gap-2 px-4 pb-4">
-      <p class="min-w-0 text-sm text-[#94a3b8]">
+    <div
+      class="mt-4 flex gap-2 px-4 pb-4"
+      :class="
+        cardMode === 'pending' && showPendingActions
+          ? 'flex-col'
+          : 'items-center justify-between'
+      "
+    >
+      <p
+        class="min-w-0 text-sm text-[#94a3b8]"
+        :class="cardMode === 'pending' && showPendingActions ? 'w-full' : ''"
+      >
         <span v-if="passengerCount > 0">👥 {{ passengerMeta }}</span>
         <span v-if="passengerCount > 0 && kmLabel"> · </span>
         <span v-if="kmLabel">{{ kmLabel }}</span>
@@ -73,14 +83,36 @@
       <template v-else-if="cardMode === 'confirmed'">
         <button
           type="button"
-          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/20"
+          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#22c55e] px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-black/20 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="busy"
           @click.stop="emit('start', trip.id)"
         >
           {{ t('driver_home.card_start') }}
         </button>
       </template>
       <template v-else-if="cardMode === 'pending'">
+        <template v-if="showPendingActions">
+          <div class="grid min-h-[48px] w-full shrink-0 grid-cols-2 gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl bg-[#22c55e] px-3 py-2.5 text-sm font-bold text-white shadow-md shadow-black/25 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="busy"
+              @click.stop="emit('confirm', trip)"
+            >
+              {{ t('driver_home.btn_confirm') }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border-2 border-rose-500/70 bg-transparent px-3 py-2.5 text-sm font-bold text-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="busy"
+              @click.stop="emit('decline', trip)"
+            >
+              {{ t('driver_home.btn_decline') }}
+            </button>
+          </div>
+        </template>
         <button
+          v-else
           type="button"
           class="inline-flex shrink-0 items-center justify-center rounded-xl border-2 border-[#fbbf24] bg-transparent px-4 py-2 text-sm font-bold text-[#fbbf24]"
           @click.stop="goDetail"
@@ -104,9 +136,12 @@ import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   trip: { type: Object, required: true },
+  /** Hiển thị nút Xác nhận / Từ chối (banner chờ xác nhận). */
+  showPendingActions: { type: Boolean, default: false },
+  busy: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['start'])
+const emit = defineEmits(['start', 'confirm', 'decline'])
 
 const router = useRouter()
 const { locale, t } = useI18n()

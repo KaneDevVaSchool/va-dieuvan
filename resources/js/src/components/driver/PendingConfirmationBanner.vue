@@ -82,6 +82,7 @@
         :open="open.pending"
         :busy-id="busyId"
         accent="mint"
+        show-pending-actions
         @toggle="toggle('pending')"
         @confirm="onConfirm"
         @decline="openDeclineModal"
@@ -93,8 +94,7 @@
         :busy-id="busyId"
         accent="emerald"
         @toggle="toggle('confirmed')"
-        @confirm="onConfirm"
-        @decline="openDeclineModal"
+        @start="onStartTrip"
       />
     </div>
 
@@ -328,11 +328,28 @@ async function submitDeclineConfirmed() {
 }
 
 async function onConfirm(trip) {
-  if (busyId.value || Date.now() < tripStatusCooldownUntil) return
+  if (busyId.value != null || Date.now() < tripStatusCooldownUntil) return
   busyId.value = trip.id
   actionError.value = ''
   try {
-    await updateTripStatus(trip.id, { status: 'in_progress' })
+    await updateTripStatus(trip.id, { status: 'driver_confirmed' })
+    emit('updated')
+  } catch (e) {
+    actionError.value = formatApiError(e)
+    if (e?.response?.status === 429) {
+      tripStatusCooldownUntil = Date.now() + 8000
+    }
+  } finally {
+    busyId.value = null
+  }
+}
+
+async function onStartTrip(tripId) {
+  if (tripId == null || busyId.value != null || Date.now() < tripStatusCooldownUntil) return
+  busyId.value = tripId
+  actionError.value = ''
+  try {
+    await updateTripStatus(tripId, { status: 'in_progress' })
     emit('updated')
   } catch (e) {
     actionError.value = formatApiError(e)
