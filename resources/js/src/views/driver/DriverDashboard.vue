@@ -43,8 +43,6 @@
           :loading="dash.loadingInitial && dash.rawListItems.length === 0"
         />
 
-        <DriverQuickStatsSection :stats="dash.monthlyTripStats" :loading="dash.statsLoadingDisplay" />
-
         <p
           v-if="dash.errorMsg"
           class="rounded-2xl border border-amber-700/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100 ring-1 ring-amber-600/30"
@@ -64,14 +62,6 @@
           :start-busy-trip-id="dash.startBusyTripId"
           @start-trip="onStartTrip"
         />
-
-        <div ref="analyticsSectionRef" class="min-h-[1px]">
-          <DriverAnalyticsSection
-            v-if="analyticsVisible"
-            :raw-trips="dash.tripsForMonthCharts"
-            :loading="dash.analyticsSectionLoading"
-          />
-        </div>
       </div>
 
       <div
@@ -103,32 +93,22 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
-import { useWhenVisible } from '../../composables/useWhenVisible'
 import { useAuthStore, useDriverDashboardStore } from '../../store/index'
 import { dashPerfMounted } from '../../util/devDriverDashboardPerf'
 import { playNotificationChime } from '../../util/notificationChime'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
-import DriverQuickStatsSection from '../../components/driver/dashboard/DriverQuickStatsSection.vue'
 import DriverPendingConfirmationSection from '../../components/driver/dashboard/DriverPendingConfirmationSection.vue'
 import DriverUpcomingTripsSection from '../../components/driver/dashboard/DriverUpcomingTripsSection.vue'
-
-const DriverAnalyticsSection = defineAsyncComponent(() =>
-  import('../../components/driver/DriverAnalyticsSection.vue'),
-)
-
-const analyticsSectionRef = ref(null)
 
 const { t } = useI18n()
 const auth = useAuthStore()
 const dash = useDriverDashboardStore()
 const { bootDriverOutboundNotifications } = useDriverWebPushBoot()
-
-const { isVisible: analyticsVisible } = useWhenVisible(analyticsSectionRef, { sectionId: 'analytics' })
 
 const user = computed(() => auth.user)
 const avatarUrl = computed(() => user.value?.avatar_url || null)
