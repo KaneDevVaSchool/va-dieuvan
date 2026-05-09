@@ -62,7 +62,9 @@ Route::prefix('trips')->group(function () {
 });
 
 Route::prefix('trip-costs')->controller(TripCostController::class)->group(function () {
-    Route::post('/{tripCost}/decision', 'decide')->middleware('throttle:20,1');
+    Route::post('/{tripCost}/decision', 'decide')
+        ->middleware(['throttle:120,1', 'idempotency'])
+        ->name('api.trip-costs.decision');
     Route::patch('/{tripCost}/override', 'override')->middleware('throttle:10,1');
 });
 

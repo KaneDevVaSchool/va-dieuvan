@@ -187,7 +187,7 @@ class TripController extends Controller
         $trip->load([
             'dispatcher:id,name,email,employee_code',
             'vehicle:id,license_plate,status,type,seat_count,odometer_km',
-            'driver:id,full_name,phone,odometer_km',
+            'driver:id,full_name,phone,odometer_km,user_id',
             'transportProvider:id,name',
             'record',
             'dispatchRequest',
@@ -614,7 +614,7 @@ class TripController extends Controller
         $fresh = $trip->fresh()->load([
             'dispatcher:id,name,email,employee_code',
             'vehicle:id,license_plate,status,type,seat_count,odometer_km',
-            'driver:id,full_name,phone,odometer_km',
+            'driver:id,full_name,phone,odometer_km,user_id',
             'transportProvider:id,name',
             'record',
             'dispatchRequest',
@@ -649,7 +649,7 @@ class TripController extends Controller
         $fresh = $trip->fresh()->load([
             'dispatcher:id,name,email,employee_code',
             'vehicle:id,license_plate,status,type,seat_count,odometer_km',
-            'driver:id,full_name,phone,odometer_km',
+            'driver:id,full_name,phone,odometer_km,user_id',
             'transportProvider:id,name',
             'record',
             'dispatchRequest',

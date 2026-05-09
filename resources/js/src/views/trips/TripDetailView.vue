@@ -36,6 +36,7 @@
         <template v-else-if="trip">
             <StickyTripHeader
                 :trip="trip"
+                :status-label-override="tripStatusLabelOverride"
                 :can-approve="canAssign"
                 :can-reject="canUpdateStatus"
                 :refreshing="refreshing"
@@ -64,6 +65,41 @@
                 />
 
                 <div
+                    v-if="driverCancellationEvent"
+                    class="mx-auto max-w-7xl px-4"
+                    role="alert"
+                >
+                    <div
+                        class="rounded-xl border-2 border-rose-400 bg-rose-50 px-4 py-3 shadow-md dark:border-rose-600 dark:bg-rose-950/60"
+                    >
+                        <p
+                            class="text-sm font-bold text-rose-900 dark:text-rose-100"
+                        >
+                            {{ t("trip_detail.driver_rejected.banner_title") }}
+                        </p>
+                        <div
+                            v-if="driverCancellationReasonText"
+                            class="mt-2 border-t border-rose-200/90 pt-2 dark:border-rose-800/80"
+                        >
+                            <p
+                                class="text-[11px] font-semibold uppercase tracking-wide text-rose-800 dark:text-rose-300"
+                            >
+                                {{
+                                    t(
+                                        "trip_detail.driver_rejected.reason_label",
+                                    )
+                                }}
+                            </p>
+                            <p
+                                class="mt-1 whitespace-pre-wrap text-sm font-medium leading-relaxed text-rose-950 dark:text-rose-50"
+                            >
+                                {{ driverCancellationReasonText }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
                     v-if="
                         trip.dispatch_request &&
                         trip.dispatch_request.status === 'pending'
@@ -88,6 +124,7 @@
                     <div class="min-w-0 space-y-4 xl:col-span-7">
                         <TripInfoCard
                             :trip="trip"
+                            :status-label-override="tripStatusLabelOverride"
                             :countdown="countdown"
                             :passenger-count="
                                 Number(
@@ -848,10 +885,64 @@ const {
     originLabel,
     destinationLabel,
     currentLabel,
-    stepPickup,
-    stepCurrent,
-    stepDropoff,
+    stepPickup: stepPickupBase,
+    stepCurrent: stepCurrentBase,
+    stepDropoff: stepDropoffBase,
 } = useTripDetail(trip);
+
+function isDriverTripCancellationEvent(e, tr) {
+    if (!e || !tr) return false;
+    if (e.type !== "status_change") return false;
+    if (String(e?.data?.to ?? "") !== "cancelled") return false;
+    const duid = tr.driver?.user_id;
+    const cid = e.creator?.id;
+    if (duid == null || cid == null) return false;
+    return Number(cid) === Number(duid);
+}
+
+const driverCancellationEvent = computed(() => {
+    const tr = trip.value;
+    if (!tr || String(tr.status ?? "") !== "cancelled") return null;
+    for (const e of tr.events ?? []) {
+        if (isDriverTripCancellationEvent(e, tr)) return e;
+    }
+    return null;
+});
+
+const driverCancellationReasonText = computed(() => {
+    const m = driverCancellationEvent.value?.message;
+    return typeof m === "string" ? m.trim() : "";
+});
+
+const tripStatusLabelOverride = computed(() =>
+    driverCancellationEvent.value
+        ? t("trip_detail.driver_rejected.status_label")
+        : null,
+);
+
+function mapStepLabelWhenDriverRejected(step) {
+    if (
+        trip.value?.status === "cancelled" &&
+        driverCancellationEvent.value &&
+        step?.state === "blocked"
+    ) {
+        return {
+            ...step,
+            label: t("trip_detail.driver_rejected.status_label"),
+        };
+    }
+    return step;
+}
+
+const stepPickup = computed(() =>
+    mapStepLabelWhenDriverRejected(stepPickupBase.value),
+);
+const stepCurrent = computed(() =>
+    mapStepLabelWhenDriverRejected(stepCurrentBase.value),
+);
+const stepDropoff = computed(() =>
+    mapStepLabelWhenDriverRejected(stepDropoffBase.value),
+);
 const loading = ref(true);
 const loadError = ref("");
 const refreshing = ref(false);
@@ -2048,12 +2139,19 @@ function eventTimelineTone(type) {
     return "other";
 }
 
+function eventTimelineToneFor(e) {
+    if (isDriverTripCancellationEvent(e, trip.value)) return "driver_reject";
+    return eventTimelineTone(e?.type);
+}
+
 function timelineToneClass(tone) {
     const map = {
         create: "border-indigo-200/90 bg-indigo-50 text-indigo-800 dark:border-indigo-800/80 dark:bg-indigo-950/60 dark:text-indigo-200",
         status: "border-teal-200/90 bg-teal-50 text-teal-900 dark:border-teal-800/80 dark:bg-teal-950/60 dark:text-teal-200",
         note: "border-violet-200/90 bg-violet-50 text-violet-900 dark:border-violet-800/80 dark:bg-violet-950/60 dark:text-violet-200",
         assign: "border-amber-200/90 bg-amber-50 text-amber-950 dark:border-amber-800/80 dark:bg-amber-950/60 dark:text-amber-100",
+        driver_reject:
+            "border-rose-300/90 bg-rose-50 text-rose-950 dark:border-rose-700/80 dark:bg-rose-950/70 dark:text-rose-100",
         other: "border-slate-200/90 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200",
     };
     return map[tone] ?? map.other;
@@ -2063,10 +2161,16 @@ function eventTitle(e) {
     if (e.type === "status_change") {
         const from = e?.data?.from;
         const to = e?.data?.to;
+        const toLabel =
+            to === "cancelled" && isDriverTripCancellationEvent(e, trip.value)
+                ? t("trip_detail.driver_rejected.status_label")
+                : to
+                  ? labelTripStatus(to)
+                  : "";
         if (from && to)
             return t("trip_detail.timeline.status_change", {
                 from: labelTripStatus(from),
-                to: labelTripStatus(to),
+                to: toLabel,
             });
         return t("trip_detail.timeline.status_change_short");
     }
@@ -2144,7 +2248,7 @@ const timeline = computed(() => {
         items.push({
             key: `ev_${e.id}`,
             icon: eventIcon(e.type),
-            tone: eventTimelineTone(e.type),
+            tone: eventTimelineToneFor(e),
             title: eventTitle(e),
             subtitle: (e.message ?? "").trim(),
             actor: e.creator?.name ?? "",

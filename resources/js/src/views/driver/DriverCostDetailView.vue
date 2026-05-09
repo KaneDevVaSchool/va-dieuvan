@@ -45,6 +45,13 @@
         {{ loadError }}
       </p>
 
+      <p
+        v-if="showTripLockedBanner"
+        class="mb-4 rounded-2xl border border-slate-500/30 bg-slate-900/50 px-4 py-3 text-sm leading-snug text-slate-200 ring-1 ring-white/[0.06]"
+      >
+        {{ t('driver_cost_req.trip_finished_readonly') }}
+      </p>
+
       <div v-if="loading" class="space-y-4">
         <div class="h-44 animate-pulse rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]" />
         <div class="h-36 animate-pulse rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]" />
@@ -341,6 +348,7 @@ import DriverReceiptGallery from '../../components/driver/costs/DriverReceiptGal
 import { confirmAction } from '../../composables/useConfirm'
 import { showAppSuccess } from '../../composables/appMessage'
 import { deleteTripCost, getTripCost, updateTripCost } from '../../api/costs'
+import { isTripCostEditableStatus } from '../../constants/tripStatus'
 import { formatVnd } from '../../util/labels'
 
 const { t, te } = useI18n()
@@ -376,11 +384,26 @@ const id = computed(() => {
   return Number.isFinite(n) && n > 0 ? n : null
 })
 
-const canAct = computed(() => cost.value && ['draft', 'submitted'].includes(cost.value.status))
+const tripAllowsCostEdits = computed(() => isTripCostEditableStatus(cost.value?.trip?.status))
 
-const galleryMutable = computed(() => ['draft', 'submitted'].includes(cost.value?.status ?? ''))
+const canAct = computed(
+  () => cost.value && ['draft', 'submitted'].includes(cost.value.status) && tripAllowsCostEdits.value,
+)
 
+const galleryMutable = computed(
+  () => ['draft', 'submitted'].includes(cost.value?.status ?? '') && tripAllowsCostEdits.value,
+)
+
+/** Chỉ xem ảnh, không đổi thứ tự/xoá (DriverReceiptGallery đồng bộ với điều kiện tải lên backend). */
 const galleryReadonly = computed(() => !galleryMutable.value)
+
+/** Giải thích khi chi phí còn sửa được theo trạng thái dòng nhưng chuyến đã kết thúc/hủy. */
+const showTripLockedBanner = computed(
+  () =>
+    !!cost.value &&
+    !tripAllowsCostEdits.value &&
+    ['draft', 'submitted'].includes(cost.value.status),
+)
 
 const dr = computed(() => cost.value?.trip?.dispatch_request)
 
@@ -553,7 +576,7 @@ watch(
 
 function openEdit() {
   const c = cost.value
-  if (!c) return
+  if (!c || !canAct.value) return
   editError.value = ''
   touch.value.amount = false
   editForm.value = {
@@ -604,7 +627,7 @@ async function confirmSaveEdit() {
 }
 
 async function saveEdit() {
-  if (id.value == null || editBusy.value) return
+  if (id.value == null || editBusy.value || !canAct.value) return
   const a = String(editForm.value.amount || '').replace(/\D/g, '')
   const num = a === '' ? NaN : parseInt(a, 10)
   if (!Number.isFinite(num) || num < 0) {

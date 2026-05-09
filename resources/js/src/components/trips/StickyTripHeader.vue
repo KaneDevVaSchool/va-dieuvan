@@ -20,7 +20,7 @@
           class="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium align-middle"
           :class="badgeClass"
         >
-          {{ labelTripStatus(trip.status) }}
+          {{ statusLabelOverride?.trim() ? statusLabelOverride : labelTripStatus(trip.status) }}
         </span>
       </div>
       <span
@@ -86,6 +86,8 @@ const props = defineProps<{
   canReject: boolean
   refreshing?: boolean
   assignDisabled?: boolean
+  /** Khi set (vd. chuyến bị tài xế từ chối), thay nhãn pill trạng thái mặc định. */
+  statusLabelOverride?: string | null
 }>()
 
 defineEmits<{

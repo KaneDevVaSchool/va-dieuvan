@@ -35,6 +35,8 @@ const props = defineProps<{
     currentLabel: string;
     embedMapSrc: string;
     expandMap: () => void;
+    /** Khi set, thay nhãn pill trạng thái (vd. «Đã từ chối» thay cho «Đã huỷ»). */
+    statusLabelOverride?: string | null;
 }>();
 
 const { t, locale } = useI18n();
@@ -98,7 +100,11 @@ const currentDotClass = computed(() => {
                     pillClassForStatus(trip.status),
                 ]"
             >
-                {{ labelTripStatus(trip.status) }}
+                {{
+                    statusLabelOverride?.trim()
+                        ? statusLabelOverride
+                        : labelTripStatus(trip.status)
+                }}
             </span>
         </div>
         <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">

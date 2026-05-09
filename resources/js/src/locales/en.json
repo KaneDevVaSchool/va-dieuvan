@@ -511,7 +511,8 @@
         "st_draft": "Draft",
         "st_reject_short": "Rejected",
         "caption_today": "Today",
-        "caption_approved": "Processed"
+        "caption_approved": "Processed",
+        "trip_finished_readonly": "This trip is completed or cancelled — you can’t add or change receipts, edit, or cancel this cost (view only)."
     },
     "driver_costs": {
         "title": "Trip costs",
@@ -1990,6 +1991,11 @@
         "banner": {
             "request_pending": "The source request is still pending approval.",
             "open_request": "Open request details"
+        },
+        "driver_rejected": {
+            "status_label": "Declined",
+            "banner_title": "Driver declined the trip",
+            "reason_label": "Decline reason"
         },
         "overview": {
             "title": "Trip overview",

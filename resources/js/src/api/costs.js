@@ -17,8 +17,15 @@ export async function submitTripCost(tripId, payload, { idempotencyKey } = {}) {
   return data.data
 }
 
-export async function decideTripCost(tripCostId, payload) {
-  const { data } = await http.post(`/trip-costs/${tripCostId}/decision`, payload)
+/**
+ * @param {Record<string, unknown>} payload
+ * @param {{ idempotencyKey?: string }} [opts]
+ */
+export async function decideTripCost(tripCostId, payload, opts = {}) {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
+  const { data } = await http.post(`/trip-costs/${tripCostId}/decision`, payload, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  })
   return data.data
 }
 
