@@ -363,6 +363,7 @@
               <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_legal_entity') }}</th>
               <th class="costs-th min-w-[6rem]">{{ t('costs_page.col_notes') }}</th>
               <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
+              <th v-if="canReconcileCosts" class="costs-th min-w-[9rem] whitespace-nowrap">{{ t('costs_page.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -419,6 +420,27 @@
                   >#{{ c.trip_id }}</RouterLink
                 >
                 <span v-else>—</span>
+              </td>
+              <td v-if="canReconcileCosts" class="costs-td">
+                <div v-if="isCostPendingDecision(c)" class="flex flex-wrap gap-1">
+                  <button
+                    type="button"
+                    class="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                    :disabled="decidingId != null"
+                    @click="quickApproveCost(c)"
+                  >
+                    {{ t('costs_page.action_approve') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-md border border-rose-300 bg-white px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-rose-950/40"
+                    :disabled="decidingId != null"
+                    @click="quickRejectCost(c)"
+                  >
+                    {{ t('costs_page.action_reject') }}
+                  </button>
+                </div>
+                <span v-else class="text-slate-400">—</span>
               </td>
             </tr>
           </tbody>
@@ -641,17 +663,20 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import { listTripCosts, submitTripCost } from '../../api/costs'
+import { listTripCosts, submitTripCost, decideTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd, formatVndDigitsInput } from '../../util/labels'
+import { useAuthStore } from '../../store'
 
 const { t, te, locale } = useI18n()
+const route = useRoute()
+const auth = useAuthStore()
 
 const DEFAULT_PER_PAGE = 25
 
@@ -721,6 +746,53 @@ const filters = reactive({
   per_page: DEFAULT_PER_PAGE,
 })
 
+function hydrateCostStatusFromRoute() {
+  if (!('status' in route.query)) {
+    filters.status = 'submitted'
+    return
+  }
+  const s = route.query.status
+  const v = Array.isArray(s) ? s[0] : s
+  filters.status = typeof v === 'string' ? v : ''
+}
+
+function isCostPendingDecision(c) {
+  const s = String(c?.status ?? '').toLowerCase()
+  return s === 'submitted' || s === 'draft'
+}
+
+async function quickApproveCost(c) {
+  if (!c?.id || decidingId.value != null) return
+  decidingId.value = c.id
+  try {
+    await decideTripCost(c.id, { decision: 'confirm' })
+    await reload()
+  } catch (e) {
+    window.alert(e?.response?.data?.message ?? t('costs_page.decide_err'))
+  } finally {
+    decidingId.value = null
+  }
+}
+
+async function quickRejectCost(c) {
+  if (!c?.id || decidingId.value != null) return
+  let reason = ''
+  if (typeof window !== 'undefined') {
+    const raw = window.prompt(t('costs_page.reject_reason_prompt'), '')
+    if (raw === null) return
+    reason = String(raw).trim()
+  }
+  decidingId.value = c.id
+  try {
+    await decideTripCost(c.id, { decision: 'reject', reason: reason || undefined })
+    await reload()
+  } catch (e) {
+    window.alert(e?.response?.data?.message ?? t('costs_page.decide_err'))
+  } finally {
+    decidingId.value = null
+  }
+}
+
 const costForm = ref({ trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' })
 /** Chỉ chữ số — dùng format VND khi gõ */
 const costAmountDigits = ref('')
@@ -729,7 +801,9 @@ const quickAddTypeLabel = ref('')
 const quickAddTypeError = ref('')
 const submitting = ref(false)
 const costMsg = ref('')
+const decidingId = ref(null)
 
+const canReconcileCosts = computed(() => auth.hasPermission('trip.cost.reconcile'))
 const costAmountDisplay = computed(() => formatVndDigitsInput(costAmountDigits.value))
 
 watch(extraCostTypes, (v) => {
@@ -1119,9 +1193,19 @@ function loadFilterControlVisibility() {
   }
 }
 
+watch(
+  () => route.query.status,
+  () => {
+    hydrateCostStatusFromRoute()
+    filters.page = 1
+    reload()
+  },
+)
+
 onMounted(async () => {
   loadFilterControlVisibility()
   loadExtraCostTypesFromStorage()
+  hydrateCostStatusFromRoute()
   await loadTripPickerOptions()
   await reload()
 })

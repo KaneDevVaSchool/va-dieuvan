@@ -1,5 +1,11 @@
 import { defineStore } from 'pinia'
-import { getDriverSummary, listDriverTripsAll } from '../api/driver'
+import {
+  DRIVER_TRIPS_FETCH_MAX_PAGES,
+  DRIVER_TRIPS_LIST_MAX_PER_PAGE,
+  getDriverSummary,
+  listDriverTrips,
+  listDriverTripPagesAfterFirst,
+} from '../api/driver'
 import { updateTripStatus } from '../api/trips'
 import { showAppErrorFromApi, showAppSuccess } from '../composables/appMessage'
 import { i18n } from '../i18n'
@@ -100,6 +106,31 @@ function cloneTrip(trip) {
   }
 }
 
+/** `summary.driver` có thể null nhưng list trip vẫn có một `driver_id` duy nhất — tránh ẩn toàn list. */
+function resolveEffectiveDriverId(idFromSummary, items) {
+  if (idFromSummary != null && idFromSummary !== '') {
+    const n = Number(idFromSummary)
+    if (!Number.isNaN(n)) return n
+  }
+  const uniq = new Set()
+  for (const x of items) {
+    if (x.driver_id == null || x.driver_id === '') continue
+    const n = Number(x.driver_id)
+    if (!Number.isNaN(n)) uniq.add(n)
+  }
+  if (uniq.size === 1) return [...uniq][0]
+  return null
+}
+
+function normalizedDashboardEndYmd(dashboardDateTo) {
+  const s = dashboardDateTo != null ? String(dashboardDateTo).trim() : ''
+  const head = s.length >= 10 ? s.slice(0, 10) : ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(head)) return head
+  const h = new Date()
+  h.setDate(h.getDate() + 21)
+  return ymd(h)
+}
+
 export const useDriverDashboardStore = defineStore('driverDashboard', {
   state: () => ({
     myDriverId: null,
@@ -118,11 +149,18 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
 
   getters: {
     rawTrips(state) {
+      const items = state.rawListItems
       const id = state.myDriverId
-      if (id == null) return []
-      return state.rawListItems.filter(
+      if (id == null) {
+        return items.slice()
+      }
+      const matched = items.filter(
         (x) => x.driver_id != null && Number(x.driver_id) === Number(id),
       )
+      if (matched.length > 0) {
+        return matched
+      }
+      return items.slice()
     },
 
     needsConfirmationTrips() {
@@ -139,7 +177,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
 
     upcomingScheduleTrips() {
       const start = ymd(new Date())
-      const end = this.dashboardDateTo || start
+      const end = normalizedDashboardEndYmd(this.dashboardDateTo)
       return sortScheduleTrips(
         this.rawTrips.filter((x) => {
           const d = tripDepartYmd(x)
@@ -223,6 +261,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         if (snap.monthlyTripStats != null && typeof snap.monthlyTripStats === 'object') {
           this.monthlyTripStats = mapHistoryStatsFromApi(snap.monthlyTripStats)
         }
+        this.myDriverId = resolveEffectiveDriverId(this.myDriverId, this.rawListItems)
         hit = true
       } catch {
         /* ignore */
@@ -320,17 +359,49 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       dashPerfApiStart({ dateFrom, dateTo, silent })
 
       try {
-        const [sum, listBundle] = await Promise.all([
+        const dateQuery = { date_from: dateFrom, date_to: dateTo }
+        const [sum, page1] = await Promise.all([
           getDriverSummary(),
-          listDriverTripsAll({ date_from: dateFrom, date_to: dateTo }),
+          listDriverTrips({
+            ...dateQuery,
+            per_page: DRIVER_TRIPS_LIST_MAX_PER_PAGE,
+            page: 1,
+          }),
         ])
-        this.myDriverId = sum?.driver?.id ?? null
-        this.rawListItems = listBundle?.items ?? []
-        const st = listBundle?.stats ?? null
+
+        const batch1 = page1?.items ?? []
+        const st = page1?.stats ?? null
+        const lastPage = Math.min(
+          Number(page1?.meta?.last_page ?? 1),
+          DRIVER_TRIPS_FETCH_MAX_PAGES,
+        )
+
+        this.rawListItems = batch1
+        this.myDriverId = resolveEffectiveDriverId(sum?.driver?.id ?? null, batch1)
         this.monthlyTripStats =
           st != null && typeof st === 'object' ? mapHistoryStatsFromApi(st) : emptyStatsShape()
         this.dashboardDateFrom = dateFrom
         this.dashboardDateTo = dateTo
+
+        if (!silent) {
+          this.loadingInitial = false
+        }
+
+        if (lastPage > 1) {
+          try {
+            const restItems = await listDriverTripPagesAfterFirst(
+              dateQuery,
+              DRIVER_TRIPS_LIST_MAX_PER_PAGE,
+              lastPage,
+            )
+            const merged = [...batch1, ...restItems]
+            this.rawListItems = merged
+            this.myDriverId = resolveEffectiveDriverId(sum?.driver?.id ?? null, merged)
+          } catch {
+            void this.scheduleSilentRefetch()
+          }
+        }
+
         this.lastFetchedAt = Date.now()
         this.persistToCache()
         if (!silent) {

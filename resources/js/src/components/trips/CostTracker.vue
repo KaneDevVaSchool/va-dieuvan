@@ -290,7 +290,24 @@ const pendingFileRef = ref<HTMLInputElement | null>(null);
 const amountInputRef = ref<HTMLInputElement | null>(null);
 const receiptUploadingId = ref<number | null>(null);
 
-const breakdownSource = computed(() => props.costs ?? []);
+function sumCostAmounts(list: CostRow[]) {
+    return list.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+}
+
+const costsConfirmedOnly = computed(() =>
+    (props.costs ?? []).filter(
+        (c) => String(c.status ?? "").toLowerCase() === "confirmed",
+    ),
+);
+
+const costsPendingLike = computed(() =>
+    (props.costs ?? []).filter((c) => {
+        const s = String(c.status ?? "").toLowerCase();
+        return s === "submitted" || s === "draft" || s === "pending";
+    }),
+);
+
+const breakdownSource = computed(() => costsConfirmedOnly.value);
 const breakdown = useCostTypeBreakdown(breakdownSource);
 
 watch(pendingFile, (f) => {
@@ -334,8 +351,20 @@ const costsTotalFormatted = computed(() => {
     const list = props.costs ?? [];
     if (!list.length) return "—";
     const cur = list[0]?.currency || "VND";
-    const sum = list.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-    return `${new Intl.NumberFormat(locale.value === "en" ? "en-US" : "vi-VN").format(sum)} ${cur}`;
+    const loc = locale.value === "en" ? "en-US" : "vi-VN";
+    const fmtN = (n: number) =>
+        `${new Intl.NumberFormat(loc).format(n)} ${cur}`;
+    const approvedSum = sumCostAmounts(costsConfirmedOnly.value);
+    const pendingSum = sumCostAmounts(costsPendingLike.value);
+    let out = t("trip_detail.costs.summary_approved_only", {
+        amount: fmtN(approvedSum),
+    });
+    if (pendingSum > 0) {
+        out += ` · ${t("trip_detail.costs.summary_pending_part", {
+            amount: fmtN(pendingSum),
+        })}`;
+    }
+    return out;
 });
 
 const embeddedSummaryLine = computed(() =>

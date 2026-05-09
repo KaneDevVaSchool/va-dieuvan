@@ -376,6 +376,7 @@
         "title": "Chi tiết chuyến",
         "back": "Quay lại lịch",
         "more": "Tùy chọn",
+        "a11y_student_row": "{name}. Chạm để mở các thao tác gọi và đánh dấu đón.",
         "action_refresh": "Làm mới",
         "call_dispatcher": "Gọi điều vận",
         "status_running": "Đang thực hiện",
@@ -430,6 +431,7 @@
         "cost_err_submit": "Gửi chi phí thất bại. Thử lại.",
         "today_time": "Hôm nay, {t}",
         "students_title": "Danh sách hành khách ({n})",
+        "cargo_list_title": "Danh sách hàng hóa ({n})",
         "picked": "Đã đón",
         "state_picked": "Đã đón",
         "next_stop": "Điểm tiếp theo",
@@ -483,9 +485,15 @@
         "cost_type_wash": "Rửa xe",
         "cost_type_fine": "Phạt",
         "cost_type_repair": "Sửa chữa nhỏ",
+        "cost_status_draft": "Nháp",
         "cost_status_submitted": "Chờ duyệt",
         "cost_status_confirmed": "Đã duyệt",
-        "cost_status_rejected": "Từ chối"
+        "cost_status_rejected": "Từ chối",
+        "schedule_time_range": "Xuất phát {start} — đến dự kiến {end}",
+        "schedule_start_only": "Xuất phát {start}",
+        "schedule_tz_note": "Giờ Việt Nam (UTC+7)",
+        "costs_approved_line": "Đã duyệt: {amount}",
+        "costs_pending_line": "Chờ duyệt: {amount}"
     },
     "driver_cost_req": {
         "title": "Chi tiết yêu cầu",
@@ -2312,7 +2320,15 @@
             "add_btn": "+ Thêm chi phí",
             "add_btn_cancel": "Đóng",
             "breakdown_total": "Tổng",
-            "embedded_summary": "{count} mục · {total}"
+            "embedded_summary": "{count} mục · {total}",
+            "summary_approved_only": "Đã duyệt: {amount}",
+            "summary_pending_part": "Chờ: {amount}",
+            "status_draft": "Nháp",
+            "status_submitted": "Chờ duyệt",
+            "status_confirmed": "Đã duyệt",
+            "status_rejected": "Từ chối",
+            "status_pending": "Chờ duyệt",
+            "status_approved": "Đã duyệt"
         }
     },
     "dashboard_analytics": {
@@ -2515,7 +2531,7 @@
     },
     "costs_page": {
         "hero_title": "Chi phí chuyến",
-        "hero_subtitle": "Theo dõi và ghi nhận chi phí vận hành — lọc theo trạng thái, loại, chuyến và ngày.",
+        "hero_subtitle": "Theo dõi và ghi nhận chi phí vận hành — lọc theo trạng thái, loại, chuyến và ngày. Mặc định hiển thị hàng chờ chờ duyệt.",
         "section_kpis": "Chỉ số trang",
         "section_list": "Danh sách chi phí",
         "kpi_total": "Tổng bản ghi",
@@ -2554,6 +2570,11 @@
         "col_legal_entity": "Pháp nhân TT",
         "col_notes": "Ghi chú",
         "col_trip": "Trip",
+        "col_actions": "Thao tác",
+        "action_approve": "Duyệt",
+        "action_reject": "Từ chối",
+        "reject_reason_prompt": "Lý do từ chối (tuỳ chọn, Enter để gửi không lý do)",
+        "decide_err": "Không cập nhật được trạng thái chi phí.",
         "view_receipt": "Xem",
         "loading_table": "Đang tải…",
         "pagination_of": "Trang {current} / {last}",

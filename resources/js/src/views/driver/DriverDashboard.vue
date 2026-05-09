@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="min-h-full w-full overflow-x-hidden bg-[#020B0B] pb-[calc(7rem+env(safe-area-inset-bottom))] text-[#eaf8f5]"
-  >
+  <div class="min-h-0 w-full bg-[#020B0B] pb-24 text-[#eaf8f5]">
     <div
       class="relative isolate w-full overflow-hidden rounded-b-[1.75rem] shadow-[0_10px_40px_-8px_rgba(34,211,238,0.18)] ring-1 ring-[#7fdcc8]/10 -mt-[env(safe-area-inset-top,0px)] pt-[env(safe-area-inset-top,0px)]"
     >
@@ -35,10 +33,10 @@
       </div>
     </div>
 
-    <div class="mx-auto w-full min-w-0 max-w-full px-3 pt-4 sm:px-4">
+    <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-3 pt-4 sm:px-4">
       <div class="min-w-0 space-y-4">
         <DriverPendingConfirmationSection
-          v-if="dash.myDriverId != null && (dash.loadingInitial || dash.needsConfirmationTrips.length)"
+          v-if="dash.needsConfirmationTrips.length > 0 || (dash.loadingInitial && dash.rawListItems.length === 0)"
           :trips="dash.needsConfirmationTrips"
           :loading="dash.loadingInitial && dash.rawListItems.length === 0"
         />
@@ -93,7 +91,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
@@ -261,15 +259,30 @@ async function onStartTrip(tripId) {
   }
 }
 
-onMounted(async () => {
-  await bootDriverOutboundNotifications()
+function scheduleDeferredPushBoot() {
+  const run = () => void bootDriverOutboundNotifications()
+  if (typeof window === 'undefined') {
+    run()
+    return
+  }
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(run, { timeout: 2500 })
+  } else {
+    window.setTimeout(run, 0)
+  }
+}
+
+onMounted(() => {
   dash.hydrateFromCache()
   dashPerfMounted()
-  if (dash.rawListItems.length > 0) {
-    await dash.fetchDashboard({ silent: true, force: true })
-  } else {
-    await dash.fetchDashboard({ silent: false, force: true })
-  }
+
+  const silent = dash.rawListItems.length > 0
+
   startDriverVisiblePoll()
+  scheduleDeferredPushBoot()
+
+  void nextTick(() => {
+    void dash.fetchDashboard({ silent, force: true })
+  })
 })
 </script>

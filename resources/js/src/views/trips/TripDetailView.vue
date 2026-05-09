@@ -751,6 +751,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
+import { useVisiblePoll } from "../../composables/useDriverVisiblePoll";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import {
@@ -2507,7 +2508,17 @@ watch(
     { flush: "post" },
 );
 
-onMounted(load);
+const { start: startStaffTripDetailPoll } = useVisiblePoll(
+    () => {
+        void load({ silent: true });
+    },
+    { intervalMs: 50_000 },
+);
+
+onMounted(() => {
+    void load();
+    startStaffTripDetailPoll();
+});
 watch(
     () => route.params.id,
     () => {

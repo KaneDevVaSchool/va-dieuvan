@@ -8,11 +8,18 @@ use App\Models\User;
 use App\Support\PermissionPlainVi;
 use Illuminate\Database\Seeder;
 
+/**
+ * Đồng bộ danh sách permission (theo chuỗi dùng trong FormRequest / Policy) và gán mặc định cho từng role.
+ *
+ * Chạy sau khi migrate: php artisan db:seed --class=RbacSeeder
+ */
 class RbacSeeder extends Seeder
 {
+    private const GUARD = 'web';
+
     public function run(): void
     {
-        $guard = 'web';
+        $guard = self::GUARD;
 
         $roles = [
             ['name' => 'superadmin', 'display_name' => 'Super Admin'],
@@ -30,32 +37,39 @@ class RbacSeeder extends Seeder
             );
         }
 
+        // Danh sách đầy đủ: khi thêm API mới, thêm key vào đây (và permission_plain_vi.json nếu cần mô tả).
         $permissions = [
+            // Yêu cầu điều xe
             'request.create',
             'request.update_own',
             'request.cancel_own',
             'request.approve',
             'request.paper.manage',
+            // Chuyến
             'trip.assign',
             'trip.view_all',
             'trip.view_own',
             'trip.update_status',
             'trip.record.create',
             'trip.event.create',
+            // Chi phí chuyến
             'trip.cost.view',
             'trip.cost.reconcile',
+            // Thanh toán / báo cáo
             'payment.reconcile',
             'payment.execute',
+            'report.view',
+            'report.export',
+            // Vận hành khác
             'cargo.manage',
             'route.manage',
             'student.manage',
             'attachment.upload',
-            'report.view',
-            'report.export',
             'reference_pricing.manage',
             'resource.driver.manage',
             'resource.vehicle.manage',
             'resource.provider.manage',
+            // Người dùng / hệ thống
             'user.manage',
             'audit_log.view',
             'data.override_confirmed',
@@ -104,6 +118,7 @@ class RbacSeeder extends Seeder
                 'trip.record.create',
                 'trip.event.create',
                 'trip.cost.view',
+                'trip.cost.reconcile',
                 'report.view',
                 'report.export',
                 'reference_pricing.manage',
@@ -131,7 +146,7 @@ class RbacSeeder extends Seeder
         ];
 
         foreach ($map as $roleName => $perms) {
-            $role = Role::where('name', $roleName)->where('guard_name', $guard)->first();
+            $role = Role::query()->where('name', $roleName)->where('guard_name', $guard)->first();
             if (! $role) {
                 continue;
             }

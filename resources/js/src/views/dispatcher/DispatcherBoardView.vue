@@ -739,9 +739,9 @@ function computeConflicts(tripList) {
   return conflictIds
 }
 
-/** Trên lịch: chuyến đã phân công / đang chạy — không trùng với hàng đợi (pending, approved). */
+/** Trên lịch: chỉ chuyến còn vận hành (ẩn đã xong / huỷ / hàng đợi phân công). */
 const timelineTrips = computed(() =>
-  trips.value.filter((x) => !['pending', 'approved', 'cancelled'].includes(x.status)),
+  trips.value.filter((x) => !['pending', 'approved', 'cancelled', 'completed'].includes(x.status)),
 )
 
 const conflictIds = computed(() => computeConflicts(timelineTrips.value))

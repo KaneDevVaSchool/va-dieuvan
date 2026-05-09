@@ -1,18 +1,72 @@
-Apply:
-.curso
-- @core.mdc
-- @vue.mdc
-- @ui.mdc
+Bắt buộc áp dụng:
+@.cursorrules @.cursorignore
 
+Tuân thủ context và coding convention theo:
+@.cursor/rules/core.mdc
+@.cursor/rules/laravel.mdc
+@.cursor/rules/vue.mdc
 
-Scope:
-- UI only
-- Keep logic
+Trang URL mục tiêu:
+https://dieuvan.vaschools.edu.vn/driver/trips/39
 
-Requirements:
-- reusable
-- clean
-- tailwind
+File cần refactor/chỉnh sửa:
+@DriverTripDetailView.vue (1-1368)
 
-Output:
-- Full file
+Yêu cầu thực hiện:
+
+* Phân tích toàn bộ UI/UX hiện tại của màn hình chi tiết chuyến đi tài xế.
+* Giữ đồng nhất design system với các màn hình driver khác.
+* Ưu tiên mobile-first, thao tác nhanh cho tài xế khi đang di chuyển.
+* Không làm thay đổi business logic hiện có nếu không cần thiết.
+* Refactor component theo hướng clean, dễ maintain, reusable và scalable.
+* Tối ưu spacing, hierarchy, typography và trạng thái tương tác.
+* Hạn chế nested div dư thừa, tránh code duplicated.
+* Không dùng mock/demo text.
+* Tất cả wording phải production-ready, dễ hiểu với tài xế.
+
+Nội dung cần sửa:
+
+# 1. [Mô tả vấn đề]
+
+Vấn đề hiện tại:
+
+* [Điền chi tiết vấn đề UI/UX hoặc logic]
+* [Ví dụ: thông tin khó đọc, CTA chưa nổi bật, layout rối, mobile bị dài, spacing chưa hợp lý...]
+
+Mong muốn:
+
+* [Điền mục tiêu mong muốn]
+* [Ví dụ: tối ưu thao tác nhanh, gom nhóm thông tin rõ ràng, CTA nổi bật hơn...]
+
+Yêu cầu triển khai:
+
+* Phân tích lại UX flow tài xế khi xem chi tiết chuyến.
+* Đề xuất layout phù hợp hơn cho mobile.
+* Ưu tiên hiển thị các thông tin quan trọng ở first viewport.
+* Tối ưu sticky action bottom bar nếu cần.
+* Thiết kế lại card/block theo hướng modern dashboard.
+* Thêm trạng thái loading/skeleton/shimmer phù hợp.
+* Tối ưu responsive cho mobile/tablet.
+* Cải thiện accessibility:
+
+  * touch target lớn
+  * contrast rõ
+  * typography dễ đọc
+  * spacing đủ thoáng
+
+Yêu cầu code:
+
+* Refactor component thành các section/component nhỏ nếu cần.
+* Ưu tiên computed/state rõ ràng.
+* Hạn chế inline logic trong template.
+* Tách reusable UI block hợp lý.
+* Tối ưu performance render.
+* Không phá vỡ reactive hiện tại.
+* Giữ clean architecture và convention theo project.
+
+Kết quả mong muốn:
+
+* UI hiện đại, gọn gàng, dễ thao tác cho tài xế.
+* Trải nghiệm mobile tốt hơn rõ rệt.
+* Flow trực quan, ít thao tác hơn.
+* Code sạch, dễ maintain và mở rộng về sau.

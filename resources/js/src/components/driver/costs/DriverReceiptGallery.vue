@@ -216,7 +216,7 @@ import {
 import { uploadAttachment, deleteAttachment } from '../../../api/attachments'
 import { compressImageFile } from '../../../util/imageCompress'
 import { confirmAction } from '../../../composables/useConfirm'
-import { showAppError } from '../../../composables/appMessage'
+import { showAppError, showAppErrorFromApi } from '../../../composables/appMessage'
 
 const props = defineProps({
   tripId: { type: Number, required: true },
@@ -363,7 +363,15 @@ async function onNativePick(e) {
 }
 
 async function pipeUpload(file) {
-  const prepared = await compressImageFile(file)
+  let prepared
+  try {
+    prepared = await compressImageFile(file)
+  } catch {
+    failedJobs.value.push({ file, name: file.name })
+    showAppError(props.uploadFail)
+    return
+  }
+
   const key = `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`
   const url = URL.createObjectURL(prepared)
   optimisticRows.value.push({
@@ -388,11 +396,12 @@ async function pipeUpload(file) {
     optimisticRows.value = optimisticRows.value.filter((r) => r.key !== key)
     uploadingKeys.value.delete(key)
     emit('updated')
-  } catch {
+  } catch (err) {
     URL.revokeObjectURL(url)
     optimisticRows.value = optimisticRows.value.filter((r) => r.key !== key)
     uploadingKeys.value.delete(key)
     failedJobs.value.push({ file: prepared, name: prepared.name })
+    showAppErrorFromApi(err, props.uploadFail)
   }
 }
 

@@ -17,7 +17,7 @@
             class="inline-flex shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
             :class="costStatusClass"
           >
-            {{ cost.status }}
+            {{ costStatusLabel }}
           </span>
         </div>
         <p v-if="cost.description?.trim()" class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ cost.description.trim() }}</p>
@@ -80,7 +80,7 @@ const emit = defineEmits<{
   'pick-receipt': [costId: number, ev: Event]
 }>()
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const hiddenInputRef = shallowRef<HTMLInputElement | null>(null)
 
 function triggerPick() {
@@ -93,9 +93,24 @@ function onReceiptInputChange(ev: Event) {
   emit('pick-receipt', id, ev)
 }
 
-const receiptAria = computed(() => t('trip_detail.costs.receipt_upload'))
+const costStatusLabel = computed(() => {
+  const raw = String(props.cost.status ?? '').trim().toLowerCase()
+  if (!raw) return ''
+  const keyMap: Record<string, string> = {
+    draft: 'trip_detail.costs.status_draft',
+    submitted: 'trip_detail.costs.status_submitted',
+    confirmed: 'trip_detail.costs.status_confirmed',
+    rejected: 'trip_detail.costs.status_rejected',
+    pending: 'trip_detail.costs.status_pending',
+    approved: 'trip_detail.costs.status_approved',
+  }
+  const key = keyMap[raw]
+  if (key && te(key)) return t(key)
+  return props.cost.status ?? ''
+})
 
 const receiptLabel = computed(() => t('trip_detail.costs.receipt_upload'))
+const receiptAria = receiptLabel
 
 const typeIcon = computed(() => {
   const k = mapCostTypeForUi(props.cost.type)
@@ -109,7 +124,7 @@ const costStatusClass = computed(() => {
   const x = String(props.cost.status ?? '').toLowerCase()
   if (x === 'confirmed' || x === 'approved') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
   if (x === 'rejected') return 'bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300'
-  if (x === 'pending') return 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200'
+  if (x === 'draft') return 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
   if (x === 'submitted') return 'bg-sky-100 text-sky-900 dark:bg-sky-950/40 dark:text-sky-300'
   return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
 })

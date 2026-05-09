@@ -709,6 +709,8 @@ import {
   labelTripStatus,
   labelTripType,
 } from '../../util/labels'
+import { tripStatusAdminPillClass } from '../../constants/tripStatus'
+import { useVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useAuthStore } from '../../store'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
 
@@ -1218,17 +1220,7 @@ function tripTypeIconWrap(tt) {
 }
 
 function statusPillClass(s) {
-  const map = {
-    pending: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100',
-    approved: 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-200',
-    assigned: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200',
-    driver_confirmed: 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100',
-    in_progress: 'bg-teal-100 text-teal-900 dark:bg-teal-950/40 dark:text-teal-100',
-    completed: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100',
-    cancelled: 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-100',
-    incident: 'bg-rose-100 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100',
-  }
-  return map[s] ?? 'bg-slate-100 text-slate-800'
+  return tripStatusAdminPillClass(s)
 }
 
 /** Hiển thị ngày + giờ đầy đủ (danh sách / meta vận hành) */
@@ -1435,6 +1427,14 @@ watch(searchInput, () => {
   }, 320)
 })
 
+const { start: startTripsListPoll } = useVisiblePoll(
+  () => {
+    void reload()
+    void reloadStats()
+  },
+  { intervalMs: 55_000 },
+)
+
 watch(
   () => route.query.status,
   () => {
@@ -1452,5 +1452,6 @@ onMounted(() => {
   applyStatusFromRoute()
   reloadStats()
   reload()
+  startTripsListPoll()
 })
 </script>

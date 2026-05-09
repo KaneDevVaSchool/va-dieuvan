@@ -11,7 +11,7 @@
     "trip.record.create": "Được thêm bản ghi/ghi chú vận hành trên chuyến.",
     "trip.event.create": "Được thêm sự kiện (checkpoint, sự cố…) trên chuyến.",
     "trip.cost.view": "Xem chi phí liên quan chuyến.",
-    "trip.cost.reconcile": "Được đối chiếu/xử lý chi phí chuyến (kế toán).",
+    "trip.cost.reconcile": "Được duyệt/từ chối và đối chiếu chi phí chuyến (điều vận/kế toán tùy cấu hình role).",
     "payment.reconcile": "Được đối soát kỳ thanh toán, công nợ.",
     "payment.execute": "Được ghi nhận/ thực hiện thanh toán.",
     "cargo.manage": "Quản lý thông tin hàng hóa (cargo) trên hệ thống.",

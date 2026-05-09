@@ -91,3 +91,8 @@ export function useDriverVisiblePoll(refetch, opts = {}) {
 
   return { start, stop }
 }
+
+/** Alias cho màn staff/dispatch dùng cùng cơ chế poll. */
+export function useVisiblePoll(refetch, opts = {}) {
+  return useDriverVisiblePoll(refetch, opts)
+}
