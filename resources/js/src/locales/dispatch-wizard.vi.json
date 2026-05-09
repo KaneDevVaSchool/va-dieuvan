@@ -199,7 +199,7 @@
             "targets_hint": "Nên chọn ít nhất một đối tượng để ghi rõ phân bổ nội bộ khi xử lý yêu cầu.",
             "targets_selected": "Đã chọn {n} mục.",
             "targets_warn": "Chọn ít nhất một đối tượng để ghi rõ phân bổ nội bộ.",
-            "sec_coordinator": "Nhân sự phụ trách điều phối",
+            "sec_coordinator": "Trưởng đoàn phụ trách ",
             "coord_search_label": "Tìm theo tên",
             "coord_search_title": "Giống mục A: chọn nhân sự để điền họ tên, email, SĐT.",
             "coord_search_ph": "Gõ họ tên nhân sự điều phối…",
