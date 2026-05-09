@@ -133,6 +133,11 @@
 import { computed, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import {
+  formatDepartForTrip,
+  tripDepartIso,
+  tripOutboundInboundTimeRange,
+} from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
   trip: { type: Object, required: true },
@@ -154,12 +159,11 @@ function drOf(t) {
 
 const pickupTime = computed(() => {
   const tr = tripRaw.value
+  const tag = locale.value === 'vi' ? 'vi' : 'en'
+  const range = tripOutboundInboundTimeRange(tr, tag, t)
+  if (range) return range
+  if (tripDepartIso(tr)) return formatDepartForTrip(tr, tag).time
   if (tr.pickup_time) return tr.pickup_time
-  if (tr.depart_at) {
-    const d = new Date(tr.depart_at)
-    if (Number.isNaN(d.getTime())) return '—'
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-  }
   return '—'
 })
 

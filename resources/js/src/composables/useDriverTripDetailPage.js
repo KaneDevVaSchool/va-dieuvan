@@ -200,6 +200,7 @@ export function useDriverTripDetailPage() {
       .reduce((s, c) => s + costAmountNum(c), 0),
   )
 
+  const canAddCost = computed(() => isTripCostEditableStatus(trip.value?.status))
 
   const startKmModel = computed(() => {
     const r = trip.value?.record
@@ -292,6 +293,7 @@ export function useDriverTripDetailPage() {
   }
 
   function openCostModal() {
+    if (!canAddCost.value) return
     costError.value = ''
     costForm.value = { type: 'fuel', amount: '', description: '' }
     costModalOpen.value = true
@@ -299,7 +301,7 @@ export function useDriverTripDetailPage() {
 
   async function submitCost() {
     const id = tripId.value
-    if (id == null || costSaving.value) return
+    if (id == null || costSaving.value || !canAddCost.value) return
     const a = String(costForm.value.amount || '').replace(/\D/g, '')
     const num = a === '' ? NaN : parseInt(a, 10)
     if (!Number.isFinite(num) || num < 0) {
