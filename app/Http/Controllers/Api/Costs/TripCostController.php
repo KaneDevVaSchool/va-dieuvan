@@ -212,8 +212,8 @@ class TripCostController extends Controller
             $before = $tripCost->toArray();
 
             $tripCost->load('trip');
+            // Duyệt / từ chối đối soát vẫn được phép khi chuyến đã hoàn thành hoặc hủy (chỉ chặn khi đã thanh toán / khóa tài chính).
             FinancialDataLock::assertTripNotPaid($tripCost->trip);
-            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
 
             if (! in_array($tripCost->status, ['submitted', 'draft'], true)) {
                 abort(409, Messages::COST_NOT_ACTIONABLE);

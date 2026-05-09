@@ -73,7 +73,6 @@ class FinancialLockTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-04-02 08:00:00'));
 
         $dispatcher = $this->seedAndMakeUser('dispatcher');
-        $accountant = $this->seedAndMakeUser('accountant');
 
         $trip = $this->makeTrip($dispatcher, ['payment_status' => 'unpaid']);
 
@@ -88,12 +87,39 @@ class FinancialLockTest extends TestCase
 
         $trip->update(['payment_status' => 'paid', 'paid_at' => now()]);
 
-        $this->actingAs($accountant);
+        $this->actingAs($dispatcher);
         $res = $this->postJson("/api/trip-costs/{$cost->id}/decision", [
             'decision' => 'confirm',
         ]);
 
         $res->assertStatus(409);
+    }
+
+    public function test_can_confirm_submitted_cost_when_trip_completed_and_unpaid(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-04-02 08:00:00'));
+
+        $dispatcher = $this->seedAndMakeUser('dispatcher');
+
+        $trip = $this->makeTrip($dispatcher, ['status' => 'completed']);
+
+        $cost = TripCost::create([
+            'trip_id' => $trip->id,
+            'created_by' => $dispatcher->id,
+            'type' => 'fuel',
+            'amount' => 50000,
+            'currency' => 'VND',
+            'status' => 'submitted',
+        ]);
+
+        $this->actingAs($dispatcher);
+        $res = $this->postJson("/api/trip-costs/{$cost->id}/decision", [
+            'decision' => 'confirm',
+        ]);
+
+        $res->assertOk();
+        $cost->refresh();
+        $this->assertSame('confirmed', $cost->status);
     }
 
     public function test_cannot_assign_when_trip_is_paid(): void
