@@ -101,6 +101,7 @@ import { ClipboardDocumentListIcon, PlusCircleIcon } from '@heroicons/vue/24/out
 import DriverCostStatusTabs from '../../components/driver/costs/DriverCostStatusTabs.vue'
 import DriverCostListCard from '../../components/driver/costs/DriverCostListCard.vue'
 import { useDriverCostsList } from '../../composables/useDriverCostsList'
+import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { usePullToRefresh } from '../../composables/usePullToRefresh'
 
 const { t, te } = useI18n()
@@ -124,6 +125,8 @@ const tabItems = computed(() => [
 const statusRef = computed(() => statusTab.value)
 
 const { items, loading, loadingMore, errorMsg, meta, load, refresh, loadMore } = useDriverCostsList(statusRef)
+
+const { start: startCostsVisiblePoll } = useDriverVisiblePoll(() => refresh())
 
 const { pulling: ptrPulling, refreshing: ptrRefreshing } = usePullToRefresh(() => refresh())
 
@@ -157,7 +160,7 @@ function typeLabel(type) {
 }
 
 onMounted(() => {
-  void load({ append: false })
+  void load({ append: false }).finally(() => startCostsVisiblePoll())
   io = new IntersectionObserver(
     (entries) => {
       if (entries.some((e) => e.isIntersecting)) void loadMore()

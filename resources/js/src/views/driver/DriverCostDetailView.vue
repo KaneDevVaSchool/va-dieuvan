@@ -348,6 +348,7 @@ import DriverReceiptGallery from '../../components/driver/costs/DriverReceiptGal
 import { confirmAction } from '../../composables/useConfirm'
 import { showAppSuccess } from '../../composables/appMessage'
 import { deleteTripCost, getTripCost, updateTripCost } from '../../api/costs'
+import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { isTripCostEditableStatus } from '../../constants/tripStatus'
 import { formatVnd } from '../../util/labels'
 
@@ -684,8 +685,10 @@ async function onGalleryUpdated() {
   await load()
 }
 
+const { start: startCostDetailVisiblePoll } = useDriverVisiblePoll(() => load())
+
 onMounted(() => {
-  void load()
+  void load().finally(() => startCostDetailVisiblePoll())
   heroIo = new IntersectionObserver(
     ([e]) => {
       heroVisible.value = e?.isIntersecting ?? true
