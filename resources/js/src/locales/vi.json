@@ -1812,7 +1812,10 @@
         "driver_rejected": {
             "status_label": "Đã từ chối",
             "banner_title": "Tài xế đã từ chối chuyến",
-            "reason_label": "Lý do từ chối"
+            "reason_label": "Lý do từ chối",
+            "reassign_hint": "Vui lòng chọn xe và tài xế khác trong khối «Điều phối» bên phải, rồi nhấn xác nhận phân công để gửi lại.",
+            "coordination_hint_short": "Chuyến có thể phân công lại — chọn tài xế khác trong khối Điều phối.",
+            "same_driver_blocked_hint": "Tài xế này đã từ chối chuyến — vui lòng chọn tài xế khác."
         },
         "overview": {
             "title": "Tổng quan chuyến",

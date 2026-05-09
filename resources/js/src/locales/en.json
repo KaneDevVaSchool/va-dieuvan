@@ -2002,7 +2002,10 @@
         "driver_rejected": {
             "status_label": "Declined",
             "banner_title": "Driver declined the trip",
-            "reason_label": "Decline reason"
+            "reason_label": "Decline reason",
+            "reassign_hint": "Choose another vehicle and driver in the coordination panel on the right, then confirm assignment to send it again.",
+            "coordination_hint_short": "This trip can be reassigned — pick another driver in the coordination panel.",
+            "same_driver_blocked_hint": "This driver already declined this trip — please choose a different driver."
         },
         "overview": {
             "title": "Trip overview",

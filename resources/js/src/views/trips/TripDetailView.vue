@@ -38,7 +38,7 @@
                 :trip="trip"
                 :status-label-override="tripStatusLabelOverride"
                 :can-approve="canAssign"
-                :can-reject="canUpdateStatus"
+                :can-reject="canRejectTripFromHeader"
                 :refreshing="refreshing"
                 :assign-disabled="assigning || !assignReady"
                 @back="router.push(tripsListPath)"
@@ -96,6 +96,11 @@
                                 {{ driverCancellationReasonText }}
                             </p>
                         </div>
+                        <p
+                            class="mt-3 border-t border-rose-200/90 pt-3 text-sm font-medium leading-relaxed text-rose-900 dark:border-rose-800/80 dark:text-rose-100"
+                        >
+                            {{ t("trip_detail.driver_rejected.reassign_hint") }}
+                        </p>
                     </div>
                 </div>
 
@@ -914,6 +919,20 @@ const driverCancellationReasonText = computed(() => {
     return typeof m === "string" ? m.trim() : "";
 });
 
+/** Tài xế nội bộ trên chuyến lúc bị từ chối (để gợi ý chọn người khác khi phân công lại). */
+const driverRejectedInternalDriverId = computed(() => {
+    if (!driverCancellationEvent.value || !trip.value) return null;
+    const id = trip.value.driver_id;
+    return id != null ? Number(id) : null;
+});
+
+const sameRejectedDriverSelected = computed(() => {
+    const rid = driverRejectedInternalDriverId.value;
+    const did = dispatchResources.value?.driver_id;
+    if (rid == null || did == null) return false;
+    return Number(did) === rid;
+});
+
 const tripStatusLabelOverride = computed(() =>
     driverCancellationEvent.value
         ? t("trip_detail.driver_rejected.status_label")
@@ -1001,6 +1020,11 @@ const canAssign = computed(() => auth.hasPermission("trip.assign"));
 const canUpdateStatus = computed(() =>
     auth.hasPermission("trip.update_status"),
 );
+const canRejectTripFromHeader = computed(() => {
+    if (!canUpdateStatus.value || !trip.value) return false;
+    const s = String(trip.value.status ?? "").toLowerCase();
+    return s !== "cancelled" && s !== "completed";
+});
 const canManageAttachments = computed(() =>
     auth.hasPermission("attachment.upload"),
 );
@@ -1025,7 +1049,8 @@ const canRescheduleTrip = computed(() => {
     if (!canAssign.value || !trip.value) return false;
     if ((trip.value.payment_status ?? "unpaid") === "paid") return false;
     const s = trip.value.status;
-    if (s === "cancelled" || s === "completed") return false;
+    if (s === "completed") return false;
+    if (s === "cancelled" && !driverCancellationEvent.value) return false;
     return true;
 });
 
@@ -1041,7 +1066,9 @@ const COORDINATION_ACTIONS_LOCKED_STATUSES = new Set([
 
 const coordinationActionsLocked = computed(() => {
     const s = String(trip.value?.status ?? "").toLowerCase();
-    return COORDINATION_ACTIONS_LOCKED_STATUSES.has(s);
+    if (!COORDINATION_ACTIONS_LOCKED_STATUSES.has(s)) return false;
+    if (s === "cancelled" && driverCancellationEvent.value) return false;
+    return true;
 });
 
 const canRescheduleForCoordinationPanel = computed(
@@ -1925,6 +1952,7 @@ const assignReady = computed(() => {
     if (!canAssign.value) return false;
     const p = dispatchResources.value;
     if (!p?.readyForSubmit) return false;
+    if (sameRejectedDriverSelected.value) return false;
     if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id)))
         return false;
     if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id)))
@@ -2014,6 +2042,10 @@ const coordinationScheduleLines = computed(() => {
         lines.push(t("trip_detail.coordination.preview_window_hint"));
     const busy = busyResourcesHint.value;
     if (busy) lines.push(busy);
+    if (driverCancellationEvent.value)
+        lines.push(t("trip_detail.driver_rejected.coordination_hint_short"));
+    if (sameRejectedDriverSelected.value)
+        lines.push(t("trip_detail.driver_rejected.same_driver_blocked_hint"));
     const rh = resourceHint.value?.trim();
     if (rh) lines.push(rh);
     return lines;
@@ -2038,8 +2070,10 @@ const coordinationCapacityBanner = computed(() => {
 });
 
 const showCoordinationAssignFooter = computed(() => {
+    if (!canAssign.value) return false;
     const st = String(trip.value?.status ?? "").toLowerCase();
-    return st === "approved" && canAssign.value;
+    if (st === "approved") return true;
+    return st === "cancelled" && Boolean(driverCancellationEvent.value);
 });
 
 function onCoordinationCancel() {
@@ -2451,6 +2485,11 @@ async function onApproveTransfer() {
         return;
     }
 
+    if (sameRejectedDriverSelected.value) {
+        assignFeedbackKind.value = "error";
+        assignMsg.value = t("trip_detail.driver_rejected.same_driver_blocked_hint");
+        return;
+    }
     if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id))) {
         assignFeedbackKind.value = "error";
         assignMsg.value = t("trip_detail.coordination.validation_busy_driver");
