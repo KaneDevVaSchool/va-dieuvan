@@ -180,13 +180,10 @@ export function useResourceSelector(
     const customTaxiOk = txs
       .filter((t) => isCustomResource(t))
       .some((x) => String(x.label ?? '').trim().length > 0)
-    const customVendorOk = vds
-      .filter((v) => isCustomResource(v))
-      .some((x) => String(x.label ?? '').trim().length > 0)
 
     if (hasT || hasP) {
-      const hasNumericId = numericVendors.length > 0 || numericTaxis.length > 0
-      if (!hasNumericId && !customTaxiOk && !customVendorOk) return 'need_provider'
+      if (hasP && numericVendors.length === 0) return 'need_provider'
+      if (hasT && numericTaxis.length === 0 && !customTaxiOk) return 'need_provider'
     }
 
     return null

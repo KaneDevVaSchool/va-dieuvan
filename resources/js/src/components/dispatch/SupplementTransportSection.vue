@@ -51,7 +51,61 @@
       leave-to-class="opacity-0 -translate-y-0.5"
     >
       <div v-show="expanded" class="rounded-b-2xl bg-white/50 px-3 pb-3 pt-2 dark:bg-slate-950/25">
-        <div class="flex flex-wrap items-center gap-2" :class="indentBody ? 'ml-[38px]' : ''">
+        <div v-if="kind === 'vendor'" class="space-y-2" :class="indentBody ? 'ml-[38px]' : ''">
+          <label class="sr-only" for="ncc-supplement-filter">{{ nameFieldLabel }}</label>
+          <input
+            id="ncc-supplement-filter"
+            v-model="vendorFilter"
+            type="search"
+            autocomplete="off"
+            class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+            :placeholder="t('trip_detail.coordination.resource_section_vendor_filter_ph')"
+            :disabled="disabled"
+          />
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="min-w-0 flex-1">
+              <label class="sr-only" for="ncc-supplement-select">{{ nameFieldLabel }}</label>
+              <select
+                id="ncc-supplement-select"
+                v-model="selectedVendorId"
+                class="w-full appearance-none rounded-xl border border-transparent bg-slate-100/90 py-2 pl-3 pr-8 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:border-slate-300 focus:bg-white focus:shadow-md disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:border-slate-600 dark:focus:bg-slate-900 dark:focus:shadow-black/35"
+                :disabled="disabled"
+                :aria-label="nameFieldLabel"
+              >
+                <option value="">{{ namePlaceholder }}</option>
+                <option
+                  v-for="opt in filteredVendorSelectOptions"
+                  :key="String(opt.id)"
+                  :value="String(opt.id)"
+                >
+                  {{ opt.label }}{{ opt.sublabel ? ` · ${opt.sublabel}` : '' }}
+                </option>
+              </select>
+            </div>
+            <div class="w-16 shrink-0">
+              <input
+                v-model="seatDraft"
+                type="number"
+                min="1"
+                step="1"
+                inputmode="numeric"
+                class="w-full rounded-xl bg-slate-100/90 px-1 py-1.5 text-center text-[12px] font-normal tabular-nums text-slate-800 shadow-inner outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
+                :disabled="disabled"
+                :aria-label="t('trip_detail.coordination.supplement_seats_aria')"
+              />
+            </div>
+            <button
+              type="button"
+              class="shrink-0 rounded-xl bg-[#8B1A1A] px-3 py-1.5 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/20 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40 dark:shadow-[#8B1A1A]/25"
+              :disabled="disabled"
+              @click="onAdd"
+            >
+              {{ t('trip_detail.coordination.supplement_add_btn') }}
+            </button>
+          </div>
+        </div>
+
+        <div v-else class="flex flex-wrap items-center gap-2" :class="indentBody ? 'ml-[38px]' : ''">
           <div class="min-w-0 flex-1">
             <input
               v-model="nameDraft"
@@ -161,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import type { ResourceItem } from '../../types/dispatch'
@@ -192,7 +246,34 @@ const { t } = useI18n()
 const expanded = ref(false)
 const nameDraft = ref('')
 const seatDraft = ref(String(props.defaultSeat))
+const vendorFilter = ref('')
+const selectedVendorId = ref('')
 const refsOpen = ref<Record<string, boolean>>({})
+
+const filteredVendorSelectOptions = computed(() => {
+  if (props.kind !== 'vendor') return []
+  const q = vendorFilter.value.trim().toLowerCase()
+  const list = props.options ?? []
+  return list.filter((o) => {
+    if (o.available === false) return false
+    if (!q) return true
+    const lab = String(o.label ?? '').toLowerCase()
+    const sub = String(o.sublabel ?? '').toLowerCase()
+    return lab.includes(q) || sub.includes(q)
+  })
+})
+
+watch(
+  () => props.options,
+  () => {
+    if (props.kind !== 'vendor') return
+    const id = selectedVendorId.value.trim()
+    if (!id) return
+    const ok = props.options.some((o) => String(o.id) === id && o.available !== false)
+    if (!ok) selectedVendorId.value = ''
+  },
+  { deep: true },
+)
 
 watch(
   () => props.modelValue.length,
@@ -289,10 +370,30 @@ function isCustomDuplicate(name: string) {
 
 function onAdd() {
   if (props.disabled) return
-  const name = nameDraft.value.trim()
-  if (!name) return
   const seats = parseSeats()
   if (seats == null) return
+
+  if (props.kind === 'vendor') {
+    const idRaw = selectedVendorId.value.trim()
+    if (!idRaw) return
+    const resolved = props.options.find((o) => String(o.id) === idRaw && o.available !== false)
+    if (!resolved) return
+    if (props.modelValue.some((v) => String(v.id) === String(resolved.id))) {
+      selectedVendorId.value = ''
+      return
+    }
+    const enriched: ResourceItem = {
+      ...resolved,
+      supplementSeats: seats,
+    }
+    emit('update:modelValue', [...props.modelValue, enriched])
+    selectedVendorId.value = ''
+    seatDraft.value = String(props.defaultSeat)
+    return
+  }
+
+  const name = nameDraft.value.trim()
+  if (!name) return
 
   if (isCustomDuplicate(name)) {
     nameDraft.value = ''
