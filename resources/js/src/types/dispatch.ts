@@ -16,6 +16,8 @@ export interface ResourceItem {
   /** Tham chiếu xe/lái ngoài (chủ yếu NCC), gộp khi submit. */
   externalVehicleRef?: string | null
   externalDriverRef?: string | null
+  /** Ghi chú tự do (SĐT, biển số, tên…) — chủ yếu dùng cho NCC bổ sung. */
+  contactNotes?: string | null
 }
 
 export interface SelectedResources {
@@ -36,6 +38,7 @@ export interface SupplementItem {
   isCustom?: boolean | null
   externalVehicleRef?: string | null
   externalDriverRef?: string | null
+  contactNotes?: string | null
 }
 
 /** Cấu trúc JSON lưu trong trips.supplement_transports */

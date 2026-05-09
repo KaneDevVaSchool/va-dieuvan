@@ -71,6 +71,7 @@ class DispatchingService
                         'isCustom'           => isset($item['isCustom']) ? (bool) $item['isCustom'] : null,
                         'externalVehicleRef' => isset($item['externalVehicleRef']) ? substr((string) $item['externalVehicleRef'], 0, 255) : null,
                         'externalDriverRef'  => isset($item['externalDriverRef'])  ? substr((string) $item['externalDriverRef'],  0, 255) : null,
+                        'contactNotes'       => isset($item['contactNotes']) ? substr((string) $item['contactNotes'], 0, 500) : null,
                     ], fn ($v) => $v !== null && $v !== '');
                     $supplementJson = json_encode([
                         'taxis'   => array_map($sanitize, $taxis),

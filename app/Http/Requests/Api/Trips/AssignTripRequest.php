@@ -30,6 +30,7 @@ class AssignTripRequest extends ApiFormRequest
             'supplement_transports.taxis.*.isCustom'    => ['nullable', 'boolean'],
             'supplement_transports.taxis.*.externalVehicleRef' => ['nullable', 'string', 'max:255'],
             'supplement_transports.taxis.*.externalDriverRef'  => ['nullable', 'string', 'max:255'],
+            'supplement_transports.taxis.*.contactNotes'       => ['nullable', 'string', 'max:500'],
 
             'supplement_transports.vendors'             => ['nullable', 'array'],
             'supplement_transports.vendors.*.id'        => ['required', 'string'],
@@ -38,6 +39,7 @@ class AssignTripRequest extends ApiFormRequest
             'supplement_transports.vendors.*.isCustom'  => ['nullable', 'boolean'],
             'supplement_transports.vendors.*.externalVehicleRef' => ['nullable', 'string', 'max:255'],
             'supplement_transports.vendors.*.externalDriverRef'  => ['nullable', 'string', 'max:255'],
+            'supplement_transports.vendors.*.contactNotes'       => ['nullable', 'string', 'max:500'],
         ];
     }
 }

@@ -2041,6 +2041,8 @@
             "supplement_total_label": "Tổng chỗ bổ sung",
             "supplement_total_value": "{n} chỗ",
             "supplement_ncc_refs_toggle": "Tham chiếu xe / tài xế đối tác",
+            "ncc_contact_notes_label": "Ghi chú phụ trợ",
+            "ncc_contact_notes_ph": "SĐT, biển số, tên lái xe…",
             "provider_quick_add_inline": "+ Tạo mới ↗",
             "supplement_options_count": "{n} tùy chọn",
             "schedule_alerts_heading": "Lịch & cảnh báo",

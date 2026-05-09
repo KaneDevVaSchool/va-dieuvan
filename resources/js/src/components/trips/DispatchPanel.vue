@@ -614,12 +614,18 @@ const secondaryScheduleHint = computed(() => {
 function formatSupplementLine(it: SupplementItem): string {
     const lab = String(it.label ?? "").trim();
     const n = Number(it.supplementSeats);
+    let base = lab;
     if (Number.isFinite(n) && n > 0) {
-        return `${lab} — ${t("trip_detail.coordination.seats_n", {
+        base = `${lab} — ${t("trip_detail.coordination.seats_n", {
             n: Math.floor(n),
         })}`;
     }
-    return lab;
+    const cn = String(it.contactNotes ?? "").trim();
+    if (cn) {
+        const short = cn.length > 80 ? `${cn.slice(0, 77)}…` : cn;
+        return base ? `${base} · ${short}` : short;
+    }
+    return base;
 }
 
 type SupplementFlatten = {

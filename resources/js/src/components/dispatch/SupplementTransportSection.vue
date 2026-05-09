@@ -205,6 +205,24 @@
                     @input="onExternalDriverInput(idx, $event)"
                   />
                 </div>
+                <div>
+                  <label
+                    class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    :for="`ncc-contact-notes-${idx}`"
+                  >
+                    {{ t('trip_detail.coordination.ncc_contact_notes_label') }}
+                  </label>
+                  <textarea
+                    :id="`ncc-contact-notes-${idx}`"
+                    :value="item.contactNotes ?? ''"
+                    rows="2"
+                    maxlength="500"
+                    class="w-full resize-y rounded-xl bg-white/70 px-2.5 py-1.5 text-[13px] font-normal leading-snug text-slate-800 shadow-inner shadow-slate-900/10 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500"
+                    :placeholder="t('trip_detail.coordination.ncc_contact_notes_ph')"
+                    :disabled="disabled"
+                    @input="onContactNotesInput(idx, $event)"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -307,7 +325,8 @@ watch(
       const id = itemId(it)
       const has =
         String(it.externalVehicleRef ?? '').trim() !== '' ||
-        String(it.externalDriverRef ?? '').trim() !== ''
+        String(it.externalDriverRef ?? '').trim() !== '' ||
+        String(it.contactNotes ?? '').trim() !== ''
       if (props.kind === 'vendor' && has && next[id] === undefined) next[id] = true
     }
     refsOpen.value = next
@@ -330,7 +349,16 @@ function onExternalDriverInput(idx: number, e: Event) {
   patchItem(idx, 'externalDriverRef', el.value)
 }
 
-function patchItem(idx: number, key: 'externalVehicleRef' | 'externalDriverRef', value: string) {
+function onContactNotesInput(idx: number, e: Event) {
+  const el = e.target as HTMLTextAreaElement
+  patchItem(idx, 'contactNotes', el.value)
+}
+
+function patchItem(
+  idx: number,
+  key: 'externalVehicleRef' | 'externalDriverRef' | 'contactNotes',
+  value: string,
+) {
   if (props.disabled) return
   const next = props.modelValue.map((it, i) =>
     i === idx ? { ...it, [key]: value } : it,

@@ -63,6 +63,9 @@ function toResourceProvider(p: Record<string, unknown>): ResourceItem {
 
 /** Chuyển ResourceItem thành SupplementItem gọn để lưu DB. */
 function toSupplementItem(it: ResourceItem): SupplementItem {
+  const cnRaw = String(it.contactNotes ?? '').trim()
+  const contactNotes =
+    cnRaw.length > 500 ? cnRaw.slice(0, 500) : cnRaw || undefined
   return {
     id: String(it.id),
     label: String(it.label ?? ''),
@@ -70,6 +73,7 @@ function toSupplementItem(it: ResourceItem): SupplementItem {
     ...(it.isCustom ? { isCustom: true } : {}),
     ...(it.externalVehicleRef ? { externalVehicleRef: String(it.externalVehicleRef) } : {}),
     ...(it.externalDriverRef ? { externalDriverRef: String(it.externalDriverRef) } : {}),
+    ...(contactNotes ? { contactNotes } : {}),
   }
 }
 
@@ -398,6 +402,7 @@ export function useResourceSelector(
           supplementSeats: item.supplementSeats ?? null,
           externalVehicleRef: item.externalVehicleRef ?? null,
           externalDriverRef: item.externalDriverRef ?? null,
+          contactNotes: item.contactNotes ?? null,
         }
       })
 
@@ -416,6 +421,7 @@ export function useResourceSelector(
           supplementSeats: item.supplementSeats ?? null,
           externalVehicleRef: item.externalVehicleRef ?? null,
           externalDriverRef: item.externalDriverRef ?? null,
+          contactNotes: item.contactNotes ?? null,
         }
       })
       return

@@ -2231,6 +2231,8 @@
             "supplement_total_label": "Total supplementary seats",
             "supplement_total_value": "{n} seats",
             "supplement_ncc_refs_toggle": "Partner vehicle / driver reference",
+            "ncc_contact_notes_label": "Auxiliary notes",
+            "ncc_contact_notes_ph": "Phone, plate, driver name…",
             "provider_quick_add_inline": "+ Create new ↗",
             "supplement_options_count": "{n} options",
             "schedule_alerts_heading": "Schedule & alerts",
