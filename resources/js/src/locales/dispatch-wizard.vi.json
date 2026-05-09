@@ -202,7 +202,7 @@
             "sec_coordinator": "Trưởng đoàn phụ trách ",
             "coord_search_label": "Tìm theo tên",
             "coord_search_title": "Giống mục A: chọn nhân sự để điền họ tên, email, SĐT.",
-            "coord_search_ph": "Gõ họ tên nhân sự điều phối…",
+            "coord_search_ph": "Gõ họ tên nhân sự trưởng đoàn..",
             "coord_name_ph": "Họ và tên người phụ trách",
             "coord_email_label": "Email nhân viên",
             "coord_email_ph": "email{'@'}va.edu.vn",
