@@ -622,6 +622,92 @@
 
     <Teleport to="body">
       <div
+        v-if="rejectModalOpen && rejectTarget"
+        class="fixed inset-0 z-[105] flex items-end justify-center p-3 sm:items-center sm:p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="costs-reject-title"
+      >
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeRejectModal" />
+        <div
+          class="relative z-10 flex max-h-[min(92vh,560px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
+          @click.stop
+        >
+          <div
+            class="flex items-start gap-3 border-b border-rose-100 bg-gradient-to-r from-rose-50/90 via-white to-white px-5 py-4 dark:border-rose-900/40 dark:from-rose-950/40 dark:via-slate-900 dark:to-slate-900"
+          >
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700 shadow-inner dark:bg-rose-950/60 dark:text-rose-200"
+              aria-hidden="true"
+            >
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 id="costs-reject-title" class="text-base font-semibold text-rose-950 dark:text-rose-100">
+                {{ t('costs_page.reject_modal_title') }}
+              </h2>
+              <p class="mt-0.5 text-xs leading-relaxed text-rose-800/80 dark:text-rose-200/80">
+                {{ t('costs_page.reject_modal_subtitle') }}
+              </p>
+              <p
+                class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
+              >
+                {{ t('costs_page.reject_modal_summary', { id: rejectTarget.id, trip: rejectTarget.trip_id ?? '—' }) }}
+                <span v-if="rejectTarget.amount != null" class="mt-1 block tabular-nums text-slate-600 dark:text-slate-300">
+                  {{ formatVnd(rejectTarget.amount) }}
+                </span>
+              </p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-100/80 hover:text-rose-800 dark:hover:bg-rose-950/50 dark:hover:text-rose-200"
+              :aria-label="t('costs_page.modal_close_aria')"
+              @click="closeRejectModal"
+            >
+              <XMarkIcon class="h-5 w-5" />
+            </button>
+          </div>
+          <div class="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
+            <label class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">{{
+              t('costs_page.reject_modal_reason_label')
+            }}</label>
+            <textarea
+              v-model="rejectReasonInput"
+              rows="4"
+              class="costs-input min-h-[6rem] w-full resize-y text-sm"
+              :placeholder="t('costs_page.reject_modal_reason_placeholder')"
+              autocomplete="off"
+            />
+            <div class="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
+              <button type="button" class="costs-btn-ghost" :disabled="decidingId != null" @click="closeRejectModal">
+                {{ t('costs_page.reject_modal_cancel') }}
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-50 dark:bg-rose-700 dark:hover:bg-rose-600"
+                :disabled="decidingId != null"
+                @click="submitRejectModal"
+              >
+                <span
+                  v-if="decidingId != null"
+                  class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                />
+                {{ t('costs_page.reject_modal_submit') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
         v-if="quickAddTypeOpen"
         class="fixed inset-0 z-[110] flex items-end justify-center p-4 sm:items-center"
         role="dialog"
@@ -672,6 +758,7 @@ import { listTripCosts, submitTripCost, decideTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd, formatVndDigitsInput } from '../../util/labels'
+import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 
 const { t, te, locale } = useI18n()
@@ -736,6 +823,12 @@ const tripOptionsRaw = ref([])
 const tripsForModalLoading = ref(false)
 const costMsgIsError = ref(false)
 
+const decidingId = ref(null)
+const rejectModalOpen = ref(false)
+/** @type {import('vue').Ref<Record<string, unknown> | null>} */
+const rejectTarget = ref(null)
+const rejectReasonInput = ref('')
+
 const filters = reactive({
   status: '',
   type: '',
@@ -768,29 +861,45 @@ async function quickApproveCost(c) {
     await decideTripCost(c.id, { decision: 'confirm' })
     await reload()
   } catch (e) {
-    window.alert(e?.response?.data?.message ?? t('costs_page.decide_err'))
+    showAppErrorFromApi(e, t('costs_page.decide_err'))
   } finally {
     decidingId.value = null
   }
 }
 
-async function quickRejectCost(c) {
+function openRejectModal(c) {
   if (!c?.id || decidingId.value != null) return
-  let reason = ''
-  if (typeof window !== 'undefined') {
-    const raw = window.prompt(t('costs_page.reject_reason_prompt'), '')
-    if (raw === null) return
-    reason = String(raw).trim()
-  }
+  rejectTarget.value = c
+  rejectReasonInput.value = ''
+  rejectModalOpen.value = true
+}
+
+function closeRejectModal() {
+  rejectModalOpen.value = false
+  rejectTarget.value = null
+  rejectReasonInput.value = ''
+}
+
+async function submitRejectModal() {
+  const c = rejectTarget.value
+  if (!c?.id || decidingId.value != null) return
   decidingId.value = c.id
   try {
-    await decideTripCost(c.id, { decision: 'reject', reason: reason || undefined })
+    await decideTripCost(c.id, {
+      decision: 'reject',
+      reason: rejectReasonInput.value.trim() || undefined,
+    })
+    closeRejectModal()
     await reload()
   } catch (e) {
-    window.alert(e?.response?.data?.message ?? t('costs_page.decide_err'))
+    showAppErrorFromApi(e, t('costs_page.decide_err'))
   } finally {
     decidingId.value = null
   }
+}
+
+function quickRejectCost(c) {
+  openRejectModal(c)
 }
 
 const costForm = ref({ trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' })
@@ -801,7 +910,6 @@ const quickAddTypeLabel = ref('')
 const quickAddTypeError = ref('')
 const submitting = ref(false)
 const costMsg = ref('')
-const decidingId = ref(null)
 
 const canReconcileCosts = computed(() => auth.hasPermission('trip.cost.reconcile'))
 const costAmountDisplay = computed(() => formatVndDigitsInput(costAmountDigits.value))
@@ -1056,10 +1164,13 @@ function closeAddCostModal() {
   costMsgIsError.value = false
 }
 
+watch([addCostModalOpen, rejectModalOpen], () => {
+  if (typeof document === 'undefined') return
+  document.body.style.overflow = addCostModalOpen.value || rejectModalOpen.value ? 'hidden' : ''
+})
+
 let escapeCloseModal = null
 watch(addCostModalOpen, (open) => {
-  if (typeof document === 'undefined') return
-  document.body.style.overflow = open ? 'hidden' : ''
   if (typeof window === 'undefined') return
   if (escapeCloseModal) {
     window.removeEventListener('keydown', escapeCloseModal)
@@ -1073,10 +1184,26 @@ watch(addCostModalOpen, (open) => {
   }
 })
 
+let escapeCloseRejectModal = null
+watch(rejectModalOpen, (open) => {
+  if (typeof window === 'undefined') return
+  if (escapeCloseRejectModal) {
+    window.removeEventListener('keydown', escapeCloseRejectModal)
+    escapeCloseRejectModal = null
+  }
+  if (open) {
+    escapeCloseRejectModal = (e) => {
+      if (e.key === 'Escape') closeRejectModal()
+    }
+    window.addEventListener('keydown', escapeCloseRejectModal)
+  }
+})
+
 onUnmounted(() => {
   if (typeof document !== 'undefined') document.body.style.overflow = ''
-  if (typeof window !== 'undefined' && escapeCloseModal) {
-    window.removeEventListener('keydown', escapeCloseModal)
+  if (typeof window !== 'undefined') {
+    if (escapeCloseModal) window.removeEventListener('keydown', escapeCloseModal)
+    if (escapeCloseRejectModal) window.removeEventListener('keydown', escapeCloseRejectModal)
   }
 })
 
