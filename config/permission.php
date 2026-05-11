@@ -13,7 +13,7 @@ return [
 
     'superadmin_role' => env('SUPERADMIN_ROLE', 'superadmin'),
 
-    'superadmin_email' => env('SUPERADMIN_EMAIL', 'hungtest@vaschools.edu.vn'),
+    'superadmin_email' => env('SUPERADMIN_EMAIL', 'hungnv@vaschools.edu.vn'),
 
     'table_names' => [
         'roles' => 'roles',
