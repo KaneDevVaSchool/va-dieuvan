@@ -21,6 +21,7 @@ class DispatchRequest extends Model
 
     protected $fillable = [
         'requester_id',
+        'dispatch_request_template_id',
         'approved_by',
         'source_channel',
         'is_urgent',
@@ -57,6 +58,11 @@ class DispatchRequest extends Model
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requester_id');
+    }
+
+    public function dispatchRequestTemplate(): BelongsTo
+    {
+        return $this->belongsTo(DispatchRequestTemplate::class, 'dispatch_request_template_id');
     }
 
     public function approver(): BelongsTo

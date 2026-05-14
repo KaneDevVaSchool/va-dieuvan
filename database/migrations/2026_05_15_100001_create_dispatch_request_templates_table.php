@@ -1,0 +1,47 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Lặp định kỳ (CLB ngoại khóa, …): mẫu + JSON recurrence_rule đơn giản (weekly/daily) hoặc rrule RFC string.
+     */
+    public function up(): void
+    {
+        Schema::create('dispatch_request_templates', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('requester_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('dispatch_package_id')->nullable()->constrained('dispatch_packages')->nullOnDelete();
+
+            $table->boolean('is_active')->default(true);
+
+            $table->enum('trip_type', ['door_to_door', 'point_to_point', 'business', 'cargo']);
+            $table->string('origin')->nullable();
+            $table->string('destination')->nullable();
+            $table->unsignedSmallInteger('passenger_count')->nullable();
+            $table->text('notes')->nullable();
+            /** đến cùng calendar day với depart_at (null = chỉ có time). */
+            $table->unsignedSmallInteger('arrive_offset_minutes')->nullable();
+
+            $table->json('recurrence_rule');
+            /** Lặp đến hết ngày này (inclusive, theo TZ app). Null = không giới hạn. */
+            $table->date('recurrence_end_date')->nullable();
+            /** Giờ xuất phát (local TZ app) cho các instance sinh ra. */
+            $table->time('recurrence_time')->default('08:00:00');
+
+            $table->json('wizard_snapshot')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['is_active', 'requester_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('dispatch_request_templates');
+    }
+};

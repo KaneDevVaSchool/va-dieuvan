@@ -28,9 +28,6 @@ Route::patch('/reference-pricing/notes/{pricingNote}', [ReferencePricingControll
     ->middleware('permission:reference_pricing.manage');
 
 Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)->group(function () {
-    Route::post('/', 'store')
-        ->middleware(['throttle:20,1', 'idempotency'])
-        ->name('api.dispatch-requests.store');
     Route::post('/{dispatchRequest}/paper-received', 'markPaperReceived')->middleware('throttle:20,1');
     Route::patch('/{dispatchRequest}/fill-price', 'fillPrice')
         ->middleware('throttle:20,1')

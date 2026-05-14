@@ -41,6 +41,7 @@ Thư mục `app/Jobs/` **không chứa job class** trong repo hiện tại — h
 | `TripAssignedNotification` | `default` hoặc `urgent-notifications` | `ShouldQueue` + `ShouldQueueAfterCommit` |
 | `NewDispatchRequestNotification` | Theo cờ urgent | `ShouldQueue` |
 | `CargoSlaBreachedNotification` | default constructor | `ShouldQueue` — broadcast qua `Notification::send` trong command |
+| `DispatchPackageSessionsLowBalanceNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit` — cảnh báo gần hết buổi trong gói |
 
 Queue name lấy từ `config/dispatch.php`:
 
@@ -70,6 +71,7 @@ Queue name lấy từ `config/dispatch.php`:
 |---------|-----------|
 | `cargo:sla-check` | Quét `cargo_shipments` quá SLA → `audit_logs` + notify dispatcher/admin |
 | `cargo:backfill-shipments` | Tạo shipment cho yêu cầu cargo đã duyệt có trip nhưng thiếu phiếu |
+| `dispatch:materialize-recurring-requests` | Sinh `dispatch_requests` từ templates lặp (recurring CLB…) |
 | `cms:sync-users` | Đồng bộ user từ DB CMS (`cms` connection) |
 | `inspire` | Mặc định Laravel (demo) |
 
@@ -81,6 +83,7 @@ Queue name lấy từ `config/dispatch.php`:
 
 ```php
 $schedule->command('cargo:sla-check')->everyFiveMinutes();
+$schedule->command('dispatch:materialize-recurring-requests')->hourly();
 ```
 
 **Yêu cầu vận hành:** crontab gọi `php artisan schedule:run` **mỗi phút**.

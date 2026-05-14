@@ -12,7 +12,7 @@ class EnsureDispatchWebAccess
     {
         $user = $request->user();
         if ($user && ! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
-            abort(403, 'Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher, trưởng đơn vị hoặc tài xế (driver).');
+            abort(403, 'Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher, trưởng đơn vị, user nội bộ hoặc tài xế (driver).');
         }
 
         return $next($request);

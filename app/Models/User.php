@@ -51,14 +51,14 @@ class User extends Authenticatable
         return $this->hasRole($roleName);
     }
 
-    /** Web SPA điều vận: superadmin (email hoặc role), admin, dispatcher, trưởng đơn vị. */
+    /** Web SPA điều vận: superadmin (email hoặc role), admin, dispatcher, trưởng đơn vị, user nội bộ. */
     public function canAccessDispatchWebApp(): bool
     {
         if ($this->isSuperAdmin()) {
             return true;
         }
 
-        return $this->hasAnyRole(['admin', 'dispatcher', 'department_head']);
+        return $this->hasAnyRole(['admin', 'dispatcher', 'department_head', 'internal_user']);
     }
 
     /** Khu vực web tài xế (`/driver`). */

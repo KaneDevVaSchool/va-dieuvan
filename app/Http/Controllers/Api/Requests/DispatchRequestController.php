@@ -12,6 +12,7 @@ use App\Http\Requests\Api\Requests\FillPriceDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
+use App\Http\Requests\Api\Requests\UpdateRecurringDispatchRequestPassengerCountRequest;
 use App\Models\DispatchRequest;
 use App\Models\DispatchSetting;
 use App\Models\Role;
@@ -43,6 +44,7 @@ class DispatchRequestController extends Controller
             'approver:id,name,email,employee_code',
             'priceFiller:id,name,email,employee_code',
             'trip',
+            'dispatchRequestTemplate.dispatchPackage',
             'attachments' => fn ($q) => $q->orderByDesc('id'),
         ]);
 
@@ -447,14 +449,58 @@ class DispatchRequestController extends Controller
         });
     }
 
+    public function patchRecurringPassengerCount(UpdateRecurringDispatchRequestPassengerCountRequest $request, DispatchRequest $dispatchRequest)
+    {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $data = $request->validated();
+        $user = $request->user();
+
+        $before = $dispatchRequest->toArray();
+        $beforeCount = $dispatchRequest->passenger_count;
+
+        $dispatchRequest->update([
+            'passenger_count' => $data['passenger_count'],
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.passenger_count_updated',
+            auditable: $dispatchRequest,
+            before: $before,
+            after: $dispatchRequest->fresh()->toArray(),
+            metadata: ['passenger_count_before' => $beforeCount, 'passenger_count_after' => $data['passenger_count']],
+        );
+
+        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
+    }
+
     /**
      * @return array<string, mixed>
      */
     private function presentDispatchRequest(DispatchRequest $dispatchRequest): array
     {
+        $dispatchRequest->loadMissing('dispatchRequestTemplate.dispatchPackage');
+
         $arr = $dispatchRequest->toArray();
         $arr['threshold_hours'] = DispatchSetting::urgentThresholdHoursForTripType((string) $dispatchRequest->trip_type);
         $arr['is_urgent_auto'] = $dispatchRequest->isUrgentAuto();
+
+        if ($dispatchRequest->dispatch_request_template_id !== null) {
+            $pkg = $dispatchRequest->dispatchRequestTemplate?->dispatchPackage;
+            $arr['dispatch_package_sessions'] = null;
+            if ($pkg !== null) {
+                $arr['dispatch_package_sessions'] = [
+                    'dispatch_package_id' => $pkg->id,
+                    'total_sessions' => (int) $pkg->total_sessions,
+                    'sessions_used' => (int) $pkg->sessions_used,
+                    'sessions_remaining' => $pkg->remainingSessions(),
+                    'alert_when_remaining_sessions' => (int) $pkg->alert_when_remaining_sessions,
+                ];
+            }
+        }
 
         return $arr;
     }

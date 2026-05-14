@@ -35,4 +35,8 @@ final class Messages
     public const TRIP_PAID_CANNOT_ADD_TO_RECONCILE = 'Một hoặc nhiều chuyến đã thanh toán; không thể tạo/ghi lại payment trong kỳ đối soát.';
 
     public const TRIP_TERMINAL_NO_LIST_OR_COST_EDITS = 'Chuyến đã hoàn thành hoặc đã hủy; không thể thêm, sửa hay xóa hành khách hoặc chi phí.';
+
+    public const REQUEST_NOT_RECURRING_INSTANCE = 'Chỉ áp dụng cho phiếu sinh theo định kỳ (đã liên kết template).';
+
+    public const REQUEST_RECURRING_PASSENGER_COUNT_LOCKED = 'Chỉ cập nhật số hành khách trước giờ khởi hành ít nhất 24 giờ.';
 }

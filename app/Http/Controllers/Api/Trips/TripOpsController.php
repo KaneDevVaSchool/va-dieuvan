@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Trips\UpsertTripRecordRequest;
 use App\Models\Trip;
 use App\Models\TripEvent;
 use App\Services\Auditing\AuditLogger;
+use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
 use App\Support\TripVisibility;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,9 @@ class TripOpsController extends Controller
 
         $user = $request->user();
 
-        return DB::transaction(function () use ($trip, $data, $user) {
+        $beforeStatus = (string) $trip->status;
+
+        $response = DB::transaction(function () use ($trip, $data, $user) {
             $before = $trip->toArray();
 
             $updates = ['status' => $data['status']];
@@ -55,6 +58,14 @@ class TripOpsController extends Controller
 
             return $this->ok($trip);
         });
+
+        $newStatus = (string) $data['status'];
+        if ($newStatus === 'completed' && $beforeStatus !== 'completed') {
+            $trip->refresh();
+            app(DispatchRecurringMaintenanceService::class)->consumePackageSessionAfterTripCompletion($trip);
+        }
+
+        return $response;
     }
 
     public function addEvent(AddTripEventRequest $request, Trip $trip)

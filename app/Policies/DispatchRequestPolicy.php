@@ -43,6 +43,24 @@ class DispatchRequestPolicy
         return (int) $dispatchRequest->requester_id === (int) $user->id;
     }
 
+    public function adjustPassengerCount(User $user, DispatchRequest $dispatchRequest): bool
+    {
+        if ($dispatchRequest->trashed()) {
+            return false;
+        }
+
+        if ($dispatchRequest->dispatch_request_template_id === null) {
+            return false;
+        }
+
+        if ($user->hasPermission('trip.view_all')) {
+            return true;
+        }
+
+        return (int) $dispatchRequest->requester_id === (int) $user->id
+            && $user->hasPermission('request.update_own');
+    }
+
     /**
      * Soft-delete (move to trash).
      */
