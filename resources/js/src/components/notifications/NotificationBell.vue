@@ -1,7 +1,8 @@
 <template>
   <button
     type="button"
-    class="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 active:scale-95"
+    class="relative flex h-10 w-10 items-center justify-center rounded-full border transition active:scale-95"
+    :class="toneClass"
     :title="t('notify.bell_open')"
     @click="onBellClick"
   >
@@ -16,13 +17,31 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { BellIcon } from '@heroicons/vue/24/outline'
 import { useNotificationStore } from '../../store/notificationCenter'
 
+const props = defineProps({
+  /**
+   * 'brand' — nền thương hiệu tối (sidebar dọc)
+   * 'light' — nền trắng (header ngang)
+   */
+  tone: {
+    type: String,
+    default: 'brand',
+    validator: (v) => ['brand', 'light'].includes(v),
+  },
+})
+
 const { t } = useI18n()
 const notifStore = useNotificationStore()
+
+const toneClass = computed(() =>
+  props.tone === 'light'
+    ? 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-700'
+    : 'border-white/20 bg-white/10 text-white hover:bg-white/20',
+)
 
 function onBellClick() {
   if (notifStore.panelOpen) {
@@ -32,8 +51,4 @@ function onBellClick() {
   }
   void notifStore.refreshBadges()
 }
-
-onMounted(() => {
-  void notifStore.refreshBadges()
-})
 </script>

@@ -261,6 +261,15 @@ const staffChildRoutes = [
         featureKey: "module.system.dispatch_settings",
       },
     },
+    {
+      path: "notifications",
+      name: "notificationsHub",
+      component: () => import("../views/notifications/NotificationsHubView.vue"),
+      meta: {
+        title: "Thông báo",
+        subtitle: "Hộp thư",
+      },
+    },
 ];
 
 const router = createRouter({

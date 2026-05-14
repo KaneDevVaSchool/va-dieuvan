@@ -51,7 +51,8 @@
         "trip_type_point_to_point": "Điểm đến điểm",
         "trip_type_business": "Công tác",
         "trip_type_cargo": "Hàng hóa",
-        "trip_type_unspecified": "Khác"
+        "trip_type_unspecified": "Khác",
+        "view_all": "Xem tất cả"
     },
     "nav": {
         "section_ops": "Điều vận",

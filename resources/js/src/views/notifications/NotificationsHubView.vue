@@ -76,7 +76,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
-import { listInbox, markAllNotificationsRead, markNotificationRead } from '../../api/notifications'
+import { fetchNotificationInbox, markAllNotificationsRead, markNotificationRead } from '../../api/notifications'
 
 const { t, locale } = useI18n()
 
@@ -96,7 +96,7 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const data = await listInbox()
+    const data = await fetchNotificationInbox()
     items.value = data.items ?? []
   } catch (e) {
     error.value = e?.response?.data?.message ?? String(e?.message ?? 'Error')

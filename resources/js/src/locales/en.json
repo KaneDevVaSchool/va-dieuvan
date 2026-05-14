@@ -51,7 +51,8 @@
         "trip_type_point_to_point": "Point to point",
         "trip_type_business": "Business",
         "trip_type_cargo": "Cargo",
-        "trip_type_unspecified": "Other"
+        "trip_type_unspecified": "Other",
+        "view_all": "View all"
     },
     "nav": {
         "section_ops": "Dispatch",

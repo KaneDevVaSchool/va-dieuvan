@@ -20,13 +20,23 @@ class CargoSlaBreachedNotification extends Notification implements ShouldQueue
         return ['database'];
     }
 
-    public function toDatabase(object $notifiable): array
+    public function toArray(object $notifiable): array
     {
+        $slaDue = optional($this->shipment->sla_due_at)->toIso8601String();
+
         return [
-            'type' => 'cargo_sla_breached',
+            'title' => 'SLA hàng hóa vi phạm',
+            'body' => sprintf(
+                'Lô hàng #%s (%s) đã quá SLA%s.',
+                $this->shipment->id,
+                $this->shipment->status,
+                $slaDue ? ' lúc '.date('d/m H:i', strtotime($slaDue)) : '',
+            ),
+            'event' => 'cargo.sla_breached',
             'shipment_id' => $this->shipment->id,
             'status' => $this->shipment->status,
-            'sla_due_at' => optional($this->shipment->sla_due_at)->toIso8601String(),
+            'sla_due_at' => $slaDue,
+            'url' => '/cargo/'.$this->shipment->id,
         ];
     }
 }

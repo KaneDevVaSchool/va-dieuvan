@@ -1,33 +1,10 @@
 <template>
   <Teleport to="body">
-    <!-- Chuông: floating, mobile + desktop -->
-    <div
-      v-if="auth.isLoggedIn && !isDriverApp"
-      class="pointer-events-none fixed right-0 top-0 z-[100] p-2 pl-6 sm:p-3 print:hidden md:hidden"
-      :style="{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }"
-    >
-      <div class="pointer-events-auto flex flex-col items-end gap-2">
-        <button
-          type="button"
-          class="relative flex h-11 w-11 items-center justify-center rounded-full border border-amber-200/80 bg-amber-50/95 text-amber-800 shadow-md backdrop-blur transition hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-950/90 dark:text-amber-100"
-          :title="t('notify.bell_open')"
-          @click="onBellClick"
-        >
-          <BellIcon class="h-5 w-5" aria-hidden="true" />
-          <span
-            v-if="notifStore.lastUnread > 0"
-            class="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white"
-          >
-            {{ notifStore.lastUnread > 99 ? '99+' : notifStore.lastUnread }}
-          </span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Panel: bottom-sheet mobile · floating card sm+ -->
+    <!-- Panel: bottom-sheet mobile · floating card sm+; justify theo trục sidebar -->
     <div
       v-if="notifStore.panelOpen"
-      class="fixed inset-0 z-[200] flex flex-col justify-end sm:flex-row sm:items-start sm:justify-end sm:p-3 md:p-4 print:hidden md:hidden"
+      class="fixed inset-0 z-[200] flex flex-col justify-end sm:flex-row sm:items-start sm:p-3 md:p-4 print:hidden"
+      :class="panelJustifyClass"
     >
       <div
         class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] transition-opacity active:bg-slate-900/55"
@@ -262,16 +239,25 @@
           </ul>
         </template>
         <div
-          v-if="!notifStore.loading && notifStore.items.length"
-          class="shrink-0 border-t border-slate-100 bg-white/95 px-4 pt-3 dark:border-slate-800 dark:bg-slate-900/95"
+          class="shrink-0 border-t border-slate-100 bg-white/95 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/95"
         >
-          <button
-            type="button"
-            class="w-full rounded-2xl bg-slate-900 py-3.5 text-base font-bold text-white shadow-md active:scale-[0.98] active:bg-slate-800 dark:bg-white dark:text-slate-900 dark:active:bg-slate-200"
-            @click="onReadAll"
-          >
-            {{ t('notify.mark_all') }}
-          </button>
+          <div class="flex items-center justify-between gap-2">
+            <RouterLink
+              :to="hubPath"
+              class="rounded-lg px-2 py-1.5 text-sm font-semibold text-sky-600 transition hover:bg-sky-50 active:bg-sky-100 dark:text-sky-400 dark:hover:bg-sky-950/40"
+              @click="notifStore.closePanel()"
+            >
+              {{ t('notify.view_all') }}
+            </RouterLink>
+            <button
+              v-if="!notifStore.loading && notifStore.items.length"
+              type="button"
+              class="rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 active:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800"
+              @click="onReadAll"
+            >
+              {{ t('notify.mark_all') }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -281,12 +267,13 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { useNotificationStore } from '../../store/notificationCenter'
 import { useAuthStore } from '../../store'
+import { useSidebarLayout } from '../../composables/useSidebarLayout'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
@@ -295,6 +282,13 @@ const router = useRouter()
 const route = useRoute()
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isProd = import.meta.env.PROD
+const hubPath = computed(() =>
+  isDriverApp.value ? '/driver' : buildStaffPrefixedPath('/notifications'),
+)
+const { isVertical } = useSidebarLayout()
+const panelJustifyClass = computed(() =>
+  isVertical.value ? 'md:justify-start' : 'sm:justify-end',
+)
 
 const notificationPermission = ref('default')
 const pushLoading = ref(false)

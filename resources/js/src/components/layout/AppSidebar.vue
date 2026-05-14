@@ -212,6 +212,14 @@
       </nav>
     </div>
 
+    <!-- Chuông thông báo: dọc theo sidebar, trên block tài khoản -->
+    <div
+      class="shrink-0 border-t border-white/15 py-1.5 md:py-2"
+      :class="ui.sidebarCollapsed ? 'flex justify-center px-1 md:px-1.5' : 'flex items-center px-2 md:px-3'"
+    >
+      <NotificationBell tone="brand" />
+    </div>
+
     <SidebarAccountBlock layout="vertical" brand :compact="ui.sidebarCollapsed" />
 
     <p class="sr-only" aria-live="polite">{{ t(preferenceLabelKey) }}</p>
@@ -301,7 +309,8 @@
         </template>
       </nav>
 
-      <div class="flex shrink-0 items-center">
+      <div class="flex shrink-0 items-center gap-2">
+        <NotificationBell tone="light" />
         <SidebarAccountBlock layout="horizontal" />
       </div>
     </div>
@@ -317,6 +326,7 @@ import HorizontalNavGroup from '../nav/HorizontalNavGroup.vue'
 import SidebarCollapsedNavGroup from '../nav/SidebarCollapsedNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'
 import SidebarAccountBlock from './SidebarAccountBlock.vue'
+import NotificationBell from '../notifications/NotificationBell.vue'
 import { useNavSections } from '../../composables/useNavSections'
 import { useNavBarLabel } from '../../composables/useNavBarLabel'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'

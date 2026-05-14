@@ -322,12 +322,21 @@ Quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
 
 **Chức năng**
 
+- Chuông thông báo (bell) hiển thị trong `AppSidebar`: sidebar dọc (ngay trên block tài khoản) và header ngang (cạnh avatar); badge số đỏ từ `GET /api/nav/badges` → `notifications_unread`
+- Panel thông báo (bottom-sheet mobile / floating card desktop): mở khi click bell, hoạt động ở mọi breakpoint
+- Toast real-time: khi poll 15 s phát hiện unread tăng → fetch inbox → hiển thị stacked toast góc phải (tự đóng 5 s, click → điều hướng)
 - Inbox đọc/đánh dấu đọc
-- Đăng ký Web Push + VAPID public key
+- Hub đầy đủ tại `GET /notifications` (`NotificationsHubView`)
+- Đăng ký Web Push + VAPID public key (push gửi ngay khi notify ghi DB)
 
-**API:** `InboxController`, `PushSubscriptionController`.
+**API:** `InboxController`, `PushSubscriptionController`, `NavBadgesController`.
 
 **DB:** `notifications`, `push_subscriptions`.
+
+**Frontend:**
+- Store: `store/notificationCenter.js` — poll 15 s, `toastQueue`, `seenToastIds`, `sessionStartedAt`
+- Components: `NotificationBell.vue` (prop `tone: brand|light`), `NotificationCenter.vue` (panel), `NotificationToast.vue` (toast stack)
+- Route staff: `notifications` → `NotificationsHubView.vue`
 
 ---
 

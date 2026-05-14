@@ -11,6 +11,9 @@ import { getVapidPublicKey, storePushSubscription } from '../api/push'
 import { i18n } from '../i18n'
 import { useAuthStore } from './index'
 
+const POLL_INTERVAL_MS = 15000
+const TOAST_MAX = 3
+
 const SOUND_KEY = 'va_notify_sound'
 const ASKED_PUSH_KEY = 'va_push_asked'
 
@@ -134,6 +137,14 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
   const pushState = ref('unknown')
   const pushRegisterLoading = ref(false)
   const pollHandle = ref(null)
+
+  const toastQueue = ref([])
+  /** IDs đã toast trong phiên — tránh hiện lại sau mỗi poll */
+  let seenToastIds = new Set()
+  /** Thời điểm bắt đầu poll — không toast notify cũ hơn */
+  let sessionStartedAt = null
+  /** Guard tránh gọi _fetchAndQueueToasts song song */
+  let isFetchingToasts = false
   if (typeof window !== 'undefined') {
     soundEnabled.value = readSoundPref()
   }
@@ -208,8 +219,10 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
       const b = await fetchNavBadges()
       const n = Number(b?.notifications_unread ?? 0)
       if (Number.isFinite(n)) {
-        if (badgePrimed && n > lastUnread.value && soundEnabled.value) {
-          playNotificationChime()
+        if (badgePrimed && n > lastUnread.value) {
+          if (soundEnabled.value) {
+            playNotificationChime()
+          }
           if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             try {
               new Notification(document.title, {
@@ -221,6 +234,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
               /* ignore */
             }
           }
+          void _fetchAndQueueToasts()
         }
         lastUnread.value = n
         badgePrimed = true
@@ -230,17 +244,64 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     }
   }
 
+  async function _fetchAndQueueToasts() {
+    if (isFetchingToasts) return
+    isFetchingToasts = true
+    try {
+      const res = await fetchNotificationInbox({ per_page: 5 })
+      const inbox = res?.items ?? []
+      const cutoff = sessionStartedAt instanceof Date ? sessionStartedAt : null
+      for (const item of inbox) {
+        if (toastQueue.value.length >= TOAST_MAX) break
+        if (seenToastIds.has(item.id)) continue
+        if (cutoff && item.created_at) {
+          const t = new Date(item.created_at)
+          if (t < cutoff) continue
+        }
+        if (item.read) continue
+        _pushToast(item)
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      isFetchingToasts = false
+    }
+  }
+
+  function _pushToast(item) {
+    seenToastIds.add(item.id)
+    toastQueue.value.push({
+      id: item.id,
+      title: item.data?.title ?? i18n.global.t('notify.title'),
+      body: item.data?.body ?? '',
+      url: item.data?.url ?? '',
+      createdAt: item.created_at,
+    })
+  }
+
+  function dismissToast(id) {
+    toastQueue.value = toastQueue.value.filter((t) => t.id !== id)
+  }
+
+  function _onVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+      void refreshBadges()
+    }
+  }
+
   function startPolling() {
     if (typeof window === 'undefined') {
       return
     }
     stopPolling()
+    sessionStartedAt = new Date()
     void refreshBadges()
+    document.addEventListener('visibilitychange', _onVisibilityChange)
     pollHandle.value = window.setInterval(() => {
       if (document.visibilityState === 'visible') {
         void refreshBadges()
       }
-    }, 45000)
+    }, POLL_INTERVAL_MS)
   }
 
   function stopPolling() {
@@ -248,9 +309,14 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
       clearInterval(pollHandle.value)
       pollHandle.value = null
     }
+    document.removeEventListener('visibilitychange', _onVisibilityChange)
     lastUnread.value = 0
     badgePrimed = false
     panelOpen.value = false
+    toastQueue.value = []
+    seenToastIds = new Set()
+    sessionStartedAt = null
+    isFetchingToasts = false
     clearAppBadgeSafe()
   }
 
@@ -348,6 +414,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     soundEnabled,
     pushState,
     pushRegisterLoading,
+    toastQueue,
     setPanel,
     openPanel,
     closePanel,
@@ -355,6 +422,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     onReadOne,
     onReadAll,
     refreshBadges,
+    dismissToast,
     startPolling,
     stopPolling,
     requestBrowserNotificationPermission,
