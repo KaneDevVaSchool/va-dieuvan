@@ -1,5 +1,5 @@
 import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   AcademicCapIcon,
