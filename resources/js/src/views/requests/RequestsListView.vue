@@ -427,6 +427,7 @@
             {{ t('requests_page.filter_extra') }}
             <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
           </button>
+        </div>
       </div>
 
       <div
