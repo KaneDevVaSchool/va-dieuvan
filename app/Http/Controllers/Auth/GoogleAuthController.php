@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\InvalidStateException;
 
 class GoogleAuthController extends Controller
 {
@@ -21,25 +22,32 @@ class GoogleAuthController extends Controller
             'ip' => $request->ip(),
             'next_length' => strlen($next),
             'user_agent' => Str::limit((string) $request->userAgent(), 200, '…'),
+            'oauth_mode' => config('services.google.stateless', false) ? 'stateless' : 'session_state',
+            'trusted_proxies' => config('trusted_proxies.proxies') === '*' ? '*' : (config('trusted_proxies.proxies') !== null ? 'set' : 'null'),
         ]);
 
-        return Socialite::driver('google')
-            ->with(['prompt' => 'select_account'])
-            ->redirect();
+        return $this->googleDriver()->redirect();
     }
 
     public function callback(Request $request)
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = $this->googleDriver()->user();
+        } catch (InvalidStateException $e) {
+            Log::warning('google.oauth.invalid_state', array_merge([
+                'message' => $e->getMessage() !== '' ? $e->getMessage() : 'empty',
+                'oauth_mode' => config('services.google.stateless', false) ? 'stateless' : 'session_state',
+            ], $this->oauthDiagnosticContext($request)));
+
+            return $this->loginRedirect([
+                'error' => 'Phiên đăng nhập Google bị gián đoạn (cookie phiên không khớp). Hãy tắt chặn cookie, đóng các tab khác rồi thử lại. Nếu vẫn lỗi, kiểm tra .env: APP_URL (https), SESSION_DOMAIN để trống hoặc đúng host, và TRUSTED_PROXIES=* sau reverse proxy.',
+            ]);
         } catch (\Throwable $e) {
-            Log::warning('google.oauth.callback_failed', [
+            Log::warning('google.oauth.callback_failed', array_merge([
                 'exception' => $e::class,
                 'message' => $e->getMessage(),
-                'session_id_fragment' => session()->getId()
-                    ? Str::substr(session()->getId(), 0, 8).'…'
-                    : null,
-            ]);
+                'oauth_mode' => config('services.google.stateless', false) ? 'stateless' : 'session_state',
+            ], $this->oauthDiagnosticContext($request)));
 
             return $this->loginRedirect(['error' => 'Đăng nhập Google thất bại.']);
         }
@@ -143,6 +151,48 @@ class GoogleAuthController extends Controller
             'token' => $token,
             'redirect' => $next,
         ]);
+    }
+
+    /**
+     * @return \Laravel\Socialite\Contracts\Provider
+     */
+    private function googleDriver()
+    {
+        $driver = Socialite::driver('google')->with(['prompt' => 'select_account']);
+
+        if (config('services.google.stateless', false)) {
+            return $driver->stateless();
+        }
+
+        return $driver;
+    }
+
+    /**
+     * Ngữ cảnh chẩn đoán OAuth (không log code/state/Google token).
+     *
+     * @return array<string, mixed>
+     */
+    private function oauthDiagnosticContext(Request $request): array
+    {
+        $cookieName = config('session.cookie');
+
+        return [
+            'session_id_fragment' => session()->getId()
+                ? Str::substr(session()->getId(), 0, 8).'…'
+                : null,
+            'session_driver' => config('session.driver'),
+            'session_same_site' => config('session.same_site'),
+            'session_secure' => config('session.secure'),
+            'session_domain' => config('session.domain'),
+            'session_cookie_name' => $cookieName,
+            'has_session_cookie' => $cookieName !== null && $request->cookies->has((string) $cookieName),
+            'request_https' => $request->secure(),
+            'callback_has_code_param' => $request->filled('code'),
+            'callback_has_state_param' => $request->filled('state'),
+            'x_forwarded_proto' => $request->headers->get('X-Forwarded-Proto'),
+            'host' => $request->getHost(),
+            'app_url' => config('app.url'),
+        ];
     }
 
     /**

@@ -36,6 +36,9 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
         'allowed_domains' => env('GOOGLE_ALLOWED_EMAIL_DOMAINS', ''),
+        // Bypass OAuth "state" in session — hết InvalidState nhưng bỏ lớp chống CSRF của state.
+        // Chỉ bật nếu đã thử SESSION_DOMAIN / TRUSTED_PROXIES mà cookie session vẫn lỗi.
+        'stateless' => env('GOOGLE_OAUTH_STATELESS', false),
     ],
 
 ];
