@@ -50,7 +50,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../store'
 import { formatApiError } from '../../api/http'
-import { sanitizeLoginRedirect } from '../../util/loginRedirect'
+import {
+  sanitizeLoginRedirect,
+  normalizeLoginRouteQuery,
+  loginRouteNeedsSanitizeReplace,
+} from '../../util/loginRedirect'
 
 /** `public/images/logo/...` */
 const LOGO_PWA_URL = '/images/logo/logo-2.png'
@@ -74,6 +78,13 @@ function onGoogleClick() {
 }
 
 onMounted(async () => {
+  if (loginRouteNeedsSanitizeReplace(route.query)) {
+    await router.replace({
+      path: '/login',
+      query: normalizeLoginRouteQuery(route.query),
+    })
+  }
+
   const q = route.query
   if (q.error) {
     error.value = String(q.error)

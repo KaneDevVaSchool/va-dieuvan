@@ -162,25 +162,62 @@ class GoogleAuthController extends Controller
             return '/';
         }
 
-        $s = trim($raw);
+        $s = trim(str_replace('+', ' ', $raw));
         if ($s === '') {
             return '/';
         }
-        if (strlen($s) > 512 || str_contains($s, '://')) {
-            Log::notice('google.oauth.invalid_redirect_scrubbed', ['reason' => 'length_or_scheme']);
+        if (strlen($s) > 512) {
+            Log::notice('google.oauth.invalid_redirect_scrubbed', ['reason' => 'initial_length']);
 
             return '/';
         }
+
+        for ($i = 0; $i < 14; $i++) {
+            $decoded = rawurldecode($s);
+            if ($decoded === $s) {
+                break;
+            }
+            $s = $decoded;
+            if (strlen($s) > 768) {
+                Log::notice('google.oauth.invalid_redirect_scrubbed', ['reason' => 'decode_overflow']);
+
+                return '/';
+            }
+        }
+
+        $s = trim($s);
+        if ($s === '') {
+            return '/';
+        }
+
+        if (str_contains($s, '://')) {
+            Log::notice('google.oauth.invalid_redirect_scrubbed', ['reason' => 'absolute_scheme']);
+
+            return '/';
+        }
+
         if (! str_starts_with($s, '/')) {
             $s = '/'.$s;
         }
-        if (str_starts_with($s, '/auth/google')) {
+
+        $lower = strtolower($s);
+        if (
+            str_contains($lower, '/auth/google')
+            || str_contains($lower, '%2fauth%2fgoogle')
+        ) {
             Log::notice('google.oauth.invalid_redirect_scrubbed', ['reason' => 'auth_google_path']);
 
             return '/';
         }
+
         if (preg_match('/[?&]code=/', $s) || preg_match('/[?&]state=/', $s)) {
             Log::notice('google.oauth.invalid_redirect_scrubbed', ['reason' => 'oauth_query_params']);
+
+            return '/';
+        }
+
+        if (strlen($s) > 512) {
+            Log::notice('google.oauth.invalid_redirect_scrubbed', ['reason' => 'final_length']);
 
             return '/';
         }
