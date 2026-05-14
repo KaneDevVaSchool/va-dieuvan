@@ -16,7 +16,9 @@ class GoogleAuthController extends Controller
         $next = $request->query('redirect', '/');
         session(['oauth_redirect' => is_string($next) ? $next : '/']);
 
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')
+            ->with(['prompt' => 'select_account'])
+            ->redirect();
     }
 
     public function callback(Request $request)
