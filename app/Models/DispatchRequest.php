@@ -31,6 +31,9 @@ class DispatchRequest extends Model
         'arrive_by',
         'passenger_count',
         'notes',
+        'service_price',
+        'price_filled_by',
+        'price_filled_at',
         'status',
         'paper_status',
         'paper_received_at',
@@ -46,6 +49,8 @@ class DispatchRequest extends Model
         'arrive_by' => 'datetime',
         'is_urgent' => 'boolean',
         'paper_received_at' => 'datetime',
+        'service_price' => 'decimal:2',
+        'price_filled_at' => 'datetime',
         'wizard_snapshot' => 'array',
     ];
 
@@ -57,6 +62,11 @@ class DispatchRequest extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function priceFiller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'price_filled_by');
     }
 
     public function trip(): HasOne

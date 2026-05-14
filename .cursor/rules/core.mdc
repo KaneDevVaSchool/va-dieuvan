@@ -42,3 +42,7 @@ Sửa bug trong file/ngữ cảnh được chỉ định.
 
 - Fix đúng bug, không tạo bug mới
 - Code gọn, dễ bảo trì
+
+## DOCS
+
+Khi cần hiểu luồng nghiệp vụ / schema / API liên quan bug: mở đúng file trong `docs/` (`.cursorrules` mục DOCS), không đọc lan man.

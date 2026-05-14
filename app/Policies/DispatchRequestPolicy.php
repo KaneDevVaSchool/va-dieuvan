@@ -14,6 +14,7 @@ class DispatchRequestPolicy
             || $user->hasPermission('request.update_own')
             || $user->hasPermission('request.cancel_own')
             || $user->hasPermission('request.approve')
+            || $user->hasPermission('request.approve_dept')
             || $user->hasPermission('request.paper.manage');
     }
 
@@ -25,6 +26,7 @@ class DispatchRequestPolicy
 
         if ($user->hasPermission('trip.view_all')
             || $user->hasPermission('request.approve')
+            || $user->hasPermission('request.approve_dept')
             || $user->hasPermission('request.paper.manage')) {
             return true;
         }
@@ -45,7 +47,9 @@ class DispatchRequestPolicy
             return false;
         }
 
-        if ($user->hasPermission('trip.view_all') || $user->hasPermission('request.approve')) {
+        if ($user->hasPermission('trip.view_all')
+            || $user->hasPermission('request.approve')
+            || $user->hasPermission('request.approve_dept')) {
             return true;
         }
 
@@ -87,7 +91,9 @@ class DispatchRequestPolicy
 
     private function canManageTrashed(User $user, DispatchRequest $dispatchRequest): bool
     {
-        if ($user->hasPermission('trip.view_all') || $user->hasPermission('request.approve')) {
+        if ($user->hasPermission('trip.view_all')
+            || $user->hasPermission('request.approve')
+            || $user->hasPermission('request.approve_dept')) {
             return true;
         }
 

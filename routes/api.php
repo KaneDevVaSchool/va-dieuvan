@@ -23,7 +23,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     /*
     | Web SPA: điều vận (admin, dispatcher) hoặc tài xế (driver) — dispatch.web
     |--------------------------------------------------------------------------
-    | dispatch.staff: chỉ superadmin, admin, dispatcher (không phải tài khoản chỉ driver)
+    | dispatch.staff: chỉ superadmin, admin, dispatcher, department_head (không phải tài khoản chỉ driver)
     | driver.spa: chỉ role tài xế
     |--------------------------------------------------------------------------
     */

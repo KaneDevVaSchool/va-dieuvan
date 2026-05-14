@@ -32,9 +32,11 @@ Chi tiết thêm: `.cursor/rules/laravel.mdc`, `.cursor/rules/vue.mdc` khi làm 
 
 # ĐIỂM Neo REPO (THAM CHIẾU NHANH)
 
-* API SPA / route: `routes/api/`, đặc biệt `routes/api/spa/`
-* Backend: `app/Http/Controllers/`, `app/Services/`, `app/Http/Requests/`
-* Frontend: `resources/js/src/` (views, components, stores, composables)
+* API SPA / route: `routes/api.php` → `routes/api/spa/` (`common-read|mutate`, `driver-read|mutate`, `dispatch-staff-read|mutate`). Không nhét endpoint SPA trực tiếp vào `api.php` trừ login/logout/telemetry.
+* Backend: `app/Http/Controllers/Api/`, `app/Http/Requests/`, `app/Http/Middleware/`
+* Services (nghiệp vụ tiêu biểu): `App\Services\Dispatching\DispatchingService`, `Auditing\AuditLogger`, `WebPushSender`, `Costs\CostCalculationService`, `Admin\UserRoleService`, `Operational\DriverWorkloadService`, `PermissionService`, `RoleService`, `FeatureToggleService`, `Trips\TripNamedPassengerSyncService`, `DispatchRequests\DispatchRequestPdfPresenter`, `Ocr\PaperOcrStubService`, `CmsUserInfoService`
+* Notifications / listeners: `app/Notifications/`, `app/Listeners/SendWebPushOnDatabaseNotification.php`
+* Frontend: `resources/js/src/` (`api/` 18 module, `store/`, `stores/`, `views/`, `components/`, `composables/`, `router/index.js`)
 
 # SCOPE CONTROL (CRITICAL)
 
@@ -86,3 +88,22 @@ Chi tiết thêm: `.cursor/rules/laravel.mdc`, `.cursor/rules/vue.mdc` khi làm 
 * Suy nghĩ trước khi code
 * Sửa gốc, không vá triệu chứng
 * Ưu tiên bảo trì lâu dài
+
+# DOCS (TÀI LIỆU DỰ ÁN)
+
+Đọc khi cần context — không nạp toàn bộ; chỉ mở file phù hợp nhiệm vụ:
+
+* `docs/PROJECT_OVERVIEW.md` — giới thiệu, domain, stack, flow tổng quan
+* `docs/SYSTEM_ARCHITECTURE.md` — layer, auth, queue/notify, idempotency
+* `docs/ENVIRONMENT_SETUP.md` — cài đặt local, env, migrate/seed, queue
+* `docs/PROJECT_STRUCTURE.md` — cây thư mục, convention
+* `docs/DATABASE_SPECIFICATION.md` — bảng, ERD, soft delete, audit
+* `docs/FEATURES_AND_MODULES.md` — module, entry controller/API
+* `docs/API_OVERVIEW.md` — catalog endpoint + middleware/throttle
+* `docs/DEPLOYMENT_GUIDE.md` — Nginx, Supervisor, SSL, backup
+* `docs/QUEUE_EVENT_CRON.md` — notification queue, schedule, commands
+* `docs/PERMISSION_AND_ROLE.md` — roles, permission keys, middleware
+* `docs/THIRD_PARTY_SERVICES.md` — Google, VAPID, DomPDF, CMS DB
+* `docs/TROUBLESHOOTING.md` — lỗi thường gặp
+
+Rule bổ sung theo ngữ cảnh file: `.cursor/rules/*.mdc` (domain luôn bật; api-routes, database, permissions-rbac, notifications-queue theo glob).

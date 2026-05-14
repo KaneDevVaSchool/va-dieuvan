@@ -57,7 +57,7 @@ class UploadAttachmentRequest extends ApiFormRequest
         return [
             'attachable_type' => ['required', Rule::in(['trip', 'cargo_shipment', 'trip_cost', 'dispatch_request', 'driver_compliance_document', 'vehicle_compliance_document'])],
             'attachable_id' => ['required', 'integer', 'min:1'],
-            'kind' => ['nullable', 'string', 'max:50'],
+            'kind' => ['nullable', 'string', 'max:50', Rule::in(['paper_scan', 'request_attachment', 'proposal_basis', 'signed_paper', 'receipt', 'pod', 'route_doc'])],
             'file' => ['required', 'file', 'max:10240'], // 10MB
         ];
     }

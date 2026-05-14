@@ -19,7 +19,23 @@ Repo này là scaffold cho hệ thống “Phần mềm điều vận” theo BR
 - **Frontend**: Vue 3 (component-based, responsive)
 - **Database**: MySQL
 
-Tài liệu triển khai các bước tiếp theo:
+Tài liệu kỹ thuật / vận hành (bộ chính trong repo):
+
+- [docs/PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) — Tổng quan
+- [docs/SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) — Kiến trúc
+- [docs/ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) — Cài đặt môi trường
+- [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) — Cấu trúc source
+- [docs/DATABASE_SPECIFICATION.md](docs/DATABASE_SPECIFICATION.md) — Database
+- [docs/FEATURES_AND_MODULES.md](docs/FEATURES_AND_MODULES.md) — Tính năng / module
+- [docs/API_OVERVIEW.md](docs/API_OVERVIEW.md) — API
+- [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) — Deploy
+- [docs/QUEUE_EVENT_CRON.md](docs/QUEUE_EVENT_CRON.md) — Queue / cron
+- [docs/PERMISSION_AND_ROLE.md](docs/PERMISSION_AND_ROLE.md) — RBAC
+- [docs/THIRD_PARTY_SERVICES.md](docs/THIRD_PARTY_SERVICES.md) — Tích hợp ngoài
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Xử lý sự cố
+- [docs/CURSOR_PROMPT_TEMPLATES.md](docs/CURSOR_PROMPT_TEMPLATES.md) — Prompt mẫu Cursor (feature, bug, feedback)
+
+Tài liệu bổ sung (nếu có trong nhánh):
 
 - `docs/NEXT_STEPS.md`
 - `docs/API_CONVENTIONS.md`

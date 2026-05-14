@@ -20,6 +20,9 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
         $dispatcher = User::factory()->create();
         $dispatcher->assignRole('dispatcher');
 
+        $departmentHead = User::factory()->create();
+        $departmentHead->assignRole('department_head');
+
         $requester = User::factory()->create();
         $requester->assignRole('internal_user');
 
@@ -50,6 +53,12 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
         ]);
 
         $this->actingAs($dispatcher);
+
+        $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
+            'service_price' => 250000,
+        ])->assertSuccessful();
+
+        $this->actingAs($departmentHead);
 
         $res = $this->postJson("/api/dispatch-requests/{$dr->id}/decision", [
             'decision' => 'approve',
@@ -82,7 +91,7 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
 
         $dr = DispatchRequest::create([
             'requester_id' => $requester->id,
-            'trip_type' => 'point_to_point',
+            'trip_type' => 'door_to_door',
             'depart_at' => now()->addDays(3),
             'status' => 'pending',
             'source_channel' => 'portal',

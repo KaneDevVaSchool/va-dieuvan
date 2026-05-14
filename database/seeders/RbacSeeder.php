@@ -28,6 +28,7 @@ class RbacSeeder extends Seeder
             ['name' => 'driver', 'display_name' => 'Tài xế'],
             ['name' => 'accountant', 'display_name' => 'Kế toán'],
             ['name' => 'internal_user', 'display_name' => 'User nội bộ'],
+            ['name' => 'department_head', 'display_name' => 'Trưởng đơn vị'],
         ];
 
         foreach ($roles as $r) {
@@ -44,6 +45,8 @@ class RbacSeeder extends Seeder
             'request.update_own',
             'request.cancel_own',
             'request.approve',
+            'request.fill_price',
+            'request.approve_dept',
             'request.paper.manage',
             // Chuyến
             'trip.assign',
@@ -110,6 +113,7 @@ class RbacSeeder extends Seeder
                 'request.update_own',
                 'request.cancel_own',
                 'request.approve',
+                'request.fill_price',
                 'request.paper.manage',
                 'trip.assign',
                 'trip.view_all',
@@ -128,6 +132,11 @@ class RbacSeeder extends Seeder
                 'cargo.manage',
                 'route.manage',
                 'student.manage',
+                'attachment.upload',
+            ],
+            'department_head' => [
+                'request.approve_dept',
+                'trip.view_own',
                 'attachment.upload',
             ],
             'accountant' => [

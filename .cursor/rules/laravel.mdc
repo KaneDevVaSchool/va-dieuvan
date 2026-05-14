@@ -40,3 +40,26 @@ Controller → FormRequest → Service → Resource (JSON)
 ## API
 
 - Dùng API Resource cho response chuẩn hóa
+- Controller API có thể dùng trait `App\Http\Controllers\Api\Concerns\ApiResponses` (`ok()`, …)
+
+## SERVICES (VA ĐIỀU VẬN)
+
+Logic nặng nằm dưới `app/Services/` — ví dụ: `Dispatching\DispatchingService`, `Auditing\AuditLogger`, `WebPushSender`, `Costs\CostCalculationService`, `Admin\UserRoleService`, `Operational\DriverWorkloadService`, `PermissionService`, `RoleService`, `FeatureToggleService`, `Trips\TripNamedPassengerSyncService`, `DispatchRequests\DispatchRequestPdfPresenter`, `Ocr\PaperOcrStubService`, `CmsUserInfoService`. Chi tiết domain: `docs/FEATURES_AND_MODULES.md`, `docs/DATABASE_SPECIFICATION.md`.
+
+## AUDIT
+
+Ghi nhật ký thay đổi quan trọng qua `App\Services\Auditing\AuditLogger`:
+
+`app(AuditLogger::class)->log(actorId: ..., event: 'trip.assign', auditable: $model, before: [...], after: [...], metadata: [...]);`
+
+## OPTIMISTIC LOCK (TRIPS)
+
+`trips.lock_version`: cập nhật có điều kiện `where('lock_version', $expected)` và tăng `lock_version`; nếu số dòng cập nhật ≠ 1 → `abort(409, …)` (đồng bộ với `DispatchingService`).
+
+## ROUTE MIDDLEWARE (ALIAS)
+
+Đăng ký trong `app/Http/Kernel.php`: `dispatch.web`, `dispatch.staff`, `driver.spa`, `idempotency`, `feature`, `permission`, `role`. Trên route: `permission:trip.assign`; bulk đặc biệt: `permission:any,system.user_roles.manage`.
+
+## MIGRATION / SCHEMA
+
+Quy ước bảng/index/soft delete: xem `.cursor/rules/database.mdc` và `docs/DATABASE_SPECIFICATION.md`.

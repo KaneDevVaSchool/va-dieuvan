@@ -29,3 +29,20 @@ Component → Store → Service (không gọi HTTP trực tiếp trong component
 ## UI
 
 - Tailwind; bám pattern filter/toolbar có sẵn khi thêm thanh lọc (xem `filter-toolbar-vue-tailwind.mdc`)
+
+## STORE & API LAYER
+
+- Pinia chính: `resources/js/src/store/` (`index.js`: auth + re-export; `ui.js`, `driverDashboard.js`, `notificationCenter.js`). Pinia TS bổ sung: `resources/js/src/stores/*.ts`.
+- HTTP/API: **18 module** trong `resources/js/src/api/` (`http.js`, `auth.js`, `trips.js`, `requests.js`, `costs.js`, `cargo.js`, `driver.js`, `d2d.js`, `operational.js`, `attachments.js`, `admin.js`, `pricing.js`, `reports.js`, `audit.js`, `notifications.js`, `push.js`, `navBadges.js`, `dispatchSettings.js`). Component → store/composable → gọi `api/*`, **không** import axios trực tiếp trong `.vue` khi có thể tránh.
+
+## AUTH / FEATURE (KHỚP BACKEND)
+
+- `useAuthStore()`: `hasPermission('trip.assign')`, `hasAnyPermission([...])`, `isFeatureEnabled(featureKey)`, `isNavFeatureVisible(featureKey)`, getter `featureToggleRuntimeState(featureKey)`, `canAccessDispatchWebApp()`, `canAccessDriverWebApp()`.
+
+## ROUTER / LAYOUT
+
+- Staff vs driver: route có `meta.driverApp === true` → shell tài xế (`LayoutDriver`); ngược lại → `AppShell` / luồng staff (xem `resources/js/src/router/index.js`, `App.vue`).
+
+## I18N
+
+- `vue-i18n`; chuỗi trong `resources/js/src/locales/` — thêm key theo pattern file hiện có, không hardcode dài trong template nếu đã có i18n cho màn đó.

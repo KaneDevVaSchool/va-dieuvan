@@ -3,6 +3,8 @@
     "request.update_own": "Được sửa các yêu cầu do chính mình tạo.",
     "request.cancel_own": "Được hủy các yêu cầu do chính mình tạo.",
     "request.approve": "Được duyệt hoặc từ chối yêu cầu điều xe (theo quy trình).",
+    "request.fill_price": "Được điền giá dịch vụ vào phiếu trước khi trình trưởng đơn vị duyệt (business/point-to-point/cargo).",
+    "request.approve_dept": "Được duyệt hoặc từ chối phiếu đã có giá (trưởng đơn vị).",
     "request.paper.manage": "Được cập nhật trạng thái nhận/gửi phiếu giấy liên quan yêu cầu.",
     "trip.assign": "Được phân công xe, tài xế, nhà xe cho chuyến.",
     "trip.view_all": "Xem mọi chuyến đi (không chỉ chuyến của mình).",

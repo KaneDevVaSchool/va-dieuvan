@@ -28,7 +28,7 @@ class BusinessRulesTest extends TestCase
     {
         Carbon::setTestNow(Carbon::parse('2026-04-02 08:00:00'));
 
-        $user = $this->makeUserWithRole('internal_user');
+        $user = $this->makeUserWithRole('dispatcher');
         $this->actingAs($user);
 
         $res = $this->postJson('/api/dispatch-requests', [

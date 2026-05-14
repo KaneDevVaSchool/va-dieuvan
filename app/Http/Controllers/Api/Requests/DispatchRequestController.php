@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Requests\CreateDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DecideDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\ExportDispatchRequestPdfRequest;
+use App\Http\Requests\Api\Requests\FillPriceDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
@@ -16,6 +17,7 @@ use App\Models\Role;
 use App\Models\Trip;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
+use App\Notifications\PriceFilledDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
 use App\Support\DispatchCargoShipmentProvisioner;
@@ -38,6 +40,7 @@ class DispatchRequestController extends Controller
         $dispatchRequest->load([
             'requester:id,name,email,employee_code,avatar_url',
             'approver:id,name,email,employee_code',
+            'priceFiller:id,name,email,employee_code',
             'trip',
             'attachments' => fn ($q) => $q->orderByDesc('id'),
         ]);
@@ -122,6 +125,64 @@ class DispatchRequestController extends Controller
         }
 
         return $this->created($this->presentDispatchRequest($dispatchRequest));
+    }
+
+    public function fillPrice(FillPriceDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
+    {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $this->authorize('view', $dispatchRequest);
+
+        $data = $request->validated();
+
+        if ($dispatchRequest->trip_type === 'door_to_door') {
+            abort(422, Messages::REQUEST_FILL_PRICE_NOT_APPLICABLE);
+        }
+
+        if ($dispatchRequest->status !== 'pending') {
+            abort(409, Messages::REQUEST_NOT_PENDING);
+        }
+
+        $user = $request->user();
+        $before = $dispatchRequest->toArray();
+
+        $dispatchRequest->update([
+            'status' => 'price_filled',
+            'service_price' => $data['service_price'],
+            'price_filled_by' => $user->id,
+            'price_filled_at' => now(),
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.price_filled',
+            auditable: $dispatchRequest,
+            before: $before,
+            after: $dispatchRequest->fresh()->toArray(),
+            metadata: [
+                'service_price' => $data['service_price'],
+            ],
+        );
+
+        if (Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+            $recipients = User::query()
+                ->role('department_head')
+                ->get();
+            if ($recipients->isNotEmpty()) {
+                $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
+                Notification::send(
+                    $recipients,
+                    new PriceFilledDispatchRequestNotification(
+                        $dispatchRequest->id,
+                        $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
+                    ),
+                );
+            }
+        }
+
+        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
     }
 
     public function exportPdf(ExportDispatchRequestPdfRequest $request, DispatchRequest $dispatchRequest)
@@ -248,7 +309,13 @@ class DispatchRequestController extends Controller
         return DB::transaction(function () use ($dispatchRequest, $data, $user) {
             $before = $dispatchRequest->toArray();
 
-            if ($dispatchRequest->status !== 'pending') {
+            $usesDeptPriceFlow = $dispatchRequest->trip_type !== 'door_to_door';
+
+            if ($usesDeptPriceFlow) {
+                if ($dispatchRequest->status !== 'price_filled') {
+                    abort(409, Messages::REQUEST_NOT_PRICE_FILLED);
+                }
+            } elseif ($dispatchRequest->status !== 'pending') {
                 abort(409, Messages::REQUEST_NOT_PENDING);
             }
 

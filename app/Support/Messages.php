@@ -8,6 +8,10 @@ final class Messages
 
     public const REQUEST_NOT_PENDING = 'Yêu cầu không ở trạng thái chờ duyệt.';
 
+    public const REQUEST_FILL_PRICE_NOT_APPLICABLE = 'Loại yêu cầu này không áp dụng bước điền giá (door-to-door).';
+
+    public const REQUEST_NOT_PRICE_FILLED = 'Yêu cầu chưa ở trạng thái đã điền giá; không thể duyệt theo quy trình này.';
+
     public const REQUEST_PAPER_NOT_RECEIVED = 'Phiếu giấy chưa ở trạng thái đã nhận; không thể hoàn tác.';
 
     public const RESOURCE_VEHICLE_OVERLAP = 'Xe bị trùng lịch trong khung giờ này.';

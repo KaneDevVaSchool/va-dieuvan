@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +18,11 @@ class ReferencePricingTest extends TestCase
 
     public function test_reference_pricing_returns_structure(): void
     {
+        $this->seed(RbacSeeder::class);
+
         $user = User::factory()->create();
+        $user->assignRole('dispatcher');
+
         $this->actingAs($user);
 
         $res = $this->getJson('/api/reference-pricing');

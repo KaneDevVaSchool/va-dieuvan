@@ -24,7 +24,7 @@ class IdempotencyTest extends TestCase
 
         $dr = DispatchRequest::create([
             'requester_id' => $requester->id,
-            'trip_type' => 'point_to_point',
+            'trip_type' => 'door_to_door',
             'depart_at' => now()->addHours(3),
             'status' => 'pending',
             'source_channel' => 'portal',
@@ -53,14 +53,16 @@ class IdempotencyTest extends TestCase
         $this->seed(RbacSeeder::class);
 
         $user = User::factory()->create();
-        $user->assignRole('internal_user');
+        $user->assignRole('dispatcher');
 
         $this->actingAs($user);
 
         $key = 'idem-store-key-12';
         $payload = [
-            'trip_type' => 'point_to_point',
-            'depart_at' => now()->addHours(3)->toIso8601String(),
+            'trip_type' => 'door_to_door',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(10)->format('Y-m-d H:i:s'),
             'source_channel' => 'portal',
             'is_urgent' => false,
         ];

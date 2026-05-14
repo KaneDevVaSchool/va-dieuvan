@@ -1,9 +1,10 @@
 <?php
 
 /**
- * Ghi: chỉ điều vận (superadmin, admin, dispatcher).
+ * Ghi: chỉ điều vận (superadmin, admin, dispatcher, department_head).
  */
 
+use App\Http\Controllers\Api\Admin\BulkUserRolesUpdateController;
 use App\Http\Controllers\Api\Cargo\CargoController;
 use App\Http\Controllers\Api\Costs\TripCostController;
 use App\Http\Controllers\Api\D2D\RouteController;
@@ -13,7 +14,6 @@ use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
-use App\Http\Controllers\Api\Admin\BulkUserRolesUpdateController;
 use App\Http\Controllers\Api\Trips\TripController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +32,9 @@ Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)
         ->middleware(['throttle:20,1', 'idempotency'])
         ->name('api.dispatch-requests.store');
     Route::post('/{dispatchRequest}/paper-received', 'markPaperReceived')->middleware('throttle:20,1');
+    Route::patch('/{dispatchRequest}/fill-price', 'fillPrice')
+        ->middleware('throttle:20,1')
+        ->name('api.dispatch-requests.fill-price');
     Route::post('/{dispatchRequest}/paper-revert', 'revertPaperReceived')->middleware('throttle:20,1');
     Route::post('/{dispatchRequest}/decision', 'approve')
         ->middleware(['throttle:120,1', 'idempotency'])

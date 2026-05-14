@@ -51,7 +51,7 @@ class ListRequestsRequest extends ApiFormRequest
 
         return [
             'q' => ['nullable', 'string', 'max:255'],
-            'status' => ['nullable', Rule::in(['draft', 'pending', 'approved', 'rejected', 'cancelled'])],
+            'status' => ['nullable', Rule::in(['draft', 'pending', 'price_filled', 'approved', 'rejected', 'cancelled'])],
             'trip_status' => ['nullable', Rule::in([
                 'pending', 'approved', 'assigned', 'driver_confirmed', 'in_progress', 'completed', 'cancelled', 'incident',
             ])],

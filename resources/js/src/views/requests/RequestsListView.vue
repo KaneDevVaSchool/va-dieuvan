@@ -1802,7 +1802,7 @@ function applyRouteQuery() {
   } else if (typeof q.trip_status === 'string') {
     if (q.trip_status === 'in_progress') activeTab.value = 'trip_in_progress'
     else if (q.trip_status === 'completed') activeTab.value = 'trip_completed'
-  } else if (typeof q.status === 'string' && ['draft', 'pending', 'approved', 'rejected', 'cancelled'].includes(q.status)) {
+  } else if (typeof q.status === 'string' && ['draft', 'pending', 'price_filled', 'approved', 'rejected', 'cancelled'].includes(q.status)) {
     activeTab.value = q.status
   } else {
     activeTab.value = 'all'
