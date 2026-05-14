@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -24,6 +25,7 @@ class User extends Authenticatable
         'password',
         'phone',
         'employee_code',
+        'department_id',
         'is_active',
     ];
 
@@ -63,6 +65,11 @@ class User extends Authenticatable
     public function canAccessDriverWebApp(): bool
     {
         return $this->hasRole('driver');
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function pushSubscriptions(): HasMany

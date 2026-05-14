@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Requests\CreateDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DecideDispatchRequestRequest;
+use App\Http\Requests\Api\Requests\DeptDecideDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\ExportDispatchRequestPdfRequest;
 use App\Http\Requests\Api\Requests\FillPriceDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
@@ -16,8 +17,8 @@ use App\Models\DispatchSetting;
 use App\Models\Role;
 use App\Models\Trip;
 use App\Models\User;
+use App\Notifications\DeptHeadApprovalRequestedNotification;
 use App\Notifications\NewDispatchRequestNotification;
-use App\Notifications\PriceFilledDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
 use App\Support\DispatchCargoShipmentProvisioner;
@@ -167,18 +168,25 @@ class DispatchRequestController extends Controller
         );
 
         if (Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
-            $recipients = User::query()
-                ->role('department_head')
-                ->get();
-            if ($recipients->isNotEmpty()) {
+            $dispatchRequest->loadMissing('requester:id,department_id');
+            $requesterDeptId = $dispatchRequest->requester?->department_id;
+            if ($requesterDeptId !== null) {
                 $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
-                Notification::send(
-                    $recipients,
-                    new PriceFilledDispatchRequestNotification(
-                        $dispatchRequest->id,
-                        $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
-                    ),
-                );
+                $summaryLine = $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id;
+
+                $recipients = User::query()
+                    ->role('department_head')
+                    ->where('department_id', (int) $requesterDeptId)
+                    ->get();
+                if ($recipients->isNotEmpty()) {
+                    Notification::send(
+                        $recipients,
+                        new DeptHeadApprovalRequestedNotification(
+                            $dispatchRequest->id,
+                            $summaryLine,
+                        ),
+                    );
+                }
             }
         }
 
@@ -365,6 +373,77 @@ class DispatchRequestController extends Controller
             );
 
             return $this->ok(['request' => $dispatchRequest, 'trip' => $trip]);
+        });
+    }
+
+    public function deptDecision(DeptDecideDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
+    {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $this->authorize('view', $dispatchRequest);
+
+        if ($dispatchRequest->trip_type === 'door_to_door') {
+            abort(422, Messages::REQUEST_FILL_PRICE_NOT_APPLICABLE);
+        }
+
+        $data = $request->validated();
+        $user = $request->user();
+
+        return DB::transaction(function () use ($dispatchRequest, $data, $user) {
+            $before = $dispatchRequest->toArray();
+
+            if ($dispatchRequest->status !== 'price_filled') {
+                abort(409, Messages::REQUEST_NOT_PRICE_FILLED);
+            }
+
+            if ($data['decision'] === 'reject') {
+                $dispatchRequest->update([
+                    'status' => 'rejected',
+                    'approved_by' => $user->id,
+                    'rejection_reason' => trim((string) ($data['rejection_reason'] ?? '')),
+                ]);
+
+                app(AuditLogger::class)->log(
+                    actorId: $user->id,
+                    event: 'request.dept_reject',
+                    auditable: $dispatchRequest,
+                    before: $before,
+                    after: $dispatchRequest->toArray(),
+                    metadata: ['reason' => $dispatchRequest->rejection_reason],
+                );
+
+                return $this->ok($dispatchRequest->fresh());
+            }
+
+            $dispatchRequest->update([
+                'status' => 'approved',
+                'approved_by' => $user->id,
+                'rejection_reason' => null,
+            ]);
+
+            $trip = Trip::create([
+                'dispatch_request_id' => $dispatchRequest->id,
+                'dispatcher_id' => $user->id,
+                'status' => 'approved',
+                'depart_at' => $dispatchRequest->depart_at,
+                'arrive_by' => $dispatchRequest->arrive_by,
+                'lock_version' => 0,
+            ]);
+
+            DispatchCargoShipmentProvisioner::provision($dispatchRequest, $trip);
+
+            app(AuditLogger::class)->log(
+                actorId: $user->id,
+                event: 'request.approve_dept',
+                auditable: $dispatchRequest,
+                before: $before,
+                after: $dispatchRequest->toArray(),
+                metadata: ['trip_id' => $trip->id],
+            );
+
+            return $this->ok(['request' => $dispatchRequest->fresh(), 'trip' => $trip]);
         });
     }
 

@@ -26,9 +26,18 @@ class DispatchRequestPolicy
 
         if ($user->hasPermission('trip.view_all')
             || $user->hasPermission('request.approve')
-            || $user->hasPermission('request.approve_dept')
             || $user->hasPermission('request.paper.manage')) {
             return true;
+        }
+
+        if ($user->hasPermission('request.approve_dept')
+            && ! $user->hasPermission('trip.view_all')
+            && ! $user->hasPermission('request.approve')) {
+            $requester = $dispatchRequest->requester;
+
+            return $requester !== null
+                && $user->department_id !== null
+                && (int) $requester->department_id === (int) $user->department_id;
         }
 
         return (int) $dispatchRequest->requester_id === (int) $user->id;
@@ -92,9 +101,18 @@ class DispatchRequestPolicy
     private function canManageTrashed(User $user, DispatchRequest $dispatchRequest): bool
     {
         if ($user->hasPermission('trip.view_all')
-            || $user->hasPermission('request.approve')
-            || $user->hasPermission('request.approve_dept')) {
+            || $user->hasPermission('request.approve')) {
             return true;
+        }
+
+        if ($user->hasPermission('request.approve_dept')
+            && ! $user->hasPermission('trip.view_all')
+            && ! $user->hasPermission('request.approve')) {
+            $requester = $dispatchRequest->requester;
+
+            return $requester !== null
+                && $user->department_id !== null
+                && (int) $requester->department_id === (int) $user->department_id;
         }
 
         return (int) $dispatchRequest->requester_id === (int) $user->id

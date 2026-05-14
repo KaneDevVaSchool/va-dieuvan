@@ -39,6 +39,9 @@ Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)
     Route::post('/{dispatchRequest}/decision', 'approve')
         ->middleware(['throttle:120,1', 'idempotency'])
         ->name('api.dispatch-requests.decision');
+    Route::post('/{dispatchRequest}/dept-decision', 'deptDecision')
+        ->middleware(['throttle:120,1', 'idempotency', 'permission:request.approve_dept'])
+        ->name('api.dispatch-requests.dept-decision');
 });
 
 Route::controller(RequestController::class)->group(function () {

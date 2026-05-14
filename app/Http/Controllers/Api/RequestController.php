@@ -258,10 +258,17 @@ class RequestController extends Controller
     {
         $q = DispatchRequest::query();
 
-        if (! $user->hasPermission('trip.view_all')
-            && ! $user->hasPermission('request.approve_dept')) {
-            $q->where('requester_id', $user->id);
+        if ($user->hasPermission('trip.view_all')) {
+            return $q;
         }
+
+        if ($user->hasPermission('request.approve_dept') && $user->department_id !== null) {
+            return $q->whereHas('requester',
+                fn (Builder $b) => $b->where('department_id', (int) $user->department_id)
+            );
+        }
+
+        $q->where('requester_id', $user->id);
 
         return $q;
     }
