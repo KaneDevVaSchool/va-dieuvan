@@ -1,6 +1,7 @@
 import { createHttpClient } from '../core/http/createHttpClient'
 import { enqueueOutboxRequest } from '../core/offline/outbox'
 import { TOKEN_KEY } from '../core/config/authKeys'
+import { sanitizeLoginRedirect } from '../util/loginRedirect'
 
 export const http = createHttpClient()
 
@@ -15,7 +16,10 @@ http.interceptors.response.use(
         /* ignore */
       }
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`
+        const back = sanitizeLoginRedirect(
+          `${window.location.pathname || '/'}${window.location.search || ''}`,
+        )
+        window.location.href = `/login?redirect=${encodeURIComponent(back)}`
       }
     } else if (!err.response && err.config) {
       const code = err.code

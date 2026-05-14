@@ -19,7 +19,9 @@ cleanupOutdatedCaches()
 const navigationHandler = createHandlerBoundToURL('/')
 registerRoute(
   new NavigationRoute(navigationHandler, {
-    denylist: [/^\/api\//],
+    // Laravel OAuth endpoints must hit server (Google redirect_uri). If handled as SPA navigations,
+    // Workbox serves `/` shell and /auth/google/callback never runs ⇒ redirect loop và query rác.
+    denylist: [/^\/api\//, /^\/auth\/google/],
   }),
 )
 

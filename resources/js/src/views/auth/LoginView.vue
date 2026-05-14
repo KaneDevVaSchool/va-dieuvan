@@ -50,6 +50,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../store'
 import { formatApiError } from '../../api/http'
+import { sanitizeLoginRedirect } from '../../util/loginRedirect'
 
 /** `public/images/logo/...` */
 const LOGO_PWA_URL = '/images/logo/logo-2.png'
@@ -64,8 +65,8 @@ const error = ref('')
 const bootstrapping = ref(false)
 
 const googleAuthHref = computed(() => {
-  const r = route.query.redirect ?? '/'
-  return `/auth/google?redirect=${encodeURIComponent(String(r))}`
+  const r = sanitizeLoginRedirect(route.query.redirect ?? '/')
+  return `/auth/google?redirect=${encodeURIComponent(r)}`
 })
 
 function onGoogleClick() {
@@ -77,8 +78,9 @@ onMounted(async () => {
   if (q.error) {
     error.value = String(q.error)
     const clean = {}
-    if (q.redirect != null && q.redirect !== '') {
-      clean.redirect = q.redirect
+    const safeErrRedirect = sanitizeLoginRedirect(q.redirect ?? '/')
+    if (safeErrRedirect !== '/') {
+      clean.redirect = safeErrRedirect
     }
     await router.replace({ path: '/login', query: clean })
   }
@@ -95,13 +97,14 @@ onMounted(async () => {
     if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
       auth.setToken(null)
       error.value = t('routes_meta.login.no_dispatch_access')
+      const safe = sanitizeLoginRedirect(q.redirect ?? '/')
       await router.replace({
         path: '/login',
-        query: q.redirect != null && q.redirect !== '' ? { redirect: q.redirect } : {},
+        query: safe !== '/' ? { redirect: safe } : {},
       })
       return
     }
-    let target = q.redirect != null && q.redirect !== '' ? String(q.redirect) : '/'
+    let target = sanitizeLoginRedirect(q.redirect != null && q.redirect !== '' ? q.redirect : '/')
     if (!auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp()) {
       if (target === '/profile' || target.startsWith('/profile/')) {
         target = '/driver/account'
@@ -115,7 +118,11 @@ onMounted(async () => {
   } catch (e) {
     auth.setToken(null)
     error.value = formatApiError(e, 'Phiên đăng nhập không hợp lệ.')
-    await router.replace({ path: '/login', query: { redirect: q.redirect } })
+    const safe = sanitizeLoginRedirect(q.redirect ?? '/')
+    await router.replace({
+      path: '/login',
+      query: safe !== '/' ? { redirect: safe } : {},
+    })
   } finally {
     bootstrapping.value = false
   }
