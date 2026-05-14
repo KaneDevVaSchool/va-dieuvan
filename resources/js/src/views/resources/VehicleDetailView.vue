@@ -15,12 +15,43 @@
     <div v-else-if="loadError" class="py-12 text-center text-sm text-rose-600">{{ loadError }}</div>
 
     <template v-else>
+      <header class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-700">
+        <div class="min-w-0">
+          <p class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {{ t('vehicle_detail.page_heading_hint') }}
+          </p>
+          <div class="mt-1 flex flex-wrap items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+              {{ vehicle.license_plate || '—' }}
+            </h1>
+            <span
+              class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+              :class="vehicleStatusBadgeClass(vehicle.status)"
+            >
+              {{ labelVehicleStatus(vehicle.status) }}
+            </span>
+          </div>
+        </div>
+      </header>
+
       <!-- Hồ sơ xe -->
       <section class="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50 sm:p-5">
-        <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('vehicle_detail.profile') }}</h2>
-        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('vehicle_detail.profile_hint') }}</p>
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('vehicle_detail.profile') }}</h2>
+            <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('vehicle_detail.profile_hint') }}</p>
+          </div>
+          <button
+            v-if="canManage"
+            type="button"
+            class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+            @click="toggleProfileEdit"
+          >
+            {{ profileEdit ? t('vehicle_detail.cancel_edit') : t('vehicle_detail.edit') }}
+          </button>
+        </div>
 
-        <div class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+        <div v-if="!profileEdit" class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.license_plate') }}</div>
             <div class="mt-0.5 font-medium">{{ vehicle.license_plate || '—' }}</div>
@@ -42,6 +73,14 @@
             <div class="mt-0.5">{{ vehicle.owner_name || '—' }}</div>
           </div>
           <div>
+            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.caretaker_name') }}</div>
+            <div class="mt-0.5">{{ vehicle.caretaker_name || '—' }}</div>
+          </div>
+          <div>
+            <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.caretaker_phone') }}</div>
+            <div class="mt-0.5">{{ vehicle.caretaker_phone || '—' }}</div>
+          </div>
+          <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('vehicle_detail.default_driver') }}</div>
             <div class="mt-0.5">{{ vehicle.default_driver?.full_name || '—' }}</div>
           </div>
@@ -58,6 +97,57 @@
             <div class="mt-0.5 whitespace-pre-wrap">{{ vehicle.notes || '—' }}</div>
           </div>
         </div>
+
+        <form v-else class="mt-4 grid gap-3 sm:grid-cols-2" @submit.prevent="saveVehicleProfile">
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+            {{ t('resources.col_status') }}
+            <select
+              v-model="profileForm.status"
+              required
+              class="mt-1 w-full rounded-lg border border-slate-200 py-2 pl-3 pr-8 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            >
+              <option value="ready">{{ t('resources.vehicle_status_ready') }}</option>
+              <option value="in_use">{{ t('resources.vehicle_status_in_use') }}</option>
+              <option value="maintenance">{{ t('resources.vehicle_status_maintenance') }}</option>
+              <option value="broken">{{ t('resources.vehicle_status_broken') }}</option>
+            </select>
+          </label>
+          <div class="hidden sm:block" aria-hidden="true" />
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+            {{ t('vehicle_detail.caretaker_name') }}
+            <input
+              v-model="profileForm.caretaker_name"
+              type="text"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            />
+          </label>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+            {{ t('vehicle_detail.caretaker_phone') }}
+            <input
+              v-model="profileForm.caretaker_phone"
+              type="text"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            />
+          </label>
+          <label class="sm:col-span-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
+            {{ t('resources.col_notes') }}
+            <textarea
+              v-model="profileForm.notes"
+              rows="4"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            />
+          </label>
+          <div class="sm:col-span-2 flex flex-wrap gap-2 pt-1">
+            <button
+              type="submit"
+              class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+              :disabled="profileSaving"
+            >
+              {{ profileSaving ? t('resources.loading') : t('vehicle_detail.save_profile') }}
+            </button>
+            <p v-if="profileError" class="text-xs text-rose-600">{{ profileError }}</p>
+          </div>
+        </form>
       </section>
 
       <!-- Giấy tờ -->
@@ -75,6 +165,20 @@
           >
             {{ t('vehicle_detail.compliance_quick_add') }}
           </button>
+        </div>
+
+        <div
+          v-if="complianceExpirySummary.total > 0"
+          class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-100"
+          role="status"
+        >
+          {{
+            t('vehicle_detail.compliance_expiry_alert', {
+              n: complianceExpirySummary.total,
+              soon: complianceExpirySummary.soon,
+              exp: complianceExpirySummary.exp,
+            })
+          }}
         </div>
 
         <div class="mt-4 overflow-x-auto">
@@ -135,7 +239,10 @@
       </section>
 
       <!-- Audit -->
-      <section class="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50 sm:p-5">
+      <section
+        v-if="canManage"
+        class="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/50 sm:p-5"
+      >
         <h2 class="text-base font-semibold text-slate-900 dark:text-white">{{ t('vehicle_detail.audit_title') }}</h2>
         <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('vehicle_detail.audit_hint') }}</p>
         <ul class="mt-3 space-y-2 text-xs">
@@ -281,10 +388,11 @@ import {
   getVehicle,
   getVehicleComplianceAudit,
   listVehicleComplianceDocuments,
+  updateVehicle,
   updateVehicleComplianceDocument,
 } from '../../api/operational'
 import { formatApiError } from '../../api/http'
-import { showAppErrorFromApi } from '../../composables/appMessage'
+import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 
 const DOC_TYPES = [
@@ -310,6 +418,16 @@ const vehicle = ref({})
 const documents = ref([])
 const auditLogs = ref([])
 
+const profileEdit = ref(false)
+const profileSaving = ref(false)
+const profileError = ref('')
+const profileForm = ref({
+  status: 'ready',
+  caretaker_name: '',
+  caretaker_phone: '',
+  notes: '',
+})
+
 const docModalOpen = ref(false)
 const docSaving = ref(false)
 const docFormError = ref('')
@@ -331,6 +449,66 @@ const docTypeOptions = computed(() =>
   })),
 )
 
+const complianceExpirySummary = computed(() => {
+  let soon = 0
+  let exp = 0
+  for (const doc of documents.value) {
+    const st = doc.expiry?.state
+    if (st === 'soon') soon += 1
+    else if (st === 'exp') exp += 1
+  }
+  return { soon, exp, total: soon + exp }
+})
+
+function syncProfileFormFromVehicle() {
+  const v = vehicle.value || {}
+  profileForm.value = {
+    status: v.status || 'ready',
+    caretaker_name: v.caretaker_name || '',
+    caretaker_phone: v.caretaker_phone || '',
+    notes: v.notes || '',
+  }
+}
+
+function toggleProfileEdit() {
+  profileEdit.value = !profileEdit.value
+  profileError.value = ''
+  if (!profileEdit.value) syncProfileFormFromVehicle()
+}
+
+async function saveVehicleProfile() {
+  if (!canManage.value) return
+  const id = Number(route.params.id)
+  if (!id) return
+  profileSaving.value = true
+  profileError.value = ''
+  try {
+    await updateVehicle(id, {
+      status: profileForm.value.status,
+      caretaker_name: profileForm.value.caretaker_name?.trim() || null,
+      caretaker_phone: profileForm.value.caretaker_phone?.trim() || null,
+      notes: profileForm.value.notes?.trim() || null,
+    })
+    showAppSuccess(t('dispatch_settings.saved_hint'), t('requests_page.preset_toast_title'))
+    profileEdit.value = false
+    await load()
+  } catch (e) {
+    profileError.value = formatApiError(e, t('vehicle_detail.profile_save_error'))
+  } finally {
+    profileSaving.value = false
+  }
+}
+
+function vehicleStatusBadgeClass(s) {
+  const map = {
+    ready: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200',
+    in_use: 'bg-sky-100 text-sky-900 dark:bg-sky-950/50 dark:text-sky-200',
+    maintenance: 'bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200',
+    broken: 'bg-rose-100 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200',
+  }
+  return map[s] ?? 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
+}
+
 async function load() {
   loading.value = true
   loadError.value = ''
@@ -344,6 +522,7 @@ async function load() {
     const [veh, docs] = await Promise.all([getVehicle(id), listVehicleComplianceDocuments(id)])
     vehicle.value = veh
     documents.value = docs.items || []
+    syncProfileFormFromVehicle()
     try {
       const audit = await getVehicleComplianceAudit(id)
       auditLogs.value = audit.items || []

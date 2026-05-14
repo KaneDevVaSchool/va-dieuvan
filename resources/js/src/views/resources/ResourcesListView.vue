@@ -810,14 +810,12 @@
                       </div>
                       <div>
                         <RouterLink
-                          v-if="vehiclesViewMode === 'active'"
                           :to="`/resources/vehicles/${v.id}`"
                           class="block whitespace-nowrap font-semibold text-teal-700 hover:underline dark:text-teal-400"
                           @click.stop
                         >
                           {{ v.code }}
                         </RouterLink>
-                        <div v-else class="whitespace-nowrap font-semibold text-slate-900 dark:text-white">{{ v.code }}</div>
                         <div class="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">{{ v.model }}</div>
                       </div>
                     </div>

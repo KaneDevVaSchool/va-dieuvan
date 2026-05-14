@@ -403,6 +403,23 @@
 
           <button
             type="button"
+            role="switch"
+            :aria-checked="filters.recurring_only"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+            :class="
+              filters.recurring_only
+                ? 'border-indigo-300 bg-indigo-50 text-indigo-950 ring-1 ring-indigo-400/25 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-100'
+                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
+            "
+            :title="t('requests_page.recurring_toggle')"
+            @click="toggleRecurringOnly"
+          >
+            <ArrowPathIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
+            {{ t('requests_page.recurring_filter_chip') }}
+          </button>
+
+          <button
+            type="button"
             class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
             :aria-expanded="extraFiltersOpen"
             @click="extraFiltersOpen = !extraFiltersOpen"
@@ -410,7 +427,6 @@
             {{ t('requests_page.filter_extra') }}
             <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
           </button>
-        </div>
       </div>
 
       <div
@@ -691,8 +707,9 @@
                   >
                     <span
                       v-if="r.dispatch_request_template_id"
-                      class="inline-flex shrink-0 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
+                      class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
                     >
+                      <ArrowPathIcon class="h-3.5 w-3.5 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
                       {{ t('requests_page.badge_recurring') }}
                     </span>
                     <ExclamationTriangleIcon
@@ -831,7 +848,14 @@
           <li v-for="r in items" :key="`m-${r.id}`" class="px-4 py-3" :class="requestRowClass(r)">
             <RouterLink :to="`/requests/${r.id}`" class="flex items-start justify-between gap-2">
               <div class="min-w-0">
-                <div class="flex items-center gap-1.5 font-semibold text-slate-900">
+                <div class="flex flex-wrap items-center gap-1.5 font-semibold text-slate-900">
+                  <span
+                    v-if="r.dispatch_request_template_id"
+                    class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
+                  >
+                    <ArrowPathIcon class="h-3.5 w-3.5 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
+                    {{ t('requests_page.badge_recurring') }}
+                  </span>
                   <ExclamationTriangleIcon
                     v-if="r.is_urgent"
                     class="h-4 w-4 shrink-0 text-amber-600"

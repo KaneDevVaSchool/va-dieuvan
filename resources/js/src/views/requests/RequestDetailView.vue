@@ -26,8 +26,9 @@
                 </span>
                 <span
                   v-if="showRecurringBadge"
-                  class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-900 ring-1 ring-indigo-600/15"
+                  class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-900 ring-1 ring-indigo-600/15"
                 >
+                  <ArrowPathIcon class="h-3.5 w-3.5 shrink-0 text-indigo-700" aria-hidden="true" />
                   {{ t('request_detail.badge_recurring') }}
                 </span>
               </div>
@@ -42,33 +43,29 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2 sm:justify-end">
-            <button
-              type="button"
-              class="inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium shadow-sm transition"
-              :class="
-                pdfExportDisabled
-                  ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
-                  : 'border-teal-200 bg-white text-teal-800 hover:bg-teal-50'
-              "
-              :disabled="pdfBusy || pdfExportDisabled"
-              :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
-              @click="downloadRequestPdf"
-            >
-              <span
-                v-if="pdfBusy"
-                class="h-4 w-4 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-600"
-              />
-              {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
-            </button>
-            <button
-              type="button"
-              class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-400 shadow-sm"
-              disabled
-              title="Chỉnh sửa yêu cầu sẽ được bổ sung sau"
-            >
-              <PencilSquareIcon class="h-5 w-5" />
-              Chỉnh sửa
-            </button>
+            <div class="flex max-w-full flex-col items-stretch sm:items-end">
+              <button
+                type="button"
+                class="inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium shadow-sm transition"
+                :class="
+                  pdfExportDisabled
+                    ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
+                    : 'border-teal-200 bg-white text-teal-800 hover:bg-teal-50'
+                "
+                :disabled="pdfBusy || pdfExportDisabled"
+                :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
+                @click="downloadRequestPdf"
+              >
+                <span
+                  v-if="pdfBusy"
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-600"
+                />
+                {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
+              </button>
+              <p v-if="pdfExportDisabled" class="mt-1 max-w-[min(100%,18rem)] text-xs leading-snug text-slate-500">
+                {{ t('request_detail.pdf_locked_tooltip') }}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -76,7 +73,7 @@
         <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">Tiến trình yêu cầu</h2>
           <div class="mt-6 overflow-x-auto pb-2">
-            <div class="flex min-w-[1080px] items-start">
+            <div class="flex items-start" :class="stepperTrackMinClass">
               <template v-for="(step, idx) in stepperSteps" :key="step.key">
                 <div class="flex min-w-0 flex-1 flex-col items-center text-center">
                   <div
@@ -119,7 +116,7 @@
                     <span v-else class="text-slate-300">·</span>
                   </div>
                   <p class="mt-2 text-xs font-semibold text-slate-800">{{ step.label }}</p>
-                  <p v-if="step.sub" class="mt-0.5 text-[11px] text-slate-500">{{ step.sub }}</p>
+                  <p v-if="step.sub" class="mt-0.5 hidden text-[11px] text-slate-500 sm:block">{{ step.sub }}</p>
                   <p
                     v-if="step.key === 'pending' && step.state === 'current' && req.status === 'pending'"
                     class="mt-0.5 text-[11px] font-medium text-teal-600"
@@ -167,27 +164,51 @@
           v-if="showResetCloneBtn || showPassengerAdjustSection"
           class="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm"
         >
-          <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.follow_up_title') }}</h2>
-          <div v-if="showResetCloneBtn" class="mt-3">
-            <button
-              type="button"
-              class="inline-flex h-10 items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 text-sm font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="resetCloneBusy"
-              @click="onResetCloneRequest"
-            >
-              <span
-                v-if="resetCloneBusy"
-                class="h-4 w-4 animate-spin rounded-full border-2 border-teal-600/30 border-t-teal-700"
-              />
-              {{
-                resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone')
-              }}
-            </button>
+          <div v-if="showResetCloneBtn">
+            <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.reset_clone_section_title') }}</h2>
+            <div class="mt-3">
+              <button
+                type="button"
+                class="inline-flex h-10 items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 text-sm font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="resetCloneBusy"
+                @click="onResetCloneRequest"
+              >
+                <span
+                  v-if="resetCloneBusy"
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-teal-600/30 border-t-teal-700"
+                />
+                {{
+                  resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone')
+                }}
+              </button>
+            </div>
           </div>
-          <div v-if="showPassengerAdjustSection" class="mt-5 border-t border-slate-100 pt-5">
-            <h3 class="text-sm font-semibold text-slate-900">{{ t('request_detail.passenger_section_title') }}</h3>
+          <div
+            v-if="showPassengerAdjustSection"
+            :class="showResetCloneBtn ? 'mt-5 border-t border-slate-100 pt-5' : ''"
+          >
+            <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.passenger_follow_section_title') }}</h2>
             <p class="mt-1 text-xs text-slate-600">{{ t('request_detail.passenger_section_lead') }}</p>
-            <div class="mt-3 flex max-w-md flex-wrap items-end gap-2">
+            <div
+              v-if="passengerDepartLocked"
+              class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950"
+            >
+              <div class="flex gap-2">
+                <LockClosedIcon class="h-5 w-5 shrink-0 text-amber-800" aria-hidden="true" />
+                <div class="min-w-0">
+                  <p class="font-semibold">{{ t('request_detail.passenger_locked_banner_title') }}</p>
+                  <p v-if="req.depart_at" class="mt-1 text-xs leading-snug">
+                    {{ t('request_detail.passenger_locked_banner_depart', { dt: fmtStepDetail(req.depart_at) }) }}
+                  </p>
+                  <p class="mt-1 text-xs leading-snug">{{ t('request_detail.passenger_locked') }}</p>
+                  <p class="mt-2 text-xs font-medium text-slate-800">
+                    {{ t('request_detail.passenger_count_label') }}:
+                    <span class="tabular-nums">{{ passengerDraft }}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div v-else class="mt-3 flex max-w-md flex-wrap items-end gap-2">
               <label class="block text-xs font-medium text-slate-700">
                 {{ t('request_detail.passenger_count_label') }}
                 <input
@@ -196,21 +217,18 @@
                   min="1"
                   max="999"
                   class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                  :disabled="passengerDepartLocked || passengerSaving"
+                  :disabled="passengerSaving"
                 />
               </label>
               <button
                 type="button"
                 class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="passengerDepartLocked || passengerSaving"
+                :disabled="passengerSaving"
                 @click="savePassengerDraft"
               >
                 {{ passengerSaving ? t('request_detail.passenger_save_busy') : t('request_detail.passenger_save') }}
               </button>
             </div>
-            <p v-if="passengerDepartLocked" class="mt-2 text-xs font-medium text-amber-800">
-              {{ t('request_detail.passenger_locked') }}
-            </p>
             <p v-if="passengerPatchErr" class="mt-2 text-xs font-medium text-rose-600">{{ passengerPatchErr }}</p>
           </div>
         </section>
@@ -235,18 +253,20 @@
                   :href="referencePricingUrl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 underline decoration-teal-500/30 underline-offset-2 hover:text-teal-900"
+                  class="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 underline decoration-teal-500/30 underline-offset-2 hover:text-teal-900"
                 >
                   {{ t('request_detail.reference_pricing_link') }}
+                  <ArrowTopRightOnSquareIcon class="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
                 </a>
               </div>
               <form class="mt-4 grid gap-3 sm:max-w-md" @submit.prevent="submitFillPrice">
                 <Input
-                  v-model="fillPriceForm.service_price"
+                  :model-value="fillPriceForm.service_price"
                   type="text"
                   inputmode="decimal"
                   :label="t('request_detail.service_price_label')"
                   :placeholder="t('request_detail.service_price_placeholder')"
+                  @update:model-value="onFillPriceServicePriceInput"
                 />
                 <div class="flex flex-wrap items-center gap-2">
                   <Button type="submit" class="!bg-sky-600 hover:!bg-sky-700" :loading="fillPriceActing">
@@ -277,22 +297,7 @@
                 {{ t('request_detail.service_price_label') }}:
                 {{ formatVndCurrency(req.service_price) }}
               </p>
-              <div v-if="deptRejectOpen" class="mt-4 grid gap-2 sm:max-w-lg">
-                <Input
-                  v-model="deptRejectReason"
-                  :label="t('request_detail.dept_reject_reason_label')"
-                  :placeholder="t('request_detail.dept_reject_reason_placeholder')"
-                />
-                <div class="flex flex-wrap gap-2">
-                  <Button variant="danger" :loading="deptActing" @click="submitDeptReject">
-                    {{ t('request_detail.dept_confirm_reject') }}
-                  </Button>
-                  <Button variant="secondary" type="button" :disabled="deptActing" @click="closeDeptReject">
-                    {{ t('request_detail.dept_cancel_reject') }}
-                  </Button>
-                </div>
-              </div>
-              <div v-else class="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+              <div class="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                 <Button
                   class="min-h-[2.75rem] w-full justify-center !bg-violet-600 hover:!bg-violet-700"
                   :loading="deptActing"
@@ -309,7 +314,7 @@
                   {{ t('request_detail.dept_reject') }}
                 </Button>
               </div>
-              <p v-if="deptMsg" class="mt-3 text-sm text-slate-700">{{ deptMsg }}</p>
+              <p v-if="deptMsg && !deptRejectOpen" class="mt-3 text-sm text-slate-700">{{ deptMsg }}</p>
             </div>
           </div>
         </section>
@@ -789,6 +794,42 @@
         </div>
       </div>
     </template>
+
+    <Teleport to="body">
+      <div
+        v-if="deptRejectOpen && req"
+        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        role="dialog"
+        aria-modal="true"
+        @click.self="closeDeptReject"
+      >
+        <div
+          class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-2xl"
+          @click.stop
+        >
+          <div class="border-b border-violet-100 bg-violet-50/80 px-4 py-3">
+            <h3 class="text-base font-semibold text-violet-950">{{ t('request_detail.dept_reject_modal_title') }}</h3>
+            <p class="mt-0.5 text-xs text-violet-900/80">{{ t('request_detail.dept_reject_modal_lead') }}</p>
+          </div>
+          <div class="space-y-4 p-4">
+            <Input
+              v-model="deptRejectReason"
+              :label="t('request_detail.dept_reject_reason_label')"
+              :placeholder="t('request_detail.dept_reject_reason_placeholder')"
+            />
+            <p v-if="deptMsg" class="text-sm text-rose-700">{{ deptMsg }}</p>
+            <div class="flex flex-wrap gap-2">
+              <Button variant="danger" class="min-h-[2.75rem]" :loading="deptActing" @click="submitDeptReject">
+                {{ t('request_detail.dept_confirm_reject') }}
+              </Button>
+              <Button variant="secondary" type="button" class="min-h-[2.75rem]" :disabled="deptActing" @click="closeDeptReject">
+                {{ t('request_detail.dept_cancel_reject') }}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -798,6 +839,8 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
   BuildingOffice2Icon,
   CalculatorIcon,
   CalendarDaysIcon,
@@ -811,8 +854,8 @@ import {
   FlagIcon,
   HandThumbUpIcon,
   InformationCircleIcon,
+  LockClosedIcon,
   PaperClipIcon,
-  PencilSquareIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
 import { CheckIcon } from '@heroicons/vue/24/solid'
@@ -838,7 +881,7 @@ import { newIdempotencyKey } from '../../util/idempotency'
 import { labelRequestStatus, labelTripType } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
 import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
-import { parseMoneyVnd } from '../../util/money'
+import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../../util/datetime'
 import { useAuthStore } from '../../store'
@@ -927,6 +970,11 @@ const canDeleteAttachment = computed(() => auth.hasPermission('attachment.upload
 const canManagePaper = computed(() => auth.hasPermission('request.paper.manage'))
 
 const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
+
+const stepperTrackMinClass = computed(() => {
+  if (!req.value) return 'min-w-[700px]'
+  return req.value.trip_type === 'door_to_door' ? 'min-w-[700px]' : 'min-w-[860px]'
+})
 
 const referencePricingUrl = computed(() => {
   const u = formSettings.value?.reference_pricing_url
@@ -1381,7 +1429,9 @@ async function load() {
     req.value = dr
     formSettings.value = fs
     fillPriceForm.value.service_price =
-      dr?.service_price != null && dr.service_price !== '' ? String(dr.service_price) : ''
+      dr?.service_price != null && dr.service_price !== ''
+        ? formatVndWhileTyping(String(dr.service_price))
+        : ''
     paperForm.value.paper_reference = req.value?.paper_reference ?? ''
     paperForm.value.paper_received_at = req.value?.paper_received_at
       ? toDatetimeLocalValue(new Date(req.value.paper_received_at))
@@ -1580,6 +1630,10 @@ async function downloadRequestPdf() {
   }
 }
 
+function onFillPriceServicePriceInput(v) {
+  fillPriceForm.value.service_price = formatVndWhileTyping(v)
+}
+
 async function submitFillPrice() {
   fillPriceMsg.value = ''
   const n = parseMoneyVnd(fillPriceForm.value.service_price)
@@ -1608,6 +1662,7 @@ function openDeptReject() {
 function closeDeptReject() {
   deptRejectOpen.value = false
   deptRejectReason.value = ''
+  deptMsg.value = ''
 }
 
 async function submitDeptReject() {

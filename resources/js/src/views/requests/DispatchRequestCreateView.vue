@@ -421,6 +421,23 @@
                 {{ t('dispatch_wizard.create.recurrence_end_label') }}
                 <input v-model="form.recurrence_end_date" type="date" lang="vi" class="dw-input mt-1 max-w-xs" />
               </label>
+              <div
+                v-if="form.recurring_enabled"
+                class="mt-3 rounded-xl border border-sky-200 bg-white/90 px-3 py-2.5 text-xs text-slate-700 shadow-sm"
+              >
+                <p class="font-semibold text-slate-900">{{ t('dispatch_wizard.create.recurring_weekdays_preview_label') }}</p>
+                <p v-if="!recurringSelectedWeekdayLabels.length" class="mt-1 text-slate-600">
+                  {{ t('dispatch_wizard.create.recurring_weekdays_empty') }}
+                </p>
+                <p v-else class="mt-1 font-medium text-slate-800">{{ recurringSelectedWeekdayLabels.join(', ') }}</p>
+                <button
+                  type="button"
+                  class="mt-2 text-left text-sm font-semibold text-teal-700 underline decoration-teal-600/35 underline-offset-2 hover:text-teal-900"
+                  @click="goStep(2)"
+                >
+                  {{ t('dispatch_wizard.create.recurring_go_schedule_step') }}
+                </button>
+              </div>
             </div>
             <label class="block">
               <span class="dw-label-text">{{ t('dispatch_wizard.create.purpose_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
@@ -968,6 +985,7 @@ const {
   step2CoordinatorEmailInvalid,
   requestedDateTime,
   tripTypeOptions,
+  e1WeekdayOptions,
   openDatePickerFromInput,
   onRequesterPhoneInput,
   onCoordinatorPhoneInput,
@@ -1020,6 +1038,10 @@ const urgentExplainTooltip = computed(() =>
   t('dispatch_wizard.create.urgent_explain_tooltip', {
     hours: appliedUrgentThresholdHours.value ?? '—',
   }),
+)
+
+const recurringSelectedWeekdayLabels = computed(() =>
+  e1WeekdayOptions.value.filter((wd) => form.value.e1_weekdays?.[wd.k]).map((wd) => wd.label),
 )
 </script>
 
