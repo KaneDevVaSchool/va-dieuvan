@@ -22,7 +22,6 @@
 
   <AppMessageModal />
   <ConfirmModal />
-  <PwaInstallBanner />
 
   <NotificationCenter />
 </template>
@@ -38,7 +37,6 @@ import AppMessageModal from './components/ui/AppMessageModal.vue'
 import ConfirmModal from './components/ui/ConfirmModal.vue'
 import SplashScreen from './components/SplashScreen.vue'
 import Onboarding from './components/Onboarding.vue'
-import PwaInstallBanner from './components/PwaInstallBanner.vue'
 import NotificationCenter from './components/notifications/NotificationCenter.vue'
 
 const route = useRoute()
