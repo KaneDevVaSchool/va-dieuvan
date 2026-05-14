@@ -16,6 +16,7 @@ class UpdateDispatchSettingRequest extends ApiFormRequest
         return [
             'passenger_urgent_threshold_hours' => ['required', 'integer', 'min:1', 'max:8760'],
             'cargo_urgent_threshold_hours' => ['required', 'integer', 'min:1', 'max:8760'],
+            'reference_pricing_url' => ['nullable', 'string', 'max:2048'],
         ];
     }
 }

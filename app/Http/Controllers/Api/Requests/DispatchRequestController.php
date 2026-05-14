@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\Requests;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
+use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Requests\CloneDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\CreateDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DecideDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\DeptDecideDispatchRequestRequest;
@@ -12,9 +14,9 @@ use App\Http\Requests\Api\Requests\FillPriceDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
+use App\Http\Requests\Api\Requests\UpdateDispatchRequestWizardRequest;
 use App\Http\Requests\Api\Requests\UpdateRecurringDispatchRequestPassengerCountRequest;
 use App\Models\DispatchRequest;
-use App\Models\DispatchSetting;
 use App\Models\Role;
 use App\Models\Trip;
 use App\Models\User;
@@ -34,6 +36,7 @@ class DispatchRequestController extends Controller
 {
     use ApiResponses;
     use AuthorizesRequests;
+    use PresentsDispatchRequest;
 
     public function show(ShowDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
     {
@@ -202,6 +205,10 @@ class DispatchRequestController extends Controller
         }
 
         $this->authorize('view', $dispatchRequest);
+
+        if ($dispatchRequest->status !== 'approved') {
+            abort(403, Messages::REQUEST_PDF_REQUIRES_APPROVAL);
+        }
 
         $data = DispatchRequestPdfPresenter::buildPdfData($dispatchRequest);
 
@@ -477,31 +484,114 @@ class DispatchRequestController extends Controller
         return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function presentDispatchRequest(DispatchRequest $dispatchRequest): array
+    public function patchWizard(UpdateDispatchRequestWizardRequest $request, DispatchRequest $dispatchRequest)
     {
-        $dispatchRequest->loadMissing('dispatchRequestTemplate.dispatchPackage');
-
-        $arr = $dispatchRequest->toArray();
-        $arr['threshold_hours'] = DispatchSetting::urgentThresholdHoursForTripType((string) $dispatchRequest->trip_type);
-        $arr['is_urgent_auto'] = $dispatchRequest->isUrgentAuto();
-
-        if ($dispatchRequest->dispatch_request_template_id !== null) {
-            $pkg = $dispatchRequest->dispatchRequestTemplate?->dispatchPackage;
-            $arr['dispatch_package_sessions'] = null;
-            if ($pkg !== null) {
-                $arr['dispatch_package_sessions'] = [
-                    'dispatch_package_id' => $pkg->id,
-                    'total_sessions' => (int) $pkg->total_sessions,
-                    'sessions_used' => (int) $pkg->sessions_used,
-                    'sessions_remaining' => $pkg->remainingSessions(),
-                    'alert_when_remaining_sessions' => (int) $pkg->alert_when_remaining_sessions,
-                ];
-            }
+        if ($dispatchRequest->trashed()) {
+            abort(404);
         }
 
-        return $arr;
+        $data = $request->validated();
+
+        $departAt = Carbon::parse($data['depart_at']);
+        $clientUrgent = (bool) ($data['is_urgent'] ?? false);
+        [$finalUrgent, $urgentTrigger] = DispatchRequest::resolveUrgentTrigger(
+            $data['trip_type'],
+            $departAt,
+            $clientUrgent,
+        );
+        if (! $finalUrgent && $departAt->lt(now()->addHours(2))) {
+            abort(422, Messages::REQUEST_MUST_BE_2H_AHEAD);
+        }
+
+        $user = $request->user();
+
+        $requesterId = $dispatchRequest->requester_id;
+        if (! empty($data['requester_id']) && ($user->hasRole('dispatcher') || $user->hasRole('admin'))) {
+            $requesterId = (int) $data['requester_id'];
+        }
+
+        $urgentReasonTrim = isset($data['urgent_reason']) ? trim((string) $data['urgent_reason']) : '';
+
+        $before = $dispatchRequest->toArray();
+
+        $dispatchRequest->update([
+            'trip_type' => $data['trip_type'],
+            'origin' => $data['origin'] ?? null,
+            'destination' => $data['destination'] ?? null,
+            'depart_at' => $departAt,
+            'arrive_by' => isset($data['arrive_by']) && $data['arrive_by'] !== null && $data['arrive_by'] !== ''
+                ? Carbon::parse($data['arrive_by'])
+                : null,
+            'passenger_count' => $data['passenger_count'] ?? null,
+            'notes' => $data['notes'] ?? null,
+            'wizard_snapshot' => $data['wizard_snapshot'] ?? null,
+            'source_channel' => $data['source_channel'] ?? ($dispatchRequest->source_channel ?: 'portal'),
+            'is_urgent' => $finalUrgent,
+            'urgent_reason' => $finalUrgent ? ($urgentReasonTrim !== '' ? $urgentReasonTrim : null) : null,
+            'urgent_trigger' => $urgentTrigger,
+            'requester_id' => $requesterId,
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.update_wizard',
+            auditable: $dispatchRequest,
+            before: $before,
+            after: $dispatchRequest->fresh()->toArray(),
+        );
+
+        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
+    }
+
+    public function clone(CloneDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
+    {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $this->authorize('view', $dispatchRequest);
+
+        $user = $request->user();
+
+        $departAt = $dispatchRequest->depart_at instanceof Carbon
+            ? $dispatchRequest->depart_at->copy()
+            : Carbon::parse((string) $dispatchRequest->depart_at);
+
+        $clientUrgent = (bool) $dispatchRequest->is_urgent;
+        [$finalUrgent, $urgentTrigger] = DispatchRequest::resolveUrgentTrigger(
+            (string) $dispatchRequest->trip_type,
+            $departAt,
+            $clientUrgent,
+        );
+
+        $new = $dispatchRequest->replicate();
+
+        $new->dispatch_request_template_id = null;
+        $new->status = 'pending';
+        $new->service_price = null;
+        $new->price_filled_by = null;
+        $new->price_filled_at = null;
+        $new->approved_by = null;
+        $new->rejection_reason = null;
+        $new->paper_status = 'pending';
+        $new->paper_received_at = null;
+        $new->paper_reference = null;
+        $new->is_urgent = $finalUrgent;
+        $new->urgent_trigger = $urgentTrigger;
+        $new->urgent_reason = $finalUrgent ? $dispatchRequest->urgent_reason : null;
+        $new->source_channel = $dispatchRequest->source_channel ?: 'portal';
+
+        $new->save();
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.clone',
+            auditable: $new,
+            before: null,
+            after: $new->fresh()?->toArray(),
+            metadata: ['from_dispatch_request_id' => $dispatchRequest->id],
+        );
+
+        return $this->created($this->presentDispatchRequest($new->fresh()));
     }
 }

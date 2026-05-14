@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\UserSearchForDriverAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/vehicles', [OperationalResourceController::class, 'vehicles']);
+Route::get('/vehicles/{vehicle}', [OperationalResourceController::class, 'showVehicle']);
 Route::get('/vehicles/{vehicle}/conflicts', [OperationalResourceController::class, 'vehicleScheduleConflicts']);
 Route::get('/vehicles/{vehicle}/compliance-documents', [VehicleComplianceDocumentController::class, 'index']);
 Route::get('/vehicles/{vehicle}/compliance-audit', [VehicleComplianceDocumentController::class, 'auditLogs']);

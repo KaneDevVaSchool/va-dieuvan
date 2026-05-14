@@ -125,6 +125,8 @@ export function createInitialForm() {
     coordinator_email: '',
     coordinator_phone: '',
     multi_day: false,
+    recurring_enabled: false,
+    recurrence_end_date: '',
     cargo_extra_notes: '',
     need_porters: false,
     porter_qty: '',

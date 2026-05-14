@@ -9,6 +9,7 @@ class DispatchSetting extends Model
     protected $fillable = [
         'passenger_urgent_threshold_hours',
         'cargo_urgent_threshold_hours',
+        'reference_pricing_url',
     ];
 
     public static function singletonRow(): ?self
@@ -41,5 +42,13 @@ class DispatchSetting extends Model
         return $tripType === 'cargo'
             ? static::cargoUrgentThresholdHours()
             : static::passengerUrgentThresholdHours();
+    }
+
+    public static function referencePricingUrl(): ?string
+    {
+        $row = static::singletonRow();
+        $url = $row?->reference_pricing_url;
+
+        return ($url !== null && trim((string) $url) !== '') ? trim((string) $url) : null;
     }
 }

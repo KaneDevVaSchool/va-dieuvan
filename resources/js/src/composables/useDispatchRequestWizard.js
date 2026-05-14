@@ -9,7 +9,13 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../store'
 import { uploadAttachment } from '../api/attachments'
-import { createDispatchRequest, exportDispatchRequestPdf } from '../api/requests'
+import {
+  createDispatchRequest,
+  createDispatchRequestTemplate,
+  exportDispatchRequestPdf,
+  getDispatchRequest,
+  patchDispatchRequestWizard,
+} from '../api/requests'
 import { getDispatchFormSettings } from '../api/dispatchSettings'
 import { searchUsersForDispatchForm } from '../api/operational'
 import { formatApiError } from '../api/http'
@@ -38,6 +44,7 @@ import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
 export function useDispatchRequestWizard() {
   const router = useRouter()
+  const route = useRoute()
   const auth = useAuthStore()
   const { t, locale } = useI18n()
 
@@ -162,6 +169,8 @@ export function useDispatchRequestWizard() {
   const error = ref('')
 
   const created = ref(null)
+  /** Khi đặt lại từ phiếu đã duyệt: PATCH wizard thay vì POST mới. */
+  const replaceDraftRequestId = ref(null)
   const pdfLoading = ref(false)
   const pdfError = ref('')
   const pdfPreviewUrl = ref(null)
@@ -967,6 +976,47 @@ export function useDispatchRequestWizard() {
     }
   }
 
+  function buildIsoWeekdaysFromE1(e1) {
+    const map = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 }
+    const out = []
+    if (!e1 || typeof e1 !== 'object') return out
+    for (const [k, iso] of Object.entries(map)) {
+      if (e1[k]) out.push(iso)
+    }
+    return out
+  }
+
+  async function hydrateFromPendingReplace(id) {
+    replaceDraftRequestId.value = null
+    loading.value = true
+    error.value = ''
+    try {
+      const dr = await getDispatchRequest(id)
+      if (dr.status !== 'pending') {
+        error.value = t('dispatch_wizard.replace.invalid_status')
+        return
+      }
+      replaceDraftRequestId.value = id
+      const snap = dr.wizard_snapshot
+      if (snap && typeof snap === 'object') {
+        applyDraftPayload({
+          form: { ...createInitialForm(), ...(snap.form || {}) },
+          passengerRows: snap.passengerRows,
+          businessRows: snap.businessRows,
+          cargoRows: snap.cargoRows,
+          step: 0,
+          maxReachedStep: 0,
+        })
+      }
+      form.value.recurring_enabled = false
+      created.value = null
+    } catch (e) {
+      error.value = formatApiError(e, t('dispatch_wizard.replace.load_fail'))
+    } finally {
+      loading.value = false
+    }
+  }
+
   let submitInFlight = false
 
   function primaryAction() {
@@ -1028,6 +1078,18 @@ export function useDispatchRequestWizard() {
       step.value = 2
       return t('dispatch_wizard.confirm.issue_schedule_invalid')
     }
+    const wantsRecurring =
+      form.value.recurring_enabled &&
+      form.value.trip_type === 'point_to_point' &&
+      form.value.point_purpose_kind === 'extracurricular' &&
+      !replaceDraftRequestId.value
+    if (wantsRecurring) {
+      const hasWd = Object.values(form.value.e1_weekdays || {}).some(Boolean)
+      if (!hasWd) {
+        step.value = 2
+        return t('dispatch_wizard.validate.recurring_weekday')
+      }
+    }
     return ''
   }
 
@@ -1040,6 +1102,12 @@ export function useDispatchRequestWizard() {
 
   async function ensurePdfPreview() {
     if (!created.value?.id) return
+    if (created.value.status !== 'approved') {
+      revokePdfPreviewUrl()
+      pdfPreviewForId.value = null
+      pdfError.value = ''
+      return
+    }
     if (pdfPreviewForId.value === created.value.id && pdfPreviewUrl.value) return
     pdfLoading.value = true
     pdfError.value = ''
@@ -1059,6 +1127,7 @@ export function useDispatchRequestWizard() {
   }
 
   async function downloadCreatedPdf() {
+    if (!created.value?.id || created.value.status !== 'approved') return
     await ensurePdfPreview()
     if (!pdfPreviewUrl.value || !created.value?.id) return
     const a = document.createElement('a')
@@ -1078,10 +1147,11 @@ export function useDispatchRequestWizard() {
   watch(
     () => created.value,
     (val) => {
-      if (val?.id) {
+      if (val?.id && val.status === 'approved') {
         ensurePdfPreview()
       } else {
         closePdfPreview()
+        pdfError.value = ''
       }
     },
     { immediate: true },
@@ -1139,7 +1209,41 @@ export function useDispatchRequestWizard() {
         wizard_snapshot,
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
-      created.value = await createDispatchRequest(payload, { idempotencyKey })
+      const wantsRecurring =
+        form.value.recurring_enabled &&
+        form.value.trip_type === 'point_to_point' &&
+        form.value.point_purpose_kind === 'extracurricular' &&
+        !replaceDraftRequestId.value
+
+      let createdResult = null
+      if (wantsRecurring) {
+        const tmplPayload = {
+          ...payload,
+          recurrence_rule: {
+            freq: 'weekly',
+            interval: 1,
+            byweekday: buildIsoWeekdaysFromE1(form.value.e1_weekdays),
+          },
+          recurrence_end_date: form.value.recurrence_end_date?.trim() || undefined,
+        }
+        const pack = await createDispatchRequestTemplate(tmplPayload, { idempotencyKey })
+        createdResult = pack?.dispatch_request ?? null
+      } else if (replaceDraftRequestId.value) {
+        const rid = replaceDraftRequestId.value
+        createdResult = await patchDispatchRequestWizard(rid, payload, { idempotencyKey })
+        replaceDraftRequestId.value = null
+        try {
+          const q = { ...route.query }
+          delete q.replace
+          delete q.clone
+          await router.replace({ path: route.path, query: q })
+        } catch {
+          /* ignore */
+        }
+      } else {
+        createdResult = await createDispatchRequest(payload, { idempotencyKey })
+      }
+      created.value = createdResult
       if (basisFile.value && created.value?.id) {
         try {
           await uploadAttachment({
@@ -1551,7 +1655,15 @@ export function useDispatchRequestWizard() {
       dispatchFormSettingsLoading.value = false
     }
     migrateLegacyDraft()
-    loadDraftFromStorage()
+    const rawReplace = route.query.replace ?? route.query.clone
+    if (rawReplace != null && String(rawReplace).trim() !== '') {
+      const num = Number(rawReplace)
+      if (Number.isFinite(num) && num >= 1) {
+        await hydrateFromPendingReplace(num)
+      }
+    } else {
+      loadDraftFromStorage()
+    }
     if (auth.user) {
       if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
       if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
@@ -1570,6 +1682,16 @@ export function useDispatchRequestWizard() {
       }
     }
   })
+
+  watch(
+    () => route.query.replace ?? route.query.clone,
+    async (raw) => {
+      if (raw == null || String(raw).trim() === '') return
+      const num = Number(raw)
+      if (!Number.isFinite(num) || num < 1) return
+      await hydrateFromPendingReplace(num)
+    },
+  )
 
   watch(
     step,
@@ -1598,6 +1720,7 @@ export function useDispatchRequestWizard() {
     loading,
     error,
     created,
+    replaceDraftRequestId,
     pdfLoading,
     pdfError,
     pdfPreviewUrl,

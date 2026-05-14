@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Operational\ListDriversRequest;
 use App\Http\Requests\Api\Operational\ListTransportProvidersRequest;
 use App\Http\Requests\Api\Operational\ListVehiclesRequest;
 use App\Http\Requests\Api\Operational\ShowDriverRequest;
+use App\Http\Requests\Api\Operational\ShowVehicleRequest;
 use App\Http\Requests\Api\Operational\StoreDriverFromUserRequest;
 use App\Http\Requests\Api\Operational\StoreDriverRequest;
 use App\Http\Requests\Api\Operational\StoreTransportProviderRequest;
@@ -76,6 +77,13 @@ class OperationalResourceController extends Controller
                 'last_page' => $results->lastPage(),
             ],
         ]);
+    }
+
+    public function showVehicle(ShowVehicleRequest $request, Vehicle $vehicle)
+    {
+        $vehicle->load(['defaultDriver.user:id,name,email,phone,employee_code,avatar_url']);
+
+        return $this->ok($this->serializeVehicle($vehicle));
     }
 
     public function vehicleScheduleConflicts(VehicleConflictsRequest $request, Vehicle $vehicle)
@@ -439,7 +447,7 @@ class OperationalResourceController extends Controller
         $vehicle = Vehicle::onlyTrashed()->findOrFail($id);
         $vehicle->forceDelete();
 
-        return $this->ok(['deleted' => true, 'permanent' => true        ]);
+        return $this->ok(['deleted' => true, 'permanent' => true]);
     }
 
     private function serializeVehicle(Vehicle $v): array

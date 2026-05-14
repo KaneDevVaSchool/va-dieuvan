@@ -47,6 +47,10 @@
         "errors": {
             "dispatch_settings_loading": "Không tải được cài đặt ngưỡng gấp; hệ thống dùng mặc định."
         },
+        "replace": {
+            "invalid_status": "Phiếu không ở trạng thái chờ xử lý — không thể mở trong biểu mẫu.",
+            "load_fail": "Không tải được dữ liệu phiếu để chỉnh sửa."
+        },
         "draft": {
             "submitted": "Đã gửi",
             "draft": "Bản nháp",
@@ -71,11 +75,13 @@
             "detail_row": "Thêm ít nhất một dòng chi tiết.",
             "depart_time": "Chọn đầy đủ ngày giờ cần sử dụng xe ở bước «Người đề nghị & thời gian».",
             "attach_fail": "Đã tạo yêu cầu nhưng không tải được file căn cứ. Bạn có thể thử lại từ chi tiết yêu cầu (nếu được phép).",
-            "create_fail": "Tạo yêu cầu thất bại."
+            "create_fail": "Tạo yêu cầu thất bại.",
+            "recurring_weekday": "Chọn ít nhất một thứ trong tuần cho lịch định kỳ (bước Chi tiết)."
         },
         "request_status": {
             "draft": "Nháp",
             "pending": "Chờ xử lý",
+            "price_filled": "Chờ Trưởng đơn vị duyệt",
             "approved": "Đã duyệt",
             "rejected": "Từ chối",
             "cancelled": "Đã hủy"
@@ -103,6 +109,7 @@
             "schedule_empty": "Chưa có dòng lịch trình được điền.",
             "pdf_title": "Biểu mẫu PDF",
             "pdf_hint": "PDF được tạo sau khi gửi thành công; bạn có thể xem trước và tải xuống bên dưới.",
+            "pdf_locked_tooltip": "PDF chỉ mở khóa sau khi Trưởng đơn vị duyệt phiếu.",
             "zoom_out": "Thu nhỏ",
             "zoom_in": "Phóng to",
             "fullscreen": "Toàn màn hình",
@@ -190,6 +197,10 @@
             "purpose_extra": "Hoạt động ngoại khóa",
             "purpose_label": "Mục đích sử dụng",
             "purpose_ph": "Mô tả ngắn gọn mục đích sử dụng xe / chuyến…",
+            "recurring_toggle": "Đề xuất định kỳ",
+            "recurring_hint": "Chọn các thứ trong tuần ở bước «Chi tiết» (lịch). Phiếu đầu tiên dùng ngày giờ khởi hành bạn nhập.",
+            "recurrence_end_label": "Lặp đến hết ngày (tuỳ chọn)",
+            "replace_banner": "Bạn đang chỉnh sửa bản «Đặt lại» đã tạo — gửi sẽ cập nhật phiếu nháp này.",
             "basis_label": "Căn cứ đề xuất — đính kèm",
             "basis_title": "Tải tờ trình, văn bản căn cứ (PDF, ảnh). Tối đa 10MB.",
             "basis_drop": "Kéo thả tệp vào đây hoặc bấm để chọn",

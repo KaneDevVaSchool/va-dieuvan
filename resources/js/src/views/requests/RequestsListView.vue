@@ -236,6 +236,10 @@
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.sla_toggle') }}</span>
               <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
             </li>
+            <li v-if="filters.recurring_only" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.recurring_toggle') }}</span>
+              <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
+            </li>
             <li v-if="filters.per_page !== 10" class="flex justify-between gap-2">
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
               <span class="font-medium">{{ filters.per_page }}</span>
@@ -428,6 +432,22 @@
             />
           </button>
           <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.sla_toggle') }}</span>
+        </label>
+        <label class="inline-flex cursor-pointer items-center gap-2">
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="filters.recurring_only"
+            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600"
+            :class="filters.recurring_only ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
+            @click="toggleRecurringOnly"
+          >
+            <span
+              class="pointer-events-none inline-block h-5 w-5 translate-x-0.5 translate-y-0.5 rounded-full bg-white shadow transition"
+              :class="filters.recurring_only ? 'translate-x-5' : ''"
+            />
+          </button>
+          <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.recurring_toggle') }}</span>
         </label>
         <label class="inline-flex items-center gap-2">
           <span class="text-sm text-slate-600 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
@@ -669,6 +689,12 @@
                   <div
                     class="flex items-center gap-1.5 font-semibold text-slate-900 decoration-teal-600/80 underline-offset-2 group-hover:text-teal-700 group-hover:underline"
                   >
+                    <span
+                      v-if="r.dispatch_request_template_id"
+                      class="inline-flex shrink-0 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
+                    >
+                      {{ t('requests_page.badge_recurring') }}
+                    </span>
                     <ExclamationTriangleIcon
                       v-if="r.is_urgent"
                       class="h-4 w-4 shrink-0 text-amber-600"
@@ -1207,6 +1233,7 @@ const filters = reactive({
   to: '',
   priority: '',
   sla_risk_only: false,
+  recurring_only: false,
   per_page: 10,
   page: 1,
   sort: 'created_desc',
@@ -1224,6 +1251,7 @@ const activeFilterCount = computed(() => {
   if (filters.paper_status) n++
   if (filters.priority === 'urgent') n++
   if (filters.sla_risk_only) n++
+  if (filters.recurring_only) n++
   if (filters.per_page !== 10) n++
   if (filters.sort && filters.sort !== 'created_desc') n++
   return n
@@ -1310,6 +1338,7 @@ function saveFilterPreset() {
       to: filters.to,
       priority: filters.priority,
       sla_risk_only: filters.sla_risk_only,
+      recurring_only: filters.recurring_only,
       per_page: filters.per_page,
       sort: filters.sort,
       q: searchInput.value.trim(),
@@ -1337,6 +1366,7 @@ function loadFilterPreset() {
     if (typeof o.to === 'string') filters.to = o.to
     if (typeof o.priority === 'string') filters.priority = o.priority
     if (typeof o.sla_risk_only === 'boolean') filters.sla_risk_only = o.sla_risk_only
+    if (typeof o.recurring_only === 'boolean') filters.recurring_only = o.recurring_only
     if (typeof o.per_page === 'number' && [10, 20, 50, 100].includes(o.per_page)) filters.per_page = o.per_page
     if (typeof o.sort === 'string' && REQUEST_SORT_VALUES.includes(o.sort)) filters.sort = o.sort
     if ('q' in o) searchInput.value = typeof o.q === 'string' ? o.q : ''
@@ -1624,6 +1654,7 @@ function buildListParams() {
     if (params[k] === '' || params[k] === null || params[k] === undefined) delete params[k]
   })
   if (params.sla_risk_only === false) delete params.sla_risk_only
+  if (params.recurring_only === false) delete params.recurring_only
   if (params.only_trashed === false) delete params.only_trashed
   if (params.sort === 'created_desc') delete params.sort
 
@@ -1769,6 +1800,14 @@ function toggleSla() {
   if (!hadPage) reload()
 }
 
+function toggleRecurringOnly() {
+  filters.recurring_only = !filters.recurring_only
+  filters.page = 1
+  const hadPage = !!route.query.page
+  syncRoutePageAfterReset()
+  if (!hadPage) reload()
+}
+
 function resetFilters() {
   activeTab.value = 'all'
   filters.trip_type = ''
@@ -1778,6 +1817,7 @@ function resetFilters() {
   filters.to = ''
   filters.priority = ''
   filters.sla_risk_only = false
+  filters.recurring_only = false
   filters.per_page = 10
   filters.page = 1
   filters.sort = 'created_desc'

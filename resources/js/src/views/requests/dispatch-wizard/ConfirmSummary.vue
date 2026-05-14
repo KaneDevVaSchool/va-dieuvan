@@ -44,8 +44,14 @@
           </RouterLink>
           <button
             type="button"
-            class="inline-flex items-center justify-center rounded-lg border border-slate-900 bg-black px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-neutral-900 disabled:opacity-50"
-            :disabled="pdfLoading"
+            class="inline-flex items-center justify-center rounded-lg border px-4 py-2 text-xs font-semibold shadow-sm transition hover:bg-neutral-900 disabled:opacity-50"
+            :class="
+              pdfLockedAfterCreate
+                ? 'cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500'
+                : 'border-slate-900 bg-black text-white'
+            "
+            :disabled="pdfLoading || pdfLockedAfterCreate"
+            :title="pdfLockedAfterCreate ? t('dispatch_wizard.confirm.pdf_locked_tooltip') : ''"
             @click="downloadCreatedPdf"
           >
             <span v-if="pdfLoading" class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -63,7 +69,7 @@
         :pdf-error="pdfError"
         :has-created-record="!!created?.id"
         :download-busy="pdfLoading"
-        :download-disabled="pdfLoading || !created?.id"
+        :download-disabled="pdfLoading || !created?.id || pdfLockedAfterCreate"
         :fallback-download-label="t('dispatch_wizard.confirm.pdf_download_fallback')"
         :loading-label="t('dispatch_wizard.create.exporting_pdf')"
         :zoom-in-label="t('dispatch_wizard.confirm.zoom_in')"
@@ -313,6 +319,10 @@ const requestStatusLabel = computed(() => {
   const translated = t(key)
   return translated !== key ? translated : s
 })
+
+const pdfLockedAfterCreate = computed(
+  () => !!(created.value?.id && created.value?.status !== 'approved'),
+)
 
 function formatIsoDate(iso) {
   if (!iso) return '—'

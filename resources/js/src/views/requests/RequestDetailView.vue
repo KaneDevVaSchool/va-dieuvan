@@ -24,6 +24,12 @@
                 >
                   {{ labelRequestStatus(req.status) }}
                 </span>
+                <span
+                  v-if="showRecurringBadge"
+                  class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-900 ring-1 ring-indigo-600/15"
+                >
+                  {{ t('request_detail.badge_recurring') }}
+                </span>
               </div>
               <p v-if="req.trip" class="mt-1 text-sm text-teal-700">
                 <RouterLink
@@ -36,6 +42,24 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+            <button
+              type="button"
+              class="inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium shadow-sm transition"
+              :class="
+                pdfExportDisabled
+                  ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
+                  : 'border-teal-200 bg-white text-teal-800 hover:bg-teal-50'
+              "
+              :disabled="pdfBusy || pdfExportDisabled"
+              :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
+              @click="downloadRequestPdf"
+            >
+              <span
+                v-if="pdfBusy"
+                class="h-4 w-4 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-600"
+              />
+              {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
+            </button>
             <button
               type="button"
               class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-400 shadow-sm"
@@ -52,7 +76,7 @@
         <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
           <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">Tiến trình yêu cầu</h2>
           <div class="mt-6 overflow-x-auto pb-2">
-            <div class="flex min-w-[920px] items-start">
+            <div class="flex min-w-[1080px] items-start">
               <template v-for="(step, idx) in stepperSteps" :key="step.key">
                 <div class="flex min-w-0 flex-1 flex-col items-center text-center">
                   <div
@@ -62,6 +86,16 @@
                     <CheckIcon v-if="step.state === 'done'" class="h-5 w-5" />
                     <HandThumbUpIcon
                       v-else-if="step.key === 'approved' && (step.state === 'upcoming' || step.state === 'current')"
+                      class="h-5 w-5"
+                      :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                    />
+                    <CurrencyDollarIcon
+                      v-else-if="step.key === 'price_pending' && step.state !== 'done'"
+                      class="h-5 w-5"
+                      :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                    />
+                    <BuildingOffice2Icon
+                      v-else-if="step.key === 'dept_pending' && step.state !== 'done'"
                       class="h-5 w-5"
                       :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
                     />
@@ -93,7 +127,25 @@
                     Đang xử lý
                   </p>
                   <p
+                    v-if="step.key === 'price_pending' && step.state === 'current' && req.status === 'pending'"
+                    class="mt-0.5 text-[11px] font-medium text-teal-600"
+                  >
+                    {{ t('request_detail.step_price_pending') }}
+                  </p>
+                  <p
+                    v-if="step.key === 'dept_pending' && step.state === 'current' && req.status === 'price_filled'"
+                    class="mt-0.5 text-[11px] font-medium text-teal-600"
+                  >
+                    {{ t('request_detail.step_dept_pending') }}
+                  </p>
+                  <p
                     v-if="step.key === 'pending' && req.status === 'rejected'"
+                    class="mt-0.5 text-[11px] font-medium text-rose-600"
+                  >
+                    Đã từ chối
+                  </p>
+                  <p
+                    v-if="step.key === 'dept_pending' && req.status === 'rejected'"
                     class="mt-0.5 text-[11px] font-medium text-rose-600"
                   >
                     Đã từ chối
@@ -110,9 +162,198 @@
           </div>
         </section>
 
+        <!-- Đặt lại / cập nhật học sinh định kỳ -->
+        <section
+          v-if="showResetCloneBtn || showPassengerAdjustSection"
+          class="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm"
+        >
+          <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.follow_up_title') }}</h2>
+          <div v-if="showResetCloneBtn" class="mt-3">
+            <button
+              type="button"
+              class="inline-flex h-10 items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 text-sm font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="resetCloneBusy"
+              @click="onResetCloneRequest"
+            >
+              <span
+                v-if="resetCloneBusy"
+                class="h-4 w-4 animate-spin rounded-full border-2 border-teal-600/30 border-t-teal-700"
+              />
+              {{
+                resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone')
+              }}
+            </button>
+          </div>
+          <div v-if="showPassengerAdjustSection" class="mt-5 border-t border-slate-100 pt-5">
+            <h3 class="text-sm font-semibold text-slate-900">{{ t('request_detail.passenger_section_title') }}</h3>
+            <p class="mt-1 text-xs text-slate-600">{{ t('request_detail.passenger_section_lead') }}</p>
+            <div class="mt-3 flex max-w-md flex-wrap items-end gap-2">
+              <label class="block text-xs font-medium text-slate-700">
+                {{ t('request_detail.passenger_count_label') }}
+                <input
+                  v-model.number="passengerDraft"
+                  type="number"
+                  min="1"
+                  max="999"
+                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  :disabled="passengerDepartLocked || passengerSaving"
+                />
+              </label>
+              <button
+                type="button"
+                class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
+                :disabled="passengerDepartLocked || passengerSaving"
+                @click="savePassengerDraft"
+              >
+                {{ passengerSaving ? t('request_detail.passenger_save_busy') : t('request_detail.passenger_save') }}
+              </button>
+            </div>
+            <p v-if="passengerDepartLocked" class="mt-2 text-xs font-medium text-amber-800">
+              {{ t('request_detail.passenger_locked') }}
+            </p>
+            <p v-if="passengerPatchErr" class="mt-2 text-xs font-medium text-rose-600">{{ passengerPatchErr }}</p>
+          </div>
+        </section>
+
+        <!-- Fill price (Điều vận) -->
+        <section
+          v-if="showFillPriceSection"
+          class="overflow-hidden rounded-2xl border border-sky-200/90 bg-gradient-to-br from-sky-50/80 via-white to-white p-5 shadow-md ring-1 ring-sky-600/10"
+        >
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow-lg shadow-sky-900/15"
+            >
+              <CurrencyDollarIcon class="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-base font-semibold tracking-tight text-slate-900">{{ t('request_detail.fill_price_title') }}</h2>
+              <p class="mt-1 text-sm leading-snug text-slate-600">{{ t('request_detail.fill_price_lead') }}</p>
+              <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <a
+                  v-if="referencePricingUrl"
+                  :href="referencePricingUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 underline decoration-teal-500/30 underline-offset-2 hover:text-teal-900"
+                >
+                  {{ t('request_detail.reference_pricing_link') }}
+                </a>
+              </div>
+              <form class="mt-4 grid gap-3 sm:max-w-md" @submit.prevent="submitFillPrice">
+                <Input
+                  v-model="fillPriceForm.service_price"
+                  type="text"
+                  inputmode="decimal"
+                  :label="t('request_detail.service_price_label')"
+                  :placeholder="t('request_detail.service_price_placeholder')"
+                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <Button type="submit" class="!bg-sky-600 hover:!bg-sky-700" :loading="fillPriceActing">
+                    {{ t('request_detail.fill_price_submit') }}
+                  </Button>
+                  <span v-if="fillPriceMsg" class="text-xs text-slate-600">{{ fillPriceMsg }}</span>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Trưởng đơn vị -->
+        <section
+          v-if="showDeptDecisionSection"
+          class="overflow-hidden rounded-2xl border border-violet-200/90 bg-gradient-to-br from-violet-50/80 via-white to-white p-5 shadow-md ring-1 ring-violet-600/10"
+        >
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-900/15"
+            >
+              <BuildingOffice2Icon class="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-base font-semibold tracking-tight text-slate-900">{{ t('request_detail.dept_decision_title') }}</h2>
+              <p class="mt-1 text-sm leading-snug text-slate-600">{{ t('request_detail.dept_decision_lead') }}</p>
+              <p v-if="req.service_price != null" class="mt-2 text-sm font-medium text-slate-800">
+                {{ t('request_detail.service_price_label') }}:
+                {{ formatVndCurrency(req.service_price) }}
+              </p>
+              <div v-if="deptRejectOpen" class="mt-4 grid gap-2 sm:max-w-lg">
+                <Input
+                  v-model="deptRejectReason"
+                  :label="t('request_detail.dept_reject_reason_label')"
+                  :placeholder="t('request_detail.dept_reject_reason_placeholder')"
+                />
+                <div class="flex flex-wrap gap-2">
+                  <Button variant="danger" :loading="deptActing" @click="submitDeptReject">
+                    {{ t('request_detail.dept_confirm_reject') }}
+                  </Button>
+                  <Button variant="secondary" type="button" :disabled="deptActing" @click="closeDeptReject">
+                    {{ t('request_detail.dept_cancel_reject') }}
+                  </Button>
+                </div>
+              </div>
+              <div v-else class="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+                <Button
+                  class="min-h-[2.75rem] w-full justify-center !bg-violet-600 hover:!bg-violet-700"
+                  :loading="deptActing"
+                  @click="onDeptApproveClick"
+                >
+                  {{ t('request_detail.dept_approve') }}
+                </Button>
+                <Button
+                  variant="danger"
+                  class="min-h-[2.75rem] w-full justify-center"
+                  :loading="deptActing"
+                  @click="openDeptReject"
+                >
+                  {{ t('request_detail.dept_reject') }}
+                </Button>
+              </div>
+              <p v-if="deptMsg" class="mt-3 text-sm text-slate-700">{{ deptMsg }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Phiếu đã ký (người đề xuất) -->
+        <section
+          v-if="showSignedPaperSection"
+          class="overflow-hidden rounded-2xl border border-emerald-200/90 bg-white p-5 shadow-sm ring-1 ring-emerald-600/10"
+        >
+          <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.signed_upload_title') }}</h2>
+          <p class="mt-1 text-sm text-slate-600">{{ t('request_detail.signed_upload_lead') }}</p>
+          <ul v-if="signedPaperAttachments.length" class="mt-3 space-y-1.5">
+            <li
+              v-for="a in signedPaperAttachments"
+              :key="a.id"
+              class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-2.5 py-2 text-sm"
+            >
+              <span class="min-w-0 truncate font-medium text-slate-800">{{ a.original_name || `File #${a.id}` }}</span>
+              <button
+                type="button"
+                class="shrink-0 text-xs font-semibold text-teal-700 hover:underline"
+                @click="downloadFile(a)"
+              >
+                Tải
+              </button>
+            </li>
+          </ul>
+          <div class="mt-3">
+            <FileUpload
+              :key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
+              label="Thêm file đã ký"
+              hint="PDF, JPG, PNG"
+              drag-drop
+              compact
+              :upload-fn="uploadSignedPaper"
+              @uploaded="onSignedUploaded"
+            />
+          </div>
+          <p v-if="signedUploadErr" class="mt-2 text-xs text-rose-600">{{ signedUploadErr }}</p>
+        </section>
+
         <!-- Pending actions -->
         <section
-          v-if="req.status === 'pending' && canApprove"
+          v-if="req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
           class="overflow-hidden rounded-2xl border border-teal-200/90 bg-gradient-to-br from-teal-50/90 via-white to-white p-5 shadow-md shadow-teal-900/5 ring-1 ring-teal-600/10"
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -557,12 +798,14 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
+  BuildingOffice2Icon,
   CalculatorIcon,
   CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
   ClockIcon,
   Cog6ToothIcon,
   CubeIcon,
+  CurrencyDollarIcon,
   DocumentTextIcon,
   DocumentIcon,
   FlagIcon,
@@ -577,7 +820,20 @@ import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
-import { decideDispatchRequest, getDispatchRequest, markPaperReceived, revertPaperReceived } from '../../api/requests'
+import { getDispatchFormSettings } from '../../api/dispatchSettings'
+import {
+  decideDispatchRequest,
+  deptDecideDispatchRequest,
+  exportDispatchRequestPdf,
+  fillPriceDispatchRequest,
+  getDispatchRequest,
+  markPaperReceived,
+  revertPaperReceived,
+  cloneDispatchRequest,
+  patchPassengerCount,
+} from '../../api/requests'
+import { formatApiError } from '../../api/http'
+import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelRequestStatus, labelTripType } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
@@ -587,7 +843,7 @@ import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachmen
 import { toDatetimeLocalValue } from '../../util/datetime'
 import { useAuthStore } from '../../store'
 import { confirmAction } from '../../composables/useConfirm'
-import { showAppSuccess } from '../../composables/appMessage'
+import { showAppSuccess, showAppError } from '../../composables/appMessage'
 
 const route = useRoute()
 const router = useRouter()
@@ -608,6 +864,26 @@ const ocrErr = ref('')
 
 const attachErr = ref('')
 const deletingId = ref(null)
+
+const formSettings = ref(null)
+const pdfBusy = ref(false)
+const pdfErr = ref('')
+
+const fillPriceForm = ref({ service_price: '' })
+const fillPriceActing = ref(false)
+const fillPriceMsg = ref('')
+
+const deptActing = ref(false)
+const deptMsg = ref('')
+const deptRejectOpen = ref(false)
+const deptRejectReason = ref('')
+
+const signedUploadErr = ref('')
+
+const passengerDraft = ref(1)
+const passengerSaving = ref(false)
+const passengerPatchErr = ref('')
+const resetCloneBusy = ref(false)
 
 const hasUserNotes = computed(() => {
   const n = req.value?.notes?.trim()
@@ -649,6 +925,75 @@ const canApprove = computed(
 const canUploadAttachment = computed(() => auth.hasPermission('attachment.upload'))
 const canDeleteAttachment = computed(() => auth.hasPermission('attachment.upload'))
 const canManagePaper = computed(() => auth.hasPermission('request.paper.manage'))
+
+const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
+
+const referencePricingUrl = computed(() => {
+  const u = formSettings.value?.reference_pricing_url
+  return u && String(u).trim() !== '' ? String(u).trim() : ''
+})
+
+const showFillPriceSection = computed(
+  () =>
+    req.value?.status === 'pending' &&
+    req.value?.trip_type !== 'door_to_door' &&
+    auth.hasPermission('request.fill_price'),
+)
+
+const showDeptDecisionSection = computed(
+  () => req.value?.status === 'price_filled' && auth.hasPermission('request.approve_dept'),
+)
+
+const isCurrentUserRequester = computed(
+  () =>
+    auth.user?.id != null &&
+    req.value?.requester_id != null &&
+    Number(auth.user.id) === Number(req.value.requester_id),
+)
+
+const showSignedPaperSection = computed(
+  () => req.value?.status === 'approved' && isCurrentUserRequester.value,
+)
+
+function hoursUntilDepartIso(iso) {
+  if (!iso) return null
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return null
+    return (d.getTime() - Date.now()) / 3600000
+  } catch {
+    return null
+  }
+}
+
+const passengerDepartLocked = computed(() => {
+  const st = req.value?.status
+  if (!isCurrentUserRequester.value || !req.value?.dispatch_request_template_id) return true
+  if (st !== 'pending' && st !== 'price_filled') return true
+  const h = hoursUntilDepartIso(req.value?.depart_at)
+  return h == null || h < 24
+})
+
+const showPassengerAdjustSection = computed(
+  () =>
+    isCurrentUserRequester.value &&
+    !!req.value?.dispatch_request_template_id &&
+    ['pending', 'price_filled'].includes(String(req.value?.status || '')),
+)
+
+const showResetCloneBtn = computed(
+  () =>
+    isCurrentUserRequester.value &&
+    auth.hasPermission('request.create') &&
+    ['approved', 'rejected'].includes(String(req.value?.status || '')),
+)
+
+const showRecurringBadge = computed(() => !!req.value?.dispatch_request_template_id)
+
+const signedPaperAttachments = computed(() => {
+  const list = req.value?.attachments ?? []
+  return list.filter((a) => a.kind === 'signed_paper')
+})
 
 const paperScans = computed(() => {
   const list = req.value?.attachments ?? []
@@ -796,71 +1141,159 @@ const stepperSteps = computed(() => {
   const runningAt = trip?.started_at
   const completedAt = trip?.completed_at
 
+  const deptFlow = r.trip_type !== 'door_to_door'
+
+  if (!deptFlow) {
+    const steps = [
+      { key: 'created', label: 'Tạo', sub: fmtStepDetail(r.created_at), state: 'upcoming' },
+      { key: 'pending', label: 'CHỜ DUYỆT', sub: '', state: 'upcoming' },
+      { key: 'approved', label: 'Đã Duyệt', sub: '', state: 'upcoming' },
+      { key: 'dispatch', label: 'Điều Phối', sub: '', state: 'upcoming' },
+      { key: 'running', label: 'Đang Chạy', sub: '', state: 'upcoming' },
+      { key: 'done', label: 'Hoàn Tất', sub: '', state: 'upcoming' },
+    ]
+
+    steps[1].sub =
+      st === 'pending' || st === 'rejected'
+        ? fmtStepDetail(r.created_at)
+        : pendingEndAt
+          ? fmtStepDetail(pendingEndAt)
+          : '—'
+
+    steps[2].sub = approvedAt ? fmtStepDetail(approvedAt) : '—'
+
+    steps[3].sub =
+      tripSt === 'approved'
+        ? '—'
+        : dispatchDoneAt
+          ? fmtStepDetail(dispatchDoneAt)
+          : '—'
+
+    steps[4].sub =
+      tripSt === 'in_progress' || tripSt === 'completed'
+        ? fmtStepDetail(runningAt)
+        : ['assigned', 'driver_confirmed'].includes(tripSt)
+          ? fmtStepDetail(trip.updated_at)
+          : '—'
+
+    steps[5].sub = tripSt === 'completed' && completedAt ? fmtStepDetail(completedAt) : '—'
+
+    let active = 1
+    if (st === 'draft') active = 0
+    else if (st === 'pending' || st === 'rejected') active = 1
+    else if (st === 'cancelled') active = 1
+    else if (st === 'approved') {
+      if (!trip) active = 2
+      else if (tripSt === 'approved') active = 3
+      else if (['assigned', 'driver_confirmed'].includes(tripSt)) active = 4
+      else if (tripSt === 'in_progress') active = 4
+      else if (tripSt === 'completed') active = 5
+      else active = 2
+    }
+
+    steps[0].state = st === 'draft' ? 'current' : 'done'
+    for (let i = 1; i < steps.length; i++) {
+      if (i < active) steps[i].state = 'done'
+      else if (i === active) {
+        if (st === 'rejected' && i === 1) steps[i].state = 'rejected'
+        else if (st === 'cancelled' && i === 1) steps[i].state = 'current'
+        else steps[i].state = 'current'
+      } else steps[i].state = 'upcoming'
+    }
+
+    if (st === 'rejected') {
+      for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
+    }
+    if (st === 'draft') {
+      for (let i = 1; i < steps.length; i++) steps[i].state = 'upcoming'
+    }
+    if (st === 'cancelled') {
+      for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
+    }
+
+    return steps
+  }
+
   const steps = [
     { key: 'created', label: 'Tạo', sub: fmtStepDetail(r.created_at), state: 'upcoming' },
-    { key: 'pending', label: 'CHỜ DUYỆT', sub: '', state: 'upcoming' },
+    {
+      key: 'price_pending',
+      label: t('request_detail.step_price_pending'),
+      sub: '',
+      state: 'upcoming',
+    },
+    {
+      key: 'dept_pending',
+      label: t('request_detail.step_dept_pending'),
+      sub: '',
+      state: 'upcoming',
+    },
     { key: 'approved', label: 'Đã Duyệt', sub: '', state: 'upcoming' },
     { key: 'dispatch', label: 'Điều Phối', sub: '', state: 'upcoming' },
     { key: 'running', label: 'Đang Chạy', sub: '', state: 'upcoming' },
     { key: 'done', label: 'Hoàn Tất', sub: '', state: 'upcoming' },
   ]
 
-  steps[1].sub =
-    st === 'pending' || st === 'rejected'
-      ? fmtStepDetail(r.created_at)
-      : pendingEndAt
-        ? fmtStepDetail(pendingEndAt)
+  steps[1].sub = st === 'pending' ? fmtStepDetail(r.created_at) : '—'
+
+  steps[2].sub =
+    r.price_filled_at && (st === 'price_filled' || st === 'approved' || st === 'rejected')
+      ? fmtStepDetail(r.price_filled_at)
+      : st === 'price_filled'
+        ? fmtStepDetail(r.updated_at)
         : '—'
 
-  steps[2].sub = approvedAt ? fmtStepDetail(approvedAt) : '—'
+  steps[3].sub = approvedAt ? fmtStepDetail(approvedAt) : '—'
 
-  steps[3].sub =
+  steps[4].sub =
     tripSt === 'approved'
       ? '—'
       : dispatchDoneAt
         ? fmtStepDetail(dispatchDoneAt)
         : '—'
 
-  steps[4].sub =
+  steps[5].sub =
     tripSt === 'in_progress' || tripSt === 'completed'
       ? fmtStepDetail(runningAt)
       : ['assigned', 'driver_confirmed'].includes(tripSt)
         ? fmtStepDetail(trip.updated_at)
         : '—'
 
-  steps[5].sub = tripSt === 'completed' && completedAt ? fmtStepDetail(completedAt) : '—'
+  steps[6].sub = tripSt === 'completed' && completedAt ? fmtStepDetail(completedAt) : '—'
 
   let active = 1
   if (st === 'draft') active = 0
-  else if (st === 'pending' || st === 'rejected') active = 1
-  else if (st === 'cancelled') active = 1
+  else if (st === 'pending') active = 1
+  else if (st === 'price_filled') active = 2
+  else if (st === 'rejected') active = 2
+  else if (st === 'cancelled') active = 2
   else if (st === 'approved') {
-    if (!trip) active = 2
-    else if (tripSt === 'approved') active = 3
-    else if (['assigned', 'driver_confirmed'].includes(tripSt)) active = 4
-    else if (tripSt === 'in_progress') active = 4
-    else if (tripSt === 'completed') active = 5
-    else active = 2
+    if (!trip) active = 3
+    else if (tripSt === 'approved') active = 4
+    else if (['assigned', 'driver_confirmed'].includes(tripSt)) active = 5
+    else if (tripSt === 'in_progress') active = 5
+    else if (tripSt === 'completed') active = 6
+    else active = 3
   }
 
   steps[0].state = st === 'draft' ? 'current' : 'done'
   for (let i = 1; i < steps.length; i++) {
     if (i < active) steps[i].state = 'done'
     else if (i === active) {
-      if (st === 'rejected' && i === 1) steps[i].state = 'rejected'
-      else if (st === 'cancelled' && i === 1) steps[i].state = 'current'
+      if (st === 'rejected' && i === 2) steps[i].state = 'rejected'
+      else if (st === 'cancelled' && i === 2) steps[i].state = 'current'
       else steps[i].state = 'current'
     } else steps[i].state = 'upcoming'
   }
 
   if (st === 'rejected') {
-    for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
+    for (let i = 3; i < steps.length; i++) steps[i].state = 'upcoming'
   }
   if (st === 'draft') {
     for (let i = 1; i < steps.length; i++) steps[i].state = 'upcoming'
   }
   if (st === 'cancelled') {
-    for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
+    for (let i = 3; i < steps.length; i++) steps[i].state = 'upcoming'
   }
 
   return steps
@@ -876,6 +1309,7 @@ function stepCircleClass(state) {
 function statusBadgeClass(status) {
   if (status === 'approved') return 'bg-teal-50 text-teal-800 ring-1 ring-inset ring-teal-600/15'
   if (status === 'pending') return 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-500/10'
+  if (status === 'price_filled') return 'bg-amber-50 text-amber-900 ring-1 ring-inset ring-amber-600/20'
   if (status === 'rejected') return 'bg-rose-50 text-rose-800 ring-1 ring-inset ring-rose-600/15'
   return 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-500/10'
 }
@@ -908,14 +1342,52 @@ function formatVndCurrency(n) {
   return `${new Intl.NumberFormat('vi-VN').format(Number(n))} VNĐ`
 }
 
+async function onResetCloneRequest() {
+  if (!req.value?.id || resetCloneBusy.value) return
+  resetCloneBusy.value = true
+  try {
+    const dr = await cloneDispatchRequest(req.value.id)
+    await router.push({ name: 'dispatchRequestNew', query: { replace: String(dr.id) } })
+  } catch (e) {
+    showAppError(formatApiError(e, t('request_detail.reset_clone_fail')))
+  } finally {
+    resetCloneBusy.value = false
+  }
+}
+
+async function savePassengerDraft() {
+  if (!req.value?.id || passengerSaving.value || passengerDepartLocked.value) return
+  passengerSaving.value = true
+  passengerPatchErr.value = ''
+  try {
+    const n = Math.round(Number(passengerDraft.value))
+    await patchPassengerCount(req.value.id, n)
+    showAppSuccess(t('request_detail.passenger_saved'))
+    await load()
+  } catch (e) {
+    passengerPatchErr.value = formatApiError(e, t('request_detail.passenger_save_fail'))
+  } finally {
+    passengerSaving.value = false
+  }
+}
+
 async function load() {
   loading.value = true
   try {
-    req.value = await getDispatchRequest(route.params.id)
+    const [dr, fs] = await Promise.all([
+      getDispatchRequest(route.params.id),
+      getDispatchFormSettings().catch(() => null),
+    ])
+    req.value = dr
+    formSettings.value = fs
+    fillPriceForm.value.service_price =
+      dr?.service_price != null && dr.service_price !== '' ? String(dr.service_price) : ''
     paperForm.value.paper_reference = req.value?.paper_reference ?? ''
     paperForm.value.paper_received_at = req.value?.paper_received_at
       ? toDatetimeLocalValue(new Date(req.value.paper_received_at))
       : ''
+    passengerDraft.value = Math.max(1, Math.min(999, Math.round(Number(dr.passenger_count) || 1)))
+    passengerPatchErr.value = ''
   } finally {
     loading.value = false
   }
@@ -1092,6 +1564,118 @@ async function decide(d) {
   } finally {
     acting.value = false
   }
+}
+
+async function downloadRequestPdf() {
+  if (pdfExportDisabled.value || pdfBusy.value) return
+  pdfBusy.value = true
+  try {
+    const blob = await exportDispatchRequestPdf(Number(route.params.id))
+    saveAs(blob, `de-nghi-dieu-van-${route.params.id}.pdf`)
+  } catch (e) {
+    pdfErr.value = e?.response?.data?.message ?? 'Không xuất được PDF.'
+    window.alert(pdfErr.value)
+  } finally {
+    pdfBusy.value = false
+  }
+}
+
+async function submitFillPrice() {
+  fillPriceMsg.value = ''
+  const n = parseMoneyVnd(fillPriceForm.value.service_price)
+  if (!Number.isFinite(n) || n < 0) {
+    fillPriceMsg.value = 'Nhập đơn giá hợp lệ.'
+    return
+  }
+  fillPriceActing.value = true
+  try {
+    await fillPriceDispatchRequest(Number(route.params.id), { service_price: n })
+    showAppSuccess(t('request_detail.fill_price_success'), 'Đã xử lý')
+    await load()
+  } catch (e) {
+    fillPriceMsg.value = e?.response?.data?.message ?? 'Lỗi'
+  } finally {
+    fillPriceActing.value = false
+  }
+}
+
+function openDeptReject() {
+  deptRejectOpen.value = true
+  deptRejectReason.value = ''
+  deptMsg.value = ''
+}
+
+function closeDeptReject() {
+  deptRejectOpen.value = false
+  deptRejectReason.value = ''
+}
+
+async function submitDeptReject() {
+  const reason = deptRejectReason.value.trim()
+  if (!reason) {
+    deptMsg.value = 'Vui lòng nhập lý do từ chối.'
+    return
+  }
+  deptMsg.value = ''
+  deptActing.value = true
+  try {
+    await deptDecideDispatchRequest(Number(route.params.id), {
+      decision: 'reject',
+      rejection_reason: reason,
+    })
+    closeDeptReject()
+    await load()
+    showAppSuccess(t('requests_page.reject_success_body'), t('requests_page.reject_success_title'))
+  } catch (e) {
+    deptMsg.value = e?.response?.data?.message ?? 'Lỗi'
+  } finally {
+    deptActing.value = false
+  }
+}
+
+async function onDeptApproveClick() {
+  const ok = await confirmAction({
+    title: t('request_detail.dept_approve_confirm_title'),
+    message: t('request_detail.dept_approve_confirm_message'),
+    confirmLabel: t('request_detail.dept_approve'),
+  })
+  if (!ok) return
+  deptMsg.value = ''
+  deptActing.value = true
+  try {
+    const res = await deptDecideDispatchRequest(Number(route.params.id), { decision: 'approve' })
+    const code = requestRefCode.value || `REQ-${route.params.id}`
+    const tripId = res?.trip?.id
+    if (tripId) {
+      await router.push(`/trips/${tripId}`)
+      showAppSuccess(t('requests_page.approve_success_body_trip', { code }), t('requests_page.approve_success_title'))
+    } else {
+      showAppSuccess(t('requests_page.approve_success_body', { code }), t('requests_page.approve_success_title'), {
+        navigateTo: '/trips',
+        primaryLabel: t('requests_page.approve_success_go_trips'),
+      })
+    }
+  } catch (e) {
+    deptMsg.value = e?.response?.data?.message ?? 'Lỗi'
+  } finally {
+    deptActing.value = false
+  }
+}
+
+function uploadSignedPaper(file, onProgress) {
+  signedUploadErr.value = ''
+  return uploadAttachment({
+    attachable_type: 'dispatch_request',
+    attachable_id: Number(route.params.id),
+    kind: 'signed_paper',
+    file,
+    onProgress,
+  })
+}
+
+function onSignedUploaded() {
+  signedUploadErr.value = ''
+  load()
 }
 
 onMounted(load)

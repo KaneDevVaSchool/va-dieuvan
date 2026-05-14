@@ -58,6 +58,24 @@
           </label>
         </div>
 
+        <label class="block min-w-0 space-y-2">
+          <span class="block text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {{ t('dispatch_settings.reference_pricing_url') }}
+          </span>
+          <input
+            v-model.trim="referencePricingUrl"
+            type="url"
+            inputmode="url"
+            autocomplete="url"
+            maxlength="2048"
+            class="mt-1 min-h-[2.75rem] w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-900 shadow-sm outline-none ring-va-800/15 transition placeholder:text-slate-400 focus:border-violet-400/80 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-violet-500/50"
+            placeholder="https://..."
+          />
+          <span class="block text-xs leading-snug text-slate-500 dark:text-slate-400">{{
+            t('dispatch_settings.reference_pricing_hint')
+          }}</span>
+        </label>
+
         <div
           class="flex flex-col gap-4 border-t border-slate-100 pt-6 dark:border-slate-700/80 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
         >
@@ -104,8 +122,9 @@ const saveOk = ref(false)
 
 const passengerHours = ref(null)
 const cargoHours = ref(null)
+const referencePricingUrl = ref('')
 
-watch([passengerHours, cargoHours], () => {
+watch([passengerHours, cargoHours, referencePricingUrl], () => {
   saveOk.value = false
 })
 
@@ -115,6 +134,7 @@ onMounted(async () => {
     const s = await getAdminDispatchSettings()
     passengerHours.value = Number(s.passenger_urgent_threshold_hours) || 72
     cargoHours.value = Number(s.cargo_urgent_threshold_hours) || 24
+    referencePricingUrl.value = s.reference_pricing_url != null ? String(s.reference_pricing_url) : ''
   } catch (e) {
     loadErr.value = formatApiError(e, t('dispatch_settings.load_error'))
   }
@@ -128,6 +148,7 @@ async function onSave() {
     await updateDispatchSettings({
       passenger_urgent_threshold_hours: Math.round(passengerHours.value),
       cargo_urgent_threshold_hours: Math.round(cargoHours.value),
+      reference_pricing_url: referencePricingUrl.value.trim() === '' ? null : referencePricingUrl.value.trim(),
     })
     saveOk.value = true
   } catch (e) {

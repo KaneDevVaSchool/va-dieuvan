@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Attachments;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use App\Models\DispatchRequest;
 use App\Models\TripCost;
 use App\Models\User;
 use App\Support\TripVisibility;
@@ -23,6 +24,24 @@ class UploadAttachmentRequest extends ApiFormRequest
 
         if ($user->can('attachment.upload')) {
             return true;
+        }
+
+        // Người đề xuất đính kèm bản scan phiếu đã ký (BM.03) sau khi Trưởng đơn vị duyệt — không yêu cầu attachment.upload.
+        if (
+            $this->input('attachable_type') === 'dispatch_request'
+            && $this->input('kind') === 'signed_paper'
+        ) {
+            $id = (int) $this->input('attachable_id');
+            if ($id < 1) {
+                return false;
+            }
+
+            $dr = DispatchRequest::query()->find($id);
+            if ($dr === null || $dr->status !== 'approved') {
+                return false;
+            }
+
+            return (int) $dr->requester_id === (int) $user->id;
         }
 
         // Tài xế thường có trip.record.create / trip.update_status nhưng có thể chưa được gán attachment.upload trên production.

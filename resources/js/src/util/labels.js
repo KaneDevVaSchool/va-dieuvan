@@ -30,6 +30,7 @@ export function labelRequestStatus(v) {
   const m = {
     draft: 'Nháp',
     pending: 'Chờ duyệt',
+    price_filled: 'Chờ Trưởng đơn vị duyệt',
     approved: 'Đã duyệt',
     rejected: 'Từ chối',
     cancelled: 'Đã huỷ',

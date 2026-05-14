@@ -14,6 +14,8 @@ export function normalizeRequestListParams(params) {
   if (p.is_urgent === false) delete p.is_urgent
   if (p.sla_risk_only === true) p.sla_risk_only = 1
   if (p.sla_risk_only === false) delete p.sla_risk_only
+  if (p.recurring_only === true) p.recurring_only = 1
+  if (p.recurring_only === false) delete p.recurring_only
   return p
 }
 
@@ -64,6 +66,56 @@ export async function createDispatchRequest(payload, opts = {}) {
   return data.data
 }
 
+/**
+ * @param {Record<string, unknown>} payload
+ * @param {{ idempotencyKey?: string }} [opts]
+ */
+export async function createDispatchRequestTemplate(payload, opts = {}) {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
+  const { data } = await http.post('/dispatch-request-templates', payload, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  })
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
+ * @param {{ idempotencyKey?: string }} [opts]
+ */
+export async function cloneDispatchRequest(dispatchRequestId, opts = {}) {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
+  const { data } = await http.post(
+    `/dispatch-requests/${dispatchRequestId}/clone`,
+    {},
+    { headers: { 'Idempotency-Key': idempotencyKey } },
+  )
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
+ * @param {Record<string, unknown>} payload
+ * @param {{ idempotencyKey?: string }} [opts]
+ */
+export async function patchDispatchRequestWizard(dispatchRequestId, payload, opts = {}) {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
+  const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/wizard`, payload, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  })
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
+ * @param {number} passenger_count
+ */
+export async function patchPassengerCount(dispatchRequestId, passenger_count) {
+  const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/passenger-count`, {
+    passenger_count,
+  })
+  return data.data
+}
+
 export async function markPaperReceived(dispatchRequestId, payload) {
   const { data } = await http.post(`/dispatch-requests/${dispatchRequestId}/paper-received`, payload)
   return data.data
@@ -78,6 +130,26 @@ export async function decideDispatchRequest(dispatchRequestId, payload, { idempo
   const headers = {}
   if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
   const { data } = await http.post(`/dispatch-requests/${dispatchRequestId}/decision`, payload, { headers })
+  return data.data
+}
+
+/**
+ * @param {{ service_price: number|string }} payload
+ */
+export async function fillPriceDispatchRequest(dispatchRequestId, payload) {
+  const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/fill-price`, payload)
+  return data.data
+}
+
+/**
+ * @param {{ decision: 'approve'|'reject', rejection_reason?: string|null }} payload
+ * @param {{ idempotencyKey?: string }} [opts]
+ */
+export async function deptDecideDispatchRequest(dispatchRequestId, payload, opts = {}) {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
+  const { data } = await http.post(`/dispatch-requests/${dispatchRequestId}/dept-decision`, payload, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  })
   return data.data
 }
 

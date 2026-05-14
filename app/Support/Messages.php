@@ -39,4 +39,12 @@ final class Messages
     public const REQUEST_NOT_RECURRING_INSTANCE = 'Chỉ áp dụng cho phiếu sinh theo định kỳ (đã liên kết template).';
 
     public const REQUEST_RECURRING_PASSENGER_COUNT_LOCKED = 'Chỉ cập nhật số hành khách trước giờ khởi hành ít nhất 24 giờ.';
+
+    public const REQUEST_RECURRING_TEMPLATE_POINT_TO_POINT_ONLY = 'Đề xuất định kỳ chỉ áp dụng cho chuyến điểm–điểm (P2P).';
+
+    public const REQUEST_RECURRING_TEMPLATE_EXTRACURRICULAR_ONLY = 'Đề xuất định kỳ chỉ áp dụng cho mục đích hoạt động ngoại khóa (CLB).';
+
+    public const REQUEST_CLONE_INVALID_STATUS = 'Chỉ có thể đặt lại phiếu đã duyệt hoặc đã từ chối.';
+
+    public const REQUEST_PDF_REQUIRES_APPROVAL = 'PDF chỉ khả dụng sau khi phiếu đã được duyệt.';
 }

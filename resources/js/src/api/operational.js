@@ -5,6 +5,12 @@ export async function listVehicles(params = {}) {
   return data.data
 }
 
+/** @param {number} vehicleId */
+export async function getVehicle(vehicleId) {
+  const { data } = await http.get(`/vehicles/${vehicleId}`)
+  return data.data
+}
+
 export async function getVehicleScheduleConflicts(vehicleId, params = {}) {
   const { data } = await http.get(`/vehicles/${vehicleId}/conflicts`, { params })
   return data.data

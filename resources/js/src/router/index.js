@@ -176,6 +176,16 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "resources/vehicles/:id",
+        name: "vehicleDetail",
+        component: () => import("../views/resources/VehicleDetailView.vue"),
+        meta: {
+            title: "Chi tiết xe",
+            subtitle: "Hồ sơ & giấy tờ",
+            featureKey: "module.operations",
+        },
+    },
+    {
         path: "reports",
         name: "reports",
         component: () => import("../views/reports/ReportsView.vue"),

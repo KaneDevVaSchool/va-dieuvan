@@ -47,6 +47,10 @@
         "errors": {
             "dispatch_settings_loading": "Could not load urgency threshold settings — defaults are used."
         },
+        "replace": {
+            "invalid_status": "Request is not pending — cannot open in the form.",
+            "load_fail": "Could not load request data for editing."
+        },
         "draft": {
             "submitted": "Submitted",
             "draft": "Draft",
@@ -71,11 +75,13 @@
             "detail_row": "Add at least one detail row.",
             "depart_time": "Choose the full date and time for “Vehicle needed on” in the Requester & schedule step.",
             "attach_fail": "Request created but basis file upload failed. You may retry from the request detail (if allowed).",
-            "create_fail": "Failed to create request."
+            "create_fail": "Failed to create request.",
+            "recurring_weekday": "Select at least one weekday for recurring schedules (Details step)."
         },
         "request_status": {
             "draft": "Draft",
             "pending": "Pending",
+            "price_filled": "Pending department head approval",
             "approved": "Approved",
             "rejected": "Rejected",
             "cancelled": "Cancelled"
@@ -103,6 +109,7 @@
             "schedule_empty": "No filled schedule rows yet.",
             "pdf_title": "PDF form",
             "pdf_hint": "The PDF is generated after a successful submit; preview and download below.",
+            "pdf_locked_tooltip": "PDF unlocks after the department head approves the request.",
             "zoom_out": "Zoom out",
             "zoom_in": "Zoom in",
             "fullscreen": "Full screen",
@@ -190,6 +197,10 @@
             "purpose_extra": "Extracurricular",
             "purpose_label": "Purpose of use",
             "purpose_ph": "Short description of trip purpose…",
+            "recurring_toggle": "Recurring proposal",
+            "recurring_hint": "Uses weekdays selected in the Details step (e.1 schedule). First departure uses the date/time you enter.",
+            "recurrence_end_label": "Repeat until date (optional)",
+            "replace_banner": "Editing a reset draft — submitting updates this pending request.",
             "basis_label": "Supporting documents",
             "basis_title": "Upload memo / basis (PDF, image). Max 10MB.",
             "basis_drop": "Drag files here or click to choose",

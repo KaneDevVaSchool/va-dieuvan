@@ -20,6 +20,7 @@ class DispatchSettingController extends Controller
         return $this->ok([
             'passenger_urgent_threshold_hours' => DispatchSetting::passengerUrgentThresholdHours(),
             'cargo_urgent_threshold_hours' => DispatchSetting::cargoUrgentThresholdHours(),
+            'reference_pricing_url' => DispatchSetting::referencePricingUrl(),
         ]);
     }
 
@@ -47,19 +48,25 @@ class DispatchSettingController extends Controller
         $setting->update([
             'passenger_urgent_threshold_hours' => (int) $validated['passenger_urgent_threshold_hours'],
             'cargo_urgent_threshold_hours' => (int) $validated['cargo_urgent_threshold_hours'],
+            'reference_pricing_url' => isset($validated['reference_pricing_url'])
+                ? ($validated['reference_pricing_url'] !== null && trim((string) $validated['reference_pricing_url']) !== ''
+                    ? trim((string) $validated['reference_pricing_url'])
+                    : null)
+                : $setting->reference_pricing_url,
         ]);
 
         return $this->ok($setting->fresh());
     }
 
     /**
-     * @return array{passenger_urgent_threshold_hours: int, cargo_urgent_threshold_hours: int}
+     * @return array{passenger_urgent_threshold_hours: int, cargo_urgent_threshold_hours: int, reference_pricing_url: null}
      */
     private function defaultSettingShape(): array
     {
         return [
             'passenger_urgent_threshold_hours' => (int) config('dispatch.passenger_urgent_threshold_hours'),
             'cargo_urgent_threshold_hours' => (int) config('dispatch.cargo_urgent_threshold_hours'),
+            'reference_pricing_url' => null,
         ];
     }
 }

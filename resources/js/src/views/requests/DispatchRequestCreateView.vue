@@ -180,6 +180,12 @@
 
         <!-- Step 2 -->
         <div v-show="step === 1" class="space-y-5 sm:space-y-6">
+          <p
+            v-if="replaceDraftRequestId"
+            class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-950"
+          >
+            {{ t('dispatch_wizard.create.replace_banner') }}
+          </p>
           <div>
             <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
             <p class="mt-1 text-sm leading-relaxed text-slate-600">
@@ -398,6 +404,22 @@
                   class="h-4 w-4 border-slate-300 text-va-800 focus:ring-va-800"
                 />
                 <span>{{ t('dispatch_wizard.create.purpose_extra') }}</span>
+              </label>
+            </div>
+            <div
+              v-if="form.trip_type === 'point_to_point' && form.point_purpose_kind === 'extracurricular' && !replaceDraftRequestId"
+              class="mt-4 space-y-3 rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-sm text-slate-800"
+            >
+              <label class="flex cursor-pointer items-start gap-2">
+                <input v-model="form.recurring_enabled" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-va-800" />
+                <span>
+                  <span class="font-semibold">{{ t('dispatch_wizard.create.recurring_toggle') }}</span>
+                  <span class="mt-0.5 block text-xs text-slate-600">{{ t('dispatch_wizard.create.recurring_hint') }}</span>
+                </span>
+              </label>
+              <label v-if="form.recurring_enabled" class="block text-xs font-medium text-slate-700">
+                {{ t('dispatch_wizard.create.recurrence_end_label') }}
+                <input v-model="form.recurrence_end_date" type="date" lang="vi" class="dw-input mt-1 max-w-xs" />
               </label>
             </div>
             <label class="block">
@@ -917,6 +939,7 @@ const {
   loading,
   error,
   created,
+  replaceDraftRequestId,
   hasDraftSnapshot,
   clearDraftModalOpen,
   activeDraftId,
