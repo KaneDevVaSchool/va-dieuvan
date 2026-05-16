@@ -5,7 +5,6 @@ import {
     buildStaffPrefixedPath,
     shouldRewriteLegacyStaffPath,
 } from "../config/dispatchWebBase";
-import { i18n } from "../i18n";
 import { useAuthStore } from "../store";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
 
@@ -299,6 +298,16 @@ const router = createRouter({
             },
         },
         {
+            path: "/portal",
+            name: "portalSubmit",
+            component: () => import("../views/portal/PortalSubmitView.vue"),
+            meta: {
+                title: "Portal — Tạo yêu cầu",
+                subtitle: "Người dùng chưa có vai trò",
+                portal: true,
+            },
+        },
+        {
             path: DISPATCH_WEB_BASE,
             component: () => import("../views/layout/StaffRouteOutlet.vue"),
             children: staffChildRoutes,
@@ -400,18 +409,25 @@ router.beforeEach(async (to) => {
         auth.setToken(null);
         return { name: "login", query: { redirect: to.fullPath } };
     }
-    if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
-        auth.setToken(null);
-        return {
-            name: "login",
-            query: {
-                redirect: to.fullPath,
-                error: i18n.global.t("routes_meta.login.no_dispatch_access"),
-            },
-        };
-    }
+    const portalUser =
+        !auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp();
     const driverOnly =
         !auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp();
+
+    if (portalUser) {
+        if (!to.meta.portal) {
+            return { path: "/portal", replace: true };
+        }
+        return true;
+    }
+
+    if (to.meta.portal) {
+        if (driverOnly) {
+            return { path: "/driver", replace: true };
+        }
+        return { name: "dashboard" };
+    }
+
     if (driverOnly) {
         const p = to.path;
         if (p === "/profile" || p.startsWith("/profile/")) {

@@ -30,4 +30,5 @@ Route::get('/sw.js', function () {
     ]);
 });
 
-Route::view('/{any?}', 'welcome')->where('any', '.*');
+/** Do not match `/build/` or `/storage/` so missing static files 404 instead of returning HTML SPA (avoids MIME type errors on *.js modules). */
+Route::view('/{any?}', 'welcome')->where('any', '^(?!build/|storage/).*');

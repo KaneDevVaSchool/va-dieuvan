@@ -131,18 +131,15 @@ class GoogleAuthController extends Controller
             }
         }
 
-        if (! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
-            Log::notice('google.oauth.login_blocked_no_roles', ['user_id' => $user->getKey()]);
-
-            return $this->loginRedirect([
-                'error' => 'Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher hoặc tài xế (driver).',
-            ]);
-        }
-
         $token = $user->createToken('web')->plainTextToken;
         $next = $this->sanitizePostLoginRedirect(session()->pull('oauth_redirect', '/'));
         if ($next === '' || $next === '/') {
             $next = '/';
+        }
+
+        if (! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
+            Log::notice('google.oauth.login_no_roles_portal', ['user_id' => $user->getKey()]);
+            $next = '/portal';
         }
 
         Log::info('google.oauth.callback_success', ['user_id' => $user->getKey()]);

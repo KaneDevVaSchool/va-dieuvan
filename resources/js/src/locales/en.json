@@ -538,11 +538,51 @@
         "trip_depart": "Trip departure",
         "hint_add_from_trip": "Open a trip → costs section"
     },
+    "portal": {
+        "title": "Create dispatch request",
+        "subtitle": "Submit a transport request — dispatch will handle it shortly.",
+        "logout": "Sign out",
+        "logout_confirm_title": "Sign out?",
+        "logout_confirm_msg": "Your unsaved input will be lost. Continue signing out?",
+        "step_type": "Trip type",
+        "step_info": "Trip details",
+        "step_confirm": "Confirm",
+        "steps_nav": "Request steps",
+        "requester": "Requester",
+        "next": "Continue",
+        "back": "Back",
+        "submit": "Submit request",
+        "origin": "Pickup",
+        "destination": "Drop-off",
+        "depart_at": "Departure time",
+        "arrive_by": "Arrive by",
+        "passenger_count": "Passengers",
+        "notes": "Notes",
+        "urgent": "Urgent",
+        "urgent_reason": "Urgent reason",
+        "success_title": "Request submitted",
+        "success_body": "Dispatch will process it. Request ID: {id}.",
+        "status_pending": "Pending",
+        "success_hint": "Dispatch will reach out when your request is processed.",
+        "copy_id": "Copy ID",
+        "copied": "Copied!",
+        "another": "Submit another",
+        "pick_type": "Choose a trip type to continue.",
+        "pick_type_hint": "Select the type of trip:",
+        "double_tap_hint": "Tap the selected type again to continue quickly.",
+        "confirm_hint": "Review your details before submitting.",
+        "need_datetime": "Pick departure date and time.",
+        "arrive_after_depart": "Arrive-by must be on or after departure."
+    },
     "routes_meta": {
         "login": {
             "title": "Sign in",
             "subtitle": "Google sign-in",
             "no_dispatch_access": "Your account cannot access the app. You need superadmin, admin, dispatcher, or driver role."
+        },
+        "portalSubmit": {
+            "title": "Portal — New request",
+            "subtitle": "Account without role"
         },
         "dashboard": {
             "title": "Dashboard",

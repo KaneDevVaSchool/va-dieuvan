@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\ClientTelemetryController;
+use App\Http\Controllers\Api\Portal\PortalDispatchRequestController;
+use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +21,15 @@ Route::post('/telemetry/frontend', [ClientTelemetryController::class, 'store'])-
 */
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:30,1');
+
+    Route::middleware(['throttle:120,1'])->group(function () {
+        Route::get('/user', [UserProfileController::class, 'show']);
+    });
+
+    Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {
+        Route::post('/portal/dispatch-requests', [PortalDispatchRequestController::class, 'store'])
+            ->middleware('idempotency');
+    });
 
     /*
     | Web SPA: điều vận (admin, dispatcher) hoặc tài xế (driver) — dispatch.web

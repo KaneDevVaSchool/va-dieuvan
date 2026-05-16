@@ -581,11 +581,51 @@
         "trip_depart": "Xuất phát chuyến",
         "hint_add_from_trip": "Ghi thêm: mở một chuyến → mục chi phí (hoặc chọn chuyến bên dưới)"
     },
+    "portal": {
+        "title": "Tạo yêu cầu điều vận",
+        "subtitle": "Gửi yêu cầu điều xe — bộ phận điều vận sẽ xử lý sớm nhất.",
+        "logout": "Đăng xuất",
+        "logout_confirm_title": "Đăng xuất?",
+        "logout_confirm_msg": "Thông tin bạn đang nhập sẽ bị mất. Tiếp tục đăng xuất?",
+        "step_type": "Loại chuyến",
+        "step_info": "Thông tin chuyến",
+        "step_confirm": "Xác nhận",
+        "steps_nav": "Các bước gửi yêu cầu",
+        "requester": "Người đề nghị",
+        "next": "Tiếp tục",
+        "back": "Quay lại",
+        "submit": "Gửi yêu cầu",
+        "origin": "Điểm đi",
+        "destination": "Điểm đến",
+        "depart_at": "Thời gian xuất phát",
+        "arrive_by": "Đến trước",
+        "passenger_count": "Số hành khách",
+        "notes": "Ghi chú",
+        "urgent": "Gấp",
+        "urgent_reason": "Lý do gấp",
+        "success_title": "Đã gửi yêu cầu",
+        "success_body": "Bộ phận điều vận sẽ xử lý. Mã yêu cầu: {id}.",
+        "status_pending": "Chờ xử lý",
+        "success_hint": "Bộ phận điều vận sẽ liên hệ khi xử lý xong.",
+        "copy_id": "Sao chép mã",
+        "copied": "Đã sao chép!",
+        "another": "Gửi yêu cầu khác",
+        "pick_type": "Chọn loại chuyến để tiếp tục.",
+        "pick_type_hint": "Chọn loại chuyến phù hợp:",
+        "double_tap_hint": "Nhấn lại loại đã chọn để tiếp tục nhanh.",
+        "confirm_hint": "Kiểm tra lại thông tin trước khi gửi.",
+        "need_datetime": "Chọn ngày giờ xuất phát.",
+        "arrive_after_depart": "Thời điểm đến phải sau hoặc trùng xuất phát."
+    },
     "routes_meta": {
         "login": {
             "title": "Đăng nhập",
             "subtitle": "Đăng nhập Google",
             "no_dispatch_access": "Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher hoặc tài xế (driver)."
+        },
+        "portalSubmit": {
+            "title": "Portal — Tạo yêu cầu",
+            "subtitle": "Người dùng chưa có vai trò"
         },
         "dashboard": {
             "title": "Tổng quan",

@@ -107,6 +107,13 @@ server {
 
     index index.php;
 
+    # Vite `/public/build/` — luôn trả static hoặc 404; không fallback `index.php` (tránh HTML `text/html` cho `*.js` → lỗi MIME module script).
+    location ^~ /build/ {
+        expires 7d;
+        access_log off;
+        try_files $uri =404;
+    }
+
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
@@ -134,6 +141,8 @@ server {
 ```
 
 **Lưu ý SPA:** route cuối Laravel `Route::view('/{any?}', 'welcome')` phục vụ Vue — `try_files` fallback `index.php` là đủ.
+
+**MIME / Vite (`Failed to load module script … text/html`):** Nếu request tới `/build/assets/*.js` nhưng file không có trên disk (quên `npm run build`), Nginx không được đẩy request đó sang Laravel dưới dạng HTML. Khối `location ^~ /build/` và pattern `\.(js|css|…)` với `try_files $uri =404` là bắt buộc. Trên app, regex catch-all không khớp `build/` / `storage/` (`routes/web.php`) để không trả SPA HTML cho các URL build.
 
 ---
 

@@ -13,11 +13,9 @@ use App\Http\Controllers\Api\Notifications\InboxController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\Trips\TripController;
-use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Lightweight: không LogApiActivity
-Route::get('/user', [UserProfileController::class, 'show']);
 // Chỉ đọc key công khai; nhóm cha đã throttle:120,1 — không throttle:30 riêng (dễ 429 NAT / thử lại push).
 Route::get('/push/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey']);
 Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store'])->middleware('throttle:20,1');

@@ -4,11 +4,11 @@
     :app-ready="splashAppReady"
     @done="showSplash = false"
   />
-  <template v-else>
-    <Onboarding
-      v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated"
-      @done="completeOnboarding"
-    />
+    <template v-else>
+      <Onboarding
+        v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !route.meta?.portal"
+        @done="completeOnboarding"
+      />
     <template v-else>
       <LayoutDriver v-if="isDriverApp">
         <RouterView />
@@ -45,7 +45,7 @@ const route = useRoute()
 const auth = useAuthStore()
 const { hasOnboarded, completeOnboarding } = useOnboarding()
 
-const isLoginLayout = computed(() => route.name === 'login')
+const isLoginLayout = computed(() => route.name === 'login' || !!route.meta?.portal)
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isAuthenticated = computed(() => auth.isAuthenticated)
 

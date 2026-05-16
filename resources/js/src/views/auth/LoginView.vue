@@ -106,13 +106,7 @@ onMounted(async () => {
     auth.setToken(String(q.token))
     await auth.fetchMe()
     if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
-      auth.setToken(null)
-      error.value = t('routes_meta.login.no_dispatch_access')
-      const safe = sanitizeLoginRedirect(q.redirect ?? '/')
-      await router.replace({
-        path: '/login',
-        query: safe !== '/' ? { redirect: safe } : {},
-      })
+      await router.replace('/portal')
       return
     }
     let target = sanitizeLoginRedirect(q.redirect != null && q.redirect !== '' ? q.redirect : '/')

@@ -58,6 +58,18 @@ export async function getDispatchRequest(id) {
  * @param {Record<string, unknown>} payload
  * @param {{ idempotencyKey?: string }} [opts]
  */
+export async function createPortalDispatchRequest(payload, opts = {}) {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
+  const { data } = await http.post('/portal/dispatch-requests', payload, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  })
+  return data.data
+}
+
+/**
+ * @param {Record<string, unknown>} payload
+ * @param {{ idempotencyKey?: string }} [opts]
+ */
 export async function createDispatchRequest(payload, opts = {}) {
   const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
   const { data } = await http.post('/dispatch-requests', payload, {

@@ -118,12 +118,12 @@ export const useAuthStore = defineStore('auth', {
       this.user = data
       return this.user
     },
-    /** Khớp backend User::canAccessDispatchWebApp — superadmin / admin / dispatcher. */
+    /** Khớp backend User::canAccessDispatchWebApp — superadmin / admin / dispatcher / department_head / internal_user. */
     canAccessDispatchWebApp() {
       const u = this.user
       if (!u) return false
       if (u.is_superadmin) return true
-      const allow = new Set(['superadmin', 'admin', 'dispatcher'])
+      const allow = new Set(['superadmin', 'admin', 'dispatcher', 'department_head', 'internal_user'])
       return (u.roles ?? []).some((r) => r && allow.has(r.name))
     },
     /** Khớp backend User::canAccessDriverWebApp — role driver. */
@@ -148,6 +148,12 @@ export const useAuthStore = defineStore('auth', {
       if (this.user.is_superadmin) return true
       const p = this.user.permissions ?? []
       return names.some((n) => p.includes(n))
+    },
+    /** User đăng nhập nhưng chưa có role staff/driver — chỉ dùng /portal. */
+    isPortalUser() {
+      const u = this.user
+      if (!u) return false
+      return !this.canAccessDispatchWebApp() && !this.canAccessDriverWebApp()
     },
     isFeatureEnabled(featureKey) {
       if (!featureKey) return true

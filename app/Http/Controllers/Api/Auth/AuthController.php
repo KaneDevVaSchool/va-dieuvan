@@ -32,10 +32,6 @@ class AuthController extends Controller
             abort(403, 'Tài khoản đã bị khóa.');
         }
 
-        if (! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
-            abort(403, 'Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher hoặc tài xế (driver).');
-        }
-
         $device = $data['device_name'] ?? 'spa';
         $token = $user->createToken($device)->plainTextToken;
 
