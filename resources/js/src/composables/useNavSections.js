@@ -1,14 +1,14 @@
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '../store'
+import { useNotificationStore } from '../store/notificationCenter'
 import { BOTTOM_NAV, NAV_SECTIONS } from '../config/nav'
-import { fetchNavBadges } from '../api/navBadges'
 
 /**
  * Section điều hướng + badge từ API (khi đăng nhập).
  */
 export function useNavSections() {
   const auth = useAuthStore()
-  const badges = ref({})
+  const notifStore = useNotificationStore()
 
   function itemVisible(item) {
     if (!auth.isNavFeatureVisible(item.featureKey)) return false
@@ -82,18 +82,13 @@ export function useNavSections() {
 
   onMounted(async () => {
     if (!auth.isLoggedIn) return
-    try {
-      const b = await fetchNavBadges()
-      badges.value = b && typeof b === 'object' ? b : {}
-    } catch {
-      badges.value = {}
-    }
+    await notifStore.refreshBadges()
   })
 
   function badgeCount(item) {
     const key = item.badgeKey
     if (!key) return 0
-    const v = badges.value[key]
+    const v = notifStore.navBadges[key]
     if (v == null || v === '') return 0
     const n = Number(v)
     return Number.isFinite(n) ? n : 0

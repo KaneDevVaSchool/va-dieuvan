@@ -132,6 +132,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
   const items = ref([])
   const loading = ref(false)
   const lastUnread = ref(0)
+  const navBadges = ref({})
   let badgePrimed = false
   const soundEnabled = ref(true)
   const pushState = ref('unknown')
@@ -217,6 +218,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     }
     try {
       const b = await fetchNavBadges()
+      navBadges.value = b && typeof b === 'object' ? b : {}
       const n = Number(b?.notifications_unread ?? 0)
       if (Number.isFinite(n)) {
         if (badgePrimed && n > lastUnread.value) {
@@ -311,6 +313,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     }
     document.removeEventListener('visibilitychange', _onVisibilityChange)
     lastUnread.value = 0
+    navBadges.value = {}
     badgePrimed = false
     panelOpen.value = false
     toastQueue.value = []
@@ -411,6 +414,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     items,
     loading,
     lastUnread,
+    navBadges,
     soundEnabled,
     pushState,
     pushRegisterLoading,

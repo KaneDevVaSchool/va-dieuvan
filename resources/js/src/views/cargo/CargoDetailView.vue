@@ -706,11 +706,13 @@ import { listVehicles, listDrivers, listTransportProviders, createTransportProvi
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelCargoStatus } from '../../util/labels'
 import { useAuthStore } from '../../store'
+import { useNotificationStore } from '../../store/notificationCenter'
 import { i18n } from '../../i18n'
 
 const route = useRoute()
 const { t, te, locale } = useI18n()
 const auth = useAuthStore()
+const notifStore = useNotificationStore()
 
 const loading = ref(true)
 const loadError = ref('')
@@ -1322,6 +1324,7 @@ async function applyQuickStatus(status, danger) {
         timelineItems.value = d.items ?? []
       })
       .catch(() => {})
+    void notifStore.refreshBadges()
   } catch (e) {
     statusError.value = e?.response?.data?.message || t('cargo_detail.quick_status_error')
   } finally {
