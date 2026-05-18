@@ -8,7 +8,7 @@ class DestroyTripCostByDriverRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
-        return $this->allowAllOf(['trip.record.create']);
+        return $this->allowAnyOf(['trip.record.create', 'trip.cost.reconcile']);
     }
 
     public function rules(): array

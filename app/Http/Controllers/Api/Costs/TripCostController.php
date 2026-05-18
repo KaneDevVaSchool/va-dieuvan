@@ -178,12 +178,19 @@ class TripCostController extends Controller
     public function destroyByDriver(DestroyTripCostByDriverRequest $request, TripCost $tripCost)
     {
         $user = $request->user();
-        abort_unless((int) $tripCost->created_by === (int) $user->id, 403);
-        abort_unless(in_array($tripCost->status, ['draft', 'submitted'], true), 409, Messages::COST_NOT_ACTIONABLE);
+        $isReconciler = $user->hasPermission('trip.cost.reconcile');
+
+        if (! $isReconciler) {
+            abort_unless((int) $tripCost->created_by === (int) $user->id, 403);
+            abort_unless(in_array($tripCost->status, ['draft', 'submitted'], true), 409, Messages::COST_NOT_ACTIONABLE);
+        }
 
         $tripCost->load('trip');
         FinancialDataLock::assertTripNotPaid($tripCost->trip);
-        FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+
+        if (! $isReconciler) {
+            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+        }
 
         $deletedId = $tripCost->id;
         $before = $tripCost->toArray();
@@ -192,7 +199,7 @@ class TripCostController extends Controller
 
         app(AuditLogger::class)->log(
             actorId: $user->id,
-            event: 'cost.driver_delete',
+            event: $isReconciler ? 'cost.manager_delete' : 'cost.driver_delete',
             auditable: $relatedTrip,
             before: $before,
             after: null,

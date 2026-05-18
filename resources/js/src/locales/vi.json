@@ -2744,7 +2744,14 @@
         "err_type_name": "Nhập tên loại chi phí.",
         "err_pick_trip": "Vui lòng chọn chuyến.",
         "err_amount": "Nhập số tiền hợp lệ (lớn hơn 0).",
-        "err_submit": "Không gửi được chi phí."
+        "err_submit": "Không gửi được chi phí.",
+        "action_delete": "Xóa",
+        "delete_modal_title": "Xóa chi phí",
+        "delete_modal_subtitle": "Hành động này không thể hoàn tác. Chi phí sẽ bị xóa vĩnh viễn.",
+        "delete_modal_summary": "Chi phí #{id} · Chuyến #{trip}",
+        "delete_modal_cancel": "Hủy",
+        "delete_modal_submit": "Xóa vĩnh viễn",
+        "delete_err": "Không xóa được chi phí."
     },
     "payments_hub": {
         "tab_periods": "Kỳ đối soát",

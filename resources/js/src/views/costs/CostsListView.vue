@@ -422,25 +422,34 @@
                 <span v-else>—</span>
               </td>
               <td v-if="canReconcileCosts" class="costs-td">
-                <div v-if="isCostPendingDecision(c)" class="flex flex-wrap gap-1">
+                <div class="flex flex-wrap gap-1">
+                  <template v-if="isCostPendingDecision(c)">
+                    <button
+                      type="button"
+                      class="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+                      :disabled="decidingId != null"
+                      @click="quickApproveCost(c)"
+                    >
+                      {{ t('costs_page.action_approve') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-md border border-rose-300 bg-white px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-rose-950/40"
+                      :disabled="decidingId != null"
+                      @click="quickRejectCost(c)"
+                    >
+                      {{ t('costs_page.action_reject') }}
+                    </button>
+                  </template>
                   <button
                     type="button"
-                    class="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
-                    :disabled="decidingId != null"
-                    @click="quickApproveCost(c)"
+                    class="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
+                    :disabled="deletingCostId != null"
+                    @click="openDeleteModal(c)"
                   >
-                    {{ t('costs_page.action_approve') }}
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-md border border-rose-300 bg-white px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-rose-950/40"
-                    :disabled="decidingId != null"
-                    @click="quickRejectCost(c)"
-                  >
-                    {{ t('costs_page.action_reject') }}
+                    {{ t('costs_page.action_delete') }}
                   </button>
                 </div>
-                <span v-else class="text-slate-400">—</span>
               </td>
             </tr>
           </tbody>
@@ -708,6 +717,76 @@
 
     <Teleport to="body">
       <div
+        v-if="deleteModalOpen && deleteTarget"
+        class="fixed inset-0 z-[105] flex items-end justify-center p-3 sm:items-center sm:p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="costs-delete-title"
+      >
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeDeleteModal" />
+        <div
+          class="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
+          @click.stop
+        >
+          <div
+            class="flex items-start gap-3 border-b border-rose-100 bg-gradient-to-r from-rose-50/90 via-white to-white px-5 py-4 dark:border-rose-900/40 dark:from-rose-950/40 dark:via-slate-900 dark:to-slate-900"
+          >
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700 shadow-inner dark:bg-rose-950/60 dark:text-rose-200"
+              aria-hidden="true"
+            >
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+              </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 id="costs-delete-title" class="text-sm font-semibold text-rose-950 dark:text-rose-100">
+                {{ t('costs_page.delete_modal_title') }}
+              </h2>
+              <p class="mt-0.5 text-xs leading-relaxed text-rose-800/80 dark:text-rose-200/80">
+                {{ t('costs_page.delete_modal_subtitle') }}
+              </p>
+              <p
+                class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
+              >
+                {{ t('costs_page.delete_modal_summary', { id: deleteTarget.id, trip: deleteTarget.trip_id ?? '—' }) }}
+                <span v-if="deleteTarget.amount != null" class="mt-1 block tabular-nums text-slate-600 dark:text-slate-300">
+                  {{ formatVnd(deleteTarget.amount) }}
+                </span>
+              </p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-100/80 hover:text-rose-800 dark:hover:bg-rose-950/50 dark:hover:text-rose-200"
+              :aria-label="t('costs_page.modal_close_aria')"
+              @click="closeDeleteModal"
+            >
+              <XMarkIcon class="h-5 w-5" />
+            </button>
+          </div>
+          <div class="flex items-center justify-end gap-2 px-5 py-4">
+            <button type="button" class="costs-btn-ghost" :disabled="deletingCostId != null" @click="closeDeleteModal">
+              {{ t('costs_page.delete_modal_cancel') }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-50 dark:bg-rose-700 dark:hover:bg-rose-600"
+              :disabled="deletingCostId != null"
+              @click="submitDeleteModal"
+            >
+              <span
+                v-if="deletingCostId != null"
+                class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+              />
+              {{ t('costs_page.delete_modal_submit') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
         v-if="quickAddTypeOpen"
         class="fixed inset-0 z-[110] flex items-end justify-center p-4 sm:items-center"
         role="dialog"
@@ -754,7 +833,7 @@ import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import { listTripCosts, submitTripCost, decideTripCost } from '../../api/costs'
+import { listTripCosts, submitTripCost, decideTripCost, deleteTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd, formatVndDigitsInput } from '../../util/labels'
@@ -829,6 +908,11 @@ const rejectModalOpen = ref(false)
 const rejectTarget = ref(null)
 const rejectReasonInput = ref('')
 
+const deleteModalOpen = ref(false)
+/** @type {import('vue').Ref<Record<string, unknown> | null>} */
+const deleteTarget = ref(null)
+const deletingCostId = ref(null)
+
 const filters = reactive({
   status: '',
   type: '',
@@ -900,6 +984,32 @@ async function submitRejectModal() {
 
 function quickRejectCost(c) {
   openRejectModal(c)
+}
+
+function openDeleteModal(c) {
+  if (!c?.id) return
+  deleteTarget.value = c
+  deleteModalOpen.value = true
+}
+
+function closeDeleteModal() {
+  deleteModalOpen.value = false
+  deleteTarget.value = null
+}
+
+async function submitDeleteModal() {
+  const c = deleteTarget.value
+  if (!c?.id || deletingCostId.value != null) return
+  deletingCostId.value = c.id
+  try {
+    await deleteTripCost(c.id)
+    closeDeleteModal()
+    await reload()
+  } catch (e) {
+    showAppErrorFromApi(e, t('costs_page.delete_err'))
+  } finally {
+    deletingCostId.value = null
+  }
 }
 
 const costForm = ref({ trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' })
@@ -1164,9 +1274,9 @@ function closeAddCostModal() {
   costMsgIsError.value = false
 }
 
-watch([addCostModalOpen, rejectModalOpen], () => {
+watch([addCostModalOpen, rejectModalOpen, deleteModalOpen], () => {
   if (typeof document === 'undefined') return
-  document.body.style.overflow = addCostModalOpen.value || rejectModalOpen.value ? 'hidden' : ''
+  document.body.style.overflow = addCostModalOpen.value || rejectModalOpen.value || deleteModalOpen.value ? 'hidden' : ''
 })
 
 let escapeCloseModal = null
@@ -1199,11 +1309,27 @@ watch(rejectModalOpen, (open) => {
   }
 })
 
+let escapeCloseDeleteModal = null
+watch(deleteModalOpen, (open) => {
+  if (typeof window === 'undefined') return
+  if (escapeCloseDeleteModal) {
+    window.removeEventListener('keydown', escapeCloseDeleteModal)
+    escapeCloseDeleteModal = null
+  }
+  if (open) {
+    escapeCloseDeleteModal = (e) => {
+      if (e.key === 'Escape') closeDeleteModal()
+    }
+    window.addEventListener('keydown', escapeCloseDeleteModal)
+  }
+})
+
 onUnmounted(() => {
   if (typeof document !== 'undefined') document.body.style.overflow = ''
   if (typeof window !== 'undefined') {
     if (escapeCloseModal) window.removeEventListener('keydown', escapeCloseModal)
     if (escapeCloseRejectModal) window.removeEventListener('keydown', escapeCloseRejectModal)
+    if (escapeCloseDeleteModal) window.removeEventListener('keydown', escapeCloseDeleteModal)
   }
 })
 
