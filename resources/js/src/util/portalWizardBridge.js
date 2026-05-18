@@ -65,7 +65,8 @@ export function mapWizardFormToPortalState(form, rows) {
     arriveByLocal = normalizeDatetimeLocalValue(String(cr0.delivery_at).trim())
   }
 
-  const notesParts = [form.purpose, form.free_notes].map((x) => String(x ?? '').trim()).filter(Boolean)
+  const purpose = String(form.purpose ?? '').trim()
+  const notesParts = [form.free_notes].map((x) => String(x ?? '').trim()).filter(Boolean)
   const notes = notesParts.join('\n\n')
 
   let passengerCount = null
@@ -80,6 +81,7 @@ export function mapWizardFormToPortalState(form, rows) {
     departAtLocal,
     arriveByLocal,
     passengerCount,
+    purpose,
     notes,
     isUrgent: !!form.is_urgent,
     urgentReason: String(form.urgent_reason ?? '').trim(),

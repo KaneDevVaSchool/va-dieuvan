@@ -15,6 +15,7 @@
             type="text"
             autocomplete="off"
             name="portal_origin"
+            :placeholder="t('portal.origin_ph')"
             class="dw-input"
           />
         </label>
@@ -25,6 +26,7 @@
             type="text"
             autocomplete="off"
             name="portal_destination"
+            :placeholder="t('portal.destination_ph')"
             class="dw-input"
           />
         </label>
@@ -62,23 +64,38 @@
     <section class="dw-fieldset">
       <h3 class="dw-section-title">{{ t('portal.create.section_details') }}</h3>
       <div class="space-y-4">
-        <label v-if="showPassengerCount" class="block max-w-xs min-w-0">
-          <span class="dw-label-text">{{ t('portal.passenger_count') }}</span>
-          <input
-            v-model.number="model.passengerCount"
-            type="number"
-            min="1"
-            max="999"
-            name="portal_passengers"
-            class="dw-input"
-          />
-        </label>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label v-if="showPassengerCount" class="block min-w-0">
+            <span class="dw-label-text">{{ t('portal.passenger_count') }}</span>
+            <input
+              v-model.number="model.passengerCount"
+              type="number"
+              min="1"
+              max="999"
+              name="portal_passengers"
+              :placeholder="t('portal.passenger_count_ph')"
+              class="dw-input"
+            />
+          </label>
+          <label class="block min-w-0" :class="{ 'sm:col-span-2': !showPassengerCount }">
+            <span class="dw-label-text">{{ t('portal.purpose') }}</span>
+            <input
+              v-model="model.purpose"
+              type="text"
+              autocomplete="off"
+              name="portal_purpose"
+              :placeholder="t('portal.purpose_ph')"
+              class="dw-input"
+            />
+          </label>
+        </div>
         <label class="block min-w-0">
           <span class="dw-label-text">{{ t('portal.notes') }}</span>
           <textarea
             v-model="model.notes"
             rows="3"
             name="portal_notes"
+            :placeholder="t('portal.notes_ph')"
             class="dw-input min-h-[5.5rem]"
           />
         </label>
@@ -98,6 +115,7 @@
                 type="text"
                 maxlength="500"
                 name="portal_urgent_reason"
+                :placeholder="t('portal.urgent_reason_ph')"
                 class="dw-input"
               />
             </label>

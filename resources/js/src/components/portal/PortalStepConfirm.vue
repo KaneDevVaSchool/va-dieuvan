@@ -22,6 +22,14 @@
           <dd class="text-right text-sm font-medium text-slate-900">{{ summary.requesterDisplay }}</dd>
         </div>
 
+        <div v-if="summary.purpose" class="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5">
+          <dt class="flex min-w-0 items-center gap-2 text-sm font-medium text-slate-600">
+            <DocumentTextIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+            {{ t('portal.purpose') }}
+          </dt>
+          <dd class="max-w-[58%] text-right text-sm font-medium text-slate-900">{{ summary.purpose }}</dd>
+        </div>
+
         <div class="flex items-start justify-between gap-4 px-4 py-3.5 sm:px-5">
           <dt class="flex min-w-0 items-center gap-2 text-sm font-medium text-slate-600">
             <MapPinIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
@@ -99,6 +107,7 @@ import {
   ChatBubbleBottomCenterTextIcon,
   ClockIcon,
   CubeIcon,
+  DocumentTextIcon,
   ExclamationTriangleIcon,
   FlagIcon,
   HomeIcon,

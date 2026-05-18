@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dispatch-wizard min-h-screen bg-gradient-to-b from-slate-50/80 via-white to-indigo-50/25 pb-[calc(7rem+env(safe-area-inset-bottom))] text-slate-900 md:pb-10"
+    class="dispatch-wizard min-h-screen pb-[calc(7rem+env(safe-area-inset-bottom))] text-slate-900 md:pb-10"
     :aria-busy="submitting ? 'true' : 'false'"
   >
     <div
@@ -251,6 +251,7 @@ const confirmSummary = computed(() => ({
   arrivePreview: arrivePreviewComputed.value,
   showPassengerCount: showPassengerCount.value,
   passengerCount: infoModel.value.passengerCount,
+  purpose: infoModel.value.purpose,
   notes: infoModel.value.notes,
   isUrgent: infoModel.value.isUrgent,
   urgentReason: infoModel.value.urgentReason,
@@ -266,7 +267,7 @@ watch(
     }
     const touched =
       step.value > 0 ||
-      !!(m.origin || m.destination || m.departAtLocal || m.arriveByLocal || m.notes?.trim())
+      !!(m.origin || m.destination || m.departAtLocal || m.arriveByLocal || m.purpose?.trim() || m.notes?.trim())
     if (touched || m.isUrgent || m.passengerCount) {
       sessionStorage.setItem(DIRTY_KEY, '1')
     } else {
@@ -334,6 +335,8 @@ async function submit() {
 
   submitting.value = true
   try {
+    const mergedNotes = [m.purpose, m.notes].map((x) => String(x ?? '').trim()).filter(Boolean).join('\n\n')
+
     const payload = {
       trip_type: tripType.value,
       source_channel: 'portal',
@@ -345,7 +348,7 @@ async function submit() {
         showPassengerCount.value && m.passengerCount != null && m.passengerCount >= 1
           ? Math.round(Number(m.passengerCount))
           : undefined,
-      notes: m.notes.trim() || undefined,
+      notes: mergedNotes || undefined,
       is_urgent: m.isUrgent,
       urgent_reason: m.isUrgent ? m.urgentReason.trim() || undefined : undefined,
     }
