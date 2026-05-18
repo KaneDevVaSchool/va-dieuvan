@@ -621,6 +621,9 @@
         "pick_type_hint": "Chọn loại chuyến phù hợp:",
         "double_tap_hint": "Nhấn lại loại đã chọn để tiếp tục nhanh.",
         "confirm_hint": "Kiểm tra lại thông tin trước khi gửi.",
+        "confirm": {
+            "view_my_requests": "Danh sách yêu cầu của tôi"
+        },
         "confirm_review_title": "Xác nhận trước khi gửi",
         "need_datetime": "Chọn ngày giờ xuất phát.",
         "arrive_after_depart": "Thời điểm đến phải sau hoặc trùng xuất phát.",
@@ -643,7 +646,8 @@
         "card_no_route": "Chưa nhập tuyến",
         "create": {
             "page_title": "Tạo yêu cầu mới",
-            "page_subtitle": "Hoàn thành 3 bước: loại xe, thông tin chuyến, xác nhận và gửi.",
+            "page_subtitle": "Hoàn thành 4 bước: loại xe, thông tin đề nghị, lịch chi tiết, xác nhận và gửi.",
+            "recurring_not_supported": "Cổng người dùng chưa hỗ trợ tạo lịch định kỳ. Tắt tuần học ngoại khóa lặp hoặc đổi sang mục đích \"Điểm đến điểm\".",
             "section_route": "Hành trình",
             "section_time": "Thời gian",
             "section_details": "Chi tiết & ưu tiên"

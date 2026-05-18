@@ -578,6 +578,9 @@
         "pick_type_hint": "Select the type of trip:",
         "double_tap_hint": "Tap the selected type again to continue quickly.",
         "confirm_hint": "Review your details before submitting.",
+        "confirm": {
+            "view_my_requests": "My requests"
+        },
         "confirm_review_title": "Review before submit",
         "need_datetime": "Pick departure date and time.",
         "arrive_after_depart": "Arrive-by must be on or after departure.",
@@ -600,10 +603,11 @@
         "card_no_route": "No route details",
         "create": {
             "page_title": "Create request",
-            "page_subtitle": "Three steps: trip type, details, confirm and submit.",
+            "page_subtitle": "Four steps: trip type, request details, schedules, confirm and submit.",
             "section_route": "Route",
             "section_time": "Schedule",
-            "section_details": "Details & priority"
+            "section_details": "Details & priority",
+            "recurring_not_supported": "The portal cannot create recurring (weekly extracurricular) requests yet. Disable recurring or switch purpose to point-to-point."
         },
         "welcome_banner_title": "Request submitted",
         "welcome_banner_hint": "You can export PDF and upload signed scans after approval.",

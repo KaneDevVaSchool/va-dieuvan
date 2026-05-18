@@ -35,13 +35,21 @@
           </span>
           <p v-if="error" class="text-xs font-medium text-rose-700">{{ error }}</p>
         </div>
-        <div class="mt-4 flex min-w-0 flex-1 flex-col gap-2 sm:mt-0 sm:items-end">
+          <div class="mt-4 flex min-w-0 flex-1 flex-col gap-2 sm:mt-0 sm:items-end">
           <div class="flex shrink-0 flex-wrap gap-2">
             <RouterLink
+              v-if="!isPortal"
               :to="staffPath('/requests')"
               class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
             >
               {{ t('dispatch_wizard.confirm.view_list') }}
+            </RouterLink>
+            <RouterLink
+              v-else
+              :to="{ name: 'portalRequestList' }"
+              class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
+            >
+              {{ t('portal.confirm.view_my_requests') }}
             </RouterLink>
             <button
               type="button"
@@ -263,6 +271,7 @@ const w = inject(DISPATCH_WIZARD_KEY)
 if (!w) throw new Error('ConfirmSummary: missing DISPATCH_WIZARD_KEY')
 
 const {
+  isPortal,
   form,
   tripTypeOptions,
   basisFile,

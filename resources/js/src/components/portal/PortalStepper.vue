@@ -12,7 +12,47 @@
         class="flex min-w-[44%] shrink-0 snap-start flex-col sm:min-w-0 sm:flex-1"
       >
         <div class="flex items-center">
+          <button
+            v-if="interactive"
+            type="button"
+            class="group flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased transition sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
+            :class="
+              i > maxReachedStep
+                ? 'cursor-not-allowed opacity-45'
+                : current === i
+                  ? 'border border-indigo-200/50 bg-indigo-50/70 text-slate-900 shadow-sm'
+                  : current > i
+                    ? 'border border-transparent text-slate-800 hover:bg-emerald-50'
+                    : 'border border-transparent text-slate-500 hover:bg-slate-50'
+            "
+            :disabled="i > maxReachedStep"
+            :aria-current="current === i ? 'step' : undefined"
+            @click="i <= maxReachedStep && $emit('select', i)"
+          >
+            <span
+              class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold shadow-sm sm:h-8 sm:w-8 sm:text-[11px]"
+              :class="
+                current === i
+                  ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
+                  : current > i
+                    ? 'bg-emerald-500 text-white'
+                    : i <= maxReachedStep
+                      ? 'bg-slate-200 text-slate-600 group-hover:bg-slate-300'
+                      : 'bg-slate-200 text-slate-400'
+              "
+            >
+              <CheckIcon v-if="current > i" class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+              <span v-else>{{ i + 1 }}</span>
+            </span>
+            <span
+              class="min-w-0 flex-1 text-[11px] font-semibold leading-snug sm:text-center sm:text-xs sm:leading-snug"
+              :class="current === i ? 'text-slate-900' : current > i ? 'text-slate-800' : 'text-slate-500'"
+            >
+              {{ s.label }}
+            </span>
+          </button>
           <div
+            v-else
             class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
             :class="
               current === i
@@ -62,5 +102,10 @@ defineProps({
   steps: { type: Array, required: true },
   current: { type: Number, default: 0 },
   stepsNavLabel: { type: String, default: '' },
+  /** Khi bật, cho phép nhảy tới các bước đã đi qua (`maxReachedStep`). */
+  interactive: { type: Boolean, default: false },
+  maxReachedStep: { type: Number, default: 0 },
 })
+
+defineEmits(['select'])
 </script>

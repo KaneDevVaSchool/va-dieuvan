@@ -12,7 +12,9 @@ import { uploadAttachment } from '../api/attachments'
 import {
   createDispatchRequest,
   createDispatchRequestTemplate,
+  createPortalDispatchRequest,
   exportDispatchRequestPdf,
+  exportPortalDispatchRequestPdf,
   getDispatchRequest,
   patchDispatchRequestWizard,
 } from '../api/requests'
@@ -42,7 +44,11 @@ import {
 import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
-export function useDispatchRequestWizard() {
+/**
+ * @param {{ isPortal?: boolean }} [options]
+ */
+export function useDispatchRequestWizard(options = {}) {
+  const { isPortal = false } = options
   const router = useRouter()
   const route = useRoute()
   const auth = useAuthStore()
@@ -1078,6 +1084,15 @@ export function useDispatchRequestWizard() {
       step.value = 2
       return t('dispatch_wizard.confirm.issue_schedule_invalid')
     }
+    if (
+      isPortal &&
+      form.value.recurring_enabled &&
+      form.value.trip_type === 'point_to_point' &&
+      form.value.point_purpose_kind === 'extracurricular'
+    ) {
+      step.value = 1
+      return t('portal.create.recurring_not_supported')
+    }
     const wantsRecurring =
       form.value.recurring_enabled &&
       form.value.trip_type === 'point_to_point' &&
@@ -1114,7 +1129,9 @@ export function useDispatchRequestWizard() {
     try {
       revokePdfPreviewUrl()
       pdfPreviewForId.value = null
-      const blob = await exportDispatchRequestPdf(created.value.id)
+      const blob = isPortal
+        ? await exportPortalDispatchRequestPdf(created.value.id)
+        : await exportDispatchRequestPdf(created.value.id)
       pdfPreviewUrl.value = URL.createObjectURL(blob)
       pdfPreviewForId.value = created.value.id
     } catch (e) {
@@ -1193,7 +1210,7 @@ export function useDispatchRequestWizard() {
       }
       const payload = {
         trip_type: form.value.trip_type,
-        source_channel: form.value.source_channel,
+        source_channel: isPortal ? 'portal' : form.value.source_channel,
         origin: origin || undefined,
         destination: destination || undefined,
         depart_at: toIsoMaybe(computedDepartAt.value),
@@ -1210,6 +1227,7 @@ export function useDispatchRequestWizard() {
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
       const wantsRecurring =
+        !isPortal &&
         form.value.recurring_enabled &&
         form.value.trip_type === 'point_to_point' &&
         form.value.point_purpose_kind === 'extracurricular' &&
@@ -1228,7 +1246,7 @@ export function useDispatchRequestWizard() {
         }
         const pack = await createDispatchRequestTemplate(tmplPayload, { idempotencyKey })
         createdResult = pack?.dispatch_request ?? null
-      } else if (replaceDraftRequestId.value) {
+      } else if (replaceDraftRequestId.value && !isPortal) {
         const rid = replaceDraftRequestId.value
         createdResult = await patchDispatchRequestWizard(rid, payload, { idempotencyKey })
         replaceDraftRequestId.value = null
@@ -1241,7 +1259,9 @@ export function useDispatchRequestWizard() {
           /* ignore */
         }
       } else {
-        createdResult = await createDispatchRequest(payload, { idempotencyKey })
+        createdResult = isPortal
+          ? await createPortalDispatchRequest(payload, { idempotencyKey })
+          : await createDispatchRequest(payload, { idempotencyKey })
       }
       created.value = createdResult
       if (basisFile.value && created.value?.id) {
@@ -1536,7 +1556,15 @@ export function useDispatchRequestWizard() {
   function navigateToSubmittedRequestDetail() {
     const id = created.value?.id
     if (!id) return
-    router.push(staffPath(`/requests/${id}`))
+    if (isPortal) {
+      router.push({
+        name: 'portalRequestDetail',
+        params: { id: String(id) },
+        query: { created: '1' },
+      })
+    } else {
+      router.push(staffPath(`/requests/${id}`))
+    }
     closeSubmitResultModal()
   }
 
@@ -1572,6 +1600,9 @@ export function useDispatchRequestWizard() {
     urgentAutoActive.value = false
     urgentManualDesired.value = false
     hydrateRequestedDateTimeFromState()
+    if (isPortal) {
+      form.value.source_channel = 'portal'
+    }
   }
 
   function openClearDraftModal() {
@@ -1625,7 +1656,8 @@ export function useDispatchRequestWizard() {
 
   function onCancel() {
     if (created.value) {
-      router.push(staffPath('/requests'))
+      if (isPortal) router.push({ name: 'portalHome' })
+      else router.push(staffPath('/requests'))
       return
     }
     router.back()
@@ -1656,7 +1688,7 @@ export function useDispatchRequestWizard() {
     }
     migrateLegacyDraft()
     const rawReplace = route.query.replace ?? route.query.clone
-    if (rawReplace != null && String(rawReplace).trim() !== '') {
+    if (!isPortal && rawReplace != null && String(rawReplace).trim() !== '') {
       const num = Number(rawReplace)
       if (Number.isFinite(num) && num >= 1) {
         await hydrateFromPendingReplace(num)
@@ -1672,6 +1704,9 @@ export function useDispatchRequestWizard() {
     if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
     form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
     form.value.coordinator_phone = sanitizeVnPhoneDigits(form.value.coordinator_phone)
+    if (isPortal) {
+      form.value.source_channel = 'portal'
+    }
     if (!hasDraftSnapshot.value && typeof localStorage !== 'undefined') {
       const u = uidOrNull()
       if (u != null) {
@@ -1686,6 +1721,7 @@ export function useDispatchRequestWizard() {
   watch(
     () => route.query.replace ?? route.query.clone,
     async (raw) => {
+      if (isPortal) return
       if (raw == null || String(raw).trim() === '') return
       const num = Number(raw)
       if (!Number.isFinite(num) || num < 1) return
@@ -1714,6 +1750,7 @@ export function useDispatchRequestWizard() {
   )
 
   return {
+    isPortal,
     steps,
     step,
     maxReachedStep,
