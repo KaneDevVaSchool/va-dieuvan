@@ -124,6 +124,41 @@
               </div>
             </div>
             <div class="mx-3 mt-3 border-t border-slate-100" />
+
+            <!-- Preferences: language + theme -->
+            <div class="px-3 py-2.5 space-y-2.5">
+              <!-- Language -->
+              <div>
+                <p class="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                  {{ t('app.lang') }}
+                </p>
+                <div class="flex rounded-md bg-slate-100/90 p-0.5">
+                  <button
+                    type="button"
+                    class="flex-1 rounded px-1.5 py-1 text-center text-[11px] font-semibold transition sm:py-1.5"
+                    :class="locale === 'vi' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                    :aria-pressed="locale === 'vi'"
+                    @click="onLocale('vi')"
+                  >
+                    VI
+                  </button>
+                  <button
+                    type="button"
+                    class="flex-1 rounded px-1.5 py-1 text-center text-[11px] font-semibold transition sm:py-1.5"
+                    :class="locale === 'en' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                    :aria-pressed="locale === 'en'"
+                    @click="onLocale('en')"
+                  >
+                    EN
+                  </button>
+                </div>
+              </div>
+
+              <!-- Theme -->
+              <ThemeSwitcher />
+            </div>
+
+            <div class="mx-3 border-t border-slate-100" />
             <div class="px-2 pt-2">
               <button
                 type="button"
@@ -155,16 +190,22 @@ import {
   HomeIcon as HomeModernIcon,
   PlusCircleIcon,
 } from '@heroicons/vue/24/outline'
+import ThemeSwitcher from '../layout/ThemeSwitcher.vue'
 import { useAuthStore } from '../../store'
 import { fetchPortalNotifications } from '../../api/notifications'
 import { confirmAction } from '../../composables/useConfirm'
+import { setLocale } from '../../i18n'
 
 const logoUrl = '/images/logo/logo-2.png'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+
+function onLocale(lang) {
+  setLocale(lang)
+}
 
 const loggingOut = ref(false)
 const menuOpen = ref(false)
