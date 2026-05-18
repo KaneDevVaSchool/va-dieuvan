@@ -178,6 +178,7 @@
                 </button>
               </div>
             </div>
+            <ThemeSwitcher />
           </div>
         </div>
 
@@ -284,6 +285,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowRightOnRectangleIcon, ChevronDownIcon, UserCircleIcon } from '@heroicons/vue/24/outline'
 import UserAvatar from '../branding/UserAvatar.vue'
+import ThemeSwitcher from './ThemeSwitcher.vue'
 import { useAuthStore } from '../../store'
 import { useUiStore } from '../../store/ui'
 import { profilePathForAuth } from '../../config/dispatchWebBase'

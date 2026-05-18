@@ -8,19 +8,30 @@ const SIDEBAR_AXIS_KEY = 'va-sidebar-axis'
 const SIDEBAR_VERTICAL_MIN_PX = 1024
 
 let viewportListenerBound = false
+let systemThemeMediaQuery = null
+let systemThemeListener = null
+
+function getSystemPrefersDark() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
     formDirtyCount: 0,
     sidebarCollapsed: false,
-    /** Chỉ khi sidebar dọc: thu gọn rail icon */
+    /** `auto` | `light` | `dark` — chế độ giao diện */
     theme: 'light',
     /** `auto` | `vertical` | `horizontal` — tùy biến bố cục */
     sidebarAxisPreference: 'auto',
     viewportWidth: typeof window !== 'undefined' ? window.innerWidth : SIDEBAR_VERTICAL_MIN_PX,
   }),
   getters: {
-    isDark: (s) => s.theme === 'dark',
+    isDark: (s) => {
+      if (s.theme === 'dark') return true
+      if (s.theme === 'auto') return getSystemPrefersDark()
+      return false
+    },
     /** Trục hiển thị thực tế */
     sidebarEffectiveAxis: (s) => {
       if (s.sidebarAxisPreference === 'vertical') return 'vertical'
@@ -43,10 +54,13 @@ export const useUiStore = defineStore('ui', {
         this.sidebarAxisPreference = ax
       }
       const t = localStorage.getItem(THEME_KEY)
-      if (t === 'dark' || t === 'light') {
+      if (t === 'dark' || t === 'light' || t === 'auto') {
         this.theme = t
       }
       this.applyThemeClass()
+      if (this.theme === 'auto') {
+        this._attachSystemThemeListener()
+      }
       if (typeof window !== 'undefined') {
         this.viewportWidth = window.innerWidth
       }
@@ -62,7 +76,22 @@ export const useUiStore = defineStore('ui', {
     },
     applyThemeClass() {
       if (typeof document === 'undefined') return
-      document.documentElement.classList.toggle('dark', this.theme === 'dark')
+      const dark = this.theme === 'dark' || (this.theme === 'auto' && getSystemPrefersDark())
+      document.documentElement.classList.toggle('dark', dark)
+    },
+    _attachSystemThemeListener() {
+      if (typeof window === 'undefined') return
+      this._detachSystemThemeListener()
+      systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      systemThemeListener = () => this.applyThemeClass()
+      systemThemeMediaQuery.addEventListener('change', systemThemeListener)
+    },
+    _detachSystemThemeListener() {
+      if (systemThemeMediaQuery && systemThemeListener) {
+        systemThemeMediaQuery.removeEventListener('change', systemThemeListener)
+        systemThemeMediaQuery = null
+        systemThemeListener = null
+      }
     },
     setSidebarCollapsed(v) {
       this.sidebarCollapsed = !!v
@@ -90,14 +119,21 @@ export const useUiStore = defineStore('ui', {
       this.setSidebarAxisPreference(next)
     },
     setTheme(mode) {
-      this.theme = mode === 'dark' ? 'dark' : 'light'
+      if (mode !== 'auto' && mode !== 'light' && mode !== 'dark') return
+      this.theme = mode
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(THEME_KEY, this.theme)
+      }
+      if (mode === 'auto') {
+        this._attachSystemThemeListener()
+      } else {
+        this._detachSystemThemeListener()
       }
       this.applyThemeClass()
     },
     toggleTheme() {
-      this.setTheme(this.theme === 'dark' ? 'light' : 'dark')
+      const next = this.theme === 'dark' ? 'light' : 'dark'
+      this.setTheme(next)
     },
     setFormDirty(delta) {
       this.formDirtyCount = Math.max(0, this.formDirtyCount + delta)

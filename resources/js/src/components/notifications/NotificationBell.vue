@@ -7,12 +7,19 @@
     @click="onBellClick"
   >
     <BellIcon class="h-5 w-5" aria-hidden="true" />
-    <span
-      v-if="notifStore.lastUnread > 0"
-      class="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white"
-    >
-      {{ notifStore.lastUnread > 99 ? '99+' : notifStore.lastUnread }}
-    </span>
+    <template v-if="notifStore.lastUnread > 0">
+      <!-- Ping ring: only pulses when panel is closed (draws attention without distracting while reading) -->
+      <span
+        v-if="!notifStore.panelOpen"
+        class="absolute -right-0.5 -top-0.5 h-4 w-4 animate-ping rounded-full bg-rose-400 opacity-60"
+        aria-hidden="true"
+      />
+      <span
+        class="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white"
+      >
+        {{ notifStore.lastUnread > 99 ? '99+' : notifStore.lastUnread }}
+      </span>
+    </template>
   </button>
 </template>
 

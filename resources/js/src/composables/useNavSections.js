@@ -90,6 +90,10 @@ export function useNavSections() {
   function badgeCount(item) {
     const key = item.badgeKey
     if (!key) return 0
+    if (key === 'unread_notifications') {
+      const n = Number(notifStore.lastUnread ?? 0)
+      return Number.isFinite(n) ? n : 0
+    }
     const v = notifStore.navBadges[key]
     if (v == null || v === '') return 0
     const n = Number(v)

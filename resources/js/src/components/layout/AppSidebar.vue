@@ -310,6 +310,7 @@
       </nav>
 
       <div class="flex shrink-0 items-center gap-2">
+        <GlobalSearch />
         <NotificationBell tone="light" />
         <SidebarAccountBlock layout="horizontal" />
       </div>
@@ -327,6 +328,7 @@ import SidebarCollapsedNavGroup from '../nav/SidebarCollapsedNavGroup.vue'
 import SidebarNavItem from '../nav/SidebarNavItem.vue'
 import SidebarAccountBlock from './SidebarAccountBlock.vue'
 import NotificationBell from '../notifications/NotificationBell.vue'
+import GlobalSearch from './GlobalSearch.vue'
 import { useNavSections } from '../../composables/useNavSections'
 import { useNavBarLabel } from '../../composables/useNavBarLabel'
 import { useSidebarLayout } from '../../composables/useSidebarLayout'

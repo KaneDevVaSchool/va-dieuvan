@@ -134,7 +134,12 @@ export const BOTTOM_NAV = [
     badgeKey: 'pending_dispatch_requests',
   },
   { to: `${DISPATCH_WEB_BASE}/trips`, labelKey: 'nav.bottom_trips', icon: 'trips' },
-  { to: `${DISPATCH_WEB_BASE}/costs`, labelKey: 'nav.bottom_costs', icon: 'costs' },
+  {
+    to: `${DISPATCH_WEB_BASE}/notifications`,
+    labelKey: 'nav.bottom_notifications',
+    icon: 'notifications',
+    badgeKey: 'unread_notifications',
+  },
 ]
 
 /**

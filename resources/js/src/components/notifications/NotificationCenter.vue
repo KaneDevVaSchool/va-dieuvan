@@ -150,15 +150,24 @@
 
         <div
           v-if="notifStore.loading"
-          class="flex flex-1 flex-col items-center justify-center gap-3 py-12"
+          class="min-h-0 flex-1 overflow-y-auto px-3 py-3"
+          aria-busy="true"
+          :aria-label="t('notify.skeleton_loading')"
         >
-          <span
-            class="h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent dark:border-sky-400"
-            aria-hidden="true"
-          />
-          <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
-            {{ t('notify.loading') }}
-          </p>
+          <div
+            v-for="i in 3"
+            :key="i"
+            class="mb-3 rounded-2xl border border-slate-100 bg-slate-50/90 px-3.5 py-3 dark:border-slate-800 dark:bg-slate-800/40"
+          >
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5 h-8 w-8 shrink-0 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+              <div class="min-w-0 flex-1 space-y-2">
+                <div class="h-2.5 w-16 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+                <div class="h-3.5 w-4/5 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+                <div class="h-3 w-3/5 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+              </div>
+            </div>
+          </div>
         </div>
         <template v-else>
           <div
@@ -173,6 +182,9 @@
             <p class="text-lg font-semibold text-slate-700 dark:text-slate-200">
               {{ t('notify.empty') }}
             </p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              {{ t('notify.empty_hint') }}
+            </p>
           </div>
           <ul
             v-else
@@ -185,56 +197,17 @@
               >
                 {{ section.label }}
               </li>
-              <li
+              <NotificationItem
                 v-for="n in section.items"
                 :key="n.id"
-                class="mb-2 list-none rounded-2xl border px-3.5 py-3 text-sm shadow-sm transition active:scale-[0.99]"
-                :class="n.read
-                  ? 'cursor-pointer border-slate-100 bg-slate-50/90 dark:border-slate-800 dark:bg-slate-800/40'
-                  : 'cursor-pointer border-sky-200/90 bg-gradient-to-br from-sky-50 to-white dark:border-sky-900/60 dark:from-sky-950/30 dark:to-slate-900/80'"
-                role="button"
-                tabindex="0"
-                @click="onOpenNotif(n)"
-                @keydown.enter.prevent="onOpenNotif(n)"
-                @keydown.space.prevent="onOpenNotif(n)"
-              >
-                <p class="text-[11px] font-medium tracking-wide text-slate-500 dark:text-slate-400">
-                  {{ formatRelativeTime(n.created_at) }}
-                </p>
-                <span
-                  v-if="tripTypeLabelFor(n)"
-                  class="mt-2 inline-flex max-w-full rounded-lg bg-sky-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-sky-800 dark:bg-sky-900/50 dark:text-sky-200"
-                >
-                  {{ tripTypeLabelFor(n) }}
-                </span>
-                <p class="mt-1.5 text-[15px] font-semibold leading-snug text-slate-800 dark:text-slate-100">
-                  {{ linesFor(n).primary }}
-                </p>
-                <p
-                  v-if="linesFor(n).sub"
-                  class="mt-1 text-[13px] leading-snug text-slate-600 dark:text-slate-300"
-                >
-                  {{ linesFor(n).sub }}
-                </p>
-                <div class="mt-2.5 flex flex-wrap gap-2">
-                  <button
-                    v-if="resolveNavLink(n)"
-                    type="button"
-                    class="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white active:bg-sky-700 dark:bg-sky-500 dark:active:bg-sky-600"
-                    @click.stop="onOpenNotif(n)"
-                  >
-                    {{ t('notify.open') }}
-                  </button>
-                  <button
-                    v-else
-                    type="button"
-                    class="rounded-lg px-3 py-1.5 text-xs font-bold text-sky-600 active:bg-sky-50 dark:text-sky-400 dark:active:bg-sky-950/40"
-                    @click.stop="onOpenNotif(n)"
-                  >
-                    {{ t('notify.mark_read') }}
-                  </button>
-                </div>
-              </li>
+                :notification="n"
+                :kind="classifyKind(n)"
+                :lines="linesFor(n)"
+                :type-label="tripTypeLabelFor(n)"
+                :relative-time="formatRelativeTime(n.created_at)"
+                :has-nav-link="!!resolveNavLink(n)"
+                @open="onOpenNotif"
+              />
             </template>
           </ul>
         </template>
@@ -269,6 +242,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { BellIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import NotificationItem from './NotificationItem.vue'
 import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { useNotificationStore } from '../../store/notificationCenter'
