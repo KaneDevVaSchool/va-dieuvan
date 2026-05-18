@@ -1,12 +1,18 @@
 <template>
   <nav
-    class="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/80 to-white p-4 shadow-md shadow-slate-900/[0.06] ring-1 ring-slate-900/[0.04] backdrop-blur-sm sm:p-5"
+    class="relative min-w-0 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/80 to-white p-4 shadow-md shadow-slate-900/[0.06] ring-1 ring-slate-900/[0.04] backdrop-blur-sm sm:p-5"
     :aria-label="stepsNavLabel"
   >
-    <ol class="flex items-center gap-0">
-      <li v-for="(s, i) in steps" :key="s.key" class="flex min-w-0 flex-1 items-center">
+    <ol
+      class="-mx-1 flex snap-x snap-mandatory items-center gap-0 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:overflow-x-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden"
+    >
+      <li
+        v-for="(s, i) in steps"
+        :key="s.key"
+        class="flex min-w-0 shrink-0 snap-center items-center px-2 sm:flex-1 sm:px-0 sm:pb-2"
+      >
         <div
-          class="flex min-w-0 flex-1 flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left"
+          class="flex w-max max-w-none min-w-0 shrink-0 flex-col items-center gap-2 text-center sm:w-auto sm:flex-initial sm:flex-row sm:gap-3 sm:text-left"
           :class="current === i ? 'sm:ring-4 sm:rounded-2xl sm:bg-white/90 sm:px-3 sm:py-2 sm:ring-va-800/15 sm:shadow-sm' : ''"
         >
           <span
@@ -23,7 +29,7 @@
             <span v-else>{{ i + 1 }}</span>
           </span>
           <span
-            class="min-w-0 w-full max-w-full break-words whitespace-normal text-center text-xs font-semibold leading-snug sm:flex-1 sm:text-left sm:text-sm"
+            class="text-center text-xs font-semibold leading-snug whitespace-nowrap sm:text-left sm:text-sm"
             :class="current === i ? 'text-slate-900' : current > i ? 'text-emerald-800' : 'text-slate-400'"
           >
             {{ s.label }}
