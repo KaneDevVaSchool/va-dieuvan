@@ -743,12 +743,7 @@
                 <div class="text-xs text-slate-500">{{ labelSourceChannel(r.source_channel) }}</div>
               </td>
               <td v-if="requestColOn('timeline')" class="px-3 py-3 align-top">
-                <span
-                  class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
-                  :class="badgeClass(r.status)"
-                >
-                  {{ labelRequestStatus(r.status) }}
-                </span>
+                <StatusBadge :status="r.status" size="sm" />
                 <div class="mt-1 text-xs text-slate-500">{{ tripTimelineHint(r) }}</div>
               </td>
               <td v-if="requestColOn('sla')" class="px-3 py-3 align-top text-xs">
@@ -869,12 +864,7 @@
                   {{ (r.origin ?? '—') + ' → ' + (r.destination ?? '—') }}
                 </div>
               </div>
-              <span
-                class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium"
-                :class="badgeClass(r.status)"
-              >
-                {{ labelRequestStatus(r.status) }}
-              </span>
+              <StatusBadge class="shrink-0" :status="r.status" size="sm" />
             </RouterLink>
           </li>
         </ul>
@@ -1048,6 +1038,7 @@ import {
   EllipsisVerticalIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
+import StatusBadge from '../../components/ui/StatusBadge.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
@@ -1576,15 +1567,6 @@ function formatDepartDate(v) {
   } catch {
     return String(v)
   }
-}
-
-function badgeClass(status) {
-  if (status === 'approved') return 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200'
-  if (status === 'pending') return 'bg-amber-50 text-amber-800 ring-1 ring-amber-200'
-  if (status === 'draft') return 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
-  if (status === 'rejected') return 'bg-rose-50 text-rose-800 ring-1 ring-rose-200'
-  if (status === 'cancelled') return 'bg-slate-100 text-slate-500 ring-1 ring-slate-200'
-  return 'bg-slate-100 text-slate-700'
 }
 
 function tripTypeIcon(type) {

@@ -67,6 +67,74 @@ export async function createPortalDispatchRequest(payload, opts = {}) {
 }
 
 /**
+ * @param {{ per_page?: number, page?: number }} [params]
+ */
+export async function listPortalRequests(params = {}) {
+  const { data } = await http.get('/portal/dispatch-requests', { params })
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
+ */
+export async function getPortalDispatchRequest(dispatchRequestId) {
+  const { data } = await http.get(`/portal/dispatch-requests/${dispatchRequestId}`)
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
+ * @param {File} file
+ * @param {(pct: number) => void} [onProgress]
+ */
+export async function uploadPortalSignedPaper(dispatchRequestId, file, onProgress) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const { data } = await http.post(`/portal/dispatch-requests/${dispatchRequestId}/signed-paper`, fd, {
+    onUploadProgress: (e) => {
+      if (!onProgress || !e.total) return
+      onProgress(e.loaded / e.total)
+    },
+  })
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
+ * @param {number} attachmentId
+ * @returns {Promise<Blob>}
+ */
+export async function downloadPortalAttachmentBlob(dispatchRequestId, attachmentId) {
+  try {
+    const res = await http.get(`/portal/dispatch-requests/${dispatchRequestId}/attachments/${attachmentId}/download`, {
+      responseType: 'blob',
+      headers: { Accept: '*/*' },
+    })
+    return res.data
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
+}
+
+/**
+ * @param {number} dispatchRequestId
+ * @returns {Promise<Blob>}
+ */
+export async function exportPortalDispatchRequestPdf(dispatchRequestId) {
+  try {
+    const res = await http.get(`/portal/dispatch-requests/${dispatchRequestId}/export-pdf`, {
+      responseType: 'blob',
+      headers: { Accept: 'application/pdf' },
+    })
+    return res.data
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
+}
+
+/**
  * @param {Record<string, unknown>} payload
  * @param {{ idempotencyKey?: string }} [opts]
  */

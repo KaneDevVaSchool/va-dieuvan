@@ -18,12 +18,7 @@
                 <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
                   Chi tiết yêu cầu {{ requestRefCode }}
                 </h1>
-                <span
-                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                  :class="statusBadgeClass(req.status)"
-                >
-                  {{ labelRequestStatus(req.status) }}
-                </span>
+                <StatusBadge :status="req.status" />
                 <span
                   v-if="showRecurringBadge"
                   class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-900 ring-1 ring-indigo-600/15"
@@ -164,197 +159,61 @@
           v-if="showResetCloneBtn || showPassengerAdjustSection"
           class="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm"
         >
-          <div v-if="showResetCloneBtn">
-            <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.reset_clone_section_title') }}</h2>
-            <div class="mt-3">
-              <button
-                type="button"
-                class="inline-flex h-10 items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-4 text-sm font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="resetCloneBusy"
-                @click="onResetCloneRequest"
-              >
-                <span
-                  v-if="resetCloneBusy"
-                  class="h-4 w-4 animate-spin rounded-full border-2 border-teal-600/30 border-t-teal-700"
-                />
-                {{
-                  resetCloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone')
-                }}
-              </button>
-            </div>
-          </div>
-          <div
+          <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
+          <StudentCountField
             v-if="showPassengerAdjustSection"
+            v-model:passenger-count="passengerDraft"
+            :locked="passengerDepartLocked"
+            :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
+            :saving="passengerSaving"
+            :error="passengerPatchErr"
             :class="showResetCloneBtn ? 'mt-5 border-t border-slate-100 pt-5' : ''"
-          >
-            <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.passenger_follow_section_title') }}</h2>
-            <p class="mt-1 text-xs text-slate-600">{{ t('request_detail.passenger_section_lead') }}</p>
-            <div
-              v-if="passengerDepartLocked"
-              class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950"
-            >
-              <div class="flex gap-2">
-                <LockClosedIcon class="h-5 w-5 shrink-0 text-amber-800" aria-hidden="true" />
-                <div class="min-w-0">
-                  <p class="font-semibold">{{ t('request_detail.passenger_locked_banner_title') }}</p>
-                  <p v-if="req.depart_at" class="mt-1 text-xs leading-snug">
-                    {{ t('request_detail.passenger_locked_banner_depart', { dt: fmtStepDetail(req.depart_at) }) }}
-                  </p>
-                  <p class="mt-1 text-xs leading-snug">{{ t('request_detail.passenger_locked') }}</p>
-                  <p class="mt-2 text-xs font-medium text-slate-800">
-                    {{ t('request_detail.passenger_count_label') }}:
-                    <span class="tabular-nums">{{ passengerDraft }}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mt-3 flex max-w-md flex-wrap items-end gap-2">
-              <label class="block text-xs font-medium text-slate-700">
-                {{ t('request_detail.passenger_count_label') }}
-                <input
-                  v-model.number="passengerDraft"
-                  type="number"
-                  min="1"
-                  max="999"
-                  class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                  :disabled="passengerSaving"
-                />
-              </label>
-              <button
-                type="button"
-                class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="passengerSaving"
-                @click="savePassengerDraft"
-              >
-                {{ passengerSaving ? t('request_detail.passenger_save_busy') : t('request_detail.passenger_save') }}
-              </button>
-            </div>
-            <p v-if="passengerPatchErr" class="mt-2 text-xs font-medium text-rose-600">{{ passengerPatchErr }}</p>
-          </div>
+            @save="savePassengerDraft"
+          />
         </section>
+
+        <CostLimitAlert v-if="req.dispatch_package_cost_alert" :alert="req.dispatch_package_cost_alert" />
 
         <!-- Fill price (Điều vận) -->
-        <section
+        <PriceFillSection
           v-if="showFillPriceSection"
-          class="overflow-hidden rounded-2xl border border-sky-200/90 bg-gradient-to-br from-sky-50/80 via-white to-white p-5 shadow-md ring-1 ring-sky-600/10"
-        >
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow-lg shadow-sky-900/15"
-            >
-              <CurrencyDollarIcon class="h-6 w-6" aria-hidden="true" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <h2 class="text-base font-semibold tracking-tight text-slate-900">{{ t('request_detail.fill_price_title') }}</h2>
-              <p class="mt-1 text-sm leading-snug text-slate-600">{{ t('request_detail.fill_price_lead') }}</p>
-              <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <a
-                  v-if="referencePricingUrl"
-                  :href="referencePricingUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 underline decoration-teal-500/30 underline-offset-2 hover:text-teal-900"
-                >
-                  {{ t('request_detail.reference_pricing_link') }}
-                  <ArrowTopRightOnSquareIcon class="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
-                </a>
-              </div>
-              <form class="mt-4 grid gap-3 sm:max-w-md" @submit.prevent="submitFillPrice">
-                <Input
-                  :model-value="fillPriceForm.service_price"
-                  type="text"
-                  inputmode="decimal"
-                  :label="t('request_detail.service_price_label')"
-                  :placeholder="t('request_detail.service_price_placeholder')"
-                  @update:model-value="onFillPriceServicePriceInput"
-                />
-                <div class="flex flex-wrap items-center gap-2">
-                  <Button type="submit" class="!bg-sky-600 hover:!bg-sky-700" :loading="fillPriceActing">
-                    {{ t('request_detail.fill_price_submit') }}
-                  </Button>
-                  <span v-if="fillPriceMsg" class="text-xs text-slate-600">{{ fillPriceMsg }}</span>
-                </div>
-              </form>
-            </div>
-          </div>
-        </section>
+          :reference-pricing-url="referencePricingUrl"
+          :service-price="fillPriceForm.service_price"
+          :submitting="fillPriceActing"
+          :message="fillPriceMsg"
+          @update:service-price="onFillPriceServicePriceInput"
+          @submit="submitFillPrice"
+        />
 
-        <!-- Trưởng đơn vị -->
-        <section
+        <DeptApprovalSection
           v-if="showDeptDecisionSection"
-          class="overflow-hidden rounded-2xl border border-violet-200/90 bg-gradient-to-br from-violet-50/80 via-white to-white p-5 shadow-md ring-1 ring-violet-600/10"
-        >
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-900/15"
-            >
-              <BuildingOffice2Icon class="h-6 w-6" aria-hidden="true" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <h2 class="text-base font-semibold tracking-tight text-slate-900">{{ t('request_detail.dept_decision_title') }}</h2>
-              <p class="mt-1 text-sm leading-snug text-slate-600">{{ t('request_detail.dept_decision_lead') }}</p>
-              <p v-if="req.service_price != null" class="mt-2 text-sm font-medium text-slate-800">
-                {{ t('request_detail.service_price_label') }}:
-                {{ formatVndCurrency(req.service_price) }}
-              </p>
-              <div class="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
-                <Button
-                  class="min-h-[2.75rem] w-full justify-center !bg-violet-600 hover:!bg-violet-700"
-                  :loading="deptActing"
-                  @click="onDeptApproveClick"
-                >
-                  {{ t('request_detail.dept_approve') }}
-                </Button>
-                <Button
-                  variant="danger"
-                  class="min-h-[2.75rem] w-full justify-center"
-                  :loading="deptActing"
-                  @click="openDeptReject"
-                >
-                  {{ t('request_detail.dept_reject') }}
-                </Button>
-              </div>
-              <p v-if="deptMsg && !deptRejectOpen" class="mt-3 text-sm text-slate-700">{{ deptMsg }}</p>
-            </div>
-          </div>
-        </section>
+          :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
+          :acting="deptActing"
+          :inline-message="deptMsg"
+          :reject-modal-open="deptRejectOpen"
+          @approve="onDeptApproveClick"
+          @reject="openDeptReject"
+        />
 
-        <!-- Phiếu đã ký (người đề xuất) -->
-        <section
+        <SignedPaperUpload
           v-if="showSignedPaperSection"
-          class="overflow-hidden rounded-2xl border border-emerald-200/90 bg-white p-5 shadow-sm ring-1 ring-emerald-600/10"
-        >
-          <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.signed_upload_title') }}</h2>
-          <p class="mt-1 text-sm text-slate-600">{{ t('request_detail.signed_upload_lead') }}</p>
-          <ul v-if="signedPaperAttachments.length" class="mt-3 space-y-1.5">
-            <li
-              v-for="a in signedPaperAttachments"
-              :key="a.id"
-              class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-2.5 py-2 text-sm"
-            >
-              <span class="min-w-0 truncate font-medium text-slate-800">{{ a.original_name || `File #${a.id}` }}</span>
-              <button
-                type="button"
-                class="shrink-0 text-xs font-semibold text-teal-700 hover:underline"
-                @click="downloadFile(a)"
-              >
-                Tải
-              </button>
-            </li>
-          </ul>
-          <div class="mt-3">
-            <FileUpload
-              :key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
-              label="Thêm file đã ký"
-              hint="PDF, JPG, PNG"
-              drag-drop
-              compact
-              :upload-fn="uploadSignedPaper"
-              @uploaded="onSignedUploaded"
-            />
-          </div>
-          <p v-if="signedUploadErr" class="mt-2 text-xs text-rose-600">{{ signedUploadErr }}</p>
-        </section>
+          :attachments="signedPaperAttachments"
+          :upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
+          :upload-fn="uploadSignedPaper"
+          :error="signedUploadErr"
+          @download="downloadFile"
+          @uploaded="onSignedUploaded"
+        />
+
+        <RejectReasonModal
+          :open="deptRejectOpen"
+          :reason="deptRejectReason"
+          :acting="deptActing"
+          :error-message="deptMsg"
+          @update:reason="deptRejectReason = $event"
+          @close="closeDeptReject"
+          @confirm="submitDeptReject"
+        />
 
         <!-- Pending actions -->
         <section
@@ -794,42 +653,6 @@
         </div>
       </div>
     </template>
-
-    <Teleport to="body">
-      <div
-        v-if="deptRejectOpen && req"
-        class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
-        role="dialog"
-        aria-modal="true"
-        @click.self="closeDeptReject"
-      >
-        <div
-          class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-2xl"
-          @click.stop
-        >
-          <div class="border-b border-violet-100 bg-violet-50/80 px-4 py-3">
-            <h3 class="text-base font-semibold text-violet-950">{{ t('request_detail.dept_reject_modal_title') }}</h3>
-            <p class="mt-0.5 text-xs text-violet-900/80">{{ t('request_detail.dept_reject_modal_lead') }}</p>
-          </div>
-          <div class="space-y-4 p-4">
-            <Input
-              v-model="deptRejectReason"
-              :label="t('request_detail.dept_reject_reason_label')"
-              :placeholder="t('request_detail.dept_reject_reason_placeholder')"
-            />
-            <p v-if="deptMsg" class="text-sm text-rose-700">{{ deptMsg }}</p>
-            <div class="flex flex-wrap gap-2">
-              <Button variant="danger" class="min-h-[2.75rem]" :loading="deptActing" @click="submitDeptReject">
-                {{ t('request_detail.dept_confirm_reject') }}
-              </Button>
-              <Button variant="secondary" type="button" class="min-h-[2.75rem]" :disabled="deptActing" @click="closeDeptReject">
-                {{ t('request_detail.dept_cancel_reject') }}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -840,7 +663,6 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
   BuildingOffice2Icon,
   CalculatorIcon,
   CalendarDaysIcon,
@@ -854,14 +676,21 @@ import {
   FlagIcon,
   HandThumbUpIcon,
   InformationCircleIcon,
-  LockClosedIcon,
   PaperClipIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
 import { CheckIcon } from '@heroicons/vue/24/solid'
 import Button from '../../components/ui/Button.vue'
+import StatusBadge from '../../components/ui/StatusBadge.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
+import PriceFillSection from '../../components/requests/PriceFillSection.vue'
+import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
+import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
+import SignedPaperUpload from '../../components/requests/SignedPaperUpload.vue'
+import CostLimitAlert from '../../components/requests/CostLimitAlert.vue'
+import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
+import StudentCountField from '../../components/recurring/StudentCountField.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
 import { getDispatchFormSettings } from '../../api/dispatchSettings'
 import {
@@ -878,7 +707,7 @@ import {
 import { formatApiError } from '../../api/http'
 import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
-import { labelRequestStatus, labelTripType } from '../../util/labels'
+import { labelTripType } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
 import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
@@ -1352,14 +1181,6 @@ function stepCircleClass(state) {
   if (state === 'current') return 'border-teal-500 bg-white text-teal-600'
   if (state === 'rejected') return 'border-rose-400 bg-white text-rose-500'
   return 'border-slate-200 bg-white text-slate-300'
-}
-
-function statusBadgeClass(status) {
-  if (status === 'approved') return 'bg-teal-50 text-teal-800 ring-1 ring-inset ring-teal-600/15'
-  if (status === 'pending') return 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-500/10'
-  if (status === 'price_filled') return 'bg-amber-50 text-amber-900 ring-1 ring-inset ring-amber-600/20'
-  if (status === 'rejected') return 'bg-rose-50 text-rose-800 ring-1 ring-inset ring-rose-600/15'
-  return 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-500/10'
 }
 
 function fmt(v) {

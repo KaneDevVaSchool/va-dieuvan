@@ -365,6 +365,9 @@ class AttachmentController extends Controller
             if ($user->can('request.paper.manage') || $user->can('request.approve') || $user->can('request.create')) {
                 return;
             }
+            if ($user->can('view', $parent)) {
+                return;
+            }
             abort(403);
         }
 

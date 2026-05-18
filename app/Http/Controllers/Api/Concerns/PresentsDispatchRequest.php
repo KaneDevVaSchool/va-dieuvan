@@ -21,14 +21,34 @@ trait PresentsDispatchRequest
         if ($dispatchRequest->dispatch_request_template_id !== null) {
             $pkg = $dispatchRequest->dispatchRequestTemplate?->dispatchPackage;
             $arr['dispatch_package_sessions'] = null;
+            $arr['dispatch_package_cost_alert'] = null;
             if ($pkg !== null) {
+                $total = (int) $pkg->total_sessions;
+                $used = (int) $pkg->sessions_used;
+                $remaining = $pkg->remainingSessions();
+                $threshold = max(0, (int) $pkg->alert_when_remaining_sessions);
+                $exceeded = $total > 0 && $used >= $total;
+                $warn = ! $exceeded && $remaining <= $threshold;
+
                 $arr['dispatch_package_sessions'] = [
                     'dispatch_package_id' => $pkg->id,
-                    'total_sessions' => (int) $pkg->total_sessions,
-                    'sessions_used' => (int) $pkg->sessions_used,
-                    'sessions_remaining' => $pkg->remainingSessions(),
-                    'alert_when_remaining_sessions' => (int) $pkg->alert_when_remaining_sessions,
+                    'total_sessions' => $total,
+                    'sessions_used' => $used,
+                    'sessions_remaining' => $remaining,
+                    'alert_when_remaining_sessions' => $threshold,
                 ];
+
+                if ($exceeded || $warn) {
+                    $label = (string) ($pkg->label !== null && $pkg->label !== '' ? $pkg->label : $pkg->trip_type);
+                    $arr['dispatch_package_cost_alert'] = [
+                        'severity' => $exceeded ? 'exceeded' : 'warning',
+                        'package_label' => $label,
+                        'sessions_used' => $used,
+                        'total_sessions' => $total,
+                        'sessions_remaining' => $remaining,
+                        'threshold_sessions' => $threshold,
+                    ];
+                }
             }
         }
 

@@ -6,7 +6,7 @@
   />
     <template v-else>
       <Onboarding
-        v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !route.meta?.portal"
+        v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !isPortalShell"
         @done="completeOnboarding"
       />
     <template v-else>
@@ -45,7 +45,9 @@ const route = useRoute()
 const auth = useAuthStore()
 const { hasOnboarded, completeOnboarding } = useOnboarding()
 
-const isLoginLayout = computed(() => route.name === 'login' || !!route.meta?.portal)
+const isPortalShell = computed(() => route.matched.some((record) => record.meta.portal))
+
+const isLoginLayout = computed(() => route.name === 'login' || isPortalShell.value)
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isAuthenticated = computed(() => auth.isAuthenticated)
 

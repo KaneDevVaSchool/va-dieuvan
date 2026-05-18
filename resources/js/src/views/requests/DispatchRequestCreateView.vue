@@ -406,39 +406,15 @@
                 <span>{{ t('dispatch_wizard.create.purpose_extra') }}</span>
               </label>
             </div>
-            <div
-              v-if="form.trip_type === 'point_to_point' && form.point_purpose_kind === 'extracurricular' && !replaceDraftRequestId"
-              class="mt-4 space-y-3 rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-sm text-slate-800"
-            >
-              <label class="flex cursor-pointer items-start gap-2">
-                <input v-model="form.recurring_enabled" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-va-800" />
-                <span>
-                  <span class="font-semibold">{{ t('dispatch_wizard.create.recurring_toggle') }}</span>
-                  <span class="mt-0.5 block text-xs text-slate-600">{{ t('dispatch_wizard.create.recurring_hint') }}</span>
-                </span>
-              </label>
-              <label v-if="form.recurring_enabled" class="block text-xs font-medium text-slate-700">
-                {{ t('dispatch_wizard.create.recurrence_end_label') }}
-                <input v-model="form.recurrence_end_date" type="date" lang="vi" class="dw-input mt-1 max-w-xs" />
-              </label>
-              <div
-                v-if="form.recurring_enabled"
-                class="mt-3 rounded-xl border border-sky-200 bg-white/90 px-3 py-2.5 text-xs text-slate-700 shadow-sm"
-              >
-                <p class="font-semibold text-slate-900">{{ t('dispatch_wizard.create.recurring_weekdays_preview_label') }}</p>
-                <p v-if="!recurringSelectedWeekdayLabels.length" class="mt-1 text-slate-600">
-                  {{ t('dispatch_wizard.create.recurring_weekdays_empty') }}
-                </p>
-                <p v-else class="mt-1 font-medium text-slate-800">{{ recurringSelectedWeekdayLabels.join(', ') }}</p>
-                <button
-                  type="button"
-                  class="mt-2 text-left text-sm font-semibold text-teal-700 underline decoration-teal-600/35 underline-offset-2 hover:text-teal-900"
-                  @click="goStep(2)"
-                >
-                  {{ t('dispatch_wizard.create.recurring_go_schedule_step') }}
-                </button>
-              </div>
-            </div>
+            <RecurringConfigSection
+              :trip-type="form.trip_type"
+              :point-purpose-kind="form.point_purpose_kind"
+              :replace-draft-request-id="replaceDraftRequestId"
+              v-model:recurring-enabled="form.recurring_enabled"
+              v-model:recurrence-end-date="form.recurrence_end_date"
+              :weekday-labels="recurringSelectedWeekdayLabels"
+              @go-schedule-step="goStep(2)"
+            />
             <label class="block">
               <span class="dw-label-text">{{ t('dispatch_wizard.create.purpose_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
               <textarea
@@ -940,6 +916,7 @@ import {
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from './dispatch-wizard/injectionKeys'
 import ConfirmSummary from './dispatch-wizard/ConfirmSummary.vue'
+import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
 
 const { t } = useI18n()
 const wizard = useDispatchRequestWizard()

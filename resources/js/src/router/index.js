@@ -23,6 +23,10 @@ function pathIsUnderStaffBase(path) {
     return path === DISPATCH_WEB_BASE || path.startsWith(`${DISPATCH_WEB_BASE}/`);
 }
 
+function routeHasPortalMeta(to) {
+    return to.matched.some((record) => record.meta.portal === true);
+}
+
 const staffChildRoutes = [
     {
         path: "",
@@ -299,13 +303,36 @@ const router = createRouter({
         },
         {
             path: "/portal",
-            name: "portalSubmit",
-            component: () => import("../views/portal/PortalSubmitView.vue"),
+            component: () => import("../views/portal/PortalLayout.vue"),
             meta: {
-                title: "Portal — Tạo yêu cầu",
-                subtitle: "Người dùng chưa có vai trò",
                 portal: true,
             },
+            children: [
+                {
+                    path: "",
+                    name: "portalHome",
+                    component: () => import("../views/portal/PortalHomeView.vue"),
+                    meta: {
+                        portal: true,
+                    },
+                },
+                {
+                    path: "new",
+                    name: "portalCreate",
+                    component: () => import("../views/portal/PortalCreateView.vue"),
+                    meta: {
+                        portal: true,
+                    },
+                },
+                {
+                    path: "requests/:id(\\d+)",
+                    name: "portalRequestDetail",
+                    component: () => import("../views/portal/PortalRequestDetailView.vue"),
+                    meta: {
+                        portal: true,
+                    },
+                },
+            ],
         },
         {
             path: DISPATCH_WEB_BASE,
@@ -415,13 +442,13 @@ router.beforeEach(async (to) => {
         !auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp();
 
     if (portalUser) {
-        if (!to.meta.portal) {
+        if (!routeHasPortalMeta(to)) {
             return { path: "/portal", replace: true };
         }
         return true;
     }
 
-    if (to.meta.portal) {
+    if (routeHasPortalMeta(to)) {
         if (driverOnly) {
             return { path: "/driver", replace: true };
         }

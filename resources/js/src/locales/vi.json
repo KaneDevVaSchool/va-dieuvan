@@ -615,7 +615,91 @@
         "double_tap_hint": "Nhấn lại loại đã chọn để tiếp tục nhanh.",
         "confirm_hint": "Kiểm tra lại thông tin trước khi gửi.",
         "need_datetime": "Chọn ngày giờ xuất phát.",
-        "arrive_after_depart": "Thời điểm đến phải sau hoặc trùng xuất phát."
+        "arrive_after_depart": "Thời điểm đến phải sau hoặc trùng xuất phát.",
+        "nav_title": "Cổng điều vận",
+        "nav_home": "Trang chủ",
+        "nav_create": "Yêu cầu mới",
+        "home_sidebar_title": "Tài khoản",
+        "sidebar_hint": "Xem các yêu cầu bạn đã gửi",
+        "home_heading": "Yêu cầu của tôi",
+        "home_lead": "Danh sách các yêu cầu bạn đã gửi tới điều vận. Chọn một mục để xem tiến trình.",
+        "stat_total": "Tổng yêu cầu",
+        "loading_requests": "Đang tải danh sách…",
+        "load_more": "Tải thêm",
+        "loading_more": "Đang tải…",
+        "empty_title": "Chưa có yêu cầu nào",
+        "empty_desc": "Khi có nhu cầu xe, hãy tạo phiếu mới để bộ phận điều vận xử lý.",
+        "cta_primary": "Tạo yêu cầu mới",
+        "load_requests_fail": "Không tải được danh sách yêu cầu.",
+        "badge_urgent": "Gấp",
+        "card_no_route": "Chưa nhập tuyến",
+        "create": {
+            "page_title": "Tạo yêu cầu mới",
+            "page_subtitle": "Hoàn thành 3 bước: loại xe, thông tin chuyến, xác nhận và gửi."
+        },
+        "welcome_banner_title": "Đã gửi yêu cầu thành công",
+        "welcome_banner_hint": "Bạn có thể xuất PDF và đính kèm bản phiếu đã ký sau khi yêu cầu được duyệt.",
+        "welcome_banner_dismiss": "Đã hiểu",
+        "detail_loading": "Đang tải chi tiết…",
+        "detail_load_fail": "Không mở được chi tiết yêu cầu.",
+        "detail_invalid_id": "Mã yêu cầu không hợp lệ.",
+        "detail_no_locations": "Điền điểm đi và điểm đến trong lần tạo yêu cầu để tiện hiển thị.",
+        "back_home": "Về danh sách",
+        "back_list": "Về danh sách",
+        "export_pdf": "Tải PDF đề xuất",
+        "pdf_locked_tooltip": "PDF chỉ tải được sau khi yêu cầu được duyệt.",
+        "pdf_export_loading": "Đang xuất…",
+        "pdf_download_fail": "Không tải được PDF.",
+        "timeline_heading": "Tiến trình xử lý",
+        "timeline": {
+            "created": "Tạo phiếu",
+            "pending": "Chờ duyệt",
+            "price_pending": "Chờ điều vận nhập giá",
+            "dept_pending": "Chờ Trưởng đơn vị",
+            "approved": "Đã duyệt",
+            "dispatch": "Điều phối xe",
+            "running": "Đang chạy",
+            "done": "Hoàn tất"
+        },
+        "rejected_title": "Đã bị từ chối",
+        "detail_facts": "Thông tin yêu cầu",
+        "detail_help_footer": "Cần hỗ trợ khẩn, vui lòng liên hệ bộ phận điều vận.",
+        "signed_gate_hint": "Sau khi yêu cầu được duyệt, bạn có thể đính kèm bản scan phiếu đã ký tại khung bên phải.",
+        "service_price_label": "Đơn giá dự kiến",
+        "signed_upload_title": "Đính kèm phiếu đã ký",
+        "signed_upload_lead": "Chỉ tải được sau khi yêu cầu đã được duyệt. Định dạng: PDF / JPG / PNG, tối đa 10MB.",
+        "signed_download": "Tải về",
+        "signed_download_fail": "Không tải được file.",
+        "signed_add": "Thêm file đã ký",
+        "signed_hints": "PDF, JPG, PNG — tối đa 10MB",
+        "filter_all": "Tất cả",
+        "filter_pending": "Đang xử lý",
+        "filter_approved": "Đã duyệt",
+        "filter_rejected": "Từ chối",
+        "filter_empty": "Không có yêu cầu phù hợp bộ lọc.",
+        "filter_clear": "Xóa lọc",
+        "filter_toolbar_label": "Lọc theo trạng thái",
+        "stat_pending": "Đang chờ",
+        "stat_approved": "Đã duyệt",
+        "stat_loaded_hint": "Đếm trên các yêu cầu đã tải (tải thêm để cập nhật).",
+        "pick_type_to_continue": "Chọn một loại chuyến để có thể tiếp tục.",
+        "pdf_btn_label": "Tải PDF BM.03",
+        "auto_refresh_indicator": "Đang cập nhật trạng thái…",
+        "status_hint_title": "Bước tiếp theo",
+        "next_step_hint": {
+            "pending": "Yêu cầu đang chờ điều vận xử lý. Trang sẽ tự làm mới.",
+            "price_filled": "Điều vận đã nhập giá; chờ Trưởng đơn vị duyệt.",
+            "rejected": "Yêu cầu đã bị từ chối. Xem lý do và gửi yêu cầu mới nếu cần.",
+            "cancelled": "Yêu cầu đã hủy.",
+            "draft": "Phiếu đang ở trạng thái nháp.",
+            "approved_dispatch": "Đã duyệt; điều vận đang phối xe.",
+            "dispatched": "Đã có xe/phụ trách; chờ khởi hành hoặc đang chuẩn bị.",
+            "running": "Chuyến đang thực hiện.",
+            "completed": "Chuyến đã hoàn tất.",
+            "generic": "Theo dõi tiến trình ở khung tiến độ."
+        },
+        "copy_rejection": "Sao chép lý do",
+        "copy_failed": "Không sao chép được."
     },
     "routes_meta": {
         "login": {
@@ -623,9 +707,17 @@
             "subtitle": "Đăng nhập Google",
             "no_dispatch_access": "Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher hoặc tài xế (driver)."
         },
-        "portalSubmit": {
+        "portalHome": {
+            "title": "Portal — Yêu cầu của tôi",
+            "subtitle": "Người đề xuất"
+        },
+        "portalCreate": {
             "title": "Portal — Tạo yêu cầu",
-            "subtitle": "Người dùng chưa có vai trò"
+            "subtitle": "Điền và gửi phiếu"
+        },
+        "portalRequestDetail": {
+            "title": "Portal — Chi tiết yêu cầu",
+            "subtitle": ""
         },
         "dashboard": {
             "title": "Tổng quan",
@@ -1850,7 +1942,11 @@
         "passenger_save": "Lưu số học sinh",
         "passenger_save_busy": "Đang lưu…",
         "passenger_saved": "Đã cập nhật số học sinh.",
-        "passenger_save_fail": "Không lưu được."
+        "passenger_save_fail": "Không lưu được.",
+        "package_cost_alert_exceeded_title": "Gói dịch vụ đã hết số buổi",
+        "package_cost_alert_warning_title": "Gói dịch vụ sắp hết số buổi",
+        "package_cost_alert_body": "Gói «{label}»: đã dùng {used}/{total} buổi, còn {remaining} buổi (ngưỡng cảnh báo: còn tối đa {threshold} buổi).",
+        "package_cost_alert_note": "Đây chỉ là cảnh báo — không chặn tạo phiếu hoặc duyệt. Liên hệ Điều vận nếu cần điều chỉnh gói."
     },
     "app": {
         "title": "VA Dispatch · Điều vận",

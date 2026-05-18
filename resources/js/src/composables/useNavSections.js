@@ -32,6 +32,7 @@ export function useNavSections() {
   }
 
   const sections = computed(() => {
+    const _u = auth.user
     if (auth.canAccessDriverWebApp() && !auth.canAccessDispatchWebApp()) {
       return [
         {
@@ -69,6 +70,7 @@ export function useNavSections() {
 
   /** Thanh điều hướng dưới (mobile, layout ngang) */
   const bottomNavItems = computed(() => {
+    const _u = auth.user
     if (auth.canAccessDriverWebApp() && !auth.canAccessDispatchWebApp()) {
       return [
         { to: '/driver', labelKey: 'nav.bottom_driver_home', icon: 'home' },

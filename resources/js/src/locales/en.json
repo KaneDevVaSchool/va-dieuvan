@@ -572,7 +572,91 @@
         "double_tap_hint": "Tap the selected type again to continue quickly.",
         "confirm_hint": "Review your details before submitting.",
         "need_datetime": "Pick departure date and time.",
-        "arrive_after_depart": "Arrive-by must be on or after departure."
+        "arrive_after_depart": "Arrive-by must be on or after departure.",
+        "nav_title": "Dispatch portal",
+        "nav_home": "Home",
+        "nav_create": "New request",
+        "home_sidebar_title": "Account",
+        "sidebar_hint": "View submitted requests",
+        "home_heading": "My requests",
+        "home_lead": "Requests you have sent to dispatch open here for status and next steps.",
+        "stat_total": "Total requests",
+        "loading_requests": "Loading…",
+        "load_more": "Load more",
+        "loading_more": "Loading…",
+        "empty_title": "No requests yet",
+        "empty_desc": "When you need transport, create a request for dispatch.",
+        "cta_primary": "Create new request",
+        "load_requests_fail": "Could not load requests.",
+        "badge_urgent": "Urgent",
+        "card_no_route": "No route details",
+        "create": {
+            "page_title": "Create request",
+            "page_subtitle": "Three steps: trip type, details, confirm and submit."
+        },
+        "welcome_banner_title": "Request submitted",
+        "welcome_banner_hint": "You can export PDF and upload signed scans after approval.",
+        "welcome_banner_dismiss": "Got it",
+        "detail_loading": "Loading details…",
+        "detail_load_fail": "Could not load this request.",
+        "detail_invalid_id": "Invalid request ID.",
+        "detail_no_locations": "Add pickup and drop-off next time so this summary stays clear.",
+        "back_home": "Back to list",
+        "back_list": "Back to list",
+        "export_pdf": "Download proposal PDF",
+        "pdf_locked_tooltip": "PDF is available only after approval.",
+        "pdf_export_loading": "Exporting…",
+        "pdf_download_fail": "Could not download PDF.",
+        "timeline_heading": "Progress",
+        "timeline": {
+            "created": "Created",
+            "pending": "Pending",
+            "price_pending": "Waiting for dispatcher pricing",
+            "dept_pending": "Waiting for department approval",
+            "approved": "Approved",
+            "dispatch": "Dispatch & assignment",
+            "running": "In progress",
+            "done": "Completed"
+        },
+        "rejected_title": "Rejected",
+        "detail_facts": "Request details",
+        "detail_help_footer": "Need urgent help? Contact dispatch.",
+        "signed_gate_hint": "Once approved, use the upload section to attach scanned signed forms.",
+        "service_price_label": "Quoted price",
+        "signed_upload_title": "Signed form upload",
+        "signed_upload_lead": "Only after approval. PDF / JPG / PNG, max 10MB.",
+        "signed_download": "Download",
+        "signed_download_fail": "Could not download file.",
+        "signed_add": "Add signed file",
+        "signed_hints": "PDF, JPG, PNG — max 10MB",
+        "filter_all": "All",
+        "filter_pending": "In progress",
+        "filter_approved": "Approved",
+        "filter_rejected": "Rejected",
+        "filter_empty": "No requests match this filter.",
+        "filter_clear": "Clear filter",
+        "filter_toolbar_label": "Filter by status",
+        "stat_pending": "Awaiting",
+        "stat_approved": "Approved",
+        "stat_loaded_hint": "Counts reflect loaded requests only (load more to refresh).",
+        "pick_type_to_continue": "Choose a trip type to continue.",
+        "pdf_btn_label": "Download BM.03 PDF",
+        "auto_refresh_indicator": "Refreshing status…",
+        "status_hint_title": "What happens next",
+        "next_step_hint": {
+            "pending": "Dispatch is reviewing your request. This page refreshes automatically.",
+            "price_filled": "Pricing is filled; waiting for department approval.",
+            "rejected": "This request was rejected. Review the reason below or submit a new one.",
+            "cancelled": "This request was cancelled.",
+            "draft": "This request is still a draft.",
+            "approved_dispatch": "Approved; dispatch is assigning a vehicle.",
+            "dispatched": "Vehicle/driver assigned; preparing or awaiting departure.",
+            "running": "Trip is in progress.",
+            "completed": "Trip is completed.",
+            "generic": "Follow progress in the timeline."
+        },
+        "copy_rejection": "Copy reason",
+        "copy_failed": "Could not copy."
     },
     "routes_meta": {
         "login": {
@@ -580,9 +664,17 @@
             "subtitle": "Google sign-in",
             "no_dispatch_access": "Your account cannot access the app. You need superadmin, admin, dispatcher, or driver role."
         },
-        "portalSubmit": {
+        "portalHome": {
+            "title": "Portal — My requests",
+            "subtitle": "Requester"
+        },
+        "portalCreate": {
             "title": "Portal — New request",
-            "subtitle": "Account without role"
+            "subtitle": "Fill and submit"
+        },
+        "portalRequestDetail": {
+            "title": "Portal — Request detail",
+            "subtitle": ""
         },
         "dashboard": {
             "title": "Dashboard",
@@ -2040,7 +2132,11 @@
         "passenger_save": "Save passenger count",
         "passenger_save_busy": "Saving…",
         "passenger_saved": "Passenger count updated.",
-        "passenger_save_fail": "Could not save."
+        "passenger_save_fail": "Could not save.",
+        "package_cost_alert_exceeded_title": "Service package sessions exhausted",
+        "package_cost_alert_warning_title": "Service package running low on sessions",
+        "package_cost_alert_body": "Package «{label}»: used {used}/{total} sessions, {remaining} remaining (alert threshold: up to {threshold} sessions left).",
+        "package_cost_alert_note": "This is informational only — it does not block creating or approving requests. Contact dispatch if you need package changes."
     },
     "app": {
         "title": "VA Dispatch",
