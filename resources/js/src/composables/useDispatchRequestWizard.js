@@ -1669,22 +1669,27 @@ export function useDispatchRequestWizard(options = {}) {
     } catch {
       /* router guard / 401 */
     }
-    dispatchFormSettingsLoading.value = true
     dispatchFormSettingsError.value = ''
-    try {
-      const s = await getDispatchFormSettings()
-      urgentThresholds.value = {
-        passenger: Number(s.passenger_urgent_threshold_hours) || 72,
-        cargo: Number(s.cargo_urgent_threshold_hours) || 24,
-      }
-      syncUrgentFromSchedule()
-    } catch (e) {
-      dispatchFormSettingsError.value = formatApiError(
-        e,
-        t('dispatch_wizard.errors.dispatch_settings_loading'),
-      )
-    } finally {
+    if (isPortal) {
       dispatchFormSettingsLoading.value = false
+      syncUrgentFromSchedule()
+    } else {
+      dispatchFormSettingsLoading.value = true
+      try {
+        const s = await getDispatchFormSettings()
+        urgentThresholds.value = {
+          passenger: Number(s.passenger_urgent_threshold_hours) || 72,
+          cargo: Number(s.cargo_urgent_threshold_hours) || 24,
+        }
+        syncUrgentFromSchedule()
+      } catch (e) {
+        dispatchFormSettingsError.value = formatApiError(
+          e,
+          t('dispatch_wizard.errors.dispatch_settings_loading'),
+        )
+      } finally {
+        dispatchFormSettingsLoading.value = false
+      }
     }
     migrateLegacyDraft()
     const rawReplace = route.query.replace ?? route.query.clone
