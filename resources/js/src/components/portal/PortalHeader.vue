@@ -16,7 +16,7 @@
           decoding="async"
         />
         <div class="min-w-0">
-          <p class="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t('app.title') }}</p>
+          <p class="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('app.title') }}</p>
           <h1 class="truncate text-sm font-bold text-slate-900 sm:text-lg">{{ t('portal.nav_title') }}</h1>
         </div>
       </RouterLink>
@@ -61,7 +61,7 @@
           <BellOutlineIcon class="h-6 w-6" aria-hidden="true" />
           <span
             v-if="unreadBadge > 0"
-            class="absolute right-1 top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white"
+            class="absolute right-1 top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-xs font-bold leading-none text-white ring-2 ring-white"
           >
             {{ unreadBadge > 99 ? '99+' : unreadBadge }}
           </span>

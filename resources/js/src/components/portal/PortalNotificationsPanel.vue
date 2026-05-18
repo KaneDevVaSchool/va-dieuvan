@@ -1,7 +1,7 @@
 <template>
   <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
     <div class="flex items-start justify-between gap-2">
-      <h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{{ t('portal.notifications_panel_title') }}</h2>
+      <h2 class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">{{ t('portal.notifications_panel_title') }}</h2>
       <RouterLink
         :to="{ name: 'portalNotifications' }"
         class="text-xs font-semibold text-indigo-600 underline-offset-2 hover:underline"
@@ -38,7 +38,7 @@
             <div class="min-w-0 flex-1">
               <p class="text-sm font-semibold text-slate-900">{{ n.data?.title ?? n.type }}</p>
               <p class="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-600">{{ n.data?.body ?? '' }}</p>
-              <p class="mt-1 text-[11px] text-slate-400">{{ fmtTime(n.created_at) }}</p>
+              <p class="mt-1 text-xs text-slate-400">{{ fmtTime(n.created_at) }}</p>
             </div>
           </div>
         </component>

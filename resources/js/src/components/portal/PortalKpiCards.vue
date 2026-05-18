@@ -15,7 +15,7 @@
         :class="[card.borderClass, card.bgClass]"
       >
         <div class="flex items-start justify-between gap-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-600">{{ card.title }}</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ card.title }}</p>
           <span class="flex shrink-0 rounded-xl p-2" :class="card.iconWrapClass">
             <component :is="card.icon" class="h-6 w-6 opacity-95" :class="card.iconClass" aria-hidden="true" />
           </span>

@@ -3,6 +3,9 @@
     class="rounded-xl border border-slate-200/90 bg-white/90 p-2 shadow-md shadow-indigo-900/[0.04] backdrop-blur-sm sm:p-3"
     :aria-label="stepsNavLabel"
   >
+    <p class="mb-2 text-center text-xs font-medium text-slate-500 sm:hidden">
+      Bước {{ current + 1 }}/{{ steps.length }}
+    </p>
     <ol
       class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden"
     >
@@ -30,7 +33,7 @@
             @click="i <= maxReachedStep && $emit('select', i)"
           >
             <span
-              class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold shadow-sm sm:h-8 sm:w-8 sm:text-[11px]"
+              class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm sm:h-9 sm:w-9 sm:text-sm"
               :class="
                 current === i
                   ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
@@ -41,11 +44,11 @@
                       : 'bg-slate-200 text-slate-400'
               "
             >
-              <CheckIcon v-if="current > i" class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+              <CheckIcon v-if="current > i" class="h-4 w-4" aria-hidden="true" />
               <span v-else>{{ i + 1 }}</span>
             </span>
             <span
-              class="min-w-0 flex-1 text-[11px] font-semibold leading-snug sm:text-center sm:text-xs sm:leading-snug"
+              class="min-w-0 flex-1 text-xs font-semibold leading-snug sm:text-center sm:text-sm sm:leading-snug"
               :class="current === i ? 'text-slate-900' : current > i ? 'text-slate-800' : 'text-slate-500'"
             >
               {{ s.label }}
@@ -64,7 +67,7 @@
             role="presentation"
           >
             <span
-              class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold shadow-sm sm:h-8 sm:w-8 sm:text-[11px]"
+              class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm sm:h-9 sm:w-9 sm:text-sm"
               :class="
                 current === i
                   ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
@@ -73,11 +76,11 @@
                     : 'bg-slate-200 text-slate-400'
               "
             >
-              <CheckIcon v-if="current > i" class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
+              <CheckIcon v-if="current > i" class="h-4 w-4" aria-hidden="true" />
               <span v-else>{{ i + 1 }}</span>
             </span>
             <span
-              class="min-w-0 flex-1 text-[11px] font-semibold leading-snug sm:text-center sm:text-xs sm:leading-snug"
+              class="min-w-0 flex-1 text-xs font-semibold leading-snug sm:text-center sm:text-sm sm:leading-snug"
               :class="current === i ? 'text-slate-900' : current > i ? 'text-slate-800' : 'text-slate-500'"
             >
               {{ s.label }}

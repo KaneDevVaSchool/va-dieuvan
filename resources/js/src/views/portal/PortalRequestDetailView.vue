@@ -42,7 +42,7 @@
               <StatusBadge :status="req.status" />
               <span
                 v-if="req.is_urgent"
-                class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700"
+                class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700"
               >
                 {{ t('portal.badge_urgent') }}
               </span>

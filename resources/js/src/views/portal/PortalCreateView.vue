@@ -52,6 +52,14 @@
             >
               {{ t('dispatch_wizard.create.draft_saved_flash') }}
             </span>
+            <span
+              v-else-if="lastAutoSavedAt && !draftSaveFlash"
+              role="status"
+              class="text-xs text-slate-400"
+              :title="autoSavedAtLabel"
+            >
+              {{ autoSavedAtLabel }}
+            </span>
           </div>
           <button
             type="button"
@@ -101,33 +109,13 @@
       <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
         <!-- Step 1 -->
         <div v-show="step === 0">
-          <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step1_title') }}</h2>
-          <p class="mt-1 text-sm text-slate-600">{{ t('dispatch_wizard.create.step1_hint') }}</p>
-          <p class="mt-2 text-xs text-slate-500">{{ t('portal.double_tap_hint') }}</p>
-          <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <button
-              v-for="opt in tripTypeOptions"
-              :key="opt.value"
-              type="button"
-              class="group relative flex flex-col items-center rounded-xl border-2 p-4 text-center transition"
-              :class="
-                form.trip_type === opt.value
-                  ? opt.selectedClass
-                  : 'border-slate-200 bg-slate-50 hover:border-slate-300'
-              "
-              @click="onPortalTripTypeClick(opt.value)"
-            >
-              <component :is="opt.icon" class="mb-3 h-10 w-10 opacity-90" :class="opt.iconClass" />
-              <span class="font-semibold text-slate-900">{{ opt.label }}</span>
-              <span class="mt-1 text-xs leading-snug text-slate-600">{{ opt.hint }}</span>
-              <span
-                v-if="opt.badge"
-                class="mt-2 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-800"
-              >
-                {{ opt.badge }}
-              </span>
-            </button>
-          </div>
+          <PortalTripTypeGrid
+            :trip-types="TRIP_TYPES"
+            :trip-type="form.trip_type"
+            :hint="t('dispatch_wizard.create.step1_title')"
+            :double-tap-hint="t('portal.double_tap_hint')"
+            @select="onPortalTripTypeClick"
+          />
         </div>
 
         <!-- Step 2 -->
@@ -147,11 +135,14 @@
 
           <!-- Người đề nghị + Thời gian: cạnh nhau desktop, xếp dọc mobile -->
           <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
-            <div class="dw-fieldset">
+            <!-- Người đề nghị -->
+            <div class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
+
+              <!-- Tìm theo tên -->
               <div class="relative">
                 <label class="dw-label">
-                  <span>{{ t('dispatch_wizard.create.search_by_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
+                  <span>{{ t('dispatch_wizard.create.search_by_name') }}</span>
                   <span
                     class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
                     :title="t('dispatch_wizard.create.search_name_hint')"
@@ -174,7 +165,7 @@
                 />
                 <div
                   v-if="requesterSearchLoading"
-                  class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600"
                 />
                 <ul
                   v-if="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
@@ -187,7 +178,7 @@
                     <li v-for="u in requesterSearchResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-indigo-50"
                         @mousedown.prevent="pickRequester(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -199,22 +190,31 @@
                 </ul>
                 <p v-if="requesterSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ requesterSearchError }}</p>
               </div>
-              <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
-                  <input v-model="form.requester_name" type="text" class="dw-input" :placeholder="t('dispatch_wizard.create.full_name_ph')" />
-                </label>
-                <label class="block min-w-0">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.requester_email_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
-                  <input
-                    v-model="form.requester_email"
-                    type="email"
-                    :placeholder="t('dispatch_wizard.create.requester_email_ph')"
-                    :class="['dw-input', step2RequesterEmailInvalid ? 'ring-1 ring-rose-300' : '']"
-                    @blur="onRequesterEmailBlur"
-                  />
-                </label>
-                <label class="block min-w-0">
+
+              <!-- Họ tên đầy đủ -->
+              <label class="block">
+                <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }} <span class="dw-req" aria-hidden="true">*</span></span>
+                <input v-model="form.requester_name" type="text" class="dw-input mt-1" :placeholder="t('dispatch_wizard.create.full_name_ph')" />
+              </label>
+
+              <!-- Email + Số điện thoại -->
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label class="block">
+                    <span class="dw-label-text">{{ t('dispatch_wizard.create.requester_email_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
+                    <input
+                      v-model="form.requester_email"
+                      type="email"
+                      :placeholder="t('dispatch_wizard.create.requester_email_ph')"
+                      :class="['dw-input mt-1', step2RequesterEmailInvalid ? 'ring-1 ring-rose-300' : '']"
+                      @blur="onRequesterEmailBlur"
+                    />
+                  </label>
+                  <p v-if="step2RequesterEmailInvalid" class="mt-1 text-xs text-rose-600">
+                    {{ t('dispatch_wizard.create.email_invalid') }}
+                  </p>
+                </div>
+                <label class="block">
                   <span class="dw-label-text">{{ t('dispatch_wizard.create.phone') }}</span>
                   <input
                     v-model="form.requester_phone"
@@ -222,28 +222,27 @@
                     inputmode="numeric"
                     autocomplete="tel"
                     :placeholder="t('dispatch_wizard.create.phone_ph')"
-                    class="dw-input"
+                    class="dw-input mt-1"
                     maxlength="11"
                     @input="onRequesterPhoneInput"
                   />
                 </label>
-                <p
-                  v-if="step2RequesterEmailInvalid"
-                  class="text-xs text-rose-600 sm:col-span-2"
-                >
-                  {{ t('dispatch_wizard.create.email_invalid') }}
-                </p>
-                <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.unit') }}</span>
-                  <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input" />
-                </label>
               </div>
+
+              <!-- Đơn vị -->
+              <label class="block">
+                <span class="dw-label-text">{{ t('dispatch_wizard.create.unit') }}</span>
+                <input v-model="form.requester_unit" type="text" :placeholder="t('dispatch_wizard.create.unit_ph')" class="dw-input mt-1" />
+              </label>
             </div>
 
-            <div class="dw-fieldset">
+            <!-- Thời gian -->
+            <div class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
-              <div class="grid gap-3 sm:grid-cols-2">
-                <label class="block min-w-0">
+
+              <!-- Ngày đề xuất + Ngày giờ cần xe -->
+              <div class="grid gap-4 sm:grid-cols-2">
+                <label class="block">
                   <span class="dw-label-text" :title="t('dispatch_wizard.create.proposed_date_title')">
                     {{ t('dispatch_wizard.create.proposed_date') }} <span class="dw-req" aria-hidden="true">*</span>
                   </span>
@@ -255,7 +254,7 @@
                     @click="openDatePickerFromInput($event)"
                   />
                 </label>
-                <label class="block min-w-0">
+                <label class="block">
                   <span class="dw-label-text" :title="t('dispatch_wizard.create.date_needed_title')">
                     {{ t('dispatch_wizard.create.date_needed') }} <span class="dw-req" aria-hidden="true">*</span>
                   </span>
@@ -267,55 +266,59 @@
                   />
                 </label>
               </div>
-              <p v-if="step2DateOrderInvalid" class="mt-2 text-xs font-medium text-rose-600">
+              <p v-if="step2DateOrderInvalid" class="text-xs font-medium text-rose-600">
                 {{ t('dispatch_wizard.create.date_order_error') }}
               </p>
-              <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-                  <div class="flex items-center justify-between gap-3 sm:min-w-[7.5rem] sm:flex-col sm:items-stretch sm:justify-start sm:pb-0.5">
-                    <div class="flex items-center gap-2">
-                      <span class="text-sm font-semibold text-slate-900">{{ t('dispatch_wizard.create.urgent') }}</span>
-                      <span
-                        class="inline-flex cursor-help text-slate-500 hover:text-slate-700"
-                        tabindex="0"
-                        role="tooltip"
-                        :title="urgentExplainTooltip"
-                        aria-label="⚠️"
-                      >
-                        <span aria-hidden="true">⚠️</span>
-                      </span>
-                      <span
-                        class="hidden cursor-help text-slate-400 hover:text-slate-600 sm:inline-flex"
-                        :title="t('dispatch_wizard.create.urgent_title')"
-                      >
-                        <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      :aria-checked="form.is_urgent"
-                      :disabled="urgentAutoActive || loading || dispatchFormSettingsLoading"
-                      class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-va-800/30 disabled:cursor-not-allowed disabled:opacity-60"
-                      :class="form.is_urgent ? 'justify-end bg-va-800' : 'justify-start bg-slate-300'"
-                      @click="toggleUrgentManual"
+
+              <!-- Card Yêu cầu gấp -->
+              <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+                <!-- Toggle row -->
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-900">{{ t('dispatch_wizard.create.urgent') }}</span>
+                    <span
+                      class="inline-flex cursor-help text-slate-500 hover:text-slate-700"
+                      tabindex="0"
+                      role="tooltip"
+                      :title="urgentExplainTooltip"
+                      aria-label="⚠️"
                     >
-                      <span class="pointer-events-none h-7 w-7 rounded-full bg-white shadow-sm ring-1 ring-black/5" />
-                    </button>
+                      <span aria-hidden="true">⚠️</span>
+                    </span>
+                    <span
+                      class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                      :title="t('dispatch_wizard.create.urgent_title')"
+                    >
+                      <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                    </span>
                   </div>
-                  <div class="min-w-0 flex-1">
-                    <label class="block">
-                      <span class="dw-label-text">{{ t('dispatch_wizard.create.reason') }} <span v-if="form.is_urgent" class="dw-req" aria-hidden="true">*</span></span>
-                      <textarea
-                        v-model="form.urgent_reason"
-                        rows="3"
-                        :placeholder="t('dispatch_wizard.create.reason_ph')"
-                        :disabled="!form.is_urgent"
-                        class="dw-input mt-1 min-h-[4.75rem] resize-y disabled:cursor-not-allowed disabled:opacity-45"
-                      />
-                    </label>
-                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    :aria-checked="form.is_urgent"
+                    :disabled="urgentAutoActive || loading || dispatchFormSettingsLoading"
+                    class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                    :class="form.is_urgent ? 'justify-end bg-indigo-600' : 'justify-start bg-slate-300'"
+                    @click="toggleUrgentManual"
+                  >
+                    <span class="pointer-events-none h-7 w-7 rounded-full bg-white shadow-sm ring-1 ring-black/5" />
+                  </button>
                 </div>
+
+                <!-- Lý do gấp (hiện khi bật) -->
+                <div v-show="form.is_urgent" class="mt-3">
+                  <label class="block">
+                    <span class="dw-label-text">{{ t('dispatch_wizard.create.reason') }} <span class="dw-req" aria-hidden="true">*</span></span>
+                    <textarea
+                      v-model="form.urgent_reason"
+                      rows="3"
+                      :placeholder="t('dispatch_wizard.create.reason_ph')"
+                      class="dw-input mt-1 min-h-[4.75rem] resize-y"
+                    />
+                  </label>
+                </div>
+
+                <!-- Banner auto-urgent -->
                 <p v-if="urgentAutoActive" class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium leading-relaxed text-rose-800 ring-1 ring-rose-100">
                   {{
                     t('dispatch_wizard.create.urgent_auto_banner', {
@@ -452,8 +455,10 @@
               </p>
             </div>
 
-            <div class="dw-fieldset">
+            <div class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_coordinator') }}</h3>
+
+              <!-- Tìm theo tên -->
               <div class="relative">
                 <label class="dw-label">
                   <span>{{ t('dispatch_wizard.create.coord_search_label') }}</span>
@@ -479,7 +484,7 @@
                 />
                 <div
                   v-if="coordinatorSearchLoading"
-                  class="absolute right-3 top-[2.125rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600"
                 />
                 <ul
                   v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
@@ -492,7 +497,7 @@
                     <li v-for="u in coordinatorSearchResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-indigo-50"
                         @mousedown.prevent="pickCoordinator(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -504,27 +509,36 @@
                 </ul>
                 <p v-if="coordinatorSearchError" class="mt-2 text-xs font-medium text-rose-600">{{ coordinatorSearchError }}</p>
               </div>
-              <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                <label class="block min-w-0 sm:col-span-2">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }}</span>
-                  <input
-                    v-model="form.coordinator_name"
-                    type="text"
-                    class="dw-input"
-                    :placeholder="t('dispatch_wizard.create.coord_name_ph')"
-                  />
-                </label>
-                <label class="block min-w-0">
-                  <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_email_label') }}</span>
-                  <input
-                    v-model="form.coordinator_email"
-                    type="email"
-                    :class="['dw-input', step2CoordinatorEmailInvalid ? 'ring-1 ring-rose-300' : '']"
-                    :placeholder="t('dispatch_wizard.create.coord_email_ph')"
-                    @blur="onCoordinatorEmailBlur"
-                  />
-                </label>
-                <label class="block min-w-0">
+
+              <!-- Họ tên -->
+              <label class="block">
+                <span class="dw-label-text">{{ t('dispatch_wizard.create.full_name') }}</span>
+                <input
+                  v-model="form.coordinator_name"
+                  type="text"
+                  class="dw-input mt-1"
+                  :placeholder="t('dispatch_wizard.create.coord_name_ph')"
+                />
+              </label>
+
+              <!-- Email + Điện thoại -->
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label class="block">
+                    <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_email_label') }}</span>
+                    <input
+                      v-model="form.coordinator_email"
+                      type="email"
+                      :class="['dw-input mt-1', step2CoordinatorEmailInvalid ? 'ring-1 ring-rose-300' : '']"
+                      :placeholder="t('dispatch_wizard.create.coord_email_ph')"
+                      @blur="onCoordinatorEmailBlur"
+                    />
+                  </label>
+                  <p v-if="step2CoordinatorEmailInvalid" class="mt-1 text-xs text-rose-600">
+                    {{ t('dispatch_wizard.create.coord_email_invalid') }}
+                  </p>
+                </div>
+                <label class="block">
                   <span class="dw-label-text">{{ t('dispatch_wizard.create.coord_phone') }}</span>
                   <input
                     v-model="form.coordinator_phone"
@@ -532,36 +546,22 @@
                     inputmode="numeric"
                     autocomplete="tel"
                     :placeholder="t('dispatch_wizard.create.coord_phone_ph')"
-                    class="dw-input"
+                    class="dw-input mt-1"
                     maxlength="11"
                     @input="onCoordinatorPhoneInput"
                   />
                 </label>
-                <p v-if="step2CoordinatorEmailInvalid" class="text-xs text-rose-600 sm:col-span-2">
-                  {{ t('dispatch_wizard.create.coord_email_invalid') }}
-                </p>
               </div>
             </div>
           </div>
 
-          <div
-            class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-3.5"
-          >
-            <div class="min-w-0">
-              <label for="dw-source-channel" class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ t('dispatch_wizard.create.channel_label') }}</label>
-              <p class="mt-0.5 text-xs text-slate-500 sm:hidden">{{ t('dispatch_wizard.create.channel_hint') }}</p>
-            </div>
-            <select
-              id="dw-source-channel"
-              v-model="form.source_channel"
-              disabled
-              :title="t('dispatch_wizard.create.option_portal')"
-              class="dw-input max-w-full cursor-not-allowed bg-slate-100 opacity-90 sm:max-w-xs lg:max-w-sm"
-            >
-              <option value="portal">{{ t('dispatch_wizard.create.option_portal') }}</option>
-              <option value="zalo">{{ t('dispatch_wizard.create.option_zalo') }}</option>
-              <option value="paper">{{ t('dispatch_wizard.create.option_paper') }}</option>
-            </select>
+          <!-- Kênh gửi: read-only badge chip thay vì disabled select -->
+          <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
+            <span class="text-sm font-semibold text-slate-600">{{ t('dispatch_wizard.create.channel_label') }}</span>
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M2.003 5.884 10 9.882l7.997-3.998A2 2 0 0 0 16 4H4a2 2 0 0 0-1.997 1.884z"/><path d="m18 8.118-8 4-8-4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.118z"/></svg>
+              {{ t('dispatch_wizard.create.option_portal') }}
+            </span>
           </div>
         </div>
 
@@ -872,6 +872,7 @@ import { DISPATCH_WIZARD_KEY } from '../requests/dispatch-wizard/injectionKeys'
 import ConfirmSummary from '../requests/dispatch-wizard/ConfirmSummary.vue'
 import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
 import PortalStepper from '../../components/portal/PortalStepper.vue'
+import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
 
 const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
@@ -917,9 +918,9 @@ const {
   step2RequesterEmailInvalid,
   draftSaveFlash,
   draftSaveError,
+  lastAutoSavedAt,
   step2CoordinatorEmailInvalid,
   requestedDateTime,
-  tripTypeOptions,
   e1WeekdayOptions,
   openDatePickerFromInput,
   onRequesterPhoneInput,
@@ -980,6 +981,14 @@ const recurringSelectedWeekdayLabels = computed(() =>
 )
 
 const stepperSteps = computed(() => steps.value.map((s) => ({ key: s.id, label: s.title })))
+
+const autoSavedAtLabel = computed(() => {
+  if (!lastAutoSavedAt.value) return ''
+  const d = new Date(lastAutoSavedAt.value)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `Tự động lưu lúc ${hh}:${mm}`
+})
 
 function onPortalTripTypeClick(value) {
   if (form.value.trip_type === value) {

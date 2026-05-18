@@ -104,7 +104,11 @@ export function useDispatchRequestWizard(options = {}) {
   }
 
   function writeDraftList(uid, items) {
-    localStorage.setItem(draftListStorageKey(uid), JSON.stringify({ items }))
+    try {
+      localStorage.setItem(draftListStorageKey(uid), JSON.stringify({ items }))
+    } catch (e) {
+      if (isQuotaExceededError(e)) throw e
+    }
   }
 
   function refreshDraftsList() {
@@ -148,7 +152,9 @@ export function useDispatchRequestWizard(options = {}) {
     if (Array.isArray(data.businessRows) && data.businessRows.length) {
       businessRows.value = data.businessRows.map((r) => ({ ...emptyBusinessRow(), ...r }))
     }
-    if (Array.isArray(data.cargoRows) && data.cargoRows.length) cargoRows.value = data.cargoRows
+    if (Array.isArray(data.cargoRows) && data.cargoRows.length) {
+      cargoRows.value = data.cargoRows.map((r) => ({ ...emptyCargoRow(), ...r }))
+    }
     if (typeof data.step === 'number') step.value = data.step
     if (typeof data.maxReachedStep === 'number') {
       maxReachedStep.value = Math.max(data.maxReachedStep, step.value)
@@ -182,6 +188,7 @@ export function useDispatchRequestWizard(options = {}) {
   const pdfPreviewUrl = ref(null)
   const pdfPreviewForId = ref(null)
   const draftSavedAt = ref(null)
+  const lastAutoSavedAt = ref(null)
   const hasDraftSnapshot = ref(false)
   const clearDraftModalOpen = ref(false)
   const submitResultModalOpen = ref(false)
@@ -1174,9 +1181,12 @@ export function useDispatchRequestWizard(options = {}) {
     { immediate: true },
   )
 
+  let autosaveTimer = null
+
   onUnmounted(() => {
     revokePdfPreviewUrl()
     clearTimeout(draftSaveFlashTimer)
+    clearTimeout(autosaveTimer)
   })
 
   async function doSubmit() {
@@ -1754,6 +1764,22 @@ export function useDispatchRequestWizard(options = {}) {
     },
   )
 
+  // Autosave: debounce 3s sau mỗi thay đổi form; không lưu khi đã submit (created) hoặc đang ở step 0
+  watch(
+    form,
+    () => {
+      if (created.value) return
+      if (step.value === 0 && !form.value.trip_type) return
+      clearTimeout(autosaveTimer)
+      autosaveTimer = setTimeout(() => {
+        if (created.value) return
+        saveDraft()
+        lastAutoSavedAt.value = Date.now()
+      }, 3000)
+    },
+    { deep: true },
+  )
+
   return {
     isPortal,
     steps,
@@ -1767,6 +1793,7 @@ export function useDispatchRequestWizard(options = {}) {
     pdfError,
     pdfPreviewUrl,
     draftSavedAt,
+    lastAutoSavedAt,
     hasDraftSnapshot,
     clearDraftModalOpen,
     submitResultModalOpen,

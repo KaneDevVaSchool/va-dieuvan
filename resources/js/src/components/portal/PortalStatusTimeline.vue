@@ -45,10 +45,10 @@
               <span v-else-if="step.state === 'current'" class="h-2.5 w-2.5 rounded-full bg-teal-600" />
               <span v-else class="text-xs text-slate-300">·</span>
             </div>
-            <p class="mt-2 line-clamp-3 text-[11px] font-semibold leading-tight text-slate-800 lg:text-xs">
+            <p class="mt-2 line-clamp-3 text-xs font-semibold leading-tight text-slate-800 lg:text-sm">
               {{ step.label }}
             </p>
-            <p v-if="step.sub && step.sub !== '—'" class="mt-0.5 text-[10px] leading-tight text-slate-500 lg:text-[11px]">
+            <p v-if="step.sub && step.sub !== '—'" class="mt-0.5 text-xs leading-tight text-slate-500 lg:text-xs">
               {{ step.sub }}
             </p>
           </div>

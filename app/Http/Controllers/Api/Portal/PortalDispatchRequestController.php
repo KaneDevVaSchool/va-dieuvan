@@ -13,7 +13,6 @@ use App\Http\Requests\Api\Portal\SummaryPortalDispatchRequestsRequest;
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Models\Attachment;
 use App\Models\DispatchRequest;
-use App\Models\Role;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
@@ -260,21 +259,19 @@ class PortalDispatchRequestController extends Controller
             );
         }
 
-        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
-            $recipients = User::query()
-                ->role('dispatcher')
-                ->get();
-            if ($recipients->isNotEmpty()) {
-                $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
-                Notification::send(
-                    $recipients,
-                    new NewDispatchRequestNotification(
-                        $dispatchRequest->id,
-                        $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
-                        $dispatchRequest->is_urgent,
-                    ),
-                );
-            }
+        $recipients = User::query()
+            ->role(['dispatcher', 'admin', 'superadmin'])
+            ->get();
+        if ($recipients->isNotEmpty()) {
+            $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
+            Notification::send(
+                $recipients,
+                new NewDispatchRequestNotification(
+                    $dispatchRequest->id,
+                    $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
+                    $dispatchRequest->is_urgent,
+                ),
+            );
         }
 
         return $this->created($this->presentDispatchRequest($dispatchRequest));
