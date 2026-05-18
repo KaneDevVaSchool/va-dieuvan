@@ -5,7 +5,7 @@
         <div>
           <RouterLink
             :to="{ name: 'portalHome' }"
-            class="text-xs font-semibold text-va-800 underline-offset-2 hover:underline"
+            class="text-xs font-semibold text-indigo-600 underline-offset-2 hover:underline"
           >
             ← {{ t('portal.back_dashboard') }}
           </RouterLink>
@@ -42,7 +42,7 @@
               <p class="mt-2 text-xs text-slate-400">{{ fmtTime(n.created_at) }}</p>
               <RouterLink
                 v-if="n.data?.dispatch_request_id"
-                class="mt-3 inline-block text-xs font-semibold text-va-800 underline underline-offset-2"
+                class="mt-3 inline-block text-xs font-semibold text-indigo-600 underline underline-offset-2"
                 :to="{ name: 'portalRequestDetail', params: { id: String(n.data.dispatch_request_id) } }"
               >
                 {{ t('portal.notifications_open_request', { id: n.data.dispatch_request_id }) }}

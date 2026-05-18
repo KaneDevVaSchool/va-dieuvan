@@ -5,7 +5,7 @@
         <div>
           <RouterLink
             :to="{ name: 'portalHome' }"
-            class="text-xs font-semibold text-va-800 underline-offset-2 hover:underline"
+            class="text-xs font-semibold text-indigo-600 underline-offset-2 hover:underline"
           >
             ← {{ t('portal.back_dashboard') }}
           </RouterLink>
@@ -14,7 +14,7 @@
         </div>
         <RouterLink
           :to="{ name: 'portalCreate' }"
-          class="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-2xl bg-va-800 px-6 text-sm font-bold text-white shadow-md hover:bg-va-900"
+          class="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-2xl bg-indigo-600 px-6 text-sm font-bold text-white shadow-md hover:bg-indigo-700"
         >
           {{ t('portal.cta_primary') }}
         </RouterLink>
@@ -28,7 +28,7 @@
             v-model="searchInput"
             type="search"
             autocomplete="off"
-            class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm outline-none ring-va-800/20 focus:border-va-400 focus:ring-2 sm:max-w-md"
+            class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm outline-none ring-indigo-500/15 focus:border-indigo-400 focus:ring-2 sm:max-w-md"
             :placeholder="t('portal.search_placeholder')"
           />
           <div class="flex shrink-0 items-center gap-2">
@@ -36,7 +36,7 @@
             <select
               id="portal-sort"
               v-model="sort"
-              class="min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium shadow-sm outline-none focus:border-va-400 focus:ring-2"
+              class="min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium shadow-sm outline-none focus:border-indigo-400 focus:ring-2"
               @change="reloadFromStart"
             >
               <option value="depart_desc">{{ t('portal.sort_depart_desc') }}</option>
@@ -56,7 +56,7 @@
           class="min-h-[40px] rounded-full border px-4 text-xs font-semibold transition sm:text-sm"
           :class="
             filterStatus === opt.key
-              ? 'border-va-800 bg-va-800 text-white shadow-md hover:bg-va-900'
+              ? 'border-indigo-600 bg-indigo-600 text-white shadow-md hover:bg-indigo-700'
               : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
           "
           :aria-pressed="filterStatus === opt.key"
@@ -82,7 +82,7 @@
           <template #action>
             <RouterLink
               :to="{ name: 'portalCreate' }"
-              class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-va-800 px-8 text-sm font-semibold text-white shadow-md hover:bg-va-900"
+              class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-indigo-600 px-8 text-sm font-semibold text-white shadow-md hover:bg-indigo-700"
             >
               {{ t('portal.cta_primary') }}
             </RouterLink>
@@ -94,7 +94,7 @@
           <button
             v-if="pagination && pagination.current_page < pagination.last_page"
             type="button"
-            class="relative z-30 flex w-full min-h-[52px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow hover:bg-slate-50 disabled:opacity-50"
+            class="relative z-30 flex w-full min-h-[52px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow transition hover:border-indigo-200 hover:bg-indigo-50/60 disabled:opacity-50"
             :disabled="loadingMore"
             @click="loadMore"
           >

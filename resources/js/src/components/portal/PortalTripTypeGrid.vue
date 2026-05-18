@@ -1,8 +1,9 @@
 <template>
   <div>
-    <p v-if="hint" class="mb-4 text-sm font-semibold tracking-tight text-slate-700">{{ hint }}</p>
+    <h2 v-if="hint" class="text-lg font-semibold text-slate-900">{{ hint }}</h2>
+    <p v-if="doubleTapHint" class="mt-1 text-sm text-slate-600">{{ doubleTapHint }}</p>
     <div
-      class="grid grid-cols-2 gap-4 xl:grid-cols-4"
+      class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4"
       role="listbox"
       :aria-label="hint"
       aria-orientation="horizontal"
@@ -12,30 +13,39 @@
         :key="tt"
         type="button"
         role="option"
-        class="relative flex min-h-[120px] flex-col items-start gap-3 rounded-2xl border px-4 py-4 text-left shadow-sm outline-none transition-shadow duration-150 ease-out focus-visible:ring-2 focus-visible:ring-va-800 focus-visible:ring-offset-2 xl:min-h-[124px]"
+        class="relative flex min-h-[120px] flex-col items-center rounded-xl border-2 p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 xl:min-h-[124px]"
         :class="tripType === tt ? styleFor(tt).selectedCard : styleFor(tt).idleCard"
         :aria-selected="tripType === tt"
         @click="$emit('select', tt)"
       >
+        <component
+          :is="tripTypeIcon(tt)"
+          class="mb-3 h-10 w-10 shrink-0 opacity-90 stroke-[1.5]"
+          :class="styleFor(tt).iconClass"
+          aria-hidden="true"
+        />
+        <span class="font-semibold text-slate-900">{{ t(`dispatch_wizard.trip_type.${tt}.label`) }}</span>
+        <span class="mt-1 text-xs leading-snug text-slate-600">{{ t(`dispatch_wizard.trip_type.${tt}.hint`) }}</span>
         <span
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-inner ring-1 ring-black/[0.04]"
-          :class="tripType === tt ? styleFor(tt).iconSelected : styleFor(tt).iconIdle"
+          v-if="tt === 'cargo' && cargoBadge"
+          class="mt-2 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-800"
         >
-          <component :is="tripTypeIcon(tt)" class="h-10 w-10 shrink-0 stroke-[1.5]" aria-hidden="true" />
-        </span>
-        <span class="min-w-0">
-          <span class="block text-base font-bold tracking-tight text-slate-900">{{ t(`dispatch_wizard.trip_type.${tt}.label`) }}</span>
-          <span class="mt-1 block text-xs leading-snug text-slate-600">{{ t(`dispatch_wizard.trip_type.${tt}.hint`) }}</span>
+          {{ cargoBadge }}
         </span>
       </button>
     </div>
-    <p v-if="doubleTapHint" class="mt-4 text-xs text-slate-500">{{ doubleTapHint }}</p>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { BriefcaseIcon, CubeIcon, HomeIcon, MapPinIcon } from '@heroicons/vue/24/outline'
+import {
+  AcademicCapIcon,
+  BriefcaseIcon,
+  BuildingOffice2Icon,
+  CubeIcon,
+} from '@heroicons/vue/24/outline'
 
 defineProps({
   tripTypes: { type: Array, required: true },
@@ -46,41 +56,41 @@ defineProps({
 
 defineEmits(['select'])
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
-const TRIP_TYPE_ICONS = {
-  door_to_door: HomeIcon,
-  point_to_point: MapPinIcon,
-  business: BriefcaseIcon,
-  cargo: CubeIcon,
-}
+const cargoBadge = computed(() =>
+  te('dispatch_wizard.trip_type.cargo.badge') ? t('dispatch_wizard.trip_type.cargo.badge') : '',
+)
 
-/** Full Tailwind strings so JIT keeps classes */
+/** Khớp admin DispatchRequestCreateView — không hover idle */
 const TRIP_STYLE = {
   door_to_door: {
-    iconIdle: 'bg-sky-100 text-sky-700',
-    iconSelected: 'bg-sky-200 text-sky-800',
-    selectedCard: 'border-sky-400 bg-sky-50 ring-2 ring-sky-400/40 shadow-sm',
-    idleCard: 'border-slate-200/90 bg-white',
+    iconClass: 'text-violet-600',
+    selectedCard: 'border-indigo-400 bg-violet-50/90 shadow-sm ring-2 ring-indigo-500',
+    idleCard: 'border-slate-200 bg-slate-50',
   },
   point_to_point: {
-    iconIdle: 'bg-indigo-100 text-indigo-700',
-    iconSelected: 'bg-indigo-200 text-indigo-900',
-    selectedCard: 'border-indigo-400 bg-indigo-50 ring-2 ring-indigo-400/35 shadow-sm',
-    idleCard: 'border-slate-200/90 bg-white',
+    iconClass: 'text-sky-600',
+    selectedCard: 'border-indigo-400 bg-sky-50/90 shadow-sm ring-2 ring-indigo-500',
+    idleCard: 'border-slate-200 bg-slate-50',
   },
   business: {
-    iconIdle: 'bg-amber-100 text-amber-700',
-    iconSelected: 'bg-amber-200 text-amber-900',
-    selectedCard: 'border-amber-400 bg-amber-50 ring-2 ring-amber-400/35 shadow-sm',
-    idleCard: 'border-slate-200/90 bg-white',
+    iconClass: 'text-emerald-600',
+    selectedCard: 'border-indigo-400 bg-emerald-50/90 shadow-sm ring-2 ring-indigo-500',
+    idleCard: 'border-slate-200 bg-slate-50',
   },
   cargo: {
-    iconIdle: 'bg-teal-100 text-teal-700',
-    iconSelected: 'bg-teal-200 text-teal-900',
-    selectedCard: 'border-teal-400 bg-teal-50 ring-2 ring-teal-400/35 shadow-sm',
-    idleCard: 'border-slate-200/90 bg-white',
+    iconClass: 'text-orange-600',
+    selectedCard: 'border-indigo-400 bg-orange-50/90 shadow-sm ring-2 ring-indigo-500',
+    idleCard: 'border-slate-200 bg-slate-50',
   },
+}
+
+const TRIP_TYPE_ICONS = {
+  door_to_door: AcademicCapIcon,
+  point_to_point: BuildingOffice2Icon,
+  business: BriefcaseIcon,
+  cargo: CubeIcon,
 }
 
 function styleFor(tt) {
@@ -88,6 +98,6 @@ function styleFor(tt) {
 }
 
 function tripTypeIcon(tt) {
-  return TRIP_TYPE_ICONS[tt] ?? MapPinIcon
+  return TRIP_TYPE_ICONS[tt] ?? BuildingOffice2Icon
 }
 </script>

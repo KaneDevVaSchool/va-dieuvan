@@ -23,7 +23,7 @@
 
     <div v-else-if="detailError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
       {{ detailError }}
-      <RouterLink :to="{ name: 'portalHome' }" class="mt-3 block font-semibold text-va-900 underline">{{ t('portal.back_home') }}</RouterLink>
+      <RouterLink :to="{ name: 'portalHome' }" class="mt-3 block font-semibold text-indigo-700 underline">{{ t('portal.back_home') }}</RouterLink>
     </div>
 
     <template v-else-if="req">
@@ -31,7 +31,7 @@
         <div class="flex min-w-0 items-start gap-3">
           <RouterLink
             :to="{ name: 'portalHome' }"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/70 hover:text-indigo-700"
             :aria-label="t('portal.back_list')"
           >
             <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />

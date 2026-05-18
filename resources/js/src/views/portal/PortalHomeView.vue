@@ -9,7 +9,7 @@
         </div>
         <RouterLink
           :to="{ name: 'portalCreate' }"
-          class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-va-800 px-6 text-sm font-bold text-white shadow-md transition hover:bg-va-900"
+          class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-sm font-bold text-white shadow-md transition hover:bg-indigo-700"
         >
           <PlusCircleIcon class="h-5 w-5" aria-hidden="true" />
           {{ t('portal.cta_primary') }}
@@ -24,7 +24,7 @@
             <h2 class="text-lg font-bold text-slate-900">{{ t('portal.recent_requests_heading') }}</h2>
             <RouterLink
               :to="{ name: 'portalRequestList' }"
-              class="text-sm font-semibold text-va-800 underline-offset-2 hover:underline"
+              class="text-sm font-semibold text-indigo-600 underline-offset-2 hover:underline"
             >
               {{ t('portal.view_all_requests') }}
             </RouterLink>
@@ -45,7 +45,7 @@
             <template #action>
               <RouterLink
                 :to="{ name: 'portalCreate' }"
-                class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-va-800 px-8 text-sm font-semibold text-white shadow-md hover:bg-va-900"
+                class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-indigo-600 px-8 text-sm font-semibold text-white shadow-md hover:bg-indigo-700"
               >
                 {{ t('portal.cta_primary') }}
               </RouterLink>

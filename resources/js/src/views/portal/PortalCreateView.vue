@@ -1,130 +1,106 @@
 <template>
-  <div class="text-slate-900">
+  <div
+    class="dispatch-wizard min-h-screen bg-slate-50/50 pb-[calc(7rem+env(safe-area-inset-bottom))] text-slate-900 md:pb-10"
+    :aria-busy="submitting ? 'true' : 'false'"
+  >
     <div
-      class="relative overflow-hidden border-b border-slate-200/60 bg-gradient-to-br from-slate-900 via-va-900 to-va-800 px-4 py-9 text-white shadow-lg shadow-slate-900/20 sm:px-8 xl:mx-auto xl:max-w-4xl xl:rounded-b-[2rem] xl:border-x xl:border-slate-200/40 xl:shadow-xl xl:shadow-va-950/30"
+      class="mx-auto max-w-6xl space-y-6 px-4 py-6 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 lg:py-8"
     >
-      <div class="pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full bg-white/10 blur-3xl" aria-hidden="true" />
-      <div class="pointer-events-none absolute -bottom-20 left-1/4 h-40 w-72 rounded-full bg-teal-400/15 blur-3xl" aria-hidden="true" />
-      <div class="relative mx-auto flex max-w-3xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">{{ t('portal.nav_title') }}</p>
-          <h1 class="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{{ t('portal.create.page_title') }}</h1>
-          <p class="mt-2 max-w-xl text-sm leading-relaxed text-white/85">{{ t('portal.create.page_subtitle') }}</p>
+      <header>
+        <p class="text-xs font-semibold uppercase tracking-wide text-va-800">{{ t('portal.nav_title') }}</p>
+        <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{{ t('portal.create.page_title') }}</h1>
+        <p class="mt-1 text-sm text-slate-600">{{ t('portal.create.page_subtitle') }}</p>
+      </header>
+
+      <PortalStepper :steps="stepLabels" :current="step" :steps-nav-label="t('portal.steps_nav')" />
+
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
+        <div
+          v-if="formError"
+          ref="errorBannerRef"
+          role="alert"
+          tabindex="-1"
+          class="mb-5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900 outline-none"
+        >
+          {{ formError }}
         </div>
-        <div class="hidden shrink-0 sm:flex">
-          <span
-            class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/12 shadow-inner ring-2 ring-white/25 backdrop-blur-md"
-            aria-hidden="true"
+
+        <Transition name="portal-step" mode="out-in">
+          <div v-if="step === 0" key="portal-step-0" class="space-y-4">
+            <PortalTripTypeGrid
+              :trip-types="tripTypes"
+              :trip-type="tripType"
+              :hint="t('portal.pick_type_hint')"
+              :double-tap-hint="t('portal.double_tap_hint')"
+              @select="onTripTypeClick"
+            />
+            <p
+              v-if="!canGoNext"
+              role="status"
+              class="dw-callout"
+            >
+              {{ t('portal.pick_type_to_continue') }}
+            </p>
+          </div>
+          <div v-else-if="step === 1" key="portal-step-1">
+            <PortalStepInfo
+              v-model="infoModel"
+              :requester-display="requesterDisplay"
+              :show-passenger-count="showPassengerCount"
+            />
+          </div>
+          <PortalStepConfirm v-else key="portal-step-2" :hint="t('portal.confirm_hint')" :summary="confirmSummary" />
+        </Transition>
+
+        <div class="mt-8 hidden items-center justify-between gap-4 border-t border-slate-100 pt-7 md:flex">
+          <button
+            v-if="step > 0"
+            type="button"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm disabled:opacity-50"
+            :disabled="submitting"
+            @click="step -= 1"
           >
-            <PaperAirplaneIcon class="h-9 w-9 text-white" />
-          </span>
+            {{ t('portal.back') }}
+          </button>
+          <span v-else />
+
+          <button
+            v-if="step < 2"
+            type="button"
+            class="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+            :disabled="submitting || !canGoNext"
+            @click="nextStep"
+          >
+            {{ t('portal.next') }}
+            <ArrowRightIcon class="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            v-else
+            type="button"
+            class="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+            :disabled="submitting"
+            @click="submit"
+          >
+            <span
+              v-if="submitting"
+              class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+            />
+            {{ t('portal.submit') }}
+          </button>
         </div>
-      </div>
+      </section>
     </div>
 
-    <main
-      class="mx-auto max-w-4xl px-4 py-8 sm:px-6
-             supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))]
-             supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))]
-             pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-10"
-      :aria-busy="submitting ? 'true' : 'false'"
-    >
-      <div class="mx-auto mt-[-2rem] flex max-w-3xl flex-col gap-6 lg:mt-[-2.75rem]">
-        <PortalStepper :steps="stepLabels" :current="step" :steps-nav-label="t('portal.steps_nav')" />
-
-        <div
-          class="rounded-[1.75rem] border border-slate-200/90 bg-white/95 p-5 shadow-2xl shadow-slate-900/[0.08] ring-1 ring-slate-900/[0.04] backdrop-blur-sm sm:p-8 md:p-10"
-        >
-          <div
-            v-if="formError"
-            ref="errorBannerRef"
-            role="alert"
-            tabindex="-1"
-            class="mb-5 rounded-2xl border border-rose-200/80 bg-gradient-to-r from-rose-50 to-white px-4 py-3 text-sm font-semibold text-rose-900 shadow-sm outline-none ring-1 ring-rose-100/80"
-          >
-            {{ formError }}
-          </div>
-
-          <Transition name="portal-step" mode="out-in">
-            <div v-if="step === 0" key="portal-step-0" class="space-y-4">
-              <PortalTripTypeGrid
-                :trip-types="tripTypes"
-                :trip-type="tripType"
-                :hint="t('portal.pick_type_hint')"
-                :double-tap-hint="t('portal.double_tap_hint')"
-                @select="onTripTypeClick"
-              />
-              <p
-                v-if="!canGoNext"
-                role="status"
-                class="rounded-xl border border-amber-200/90 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-950 shadow-sm ring-1 ring-amber-100/90"
-              >
-                {{ t('portal.pick_type_to_continue') }}
-              </p>
-            </div>
-            <div v-else-if="step === 1" key="portal-step-1" class="space-y-5">
-              <PortalStepInfo
-                v-model="infoModel"
-                :requester-display="requesterDisplay"
-                :show-passenger-count="showPassengerCount"
-              />
-            </div>
-            <PortalStepConfirm v-else key="portal-step-2" :hint="t('portal.confirm_hint')" :summary="confirmSummary" />
-          </Transition>
-
-          <!-- Desktop footer nút -->
-          <div class="mt-8 hidden items-center justify-between gap-4 border-t border-slate-100/90 pt-7 md:flex">
-            <button
-              v-if="step > 0"
-              type="button"
-              class="min-h-[46px] rounded-xl border border-slate-200/95 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-900/[0.04] transition hover:bg-slate-50 disabled:opacity-50"
-              :disabled="submitting"
-              @click="step -= 1"
-            >
-              {{ t('portal.back') }}
-            </button>
-            <span v-else />
-
-            <button
-              v-if="step < 2"
-              type="button"
-              class="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-gradient-to-r from-va-800 to-va-900 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-va-950/30 ring-1 ring-white/10 transition hover:from-va-900 hover:to-va-950 disabled:cursor-not-allowed disabled:opacity-45"
-              :disabled="submitting || !canGoNext"
-              @click="nextStep"
-            >
-              {{ t('portal.next') }}
-              <ArrowRightIcon class="h-5 w-5" aria-hidden="true" />
-            </button>
-            <button
-              v-else
-              type="button"
-              class="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-gradient-to-r from-va-800 to-va-900 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-va-950/30 ring-1 ring-white/10 transition hover:from-va-900 hover:to-va-950 disabled:cursor-not-allowed disabled:opacity-45"
-              :disabled="submitting"
-              @click="submit"
-            >
-              <span
-                v-if="submitting"
-                class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
-              />
-              {{ t('portal.submit') }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </main>
-
     <div
-      class="fixed inset-x-0 bottom-0 z-40 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 md:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 flex justify-center border-t border-slate-200 bg-white/98 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 md:hidden"
     >
       <div
-        class="mx-auto flex w-full max-w-xl items-center gap-2 rounded-[1.75rem] border border-slate-200/95 bg-white/95 px-3 py-2.5 shadow-[0_-16px_40px_-12px_rgba(15,23,42,0.22)] backdrop-blur-xl ring-1 ring-slate-900/[0.05]
-               supports-[padding:max(0px)]:pl-[max(0.75rem,env(safe-area-inset-left))]
-               supports-[padding:max(0px)]:pr-[max(0.75rem,env(safe-area-inset-right))]"
+        class="mx-auto flex w-full max-w-6xl items-center gap-2 px-4 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))]"
       >
         <button
           v-if="step > 0"
           type="button"
-          class="min-h-[48px] min-w-[96px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-900/[0.04] disabled:opacity-45"
+          class="min-h-[48px] min-w-[96px] rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm disabled:opacity-45"
           :disabled="submitting"
           @click="step -= 1"
         >
@@ -135,19 +111,19 @@
         <button
           v-if="step < 2"
           type="button"
-          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-va-800 to-va-900 px-4 text-sm font-bold text-white shadow-lg shadow-va-950/25 ring-1 ring-white/10 hover:from-va-900 hover:to-va-950 disabled:cursor-not-allowed disabled:opacity-45"
-              :disabled="submitting || !canGoNext"
-              @click="nextStep"
+          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-va-800 px-4 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+          :disabled="submitting || !canGoNext"
+          @click="nextStep"
         >
           {{ t('portal.next') }}
-          <ArrowRightIcon class="h-5 w-5" aria-hidden="true" />
+          <ArrowRightIcon class="h-4 w-4" aria-hidden="true" />
         </button>
         <button
           v-else
           type="button"
-          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-va-800 to-va-900 px-4 text-sm font-bold text-white shadow-lg shadow-va-950/25 ring-1 ring-white/10 hover:from-va-900 hover:to-va-950 disabled:opacity-45"
-              :disabled="submitting"
-              @click="submit"
+          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-va-800 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-45"
+          :disabled="submitting"
+          @click="submit"
         >
           <span
             v-if="submitting"
@@ -164,7 +140,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRightIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline'
+import { ArrowRightIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
 import { createPortalDispatchRequest } from '../../api/requests'
 import { formatApiError } from '../../api/http'
@@ -391,6 +367,7 @@ async function submit() {
 }
 </script>
 
+<style src="../requests/dispatch-wizard/dispatchWizard.styles.css"></style>
 <style scoped>
 .portal-step-enter-active,
 .portal-step-leave-active {

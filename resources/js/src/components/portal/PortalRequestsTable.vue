@@ -13,7 +13,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
-          <tr v-for="req in requests" :key="req.id" class="transition hover:bg-slate-50/80">
+          <tr v-for="req in requests" :key="req.id" class="group/row transition hover:bg-indigo-50/40">
             <td class="whitespace-nowrap px-4 py-3 font-mono text-sm font-semibold text-slate-900">#{{ req.id }}</td>
             <td class="px-4 py-3">
               <p class="font-medium text-slate-800">{{ routeLine(req) }}</p>
@@ -28,7 +28,7 @@
             <td class="px-4 py-3 text-right">
               <RouterLink
                 :to="{ name: 'portalRequestDetail', params: { id: String(req.id) } }"
-                class="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                class="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl text-slate-400 transition group-hover/row:bg-indigo-50 group-hover/row:text-indigo-500 hover:text-indigo-600"
                 :aria-label="t('portal.open_request', { id: req.id })"
               >
                 <ChevronRightIcon class="h-5 w-5" />
@@ -45,7 +45,7 @@
         v-for="req in requests"
         :key="req.id"
         :to="{ name: 'portalRequestDetail', params: { id: String(req.id) } }"
-        class="flex gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+        class="group/card flex gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-200/80 hover:bg-indigo-50/30"
       >
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2">
@@ -56,7 +56,7 @@
           <p v-if="tripTypeLabel(req)" class="mt-1 text-xs text-slate-500">{{ tripTypeLabel(req) }}</p>
           <p class="mt-2 text-xs text-slate-600">{{ timeCell(req) }}</p>
         </div>
-        <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+        <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400 transition group-hover/card:text-indigo-500" aria-hidden="true" />
       </RouterLink>
     </div>
   </div>

@@ -11,15 +11,17 @@
       <article
         v-for="card in cards"
         :key="card.key"
-        class="rounded-2xl border bg-white p-4 shadow-sm ring-1 ring-inset ring-black/[0.03]"
-        :class="card.borderClass"
+        class="rounded-2xl border bg-gradient-to-br p-4 shadow-sm ring-1 ring-inset ring-black/[0.03] transition hover:shadow-md"
+        :class="[card.borderClass, card.bgClass]"
       >
         <div class="flex items-start justify-between gap-2">
           <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-600">{{ card.title }}</p>
-          <component :is="card.icon" class="h-6 w-6 shrink-0 opacity-90" :class="card.iconClass" aria-hidden="true" />
+          <span class="flex shrink-0 rounded-xl p-2" :class="card.iconWrapClass">
+            <component :is="card.icon" class="h-6 w-6 opacity-95" :class="card.iconClass" aria-hidden="true" />
+          </span>
         </div>
-        <p class="mt-2 font-mono text-2xl font-bold tracking-tight text-slate-900">{{ card.value }}</p>
-        <p class="mt-1 text-xs leading-snug text-slate-500">{{ card.subtitle }}</p>
+        <p class="mt-2 text-3xl font-bold tabular-nums tracking-tight" :class="card.valueClass">{{ card.value }}</p>
+        <p class="mt-1 text-xs leading-snug text-slate-600">{{ card.subtitle }}</p>
       </article>
     </template>
   </div>
@@ -54,7 +56,10 @@ const cards = computed(() => {
       subtitle: t('portal.kpi_processing_sub'),
       icon: TruckIcon,
       iconClass: 'text-sky-600',
+      iconWrapClass: 'bg-sky-100 text-sky-600',
+      bgClass: 'from-sky-50/90 to-white',
       borderClass: 'border-sky-100',
+      valueClass: 'text-sky-700',
     },
     {
       key: 'pending',
@@ -63,7 +68,10 @@ const cards = computed(() => {
       subtitle: t('portal.kpi_pending_sub'),
       icon: ClockIcon,
       iconClass: 'text-amber-600',
+      iconWrapClass: 'bg-amber-100 text-amber-600',
+      bgClass: 'from-amber-50/90 to-white',
       borderClass: 'border-amber-100',
+      valueClass: 'text-amber-700',
     },
     {
       key: 'completed',
@@ -72,7 +80,10 @@ const cards = computed(() => {
       subtitle: t('portal.kpi_completed_sub'),
       icon: CheckCircleIcon,
       iconClass: 'text-emerald-600',
+      iconWrapClass: 'bg-emerald-100 text-emerald-600',
+      bgClass: 'from-emerald-50/90 to-white',
       borderClass: 'border-emerald-100',
+      valueClass: 'text-emerald-700',
     },
     {
       key: 'rejected',
@@ -81,7 +92,10 @@ const cards = computed(() => {
       subtitle: t('portal.kpi_rejected_sub'),
       icon: XCircleIcon,
       iconClass: 'text-rose-600',
+      iconWrapClass: 'bg-rose-100 text-rose-600',
+      bgClass: 'from-rose-50/90 to-white',
       borderClass: 'border-rose-100',
+      valueClass: 'text-rose-700',
     },
   ]
 })
