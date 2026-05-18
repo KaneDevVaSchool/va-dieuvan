@@ -1,6 +1,6 @@
 <template>
   <header
-    class="sticky top-0 z-30 border-b border-slate-200/90 bg-white/98 shadow-sm backdrop-blur-md
+    class="fixed inset-x-0 top-0 z-50 border-b border-slate-200/90 bg-white/98 shadow-sm backdrop-blur-md
            supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)]
            supports-[padding:max(0px)]:pl-[env(safe-area-inset-left)]
            supports-[padding:max(0px)]:pr-[env(safe-area-inset-right)]"
@@ -21,7 +21,7 @@
         </div>
       </RouterLink>
 
-      <nav class="flex shrink-0 items-center gap-1.5 sm:gap-2 lg:gap-3" aria-label="Portal">
+      <nav class="flex shrink-0 flex-1 items-center justify-center gap-1.5 sm:gap-2 lg:gap-3 xl:flex-none xl:justify-start" aria-label="Portal">
         <RouterLink
           :to="{ name: 'portalHome' }"
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
@@ -52,7 +52,22 @@
         </RouterLink>
       </nav>
 
-      <div ref="menuRootRef" class="relative shrink-0">
+      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+        <RouterLink
+          :to="{ name: 'portalNotifications' }"
+          class="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+          :aria-label="t('portal.notifications_bell_aria')"
+        >
+          <BellOutlineIcon class="h-6 w-6" aria-hidden="true" />
+          <span
+            v-if="unreadBadge > 0"
+            class="absolute right-1 top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white"
+          >
+            {{ unreadBadge > 99 ? '99+' : unreadBadge }}
+          </span>
+        </RouterLink>
+
+        <div ref="menuRootRef" class="relative shrink-0">
         <button
           type="button"
           class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-slate-200/80 bg-white px-2 py-1 font-semibold text-va-900 outline-none ring-va-800/30 transition hover:bg-slate-50 focus-visible:ring-2 disabled:opacity-50 sm:min-w-0 sm:gap-2 sm:px-3"
@@ -124,21 +139,24 @@
           </div>
         </Transition>
       </div>
+      </div>
     </div>
   </header>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightStartOnRectangleIcon,
+  BellIcon as BellOutlineIcon,
   ChevronDownIcon,
   HomeIcon as HomeModernIcon,
   PlusCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
+import { fetchPortalNotifications } from '../../api/notifications'
 import { confirmAction } from '../../composables/useConfirm'
 
 const logoUrl = '/images/logo/logo-2.png'
@@ -155,9 +173,22 @@ const menuRootRef = ref(null)
 const isHome = computed(() => route.name === 'portalHome')
 const isCreate = computed(() => route.name === 'portalCreate')
 const isDetail = computed(() => route.name === 'portalRequestDetail')
+const isList = computed(() => route.name === 'portalRequestList')
 
-/** Detail is treated as sub-view of list → highlight Home nav */
-const homeNavActive = computed(() => isHome.value || isDetail.value)
+/** Detail / list là phần mở rộng của trang chủ portal → highlight Home nav */
+const homeNavActive = computed(() => isHome.value || isDetail.value || isList.value)
+
+const unreadBadge = ref(0)
+let unreadPollTimer = null
+
+async function refreshUnreadBadge() {
+  try {
+    const data = await fetchPortalNotifications({ per_page: 1, page: 1 })
+    unreadBadge.value = data.meta?.unread_total ?? 0
+  } catch {
+    unreadBadge.value = 0
+  }
+}
 
 const userInitials = computed(() => {
   const name = auth.user?.name?.trim()
@@ -178,11 +209,21 @@ function onDocPointerDown(e) {
 
 onMounted(() => {
   document.addEventListener('pointerdown', onDocPointerDown, true)
+  refreshUnreadBadge()
+  unreadPollTimer = window.setInterval(refreshUnreadBadge, 60_000)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocPointerDown, true)
+  if (unreadPollTimer) window.clearInterval(unreadPollTimer)
 })
+
+watch(
+  () => route.fullPath,
+  () => {
+    refreshUnreadBadge()
+  },
+)
 
 async function closeMenuThenLogout() {
   menuOpen.value = false

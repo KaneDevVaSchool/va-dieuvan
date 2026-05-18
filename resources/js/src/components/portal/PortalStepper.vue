@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="relative min-w-0 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/80 to-white p-4 shadow-md shadow-slate-900/[0.06] ring-1 ring-slate-900/[0.04] backdrop-blur-sm sm:p-5"
+    class="relative min-w-0 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm shadow-slate-900/[0.04] sm:p-5"
     :aria-label="stepsNavLabel"
   >
     <ol
@@ -16,7 +16,7 @@
           :class="current === i ? 'sm:ring-4 sm:rounded-2xl sm:bg-white/90 sm:px-3 sm:py-2 sm:ring-va-800/15 sm:shadow-sm' : ''"
         >
           <span
-            class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold shadow-md transition-all duration-200"
+            class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold shadow-sm"
             :class="
               current === i
                 ? 'bg-va-800 text-white ring-4 ring-va-800/25 shadow-va-900/25'
@@ -37,12 +37,8 @@
         </div>
         <div
           v-if="i < steps.length - 1"
-          class="mx-1 hidden h-0.5 min-w-[0.75rem] flex-1 rounded-full bg-gradient-to-r sm:block md:mx-3"
-          :class="
-            current > i
-              ? 'from-emerald-400 via-emerald-300 to-slate-200'
-              : 'from-slate-200 via-slate-200 to-slate-200'
-          "
+          class="mx-1 hidden h-0.5 min-w-[0.75rem] flex-1 rounded-full sm:block md:mx-3"
+          :class="current > i ? 'bg-emerald-500' : 'bg-slate-200'"
           aria-hidden="true"
         />
       </li>

@@ -703,7 +703,56 @@
             "generic": "Theo dõi tiến trình ở khung tiến độ."
         },
         "copy_rejection": "Sao chép lý do",
-        "copy_failed": "Không sao chép được."
+        "copy_failed": "Không sao chép được.",
+        "dashboard_heading": "Tổng quan yêu cầu",
+        "dashboard_lead": "Theo dõi và quản lý các yêu cầu xe công tác của bạn.",
+        "kpi_processing_title": "Đang xử lý",
+        "kpi_processing_sub": "Điều vận đang phối xe / chuyến chưa hoàn tất.",
+        "kpi_pending_title": "Chờ duyệt",
+        "kpi_pending_sub": "Chờ điều vận hoặc Trưởng đơn vị duyệt.",
+        "kpi_completed_title": "Đã hoàn tất",
+        "kpi_completed_sub": "Trong tháng này.",
+        "kpi_rejected_title": "Bị trả về / Từ chối",
+        "kpi_rejected_sub": "Cần bổ sung thông tin hoặc đã bị từ chối.",
+        "recent_requests_heading": "Yêu cầu gần đây",
+        "view_all_requests": "Xem tất cả",
+        "table_code": "Mã YC",
+        "table_route": "Loại xe / Lộ trình",
+        "table_time": "Thời gian",
+        "table_status": "Trạng thái",
+        "table_action": "Thao tác",
+        "open_request": "Mở yêu cầu #{id}",
+        "quick_actions_title": "Lối tắt",
+        "quick_business_label": "Yêu cầu xe công tác",
+        "quick_business_hint": "Tạo phiếu đi công tác nhanh",
+        "quick_cargo_label": "Yêu cầu xe giao hàng",
+        "quick_cargo_hint": "Vận chuyển hàng hóa",
+        "quick_d2d_label": "Đưa đón (D2D)",
+        "quick_d2d_hint": "Door-to-door",
+        "quick_p2p_label": "Điểm — điểm",
+        "quick_p2p_hint": "Chở khách giữa hai điểm",
+        "notifications_panel_title": "Thông báo mới",
+        "notifications_view_all": "Xem tất cả",
+        "notifications_empty": "Chưa có thông báo.",
+        "notifications_load_fail": "Không tải được thông báo.",
+        "notifications_page_title": "Thông báo",
+        "notifications_page_lead": "Hoạt động liên quan yêu cầu của bạn.",
+        "notifications_mark_all": "Đánh dấu đã đọc tất cả",
+        "notifications_mark_read": "Đã đọc",
+        "notifications_badge_new": "Mới",
+        "notifications_open_request": "Mở yêu cầu #{id}",
+        "notifications_mark_fail": "Không cập nhật được trạng thái đọc.",
+        "notifications_bell_aria": "Thông báo",
+        "filter_returned": "Bị trả về",
+        "list_page_heading": "Danh sách yêu cầu",
+        "list_page_lead": "Tìm kiếm, lọc và sắp xếp các phiếu bạn đã gửi.",
+        "search_placeholder": "Tìm mã hoặc địa điểm…",
+        "sort_label": "Sắp xếp",
+        "sort_depart_desc": "Giờ xuất phát — mới nhất",
+        "sort_depart_asc": "Giờ xuất phát — cũ nhất",
+        "sort_created_desc": "Ngày tạo — mới nhất",
+        "sort_created_asc": "Ngày tạo — cũ nhất",
+        "back_dashboard": "Về tổng quan"
     },
     "routes_meta": {
         "login": {
@@ -712,7 +761,7 @@
             "no_dispatch_access": "Tài khoản không có quyền truy cập. Cần vai trò superadmin, admin, dispatcher hoặc tài xế (driver)."
         },
         "portalHome": {
-            "title": "Portal — Yêu cầu của tôi",
+            "title": "Portal — Tổng quan yêu cầu",
             "subtitle": "Người đề xuất"
         },
         "portalCreate": {
@@ -721,6 +770,14 @@
         },
         "portalRequestDetail": {
             "title": "Portal — Chi tiết yêu cầu",
+            "subtitle": ""
+        },
+        "portalRequestList": {
+            "title": "Portal — Danh sách yêu cầu",
+            "subtitle": ""
+        },
+        "portalNotifications": {
+            "title": "Portal — Thông báo",
             "subtitle": ""
         },
         "dashboard": {

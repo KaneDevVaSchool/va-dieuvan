@@ -161,8 +161,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowRightIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
@@ -172,29 +172,54 @@ import PortalStepper from '../../components/portal/PortalStepper.vue'
 import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
 import PortalStepInfo from '../../components/portal/PortalStepInfo.vue'
 import PortalStepConfirm from '../../components/portal/PortalStepConfirm.vue'
+import {
+  buildPortalCreateDefaultsFromWizardForm,
+  loadDispatchWizardDraftFromStorage,
+  mapWizardFormToPortalState,
+} from '../../util/portalWizardBridge'
 
 const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
 const DIRTY_KEY = 'portal_form_dirty'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
 const tripTypes = TRIP_TYPES
 const step = ref(0)
-const tripType = ref('point_to_point')
 
-const infoModel = ref({
-  origin: '',
-  destination: '',
-  departAtLocal: '',
-  arriveByLocal: '',
-  passengerCount: null,
-  notes: '',
-  isUrgent: false,
-  urgentReason: '',
+/** Mặc định giống DispatchRequestCreateView (createInitialForm); có nháp wizard thì điền chồng từ localStorage. */
+const _portalDefaults = buildPortalCreateDefaultsFromWizardForm()
+const tripType = ref(_portalDefaults.tripType)
+const infoModel = ref({ ..._portalDefaults.infoModel })
+
+function applyShortcutTripType() {
+  const raw = String(route.query.type ?? '').trim().toLowerCase()
+  if (TRIP_TYPES.includes(raw)) {
+    tripType.value = raw
+    step.value = 1
+    formError.value = ''
+  }
+}
+
+onMounted(() => {
+  const uid = auth.user?.id ?? null
+  const draft = loadDispatchWizardDraftFromStorage(uid)
+  if (draft?.form) {
+    const mapped = mapWizardFormToPortalState(draft.form, {
+      passengerRows: draft.passengerRows,
+      businessRows: draft.businessRows,
+      cargoRows: draft.cargoRows,
+    })
+    if (TRIP_TYPES.includes(mapped.tripType)) tripType.value = mapped.tripType
+    infoModel.value = { ...mapped.infoModel }
+  }
+  applyShortcutTripType()
 })
+
+watch(() => route.query.type, applyShortcutTripType)
 
 const formError = ref('')
 const submitting = ref(false)

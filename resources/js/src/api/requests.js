@@ -67,7 +67,16 @@ export async function createPortalDispatchRequest(payload, opts = {}) {
 }
 
 /**
- * @param {{ per_page?: number, page?: number }} [params]
+ * Portal dashboard KPI counts (scoped to current requester).
+ * @returns {Promise<{ processing: number, pending: number, completed_this_month: number, rejected: number }>}
+ */
+export async function getPortalRequestsSummary() {
+  const { data } = await http.get('/portal/dispatch-requests/summary')
+  return data.data
+}
+
+/**
+ * @param {{ per_page?: number, page?: number, q?: string, sort?: 'depart_desc'|'depart_asc'|'created_desc'|'created_asc', filter?: 'all'|'pending'|'approved'|'rejected'|'returned' }} [params]
  */
 export async function listPortalRequests(params = {}) {
   const { data } = await http.get('/portal/dispatch-requests', { params })

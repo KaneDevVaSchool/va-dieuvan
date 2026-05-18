@@ -325,6 +325,22 @@ const router = createRouter({
                     },
                 },
                 {
+                    path: "notifications",
+                    name: "portalNotifications",
+                    component: () => import("../views/portal/PortalNotificationsView.vue"),
+                    meta: {
+                        portal: true,
+                    },
+                },
+                {
+                    path: "requests",
+                    name: "portalRequestList",
+                    component: () => import("../views/portal/PortalRequestListView.vue"),
+                    meta: {
+                        portal: true,
+                    },
+                },
+                {
                     path: "requests/:id(\\d+)",
                     name: "portalRequestDetail",
                     component: () => import("../views/portal/PortalRequestDetailView.vue"),

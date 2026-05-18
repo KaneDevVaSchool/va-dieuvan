@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\ClientTelemetryController;
 use App\Http\Controllers\Api\Portal\PortalDispatchRequestController;
+use App\Http\Controllers\Api\Portal\PortalNotificationController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Support\Facades\Route;
@@ -28,7 +29,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::middleware(['throttle:120,1'])->group(function () {
+        Route::get('/portal/dispatch-requests/summary', [PortalDispatchRequestController::class, 'summary']);
         Route::get('/portal/dispatch-requests', [PortalDispatchRequestController::class, 'index']);
+        Route::get('/portal/notifications', [PortalNotificationController::class, 'index']);
+        Route::post('/portal/notifications/read-all', [PortalNotificationController::class, 'markAllRead']);
+        Route::post('/portal/notifications/{notification}/read', [PortalNotificationController::class, 'markRead']);
         Route::get('/portal/dispatch-requests/{dispatchRequest}', [PortalDispatchRequestController::class, 'show']);
         Route::get('/portal/dispatch-requests/{dispatchRequest}/export-pdf', [DispatchRequestController::class, 'exportPdf'])
             ->middleware('throttle:30,1');

@@ -660,7 +660,56 @@
             "generic": "Follow progress in the timeline."
         },
         "copy_rejection": "Copy reason",
-        "copy_failed": "Could not copy."
+        "copy_failed": "Could not copy.",
+        "dashboard_heading": "Request overview",
+        "dashboard_lead": "Track and manage your transport requests.",
+        "kpi_processing_title": "Being processed",
+        "kpi_processing_sub": "Dispatch is assigning / trip not finished.",
+        "kpi_pending_title": "Pending approval",
+        "kpi_pending_sub": "Awaiting dispatch or department approval.",
+        "kpi_completed_title": "Completed",
+        "kpi_completed_sub": "This month.",
+        "kpi_rejected_title": "Returned / rejected",
+        "kpi_rejected_sub": "Needs more info or was rejected.",
+        "recent_requests_heading": "Recent requests",
+        "view_all_requests": "View all",
+        "table_code": "ID",
+        "table_route": "Trip type / Route",
+        "table_time": "Time",
+        "table_status": "Status",
+        "table_action": "Action",
+        "open_request": "Open request #{id}",
+        "quick_actions_title": "Shortcuts",
+        "quick_business_label": "Business trip request",
+        "quick_business_hint": "Quick create — business trip",
+        "quick_cargo_label": "Delivery request",
+        "quick_cargo_hint": "Cargo transport",
+        "quick_d2d_label": "Door-to-door",
+        "quick_d2d_hint": "Pickup & drop-off",
+        "quick_p2p_label": "Point to point",
+        "quick_p2p_hint": "Between two stops",
+        "notifications_panel_title": "Notifications",
+        "notifications_view_all": "View all",
+        "notifications_empty": "No notifications yet.",
+        "notifications_load_fail": "Could not load notifications.",
+        "notifications_page_title": "Notifications",
+        "notifications_page_lead": "Updates related to your requests.",
+        "notifications_mark_all": "Mark all read",
+        "notifications_mark_read": "Mark read",
+        "notifications_badge_new": "New",
+        "notifications_open_request": "Open request #{id}",
+        "notifications_mark_fail": "Could not update read status.",
+        "notifications_bell_aria": "Notifications",
+        "filter_returned": "Returned",
+        "list_page_heading": "All requests",
+        "list_page_lead": "Search, filter and sort requests you submitted.",
+        "search_placeholder": "Search ID or places…",
+        "sort_label": "Sort",
+        "sort_depart_desc": "Departure — newest first",
+        "sort_depart_asc": "Departure — oldest first",
+        "sort_created_desc": "Created — newest first",
+        "sort_created_asc": "Created — oldest first",
+        "back_dashboard": "Back to overview"
     },
     "routes_meta": {
         "login": {
@@ -669,7 +718,7 @@
             "no_dispatch_access": "Your account cannot access the app. You need superadmin, admin, dispatcher, or driver role."
         },
         "portalHome": {
-            "title": "Portal — My requests",
+            "title": "Portal — Overview",
             "subtitle": "Requester"
         },
         "portalCreate": {
@@ -678,6 +727,14 @@
         },
         "portalRequestDetail": {
             "title": "Portal — Request detail",
+            "subtitle": ""
+        },
+        "portalRequestList": {
+            "title": "Portal — Requests list",
+            "subtitle": ""
+        },
+        "portalNotifications": {
+            "title": "Portal — Notifications",
             "subtitle": ""
         },
         "dashboard": {

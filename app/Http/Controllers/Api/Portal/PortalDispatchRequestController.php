@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Portal\CreatePortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\IndexPortalDispatchRequestsRequest;
 use App\Http\Requests\Api\Portal\PortalUploadSignedPaperRequest;
 use App\Http\Requests\Api\Portal\ShowPortalDispatchRequestRequest;
+use App\Http\Requests\Api\Portal\SummaryPortalDispatchRequestsRequest;
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Models\Attachment;
 use App\Models\DispatchRequest;
@@ -21,11 +22,46 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Database\Eloquent\Builder;
 
 class PortalDispatchRequestController extends Controller
 {
     use ApiResponses;
     use PresentsDispatchRequest;
+
+    public function summary(SummaryPortalDispatchRequestsRequest $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+
+        $base = DispatchRequest::query()->where('requester_id', $user->getKey());
+
+        $pendingApproval = (clone $base)->whereIn('status', ['pending', 'price_filled'])->count();
+
+        $processing = (clone $base)->where('status', 'approved')
+            ->where(function ($q) {
+                $q->whereDoesntHave('trip')
+                    ->orWhereHas('trip', function ($tq) {
+                        $tq->whereNotIn('status', ['completed', 'cancelled']);
+                    });
+            })->count();
+
+        $startOfMonth = now()->startOfMonth();
+        $completedThisMonth = (clone $base)->where('status', 'approved')
+            ->whereHas('trip', function ($tq) use ($startOfMonth) {
+                $tq->where('status', 'completed')
+                    ->whereNotNull('completed_at')
+                    ->where('completed_at', '>=', $startOfMonth);
+            })->count();
+
+        $rejected = (clone $base)->where('status', 'rejected')->count();
+
+        return $this->ok([
+            'processing' => $processing,
+            'pending' => $pendingApproval,
+            'completed_this_month' => $completedThisMonth,
+            'rejected' => $rejected,
+        ]);
+    }
 
     public function index(IndexPortalDispatchRequestsRequest $request): \Illuminate\Http\JsonResponse
     {
@@ -34,12 +70,42 @@ class PortalDispatchRequestController extends Controller
 
         $perPage = isset($data['per_page']) ? max(1, min(50, (int) $data['per_page'])) : 10;
 
-        $paginator = DispatchRequest::query()
+        $sort = isset($data['sort']) ? (string) $data['sort'] : 'depart_desc';
+
+        $filter = isset($data['filter']) ? (string) $data['filter'] : 'all';
+
+        $query = DispatchRequest::query()
             ->where('requester_id', $user->getKey())
-            ->orderByDesc('depart_at')
-            ->orderByDesc('id')
-            ->with(['dispatchRequestTemplate.dispatchPackage'])
-            ->paginate($perPage);
+            ->with(['dispatchRequestTemplate.dispatchPackage']);
+
+        match ($filter) {
+            'pending' => $query->whereIn('status', ['pending', 'price_filled']),
+            'approved' => $query->where('status', 'approved'),
+            'rejected' => $query->where('status', 'rejected'),
+            'returned' => $query->where('status', 'rejected'),
+            default => null,
+        };
+
+        $qRaw = isset($data['q']) ? trim((string) $data['q']) : '';
+        if ($qRaw !== '') {
+            $like = '%'.addcslashes($qRaw, '%_\\').'%';
+            $query->where(function (Builder $b) use ($qRaw, $like) {
+                if (ctype_digit($qRaw)) {
+                    $b->where('id', (int) $qRaw);
+                }
+                $b->orWhere('origin', 'like', $like)
+                    ->orWhere('destination', 'like', $like);
+            });
+        }
+
+        match ($sort) {
+            'depart_asc' => $query->orderBy('depart_at')->orderBy('id'),
+            'created_desc' => $query->orderByDesc('created_at')->orderByDesc('id'),
+            'created_asc' => $query->orderBy('created_at')->orderBy('id'),
+            default => $query->orderByDesc('depart_at')->orderByDesc('id'),
+        };
+
+        $paginator = $query->paginate($perPage);
 
         $items = [];
         foreach ($paginator->items() as $dr) {

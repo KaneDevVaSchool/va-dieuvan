@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Api\Portal;
 
 use App\Http\Requests\Api\ApiFormRequest;
-use App\Models\User;
 
-class IndexPortalDispatchRequestsRequest extends ApiFormRequest
+class PortalNotificationIndexRequest extends ApiFormRequest
 {
     use EnsuresPortalUser;
 
@@ -20,9 +19,6 @@ class IndexPortalDispatchRequestsRequest extends ApiFormRequest
         return [
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
             'page' => ['sometimes', 'integer', 'min:1'],
-            'q' => ['sometimes', 'string', 'max:120'],
-            'sort' => ['sometimes', 'string', 'in:depart_desc,depart_asc,created_desc,created_asc'],
-            'filter' => ['sometimes', 'string', 'in:all,pending,approved,rejected,returned'],
         ];
     }
 }
