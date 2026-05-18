@@ -23,7 +23,72 @@
       <!-- Filter bar -->
       <div class="relative z-40 mt-8">
         <AppFilterBar>
-          <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+          <div class="flex flex-col gap-2">
+            <!-- Search — full width on all breakpoints -->
+            <div class="relative w-full min-w-0">
+              <label class="sr-only" for="portal-list-q">{{ t('portal.search_placeholder') }}</label>
+              <MagnifyingGlassIcon
+                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                id="portal-list-q"
+                v-model="searchInput"
+                type="search"
+                autocomplete="off"
+                role="combobox"
+                :aria-expanded="showSearchSuggest"
+                aria-controls="portal-list-q-suggest"
+                aria-autocomplete="list"
+                :aria-label="t('portal.search_placeholder')"
+                :placeholder="t('portal.search_placeholder')"
+                :title="t('portal.search_placeholder')"
+                class="portal-list-q h-10 w-full rounded-lg border-0 bg-white/90 py-2 pl-9 pr-3 text-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                @input="onSearchInput"
+                @focus="onSearchFocus"
+                @blur="onSearchBlur"
+                @keydown.down.prevent="moveSearchSuggest(1)"
+                @keydown.up.prevent="moveSearchSuggest(-1)"
+                @keydown.enter.prevent="commitSearchSuggest"
+                @keydown.escape="closeSearchSuggest"
+              />
+              <div
+                v-if="searchSuggestLoading"
+                class="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600"
+                aria-hidden="true"
+              />
+              <ul
+                v-if="showSearchSuggest"
+                id="portal-list-q-suggest"
+                class="absolute z-[110] mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-slate-900/5"
+                role="listbox"
+                :aria-label="t('portal.search_suggest_aria')"
+              >
+                <li v-if="searchSuggestLoading" class="px-3 py-2.5 text-slate-500">
+                  {{ t('portal.search_suggest_loading') }}
+                </li>
+                <template v-else-if="searchSuggestions.length">
+                  <li v-for="(req, idx) in searchSuggestions" :key="req.id" role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      :aria-selected="idx === searchSuggestFocus"
+                      :class="[
+                        'flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition',
+                        idx === searchSuggestFocus ? 'bg-teal-50' : 'hover:bg-slate-50',
+                      ]"
+                      @mousedown.prevent="pickSearchSuggestion(req)"
+                    >
+                      <span class="font-mono text-sm font-semibold text-slate-900">#{{ req.id }}</span>
+                      <span class="truncate text-xs text-slate-500">{{ suggestRouteLine(req) }}</span>
+                    </button>
+                  </li>
+                </template>
+                <li v-else class="px-3 py-2.5 text-slate-500">{{ t('portal.search_suggest_empty') }}</li>
+              </ul>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
 
             <!-- Funnel / phễu -->
             <details ref="funnelRef" class="group relative">
@@ -101,22 +166,6 @@
                 </div>
               </div>
             </details>
-
-            <!-- Divider -->
-            <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
-
-            <!-- Search (always visible) -->
-            <label class="sr-only" for="portal-list-q">{{ t('portal.search_placeholder') }}</label>
-            <input
-              id="portal-list-q"
-              v-model="searchInput"
-              type="search"
-              autocomplete="off"
-              :aria-label="t('portal.search_placeholder')"
-              :placeholder="t('portal.search_placeholder')"
-              :title="t('portal.search_placeholder')"
-              class="portal-list-q h-9 min-w-[10rem] flex-1 rounded-lg border-0 bg-white/90 px-3 text-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:max-w-xs"
-            />
 
             <!-- Filter chips -->
             <div class="flex min-w-0 flex-1 items-center gap-x-2 gap-y-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden sm:gap-x-3">
@@ -270,6 +319,7 @@
                 <XMarkIcon class="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
+            </div>
           </div>
         </AppFilterBar>
       </div>
@@ -318,7 +368,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FunnelIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { listPortalRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
@@ -328,6 +378,7 @@ import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
 
 const PER_PAGE = 15
+const SUGGEST_PER_PAGE = 8
 const VIS_KEY = 'portal-filter-vis'
 
 const { t } = useI18n()
@@ -346,8 +397,16 @@ const filterUrgent = ref('all')
 const sort = ref('depart_desc')
 const searchInput = ref('')
 const debouncedQ = ref('')
+const searchDropdownOpen = ref(false)
+const searchSuggestions = ref([])
+const searchSuggestLoading = ref(false)
+const searchSuggestFocus = ref(-1)
 const dateFrom = ref('')
 const dateTo = ref('')
+
+const showSearchSuggest = computed(
+  () => searchDropdownOpen.value && String(searchInput.value ?? '').trim().length >= 1,
+)
 
 // ── Filter chip visibility (persisted) ───────────────────────
 const filterDropdownVisible = reactive(
@@ -468,6 +527,113 @@ const activeFilterLines = computed(() => {
   return lines
 })
 
+// ── Search autocomplete ──────────────────────────────────────
+let suggestTimer = null
+
+function suggestRouteLine(req) {
+  const o = (req.origin || '').trim()
+  const d = (req.destination || '').trim()
+  if (o || d) return `${o || '…'} → ${d || '…'}`.trim()
+  return t('portal.card_no_route')
+}
+
+async function fetchSearchSuggestions(term) {
+  const q = String(term ?? '').trim()
+  if (!q) {
+    searchSuggestions.value = []
+    return
+  }
+  searchSuggestLoading.value = true
+  try {
+    const data = await listPortalRequests({
+      per_page: SUGGEST_PER_PAGE,
+      page: 1,
+      sort: 'depart_desc',
+      q,
+    })
+    searchSuggestions.value = data.items ?? []
+    searchSuggestFocus.value = searchSuggestions.value.length ? 0 : -1
+  } catch {
+    searchSuggestions.value = []
+    searchSuggestFocus.value = -1
+  } finally {
+    searchSuggestLoading.value = false
+  }
+}
+
+function scheduleSearchSuggestions() {
+  clearTimeout(suggestTimer)
+  const term = String(searchInput.value ?? '').trim()
+  if (!term) {
+    searchSuggestions.value = []
+    searchSuggestFocus.value = -1
+    return
+  }
+  suggestTimer = window.setTimeout(() => fetchSearchSuggestions(term), 280)
+}
+
+function onSearchInput() {
+  searchDropdownOpen.value = true
+  scheduleSearchSuggestions()
+}
+
+function onSearchFocus() {
+  searchDropdownOpen.value = true
+  if (String(searchInput.value ?? '').trim()) {
+    scheduleSearchSuggestions()
+  }
+}
+
+function onSearchBlur() {
+  window.setTimeout(() => {
+    searchDropdownOpen.value = false
+    searchSuggestFocus.value = -1
+  }, 150)
+}
+
+function closeSearchSuggest() {
+  searchDropdownOpen.value = false
+  searchSuggestFocus.value = -1
+}
+
+function moveSearchSuggest(delta) {
+  if (!searchSuggestions.value.length) return
+  const n = searchSuggestions.value.length
+  if (searchSuggestFocus.value < 0) {
+    searchSuggestFocus.value = delta > 0 ? 0 : n - 1
+    return
+  }
+  searchSuggestFocus.value = (searchSuggestFocus.value + delta + n) % n
+}
+
+function flushSearch(term = searchInput.value) {
+  const q = String(term ?? '').trim()
+  clearTimeout(debounceTimer)
+  searchInput.value = q
+  closeSearchSuggest()
+  searchSuggestions.value = []
+  if (q !== debouncedQ.value) {
+    debouncedQ.value = q
+  } else {
+    reloadFromStart()
+  }
+}
+
+function pickSearchSuggestion(req) {
+  flushSearch(String(req.id))
+}
+
+function commitSearchSuggest() {
+  if (showSearchSuggest.value && searchSuggestFocus.value >= 0) {
+    const req = searchSuggestions.value[searchSuggestFocus.value]
+    if (req) {
+      pickSearchSuggestion(req)
+      return
+    }
+  }
+  flushSearch()
+}
+
 // ── Debounced search ─────────────────────────────────────────
 let debounceTimer = null
 
@@ -516,7 +682,11 @@ function resetFilters() {
   filterTripType.value = 'all'
   filterUrgent.value = 'all'
   sort.value = 'depart_desc'
+  clearTimeout(debounceTimer)
   searchInput.value = ''
+  debouncedQ.value = ''
+  closeSearchSuggest()
+  searchSuggestions.value = []
   dateFrom.value = ''
   dateTo.value = ''
   reloadFromStart()
@@ -581,6 +751,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearTimeout(debounceTimer)
+  clearTimeout(suggestTimer)
   clearTimeout(dateDebounceTimer)
 })
 </script>

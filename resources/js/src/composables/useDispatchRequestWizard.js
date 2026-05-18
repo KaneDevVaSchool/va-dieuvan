@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -45,6 +45,11 @@ import {
   todayISODate,
 } from './dispatchWizardConstants'
 import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
+import {
+  buildConfirmReviewIssues,
+  groupConfirmIssues,
+  mapApiValidationToConfirmIssues,
+} from './dispatchWizardConfirmIssues'
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
 /**
@@ -992,74 +997,61 @@ export function useDispatchRequestWizard(options = {}) {
 
   const schedulesPassForSubmit = computed(() => schedulesPassDispatchErrorsSnapshot())
 
-  function pushConfirmRowIssues(msgs, rows, variant, sectionKey) {
-    rows.forEach((row, idx) => {
-      const filled =
-        variant === 'cargo'
-          ? isCargoRowFilled(row)
-          : variant === 'business'
-            ? isBusinessRowFilled(row)
-            : isPassengerRowFilled(row)
-      if (!filled) return
-      const err = dispatchScheduleRowErrors(row, variant)
-      const n = idx + 1
-      if (err.time_required) {
-        msgs.push(t('dispatch_wizard.confirm.issue_row_time_required', { section: t(sectionKey), n }))
-      }
-      if (err.return_time_required) {
-        msgs.push(t('dispatch_wizard.confirm.issue_row_return_time', { section: t(sectionKey), n }))
-      }
-      if (err.return_place) {
-        msgs.push(t('dispatch_wizard.confirm.issue_row_return_place', { section: t(sectionKey), n }))
-      }
-      if (err.return_time) {
-        msgs.push(t('dispatch_wizard.confirm.issue_row_return_order', { section: t(sectionKey), n }))
-      }
-      if (err.passengers) {
-        msgs.push(t('dispatch_wizard.confirm.issue_row_guests', { section: t(sectionKey), n }))
-      }
-    })
+  const submitApiIssueItems = ref(/** @type {import('./dispatchWizardConfirmIssues').ConfirmIssue[]} */ ([]))
+  const confirmSubmitAttempted = ref(false)
+
+  function confirmIssuesContext() {
+    return {
+      form: form.value,
+      t,
+      isCargo: isCargo.value,
+      isPortal,
+      passengerRows: passengerRows.value,
+      businessRows: businessRows.value,
+      cargoRows: cargoRows.value,
+      coordinatorEmailFormatInvalid: coordinatorEmailFormatInvalid.value,
+      step2DateOrderInvalid: step2DateOrderInvalid.value,
+      detailStepSchedulesValid: detailStepSchedulesValid.value,
+      computedDepartAt: computedDepartAt.value,
+      isPlausibleEmail,
+    }
   }
 
-  /** Gợi ý kiểm tra trước khi gửi — không thay cho validateBeforeApi khi submit. */
-  const confirmReviewIssues = computed(() => {
-    const msgs = []
-    const f = form.value
-    if (!f.trip_type) msgs.push(t('dispatch_wizard.validate.pick_type'))
-    if (!f.requester_name?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_requester_name'))
-    if (!f.requester_email?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_requester_email'))
-    else if (!isPlausibleEmail(f.requester_email)) msgs.push(t('dispatch_wizard.confirm.issue_requester_email'))
-    if (coordinatorEmailFormatInvalid.value) msgs.push(t('dispatch_wizard.validate.coord_email'))
-    if (!f.purpose?.trim()) msgs.push(t('dispatch_wizard.confirm.issue_purpose'))
-    if (!f.proposed_date || !f.date_needed) msgs.push(t('dispatch_wizard.confirm.issue_dates'))
-    if (step2DateOrderInvalid.value) msgs.push(t('dispatch_wizard.validate.date_order'))
-    if (f.is_urgent && !f.urgent_reason?.trim()) msgs.push(t('dispatch_wizard.validate.urgent_reason'))
-
-    if (isCargo.value) {
-      if (!cargoRows.value.some((r) => r.name?.trim())) msgs.push(t('dispatch_wizard.validate.cargo_row'))
-      pushConfirmRowIssues(msgs, cargoRows.value, 'cargo', 'dispatch_wizard.confirm.sec_cargo')
-    } else if (f.trip_type === 'point_to_point') {
-      if (!passengerRows.value.some(isPassengerRowFilled)) msgs.push(t('dispatch_wizard.validate.p2p_row'))
-      pushConfirmRowIssues(msgs, passengerRows.value, 'passenger', 'dispatch_wizard.confirm.sec_e1')
-    } else if (f.trip_type === 'business') {
-      if (!businessRows.value.some(isBusinessRowFilled)) msgs.push(t('dispatch_wizard.validate.detail_row'))
-      pushConfirmRowIssues(msgs, businessRows.value, 'business', 'dispatch_wizard.confirm.sec_e2')
-    } else if (f.trip_type === 'door_to_door') {
-      if (
-        !passengerRows.value.some(isPassengerRowFilled) &&
-        !businessRows.value.some(isBusinessRowFilled)
-      ) {
-        msgs.push(t('dispatch_wizard.validate.detail_row'))
-      }
-      pushConfirmRowIssues(msgs, passengerRows.value, 'passenger', 'dispatch_wizard.confirm.sec_e1')
-      pushConfirmRowIssues(msgs, businessRows.value, 'business', 'dispatch_wizard.confirm.sec_e2')
-    }
-
-    if (!detailStepSchedulesValid.value) msgs.push(t('dispatch_wizard.confirm.issue_schedule_invalid'))
-    if (!computedDepartAt.value?.trim()) msgs.push(t('dispatch_wizard.validate.depart_time'))
-
-    return msgs
+  const confirmReviewIssueItems = computed(() => {
+    const seen = new Set()
+    const merged = [
+      ...buildConfirmReviewIssues(confirmIssuesContext()),
+      ...submitApiIssueItems.value,
+    ]
+    return merged.filter((item) => {
+      const key = `${item.section}::${item.message}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
   })
+
+  /** Danh sách phẳng (tương thích cũ). */
+  const confirmReviewIssues = computed(() => confirmReviewIssueItems.value.map((i) => i.message))
+
+  const confirmValidationGroups = computed(() =>
+    groupConfirmIssues(confirmReviewIssueItems.value, {
+      general: t('dispatch_wizard.confirm.sec_general'),
+      purpose: t('dispatch_wizard.confirm.sec_purpose'),
+      attach: t('dispatch_wizard.confirm.sec_attach'),
+      schedule: t('dispatch_wizard.confirm.sec_schedule'),
+    }),
+  )
+
+  function confirmSectionHasIssues(section) {
+    return confirmReviewIssueItems.value.some((i) => i.section === section)
+  }
+
+  async function scrollToConfirmValidation() {
+    await nextTick()
+    const el = document.getElementById('confirm-validation-alert')
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const headerPrimaryLabel = computed(() => {
     if (loading.value) return t('dispatch_wizard.header.sending')
@@ -1150,69 +1142,11 @@ export function useDispatchRequestWizard(options = {}) {
     else doSubmit()
   }
 
-  function validateBeforeApi() {
-    if (!form.value.trip_type) {
-      step.value = 0
-      return t('dispatch_wizard.validate.pick_type')
-    }
-    if (
-      !form.value.requester_name?.trim() ||
-      !form.value.requester_email?.trim() ||
-      !isPlausibleEmail(form.value.requester_email) ||
-      !form.value.purpose?.trim() ||
-      !form.value.proposed_date ||
-      !form.value.date_needed
-    ) {
-      step.value = 1
-      return t('dispatch_wizard.validate.step2')
-    }
-    if (coordinatorEmailFormatInvalid.value) {
-      step.value = 1
-      return t('dispatch_wizard.validate.coord_email')
-    }
-    if (isDateNeededBeforeProposed(form.value.proposed_date, form.value.date_needed)) {
-      step.value = 1
-      return t('dispatch_wizard.validate.date_order')
-    }
-    if (form.value.is_urgent && !form.value.urgent_reason?.trim()) {
-      step.value = 1
-      return t('dispatch_wizard.validate.urgent_reason')
-    }
-    if (isCargo.value) {
-      if (!cargoRows.value.some((r) => r.name?.trim())) {
-        step.value = 2
-        return t('dispatch_wizard.validate.cargo_row')
-      }
-    } else if (form.value.trip_type === 'point_to_point') {
-      if (!passengerRows.value.some(isPassengerRowFilled)) {
-        step.value = 2
-        return t('dispatch_wizard.validate.p2p_row')
-      }
-    } else if (
-      !passengerRows.value.some(isPassengerRowFilled) &&
-      !businessRows.value.some(isBusinessRowFilled)
-    ) {
-      step.value = 2
-      return t('dispatch_wizard.validate.detail_row')
-    }
-    if (!computedDepartAt.value?.trim()) {
-      step.value = 2
-      return t('dispatch_wizard.validate.depart_time')
-    }
-    if (!schedulesPassDispatchErrorsSnapshot()) {
-      step.value = 2
-      return t('dispatch_wizard.confirm.issue_schedule_invalid')
-    }
-    if (
-      isPortal &&
-      form.value.recurring_enabled &&
-      form.value.trip_type === 'point_to_point' &&
-      form.value.point_purpose_kind === 'extracurricular'
-    ) {
-      step.value = 1
-      return t('portal.create.recurring_not_supported')
-    }
+  function runPreSubmitValidation() {
+    submitApiIssueItems.value = []
+    const items = buildConfirmReviewIssues(confirmIssuesContext())
     const wantsRecurring =
+      !isPortal &&
       form.value.recurring_enabled &&
       form.value.trip_type === 'point_to_point' &&
       form.value.point_purpose_kind === 'extracurricular' &&
@@ -1220,11 +1154,14 @@ export function useDispatchRequestWizard(options = {}) {
     if (wantsRecurring) {
       const hasWd = Object.values(form.value.e1_weekdays || {}).some(Boolean)
       if (!hasWd) {
-        step.value = 2
-        return t('dispatch_wizard.validate.recurring_weekday')
+        items.push({ section: 'schedule', message: t('dispatch_wizard.validate.recurring_weekday') })
       }
     }
-    return ''
+    if (items.length) {
+      confirmSubmitAttempted.value = true
+      return items
+    }
+    return []
   }
 
   let autosaveTimer = null
@@ -1239,14 +1176,16 @@ export function useDispatchRequestWizard(options = {}) {
     submitInFlight = true
     loading.value = true
     try {
-      const v = validateBeforeApi()
-      if (v) {
-        error.value = v
+      const preSubmitIssues = runPreSubmitValidation()
+      if (preSubmitIssues.length) {
+        error.value = ''
         submitResultOk.value = false
-        submitResultDetail.value = v
+        submitResultDetail.value = preSubmitIssues.map((i) => i.message).join('\n')
         submitResultModalOpen.value = true
+        await scrollToConfirmValidation()
         return
       }
+      confirmSubmitAttempted.value = false
       error.value = ''
       created.value = null
       const idempotencyKey = newIdempotencyKey()
@@ -1354,7 +1293,15 @@ export function useDispatchRequestWizard(options = {}) {
         hasDraftSnapshot.value = u != null && readDraftList(u).items.length > 0
       }
       } catch (e) {
-        error.value = formatApiError(e, t('dispatch_wizard.validate.create_fail'))
+        const apiIssues = mapApiValidationToConfirmIssues(e, t)
+        if (apiIssues.length) {
+          submitApiIssueItems.value = apiIssues
+          confirmSubmitAttempted.value = true
+          error.value = ''
+          await scrollToConfirmValidation()
+        } else {
+          error.value = formatApiError(e, t('dispatch_wizard.validate.create_fail'))
+        }
       }
       if (created.value?.id) {
         submitResultOk.value = true
@@ -1932,6 +1879,9 @@ export function useDispatchRequestWizard(options = {}) {
     removeCargoRow,
     canSubmitApi,
     confirmReviewIssues,
+    confirmValidationGroups,
+    confirmSectionHasIssues,
+    confirmSubmitAttempted,
     headerPrimaryLabel,
     headerPrimaryDisabled,
     primaryAction,

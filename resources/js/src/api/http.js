@@ -160,7 +160,7 @@ export function humanizeApiMessage(raw, status) {
   }
 
   if (/the .* field is required|field is required/i.test(low)) {
-    return 'Vui lòng điền đầy đủ các ô bắt buộc còn thiếu.'
+    return 'Vui lòng điền đầy đủ các ô bắt buộc còn thiếu (xem chi tiết từng mục bên dưới).'
   }
 
   if (looksLikeVietnamese(s)) return s
@@ -170,6 +170,26 @@ export function humanizeApiMessage(raw, status) {
   }
 
   return 'Không thực hiện được. Vui lòng kiểm tra lại thông tin hoặc thử sau.'
+}
+
+/**
+ * Laravel 422 `errors` — tất cả thông báo theo field (không gộp một dòng chung).
+ * @param {unknown} err
+ * @returns {{ field: string, message: string }[]}
+ */
+export function extractApiValidationMessages(err) {
+  const d = err?.response?.data
+  if (!d?.errors || typeof d.errors !== 'object') return []
+  /** @type {{ field: string, message: string }[]} */
+  const out = []
+  for (const [field, val] of Object.entries(d.errors)) {
+    const list = Array.isArray(val) ? val : [val]
+    for (const item of list) {
+      if (item == null || item === '') continue
+      out.push({ field: String(field), message: String(item) })
+    }
+  }
+  return out
 }
 
 /** @param {unknown} err Axios-like error */
@@ -193,8 +213,15 @@ export function formatApiError(err, fallback = 'Đã xảy ra lỗi. Vui lòng t
   } else if (Array.isArray(d?.message) && d.message.length) {
     raw = String(d.message[0])
   } else if (d?.errors && typeof d.errors === 'object') {
-    const first = Object.values(d.errors).flat()[0]
-    if (first != null) raw = Array.isArray(first) ? first[0] : String(first)
+    const all = extractApiValidationMessages(err)
+    if (all.length === 1) {
+      raw = all[0].message
+    } else if (all.length > 1) {
+      raw = all.map((x) => x.message).join(' ')
+    } else {
+      const first = Object.values(d.errors).flat()[0]
+      if (first != null) raw = Array.isArray(first) ? first[0] : String(first)
+    }
   }
 
   const human = humanizeApiMessage(raw, status)

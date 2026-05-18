@@ -27,6 +27,14 @@ export function dispatchScheduleRowErrors(row, variant) {
     e.time_required = true
   }
 
+  if (variant === 'cargo') {
+    if (hasDepart && !(row.pickup_place && String(row.pickup_place).trim())) {
+      e.pickup_place = true
+    }
+  } else if (hasDepart && !(row.pickup && String(row.pickup).trim())) {
+    e.outbound_place = true
+  }
+
   if (hasDepart && !hasReturn) {
     e.return_time_required = true
   }

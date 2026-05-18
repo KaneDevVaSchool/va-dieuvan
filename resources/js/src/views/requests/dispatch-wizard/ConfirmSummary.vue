@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-4xl rounded-2xl bg-white px-5 py-7 shadow-sm shadow-slate-900/[0.05] sm:px-8 sm:py-9">
+  <div class="mx-auto max-w-5xl rounded-2xl bg-white px-5 py-7 shadow-sm shadow-slate-900/[0.05] sm:px-8 sm:py-9">
     <div class="flex flex-col gap-1 pb-5 sm:pb-6">
       <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">
         {{ t('dispatch_wizard.steps.confirm') }}
@@ -54,91 +54,116 @@
     <template v-else>
       <ValidationAlert
         class="mt-6"
+        alert-id="confirm-validation-alert"
         :title="t('dispatch_wizard.confirm.validation_title')"
-        :messages="confirmReviewIssues"
+        :lead="confirmValidationGroups.length ? t('dispatch_wizard.confirm.validation_lead') : ''"
+        :groups="confirmValidationGroups"
+        :messages="confirmValidationGroups.length ? [] : confirmReviewIssues"
       />
 
-      <div v-if="error" class="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-xs font-medium text-rose-900">
+      <div
+        v-if="error && !confirmReviewIssues.length"
+        class="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-xs font-medium text-rose-900"
+      >
         {{ error }}
       </div>
 
-      <div class="mt-6 flex flex-col gap-5">
-        <SummarySection :title="t('dispatch_wizard.confirm.sec_general')" :default-open="true">
-          <dl class="space-y-2">
-            <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-              <dt class="shrink-0 font-medium text-slate-500">{{ t('dispatch_wizard.confirm.svc_type') }}</dt>
-              <dd class="min-w-0 text-slate-900">{{ tripTypeLabel }}</dd>
+      <div class="mt-6 grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 lg:items-stretch">
+        <SummarySection
+          :title="t('dispatch_wizard.confirm.sec_general')"
+          :default-open="true"
+          :has-issues="confirmSectionHasIssues('general')"
+          :issue-hint="t('dispatch_wizard.confirm.section_issue_hint')"
+        >
+          <dl class="divide-y divide-slate-200/70">
+            <div class="summary-field">
+              <dt>{{ t('dispatch_wizard.confirm.svc_type') }}</dt>
+              <dd>{{ tripTypeLabel }}</dd>
             </div>
-            <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-              <dt class="shrink-0 font-medium text-slate-500">{{ t('dispatch_wizard.confirm.requester') }}</dt>
-              <dd class="min-w-0 text-slate-900">{{ form.requester_name?.trim() || '—' }}</dd>
+            <div class="summary-field">
+              <dt>{{ t('dispatch_wizard.confirm.requester') }}</dt>
+              <dd>{{ form.requester_name?.trim() || '—' }}</dd>
             </div>
-            <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-              <dt class="shrink-0 font-medium text-slate-500">{{ t('dispatch_wizard.confirm.email_phone') }}</dt>
-              <dd class="min-w-0 break-words text-slate-900">
+            <div class="summary-field">
+              <dt>{{ t('dispatch_wizard.confirm.email_phone') }}</dt>
+              <dd class="break-words">
                 {{ form.requester_email?.trim() || '—' }}
                 <span v-if="form.requester_phone?.trim()" class="text-slate-600">
                   · {{ form.requester_phone }}</span>
               </dd>
             </div>
-            <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-              <dt class="shrink-0 font-medium text-slate-500">{{ t('dispatch_wizard.confirm.usage_dates') }}</dt>
-              <dd class="min-w-0 text-slate-900">{{ usageDatesDisplay }}</dd>
+            <div class="summary-field">
+              <dt>{{ t('dispatch_wizard.confirm.usage_dates') }}</dt>
+              <dd>{{ usageDatesDisplay }}</dd>
             </div>
-            <div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-              <dt class="shrink-0 font-medium text-slate-500">{{ t('dispatch_wizard.confirm.urgency') }}</dt>
-              <dd class="min-w-0 text-slate-900">{{ urgencyLabel }}</dd>
+            <div class="summary-field">
+              <dt>{{ t('dispatch_wizard.confirm.urgency') }}</dt>
+              <dd>{{ urgencyLabel }}</dd>
             </div>
-            <div v-if="form.requester_unit?.trim()" class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
-              <dt class="shrink-0 font-medium text-slate-500">{{ t('dispatch_wizard.create.unit') }}</dt>
-              <dd class="min-w-0 text-slate-900">{{ form.requester_unit }}</dd>
+            <div v-if="form.requester_unit?.trim()" class="summary-field">
+              <dt>{{ t('dispatch_wizard.create.unit') }}</dt>
+              <dd>{{ form.requester_unit }}</dd>
             </div>
             <div
               v-if="form.coordinator_name?.trim() || form.coordinator_email?.trim() || form.coordinator_phone?.trim()"
-              class="flex flex-col gap-0.5 sm:flex-row sm:gap-2"
+              class="summary-field"
             >
-              <dt class="shrink-0 font-medium text-slate-500">{{ t('dispatch_wizard.confirm.coord_block') }}</dt>
-              <dd class="min-w-0 text-slate-900">
+              <dt>{{ t('dispatch_wizard.confirm.coord_block') }}</dt>
+              <dd>
                 {{ form.coordinator_name?.trim() || '—' }}
                 <span v-if="form.coordinator_email?.trim()" class="block text-slate-600">{{ form.coordinator_email }}</span>
                 <span v-if="form.coordinator_phone?.trim()" class="text-slate-600">{{ form.coordinator_phone }}</span>
               </dd>
             </div>
-            <div v-if="form.trip_type === 'point_to_point' && form.targets?.length" class="flex flex-col gap-0.5">
-              <dt class="font-medium text-slate-500">{{ t('dispatch_wizard.confirm.targets_block') }}</dt>
-              <dd class="text-slate-900">{{ form.targets.join(', ') }}</dd>
+            <div v-if="form.trip_type === 'point_to_point' && form.targets?.length" class="summary-field">
+              <dt>{{ t('dispatch_wizard.confirm.targets_block') }}</dt>
+              <dd>{{ form.targets.join(', ') }}</dd>
             </div>
           </dl>
         </SummarySection>
 
-        <SummarySection :title="t('dispatch_wizard.confirm.sec_purpose')" :default-open="true">
-          <p class="whitespace-pre-wrap text-slate-900">{{ form.purpose?.trim() || '—' }}</p>
-          <div v-if="form.trip_type === 'point_to_point'" class="mt-4 pt-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-              {{ t('dispatch_wizard.create.purpose_tab_aria') }}
-            </p>
-            <p class="mt-1 text-slate-900">
-              {{
-                form.point_purpose_kind === 'extracurricular'
-                  ? t('dispatch_wizard.create.purpose_extra')
-                  : t('dispatch_wizard.create.purpose_point')
-              }}
-            </p>
+        <SummarySection
+          :title="t('dispatch_wizard.confirm.sec_purpose')"
+          :default-open="true"
+          :has-issues="confirmSectionHasIssues('purpose')"
+          :issue-hint="t('dispatch_wizard.confirm.section_issue_hint')"
+        >
+          <p class="summary-text-block whitespace-pre-wrap">{{ form.purpose?.trim() || '—' }}</p>
+          <dl v-if="form.trip_type === 'point_to_point'" class="mt-3 divide-y divide-slate-200/70 border-t border-slate-200/70 pt-1">
+            <div class="summary-field">
+              <dt>{{ t('dispatch_wizard.create.purpose_tab_aria') }}</dt>
+              <dd>
+                {{
+                  form.point_purpose_kind === 'extracurricular'
+                    ? t('dispatch_wizard.create.purpose_extra')
+                    : t('dispatch_wizard.create.purpose_point')
+                }}
+              </dd>
+            </div>
+          </dl>
+        </SummarySection>
+
+        <SummarySection
+          :title="t('dispatch_wizard.confirm.sec_attach')"
+          :default-open="true"
+          :has-issues="confirmSectionHasIssues('attach')"
+          :issue-hint="t('dispatch_wizard.confirm.section_issue_hint')"
+        >
+          <div v-if="basisFile?.name" class="summary-text-block">
+            <p class="font-medium text-slate-900">{{ basisFile.name }}</p>
+            <p v-if="basisFile?.size != null" class="mt-0.5 text-slate-500">{{ formatFileSize(basisFile.size) }}</p>
           </div>
+          <p v-else class="text-slate-500">{{ t('dispatch_wizard.confirm.no_attachment') }}</p>
         </SummarySection>
 
-        <SummarySection :title="t('dispatch_wizard.confirm.sec_attach')" :default-open="true">
-          <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {{ t('dispatch_wizard.confirm.attachments') }}
-          </p>
-          <p v-if="basisFile?.name" class="mt-1 font-medium text-slate-900">{{ basisFile.name }}</p>
-          <p v-else class="mt-1 text-slate-500">{{ t('dispatch_wizard.confirm.no_attachment') }}</p>
-          <p v-if="basisFile?.size != null" class="mt-0.5 text-slate-500">{{ formatFileSize(basisFile.size) }}</p>
-        </SummarySection>
-
-        <SummarySection :title="t('dispatch_wizard.confirm.sec_schedule')" :default-open="true">
+        <SummarySection
+          :title="t('dispatch_wizard.confirm.sec_schedule')"
+          :default-open="true"
+          :has-issues="confirmSectionHasIssues('schedule')"
+          :issue-hint="t('dispatch_wizard.confirm.section_issue_hint')"
+        >
           <div v-if="!scheduleCards.length" class="text-slate-500">{{ t('dispatch_wizard.confirm.schedule_empty') }}</div>
-          <div v-else class="grid gap-3 sm:grid-cols-2">
+          <div v-else class="grid gap-3">
             <TripItemCard v-for="card in scheduleCards" :key="card.key" :heading="card.heading" :lines="card.lines" />
           </div>
         </SummarySection>
@@ -152,7 +177,7 @@
       v-if="showStickyBar"
       class="fixed inset-x-0 bottom-0 z-[120] bg-white/95 px-4 py-3 shadow-[0_-12px_40px_rgba(15,23,42,0.1)] backdrop-blur-md supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div class="mx-auto flex max-w-4xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div class="mx-auto flex max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <button
           type="button"
           class="order-2 rounded-lg bg-slate-100 px-4 py-2.5 text-center text-xs font-semibold text-slate-800 transition hover:bg-slate-200/90 sm:order-1 sm:text-left"
@@ -220,6 +245,8 @@ const {
   error,
   loading,
   confirmReviewIssues,
+  confirmValidationGroups,
+  confirmSectionHasIssues,
   headerPrimaryDisabled,
   primaryAction,
   saveDraft,
@@ -393,3 +420,21 @@ function businessCard(row, n, key) {
   return { key, heading, lines }
 }
 </script>
+
+<style scoped>
+.summary-field {
+  @apply grid grid-cols-1 gap-1 py-2.5 first:pt-0 last:pb-0 sm:grid-cols-[minmax(6.5rem,8.5rem)_1fr] sm:gap-x-3 sm:py-3;
+}
+
+.summary-field dt {
+  @apply text-[11px] font-medium leading-snug text-slate-500 sm:text-xs;
+}
+
+.summary-field dd {
+  @apply min-w-0 text-xs leading-snug text-slate-900 sm:text-[13px];
+}
+
+.summary-text-block {
+  @apply rounded-lg bg-white/90 px-3 py-2.5 text-sm leading-relaxed text-slate-900 ring-1 ring-slate-200/60;
+}
+</style>
