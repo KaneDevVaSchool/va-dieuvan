@@ -1,8 +1,8 @@
 <template>
-  <section class="rounded-xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-950/[0.03]">
+  <section class="rounded-xl bg-slate-50/70 shadow-sm shadow-slate-900/[0.03]">
     <button
       type="button"
-      class="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50/80 sm:px-5 sm:py-4"
+      class="flex w-full items-center justify-between gap-3 rounded-t-xl px-4 py-3.5 text-left transition hover:bg-slate-100/60 sm:px-5 sm:py-4"
       :aria-expanded="open"
       @click="open = !open"
     >
@@ -13,7 +13,7 @@
         aria-hidden="true"
       />
     </button>
-    <div v-show="open" class="border-t border-slate-100 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
+    <div v-show="open" class="px-4 pb-4 pt-1 sm:px-5 sm:pb-5">
       <div class="text-xs leading-relaxed text-slate-700">
         <slot />
       </div>

@@ -36,49 +36,77 @@
           >
             {{ t('dispatch_wizard.create.cancel') }}
           </button>
-          <div class="flex flex-wrap items-center gap-2">
+          <!-- Draft dropdown -->
+          <div ref="draftMenuEl" class="relative">
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-              @click="saveDraft"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+              :class="{ 'border-slate-300 bg-slate-50': draftMenuOpen }"
+              @click.stop="draftMenuOpen = !draftMenuOpen"
             >
               <DocumentArrowDownIcon class="h-4 w-4 text-slate-500" />
-              {{ t('dispatch_wizard.create.save_draft') }}
+              {{ t('dispatch_wizard.create.draft_menu_label') }}
+              <ChevronDownIcon
+                class="h-3.5 w-3.5 text-slate-400 transition-transform duration-150"
+                :class="{ 'rotate-180': draftMenuOpen }"
+              />
             </button>
+
+            <!-- autosave / flash hint below trigger -->
             <span
               v-if="draftSaveFlash"
               role="status"
-              class="text-xs font-semibold text-emerald-700"
+              class="absolute -bottom-5 left-0 whitespace-nowrap text-xs font-semibold text-emerald-700"
             >
               {{ t('dispatch_wizard.create.draft_saved_flash') }}
             </span>
             <span
-              v-else-if="lastAutoSavedAt && !draftSaveFlash"
+              v-else-if="autoSavedAtLabel"
               role="status"
-              class="text-xs text-slate-400"
+              class="absolute -bottom-5 left-0 whitespace-nowrap text-xs text-slate-400"
               :title="autoSavedAtLabel"
             >
               {{ autoSavedAtLabel }}
             </span>
+
+            <!-- Dropdown panel -->
+            <div
+              v-show="draftMenuOpen"
+              class="absolute right-0 top-full z-50 mt-1.5 w-52 rounded-xl border border-slate-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
+              role="menu"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                @click="draftMenuAction(saveDraft)"
+              >
+                <DocumentArrowDownIcon class="h-4 w-4 shrink-0 text-slate-400" />
+                {{ t('dispatch_wizard.create.save_draft') }}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                @click="draftMenuAction(openDraftsModal)"
+              >
+                <ClipboardDocumentListIcon class="h-4 w-4 shrink-0 text-slate-400" />
+                {{ t('dispatch_wizard.create.drafts_title') }}
+              </button>
+              <template v-if="activeDraftId">
+                <div class="my-1 border-t border-slate-100" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-rose-600 transition hover:bg-rose-50"
+                  @click="draftMenuAction(openClearDraftModal)"
+                >
+                  <TrashIcon class="h-4 w-4 shrink-0 text-rose-400" />
+                  {{ t('dispatch_wizard.create.clear_draft') }}
+                </button>
+              </template>
+            </div>
           </div>
-          <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
-            :title="t('dispatch_wizard.create.drafts_tooltip')"
-            @click="openDraftsModal"
-          >
-            <ClipboardDocumentListIcon class="h-4 w-4 text-slate-500" />
-            {{ t('dispatch_wizard.create.drafts_title') }}
-          </button>
-          <button
-            v-if="activeDraftId"
-            type="button"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-800"
-            :title="t('dispatch_wizard.create.clear_draft_tooltip')"
-            @click="openClearDraftModal"
-          >
-            {{ t('dispatch_wizard.create.clear_draft') }}
-          </button>
           <button
             v-if="!(step === 3 && !created)"
             type="button"
@@ -809,7 +837,7 @@
                       <span class="text-xs font-semibold uppercase tracking-wide text-va-800">{{ d.tripLabel }}</span>
                       <span
                         v-if="activeDraftId === d.id"
-                        class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-800"
+                        class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold uppercase text-emerald-800"
                       >
                         {{ t('dispatch_wizard.create.library_active') }}
                       </span>
@@ -853,18 +881,20 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, provide, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
   ClipboardDocumentListIcon,
   CloudArrowUpIcon,
   DocumentArrowDownIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   PaperClipIcon,
+  TrashIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
@@ -969,6 +999,20 @@ const {
   submitResultDetail,
   closeSubmitResultModal,
 } = wizard
+
+const draftMenuOpen = ref(false)
+const draftMenuEl = ref(null)
+
+function onDocClick(e) {
+  if (draftMenuEl.value && !draftMenuEl.value.contains(e.target)) draftMenuOpen.value = false
+}
+onMounted(() => document.addEventListener('click', onDocClick, true))
+onUnmounted(() => document.removeEventListener('click', onDocClick, true))
+
+function draftMenuAction(fn) {
+  draftMenuOpen.value = false
+  fn()
+}
 
 const urgentExplainTooltip = computed(() =>
   t('dispatch_wizard.create.urgent_explain_tooltip', {

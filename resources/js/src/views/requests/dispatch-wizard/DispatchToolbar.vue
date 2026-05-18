@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+    class="dw-schedule-toolbar flex flex-col gap-3 rounded-xl bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
   >
     <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
       <span class="text-sm text-slate-600">

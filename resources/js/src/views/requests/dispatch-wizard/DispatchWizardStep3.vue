@@ -13,24 +13,12 @@
           <h3 id="dw-e1-heading" class="dw-sec-intro__title">
             {{ t('dispatch_wizard.s3.e1_title') }}
           </h3>
-          <p class="dw-sec-intro__meta">
-            {{ t('dispatch_wizard.s3.e1_meta') }}
-          </p>
         </header>
         <DispatchStepDetails
           :model-value="passengerRows"
           variant="passenger"
           @update:valid="setSchedulePassengerValid"
-        >
-          <template #toolbar-extra>
-            <label class="dw-table-toolbar__extra mt-2 flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-              <input v-model="form.multi_day" type="checkbox" class="dw-table-toolbar__extra-check" />
-              <span :title="t('dispatch_wizard.s3.multi_day_title')">{{
-                t('dispatch_wizard.s3.multi_day')
-              }}</span>
-            </label>
-          </template>
-        </DispatchStepDetails>
+        />
       </section>
 
       <section
@@ -43,12 +31,6 @@
             <h3 id="dw-e11-heading" class="dw-e-panel__title">
               {{ t('dispatch_wizard.s3.e11_notes_title') }}
             </h3>
-            <p
-              v-if="isP2PExtracurricular"
-              class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
-            >
-              {{ t('dispatch_wizard.s3.e11_extralead', { amount: formatCurrency(5000000) }) }}
-            </p>
           </div>
         </header>
 
@@ -73,7 +55,6 @@
               :title="t('dispatch_wizard.s3.e1_period_from_title')"
               @click="openDatePickerFromInput($event)"
             />
-            <span class="dw-e11-field__hint">{{ t('dispatch_wizard.s3.date_hint') }}</span>
           </div>
           <div class="dw-e11-field">
             <span class="dw-e11-field__label">
@@ -88,7 +69,6 @@
               :title="t('dispatch_wizard.s3.e1_period_to_title')"
               @click="openDatePickerFromInput($event)"
             />
-            <span class="dw-e11-field__hint">{{ t('dispatch_wizard.s3.to_after_from', { from: t('dispatch_wizard.s3.from_date') }) }}</span>
           </div>
           <div class="dw-e11-field">
             <span class="dw-e11-field__label">{{ t('dispatch_wizard.s3.days_total') }}</span>
@@ -100,7 +80,6 @@
               :placeholder="t('dispatch_wizard.s3.days_ph')"
               :title="t('dispatch_wizard.s3.days_title')"
             />
-            <span class="dw-e11-field__hint">{{ t('dispatch_wizard.s3.days_hint') }}</span>
           </div>
           <div class="dw-e11-field">
             <span class="dw-e11-field__label">{{ t('dispatch_wizard.s3.extra_cost') }}</span>
@@ -114,14 +93,12 @@
               :title="t('dispatch_wizard.s3.extra_cost_title')"
               @input="vndForm('e1_extra_cost', $event)"
             />
-            <span class="dw-e11-field__hint">{{ t('dispatch_wizard.s3.vat_hint') }}</span>
           </div>
         </div>
 
         <div class="dw-e11-weekwrap">
           <p id="dw-e11-weekdays-label" class="dw-e11-weekwrap__title">
             {{ t('dispatch_wizard.s3.weekdays_title') }}
-            <span class="font-normal text-slate-500">{{ t('dispatch_wizard.s3.weekdays_sub') }}</span>
           </p>
           <div class="dw-weekday-strip" role="group" aria-labelledby="dw-e11-weekdays-label">
             <button
@@ -146,9 +123,6 @@
           <h3 id="dw-e2-heading" class="dw-sec-intro__title">
             {{ t('dispatch_wizard.s3.e2_title') }}
           </h3>
-          <p class="dw-sec-intro__meta">
-            {{ t('dispatch_wizard.s3.e2_meta') }}
-          </p>
         </header>
         <DispatchStepDetails
           :model-value="businessRows"
@@ -167,30 +141,13 @@
             <h3 id="dw-e21-heading" class="dw-e-panel__title">
               {{ t('dispatch_wizard.s3.e21_title') }}
             </h3>
-            <p
-              v-if="isP2PExtracurricular"
-              class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600"
-            >
-              {{ t('dispatch_wizard.s3.e21_lead_extra') }}
-            </p>
-            <p v-else class="dw-e-panel__lede mt-1 max-w-none text-xs font-normal normal-case text-slate-600">
-              {{ t('dispatch_wizard.s3.e21_lead_default') }}
-            </p>
           </div>
         </header>
         <div class="dw-e21-rows">
           <div class="dw-e21-row">
             <label class="dw-e21-row__opt">
               <input v-model="form.e2_door_pickup" type="checkbox" class="dw-e21-row__check" />
-              <span class="dw-e21-row__label">
-                {{ t('dispatch_wizard.s3.door_pickup') }}
-                <span
-                  v-if="isP2PExtracurricular"
-                  class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
-                >
-                  {{ t('dispatch_wizard.s3.door_pickup_extra', { amount: formatCurrency(200000) }) }}
-                </span>
-              </span>
+              <span class="dw-e21-row__label">{{ t('dispatch_wizard.s3.door_pickup') }}</span>
             </label>
             <div class="dw-e21-row__cost">
               <span class="dw-e21-row__cost-label">{{ t('dispatch_wizard.s3.door_cost_lbl') }}</span>
@@ -210,15 +167,7 @@
           <div class="dw-e21-row">
             <label class="dw-e21-row__opt">
               <input v-model="form.e2_driver_self" type="checkbox" class="dw-e21-row__check" />
-              <span class="dw-e21-row__label">
-                {{ t('dispatch_wizard.s3.driver_self') }}
-                <span
-                  v-if="isP2PExtracurricular"
-                  class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
-                >
-                  {{ t('dispatch_wizard.s3.driver_self_extra', { amount: formatCurrency(500000) }) }}
-                </span>
-              </span>
+              <span class="dw-e21-row__label">{{ t('dispatch_wizard.s3.driver_self') }}</span>
             </label>
             <div class="dw-e21-row__cost">
               <span class="dw-e21-row__cost-label">{{ t('dispatch_wizard.s3.door_cost_lbl') }}</span>
@@ -238,15 +187,7 @@
           <div class="dw-e21-row">
             <label class="dw-e21-row__opt">
               <input v-model="form.e2_after_21h" type="checkbox" class="dw-e21-row__check" />
-              <span class="dw-e21-row__label">
-                {{ t('dispatch_wizard.s3.after21') }}
-                <span
-                  v-if="isP2PExtracurricular"
-                  class="mt-0.5 block text-[11px] font-normal normal-case text-slate-500"
-                >
-                  {{ t('dispatch_wizard.s3.after21_extra', { amount: formatCurrency(1000000) }) }}
-                </span>
-              </span>
+              <span class="dw-e21-row__label">{{ t('dispatch_wizard.s3.after21') }}</span>
             </label>
             <div class="dw-e21-row__cost">
               <span class="dw-e21-row__cost-label">{{ t('dispatch_wizard.s3.door_cost_lbl') }}</span>
@@ -272,7 +213,6 @@
       <article class="dw-step3-section">
         <header class="dw-sec-intro">
           <h3 class="dw-sec-intro__title">{{ t('dispatch_wizard.s3.cargo_title') }}</h3>
-          <p class="dw-sec-intro__meta">{{ t('dispatch_wizard.s3.cargo_meta') }}</p>
         </header>
         <DispatchStepDetails
           :model-value="cargoRows"
@@ -295,7 +235,7 @@
             :placeholder="t('dispatch_wizard.s3.cargo_notes_ph')"
           />
         </label>
-        <div class="divide-y divide-slate-200/80 rounded-lg border border-slate-200/80 bg-white/60">
+        <div class="divide-y divide-slate-100 rounded-xl bg-white/90">
           <div class="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:py-2.5">
             <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 sm:items-center">
               <input
@@ -372,7 +312,6 @@ const {
   cargoRows,
   form,
   e1WeekdayOptions,
-  formatCurrency,
   openDatePickerFromInput,
   toggleE1Weekday,
   detailStepSchedulesValid,

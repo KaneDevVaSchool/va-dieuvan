@@ -763,7 +763,14 @@
         "sort_depart_asc": "Giờ xuất phát — cũ nhất",
         "sort_created_desc": "Ngày tạo — mới nhất",
         "sort_created_asc": "Ngày tạo — cũ nhất",
-        "back_dashboard": "Về tổng quan"
+        "back_dashboard": "Về tổng quan",
+        "filter_applied_title": "Bộ lọc đang áp dụng",
+        "filter_show_controls_title": "Hiển thị trên thanh lọc",
+        "filter_show_controls_hint": "Bỏ chọn để ẩn ô bộ lọc; giá trị đang chọn vẫn áp dụng.",
+        "filter_clear_all": "Xóa tất cả bộ lọc",
+        "filter_no_active": "Chưa chọn điều kiện lọc.",
+        "filter_label_status": "Trạng thái",
+        "filter_label_sort": "Sắp xếp"
     },
     "routes_meta": {
         "login": {

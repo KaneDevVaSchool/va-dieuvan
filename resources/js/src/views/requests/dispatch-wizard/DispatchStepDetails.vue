@@ -2,7 +2,7 @@
   <div class="dw-schedule-details flex flex-col gap-6">
     <div
       v-if="rows.length === 0"
-      class="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/90 px-5 py-14 text-center sm:py-16"
+      class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/80 px-5 py-14 text-center sm:py-16"
     >
       <div class="text-4xl text-slate-300" aria-hidden="true">📅</div>
       <p class="text-sm text-slate-600">{{ t('dispatch_wizard.s3.empty_schedules') }}</p>

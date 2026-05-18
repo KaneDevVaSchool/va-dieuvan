@@ -13,8 +13,6 @@ import {
   createDispatchRequest,
   createDispatchRequestTemplate,
   createPortalDispatchRequest,
-  exportDispatchRequestPdf,
-  exportPortalDispatchRequestPdf,
   getDispatchRequest,
   patchDispatchRequestWizard,
 } from '../api/requests'
@@ -183,10 +181,6 @@ export function useDispatchRequestWizard(options = {}) {
   const created = ref(null)
   /** Khi đặt lại từ phiếu đã duyệt: PATCH wizard thay vì POST mới. */
   const replaceDraftRequestId = ref(null)
-  const pdfLoading = ref(false)
-  const pdfError = ref('')
-  const pdfPreviewUrl = ref(null)
-  const pdfPreviewForId = ref(null)
   const draftSavedAt = ref(null)
   const lastAutoSavedAt = ref(null)
   const hasDraftSnapshot = ref(false)
@@ -1115,76 +1109,9 @@ export function useDispatchRequestWizard(options = {}) {
     return ''
   }
 
-  function revokePdfPreviewUrl() {
-    if (pdfPreviewUrl.value) {
-      URL.revokeObjectURL(pdfPreviewUrl.value)
-      pdfPreviewUrl.value = null
-    }
-  }
-
-  async function ensurePdfPreview() {
-    if (!created.value?.id) return
-    if (created.value.status !== 'approved') {
-      revokePdfPreviewUrl()
-      pdfPreviewForId.value = null
-      pdfError.value = ''
-      return
-    }
-    if (pdfPreviewForId.value === created.value.id && pdfPreviewUrl.value) return
-    pdfLoading.value = true
-    pdfError.value = ''
-    try {
-      revokePdfPreviewUrl()
-      pdfPreviewForId.value = null
-      const blob = isPortal
-        ? await exportPortalDispatchRequestPdf(created.value.id)
-        : await exportDispatchRequestPdf(created.value.id)
-      pdfPreviewUrl.value = URL.createObjectURL(blob)
-      pdfPreviewForId.value = created.value.id
-    } catch (e) {
-      pdfPreviewForId.value = null
-      pdfError.value = formatApiError(e, t('dispatch_wizard.create.pdf_error'))
-      console.error(e)
-    } finally {
-      pdfLoading.value = false
-    }
-  }
-
-  async function downloadCreatedPdf() {
-    if (!created.value?.id || created.value.status !== 'approved') return
-    await ensurePdfPreview()
-    if (!pdfPreviewUrl.value || !created.value?.id) return
-    const a = document.createElement('a')
-    a.href = pdfPreviewUrl.value
-    a.download = `de-nghi-dieu-van-${created.value.id}.pdf`
-    a.rel = 'noopener'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-  }
-
-  function closePdfPreview() {
-    revokePdfPreviewUrl()
-    pdfPreviewForId.value = null
-  }
-
-  watch(
-    () => created.value,
-    (val) => {
-      if (val?.id && val.status === 'approved') {
-        ensurePdfPreview()
-      } else {
-        closePdfPreview()
-        pdfError.value = ''
-      }
-    },
-    { immediate: true },
-  )
-
   let autosaveTimer = null
 
   onUnmounted(() => {
-    revokePdfPreviewUrl()
     clearTimeout(draftSaveFlashTimer)
     clearTimeout(autosaveTimer)
   })
@@ -1789,9 +1716,6 @@ export function useDispatchRequestWizard(options = {}) {
     error,
     created,
     replaceDraftRequestId,
-    pdfLoading,
-    pdfError,
-    pdfPreviewUrl,
     draftSavedAt,
     lastAutoSavedAt,
     hasDraftSnapshot,
@@ -1882,8 +1806,6 @@ export function useDispatchRequestWizard(options = {}) {
     headerPrimaryLabel,
     headerPrimaryDisabled,
     primaryAction,
-    downloadCreatedPdf,
-    closePdfPreview,
     saveDraft,
     openClearDraftModal,
     closeClearDraftModal,

@@ -720,7 +720,14 @@
         "sort_depart_asc": "Departure — oldest first",
         "sort_created_desc": "Created — newest first",
         "sort_created_asc": "Created — oldest first",
-        "back_dashboard": "Back to overview"
+        "back_dashboard": "Back to overview",
+        "filter_applied_title": "Applied filters",
+        "filter_show_controls_title": "Show on filter bar",
+        "filter_show_controls_hint": "Uncheck to hide a filter chip; the selected value still applies.",
+        "filter_clear_all": "Clear all filters",
+        "filter_no_active": "No filters applied.",
+        "filter_label_status": "Status",
+        "filter_label_sort": "Sort"
     },
     "routes_meta": {
         "login": {

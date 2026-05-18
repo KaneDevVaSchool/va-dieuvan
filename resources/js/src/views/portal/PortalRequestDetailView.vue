@@ -79,7 +79,7 @@
               <span>{{ pdfPrimaryLabel }}</span>
             </span>
           </button>
-          <p v-if="pdfExportDisabled" class="max-w-xl text-[11px] leading-snug text-slate-500">
+          <p v-if="pdfExportDisabled" class="max-w-xl text-xs leading-snug text-slate-500">
             {{ t('portal.pdf_locked_tooltip') }}
           </p>
         </div>

@@ -20,50 +20,175 @@
         </RouterLink>
       </div>
 
-      <div class="mt-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <label class="sr-only" for="portal-list-q">{{ t('portal.search_placeholder') }}</label>
-          <input
-            id="portal-list-q"
-            v-model="searchInput"
-            type="search"
-            autocomplete="off"
-            class="min-h-[44px] w-full rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm outline-none ring-indigo-500/15 focus:border-indigo-400 focus:ring-2 sm:max-w-md"
-            :placeholder="t('portal.search_placeholder')"
-          />
-          <div class="flex shrink-0 items-center gap-2">
-            <label class="text-xs font-semibold text-slate-600" for="portal-sort">{{ t('portal.sort_label') }}</label>
-            <select
-              id="portal-sort"
-              v-model="sort"
-              class="min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium shadow-sm outline-none focus:border-indigo-400 focus:ring-2"
-              @change="reloadFromStart"
-            >
-              <option value="depart_desc">{{ t('portal.sort_depart_desc') }}</option>
-              <option value="depart_asc">{{ t('portal.sort_depart_asc') }}</option>
-              <option value="created_desc">{{ t('portal.sort_created_desc') }}</option>
-              <option value="created_asc">{{ t('portal.sort_created_asc') }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <!-- Filter bar -->
+      <div class="relative z-40 mt-8">
+        <AppFilterBar>
+          <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
 
-      <div class="mt-5 flex flex-wrap gap-2" role="toolbar" :aria-label="t('portal.filter_toolbar_label')">
-        <button
-          v-for="opt in filterOptions"
-          :key="opt.key"
-          type="button"
-          class="min-h-[40px] rounded-full border px-4 text-xs font-semibold transition sm:text-sm"
-          :class="
-            filterStatus === opt.key
-              ? 'border-indigo-600 bg-indigo-600 text-white shadow-md hover:bg-indigo-700'
-              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-          "
-          :aria-pressed="filterStatus === opt.key"
-          @click="onFilter(opt.key)"
-        >
-          {{ opt.label }}
-        </button>
+            <!-- Funnel / phễu -->
+            <details ref="funnelRef" class="group relative">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md [&::-webkit-details-marker]:hidden"
+                :aria-label="t('portal.filter_toolbar_label')"
+              >
+                <span class="relative inline-flex">
+                  <FunnelIcon class="h-5 w-5 text-slate-600" aria-hidden="true" />
+                  <span
+                    v-if="activeFilterCount > 0"
+                    class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
+                  >
+                    {{ activeFilterCount > 9 ? '9+' : activeFilterCount }}
+                  </span>
+                </span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5"
+              >
+                <!-- Applied filters header -->
+                <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700">
+                  {{ t('portal.filter_applied_title') }}
+                </p>
+                <div class="p-3 pt-2">
+                  <ul class="mt-1 space-y-2 text-sm text-slate-700">
+                    <li v-if="!activeFilterLines.length" class="text-slate-400">
+                      {{ t('portal.filter_no_active') }}
+                    </li>
+                    <li
+                      v-for="(row, i) in activeFilterLines"
+                      :key="i"
+                      class="flex items-center gap-1.5"
+                    >
+                      <span class="text-slate-500">{{ row.label }}:</span>
+                      <span class="font-medium text-slate-800">{{ row.value }}</span>
+                    </li>
+                  </ul>
+
+                  <!-- Visibility toggles -->
+                  <div class="mt-3 border-t border-slate-100 pt-3">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700">
+                      {{ t('portal.filter_show_controls_title') }}
+                    </p>
+                    <p class="mt-0.5 text-[10px] leading-snug text-slate-500">
+                      {{ t('portal.filter_show_controls_hint') }}
+                    </p>
+                    <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                      <li v-for="fd in visibilityOptions" :key="'vis-' + fd.id" class="flex items-start gap-2">
+                        <input
+                          :id="'portal-filter-vis-' + fd.id"
+                          v-model="filterDropdownVisible[fd.id]"
+                          type="checkbox"
+                          class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                        />
+                        <label
+                          :for="'portal-filter-vis-' + fd.id"
+                          class="cursor-pointer text-sm leading-snug text-slate-700"
+                        >
+                          {{ fd.label }}
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Clear all -->
+                  <button
+                    type="button"
+                    class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    @click="resetFilters"
+                  >
+                    {{ t('portal.filter_clear_all') }}
+                  </button>
+                </div>
+              </div>
+            </details>
+
+            <!-- Divider -->
+            <div class="hidden h-6 w-px bg-slate-200/90 sm:block" aria-hidden="true" />
+
+            <!-- Search (always visible) -->
+            <label class="sr-only" for="portal-list-q">{{ t('portal.search_placeholder') }}</label>
+            <input
+              id="portal-list-q"
+              v-model="searchInput"
+              type="search"
+              autocomplete="off"
+              :aria-label="t('portal.search_placeholder')"
+              :placeholder="t('portal.search_placeholder')"
+              :title="t('portal.search_placeholder')"
+              class="portal-list-q h-9 min-w-[10rem] flex-1 rounded-lg border-0 bg-white/90 px-3 text-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:max-w-xs"
+            />
+
+            <!-- Filter chips -->
+            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+
+              <!-- Status chip -->
+              <AppFilterDropdown
+                v-if="filterDropdownVisible.status !== false"
+                :label="t('portal.filter_label_status')"
+                :summary-text="currentStatusLabel"
+                panel-class="min-w-[200px] py-1"
+              >
+                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
+                  <li v-for="opt in filterOptions" :key="opt.key">
+                    <button
+                      type="button"
+                      :class="[
+                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
+                        filterStatus === opt.key
+                          ? 'bg-teal-50 font-medium text-teal-900'
+                          : 'text-slate-700 hover:bg-slate-50',
+                      ]"
+                      @click="onFilter(opt.key)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+
+              <!-- Sort chip -->
+              <AppFilterDropdown
+                v-if="filterDropdownVisible.sort !== false"
+                :label="t('portal.filter_label_sort')"
+                :summary-text="currentSortLabel"
+                panel-class="min-w-[240px] py-1"
+              >
+                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
+                  <li v-for="opt in sortOptions" :key="opt.value">
+                    <button
+                      type="button"
+                      :class="[
+                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
+                        sort === opt.value
+                          ? 'bg-teal-50 font-medium text-teal-900'
+                          : 'text-slate-700 hover:bg-slate-50',
+                      ]"
+                      @click="onSort(opt.value)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+            </div>
+
+            <!-- Action area: clear button -->
+            <div
+              v-if="activeFilterCount > 0"
+              class="ml-auto flex shrink-0 items-center border-l border-violet-200/70 pl-2"
+            >
+              <button
+                type="button"
+                :title="t('portal.filter_clear_all')"
+                :aria-label="t('portal.filter_clear_all')"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                @click="resetFilters"
+              >
+                <XMarkIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </AppFilterBar>
       </div>
 
       <PortalRequestSkeleton v-if="loading && !loadingMore" class="mt-8" :aria-label="t('portal.loading_requests')" />
@@ -107,32 +232,65 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { listPortalRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
 
 const PER_PAGE = 15
+const VIS_KEY = 'portal-filter-vis'
 
 const { t } = useI18n()
 
+// ── List state ───────────────────────────────────────────────
 const loading = ref(true)
 const loadingMore = ref(false)
 const fetchError = ref('')
 const items = ref([])
 const pagination = ref(null)
 
+// ── Filter state ─────────────────────────────────────────────
 const filterStatus = ref('all')
 const sort = ref('depart_desc')
 const searchInput = ref('')
 const debouncedQ = ref('')
 
-let debounceTimer = null
+// ── Filter chip visibility (persisted) ───────────────────────
+const filterDropdownVisible = reactive(
+  (() => {
+    try {
+      return JSON.parse(localStorage.getItem(VIS_KEY) ?? '{}') ?? {}
+    } catch {
+      return {}
+    }
+  })(),
+)
 
+watch(
+  filterDropdownVisible,
+  (v) => {
+    try {
+      localStorage.setItem(VIS_KEY, JSON.stringify(v))
+    } catch {
+      // localStorage unavailable
+    }
+  },
+  { deep: true },
+)
+
+const visibilityOptions = computed(() => [
+  { id: 'status', label: t('portal.filter_label_status') },
+  { id: 'sort', label: t('portal.filter_label_sort') },
+])
+
+// ── Filter / sort option lists ────────────────────────────────
 const filterOptions = computed(() => [
   { key: 'all', label: t('portal.filter_all') },
   { key: 'pending', label: t('portal.filter_pending') },
@@ -140,6 +298,47 @@ const filterOptions = computed(() => [
   { key: 'rejected', label: t('portal.filter_rejected') },
   { key: 'returned', label: t('portal.filter_returned') },
 ])
+
+const sortOptions = computed(() => [
+  { value: 'depart_desc', label: t('portal.sort_depart_desc') },
+  { value: 'depart_asc', label: t('portal.sort_depart_asc') },
+  { value: 'created_desc', label: t('portal.sort_created_desc') },
+  { value: 'created_asc', label: t('portal.sort_created_asc') },
+])
+
+const currentStatusLabel = computed(
+  () => filterOptions.value.find((o) => o.key === filterStatus.value)?.label ?? filterStatus.value,
+)
+
+const currentSortLabel = computed(
+  () => sortOptions.value.find((o) => o.value === sort.value)?.label ?? sort.value,
+)
+
+// ── Active filter count + summary lines ──────────────────────
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (filterStatus.value !== 'all') n++
+  if (sort.value !== 'depart_desc') n++
+  if (debouncedQ.value) n++
+  return n
+})
+
+const activeFilterLines = computed(() => {
+  const lines = []
+  if (filterStatus.value !== 'all') {
+    lines.push({ label: t('portal.filter_label_status'), value: currentStatusLabel.value })
+  }
+  if (sort.value !== 'depart_desc') {
+    lines.push({ label: t('portal.filter_label_sort'), value: currentSortLabel.value })
+  }
+  if (debouncedQ.value) {
+    lines.push({ label: t('portal.search_placeholder'), value: debouncedQ.value })
+  }
+  return lines
+})
+
+// ── Debounced search ─────────────────────────────────────────
+let debounceTimer = null
 
 watch(searchInput, (v) => {
   clearTimeout(debounceTimer)
@@ -152,20 +351,33 @@ watch(debouncedQ, () => {
   reloadFromStart()
 })
 
+// ── Actions ──────────────────────────────────────────────────
 function onFilter(key) {
   filterStatus.value = key
   reloadFromStart()
 }
 
+function onSort(value) {
+  sort.value = value
+  reloadFromStart()
+}
+
+function resetFilters() {
+  filterStatus.value = 'all'
+  sort.value = 'depart_desc'
+  searchInput.value = ''
+  reloadFromStart()
+}
+
+// ── API ──────────────────────────────────────────────────────
 function listParams(page) {
-  const params = {
+  return {
     per_page: PER_PAGE,
     page,
     sort: sort.value,
     filter: filterStatus.value === 'all' ? undefined : filterStatus.value,
     q: debouncedQ.value || undefined,
   }
-  return params
 }
 
 async function loadFirst() {
