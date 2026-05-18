@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center shadow-sm">
+  <div class="rounded-2xl border border-dashed border-indigo-200/70 bg-white/85 px-6 py-12 text-center shadow-md shadow-indigo-900/[0.04] ring-1 ring-indigo-900/[0.03] backdrop-blur-sm">
     <ClipboardDocumentIcon
-      class="mx-auto h-12 w-12 text-slate-300"
+      class="mx-auto h-12 w-12 text-indigo-300"
       :class="{ 'animate-pulse': pulseIcon }"
       aria-hidden="true"
     />

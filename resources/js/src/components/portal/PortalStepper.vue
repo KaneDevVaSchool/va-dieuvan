@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3"
+    class="rounded-xl border border-slate-200/90 bg-white/90 p-2 shadow-md shadow-indigo-900/[0.04] backdrop-blur-sm sm:p-3"
     :aria-label="stepsNavLabel"
   >
     <ol

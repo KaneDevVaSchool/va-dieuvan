@@ -14,7 +14,7 @@
         </div>
         <button
           type="button"
-          class="min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+          class="min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
           :disabled="markingAll || loading"
           @click="markAll"
         >
@@ -72,7 +72,7 @@
       <button
         v-if="pagination && pagination.current_page < pagination.last_page"
         type="button"
-        class="mt-6 flex w-full min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow hover:bg-slate-50 disabled:opacity-50"
+        class="mt-6 flex w-full min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow transition hover:border-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
         :disabled="loadingMore"
         @click="loadMore"
       >

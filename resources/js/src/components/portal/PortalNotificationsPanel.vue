@@ -4,7 +4,7 @@
       <h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{{ t('portal.notifications_panel_title') }}</h2>
       <RouterLink
         :to="{ name: 'portalNotifications' }"
-        class="text-xs font-semibold text-va-800 underline-offset-2 hover:underline"
+        class="text-xs font-semibold text-indigo-600 underline-offset-2 hover:underline"
       >
         {{ t('portal.notifications_view_all') }}
       </RouterLink>
@@ -26,12 +26,12 @@
         <component
           :is="linkWrapper(n)"
           v-bind="linkBind(n)"
-          class="group block rounded-lg outline-none ring-va-800/25 focus-visible:ring-2"
+          class="group block rounded-lg outline-none ring-indigo-500/25 focus-visible:ring-2 focus-visible:ring-indigo-500"
         >
           <div class="flex items-start gap-2">
             <span
               v-if="!n.read"
-              class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-500"
+              class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-500 shadow-sm shadow-cyan-500/40"
               aria-hidden="true"
             />
             <span v-else class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-transparent" aria-hidden="true" />

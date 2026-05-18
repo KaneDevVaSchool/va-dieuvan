@@ -1,20 +1,20 @@
 <template>
   <div
-    class="dispatch-wizard min-h-screen bg-slate-50/50 pb-[calc(7rem+env(safe-area-inset-bottom))] text-slate-900 md:pb-10"
+    class="dispatch-wizard min-h-screen bg-gradient-to-b from-slate-50/80 via-white to-indigo-50/25 pb-[calc(7rem+env(safe-area-inset-bottom))] text-slate-900 md:pb-10"
     :aria-busy="submitting ? 'true' : 'false'"
   >
     <div
       class="mx-auto max-w-6xl space-y-6 px-4 py-6 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))] sm:px-6 lg:py-8"
     >
       <header>
-        <p class="text-xs font-semibold uppercase tracking-wide text-va-800">{{ t('portal.nav_title') }}</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">{{ t('portal.nav_title') }}</p>
         <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{{ t('portal.create.page_title') }}</h1>
         <p class="mt-1 text-sm text-slate-600">{{ t('portal.create.page_subtitle') }}</p>
       </header>
 
       <PortalStepper :steps="stepLabels" :current="step" :steps-nav-label="t('portal.steps_nav')" />
 
-      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
+      <section class="rounded-2xl border border-slate-200/90 bg-white/95 p-5 shadow-lg shadow-indigo-900/[0.04] backdrop-blur-sm ring-1 ring-slate-900/[0.03] sm:p-8 lg:p-10">
         <div
           v-if="formError"
           ref="errorBannerRef"
@@ -56,7 +56,7 @@
           <button
             v-if="step > 0"
             type="button"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm disabled:opacity-50"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/50 disabled:opacity-50"
             :disabled="submitting"
             @click="step -= 1"
           >
@@ -67,7 +67,7 @@
           <button
             v-if="step < 2"
             type="button"
-            class="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+            class="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-45"
             :disabled="submitting || !canGoNext"
             @click="nextStep"
           >
@@ -77,7 +77,7 @@
           <button
             v-else
             type="button"
-            class="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-va-800 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+            class="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-45"
             :disabled="submitting"
             @click="submit"
           >
@@ -92,7 +92,7 @@
     </div>
 
     <div
-      class="fixed inset-x-0 bottom-0 z-40 flex justify-center border-t border-slate-200 bg-white/98 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 md:hidden"
+      class="fixed inset-x-0 bottom-0 z-40 flex justify-center border-t border-slate-200/90 bg-white/90 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-lg md:hidden"
     >
       <div
         class="mx-auto flex w-full max-w-6xl items-center gap-2 px-4 supports-[padding:max(0px)]:pl-[max(1rem,env(safe-area-inset-left))] supports-[padding:max(0px)]:pr-[max(1rem,env(safe-area-inset-right))]"
@@ -100,7 +100,7 @@
         <button
           v-if="step > 0"
           type="button"
-          class="min-h-[48px] min-w-[96px] rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm disabled:opacity-45"
+          class="min-h-[48px] min-w-[96px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/50 disabled:opacity-45"
           :disabled="submitting"
           @click="step -= 1"
         >
@@ -111,7 +111,7 @@
         <button
           v-if="step < 2"
           type="button"
-          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-va-800 px-4 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45"
+          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-md hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-45"
           :disabled="submitting || !canGoNext"
           @click="nextStep"
         >
@@ -121,7 +121,7 @@
         <button
           v-else
           type="button"
-          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-va-800 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-45"
+          class="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-md hover:bg-indigo-700 disabled:opacity-45"
           :disabled="submitting"
           @click="submit"
         >
