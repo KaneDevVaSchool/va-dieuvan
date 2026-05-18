@@ -76,7 +76,7 @@ export async function getPortalRequestsSummary() {
 }
 
 /**
- * @param {{ per_page?: number, page?: number, q?: string, sort?: 'depart_desc'|'depart_asc'|'created_desc'|'created_asc', filter?: 'all'|'pending'|'approved'|'rejected'|'returned' }} [params]
+ * @param {{ per_page?: number, page?: number, q?: string, sort?: 'depart_desc'|'depart_asc'|'created_desc'|'created_asc', filter?: 'all'|'pending'|'approved'|'rejected'|'returned', trip_type?: 'business'|'cargo'|'door_to_door'|'point_to_point', is_urgent?: 0|1, date_from?: string, date_to?: string }} [params]
  */
 export async function listPortalRequests(params = {}) {
   const { data } = await http.get('/portal/dispatch-requests', { params })
@@ -124,6 +124,52 @@ export async function downloadPortalAttachmentBlob(dispatchRequestId, attachment
     await normalizeAxiosBlobError(e)
     throw e
   }
+}
+
+// ---------------------------------------------------------------------------
+// Portal form templates (biểu mẫu đã lưu)
+// ---------------------------------------------------------------------------
+
+/**
+ * @returns {Promise<Array<{ id: number, name: string, trip_type: string, updated_at: string }>>}
+ */
+export async function getPortalFormTemplates() {
+  const { data } = await http.get('/portal/form-templates')
+  return data.data
+}
+
+/**
+ * @param {number} id
+ * @returns {Promise<{ id: number, name: string, trip_type: string, wizard_snapshot: object|null, updated_at: string }>}
+ */
+export async function getPortalFormTemplate(id) {
+  const { data } = await http.get(`/portal/form-templates/${id}`)
+  return data.data
+}
+
+/**
+ * @param {{ name: string, trip_type: string, wizard_snapshot?: object }} payload
+ */
+export async function createPortalFormTemplate(payload) {
+  const { data } = await http.post('/portal/form-templates', payload)
+  return data.data
+}
+
+/**
+ * @param {number} id
+ * @param {{ name: string }} payload
+ */
+export async function updatePortalFormTemplate(id, payload) {
+  const { data } = await http.patch(`/portal/form-templates/${id}`, payload)
+  return data.data
+}
+
+/**
+ * @param {number} id
+ */
+export async function deletePortalFormTemplate(id) {
+  const { data } = await http.delete(`/portal/form-templates/${id}`)
+  return data.data
 }
 
 /**

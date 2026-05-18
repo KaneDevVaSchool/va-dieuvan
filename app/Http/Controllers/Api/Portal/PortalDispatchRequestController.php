@@ -85,6 +85,22 @@ class PortalDispatchRequestController extends Controller
             default => null,
         };
 
+        if (isset($data['trip_type'])) {
+            $query->where('trip_type', (string) $data['trip_type']);
+        }
+
+        if (array_key_exists('is_urgent', $data)) {
+            $query->where('is_urgent', (bool) $data['is_urgent']);
+        }
+
+        if (isset($data['date_from'])) {
+            $query->whereDate('depart_at', '>=', $data['date_from']);
+        }
+
+        if (isset($data['date_to'])) {
+            $query->whereDate('depart_at', '<=', $data['date_to']);
+        }
+
         $qRaw = isset($data['q']) ? trim((string) $data['q']) : '';
         if ($qRaw !== '') {
             $like = '%'.addcslashes($qRaw, '%_\\').'%';

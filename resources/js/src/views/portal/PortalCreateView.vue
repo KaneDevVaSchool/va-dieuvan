@@ -11,12 +11,6 @@
       <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">{{ t('portal.nav_title') }}</p>
         <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{{ t('portal.create.page_title') }}</h1>
-        <p class="mt-1 text-sm text-slate-600">{{ t('portal.create.page_subtitle') }}</p>
-        <p class="mt-2 text-sm text-slate-600">
-          <span class="font-medium text-va-800">{{ t('dispatch_wizard.create.badge_new') }}</span>
-          <span class="text-slate-400"> • </span>
-          {{ draftLabel }}
-        </p>
         <p v-if="dispatchFormSettingsError && !dispatchFormSettingsLoading" class="mt-1 text-xs text-amber-700">
           {{ dispatchFormSettingsError }}
         </p>
@@ -60,14 +54,6 @@
             >
               {{ t('dispatch_wizard.create.draft_saved_flash') }}
             </span>
-            <span
-              v-else-if="autoSavedAtLabel"
-              role="status"
-              class="absolute -bottom-5 left-0 whitespace-nowrap text-xs text-slate-400"
-              :title="autoSavedAtLabel"
-            >
-              {{ autoSavedAtLabel }}
-            </span>
 
             <!-- Dropdown panel -->
             <div
@@ -92,6 +78,25 @@
               >
                 <ClipboardDocumentListIcon class="h-4 w-4 shrink-0 text-slate-400" />
                 {{ t('dispatch_wizard.create.drafts_title') }}
+              </button>
+              <div class="my-1 border-t border-slate-100" />
+              <button
+                type="button"
+                role="menuitem"
+                class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                @click="draftMenuAction(openSaveTemplateModal)"
+              >
+                <BookmarkIcon class="h-4 w-4 shrink-0 text-indigo-400" />
+                {{ t('portal.template_save_action') }}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                @click="draftMenuAction(openTemplateLibrary)"
+              >
+                <BookmarkSquareIcon class="h-4 w-4 shrink-0 text-indigo-400" />
+                {{ t('portal.template_library_action') }}
               </button>
               <template v-if="activeDraftId">
                 <div class="my-1 border-t border-slate-100" />
@@ -156,9 +161,6 @@
           </p>
           <div>
             <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
-            <p class="mt-1 text-sm leading-relaxed text-slate-600">
-              {{ t('dispatch_wizard.create.step2_lead') }}
-            </p>
           </div>
 
           <!-- Người đề nghị + Thời gian: cạnh nhau desktop, xếp dọc mobile -->
@@ -362,12 +364,12 @@
             <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
             <div
               v-if="form.trip_type === 'point_to_point'"
-              class="mb-4 flex flex-wrap gap-2 sm:gap-3"
+              class="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3"
               role="radiogroup"
               :aria-label="t('dispatch_wizard.create.purpose_tab_aria')"
             >
               <label
-                class="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
+                class="flex w-full min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200 sm:w-auto"
               >
                 <input
                   v-model="form.point_purpose_kind"
@@ -378,7 +380,7 @@
                 <span>{{ t('dispatch_wizard.create.purpose_point') }}</span>
               </label>
               <label
-                class="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200"
+                class="flex w-full min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 shadow-sm transition hover:border-va-800/25 has-[:checked]:border-sky-500 has-[:checked]:bg-sky-50 has-[:checked]:ring-1 has-[:checked]:ring-sky-200 sm:w-auto"
               >
                 <input
                   v-model="form.point_purpose_kind"
@@ -878,6 +880,232 @@
       </div>
     </Transition>
   </Teleport>
+
+  <!-- Save-as-template modal -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="saveTemplateModalOpen"
+        class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="save-template-modal-title"
+        @click.self="saveTemplateModalOpen = false"
+      >
+        <div
+          class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          @click.stop
+        >
+          <div class="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
+            <div class="flex items-center gap-3">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                <BookmarkIcon class="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div class="min-w-0">
+                <h3 id="save-template-modal-title" class="text-base font-semibold leading-snug text-slate-900">
+                  {{ t('portal.template_save_title') }}
+                </h3>
+                <p class="mt-0.5 text-xs text-slate-500">{{ t('portal.template_save_hint') }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-5 py-4">
+            <label for="template-name-input" class="block text-sm font-medium text-slate-700">
+              {{ t('portal.template_name_label') }}
+            </label>
+            <input
+              id="template-name-input"
+              v-model="saveTemplateName"
+              type="text"
+              maxlength="100"
+              :placeholder="t('portal.template_name_placeholder')"
+              class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300/40"
+              @keydown.enter.prevent="confirmSaveTemplate"
+            />
+            <p v-if="templateSaveError" class="mt-2 text-xs font-medium text-rose-600">{{ templateSaveError }}</p>
+          </div>
+
+          <div class="flex flex-col gap-2 border-t border-slate-100 bg-slate-50/90 px-5 py-3 sm:flex-row sm:justify-end sm:gap-3">
+            <button
+              type="button"
+              class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto"
+              @click="saveTemplateModalOpen = false"
+            >
+              {{ t('dispatch_wizard.create.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 sm:w-auto"
+              :disabled="!saveTemplateName.trim() || templateSaveLoading"
+              @click="confirmSaveTemplate"
+            >
+              <BookmarkIcon class="h-4 w-4" aria-hidden="true" />
+              {{ t('portal.template_save_btn') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- Template library modal -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="templateModalOpen"
+        class="fixed inset-0 z-[202] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[3px]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="template-library-title"
+        @click.self="templateModalOpen = false"
+      >
+        <div
+          class="flex max-h-[min(85vh,580px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          @click.stop
+        >
+          <!-- Header -->
+          <div class="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="flex min-w-0 items-center gap-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                  <BookmarkSquareIcon class="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div class="min-w-0">
+                  <h3 id="template-library-title" class="text-base font-semibold leading-snug text-slate-900">
+                    {{ t('portal.template_library_title') }}
+                  </h3>
+                  <p class="mt-0.5 text-xs text-slate-500">{{ t('portal.template_library_hint') }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+            <div v-if="templateListLoading" class="flex items-center justify-center py-10">
+              <span class="h-5 w-5 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-600" />
+            </div>
+            <p
+              v-else-if="templateListError"
+              class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+            >
+              {{ templateListError }}
+            </p>
+            <p
+              v-else-if="!formTemplates.length"
+              class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-600"
+            >
+              {{ t('portal.template_empty') }}
+            </p>
+            <ul v-else class="space-y-2">
+              <li
+                v-for="tmpl in formTemplates"
+                :key="tmpl.id"
+                class="rounded-xl border border-slate-200/90 bg-white p-3 shadow-sm ring-1 ring-slate-900/[0.04]"
+              >
+                <!-- Rename mode -->
+                <template v-if="templateRenameId === tmpl.id">
+                  <div class="flex items-center gap-2">
+                    <input
+                      v-model="templateRenameValue"
+                      type="text"
+                      maxlength="100"
+                      :placeholder="t('portal.template_name_placeholder')"
+                      class="min-w-0 flex-1 rounded-lg border border-indigo-300 px-2.5 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-indigo-300/40"
+                      @keydown.enter.prevent="renameTemplate(tmpl.id, templateRenameValue)"
+                      @keydown.escape="cancelRename"
+                    />
+                    <button
+                      type="button"
+                      class="shrink-0 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                      @click="renameTemplate(tmpl.id, templateRenameValue)"
+                    >
+                      {{ t('portal.template_rename_save') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      @click="cancelRename"
+                    >
+                      {{ t('dispatch_wizard.create.cancel') }}
+                    </button>
+                  </div>
+                </template>
+
+                <!-- Normal mode -->
+                <template v-else>
+                  <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-sm font-semibold text-slate-900">{{ tmpl.name }}</span>
+                        <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
+                          {{ TRIP_TYPE_LABELS[tmpl.trip_type] ?? tmpl.trip_type }}
+                        </span>
+                      </div>
+                      <p class="mt-0.5 text-xs text-slate-500">
+                        {{ t('portal.template_updated_at', { date: new Date(tmpl.updated_at).toLocaleDateString('vi-VN') }) }}
+                      </p>
+                    </div>
+                    <div class="flex shrink-0 flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        class="rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                        @click="applyTemplate(tmpl)"
+                      >
+                        {{ t('portal.template_apply_btn') }}
+                      </button>
+                      <button
+                        type="button"
+                        :title="t('portal.template_rename_label')"
+                        class="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        @click="startRename(tmpl)"
+                      >
+                        <PencilIcon class="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        :title="t('portal.template_delete_confirm')"
+                        class="rounded-lg border border-rose-200 bg-white p-1.5 text-rose-500 hover:bg-rose-50"
+                        @click="deleteTemplate(tmpl.id)"
+                      >
+                        <TrashIcon class="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </template>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Footer -->
+          <div class="border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex sm:justify-end">
+            <button
+              type="button"
+              class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto"
+              @click="templateModalOpen = false"
+            >
+              {{ t('dispatch_wizard.create.library_close') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -886,6 +1114,8 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
+  BookmarkIcon,
+  BookmarkSquareIcon,
   CheckCircleIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
@@ -894,6 +1124,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   PaperClipIcon,
+  PencilIcon,
   TrashIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
@@ -998,6 +1229,21 @@ const {
   submitResultOk,
   submitResultDetail,
   closeSubmitResultModal,
+  // Portal form templates
+  formTemplates,
+  templateModalOpen,
+  saveTemplateModalOpen,
+  templateSaveLoading,
+  templateSaveError,
+  templateListLoading,
+  templateListError,
+  templateRenameId,
+  templateRenameValue,
+  loadFormTemplates,
+  saveAsTemplate,
+  applyTemplate,
+  deleteTemplate,
+  renameTemplate,
 } = wizard
 
 const draftMenuOpen = ref(false)
@@ -1047,6 +1293,41 @@ function applyShortcutTripType() {
   if (!TRIP_TYPES.includes(raw)) return
   form.value.trip_type = raw
   goStep(1)
+}
+
+// --- Template save modal local state ---
+const saveTemplateName = ref('')
+
+function openSaveTemplateModal() {
+  saveTemplateName.value = ''
+  wizard.templateSaveError.value = ''
+  saveTemplateModalOpen.value = true
+}
+
+async function confirmSaveTemplate() {
+  await saveAsTemplate(saveTemplateName.value)
+}
+
+function openTemplateLibrary() {
+  templateModalOpen.value = true
+  loadFormTemplates()
+}
+
+function startRename(tmpl) {
+  templateRenameId.value = tmpl.id
+  templateRenameValue.value = tmpl.name
+}
+
+function cancelRename() {
+  templateRenameId.value = null
+  templateRenameValue.value = ''
+}
+
+const TRIP_TYPE_LABELS = {
+  door_to_door: 'Cửa–Cửa',
+  point_to_point: 'Điểm–Điểm',
+  business: 'Công tác',
+  cargo: 'Hàng hoá',
 }
 
 watch(() => route.query.type, applyShortcutTripType)

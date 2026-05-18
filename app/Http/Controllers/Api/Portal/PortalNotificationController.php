@@ -20,7 +20,13 @@ class PortalNotificationController extends Controller
 
         $unreadTotal = $user->unreadNotifications()->count();
 
-        $paginator = $user->notifications()
+        $filter = isset($data['filter']) ? (string) $data['filter'] : 'all';
+
+        $notificationsQuery = $filter === 'unread'
+            ? $user->unreadNotifications()
+            : $user->notifications();
+
+        $paginator = $notificationsQuery
             ->orderByDesc('created_at')
             ->paginate($perPage);
 

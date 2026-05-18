@@ -21,7 +21,6 @@
           </span>
         </div>
         <p class="mt-2 text-3xl font-bold tabular-nums tracking-tight" :class="card.valueClass">{{ card.value }}</p>
-        <p class="mt-1 text-xs leading-snug text-slate-600">{{ card.subtitle }}</p>
       </article>
     </template>
   </div>
@@ -53,7 +52,6 @@ const cards = computed(() => {
       key: 'processing',
       title: t('portal.kpi_processing_title'),
       value: n(s.processing),
-      subtitle: t('portal.kpi_processing_sub'),
       icon: TruckIcon,
       iconClass: 'text-sky-600',
       iconWrapClass: 'bg-sky-100 text-sky-600',
@@ -65,7 +63,6 @@ const cards = computed(() => {
       key: 'pending',
       title: t('portal.kpi_pending_title'),
       value: n(s.pending),
-      subtitle: t('portal.kpi_pending_sub'),
       icon: ClockIcon,
       iconClass: 'text-amber-600',
       iconWrapClass: 'bg-amber-100 text-amber-600',
@@ -77,7 +74,6 @@ const cards = computed(() => {
       key: 'completed',
       title: t('portal.kpi_completed_title'),
       value: n(s.completed_this_month),
-      subtitle: t('portal.kpi_completed_sub'),
       icon: CheckCircleIcon,
       iconClass: 'text-emerald-600',
       iconWrapClass: 'bg-emerald-100 text-emerald-600',
@@ -89,7 +85,6 @@ const cards = computed(() => {
       key: 'rejected',
       title: t('portal.kpi_rejected_title'),
       value: n(s.rejected),
-      subtitle: t('portal.kpi_rejected_sub'),
       icon: XCircleIcon,
       iconClass: 'text-rose-600',
       iconWrapClass: 'bg-rose-100 text-rose-600',

@@ -119,7 +119,7 @@
             />
 
             <!-- Filter chips -->
-            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+            <div class="flex min-w-0 flex-1 items-center gap-x-2 gap-y-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden sm:gap-x-3">
 
               <!-- Status chip -->
               <AppFilterDropdown
@@ -127,6 +127,7 @@
                 :label="t('portal.filter_label_status')"
                 :summary-text="currentStatusLabel"
                 panel-class="min-w-[200px] py-1"
+                class="shrink-0 snap-start"
               >
                 <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
                   <li v-for="opt in filterOptions" :key="opt.key">
@@ -152,6 +153,7 @@
                 :label="t('portal.filter_label_sort')"
                 :summary-text="currentSortLabel"
                 panel-class="min-w-[240px] py-1"
+                class="shrink-0 snap-start"
               >
                 <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
                   <li v-for="opt in sortOptions" :key="opt.value">
@@ -169,6 +171,87 @@
                     </button>
                   </li>
                 </ul>
+              </AppFilterDropdown>
+
+              <!-- Trip type chip -->
+              <AppFilterDropdown
+                v-if="filterDropdownVisible.trip_type !== false"
+                :label="t('portal.filter_label_trip_type')"
+                :summary-text="currentTripTypeLabel"
+                panel-class="min-w-[220px] py-1"
+                class="shrink-0 snap-start"
+              >
+                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
+                  <li v-for="opt in tripTypeOptions" :key="opt.key">
+                    <button
+                      type="button"
+                      :class="[
+                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
+                        filterTripType === opt.key
+                          ? 'bg-teal-50 font-medium text-teal-900'
+                          : 'text-slate-700 hover:bg-slate-50',
+                      ]"
+                      @click="onTripType(opt.key)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+
+              <!-- Urgent chip -->
+              <AppFilterDropdown
+                v-if="filterDropdownVisible.urgent !== false"
+                :label="t('portal.filter_label_urgent')"
+                :summary-text="currentUrgentLabel"
+                panel-class="min-w-[180px] py-1"
+                class="shrink-0 snap-start"
+              >
+                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
+                  <li v-for="opt in urgentOptions" :key="opt.key">
+                    <button
+                      type="button"
+                      :class="[
+                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
+                        filterUrgent === opt.key
+                          ? 'bg-teal-50 font-medium text-teal-900'
+                          : 'text-slate-700 hover:bg-slate-50',
+                      ]"
+                      @click="onUrgent(opt.key)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+
+              <!-- Date range chip -->
+              <AppFilterDropdown
+                v-if="filterDropdownVisible.date_range !== false"
+                :label="t('portal.filter_label_date_range')"
+                :summary-text="currentDateRangeLabel"
+                panel-class="min-w-[260px] p-3"
+                class="shrink-0 snap-start"
+              >
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="flex flex-1 flex-col gap-1 text-xs text-slate-600">
+                    <span>{{ t('portal.filter_date_from') }}</span>
+                    <input
+                      v-model="dateFrom"
+                      type="date"
+                      class="h-9 rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                    />
+                  </label>
+                  <span class="hidden text-slate-400 sm:inline" aria-hidden="true">—</span>
+                  <label class="flex flex-1 flex-col gap-1 text-xs text-slate-600">
+                    <span>{{ t('portal.filter_date_to') }}</span>
+                    <input
+                      v-model="dateTo"
+                      type="date"
+                      class="h-9 rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                    />
+                  </label>
+                </div>
               </AppFilterDropdown>
             </div>
 
@@ -258,9 +341,13 @@ const pagination = ref(null)
 
 // ── Filter state ─────────────────────────────────────────────
 const filterStatus = ref('all')
+const filterTripType = ref('all')
+const filterUrgent = ref('all')
 const sort = ref('depart_desc')
 const searchInput = ref('')
 const debouncedQ = ref('')
+const dateFrom = ref('')
+const dateTo = ref('')
 
 // ── Filter chip visibility (persisted) ───────────────────────
 const filterDropdownVisible = reactive(
@@ -288,6 +375,9 @@ watch(
 const visibilityOptions = computed(() => [
   { id: 'status', label: t('portal.filter_label_status') },
   { id: 'sort', label: t('portal.filter_label_sort') },
+  { id: 'trip_type', label: t('portal.filter_label_trip_type') },
+  { id: 'urgent', label: t('portal.filter_label_urgent') },
+  { id: 'date_range', label: t('portal.filter_label_date_range') },
 ])
 
 // ── Filter / sort option lists ────────────────────────────────
@@ -306,6 +396,20 @@ const sortOptions = computed(() => [
   { value: 'created_asc', label: t('portal.sort_created_asc') },
 ])
 
+const tripTypeOptions = computed(() => [
+  { key: 'all', label: t('portal.filter_trip_type_all') },
+  { key: 'business', label: t('portal.filter_trip_type_business') },
+  { key: 'cargo', label: t('portal.filter_trip_type_cargo') },
+  { key: 'door_to_door', label: t('portal.filter_trip_type_door_to_door') },
+  { key: 'point_to_point', label: t('portal.filter_trip_type_point_to_point') },
+])
+
+const urgentOptions = computed(() => [
+  { key: 'all', label: t('portal.filter_urgent_all') },
+  { key: 'urgent', label: t('portal.filter_urgent_yes') },
+  { key: 'normal', label: t('portal.filter_urgent_no') },
+])
+
 const currentStatusLabel = computed(
   () => filterOptions.value.find((o) => o.key === filterStatus.value)?.label ?? filterStatus.value,
 )
@@ -314,12 +418,30 @@ const currentSortLabel = computed(
   () => sortOptions.value.find((o) => o.value === sort.value)?.label ?? sort.value,
 )
 
+const currentTripTypeLabel = computed(
+  () => tripTypeOptions.value.find((o) => o.key === filterTripType.value)?.label ?? filterTripType.value,
+)
+
+const currentUrgentLabel = computed(
+  () => urgentOptions.value.find((o) => o.key === filterUrgent.value)?.label ?? filterUrgent.value,
+)
+
+const currentDateRangeLabel = computed(() => {
+  if (dateFrom.value && dateTo.value) return `${dateFrom.value} — ${dateTo.value}`
+  if (dateFrom.value) return `${t('portal.filter_date_from')}: ${dateFrom.value}`
+  if (dateTo.value) return `${t('portal.filter_date_to')}: ${dateTo.value}`
+  return t('portal.filter_all')
+})
+
 // ── Active filter count + summary lines ──────────────────────
 const activeFilterCount = computed(() => {
   let n = 0
   if (filterStatus.value !== 'all') n++
+  if (filterTripType.value !== 'all') n++
+  if (filterUrgent.value !== 'all') n++
   if (sort.value !== 'depart_desc') n++
   if (debouncedQ.value) n++
+  if (dateFrom.value || dateTo.value) n++
   return n
 })
 
@@ -328,8 +450,17 @@ const activeFilterLines = computed(() => {
   if (filterStatus.value !== 'all') {
     lines.push({ label: t('portal.filter_label_status'), value: currentStatusLabel.value })
   }
+  if (filterTripType.value !== 'all') {
+    lines.push({ label: t('portal.filter_label_trip_type'), value: currentTripTypeLabel.value })
+  }
+  if (filterUrgent.value !== 'all') {
+    lines.push({ label: t('portal.filter_label_urgent'), value: currentUrgentLabel.value })
+  }
   if (sort.value !== 'depart_desc') {
     lines.push({ label: t('portal.filter_label_sort'), value: currentSortLabel.value })
+  }
+  if (dateFrom.value || dateTo.value) {
+    lines.push({ label: t('portal.filter_label_date_range'), value: currentDateRangeLabel.value })
   }
   if (debouncedQ.value) {
     lines.push({ label: t('portal.search_placeholder'), value: debouncedQ.value })
@@ -351,9 +482,27 @@ watch(debouncedQ, () => {
   reloadFromStart()
 })
 
+let dateDebounceTimer = null
+watch([dateFrom, dateTo], () => {
+  clearTimeout(dateDebounceTimer)
+  dateDebounceTimer = window.setTimeout(() => {
+    reloadFromStart()
+  }, 400)
+})
+
 // ── Actions ──────────────────────────────────────────────────
 function onFilter(key) {
   filterStatus.value = key
+  reloadFromStart()
+}
+
+function onTripType(key) {
+  filterTripType.value = key
+  reloadFromStart()
+}
+
+function onUrgent(key) {
+  filterUrgent.value = key
   reloadFromStart()
 }
 
@@ -364,8 +513,12 @@ function onSort(value) {
 
 function resetFilters() {
   filterStatus.value = 'all'
+  filterTripType.value = 'all'
+  filterUrgent.value = 'all'
   sort.value = 'depart_desc'
   searchInput.value = ''
+  dateFrom.value = ''
+  dateTo.value = ''
   reloadFromStart()
 }
 
@@ -377,6 +530,11 @@ function listParams(page) {
     sort: sort.value,
     filter: filterStatus.value === 'all' ? undefined : filterStatus.value,
     q: debouncedQ.value || undefined,
+    trip_type: filterTripType.value !== 'all' ? filterTripType.value : undefined,
+    is_urgent:
+      filterUrgent.value !== 'all' ? (filterUrgent.value === 'urgent' ? 1 : 0) : undefined,
+    date_from: dateFrom.value || undefined,
+    date_to: dateTo.value || undefined,
   }
 }
 
@@ -421,5 +579,8 @@ onMounted(() => {
   loadFirst()
 })
 
-onBeforeUnmount(() => clearTimeout(debounceTimer))
+onBeforeUnmount(() => {
+  clearTimeout(debounceTimer)
+  clearTimeout(dateDebounceTimer)
+})
 </script>

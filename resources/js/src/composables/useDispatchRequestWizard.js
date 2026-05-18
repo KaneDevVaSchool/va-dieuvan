@@ -13,8 +13,13 @@ import {
   createDispatchRequest,
   createDispatchRequestTemplate,
   createPortalDispatchRequest,
+  createPortalFormTemplate,
+  deletePortalFormTemplate,
   getDispatchRequest,
+  getPortalFormTemplate,
+  getPortalFormTemplates,
   patchDispatchRequestWizard,
+  updatePortalFormTemplate,
 } from '../api/requests'
 import { getDispatchFormSettings } from '../api/dispatchSettings'
 import { searchUsersForDispatchForm } from '../api/operational'
@@ -192,6 +197,119 @@ export function useDispatchRequestWizard(options = {}) {
   function closeSubmitResultModal() {
     submitResultModalOpen.value = false
   }
+
+  // ---------------------------------------------------------------------------
+  // Portal form templates (biểu mẫu đã lưu) — chỉ active khi isPortal
+  // ---------------------------------------------------------------------------
+  /** Danh sách biểu mẫu đã lưu (từ server). */
+  const formTemplates = ref([])
+  /** Modal thư viện biểu mẫu. */
+  const templateModalOpen = ref(false)
+  /** Modal lưu biểu mẫu mới (nhập tên). */
+  const saveTemplateModalOpen = ref(false)
+  const templateSaveLoading = ref(false)
+  const templateSaveError = ref('')
+  /** Trạng thái loading khi tải danh sách. */
+  const templateListLoading = ref(false)
+  const templateListError = ref('')
+  /** id đang đổi tên (inline trong modal danh sách). */
+  const templateRenameId = ref(null)
+  const templateRenameValue = ref('')
+
+  async function loadFormTemplates() {
+    if (!isPortal) return
+    templateListLoading.value = true
+    templateListError.value = ''
+    try {
+      formTemplates.value = await getPortalFormTemplates()
+    } catch (e) {
+      templateListError.value = formatApiError(e, t('portal.template_load_fail'))
+    } finally {
+      templateListLoading.value = false
+    }
+  }
+
+  async function saveAsTemplate(name) {
+    if (!isPortal) return
+    const trimmed = (name ?? '').trim()
+    if (!trimmed) return
+    templateSaveLoading.value = true
+    templateSaveError.value = ''
+    try {
+      const snap = {
+        form: { ...form.value },
+        passengerRows: passengerRows.value.map((r) => ({ ...r })),
+        businessRows: businessRows.value.map((r) => ({ ...r })),
+        cargoRows: cargoRows.value.map((r) => ({ ...r })),
+      }
+      await createPortalFormTemplate({
+        name: trimmed,
+        trip_type: form.value.trip_type || 'point_to_point',
+        wizard_snapshot: snap,
+      })
+      saveTemplateModalOpen.value = false
+      await loadFormTemplates()
+    } catch (e) {
+      templateSaveError.value = formatApiError(e, t('portal.template_save_fail'))
+    } finally {
+      templateSaveLoading.value = false
+    }
+  }
+
+  async function applyTemplate(templateItem) {
+    if (!isPortal) return
+    templateListLoading.value = true
+    try {
+      const full = await getPortalFormTemplate(templateItem.id)
+      const snap = full.wizard_snapshot
+      if (snap && typeof snap === 'object') {
+        applyDraftPayload({
+          form: { ...createInitialForm(), ...(snap.form || {}) },
+          passengerRows: snap.passengerRows,
+          businessRows: snap.businessRows,
+          cargoRows: snap.cargoRows,
+          step: 0,
+          maxReachedStep: 0,
+        })
+        if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
+        if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
+      }
+      templateModalOpen.value = false
+      error.value = ''
+      created.value = null
+    } catch (e) {
+      templateListError.value = formatApiError(e, t('portal.template_load_fail'))
+    } finally {
+      templateListLoading.value = false
+    }
+  }
+
+  async function deleteTemplate(id) {
+    if (!isPortal) return
+    try {
+      await deletePortalFormTemplate(id)
+      formTemplates.value = formTemplates.value.filter((t) => t.id !== id)
+      if (templateRenameId.value === id) templateRenameId.value = null
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function renameTemplate(id, name) {
+    if (!isPortal) return
+    const trimmed = (name ?? '').trim()
+    if (!trimmed) return
+    try {
+      const updated = await updatePortalFormTemplate(id, { name: trimmed })
+      const idx = formTemplates.value.findIndex((x) => x.id === id)
+      if (idx !== -1) formTemplates.value[idx] = { ...formTemplates.value[idx], name: updated.name }
+      templateRenameId.value = null
+      templateRenameValue.value = ''
+    } catch {
+      /* ignore */
+    }
+  }
+
   /** Id bản nháp đang mở (chuỗi); null = phiên làm việc mới, lưu sẽ tạo bản mới. */
   const activeDraftId = ref(null)
   /** Meta cho danh sách (mới nhất trước). */
@@ -1641,6 +1759,17 @@ export function useDispatchRequestWizard(options = {}) {
     if (auth.user) {
       if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
       if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
+      if (!form.value.requester_phone?.trim()) {
+        const phone = auth.user.cms_user_info?.phone || auth.user.phone || ''
+        if (phone) form.value.requester_phone = phone
+      }
+      if (!form.value.requester_unit?.trim()) {
+        const cms = auth.user.cms_user_info
+        if (cms) {
+          const parts = [cms.unit_name, cms.department_name].filter(Boolean)
+          if (parts.length) form.value.requester_unit = parts.join(' — ')
+        }
+      }
     }
     if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
     if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
@@ -1818,5 +1947,24 @@ export function useDispatchRequestWizard(options = {}) {
     navigateToSubmittedRequestDetail,
     closeSubmitModalAndStartNewDraft,
     onCancel,
+    // Portal form templates
+    ...(isPortal
+      ? {
+          formTemplates,
+          templateModalOpen,
+          saveTemplateModalOpen,
+          templateSaveLoading,
+          templateSaveError,
+          templateListLoading,
+          templateListError,
+          templateRenameId,
+          templateRenameValue,
+          loadFormTemplates,
+          saveAsTemplate,
+          applyTemplate,
+          deleteTemplate,
+          renameTemplate,
+        }
+      : {}),
   }
 }

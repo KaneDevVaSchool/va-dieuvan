@@ -37,6 +37,20 @@
           <span class="hidden sm:inline">{{ t('portal.nav_home') }}</span>
         </RouterLink>
         <RouterLink
+          :to="{ name: 'portalRequestList' }"
+          class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
+          :class="
+            isList
+              ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          "
+          :aria-current="isList ? 'page' : undefined"
+          :title="t('portal.nav_list')"
+        >
+          <ListBulletIcon class="h-5 w-5 shrink-0 sm:mr-1.5" aria-hidden="true" />
+          <span class="hidden sm:inline">{{ t('portal.nav_list') }}</span>
+        </RouterLink>
+        <RouterLink
           :to="{ name: 'portalCreate' }"
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
@@ -188,6 +202,7 @@ import {
   BellIcon as BellOutlineIcon,
   ChevronDownIcon,
   HomeIcon as HomeModernIcon,
+  ListBulletIcon,
   PlusCircleIcon,
 } from '@heroicons/vue/24/outline'
 import ThemeSwitcher from '../layout/ThemeSwitcher.vue'
@@ -216,8 +231,8 @@ const isCreate = computed(() => route.name === 'portalCreate')
 const isDetail = computed(() => route.name === 'portalRequestDetail')
 const isList = computed(() => route.name === 'portalRequestList')
 
-/** Detail / list là phần mở rộng của trang chủ portal → highlight Home nav */
-const homeNavActive = computed(() => isHome.value || isDetail.value || isList.value)
+/** Detail là phần mở rộng của trang chủ portal → highlight Home nav */
+const homeNavActive = computed(() => isHome.value || isDetail.value)
 
 const unreadBadge = ref(0)
 let unreadPollTimer = null

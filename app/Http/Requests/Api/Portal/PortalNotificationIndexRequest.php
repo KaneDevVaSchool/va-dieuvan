@@ -19,6 +19,7 @@ class PortalNotificationIndexRequest extends ApiFormRequest
         return [
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
             'page' => ['sometimes', 'integer', 'min:1'],
+            'filter' => ['sometimes', 'string', 'in:all,unread'],
         ];
     }
 }

@@ -7,12 +7,12 @@
       Bước {{ current + 1 }}/{{ steps.length }}
     </p>
     <ol
-      class="flex snap-x snap-mandatory items-stretch gap-0 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden"
+      class="flex items-stretch gap-0"
     >
       <li
         v-for="(s, i) in steps"
         :key="s.key"
-        class="flex min-w-[44%] shrink-0 snap-start flex-col sm:min-w-0 sm:flex-1"
+        :class="i === current ? 'flex flex-1 min-w-0 flex-col' : 'hidden sm:flex sm:flex-1 sm:min-w-0 sm:shrink-0 sm:flex-col'"
       >
         <div class="flex items-center">
           <button

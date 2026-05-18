@@ -23,6 +23,10 @@ class IndexPortalDispatchRequestsRequest extends ApiFormRequest
             'q' => ['sometimes', 'string', 'max:120'],
             'sort' => ['sometimes', 'string', 'in:depart_desc,depart_asc,created_desc,created_asc'],
             'filter' => ['sometimes', 'string', 'in:all,pending,approved,rejected,returned'],
+            'trip_type' => ['sometimes', 'string', 'in:business,cargo,door_to_door,point_to_point'],
+            'is_urgent' => ['sometimes', 'boolean'],
+            'date_from' => ['sometimes', 'date_format:Y-m-d'],
+            'date_to' => ['sometimes', 'date_format:Y-m-d'],
         ];
     }
 }

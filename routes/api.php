@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\ClientTelemetryController;
 use App\Http\Controllers\Api\Portal\PortalDispatchRequestController;
+use App\Http\Controllers\Api\Portal\PortalFormTemplateController;
 use App\Http\Controllers\Api\Portal\PortalNotificationController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -40,12 +41,24 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/portal/dispatch-requests/{dispatchRequest}/attachments/{attachment}/download', [PortalDispatchRequestController::class, 'downloadAttachment'])
             ->whereNumber('attachment')
             ->middleware('throttle:60,1');
+
+        // Biểu mẫu đã lưu (portal form templates)
+        Route::get('/portal/form-templates', [PortalFormTemplateController::class, 'index']);
+        Route::get('/portal/form-templates/{portalFormTemplate}', [PortalFormTemplateController::class, 'show']);
     });
 
     Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {
         Route::post('/portal/dispatch-requests', [PortalDispatchRequestController::class, 'store'])
             ->middleware('idempotency');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/signed-paper', [PortalDispatchRequestController::class, 'uploadSignedPaper'])
+            ->middleware('throttle:30,1');
+
+        // Biểu mẫu đã lưu — mutate
+        Route::post('/portal/form-templates', [PortalFormTemplateController::class, 'store'])
+            ->middleware('throttle:30,1');
+        Route::patch('/portal/form-templates/{portalFormTemplate}', [PortalFormTemplateController::class, 'update'])
+            ->middleware('throttle:30,1');
+        Route::delete('/portal/form-templates/{portalFormTemplate}', [PortalFormTemplateController::class, 'destroy'])
             ->middleware('throttle:30,1');
     });
 
