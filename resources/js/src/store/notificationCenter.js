@@ -213,7 +213,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
 
   async function refreshBadges() {
     const auth = useAuthStore()
-    if (!auth.isLoggedIn) {
+    if (!auth.isLoggedIn || !auth.user || auth.isPortalUser()) {
       return
     }
     try {
@@ -295,6 +295,11 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     if (typeof window === 'undefined') {
       return
     }
+    const auth = useAuthStore()
+    if (!auth.isLoggedIn || !auth.user || auth.isPortalUser()) {
+      stopPolling()
+      return
+    }
     stopPolling()
     sessionStartedAt = new Date()
     void refreshBadges()
@@ -343,7 +348,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
    */
   async function registerWebPush() {
     const auth = useAuthStore()
-    if (!auth.isLoggedIn) {
+    if (!auth.isLoggedIn || !auth.user || auth.isPortalUser()) {
       return { ok: false, reason: 'api' }
     }
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {

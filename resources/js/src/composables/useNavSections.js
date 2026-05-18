@@ -83,7 +83,7 @@ export function useNavSections() {
   })
 
   onMounted(async () => {
-    if (!auth.isLoggedIn) return
+    if (!auth.isLoggedIn || !auth.user || auth.isPortalUser()) return
     await notifStore.refreshBadges()
   })
 

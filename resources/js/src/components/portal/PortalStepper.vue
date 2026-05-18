@@ -23,7 +23,7 @@
             <span v-else>{{ i + 1 }}</span>
           </span>
           <span
-            class="min-w-0 max-w-full truncate text-xs font-semibold sm:flex-1 sm:overflow-visible sm:whitespace-normal sm:text-sm"
+            class="min-w-0 w-full max-w-full break-words whitespace-normal text-center text-xs font-semibold leading-snug sm:flex-1 sm:text-left sm:text-sm"
             :class="current === i ? 'text-slate-900' : current > i ? 'text-emerald-800' : 'text-slate-400'"
           >
             {{ s.label }}
