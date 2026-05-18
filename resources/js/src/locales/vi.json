@@ -614,6 +614,7 @@
         "pick_type_hint": "Chọn loại chuyến phù hợp:",
         "double_tap_hint": "Nhấn lại loại đã chọn để tiếp tục nhanh.",
         "confirm_hint": "Kiểm tra lại thông tin trước khi gửi.",
+        "confirm_review_title": "Xác nhận trước khi gửi",
         "need_datetime": "Chọn ngày giờ xuất phát.",
         "arrive_after_depart": "Thời điểm đến phải sau hoặc trùng xuất phát.",
         "nav_title": "Cổng điều vận",
@@ -635,7 +636,10 @@
         "card_no_route": "Chưa nhập tuyến",
         "create": {
             "page_title": "Tạo yêu cầu mới",
-            "page_subtitle": "Hoàn thành 3 bước: loại xe, thông tin chuyến, xác nhận và gửi."
+            "page_subtitle": "Hoàn thành 3 bước: loại xe, thông tin chuyến, xác nhận và gửi.",
+            "section_route": "Hành trình",
+            "section_time": "Thời gian",
+            "section_details": "Chi tiết & ưu tiên"
         },
         "welcome_banner_title": "Đã gửi yêu cầu thành công",
         "welcome_banner_hint": "Bạn có thể xuất PDF và đính kèm bản phiếu đã ký sau khi yêu cầu được duyệt.",

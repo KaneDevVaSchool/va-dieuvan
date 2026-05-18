@@ -524,9 +524,11 @@ import Button from '../../components/ui/Button.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import { listCargoShipments } from '../../api/cargo'
+import { useNotificationStore } from '../../store/notificationCenter'
 import { labelCargoStatus } from '../../util/labels'
 
 const { t, locale } = useI18n()
+const notifStore = useNotificationStore()
 
 const loading = ref(false)
 const kpiLoading = ref(false)
@@ -989,6 +991,7 @@ async function reload() {
     const res = await listCargoShipments(listParams())
     items.value = res.items ?? []
     meta.value = res.meta ?? {}
+    void notifStore.refreshBadges()
   } finally {
     loading.value = false
   }

@@ -27,18 +27,13 @@ class CargoController extends Controller
         $data = $request->validated();
 
         $q = CargoShipment::query()
+            ->visibleOnStaffCargoIndex()
             ->with([
                 'trip:id,status,depart_at',
                 'dispatchRequest:id,status',
                 'attachments' => fn ($q) => $q->where('kind', 'pod')->orderByDesc('id'),
             ])
             ->orderByDesc('id');
-
-        // Dispatch requests use soft deletes; align with Trip list (`whereHas('dispatchRequest')`).
-        $q->where(function (Builder $w) {
-            $w->whereNull('dispatch_request_id')
-                ->orWhereHas('dispatchRequest');
-        });
 
         $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
 

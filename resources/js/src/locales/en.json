@@ -571,6 +571,7 @@
         "pick_type_hint": "Select the type of trip:",
         "double_tap_hint": "Tap the selected type again to continue quickly.",
         "confirm_hint": "Review your details before submitting.",
+        "confirm_review_title": "Review before submit",
         "need_datetime": "Pick departure date and time.",
         "arrive_after_depart": "Arrive-by must be on or after departure.",
         "nav_title": "Dispatch portal",
@@ -592,7 +593,10 @@
         "card_no_route": "No route details",
         "create": {
             "page_title": "Create request",
-            "page_subtitle": "Three steps: trip type, details, confirm and submit."
+            "page_subtitle": "Three steps: trip type, details, confirm and submit.",
+            "section_route": "Route",
+            "section_time": "Schedule",
+            "section_details": "Details & priority"
         },
         "welcome_banner_title": "Request submitted",
         "welcome_banner_hint": "You can export PDF and upload signed scans after approval.",

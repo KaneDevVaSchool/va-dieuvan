@@ -130,14 +130,21 @@ function createSharedApi() {
     }
   }
 
-  const presetDefs = computed(() => [
-    { id: 'all', label: t('dashboard_analytics.preset_all_time') },
-    { id: 'month', label: t('dashboard_analytics.preset_month') },
-    { id: 'last30', label: t('dashboard_analytics.preset_last30') },
-    { id: 'last7', label: t('dashboard_analytics.preset_last7') },
-    { id: 'quarter', label: t('dashboard_analytics.preset_quarter') },
-    { id: 'custom', label: t('dashboard_analytics.preset_custom') },
-  ])
+  function safeLabel(v, fb = '—') {
+    const s = v != null && typeof v !== 'object' ? String(v) : ''
+    return s.trim() !== '' ? s : fb
+  }
+
+  const presetDefs = computed(() =>
+    [
+      { id: 'all', label: t('dashboard_analytics.preset_all_time') },
+      { id: 'month', label: t('dashboard_analytics.preset_month') },
+      { id: 'last30', label: t('dashboard_analytics.preset_last30') },
+      { id: 'last7', label: t('dashboard_analytics.preset_last7') },
+      { id: 'quarter', label: t('dashboard_analytics.preset_quarter') },
+      { id: 'custom', label: t('dashboard_analytics.preset_custom') },
+    ].map((p) => (p && p.id != null ? { ...p, label: safeLabel(p.label) } : null)).filter(Boolean),
+  )
 
   const currentPresetLabel = computed(() => presetDefs.value.find((p) => p.id === preset.value)?.label ?? '')
 
@@ -223,11 +230,11 @@ function createSharedApi() {
       }
       rows.push({ label: t('dashboard_analytics.filter_fleet'), value: map[filterFleetMode.value] ?? filterFleetMode.value })
     }
-    return rows
+    return rows.filter((row) => row && row.label != null && row.value != null)
   })
 
   const dimensionFilters = computed(() => {
-    const fa = t('dashboard_analytics.filter_all')
+    const fa = safeLabel(t('dashboard_analytics.filter_all'))
     const tripTypeOpts = [
       { value: '', label: fa },
       { value: 'door_to_door', label: labelTripType('door_to_door') },
@@ -262,10 +269,10 @@ function createSharedApi() {
       { value: 'unspecified', label: t('dashboard_analytics.fleet_unspecified') },
     ]
 
-    return [
+    const defs = [
       {
         id: 'trip_type',
-        label: t('dashboard_analytics.filter_trip_type'),
+        label: safeLabel(t('dashboard_analytics.filter_trip_type')),
         summary: filterTripType.value ? labelTripType(filterTripType.value) : fa,
         options: tripTypeOpts,
         isSelected: (v) => (v === '' ? !filterTripType.value : filterTripType.value === v),
@@ -276,7 +283,7 @@ function createSharedApi() {
       },
       {
         id: 'channel',
-        label: t('dashboard_analytics.filter_channel'),
+        label: safeLabel(t('dashboard_analytics.filter_channel')),
         summary: filterSourceChannel.value ? t(`labels.source_channel.${filterSourceChannel.value}`) : fa,
         options: channelOpts,
         isSelected: (v) => (v === '' ? !filterSourceChannel.value : filterSourceChannel.value === v),
@@ -287,7 +294,7 @@ function createSharedApi() {
       },
       {
         id: 'paper',
-        label: t('dashboard_analytics.filter_paper'),
+        label: safeLabel(t('dashboard_analytics.filter_paper')),
         summary: filterPaperStatus.value ? t(`labels.paper_status.${filterPaperStatus.value}`) : fa,
         options: paperOpts,
         isSelected: (v) => (v === '' ? !filterPaperStatus.value : filterPaperStatus.value === v),
@@ -298,7 +305,7 @@ function createSharedApi() {
       },
       {
         id: 'urgent',
-        label: t('dashboard_analytics.filter_urgent'),
+        label: safeLabel(t('dashboard_analytics.filter_urgent')),
         summary: filterIsUrgent.value ? t('dashboard_analytics.filter_urgent_only') : fa,
         options: urgentOpts,
         isSelected: (v) => (v === '' ? !filterIsUrgent.value : filterIsUrgent.value),
@@ -309,7 +316,7 @@ function createSharedApi() {
       },
       {
         id: 'trip_run',
-        label: t('dashboard_analytics.filter_trip_run_status'),
+        label: safeLabel(t('dashboard_analytics.filter_trip_run_status')),
         summary: filterTripRunStatus.value ? labelTripStatus(filterTripRunStatus.value) : fa,
         options: runStatusOpts,
         isSelected: (v) => (v === '' ? !filterTripRunStatus.value : filterTripRunStatus.value === v),
@@ -320,7 +327,7 @@ function createSharedApi() {
       },
       {
         id: 'fleet',
-        label: t('dashboard_analytics.filter_fleet'),
+        label: safeLabel(t('dashboard_analytics.filter_fleet')),
         summary: filterFleetMode.value
           ? {
               internal: t('dashboard_analytics.fleet_internal'),
@@ -337,11 +344,32 @@ function createSharedApi() {
         },
       },
     ]
+
+    return defs
+      .filter((fd) => fd && fd.id && typeof fd.label === 'string' && fd.label.length > 0)
+      .map((fd) => ({
+        ...fd,
+        options: Array.isArray(fd.options)
+          ? fd.options
+              .filter((o) => o != null && typeof o === 'object')
+              .map((o) => ({
+                ...o,
+                label: safeLabel(o.label, fa),
+              }))
+          : [],
+      }))
+      .filter((fd) => fd.options.length > 0)
   })
 
   const visibleDimensionFilters = computed(() =>
     dimensionFilters.value.filter(
-      (fd) => fd && fd.id && Array.isArray(fd.options) && dimensionFilterBarVisible.value[fd.id] !== false,
+      (fd) =>
+        fd &&
+        fd.id &&
+        typeof fd.label === 'string' &&
+        Array.isArray(fd.options) &&
+        fd.options.length > 0 &&
+        dimensionFilterBarVisible.value[fd.id] !== false,
     ),
   )
 
@@ -359,12 +387,16 @@ function createSharedApi() {
     return Math.floor((b.getTime() - a.getTime()) / 86400000) + 1
   })
 
-  const dateQuickChips = computed(() => [
-    { kind: 'today', label: t('dashboard_analytics.date_range_quick_today') },
-    { kind: 'yesterday', label: t('dashboard_analytics.date_range_quick_yesterday') },
-    { kind: 'last7', label: t('dashboard_analytics.date_range_quick_last7') },
-    { kind: 'month', label: t('dashboard_analytics.date_range_quick_month') },
-  ])
+  const dateQuickChips = computed(() =>
+    [
+      { kind: 'today', label: t('dashboard_analytics.date_range_quick_today') },
+      { kind: 'yesterday', label: t('dashboard_analytics.date_range_quick_yesterday') },
+      { kind: 'last7', label: t('dashboard_analytics.date_range_quick_last7') },
+      { kind: 'month', label: t('dashboard_analytics.date_range_quick_month') },
+    ]
+      .map((c) => (c && c.kind ? { ...c, label: safeLabel(c.label) } : null))
+      .filter(Boolean),
+  )
 
   function syncRangeForPreset(id) {
     const now = new Date()

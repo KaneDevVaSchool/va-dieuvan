@@ -20,9 +20,8 @@ class CargoSlaCheckCommand extends Command
         $notify = (bool) ((int) $this->option('notify'));
 
         $shipments = CargoShipment::query()
-            ->whereNotIn('status', ['delivered', 'cancelled'])
-            ->whereNotNull('sla_due_at')
-            ->where('sla_due_at', '<', now())
+            ->visibleOnStaffCargoIndex()
+            ->openSlaBreached()
             ->get();
 
         if ($shipments->isEmpty()) {

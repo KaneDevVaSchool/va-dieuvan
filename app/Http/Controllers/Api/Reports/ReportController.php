@@ -172,12 +172,16 @@ class ReportController extends Controller
             ->limit(50)
             ->get();
 
-        $cargoSlaBreaches = CargoShipment::query()
-            ->whereHas('dispatchRequest')
-            ->whereNotIn('status', ['delivered', 'cancelled'])
-            ->whereNotNull('sla_due_at')
-            ->where('sla_due_at', '<', now())
-            ->count();
+        $cargoSlaQuery = CargoShipment::query()
+            ->visibleOnStaffCargoIndex()
+            ->openSlaBreached();
+        if ($dateBounded) {
+            $cargoSlaQuery->whereBetween('cargo_shipments.created_at', [
+                $from->copy()->startOfDay(),
+                $to->copy()->endOfDay(),
+            ]);
+        }
+        $cargoSlaBreaches = $cargoSlaQuery->count();
 
         $fleetAgg = $tripBase
             ->clone()

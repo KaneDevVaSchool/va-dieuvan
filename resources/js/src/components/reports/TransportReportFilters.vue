@@ -43,8 +43,8 @@
                 </span>
               </li>
               <li v-for="(row, i) in r.activeFilterLines" :key="i" class="border-t border-slate-100 pt-2 dark:border-slate-700">
-                <span class="text-slate-500 dark:text-slate-400">{{ row.label }}:</span>
-                <span class="font-medium text-slate-800 dark:text-slate-200">{{ row.value }}</span>
+                <span class="text-slate-500 dark:text-slate-400">{{ row?.label ?? '—' }}:</span>
+                <span class="font-medium text-slate-800 dark:text-slate-200">{{ row?.value ?? '—' }}</span>
               </li>
             </ul>
             <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
@@ -66,7 +66,7 @@
                     :for="'rep-bar-vis-' + fd.id"
                     class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
                   >
-                    {{ fd.label }}
+                    {{ fd?.label ?? '—' }}
                   </label>
                 </li>
               </ul>
@@ -110,7 +110,7 @@
                   ]"
                   @click="r.applyPreset(p.id)"
                 >
-                  {{ p.label }}
+                  {{ p?.label ?? '—' }}
                 </button>
               </li>
             </ul>
@@ -162,7 +162,7 @@
                   class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
                   @click="r.applyQuickDateRange(chip.kind)"
                 >
-                  {{ chip.label }}
+                  {{ chip?.label ?? '—' }}
                 </button>
               </div>
               <div class="mt-3 space-y-3">
@@ -230,7 +230,7 @@
             <summary
               class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
             >
-              <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
+              <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ fd?.label ?? '—' }}</span>
               <span class="max-w-[9rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">
                 {{ fd.summary }}
               </span>
@@ -241,20 +241,20 @@
             >
               <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
                 <li
-                  v-for="(opt, optIdx) in (fd.options || []).filter((o) => o && typeof o === 'object')"
-                  :key="fd.id + '-' + optIdx + '-' + String(opt.value)"
+                  v-for="(opt, optIdx) in (fd.options || []).filter((o) => o != null && typeof o === 'object')"
+                  :key="fd.id + '-' + optIdx + '-' + String(opt?.value ?? '')"
                 >
                   <button
                     type="button"
                     :class="[
                       'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                      fd.isSelected(opt.value)
+                      fd.isSelected(opt?.value)
                         ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
                         : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
                     ]"
-                    @click="fd.pick(opt.value)"
+                    @click="fd.pick(opt?.value)"
                   >
-                    {{ opt.label ?? '—' }}
+                    {{ opt?.label ?? '—' }}
                   </button>
                 </li>
               </ul>
