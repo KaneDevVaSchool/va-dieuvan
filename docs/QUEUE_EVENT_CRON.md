@@ -39,7 +39,7 @@ Thư mục `app/Jobs/` **không chứa job class** trong repo hiện tại — h
 | Class | Queue | Ghi chú |
 |-------|-------|---------|
 | `TripAssignedNotification` | `default` hoặc `urgent-notifications` | `ShouldQueue` + `ShouldQueueAfterCommit` |
-| `NewDispatchRequestNotification` | Theo cờ urgent | `ShouldQueue` |
+| `NewDispatchRequestNotification` | Theo cờ urgent | `ShouldQueue` + `ShouldQueueAfterCommit`; kênh `database` (Web Push qua listener sau khi lưu DB) |
 | `CargoSlaBreachedNotification` | default constructor | `ShouldQueue` — broadcast qua `Notification::send` trong command; `toArray()` trả `title`, `body`, `event`, `url` |
 | `DispatchPackageSessionsLowBalanceNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit` — cảnh báo gần hết buổi trong gói |
 | `DeptHeadApprovalRequestedNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit` |

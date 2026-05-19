@@ -201,8 +201,7 @@ Windows dev: chạy thủ công `php artisan cargo:sla-check` hoặc Task Schedu
 
 ## Mail & storage
 
-- **Mail dev**: `.env.example` trỏ Mailpit `MAIL_HOST=mailpit`, `MAIL_PORT=1025`.
-- **Mail production**: không dùng `mailpit` trên server thật — cấu hình SMTP hoặc `MAIL_MAILER=log`; có thể `DISPATCH_MAIL_FOR_NEW_REQUESTS=false` nếu chỉ cần notification database (xem [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)).
+- **Mail dev**: `.env.example` trỏ Mailpit `MAIL_HOST=mailpit`, `MAIL_PORT=1025` (Laravel mặc định; thông báo trong app dùng database/Web Push, không gửi email qua notification).
 - **Filesystem**: `FILESYSTEM_DISK=local` + `storage/app/public`; nhớ `php artisan storage:link`.
 
 ---

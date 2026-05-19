@@ -23,7 +23,9 @@
 | Giải pháp | Đặt `QUEUE_CONNECTION=redis` hoặc `database`; `php artisan migrate`; Supervisor chạy `queue:work`; kiểm tra `DISPATCH_NOTIFICATIONS_QUEUE_*` khớp `--queue=` |
 | Phòng ngừa | Monitor worker uptime; log `dispatch.debug_notification_log` khi cần |
 
-**Lỗi `getaddrinfo for mailpit failed` khi tạo yêu cầu (portal/staff):** `.env` production đang để `MAIL_HOST=mailpit` (tên host chỉ có trong Docker dev). Sửa `MAIL_*` sang SMTP thật, hoặc `MAIL_MAILER=log`, hoặc `DISPATCH_MAIL_FOR_NEW_REQUESTS=false` để chỉ dùng kênh database (ứng dụng vẫn gửi notification database; từ bản vá mailpit guard, kênh mail cũng tự bỏ qua khi không phải `local`/`testing`).
+**Vẫn lỗi SMTP / `MailChannel` với `NewDispatchRequestNotification`:** Trên repo hiện tại notification này **chỉ** dùng kênh `database` (không gửi email). Nếu log vẫn gọi `MailChannel`, server đang chạy **mã cũ** chưa pull/restart, hoặc worker queue cũ (restart Supervisor / `php artisan queue:restart`), hoặc OPcache PHP chưa invalidate — deploy lại file `app/Notifications/NewDispatchRequestNotification.php`, rồi restart PHP-FPM nếu cần.
+
+**Lỗi `getaddrinfo for smtp.example.com`:** `smtp.example.com` là **placeholder trong tài liệu**, không phải máy chủ thật — không đưa nguyên vào `.env` production. Tạm thời: `MAIL_MAILER=log` để Laravel không mở SMTP; lâu dài: SMTP thật sau khi đã deploy bản notification không dùng mail (hoặc chỉ dùng `log` nếu không cần email).
 
 ---
 
