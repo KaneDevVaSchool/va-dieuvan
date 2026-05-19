@@ -3,49 +3,49 @@
     class="overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md"
     :class="
       emphasize
-        ? 'border-slate-200 border-l-[5px] border-l-[#800020] ring-1 ring-rose-900/10'
-        : 'border-slate-200'
+        ? 'border-rose-200/80 bg-rose-50/30 ring-1 ring-rose-100/80'
+        : 'border-slate-200/70 bg-white'
     "
   >
-    <div class="px-4 py-4 sm:px-5">
+    <div class="px-4 py-4 sm:px-5 sm:py-5">
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-sm font-bold text-[#800020]">{{ t('dept.request_code_short', { id: req.id }) }}</span>
+        <span class="text-base font-bold text-[#800020]">{{ t('dept.request_code_short', { id: req.id }) }}</span>
         <span
-          class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700"
+          class="rounded-full bg-slate-100/90 px-3 py-1 text-sm font-semibold text-slate-700"
         >
           {{ tripTypeLabel }}
         </span>
         <span
-          class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+          class="rounded-full px-3 py-1 text-sm font-semibold"
           :class="statusBadgeClass"
         >
           {{ statusLabel }}
         </span>
       </div>
-      <h3 class="mt-2 text-base font-bold leading-snug text-slate-900">
+      <h3 class="mt-2.5 text-lg font-bold leading-snug text-slate-900 sm:text-xl">
         {{ cardTitle }}
       </h3>
-      <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+      <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-base text-slate-600">
         <span class="inline-flex items-center gap-1.5">
-          <UserIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <UserIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
           {{ req.requester?.name ?? '—' }}
         </span>
         <span class="inline-flex items-center gap-1.5">
-          <CalendarDaysIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          <CalendarDaysIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
           {{ departLabel }}
         </span>
-        <span v-if="priceLabel" class="inline-flex items-center gap-1.5 font-medium text-slate-800">
-          <BanknotesIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+        <span v-if="priceLabel" class="inline-flex items-center gap-1.5 font-semibold text-slate-800">
+          <BanknotesIcon class="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
           {{ priceLabel }}
         </span>
       </div>
-      <p v-if="req.rejection_reason && showRejection" class="mt-2 text-sm text-rose-700">
+      <p v-if="req.rejection_reason && showRejection" class="mt-2 text-base text-rose-700">
         {{ req.rejection_reason }}
       </p>
       <div class="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          class="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+          class="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200/80 bg-white px-4 text-base font-semibold text-slate-800 hover:bg-slate-50"
           @click="$emit('detail', req.id)"
         >
           {{ t('dept.view_detail') }}

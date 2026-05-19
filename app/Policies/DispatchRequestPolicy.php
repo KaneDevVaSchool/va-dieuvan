@@ -135,6 +135,31 @@ class DispatchRequestPolicy
                 || $user->hasPermission('request.create'));
     }
 
+    public function approveDept(User $user, DispatchRequest $dispatchRequest): bool
+    {
+        if ($dispatchRequest->trashed()) {
+            return false;
+        }
+
+        if ($dispatchRequest->trip_type === 'door_to_door') {
+            return false;
+        }
+
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if (! $user->hasPermission('request.approve_dept')) {
+            return false;
+        }
+
+        if ($user->hasPermission('trip.view_all') || $user->hasPermission('request.approve')) {
+            return true;
+        }
+
+        return $this->approveDeptLimitedViewEligible($user, $dispatchRequest);
+    }
+
     /** Trưởng BP «thuần»: nếu phiếu có `assigned_dept_head_id` thì chỉ người đó; phiếu chưa gán (legacy) vẫn theo người đề xuất cùng phòng — trừ khi user không có phòng trong hồ sơ thì chỉ xem phiếu được gán cho mình. */
     private function approveDeptLimitedViewEligible(User $user, DispatchRequest $dispatchRequest): bool
     {

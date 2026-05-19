@@ -240,4 +240,41 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
         ])
             ->assertStatus(422);
     }
+
+    public function test_assigned_dept_head_can_approve_even_when_requester_has_no_department(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $deptB = Department::query()->create(['name' => 'Phòng B', 'code' => 'PHB']);
+
+        $requester = User::factory()->create(['department_id' => null, 'is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $headB = User::factory()->create(['department_id' => $deptB->id, 'is_active' => true]);
+        $headB->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(3),
+            'status' => 'price_filled',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'service_price' => 150000,
+            'assigned_dept_head_id' => $headB->id,
+            'wizard_snapshot' => [],
+        ]);
+
+        $this->actingAs($headB);
+
+        $this->postJson("/api/dispatch-requests/{$dr->id}/dept-decision", [
+            'decision' => 'approve',
+        ], ['Idempotency-Key' => 'test-dept-approve-'.$dr->id])
+            ->assertSuccessful();
+
+        $this->assertSame('approved', DispatchRequest::query()->findOrFail($dr->id)->status);
+    }
 }

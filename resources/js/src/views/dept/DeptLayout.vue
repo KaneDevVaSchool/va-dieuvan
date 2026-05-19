@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex h-dvh min-h-0 flex-row overflow-hidden bg-slate-50 text-slate-900 antialiased supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)] dark:bg-slate-950 dark:text-slate-100"
+    class="flex h-dvh min-h-0 flex-row overflow-hidden bg-[#f8fafc] text-slate-900 antialiased supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)] supports-[padding:max(0px)]:pb-[env(safe-area-inset-bottom)] dark:bg-slate-950 dark:text-slate-100"
   >
     <!-- Mobile drawer backdrop -->
     <button
@@ -383,7 +383,7 @@ function navLinkClass(routeName) {
     : 'justify-start gap-3 py-2.5 pl-3 pr-3'
 
   const active = on
-    ? 'bg-white/15 font-semibold text-white before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-white before:content-[\'\']'
+    ? 'bg-white/15 font-semibold text-white ring-1 ring-inset ring-white/25'
     : 'text-white/90 hover:bg-white/10'
 
   return ['relative flex items-center rounded-lg text-sm transition-colors', layout, active].join(' ')

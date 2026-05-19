@@ -8,34 +8,34 @@
         {{ t('dept.pending_subtitle', { count: summary.pending_count }) }}
       </p>
     </header>
-    <p class="mt-0 hidden text-sm text-slate-600 dark:text-slate-400 md:block">
+    <p class="mt-0 hidden text-base text-slate-600 dark:text-slate-400 md:block">
       {{ t('dept.pending_subtitle', { count: summary.pending_count }) }}
     </p>
 
     <div class="mt-8 grid max-w-5xl gap-4 sm:grid-cols-3">
-      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('dept.kpi_pending') }}</p>
-        <p class="mt-2 text-3xl font-bold text-[#800020]">{{ summary.pending_today }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ t('dept.kpi_pending_sub') }}</p>
+      <div class="rounded-2xl border border-slate-100 bg-white/90 p-5 shadow-sm ring-1 ring-slate-100/80">
+        <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ t('dept.kpi_pending') }}</p>
+        <p class="mt-2 text-4xl font-bold tabular-nums text-[#800020]">{{ summary.pending_today }}</p>
+        <p class="mt-1.5 text-sm text-slate-500">{{ t('dept.kpi_pending_sub') }}</p>
       </div>
-      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div class="rounded-2xl border border-slate-100 bg-white/90 p-5 shadow-sm ring-1 ring-slate-100/80">
+        <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">
           {{ t('dept.kpi_approved_month') }}
         </p>
-        <p class="mt-2 text-3xl font-bold text-slate-900">{{ summary.approved_this_month }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ t('dept.kpi_approved_sub') }}</p>
+        <p class="mt-2 text-4xl font-bold tabular-nums text-slate-800">{{ summary.approved_this_month }}</p>
+        <p class="mt-1.5 text-sm text-slate-500">{{ t('dept.kpi_approved_sub') }}</p>
       </div>
-      <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('dept.kpi_rate') }}</p>
-        <p class="mt-2 text-3xl font-bold text-slate-900">
+      <div class="rounded-2xl border border-slate-100 bg-white/90 p-5 shadow-sm ring-1 ring-slate-100/80">
+        <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ t('dept.kpi_rate') }}</p>
+        <p class="mt-2 text-4xl font-bold tabular-nums text-slate-800">
           {{ summary.approval_rate_30d != null ? `${summary.approval_rate_30d}%` : '—' }}
         </p>
-        <p class="mt-1 text-xs text-slate-500">{{ t('dept.kpi_rate_sub') }}</p>
+        <p class="mt-1.5 text-sm text-slate-500">{{ t('dept.kpi_rate_sub') }}</p>
       </div>
     </div>
 
     <div class="mt-10 max-w-5xl">
-      <h2 class="text-lg font-bold text-slate-900 dark:text-slate-50">{{ t('dept.list_pending_title') }}</h2>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-50 sm:text-2xl">{{ t('dept.list_pending_title') }}</h2>
 
       <div class="relative z-40 mt-4">
         <AppFilterBar>
@@ -154,7 +154,7 @@
 
             <div
               v-if="activeFilterCount > 0"
-              class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 dark:border-violet-900/40"
+              class="ml-auto flex shrink-0 items-center gap-1 pl-2"
             >
               <button
                 type="button"

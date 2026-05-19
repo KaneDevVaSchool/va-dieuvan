@@ -20,25 +20,13 @@ class DeptDecideDispatchRequestRequest extends ApiFormRequest
             return true;
         }
 
-        if (! $user->hasPermission('request.approve_dept')) {
-            return false;
-        }
-
         /** @var mixed $dr */
         $dr = $this->route('dispatchRequest');
         if (! $dr instanceof DispatchRequest) {
             return false;
         }
 
-        if ($dr->trip_type === 'door_to_door') {
-            return false;
-        }
-
-        $requester = $dr->requester;
-
-        return $requester !== null
-            && $user->department_id !== null
-            && (int) $requester->department_id === (int) $user->department_id;
+        return $user->can('approveDept', $dr);
     }
 
     /**
