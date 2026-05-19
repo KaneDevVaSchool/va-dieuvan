@@ -39,7 +39,7 @@
               alt=""
               width="36"
               height="36"
-              class="shrink-0 rounded-full bg-white/90 object-contain p-0.5 ring-2 ring-white/30"
+              class="shrink-0 rounded-full object-contain p-0.5 ring-2 ring-white/30"
               :class="compactNav ? 'h-8 w-8' : 'h-9 w-9 md:h-10 md:w-10'"
               decoding="async"
             />
@@ -310,7 +310,7 @@ import { getDeptSummary } from '../../api/requests'
 
 const logoUrl = '/images/logo/logo-2.png'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -344,13 +344,15 @@ const verticalAsideWidthClass = computed(() => {
 })
 
 const pageTitle = computed(() => {
-  const title = route.meta?.title
-  return typeof title === 'string' && title ? title : t('portal.nav_title')
+  const name = route.name
+  if (name && te(`routes_meta.${String(name)}.title`)) return t(`routes_meta.${String(name)}.title`)
+  return t('portal.nav_title')
 })
 
 const pageSubtitle = computed(() => {
-  const sub = route.meta?.subtitle
-  return typeof sub === 'string' && sub ? sub : ''
+  const name = route.name
+  if (name && te(`routes_meta.${String(name)}.subtitle`)) return t(`routes_meta.${String(name)}.subtitle`)
+  return ''
 })
 
 const deptDisplayName = computed(() => {

@@ -35,44 +35,144 @@
     </div>
 
     <div class="mt-10 max-w-5xl">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <h2 class="text-lg font-bold text-slate-900">{{ t('dept.list_pending_title') }}</h2>
-        <button
-          type="button"
-          class="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
-          @click="filterOpen = !filterOpen"
-        >
-          <FunnelIcon class="h-4 w-4" aria-hidden="true" />
-          {{ t('dept.filter_btn') }}
-        </button>
-      </div>
+      <h2 class="text-lg font-bold text-slate-900 dark:text-slate-50">{{ t('dept.list_pending_title') }}</h2>
 
-      <div
-        v-if="filterOpen"
-        class="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-end"
-      >
-        <label class="block min-w-0 flex-1 text-sm">
-          <span class="mb-1 block font-medium text-slate-700">{{ t('requests_page.filter_trip_type') }}</span>
-          <select
-            v-model="filterTripType"
-            class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium outline-none ring-[#800020]/20 focus:ring-2"
-          >
-            <option value="">{{ t('requests_page.all') }}</option>
-            <option value="door_to_door">{{ t('request_detail.trip_type.door_to_door') }}</option>
-            <option value="point_to_point">{{ t('request_detail.trip_type.point_to_point') }}</option>
-            <option value="business">{{ t('request_detail.trip_type.business') }}</option>
-            <option value="cargo">{{ t('request_detail.trip_type.cargo') }}</option>
-          </select>
-        </label>
-        <label class="block min-w-0 flex-1 text-sm">
-          <span class="mb-1 block font-medium text-slate-700">{{ t('requests_page.search_placeholder') }}</span>
-          <input
-            v-model.trim="filterQ"
-            type="search"
-            class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-[#800020]/20 focus:ring-2"
-            autocomplete="off"
-          />
-        </label>
+      <div class="relative z-40 mt-4">
+        <AppFilterBar>
+          <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+            <details ref="funnelDetailsRef" class="group relative">
+              <summary
+                class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="relative inline-flex">
+                  <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+                  <span
+                    v-if="activeFilterCount > 0"
+                    class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
+                  >
+                    {{ activeFilterCount > 9 ? '9+' : activeFilterCount }}
+                  </span>
+                </span>
+                <span class="hidden text-sm font-medium text-slate-700 sm:inline dark:text-slate-200">{{ t('dept.filter_toolbar_label') }}</span>
+                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
+              >
+                <p
+                  class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300"
+                >
+                  {{ t('filter_bar.active_title') }}
+                </p>
+                <div class="p-3 pt-2">
+                  <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <li v-if="filterTripType" class="flex justify-between gap-2">
+                      <span class="text-slate-500 dark:text-slate-400">{{ t('dept.filter_label_trip_type') }}</span>
+                      <span class="font-medium">{{ tripTypeLabel(filterTripType) }}</span>
+                    </li>
+                    <li v-if="filterQ.trim()" class="flex justify-between gap-2">
+                      <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.search') }}</span>
+                      <span class="max-w-[10rem] truncate font-medium" :title="filterQ">{{ filterQ }}</span>
+                    </li>
+                    <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">{{ t('filter_bar.empty') }}</li>
+                  </ul>
+                  <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                      {{ t('trips_page.filter_show_controls_title') }}
+                    </p>
+                    <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                      {{ t('trips_page.filter_show_controls_hint') }}
+                    </p>
+                    <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                      <li v-for="fd in filterControlDefs" :key="'dept-dash-vis-' + fd.id" class="flex items-start gap-2">
+                        <input
+                          :id="'dept-dash-filter-vis-' + fd.id"
+                          v-model="filterControlVisible[fd.id]"
+                          type="checkbox"
+                          class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                        />
+                        <label
+                          :for="'dept-dash-filter-vis-' + fd.id"
+                          class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                        >
+                          {{ fd.label }}
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
+                  <button
+                    type="button"
+                    class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @click="resetFilters()"
+                  >
+                    {{ t('filter_bar.clear_all') }}
+                  </button>
+                </div>
+              </div>
+            </details>
+
+            <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
+
+            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+              <AppFilterDropdown
+                v-if="filterControlVisible.trip_type"
+                root-class="shrink-0"
+                :label="t('dept.filter_label_trip_type')"
+                :summary-text="filterTripType ? tripTypeLabel(filterTripType) : t('dept.filter_trip_type_all')"
+                summary-text-class="max-w-[10rem]"
+                panel-class="min-w-[220px] py-1"
+              >
+                <ul class="space-y-0.5 px-1 py-1">
+                  <li v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                    <button
+                      type="button"
+                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                      :class="
+                        filterTripType === opt.value
+                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                      "
+                      @click="applyTripType($event, opt.value)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+
+              <input
+                v-if="filterControlVisible.search"
+                v-model.trim="filterQ"
+                type="search"
+                :aria-label="t('dept.filter_search_placeholder')"
+                :placeholder="t('dept.filter_search_placeholder')"
+                :title="t('dept.filter_search_placeholder')"
+                class="h-9 w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-52 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                autocomplete="off"
+              />
+            </div>
+
+            <div
+              v-if="activeFilterCount > 0"
+              class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 dark:border-violet-900/40"
+            >
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+                :title="t('filter_bar.clear_icon')"
+                :aria-label="t('filter_bar.clear_icon')"
+                @click="resetFilters()"
+              >
+                <span class="relative inline-flex">
+                  <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+                  <XMarkIcon
+                    class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+                  />
+                </span>
+              </button>
+            </div>
+          </div>
+        </AppFilterBar>
       </div>
 
       <div v-if="loadError" class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
@@ -137,16 +237,21 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { ArrowDownIcon, ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
 import { deptDecideDispatchRequest, getDeptSummary, listRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import DeptRequestCard from '../../components/dept/DeptRequestCard.vue'
 import Modal from '../../components/ui/Modal.vue'
 import Button from '../../components/ui/Button.vue'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+
+const FILTER_VISIBILITY_KEY = 'va.dept.dashboard.filter_vis_v1'
+const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
 const { t } = useI18n()
 const router = useRouter()
@@ -163,9 +268,91 @@ const summaryLocal = ref({
 const loading = ref(true)
 const loadingMore = ref(false)
 const loadError = ref('')
-const filterOpen = ref(false)
 const filterTripType = ref('')
 const filterQ = ref('')
+const funnelDetailsRef = ref(null)
+
+function defaultFilterControlVisibility() {
+  return {
+    trip_type: true,
+    search: true,
+  }
+}
+
+const filterControlVisible = reactive(defaultFilterControlVisibility())
+
+const filterControlDefs = computed(() => [
+  { id: 'trip_type', label: t('dept.filter_label_trip_type') },
+  { id: 'search', label: t('filter_bar.search') },
+])
+
+const tripTypeFilterOptions = computed(() => [
+  { value: '', label: t('dept.filter_trip_type_all') },
+  ...TRIP_TYPES.map((value) => ({
+    value,
+    label: t(`request_detail.trip_type.${value}`),
+  })),
+])
+
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (filterTripType.value) n++
+  if (filterQ.value.trim()) n++
+  return n
+})
+
+function tripTypeLabel(value) {
+  if (!value) return t('dept.filter_trip_type_all')
+  return t(`request_detail.trip_type.${value}`)
+}
+
+function loadFilterVisibility() {
+  try {
+    const raw = localStorage.getItem(FILTER_VISIBILITY_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    const base = defaultFilterControlVisibility()
+    for (const k of Object.keys(base)) {
+      if (typeof o[k] === 'boolean') base[k] = o[k]
+    }
+    Object.assign(filterControlVisible, base)
+  } catch {
+    /* ignore */
+  }
+}
+
+function saveFilterVisibility() {
+  try {
+    localStorage.setItem(FILTER_VISIBILITY_KEY, JSON.stringify({ ...filterControlVisible }))
+  } catch {
+    /* ignore */
+  }
+}
+
+function closeParentDetails(ev) {
+  const el = ev?.currentTarget
+  if (!el || typeof el.closest !== 'function') return
+  const d = el.closest('details')
+  if (d) d.open = false
+}
+
+function closeFunnelMenu() {
+  const el = funnelDetailsRef.value
+  if (el && 'open' in el) el.open = false
+}
+
+function applyTripType(ev, value) {
+  filterTripType.value = value
+  closeParentDetails(ev)
+}
+
+function resetFilters() {
+  filterTripType.value = ''
+  filterQ.value = ''
+  closeFunnelMenu()
+}
+
+watch(filterControlVisible, saveFilterVisibility, { deep: true })
 
 const pagePending = ref(1)
 const pagePriceFilled = ref(1)
@@ -334,5 +521,8 @@ async function confirmReject() {
   }
 }
 
-onMounted(initialLoad)
+onMounted(() => {
+  loadFilterVisibility()
+  initialLoad()
+})
 </script>

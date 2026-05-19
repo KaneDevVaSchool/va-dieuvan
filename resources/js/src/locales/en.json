@@ -811,6 +811,16 @@
         "reject_reason_required": "Please enter a rejection reason.",
         "cancel": "Cancel",
         "tab_all": "All",
+        "filter_toolbar_label": "Filters",
+        "filter_label_status": "Status",
+        "filter_label_trip_type": "Trip type",
+        "filter_label_date_range": "Date range",
+        "filter_date_from": "From",
+        "filter_date_to": "To",
+        "filter_search_placeholder": "ID, origin, destination…",
+        "filter_status_all": "All statuses",
+        "filter_trip_type_all": "All types",
+        "per_page_unit": "rows",
         "load_more": "Load more"
     },
     "routes_meta": {

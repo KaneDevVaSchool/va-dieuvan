@@ -125,8 +125,14 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
 
         $coordinatorLine = trim((string) ($form['coordinator_name'] ?? ''));
 
-        $extrasTotal = $this->sumExtraFeesFromSnapshot($snap);
-        $grand = round((float) ($dr->service_price ?? 0) + $extrasTotal, 2);
+        $isCargo = ($dr->trip_type ?? '') === 'cargo';
+        $unitTotal = $isCargo
+            ? $this->sumRowMoneyField($snap, 'cargoRows', 'cost')
+            : $this->sumRowMoneyField($snap, 'businessRows', 'unit_price')
+                + $this->sumRowMoneyField($snap, 'passengerRows', 'unit_price');
+        $extrasTotal = $isCargo ? 0.0 : $this->sumExtraFeesFromSnapshot($snap);
+        $grand = round((float) ($dr->service_price ?? 0), 2);
+        $showPriceBreakdown = ! $isCargo && ($unitTotal > 0 || $extrasTotal > 0);
 
         $receiverDept = '';
         if ($notifiable instanceof AppUser) {
@@ -150,7 +156,10 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
             'routeLine' => trim(($dr->origin ?? '').' → '.($dr->destination ?? '')),
             'timeLineDepart' => $departAtVi !== '' ? $departAtVi : '—',
             'timeLineArrive' => $arriveAtVi !== '' ? $arriveAtVi : '—',
-            'servicePriceFmt' => $this->moneyVnd($dr->service_price),
+            'isCargoTrip' => $isCargo,
+            'showPriceBreakdown' => $showPriceBreakdown,
+            'showExtraLine' => $showPriceBreakdown && $extrasTotal > 0,
+            'unitPriceTotalFmt' => $this->moneyVnd($unitTotal),
             'extraFeesFmt' => $this->moneyVnd($extrasTotal),
             'grandTotalFmt' => $this->moneyVnd($grand),
             'hasDeadlineNotice' => $deadlineNotice !== '',
@@ -182,24 +191,31 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
 
     private function sumExtraFeesFromSnapshot(array $snap): float
     {
-        $total = 0.0;
+        return round(
+            $this->sumRowMoneyField($snap, 'businessRows', 'extra_fee')
+                + $this->sumRowMoneyField($snap, 'passengerRows', 'extra_fee'),
+            2,
+        );
+    }
 
-        foreach (['businessRows', 'passengerRows', 'cargoRows'] as $key) {
-            $rows = $snap[$key] ?? null;
-            if (! is_array($rows)) {
+    private function sumRowMoneyField(array $snap, string $rowsKey, string $field): float
+    {
+        $rows = $snap[$rowsKey] ?? null;
+        if (! is_array($rows)) {
+            return 0.0;
+        }
+
+        $total = 0.0;
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
                 continue;
             }
-            foreach ($rows as $row) {
-                if (! is_array($row)) {
-                    continue;
-                }
-                $v = $row['extra_fee'] ?? null;
-                if ($v === null || $v === '') {
-                    continue;
-                }
-                if (is_numeric($v)) {
-                    $total += (float) $v;
-                }
+            $v = $row[$field] ?? null;
+            if ($v === null || $v === '') {
+                continue;
+            }
+            if (is_numeric($v)) {
+                $total += (float) $v;
             }
         }
 

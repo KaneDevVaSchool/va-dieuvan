@@ -872,6 +872,16 @@
         "reject_reason_required": "Vui lòng nhập lý do từ chối.",
         "cancel": "Huỷ",
         "tab_all": "Tất cả",
+        "filter_toolbar_label": "Bộ lọc",
+        "filter_label_status": "Trạng thái",
+        "filter_label_trip_type": "Loại chuyến",
+        "filter_label_date_range": "Khoảng ngày",
+        "filter_date_from": "Từ ngày",
+        "filter_date_to": "Đến ngày",
+        "filter_search_placeholder": "Mã, điểm đi, điểm đến…",
+        "filter_status_all": "Tất cả trạng thái",
+        "filter_trip_type_all": "Tất cả loại",
+        "per_page_unit": "dòng",
         "load_more": "Tải thêm"
     },
     "routes_meta": {

@@ -122,6 +122,41 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
         $this->assertStringContainsString('Phiếu đề xuất chờ duyệt —', $mail->subject);
     }
 
+    public function test_dept_head_approval_mail_grand_total_matches_service_price_without_double_counting_extra(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $head = User::factory()->create(['is_active' => true, 'email' => 'head@example.test']);
+        $head->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => User::factory()->create(['is_active' => true])->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(3),
+            'status' => 'price_filled',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'service_price' => 120000,
+            'assigned_dept_head_id' => $head->id,
+            'wizard_snapshot' => [
+                'businessRows' => [
+                    ['unit_price' => 100000, 'extra_fee' => 20000],
+                ],
+            ],
+        ]);
+
+        $notification = new DeptHeadApprovalRequestedNotification($dr->id);
+        $mail = $notification->toMail($head);
+        $html = (string) (method_exists($mail, 'render') ? $mail->render() : '');
+
+        $this->assertStringContainsString('120.000', $html);
+        $this->assertStringNotContainsString('140.000', $html);
+        $this->assertStringContainsString('Tổng phụ thu', $html);
+    }
+
     public function test_fill_price_accepts_head_from_any_department_even_if_requester_has_no_department(): void
     {
         $this->seed(RbacSeeder::class);

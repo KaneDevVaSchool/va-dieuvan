@@ -364,25 +364,25 @@ const router = createRouter({
                     path: "",
                     name: "deptDashboard",
                     component: () => import("../views/dept/DeptDashboardView.vue"),
-                    meta: { deptHead: true, title: "Chờ duyệt", subtitle: "Trưởng đơn vị" },
+                    meta: { deptHead: true },
                 },
                 {
                     path: "approved",
                     name: "deptApproved",
                     component: () => import("../views/dept/DeptApprovedView.vue"),
-                    meta: { deptHead: true, title: "Đã duyệt", subtitle: "Trưởng đơn vị" },
+                    meta: { deptHead: true },
                 },
                 {
                     path: "rejected",
                     name: "deptRejected",
                     component: () => import("../views/dept/DeptRejectedView.vue"),
-                    meta: { deptHead: true, title: "Đã từ chối", subtitle: "Trưởng đơn vị" },
+                    meta: { deptHead: true },
                 },
                 {
                     path: "all",
                     name: "deptAll",
                     component: () => import("../views/dept/DeptAllRequestsView.vue"),
-                    meta: { deptHead: true, title: "Tất cả phiếu", subtitle: "Trưởng đơn vị" },
+                    meta: { deptHead: true },
                 },
                 {
                     path: "requests/:id(\\d+)",
@@ -390,8 +390,6 @@ const router = createRouter({
                     component: () => import("../views/requests/RequestDetailView.vue"),
                     meta: {
                         deptHead: true,
-                        title: "Chi tiết yêu cầu",
-                        subtitle: "Trưởng đơn vị",
                     },
                 },
             ],
