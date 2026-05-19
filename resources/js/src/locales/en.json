@@ -2207,6 +2207,8 @@
         "timeline_empty": "No timeline data yet."
     },
     "request_detail": {
+        "proposal_detail_label": "Request details",
+        "proposal_detail_empty": "No proposal detail text yet.",
         "export_pdf": "Export PDF",
         "pdf_export_loading": "Exporting…",
         "pdf_locked_tooltip": "PDF unlocks after the request is approved.",

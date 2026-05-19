@@ -2035,6 +2035,8 @@
         "timeline_empty": "Chưa có dữ liệu timeline (chọn chuyến đang chạy)."
     },
     "request_detail": {
+        "proposal_detail_label": "Chi tiết đề nghị",
+        "proposal_detail_empty": "Chưa có nội dung chi tiết đề nghị.",
         "export_pdf": "Xuất PDF",
         "pdf_export_loading": "Đang xuất…",
         "pdf_locked_tooltip": "PDF chỉ mở khóa sau khi phiếu đã được duyệt.",
