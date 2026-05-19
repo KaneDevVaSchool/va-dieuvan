@@ -348,15 +348,6 @@
                   </div>
                 </div>
 
-                <div v-if="bm03Display" class="min-w-0 md:col-span-2">
-                  <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Nội dung đơn điện tử (BM.03)</p>
-                  <p class="mt-1 text-xs text-slate-500">Tự động từ biểu mẫu tạo yêu cầu; không dùng cột ghi chú.</p>
-                  <div
-                    class="mt-2 max-h-[min(32rem,70vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-700 [overflow-wrap:anywhere]"
-                  >
-                    {{ bm03Display }}
-                  </div>
-                </div>
 
                 <!-- Attached documents -->
                 <div class="min-w-0 md:col-span-2">
@@ -709,7 +700,6 @@ import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripType } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
-import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../../util/datetime'
@@ -767,18 +757,6 @@ const userNotesFormatted = computed(() => {
   const n = req.value?.notes?.trim()
   if (!n || isLegacyBm03NotesBlock(n)) return ''
   return formatDispatchRequestNotesForDisplay(n)
-})
-
-const bm03Display = computed(() => {
-  const r = req.value
-  const snap = r?.wizard_snapshot
-  if (snap?.form) {
-    const built = buildBm03BodyFromWizardSnapshot(snap)?.trim()
-    if (built) return formatDispatchRequestNotesForDisplay(built)
-  }
-  const n = r?.notes?.trim()
-  if (n && isLegacyBm03NotesBlock(n)) return formatDispatchRequestNotesForDisplay(n)
-  return ''
 })
 
 const requestRefCode = computed(() => {
