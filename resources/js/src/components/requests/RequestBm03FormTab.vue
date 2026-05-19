@@ -256,9 +256,6 @@
                     </div>
                     <p v-if="deptHeadsLoadErr" class="text-xs text-rose-600">{{ deptHeadsLoadErr }}</p>
                     <p v-else-if="assignDeptHeadClientErr" class="text-xs text-rose-600">{{ assignDeptHeadClientErr }}</p>
-                    <p v-else-if="assignDeptHeadDeptMissingWarn" class="text-xs font-medium text-amber-900">
-                      {{ t('request_detail.assign_dept_head_no_department_warn') }}
-                    </p>
                     <p v-else-if="deptHeadAssignRequired && deptHeadSearchHint" class="text-xs text-slate-500">{{ deptHeadSearchHint }}</p>
                   </div>
                   <div class="flex flex-wrap items-center gap-2.5">
@@ -503,9 +500,6 @@
                   </div>
                   <p v-if="deptHeadsLoadErr" class="text-xs text-rose-600">{{ deptHeadsLoadErr }}</p>
                   <p v-else-if="assignDeptHeadClientErr" class="text-xs text-rose-600">{{ assignDeptHeadClientErr }}</p>
-                  <p v-else-if="assignDeptHeadDeptMissingWarn" class="text-xs font-medium text-amber-900">
-                    {{ t('request_detail.assign_dept_head_no_department_warn') }}
-                  </p>
                   <p v-else-if="deptHeadAssignRequired && deptHeadSearchHint" class="text-xs text-slate-500">{{ deptHeadSearchHint }}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5">
@@ -682,20 +676,10 @@ const selectedDeptHeadId = ref('')
 /** Nhãn ô tìm khi đã pick — đổi nội dung ô ⇒ bỏ chọn để tránh nhầm ID */
 const deptHeadLockedLabel = ref('')
 
-const deptHeadAssignRequired = computed(
-  () => props.showFillPriceSection && props.req?.requester?.department_id != null,
-)
+const deptHeadAssignRequired = computed(() => props.showFillPriceSection)
 
 /** Chỉ khóa ô khi đang gửi lưu giá — không khóa vì thiếu department_id trên SPA/DB để luôn gõ được. */
 const fillPriceLocked = computed(() => props.fillPriceActing)
-
-/** Người đề xuất không có phòng trong API — không tìm được trưởng BP; gợi ý cập nhật nhân viên. */
-const assignDeptHeadDeptMissingWarn = computed(
-  () =>
-    props.showFillPriceSection &&
-    props.req?.requester &&
-    (props.req.requester.department_id == null || props.req.requester.department_id === ''),
-)
 
 const deptHeadSearchHint = computed(() => t('request_detail.assign_dept_head_combo_hint'))
 

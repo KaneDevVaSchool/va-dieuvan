@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\DispatchRequest;
+use App\Models\User as AppUser;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
@@ -127,6 +128,18 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
         $extrasTotal = $this->sumExtraFeesFromSnapshot($snap);
         $grand = round((float) ($dr->service_price ?? 0) + $extrasTotal, 2);
 
+        $receiverDept = '';
+        if ($notifiable instanceof AppUser) {
+            $notifiable->loadMissing('department:id,name,code');
+            $receiverDept = trim((string) ($notifiable->department?->name ?? $notifiable->department?->code ?? ''));
+        }
+        $privacyScopeFooter = $receiverDept !== ''
+            ? sprintf(
+                'Bạn nhận email vì được Điều vận gán là người duyệt cho phiếu này. Đơn vị ghi trên hồ sơ của bạn: %s.',
+                $receiverDept,
+            )
+            : 'Bạn nhận email vì được Điều vận gán là người duyệt (Trưởng BP) cho phiếu này.';
+
         return [
             'deptHeadName' => trim((string) ($notifiable->name ?? '')) ?: $notifiable->email,
             'requestRefCode' => $this->referenceCode($dr),
@@ -144,7 +157,7 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
             'deadlineNotice' => $deadlineNotice,
             'detailUrl' => rtrim(config('app.url'), '/').'/dept/requests/'.$dr->id,
             'helpdesk' => trim((string) config('dispatch.mail_helpdesk')),
-            'departmentName' => (string) ($dr->requester?->department?->name ?? $dr->requester?->department?->code ?? 'phòng ban của Người đề xuất'),
+            'privacyScopeFooter' => $privacyScopeFooter,
         ];
     }
 

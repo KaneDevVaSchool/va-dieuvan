@@ -10,9 +10,7 @@ final class Messages
 
     public const REQUEST_FILL_PRICE_NOT_APPLICABLE = 'Loại yêu cầu này không áp dụng bước điền giá (door-to-door).';
 
-    public const REQUEST_INVALID_DEPT_HEAD = 'Người được chỉ định không phải trưởng đơn vị của phòng đề xuất.';
-
-    public const REQUEST_DEPT_HEAD_REQUIRES_DEPARTMENT = 'Không thể chỉ định trưởng đơn vị khi người đề xuất chưa thuộc phòng ban.';
+    public const REQUEST_INVALID_DEPT_HEAD = 'Người được chỉ định không phải trưởng đơn vị đang hoạt động trong hệ thống.';
 
     public const REQUEST_DEPT_HEAD_REQUIRED = 'Vui lòng chọn Trưởng đơn vị nhận duyệt trước khi chuyển phiếu.';
 

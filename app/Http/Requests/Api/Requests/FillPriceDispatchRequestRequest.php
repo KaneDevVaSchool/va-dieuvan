@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Api\Requests;
 
 use App\Http\Requests\Api\ApiFormRequest;
-use App\Models\DispatchRequest;
 use App\Models\Role;
 use App\Support\Messages;
 use Illuminate\Validation\Rule;
@@ -16,7 +15,7 @@ class FillPriceDispatchRequestRequest extends ApiFormRequest
     }
 
     /**
-     * Gán Trưởng đơn vị bắt buộc khi có phòng của người đề xuất và trong hệ thống có role department_head (quy trình duyệt BP).
+     * Bắt buộc chọn một Trưởng BP khi hệ thống có role `department_head` (luồng fill giá).
      */
     public function rules(): array
     {
@@ -44,17 +43,10 @@ class FillPriceDispatchRequestRequest extends ApiFormRequest
 
     private function requiresDeptHeadUserId(): bool
     {
-        $dr = $this->route('dispatchRequest');
-        if (! $dr instanceof DispatchRequest) {
-            return false;
-        }
-
         if (! Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
             return false;
         }
 
-        $dr->loadMissing('requester:id,department_id');
-
-        return $dr->requester?->department_id !== null;
+        return true;
     }
 }

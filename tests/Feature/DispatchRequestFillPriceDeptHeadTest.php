@@ -15,19 +15,17 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_fill_price_requires_dept_head_when_requester_has_department(): void
+    public function test_fill_price_requires_dept_head_choice_when_role_exists(): void
     {
         $this->seed(RbacSeeder::class);
 
-        $dept = Department::query()->create(['name' => 'Phòng QA', 'code' => 'QA']);
+        User::factory()->create(['is_active' => true])->assignRole('department_head');
 
         $dispatcher = User::factory()->create(['is_active' => true]);
         $dispatcher->assignRole('dispatcher');
 
-        $requester = User::factory()->create(['department_id' => $dept->id, 'is_active' => true]);
+        $requester = User::factory()->create(['department_id' => null, 'is_active' => true]);
         $requester->assignRole('internal_user');
-
-        User::factory()->create(['department_id' => $dept->id, 'is_active' => true])->assignRole('department_head');
 
         $dr = DispatchRequest::create([
             'requester_id' => $requester->id,
@@ -122,5 +120,89 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
         $this->assertNotSame('', trim((string) $html));
         $this->assertStringContainsString('/dept/requests/'.$fresh->id, (string) $html);
         $this->assertStringContainsString('Phiếu đề xuất chờ duyệt —', $mail->subject);
+    }
+
+    public function test_fill_price_accepts_head_from_any_department_even_if_requester_has_no_department(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $deptB = Department::query()->create(['name' => 'Phòng B', 'code' => 'PHB']);
+
+        $dispatcher = User::factory()->create(['is_active' => true]);
+        $dispatcher->assignRole('dispatcher');
+
+        $requester = User::factory()->create(['department_id' => null, 'is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $headB = User::factory()->create(['department_id' => $deptB->id, 'is_active' => true]);
+        $headB->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(3),
+            'arrive_by' => now()->addDays(4),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => [],
+        ]);
+
+        $this->actingAs($dispatcher);
+
+        $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
+            'service_price' => 100000,
+            'dept_head_user_id' => $headB->id,
+            'rows' => [],
+        ])
+            ->assertSuccessful();
+
+        $fresh = DispatchRequest::query()->findOrFail($dr->id);
+        $this->assertSame('price_filled', $fresh->status);
+        $this->assertSame($headB->id, $fresh->assigned_dept_head_id);
+    }
+
+    public function test_fill_price_rejects_user_who_is_not_active_department_head(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $dept = Department::query()->create(['name' => 'Phòng QA', 'code' => 'QA']);
+
+        $dispatcher = User::factory()->create(['is_active' => true]);
+        $dispatcher->assignRole('dispatcher');
+
+        $requester = User::factory()->create(['department_id' => $dept->id, 'is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $internalOnly = User::factory()->create(['department_id' => $dept->id, 'is_active' => true]);
+        $internalOnly->assignRole('internal_user');
+
+        User::factory()->create(['is_active' => true])->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(3),
+            'arrive_by' => now()->addDays(4),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => [],
+        ]);
+
+        $this->actingAs($dispatcher);
+
+        $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
+            'service_price' => 100000,
+            'dept_head_user_id' => $internalOnly->id,
+            'rows' => [],
+        ])
+            ->assertStatus(422);
     }
 }

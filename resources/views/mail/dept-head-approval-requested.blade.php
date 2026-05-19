@@ -122,7 +122,7 @@
                         </p>
 
                         <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;line-height:1.5;">
-                            🔒 Bạn chỉ nhận email này vì là Trưởng đơn vị của {{ $departmentName }} và được gán làm người duyệt cho phiếu này.
+                            🔒 {{ $privacyScopeFooter }}
                         </p>
                     </td>
                 </tr>

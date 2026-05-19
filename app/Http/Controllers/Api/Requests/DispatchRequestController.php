@@ -154,20 +154,14 @@ class DispatchRequestController extends Controller
         $user = $request->user();
         $before = $dispatchRequest->toArray();
 
-        $dispatchRequest->loadMissing('requester:id,department_id');
-        $requesterDeptId = $dispatchRequest->requester?->department_id;
-
         $chosenDeptHeadId = isset($data['dept_head_user_id']) ? (int) $data['dept_head_user_id'] : null;
         if ($chosenDeptHeadId === 0) {
             $chosenDeptHeadId = null;
         }
         if ($chosenDeptHeadId !== null) {
-            if ($requesterDeptId === null) {
-                abort(422, Messages::REQUEST_DEPT_HEAD_REQUIRES_DEPARTMENT);
-            }
             $eligible = User::query()
+                ->where('is_active', true)
                 ->role('department_head')
-                ->where('department_id', (int) $requesterDeptId)
                 ->whereKey($chosenDeptHeadId)
                 ->exists();
             if (! $eligible) {
@@ -235,7 +229,7 @@ class DispatchRequestController extends Controller
     }
 
     /**
-     * Trưởng đơn vị cùng department với người đề xuất (cho bước gán người duyệt khi điền giá).
+     * Trưởng BP đang hoạt động (cho bước gán người duyệt khi điền giá — có thể chọn BP bất kỳ đơn vị).
      */
     public function availableDeptHeads(ShowDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
     {
@@ -245,10 +239,7 @@ class DispatchRequestController extends Controller
 
         $this->authorize('view', $dispatchRequest);
 
-        $dispatchRequest->loadMissing('requester:id,department_id');
-        $deptId = $dispatchRequest->requester?->department_id;
-
-        if ($deptId === null || ! Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+        if (! Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
             return $this->ok([]);
         }
 
@@ -257,7 +248,6 @@ class DispatchRequestController extends Controller
         $users = User::query()
             ->where('is_active', true)
             ->role('department_head')
-            ->where('department_id', (int) $deptId)
             ->when($qTrim !== '', function ($query) use ($qTrim): void {
                 $like = '%'.addcslashes($qTrim, '%_\\').'%';
                 $query->where(function ($w) use ($like): void {
@@ -275,7 +265,6 @@ class DispatchRequestController extends Controller
             $picked = User::query()
                 ->where('is_active', true)
                 ->role('department_head')
-                ->where('department_id', (int) $deptId)
                 ->whereKey($pickId)
                 ->first(['id', 'name', 'employee_code', 'email']);
             if ($picked !== null && ! $users->contains(static fn (User $u): bool => (int) $u->id === $pickId)) {

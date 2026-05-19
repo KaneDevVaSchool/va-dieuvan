@@ -135,21 +135,20 @@ class DispatchRequestPolicy
                 || $user->hasPermission('request.create'));
     }
 
-    /** Trưởng BP «thuần»: cùng phòng với người đề xuất và (nếu phiếu đã gán) chỉ được xem phiếu gán cho mình — trừ bản legacy `assigned_dept_head_id` null. */
+    /** Trưởng BP «thuần»: nếu phiếu có `assigned_dept_head_id` thì chỉ người đó; phiếu chưa gán (legacy) vẫn theo người đề xuất cùng phòng — trừ khi user không có phòng trong hồ sơ thì chỉ xem phiếu được gán cho mình. */
     private function approveDeptLimitedViewEligible(User $user, DispatchRequest $dispatchRequest): bool
     {
+        if ($dispatchRequest->assigned_dept_head_id !== null) {
+            return (int) $dispatchRequest->assigned_dept_head_id === (int) $user->id;
+        }
+
+        if ($user->department_id === null) {
+            return false;
+        }
+
+        $dispatchRequest->loadMissing('requester:id,department_id');
         $requester = $dispatchRequest->requester;
-        if ($requester === null
-            || $user->department_id === null
-            || (int) $requester->department_id !== (int) $user->department_id) {
-            return false;
-        }
 
-        if ($dispatchRequest->assigned_dept_head_id !== null
-            && (int) $dispatchRequest->assigned_dept_head_id !== (int) $user->id) {
-            return false;
-        }
-
-        return true;
+        return $requester !== null && (int) $requester->department_id === (int) $user->department_id;
     }
 }

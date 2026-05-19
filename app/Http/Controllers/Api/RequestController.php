@@ -320,21 +320,43 @@ class RequestController extends Controller
             return $q;
         }
 
-        if ($user->hasPermission('request.approve_dept') && $user->department_id !== null) {
-            $q->whereHas('requester',
-                fn (Builder $b) => $b->where('department_id', (int) $user->department_id)
-            );
+        if ($user->hasPermission('request.approve_dept')) {
             $deptHeadPure = ! $user->hasPermission('trip.view_all')
                 && ! $user->hasPermission('request.approve');
-            if ($deptHeadPure) {
-                $uid = (int) $user->id;
-                $q->where(function (Builder $w) use ($uid): void {
-                    $w->whereNull('assigned_dept_head_id')
-                        ->orWhere('assigned_dept_head_id', $uid);
-                });
+
+            // Trưởng BP thuần, profile không có phòng: chỉ phiếu gán đích danh.
+            if ($deptHeadPure && $user->department_id === null) {
+                $q->where('assigned_dept_head_id', (int) $user->id);
+
+                return $q;
             }
 
-            return $q;
+            $deptId = $user->department_id !== null ? (int) $user->department_id : null;
+
+            if ($deptHeadPure && $deptId !== null) {
+                $uid = (int) $user->id;
+                $q->where(function (Builder $outer) use ($uid, $deptId): void {
+                    $outer->where('assigned_dept_head_id', $uid)
+                        ->orWhere(function (Builder $leg) use ($deptId): void {
+                            $leg->whereNull('assigned_dept_head_id')
+                                ->whereHas(
+                                    'requester',
+                                    fn (Builder $b) => $b->where('department_id', $deptId),
+                                );
+                        });
+                });
+
+                return $q;
+            }
+
+            if ($deptId !== null) {
+                $q->whereHas(
+                    'requester',
+                    fn (Builder $b) => $b->where('department_id', $deptId),
+                );
+
+                return $q;
+            }
         }
 
         $q->where('requester_id', $user->id);
