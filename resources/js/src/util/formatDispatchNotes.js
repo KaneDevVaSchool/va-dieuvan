@@ -43,3 +43,92 @@ export function formatDispatchRequestNotesForDisplay(raw) {
 
   return s.replace(/\n{3,}/g, '\n\n').trim()
 }
+
+/** Tiêu đề mục do BM.03/MH.QT.04 sinh ra (đồng bộ với buildBm03BodyFromSnapshot). */
+const BM03_KNOWN_SECTION_HEADERS = new Set([
+  'Người đề nghị',
+  'Mục đích sử dụng',
+  'Thời gian',
+  'Đối tượng / điều phối',
+  'Nội dung đề nghị vận chuyển',
+  'Nội dung đề xuất cho chương trình / sự kiện ngoại khóa',
+  'Nội dung đề xuất cho nhân sự đi công tác',
+  'e.1.1 Ghi chú khác đề xuất',
+  'Nội dung chi tiết',
+  'Ghi chú khác (công tác)',
+])
+
+/**
+ * Tách nội dung đã format thành các mục để hiển thị dạng thẻ (BM.03 + ghi chú thêm).
+ * @param {string|null|undefined} formattedText — nên dùng output sau formatDispatchRequestNotesForDisplay
+ * @returns {{ banner: string | null, sections: Array<{ title: string, content: string }> }}
+ */
+export function splitDispatchRequestNotesVisualSections(formattedText) {
+  let text = String(formattedText ?? '').replace(/\r\n/g, '\n').trim()
+  if (!text) {
+    return { banner: null, sections: [] }
+  }
+
+  let appendix = ''
+  const appendixRe = /\n\n—{2,}\n\nGhi chú thêm:\n\n/
+  const appendixIdx = text.search(appendixRe)
+  if (appendixIdx >= 0) {
+    appendix = text.slice(appendixIdx).replace(appendixRe, '').trim()
+    text = text.slice(0, appendixIdx).trim()
+  }
+
+  const mainPart = text
+  const lines = mainPart.split('\n')
+  let banner = null
+  /** @type {Array<{ title: string, content: string }>} */
+  const sections = []
+  let title = 'Chi tiết đề nghị'
+  /** @type {string[]} */
+  let buf = []
+
+  const flush = () => {
+    const content = buf.join('\n').trim()
+    buf = []
+    if (!content) return
+    sections.push({ title, content })
+    title = 'Chi tiết đề nghị'
+  }
+
+  for (const raw of lines) {
+    const t = raw.trim()
+    if (/^=+$/.test(t)) continue
+
+    const eqLine = t.match(/^=+\s*(.+?)\s*=+\s*$/)
+    if (eqLine && eqLine[1]) {
+      flush()
+      banner = eqLine[1].trim()
+      continue
+    }
+
+    if (BM03_KNOWN_SECTION_HEADERS.has(t)) {
+      flush()
+      title = t
+      continue
+    }
+
+    if (/^---\s*Hệ thống/i.test(t)) {
+      flush()
+      title = 'Hệ thống'
+      buf.push(raw)
+      continue
+    }
+
+    buf.push(raw)
+  }
+  flush()
+
+  if (sections.length === 0 && mainPart.trim()) {
+    sections.push({ title: 'Chi tiết đề nghị', content: mainPart.trim() })
+  }
+
+  if (appendix) {
+    sections.push({ title: 'Ghi chú thêm', content: appendix })
+  }
+
+  return { banner, sections }
+}

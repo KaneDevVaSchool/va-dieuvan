@@ -337,15 +337,32 @@
                     <span>{{ passengerOrCargoLine }}</span>
                   </dd>
                 </div>
-                <div v-if="hasRequestNotesBlock">
-                  <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ requestNotesLabel }}</dt>
-                  <dd
-                    class="mt-1 max-h-[min(36rem,70vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-800 [overflow-wrap:anywhere]"
-                  >
-                    {{ requestNotesCombined }}
-                  </dd>
-                </div>
               </dl>
+              <div v-if="hasRequestNotesBlock" class="mt-4 border-t border-slate-100 pt-4">
+                <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">{{ requestNotesLabel }}</p>
+                <p
+                  v-if="requestNotesVisualSections.banner"
+                  class="mt-3 rounded-lg border border-teal-100 bg-teal-50/50 px-3 py-2 text-sm font-semibold text-slate-900"
+                >
+                  {{ requestNotesVisualSections.banner }}
+                </p>
+                <div class="mt-3 space-y-3">
+                  <div
+                    v-for="(sec, idx) in requestNotesVisualSections.sections"
+                    :key="idx"
+                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                  >
+                    <h3 class="border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700">
+                      {{ sec.title }}
+                    </h3>
+                    <div
+                      class="max-h-[min(20rem,50vh)] overflow-y-auto whitespace-pre-wrap break-words px-3 py-2.5 text-sm leading-relaxed text-slate-800 [overflow-wrap:anywhere] sm:max-h-[min(28rem,55vh)]"
+                    >
+                      {{ sec.content }}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </aside>
 
@@ -750,7 +767,7 @@ import { formatApiError } from '../../api/http'
 import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripType } from '../../util/labels'
-import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
+import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock, splitDispatchRequestNotesVisualSections } from '../../util/formatDispatchNotes'
 import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
@@ -825,6 +842,10 @@ const requestNotesCombined = computed(() => {
 })
 
 const hasRequestNotesBlock = computed(() => !!requestNotesCombined.value.trim())
+
+const requestNotesVisualSections = computed(() =>
+  splitDispatchRequestNotesVisualSections(requestNotesCombined.value),
+)
 
 /** Một nhãn cố định — tránh nhiều dòng chú thích. */
 const requestNotesLabel = computed(() => 'Chi tiết đề nghị')
