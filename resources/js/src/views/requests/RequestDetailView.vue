@@ -469,127 +469,156 @@
               </section>
             </div>
 
-            <div v-show="activeTab === 'proposal'" class="space-y-4">
-              <section
-                v-if="req"
-                class="overflow-hidden rounded-xl border border-amber-200/90 bg-gradient-to-br from-amber-50/90 via-white to-white p-4 shadow-sm ring-1 ring-amber-600/10 sm:p-5"
-              >
-                <div class="flex flex-wrap items-start justify-between gap-3 border-b border-amber-100 pb-3">
-                  <div class="flex items-center gap-2 text-amber-900">
-                    <CalculatorIcon class="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
-                    <div>
-                      <h2 class="text-sm font-bold text-slate-900 sm:text-base">Tham chiếu định giá</h2>
-                      <p class="mt-0.5 text-xs text-amber-900/80">
-                        Căn cứ khai báo và dự toán — dùng khi nhập đơn giá dịch vụ ở tab Phê duyệt.
-                      </p>
-                    </div>
-                  </div>
+            <div v-show="activeTab === 'proposal'" class="space-y-5">
+              <section v-if="req" class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
+                <div class="border-b border-slate-200 pb-4">
+                  <h2 class="text-base font-semibold text-slate-900">Thông tin để đối chiếu giá</h2>
+                  <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                    Các mục dưới đây lấy từ đơn đề nghị và hệ thống tính sơ bộ. Khi nhập
+                    <strong class="font-semibold text-slate-800">đơn giá dịch vụ</strong>, mở thêm tab
+                    <strong class="font-semibold text-slate-800">Phê duyệt</strong> (nút “Bảng giá tham chiếu” nếu cần).
+                  </p>
                 </div>
-                <dl class="mt-4 grid gap-3 text-xs sm:grid-cols-2 sm:text-sm">
-                  <div class="sm:col-span-2">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Lộ trình</dt>
-                    <dd class="mt-1 font-semibold text-slate-900 [overflow-wrap:anywhere]">
+                <dl class="divide-y divide-slate-100 text-sm">
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="flex items-start gap-2 font-medium text-slate-600">
+                      <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span>Lộ trình xe</span>
+                    </dt>
+                    <dd class="font-medium text-slate-900 [overflow-wrap:anywhere] sm:text-base">
                       <span>{{ req.origin || '—' }}</span>
-                      <span class="mx-2 text-slate-400">→</span>
+                      <span class="mx-1.5 text-slate-400">→</span>
                       <span>{{ req.destination || '—' }}</span>
                     </dd>
                   </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Khoảng cách (ước tính)</dt>
-                    <dd class="mt-1 font-medium text-slate-900">
-                      {{ costEstimate?.distanceLabel != null ? `~ ${costEstimate.distanceLabel}` : '—' }}
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="flex items-start gap-2 font-medium text-slate-600">
+                      <InformationCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span>Khoảng cách (ước tính)</span>
+                    </dt>
+                    <dd class="text-slate-900 sm:text-base">
+                      {{ costEstimate?.distanceLabel != null ? `khoảng ${costEstimate.distanceLabel}` : '—' }}
                     </dd>
                   </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Thời gian sử dụng</dt>
-                    <dd class="mt-1 font-medium text-slate-900">
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="flex items-start gap-2 font-medium text-slate-600">
+                      <CalendarDaysIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span>Ngày dùng xe</span>
+                    </dt>
+                    <dd class="text-slate-900 sm:text-base">
                       {{ fmtDateVi(req.depart_at) }}
-                      <span class="text-slate-500"> · </span>
+                    </dd>
+                  </div>
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="flex items-start gap-2 font-medium text-slate-600">
+                      <ClockIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span>Giờ đi — giờ về</span>
+                    </dt>
+                    <dd class="text-slate-900 sm:text-base">
                       {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
                     </dd>
                   </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Số người / tải</dt>
-                    <dd class="mt-1 font-medium text-slate-900">{{ passengerOrCargoLine }}</dd>
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="flex items-start gap-2 font-medium text-slate-600">
+                      <CubeIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span>Số người hoặc tải</span>
+                    </dt>
+                    <dd class="text-slate-900 sm:text-base">{{ passengerOrCargoLine }}</dd>
                   </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Loại xe đề xuất</dt>
-                    <dd class="mt-1 font-medium text-slate-900">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="flex items-start gap-2 font-medium text-slate-600">
+                      <TruckIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span>Gợi ý loại xe</span>
+                    </dt>
+                    <dd class="text-slate-900 sm:text-base">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
                   </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Đơn giá tham chiếu (khai báo)</dt>
-                    <dd class="mt-1 font-semibold tabular-nums text-amber-950">
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="flex items-start gap-2 font-medium text-slate-600">
+                      <CurrencyDollarIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span>Đơn giá người gửi đã khai</span>
+                    </dt>
+                    <dd class="font-medium tabular-nums text-slate-900 sm:text-base">
                       {{ costEstimate?.refUnitLabel ?? '—' }}
                     </dd>
                   </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Phí cầu đường (dự kiến)</dt>
-                    <dd class="mt-1 font-medium tabular-nums text-slate-900">{{ costEstimate?.tollLabel ?? '—' }}</dd>
+                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
+                    <dt class="font-medium text-slate-600 sm:pl-6">Phí cầu đường (dự kiến)</dt>
+                    <dd class="tabular-nums text-slate-900 sm:text-base">{{ costEstimate?.tollLabel ?? '—' }}</dd>
                   </div>
-                  <div class="sm:col-span-2">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-amber-800/80">Tổng dự toán (theo khai báo)</dt>
-                    <dd class="mt-1 text-lg font-bold tabular-nums text-teal-700 sm:text-xl">
+                  <div class="grid gap-1 border-t-2 border-slate-200 py-4 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4">
+                    <dt class="flex items-start gap-2 font-semibold text-slate-800">
+                      <CalculatorIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                      <span>Tổng chi phí sơ bộ</span>
+                    </dt>
+                    <dd class="text-lg font-semibold tabular-nums text-slate-900 sm:text-xl">
                       {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
                     </dd>
                   </div>
                 </dl>
               </section>
 
-              <template v-if="hasRequestNotesBlock">
-                <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <h2 class="border-b border-slate-100 pb-2 text-sm font-semibold text-slate-900 sm:text-base">
+              <template v-if="hasVisibleProposalNotesContent">
+                <div class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
+                  <h2 class="text-base font-semibold text-slate-900">
                     {{ t('request_detail.proposal_detail_label') }}
                   </h2>
-                  <p
-                    v-if="requestNotesVisualSections.banner"
-                    class="mt-3 rounded-lg border border-teal-100 bg-teal-50/50 px-3 py-2 text-sm font-semibold text-slate-900"
-                  >
-                    {{ requestNotesVisualSections.banner }}
-                  </p>
-                  <div class="mt-4 space-y-3">
-                    <div
-                      v-for="(sec, idx) in requestNotesVisualSections.sections"
-                      :key="idx"
-                      class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                  <p class="mt-1 text-sm text-slate-600">
+                    Nội dung do người gửi đơn khai báo; các dòng có
+                    <span class="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 text-xs font-medium text-slate-800"
+                      >ĐG / PS</span
                     >
-                      <h3
-                        class="border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700"
-                      >
+                    là đơn giá và phát sinh (nếu có).
+                  </p>
+                  <p
+                    v-if="requestNotesProposalDisplay.banner"
+                    class="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
+                  >
+                    {{ requestNotesProposalDisplay.banner }}
+                  </p>
+                  <div class="mt-5 space-y-4">
+                    <div
+                      v-for="(sec, idx) in requestNotesProposalDisplay.sections"
+                      :key="idx"
+                      class="rounded-lg border border-slate-200"
+                    >
+                      <h3 class="border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-900">
                         {{ sec.title }}
                       </h3>
-                      <div class="space-y-2.5 px-3 py-3 text-sm leading-relaxed text-slate-800 [overflow-wrap:anywhere]">
+                      <div class="space-y-2 px-3 py-3 text-sm text-slate-800 [overflow-wrap:anywhere]">
                         <template v-for="(item, iidx) in parseSectionContent(sec.content)" :key="iidx">
                           <div
                             v-if="item.type === 'kv'"
-                            class="flex flex-col gap-0.5 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+                            class="grid gap-0.5 rounded-md border border-slate-100 py-2 pl-3 pr-3 sm:grid-cols-[minmax(0,40%)_1fr] sm:gap-3"
                           >
-                            <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                            <dt class="text-sm font-medium text-slate-600">
                               {{ item.key }}
                             </dt>
-                            <dd class="text-sm font-medium text-slate-900 sm:max-w-[65%] sm:text-right">
+                            <dd class="text-sm font-medium text-slate-900">
                               {{ item.value }}
                             </dd>
                           </div>
 
                           <div
                             v-else-if="item.type === 'row'"
-                            class="flex gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm ring-1 ring-slate-900/[0.04]"
+                            class="flex gap-3 rounded-md border border-slate-200 bg-slate-50/50 p-3"
                           >
                             <div
-                              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-xs font-bold text-teal-800 ring-1 ring-teal-600/15"
+                              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-sm font-semibold text-slate-800"
+                              aria-hidden="true"
                             >
                               {{ item.index }}
                             </div>
                             <div class="min-w-0 flex-1">
+                              <p class="sr-only">Hàng {{ item.index }}</p>
                               <div class="flex flex-wrap gap-2">
                                 <span
                                   v-for="(seg, si) in item.segments"
                                   :key="si"
-                                  class="inline-flex max-w-full break-words rounded-md px-2 py-1 text-xs font-medium sm:text-sm"
+                                  class="inline-flex max-w-full break-words rounded-md border px-2 py-1 text-xs sm:text-sm"
                                   :class="
                                     segmentHighlightsPricing(seg)
-                                      ? 'bg-amber-100 text-amber-950 ring-1 ring-amber-300/60'
-                                      : 'bg-slate-100 text-slate-800 ring-1 ring-slate-200/80'
+                                      ? 'border-amber-400 bg-amber-50 font-medium text-amber-950'
+                                      : 'border-slate-200 bg-white text-slate-800'
                                   "
                                 >
                                   {{ seg }}
@@ -600,10 +629,12 @@
 
                           <div
                             v-else-if="item.type === 'total'"
-                            class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-teal-50/90 px-3 py-2.5 ring-1 ring-teal-600/10"
+                            class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3 py-3"
                           >
-                            <span class="text-xs font-semibold text-teal-900">{{ item.label }}</span>
-                            <span class="text-base font-bold tabular-nums text-teal-700 sm:text-lg">{{ item.amount }}</span>
+                            <span class="text-sm font-medium text-slate-700">{{ item.label }}</span>
+                            <span class="text-base font-semibold tabular-nums text-slate-900 sm:text-lg">{{
+                              item.amount
+                            }}</span>
                           </div>
 
                           <p v-else-if="item.type === 'raw' && item.text" class="whitespace-pre-wrap text-sm text-slate-700">
@@ -617,7 +648,7 @@
               </template>
               <div
                 v-else
-                class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500"
+                class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-12 text-center text-sm text-slate-600"
               >
                 {{ t('request_detail.proposal_detail_empty') }}
               </div>
@@ -993,6 +1024,7 @@ import {
   FlagIcon,
   HandThumbUpIcon,
   InformationCircleIcon,
+  MapPinIcon,
   PaperClipIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
@@ -1104,10 +1136,34 @@ const requestNotesCombined = computed(() => {
   return ''
 })
 
-const hasRequestNotesBlock = computed(() => !!requestNotesCombined.value.trim())
-
 const requestNotesVisualSections = computed(() =>
   splitDispatchRequestNotesVisualSections(requestNotesCombined.value),
+)
+
+/** Ẩn dòng banner === ... === của phiếu BM.03 bản điện tử (chỉ UI, không đổi dữ liệu gốc). */
+function isHiddenProposalBanner(banner) {
+  const s = String(banner || '').trim()
+  if (!s) return false
+  return (
+    /đề\s*nghị\s*điều\s*vận/i.test(s) ||
+    /BM\.03/i.test(s) ||
+    /MH\.QT\.04/i.test(s) ||
+    /bản\s*điện\s*tử/i.test(s)
+  )
+}
+
+const requestNotesProposalDisplay = computed(() => {
+  const { banner, sections } = requestNotesVisualSections.value
+  const showBanner = banner && !isHiddenProposalBanner(banner) ? banner : null
+  const showSections = sections.filter(
+    (sec) => sec.title !== 'Hệ thống' && sec.title !== 'Chi tiết đề nghị',
+  )
+  return { banner: showBanner, sections: showSections }
+})
+
+const hasVisibleProposalNotesContent = computed(
+  () =>
+    !!(requestNotesProposalDisplay.value.banner || requestNotesProposalDisplay.value.sections.length),
 )
 
 const requestRefCode = computed(() => {
