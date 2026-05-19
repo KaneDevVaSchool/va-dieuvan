@@ -256,7 +256,7 @@ import { formatApiError } from '../../api/http'
 import DeptRequestCard from '../../components/dept/DeptRequestCard.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import { labelTripType } from '../../util/labels'
+import { labelTripType, labelRequestStatus } from '../../util/labels'
 
 const FILTER_VISIBILITY_KEY = 'va.dept.all.filter_vis_v1'
 const DEFAULT_PER_PAGE = 20
@@ -310,7 +310,7 @@ const statusFilterOptions = computed(() => [
   { value: '', label: t('dept.filter_status_all') },
   ...STATUS_VALUES.map((value) => ({
     value,
-    label: t(`request_detail.request_status.${value}`),
+    label: labelRequestStatus(value),
   })),
 ])
 
@@ -339,8 +339,7 @@ const activeFilterCount = computed(() => {
 
 function statusLabel(value) {
   if (!value) return t('dept.filter_status_all')
-  const key = `request_detail.request_status.${value}`
-  return t(key)
+  return labelRequestStatus(value)
 }
 
 function tripTypeLabel(value) {

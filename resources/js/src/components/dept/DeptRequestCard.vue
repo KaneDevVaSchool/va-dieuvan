@@ -85,7 +85,7 @@ import {
   UserIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../ui/Button.vue'
-import { labelTripType } from '../../util/labels'
+import { labelTripType, labelRequestStatus } from '../../util/labels'
 
 const props = defineProps({
   req: { type: Object, required: true },
@@ -110,7 +110,7 @@ const statusLabel = computed(() => {
   const s = props.req.status
   if (s === 'price_filled') return t('dept.badge_new_pending')
   if (s === 'pending') return t('dept.badge_waiting_price')
-  return t(`request_detail.request_status.${s}`)
+  return labelRequestStatus(s)
 })
 
 const statusBadgeClass = computed(() => {
