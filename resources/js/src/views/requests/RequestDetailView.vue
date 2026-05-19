@@ -1,5 +1,10 @@
 <template>
-  <div class="flex h-screen flex-col overflow-hidden bg-slate-50">
+  <div
+    :class="[
+      'flex flex-col overflow-hidden bg-slate-50',
+      isDeptRequestDetailRoute ? 'min-h-0 min-w-0 flex-1' : 'h-screen',
+    ]"
+  >
     <div v-if="loading" class="flex flex-1 items-center justify-center px-4 py-12 text-sm text-slate-500">
       Đang tải…
     </div>

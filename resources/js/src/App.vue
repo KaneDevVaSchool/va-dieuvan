@@ -6,16 +6,17 @@
   />
     <template v-else>
       <Onboarding
-        v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !isPortalShell"
+        v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !isPortalShell && !isDeptShell"
         @done="completeOnboarding"
       />
     <template v-else>
       <LayoutDriver v-if="isDriverApp">
         <RouterView />
       </LayoutDriver>
-      <AppShell v-else-if="!isLoginLayout">
+      <AppShell v-else-if="!isLoginLayout && !isDeptShell">
         <RouterView />
       </AppShell>
+      <RouterView v-else-if="isDeptShell" />
       <RouterView v-else />
     </template>
   </template>
@@ -46,6 +47,12 @@ const auth = useAuthStore()
 const { hasOnboarded, completeOnboarding } = useOnboarding()
 
 const isPortalShell = computed(() => route.matched.some((record) => record.meta.portal))
+const isDeptShell = computed(
+  () =>
+    route.path === '/dept' ||
+    route.path.startsWith('/dept/') ||
+    route.matched.some((record) => record.meta.deptHead === true),
+)
 
 const isLoginLayout = computed(() => route.name === 'login' || isPortalShell.value)
 const isDriverApp = computed(() => !!route.meta?.driverApp)

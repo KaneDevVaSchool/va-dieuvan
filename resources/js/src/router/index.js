@@ -12,6 +12,7 @@ function scrollAppMainToTop() {
     if (typeof document === "undefined") return;
     requestAnimationFrame(() => {
         document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "auto" });
+        document.getElementById("dept-main-scroll")?.scrollTo({ top: 0, behavior: "auto" });
     });
 }
 

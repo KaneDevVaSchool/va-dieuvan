@@ -155,7 +155,24 @@
           <XCircleIcon class="h-5 w-5 shrink-0 opacity-90" aria-hidden="true" />
           <span v-if="!compactNav" class="min-w-0 flex-1 truncate">{{ t('dept.nav_rejected') }}</span>
         </RouterLink>
+
+        <RouterLink
+          :to="{ name: 'deptAll' }"
+          :class="navLinkClass('deptAll')"
+          :title="compactNav ? t('dept.nav_all') : undefined"
+          @click="closeMobileDrawer"
+        >
+          <QueueListIcon class="h-5 w-5 shrink-0 opacity-90" aria-hidden="true" />
+          <span v-if="!compactNav" class="min-w-0 flex-1 truncate">{{ t('dept.nav_all') }}</span>
+        </RouterLink>
       </nav>
+
+      <div
+        class="shrink-0 border-t border-white/15 py-1.5 md:py-2"
+        :class="compactNav ? 'flex justify-center px-1 md:px-1.5' : 'flex items-center px-2 md:px-3'"
+      >
+        <NotificationBell tone="brand" />
+      </div>
 
       <div class="shrink-0 border-t border-white/15 p-2 md:p-3">
         <p
@@ -187,6 +204,32 @@
     </aside>
 
     <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+      <header
+        v-if="route.name !== 'deptRequestDetail'"
+        class="sticky top-0 z-30 hidden shrink-0 border-b border-slate-200/90 bg-white/95 px-4 py-4 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 md:flex md:px-6 lg:px-8"
+      >
+        <div class="min-w-0 flex-1">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {{ t('portal.nav_title') }}
+            <span class="text-slate-300 dark:text-slate-600"> · </span>
+            <span class="text-slate-600 dark:text-slate-300">{{ deptDisplayName }}</span>
+          </p>
+          <h1 class="mt-0.5 truncate text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            {{ pageTitle }}
+          </h1>
+          <p v-if="pageSubtitle" class="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
+            {{ pageSubtitle }}
+          </p>
+        </div>
+        <span
+          v-if="summary.pending_count > 0 && route.name === 'deptDashboard'"
+          class="ml-4 inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-[color:var(--va-brand)]/10 px-3 py-1.5 text-xs font-semibold text-[color:var(--va-brand)] ring-1 ring-[color:var(--va-brand)]/20"
+        >
+          {{ t('dept.kpi_pending') }}
+          <span class="tabular-nums">{{ summary.pending_count }}</span>
+        </span>
+      </header>
+
       <header
         class="sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b border-slate-200/90 bg-white/95 px-3 py-2.5 shadow-sm backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 md:hidden"
       >
@@ -233,7 +276,12 @@
 
       <main
         id="dept-main-scroll"
-        class="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6"
+        :class="[
+          'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden',
+          route.name === 'deptRequestDetail'
+            ? 'flex flex-col p-0'
+            : 'px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
+        ]"
       >
         <RouterView />
       </main>
@@ -252,9 +300,11 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ClipboardDocumentListIcon,
+  QueueListIcon,
   XCircleIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import { useAuthStore } from '../../store'
 import { getDeptSummary } from '../../api/requests'
 
@@ -291,6 +341,16 @@ const verticalAsideWidthClass = computed(() => {
     return 'w-[min(17.5rem,calc(100vw-3rem))] min-w-[13rem] max-w-[min(17.5rem,calc(100vw-3rem))] sm:w-56 md:w-[4.25rem] md:min-w-[4.25rem] md:max-w-[4.25rem]'
   }
   return 'w-[min(17.5rem,calc(100vw-3rem))] min-w-[13rem] max-w-[min(17.5rem,calc(100vw-3rem))] sm:w-56 md:w-60 lg:w-64'
+})
+
+const pageTitle = computed(() => {
+  const title = route.meta?.title
+  return typeof title === 'string' && title ? title : t('portal.nav_title')
+})
+
+const pageSubtitle = computed(() => {
+  const sub = route.meta?.subtitle
+  return typeof sub === 'string' && sub ? sub : ''
 })
 
 const deptDisplayName = computed(() => {

@@ -1,8 +1,5 @@
 <template>
-  <div class="px-6 py-8 lg:px-10">
-    <header class="max-w-5xl">
-      <h1 class="text-2xl font-bold text-slate-900">{{ t('dept.list_all_title') }}</h1>
-    </header>
+  <div class="mx-auto w-full max-w-5xl">
 
     <div class="mt-6 flex max-w-5xl flex-wrap gap-2">
       <button

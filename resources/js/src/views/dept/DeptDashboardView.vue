@@ -1,13 +1,16 @@
 <template>
-  <div class="px-6 py-8 lg:px-10">
-    <header class="max-w-5xl">
-      <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+  <div class="mx-auto w-full max-w-5xl">
+    <header class="md:hidden">
+      <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
         {{ t('dept.pending_heading', { dept: deptName }) }}
       </h1>
-      <p class="mt-2 text-sm text-slate-600">
+      <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
         {{ t('dept.pending_subtitle', { count: summary.pending_count }) }}
       </p>
     </header>
+    <p class="mt-0 hidden text-sm text-slate-600 dark:text-slate-400 md:block">
+      {{ t('dept.pending_subtitle', { count: summary.pending_count }) }}
+    </p>
 
     <div class="mt-8 grid max-w-5xl gap-4 sm:grid-cols-3">
       <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">

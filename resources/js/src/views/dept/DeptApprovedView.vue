@@ -1,8 +1,5 @@
 <template>
-  <div class="px-6 py-8 lg:px-10">
-    <header class="max-w-5xl">
-      <h1 class="text-2xl font-bold text-slate-900">{{ t('dept.list_approved_title') }}</h1>
-    </header>
+  <div class="mx-auto w-full max-w-5xl">
     <div v-if="error" class="mt-6 max-w-5xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
       {{ error }}
     </div>
