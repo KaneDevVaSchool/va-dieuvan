@@ -292,10 +292,15 @@ export async function fillPriceDispatchRequest(dispatchRequestId, payload) {
 }
 
 /**
- * @returns {Promise<Array<{ id: number, name: string, employee_code: string|null }>>}
+ * Trưởng BP cùng phòng với người đề xuất (`q`: lọc; `pick`: luôn trả user ID nếu hợp lệ).
+ * @returns {Promise<Array<{ id: number, name: string, employee_code: string|null, email?: string|null }>>}
  */
-export async function getAvailableDeptHeads(dispatchRequestId) {
-  const { data } = await http.get(`/dispatch-requests/${dispatchRequestId}/available-dept-heads`)
+export async function getAvailableDeptHeads(dispatchRequestId, opts = {}) {
+  const params = {}
+  if (opts.q != null && String(opts.q).trim() !== '') params.q = String(opts.q).trim()
+  if (opts.pick != null && opts.pick !== '') params.pick = opts.pick
+
+  const { data } = await http.get(`/dispatch-requests/${dispatchRequestId}/available-dept-heads`, { params })
   return data.data ?? []
 }
 

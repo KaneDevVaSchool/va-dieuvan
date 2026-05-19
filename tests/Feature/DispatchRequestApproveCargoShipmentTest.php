@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CargoShipment;
+use App\Models\Department;
 use App\Models\DispatchRequest;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
@@ -17,13 +18,15 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
     {
         $this->seed(RbacSeeder::class);
 
+        $dept = Department::query()->create(['name' => 'Test Dept Cargo', 'code' => 'TDC']);
+
         $dispatcher = User::factory()->create();
         $dispatcher->assignRole('dispatcher');
 
-        $departmentHead = User::factory()->create();
+        $departmentHead = User::factory()->create(['department_id' => $dept->id]);
         $departmentHead->assignRole('department_head');
 
-        $requester = User::factory()->create();
+        $requester = User::factory()->create(['department_id' => $dept->id]);
         $requester->assignRole('internal_user');
 
         $dr = DispatchRequest::create([
@@ -56,6 +59,7 @@ class DispatchRequestApproveCargoShipmentTest extends TestCase
 
         $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
             'service_price' => 250000,
+            'dept_head_user_id' => $departmentHead->id,
         ])->assertSuccessful();
 
         $this->actingAs($departmentHead);

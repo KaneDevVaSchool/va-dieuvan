@@ -14,6 +14,8 @@ final class Messages
 
     public const REQUEST_DEPT_HEAD_REQUIRES_DEPARTMENT = 'Không thể chỉ định trưởng đơn vị khi người đề xuất chưa thuộc phòng ban.';
 
+    public const REQUEST_DEPT_HEAD_REQUIRED = 'Vui lòng chọn Trưởng đơn vị nhận duyệt trước khi chuyển phiếu.';
+
     public const REQUEST_NOT_PRICE_FILLED = 'Yêu cầu chưa ở trạng thái đã điền giá; không thể duyệt theo quy trình này.';
 
     public const REQUEST_PAPER_NOT_RECEIVED = 'Phiếu giấy chưa ở trạng thái đã nhận; không thể hoàn tác.';

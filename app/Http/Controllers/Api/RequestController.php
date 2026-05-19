@@ -321,9 +321,20 @@ class RequestController extends Controller
         }
 
         if ($user->hasPermission('request.approve_dept') && $user->department_id !== null) {
-            return $q->whereHas('requester',
+            $q->whereHas('requester',
                 fn (Builder $b) => $b->where('department_id', (int) $user->department_id)
             );
+            $deptHeadPure = ! $user->hasPermission('trip.view_all')
+                && ! $user->hasPermission('request.approve');
+            if ($deptHeadPure) {
+                $uid = (int) $user->id;
+                $q->where(function (Builder $w) use ($uid): void {
+                    $w->whereNull('assigned_dept_head_id')
+                        ->orWhere('assigned_dept_head_id', $uid);
+                });
+            }
+
+            return $q;
         }
 
         $q->where('requester_id', $user->id);

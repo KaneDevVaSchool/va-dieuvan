@@ -23,4 +23,7 @@ return [
 
     /** Số ngày tới sinh sẵn phiếu lặp trong `dispatch:materialize-recurring-requests`. */
     'recurring_materialization_horizon_days' => max(1, (int) env('DISPATCH_RECURRING_HORIZON_DAYS', 21)),
+
+    /** Footer email chờ duyệt trưởng đơn vị (mailto hoặc chuỗi hiển thị). */
+    'mail_helpdesk' => env('DISPATCH_MAIL_HELPDESK', ''),
 ];

@@ -203,6 +203,88 @@
                   <p class="text-[11px] text-slate-500 sm:self-start sm:max-w-[12rem]">(Liên hệ NV Điều vận để điền thông tin chi phí)</p>
                 </div>
               </div>
+              <div
+                v-if="showFillPriceSection"
+                class="border-t border-slate-200 bg-slate-50 px-3 py-4 sm:px-4"
+              >
+                <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
+                  <div class="flex min-w-[10rem] max-w-md flex-1 flex-col gap-1">
+                    <label class="text-xs font-medium text-slate-600" for="bm03-assign-dept-head-input-cargo">{{ t('request_detail.assign_dept_head_label') }}</label>
+                    <div class="relative">
+                      <input
+                        id="bm03-assign-dept-head-input-cargo"
+                        v-model="deptHeadSearchQ"
+                        type="search"
+                        role="combobox"
+                        autocomplete="off"
+                        :aria-expanded="deptHeadDropdownOpen && deptHeadSearchQ.trim().length >= 2"
+                        aria-controls="bm03-dept-head-list-cargo"
+                        :disabled="fillPriceActing || deptHeadsBlocked"
+                        :placeholder="t('request_detail.assign_dept_head_combo_ph')"
+                        class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 outline-none ring-slate-500/20 placeholder:text-slate-400 focus:border-slate-500 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-60"
+                        @input="scheduleDeptHeadSearch"
+                        @focus="onDeptHeadFocus"
+                        @blur="onDeptHeadBlur"
+                      />
+                      <div
+                        v-if="deptHeadSearchLoading"
+                        class="absolute right-3 top-[0.6875rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                      />
+                      <ul
+                        v-if="deptHeadDropdownOpen && deptHeadSearchQ.trim().length >= 2"
+                        id="bm03-dept-head-list-cargo"
+                        class="absolute z-40 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                        role="listbox"
+                      >
+                        <li v-if="deptHeadSearchLoading" class="px-3 py-2.5 text-slate-500">
+                          {{ t('request_detail.assign_dept_head_loading') }}
+                        </li>
+                        <template v-else-if="deptHeadOptions.length">
+                          <li v-for="u in deptHeadOptions" :key="'dhc-' + u.id">
+                            <button
+                              type="button"
+                              class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                              @mousedown.prevent="pickDeptHead(u)"
+                            >
+                              <span class="font-medium text-slate-900">{{ u.name }}</span>
+                              <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                            </button>
+                          </li>
+                        </template>
+                        <li v-else class="px-3 py-2.5 text-slate-500">{{ t('request_detail.assign_dept_head_no_match') }}</li>
+                      </ul>
+                    </div>
+                    <p v-if="deptHeadsLoadErr" class="text-xs text-rose-600">{{ deptHeadsLoadErr }}</p>
+                    <p v-else-if="assignDeptHeadClientErr" class="text-xs text-rose-600">{{ assignDeptHeadClientErr }}</p>
+                    <p v-else-if="deptHeadAssignRequired && deptHeadSearchHint" class="text-xs text-slate-500">{{ deptHeadSearchHint }}</p>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <Button
+                      type="button"
+                      class="min-h-[2.375rem] shadow-sm sm:min-h-[2.375rem]"
+                      :loading="fillPriceActing"
+                      @click="emitSaveRowPrices(true)"
+                    >
+                      {{ t('request_detail.fill_price_submit') }}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      :disabled="fillPriceActing"
+                      class="min-h-[2.375rem]"
+                      @click="emit('open-reference-pricing')"
+                    >
+                      {{ t('request_detail.reference_pricing_link') }}
+                    </Button>
+                  </div>
+                  <p
+                    v-if="fillPriceMsg"
+                    class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-800 sm:w-auto sm:flex-1 sm:min-w-[12rem]"
+                  >
+                    {{ fillPriceMsg }}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div v-else-if="!isBusiness" class="overflow-x-auto rounded-lg border border-slate-300">
@@ -368,32 +450,64 @@
               class="border-t border-slate-200 bg-slate-50 px-3 py-4 sm:px-4"
             >
               <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
-                <div class="flex min-w-[10rem] max-w-xs flex-col gap-1">
-                  <label class="text-xs font-medium text-slate-600" for="bm03-assign-dept-head">
+                <div class="flex min-w-[10rem] max-w-md flex-1 flex-col gap-1">
+                  <label class="text-xs font-medium text-slate-600" for="bm03-assign-dept-head-input">
                     {{ t('request_detail.assign_dept_head_label') }}
                   </label>
-                  <select
-                    id="bm03-assign-dept-head"
-                    v-model="selectedDeptHeadId"
-                    :disabled="fillPriceActing || deptHeadsLoading"
-                    class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 outline-none ring-slate-500/20 focus:border-slate-500 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <option value="">{{ t('request_detail.assign_dept_head_placeholder') }}</option>
-                    <option v-for="u in deptHeadOptions" :key="u.id" :value="String(u.id)">
-                      {{ u.name }}{{ u.employee_code ? ` (${u.employee_code})` : '' }}
-                    </option>
-                  </select>
-                  <p v-if="deptHeadsLoadErr" class="text-xs text-slate-600">{{ deptHeadsLoadErr }}</p>
-                  <p v-else-if="deptHeadsLoading" class="text-xs text-slate-500">
-                    {{ t('request_detail.assign_dept_head_loading') }}
-                  </p>
+                  <div class="relative">
+                    <input
+                      id="bm03-assign-dept-head-input"
+                      v-model="deptHeadSearchQ"
+                      type="search"
+                      role="combobox"
+                      autocomplete="off"
+                      :aria-expanded="deptHeadDropdownOpen && deptHeadSearchQ.trim().length >= 2"
+                      aria-controls="bm03-dept-head-list"
+                      :disabled="fillPriceActing || deptHeadsBlocked"
+                      :placeholder="t('request_detail.assign_dept_head_combo_ph')"
+                      class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 outline-none ring-slate-500/20 placeholder:text-slate-400 focus:border-slate-500 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-60"
+                      @input="scheduleDeptHeadSearch"
+                      @focus="onDeptHeadFocus"
+                      @blur="onDeptHeadBlur"
+                    />
+                    <div
+                      v-if="deptHeadSearchLoading"
+                      class="absolute right-3 top-[0.6875rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                    />
+                    <ul
+                      v-if="deptHeadDropdownOpen && deptHeadSearchQ.trim().length >= 2"
+                      id="bm03-dept-head-list"
+                      class="absolute z-40 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                      role="listbox"
+                    >
+                      <li v-if="deptHeadSearchLoading" class="px-3 py-2.5 text-slate-500">
+                        {{ t('request_detail.assign_dept_head_loading') }}
+                      </li>
+                      <template v-else-if="deptHeadOptions.length">
+                        <li v-for="u in deptHeadOptions" :key="'dh-' + u.id">
+                          <button
+                            type="button"
+                            class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-800/5"
+                            @mousedown.prevent="pickDeptHead(u)"
+                          >
+                            <span class="font-medium text-slate-900">{{ u.name }}</span>
+                            <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                          </button>
+                        </li>
+                      </template>
+                      <li v-else class="px-3 py-2.5 text-slate-500">{{ t('request_detail.assign_dept_head_no_match') }}</li>
+                    </ul>
+                  </div>
+                  <p v-if="deptHeadsLoadErr" class="text-xs text-rose-600">{{ deptHeadsLoadErr }}</p>
+                  <p v-else-if="assignDeptHeadClientErr" class="text-xs text-rose-600">{{ assignDeptHeadClientErr }}</p>
+                  <p v-else-if="deptHeadAssignRequired && deptHeadSearchHint" class="text-xs text-slate-500">{{ deptHeadSearchHint }}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5">
                   <Button
                     type="button"
                     class="min-h-[2.375rem] shadow-sm sm:min-h-[2.375rem]"
                     :loading="fillPriceActing"
-                    @click="emitSaveRowPrices"
+                    @click="emitSaveRowPrices(false)"
                   >
                     {{ t('request_detail.fill_price_submit') }}
                   </Button>
@@ -552,41 +666,143 @@ const emit = defineEmits([
 ])
 
 const deptHeadOptions = ref([])
-const deptHeadsLoading = ref(false)
 const deptHeadsLoadErr = ref('')
+const deptHeadSearchQ = ref('')
+const deptHeadDropdownOpen = ref(false)
+const deptHeadSearchLoading = ref(false)
+let deptHeadSearchTimer = null
+const assignDeptHeadClientErr = ref('')
 const selectedDeptHeadId = ref('')
+/** Nhãn ô tìm khi đã pick — đổi nội dung ô ⇒ bỏ chọn để tránh nhầm ID */
+const deptHeadLockedLabel = ref('')
+
+const deptHeadAssignRequired = computed(
+  () => props.showFillPriceSection && props.req?.requester?.department_id != null,
+)
+
+const deptHeadsBlocked = computed(() => props.fillPriceActing || props.req?.requester?.department_id == null)
+
+const deptHeadSearchHint = computed(() => t('request_detail.assign_dept_head_combo_hint'))
+
+function formatDeptHeadChosenLabel(u) {
+  const email = u?.email ? String(u.email).trim() : ''
+  const name = u?.name ? String(u.name).trim() : ''
+  return email !== '' ? `${name} — ${email}` : name
+}
 
 watch(
-  () => [props.showFillPriceSection, props.req?.id],
-  async ([show, id]) => {
-    if (!show || id == null) {
+  () => props.showFillPriceSection,
+  (on) => {
+    if (!on) {
+      deptHeadSearchQ.value = ''
+      deptHeadDropdownOpen.value = false
+      assignDeptHeadClientErr.value = ''
       deptHeadOptions.value = []
+      selectedDeptHeadId.value = ''
+      deptHeadLockedLabel.value = ''
+      clearTimeout(deptHeadSearchTimer)
+      deptHeadSearchTimer = null
+    }
+  },
+)
+
+watch(
+  () => [props.showFillPriceSection, props.req?.id, props.req?.assigned_dept_head_id],
+  async ([show, rid, hid]) => {
+    if (!show || rid == null) {
       return
     }
-    deptHeadsLoading.value = true
-    deptHeadsLoadErr.value = ''
-    try {
-      deptHeadOptions.value = await getAvailableDeptHeads(id)
-    } catch (e) {
-      deptHeadsLoadErr.value =
-        typeof e?.response?.data?.message === 'string'
-          ? e.response.data.message
-          : t('request_detail.assign_dept_head_load_err')
+    if (hid != null) {
+      deptHeadsLoadErr.value = ''
+      deptHeadSearchLoading.value = true
+      try {
+        const list = await getAvailableDeptHeads(rid, { pick: hid })
+        deptHeadOptions.value = list ?? []
+        const u = deptHeadOptions.value.find((row) => Number(row.id) === Number(hid))
+        selectedDeptHeadId.value = String(hid)
+        if (u) {
+          deptHeadLockedLabel.value = formatDeptHeadChosenLabel(u)
+          deptHeadSearchQ.value = deptHeadLockedLabel.value
+        }
+      } catch (e) {
+        deptHeadsLoadErr.value =
+          typeof e?.response?.data?.message === 'string'
+            ? e.response.data.message
+            : t('request_detail.assign_dept_head_load_err')
+      } finally {
+        deptHeadSearchLoading.value = false
+      }
+    } else if (hid == null) {
+      selectedDeptHeadId.value = ''
+      deptHeadLockedLabel.value = ''
+      deptHeadSearchQ.value = ''
       deptHeadOptions.value = []
-    } finally {
-      deptHeadsLoading.value = false
     }
   },
   { immediate: true },
 )
 
-watch(
-  () => props.req?.assigned_dept_head_id,
-  (id) => {
-    selectedDeptHeadId.value = id != null ? String(id) : ''
-  },
-  { immediate: true },
-)
+watch(deptHeadSearchQ, () => {
+  if (deptHeadLockedLabel.value === '') return
+  if (deptHeadSearchQ.value.trim() !== deptHeadLockedLabel.value.trim()) {
+    selectedDeptHeadId.value = ''
+  }
+})
+
+function scheduleDeptHeadSearch() {
+  deptHeadsLoadErr.value = ''
+  assignDeptHeadClientErr.value = ''
+  clearTimeout(deptHeadSearchTimer)
+  deptHeadSearchTimer = setTimeout(runDeptHeadSearch, 350)
+}
+
+async function runDeptHeadSearch() {
+  deptHeadDropdownOpen.value = false
+  const rid = props.req?.id
+  if (rid == null) return
+
+  const q = deptHeadSearchQ.value.trim()
+  if (q.length < 2) {
+    deptHeadOptions.value = []
+    return
+  }
+
+  deptHeadSearchLoading.value = true
+  deptHeadDropdownOpen.value = true
+  try {
+    deptHeadOptions.value = await getAvailableDeptHeads(rid, { q })
+    deptHeadsLoadErr.value = ''
+  } catch (e) {
+    deptHeadOptions.value = []
+    deptHeadsLoadErr.value =
+      typeof e?.response?.data?.message === 'string'
+        ? e.response.data.message
+        : t('request_detail.assign_dept_head_load_err')
+  } finally {
+    deptHeadSearchLoading.value = false
+  }
+}
+
+function pickDeptHead(u) {
+  selectedDeptHeadId.value = String(u.id)
+  deptHeadLockedLabel.value = formatDeptHeadChosenLabel(u)
+  deptHeadSearchQ.value = deptHeadLockedLabel.value
+  deptHeadDropdownOpen.value = false
+  assignDeptHeadClientErr.value = ''
+}
+
+function onDeptHeadFocus() {
+  if (deptHeadSearchQ.value.trim().length >= 2) {
+    deptHeadDropdownOpen.value = true
+    runDeptHeadSearch()
+  }
+}
+
+function onDeptHeadBlur() {
+  setTimeout(() => {
+    deptHeadDropdownOpen.value = false
+  }, 180)
+}
 
 /** Indices 0..12 matching cargo PDF columns → cost last */
 const cargoColIndexes = Array.from({ length: 13 }, (_, i) => i)
@@ -960,11 +1176,19 @@ function buildRowsPayload() {
   return out
 }
 
-function emitSaveRowPrices() {
+function emitSaveRowPrices(forCargoFill = false) {
+  assignDeptHeadClientErr.value = ''
+  if (deptHeadAssignRequired.value) {
+    const rawSel = selectedDeptHeadId.value
+    if (rawSel === '' || rawSel == null) {
+      assignDeptHeadClientErr.value = t('request_detail.assign_dept_head_required')
+      return
+    }
+  }
   const raw = selectedDeptHeadId.value
   const dept_head_user_id = raw === '' || raw == null ? null : Number(raw)
   emit('save-row-prices', {
-    rows: buildRowsPayload(),
+    rows: forCargoFill ? [] : buildRowsPayload(),
     service_price: grandTotalSum.value,
     dept_head_user_id,
   })

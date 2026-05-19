@@ -33,11 +33,9 @@ class DispatchRequestPolicy
         if ($user->hasPermission('request.approve_dept')
             && ! $user->hasPermission('trip.view_all')
             && ! $user->hasPermission('request.approve')) {
-            $requester = $dispatchRequest->requester;
+            $dispatchRequest->loadMissing('requester:id,department_id');
 
-            return $requester !== null
-                && $user->department_id !== null
-                && (int) $requester->department_id === (int) $user->department_id;
+            return $this->approveDeptLimitedViewEligible($user, $dispatchRequest);
         }
 
         return (int) $dispatchRequest->requester_id === (int) $user->id;
@@ -126,16 +124,32 @@ class DispatchRequestPolicy
         if ($user->hasPermission('request.approve_dept')
             && ! $user->hasPermission('trip.view_all')
             && ! $user->hasPermission('request.approve')) {
-            $requester = $dispatchRequest->requester;
+            $dispatchRequest->loadMissing('requester:id,department_id');
 
-            return $requester !== null
-                && $user->department_id !== null
-                && (int) $requester->department_id === (int) $user->department_id;
+            return $this->approveDeptLimitedViewEligible($user, $dispatchRequest);
         }
 
         return (int) $dispatchRequest->requester_id === (int) $user->id
             && ($user->hasPermission('request.cancel_own')
                 || $user->hasPermission('request.update_own')
                 || $user->hasPermission('request.create'));
+    }
+
+    /** Trưởng BP «thuần»: cùng phòng với người đề xuất và (nếu phiếu đã gán) chỉ được xem phiếu gán cho mình — trừ bản legacy `assigned_dept_head_id` null. */
+    private function approveDeptLimitedViewEligible(User $user, DispatchRequest $dispatchRequest): bool
+    {
+        $requester = $dispatchRequest->requester;
+        if ($requester === null
+            || $user->department_id === null
+            || (int) $requester->department_id !== (int) $user->department_id) {
+            return false;
+        }
+
+        if ($dispatchRequest->assigned_dept_head_id !== null
+            && (int) $dispatchRequest->assigned_dept_head_id !== (int) $user->id) {
+            return false;
+        }
+
+        return true;
     }
 }

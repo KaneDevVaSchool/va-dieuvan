@@ -220,26 +220,14 @@ class DispatchRequestController extends Controller
             ],
         );
 
-        if (Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
-            if ($requesterDeptId !== null) {
-                $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
-                $summaryLine = $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id;
-
-                $recipients = $chosenDeptHeadId !== null
-                    ? User::query()->whereKey($chosenDeptHeadId)->get()
-                    : User::query()
-                        ->role('department_head')
-                        ->where('department_id', (int) $requesterDeptId)
-                        ->get();
-                if ($recipients->isNotEmpty()) {
-                    Notification::send(
-                        $recipients,
-                        new DeptHeadApprovalRequestedNotification(
-                            $dispatchRequest->id,
-                            $summaryLine,
-                        ),
-                    );
-                }
+        if ($chosenDeptHeadId !== null
+            && Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+            $recipients = User::query()->whereKey($chosenDeptHeadId)->get();
+            if ($recipients->isNotEmpty()) {
+                Notification::send(
+                    $recipients,
+                    new DeptHeadApprovalRequestedNotification($dispatchRequest->id),
+                );
             }
         }
 
@@ -264,11 +252,36 @@ class DispatchRequestController extends Controller
             return $this->ok([]);
         }
 
+        $qTrim = trim((string) ($request->query('q', '')));
+
         $users = User::query()
+            ->where('is_active', true)
             ->role('department_head')
             ->where('department_id', (int) $deptId)
+            ->when($qTrim !== '', function ($query) use ($qTrim): void {
+                $like = '%'.addcslashes($qTrim, '%_\\').'%';
+                $query->where(function ($w) use ($like): void {
+                    $w->where('name', 'like', $like)
+                        ->orWhere('employee_code', 'like', $like)
+                        ->orWhere('email', 'like', $like);
+                });
+            })
             ->orderBy('name')
-            ->get(['id', 'name', 'employee_code']);
+            ->limit(25)
+            ->get(['id', 'name', 'employee_code', 'email']);
+
+        $pickId = (int) ($request->query('pick', 0) ?: 0);
+        if ($pickId > 0) {
+            $picked = User::query()
+                ->where('is_active', true)
+                ->role('department_head')
+                ->where('department_id', (int) $deptId)
+                ->whereKey($pickId)
+                ->first(['id', 'name', 'employee_code', 'email']);
+            if ($picked !== null && ! $users->contains(static fn (User $u): bool => (int) $u->id === $pickId)) {
+                $users = $users->prepend($picked)->values();
+            }
+        }
 
         return $this->ok($users);
     }
