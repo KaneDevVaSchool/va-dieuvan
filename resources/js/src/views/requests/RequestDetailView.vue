@@ -1,309 +1,134 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">Đang tải…</div>
+  <div class="flex h-screen flex-col overflow-hidden bg-slate-50">
+    <div v-if="loading" class="flex flex-1 items-center justify-center px-4 py-12 text-sm text-slate-500">
+      Đang tải…
+    </div>
 
     <template v-else-if="req">
       <header
-        class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/85"
+        class="shrink-0 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/85"
       >
-        <div class="mx-auto max-w-[1600px] px-4 py-3">
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
-            <div class="flex min-w-0 flex-1 items-start gap-3">
-              <RouterLink
-                to="/requests"
-                class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-                aria-label="Quay lại danh sách"
-              >
-                <ArrowLeftIcon class="h-5 w-5" />
-              </RouterLink>
-              <div class="flex min-w-0 flex-1 items-start gap-3">
-                <div
-                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-600/15"
-                >
-                  <TruckIcon class="h-6 w-6" aria-hidden="true" />
-                </div>
-                <div class="min-w-0">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <h1 class="text-base font-bold tracking-tight text-slate-900 sm:text-lg">
-                      {{ requestRefCode }}
-                    </h1>
-                    <StatusBadge :status="req.status" />
-                    <span
-                      v-if="showRecurringBadge"
-                      class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-900 ring-1 ring-indigo-600/15"
-                    >
-                      <ArrowPathIcon class="h-3.5 w-3.5 shrink-0 text-indigo-700" aria-hidden="true" />
-                      {{ t('request_detail.badge_recurring') }}
-                    </span>
-                  </div>
-                  <p class="mt-0.5 text-xs text-slate-600 sm:text-sm">
-                    Tạo lúc: {{ fmt(req.created_at) }}
-                  </p>
-                  <p v-if="req.trip" class="mt-1 text-sm font-medium text-teal-700">
-                    <RouterLink
-                      :to="`/trips/${req.trip.id}`"
-                      class="underline decoration-teal-600/30 underline-offset-2 hover:decoration-teal-800"
-                    >
-                      Mở chuyến #{{ req.trip.id }}
-                    </RouterLink>
-                  </p>
-                </div>
-              </div>
+        <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+          <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+            <RouterLink
+              to="/requests"
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+              aria-label="Quay lại danh sách"
+            >
+              <ArrowLeftIcon class="h-4 w-4" />
+            </RouterLink>
+            <div
+              class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600 ring-1 ring-teal-600/15 sm:flex"
+            >
+              <TruckIcon class="h-5 w-5" aria-hidden="true" />
             </div>
-
-            <div class="min-w-0 w-full lg:max-w-2xl lg:flex-1 xl:max-w-3xl">
-              <div class="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-                <div class="flex items-start" :class="stepperTrackMinClass">
-                  <template v-for="(step, idx) in stepperSteps" :key="step.key">
-                    <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-                      <div
-                        class="flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors sm:h-10 sm:w-10"
-                        :class="stepCircleClass(step.state)"
-                      >
-                        <CheckIcon v-if="step.state === 'done'" class="h-4 w-4 sm:h-5 sm:w-5" />
-                        <HandThumbUpIcon
-                          v-else-if="step.key === 'approved' && (step.state === 'upcoming' || step.state === 'current')"
-                          class="h-4 w-4 sm:h-5 sm:w-5"
-                          :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                        />
-                        <CurrencyDollarIcon
-                          v-else-if="step.key === 'price_pending' && step.state !== 'done'"
-                          class="h-4 w-4 sm:h-5 sm:w-5"
-                          :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                        />
-                        <BuildingOffice2Icon
-                          v-else-if="step.key === 'dept_pending' && step.state !== 'done'"
-                          class="h-4 w-4 sm:h-5 sm:w-5"
-                          :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                        />
-                        <Cog6ToothIcon
-                          v-else-if="step.key === 'dispatch' && step.state !== 'done'"
-                          class="h-4 w-4 sm:h-5 sm:w-5"
-                          :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                        />
-                        <TruckIcon
-                          v-else-if="step.key === 'running' && step.state !== 'done'"
-                          class="h-4 w-4 sm:h-5 sm:w-5"
-                          :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                        />
-                        <FlagIcon
-                          v-else-if="step.key === 'done' && step.state !== 'done'"
-                          class="h-4 w-4 sm:h-5 sm:w-5"
-                          :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                        />
-                        <span v-else-if="step.state === 'current'" class="h-2 w-2 rounded-full bg-teal-600 sm:h-2.5 sm:w-2.5" />
-                        <span v-else-if="step.state === 'rejected'" class="text-xs font-bold">!</span>
-                        <span v-else class="text-slate-300">·</span>
-                      </div>
-                      <p class="mt-1.5 text-[10px] font-semibold leading-tight text-slate-800 sm:mt-2 sm:text-xs">
-                        {{ step.label }}
-                      </p>
-                      <p v-if="step.sub" class="mt-0.5 hidden max-w-[6.5rem] truncate text-[10px] text-slate-500 sm:block sm:max-w-none">
-                        {{ step.sub }}
-                      </p>
-                    </div>
-                    <div
-                      v-if="idx < stepperSteps.length - 1"
-                      class="mx-0.5 mt-4 h-0.5 w-4 shrink-0 sm:mx-1 sm:mt-5 sm:w-6 md:w-8"
-                      :class="step.state === 'done' ? 'bg-teal-500' : 'bg-slate-200'"
-                      aria-hidden="true"
-                    />
-                  </template>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex w-full shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:flex-col lg:items-stretch">
-              <div class="flex w-full flex-col gap-1 sm:w-auto sm:min-w-[11rem]">
-                <button
-                  type="button"
-                  class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium shadow-sm transition"
-                  :class="
-                    pdfExportDisabled
-                      ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
-                      : 'border-teal-200 bg-white text-teal-800 hover:bg-teal-50'
-                  "
-                  :disabled="pdfBusy || pdfExportDisabled"
-                  :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
-                  @click="downloadRequestPdf"
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <h1 class="text-sm font-bold tracking-tight text-slate-900 sm:text-base">
+                  {{ requestRefCode }}
+                </h1>
+                <StatusBadge :status="req.status" />
+                <span
+                  v-if="showRecurringBadge"
+                  class="inline-flex items-center gap-0.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-900 ring-1 ring-indigo-600/15"
                 >
-                  <span
-                    v-if="pdfBusy"
-                    class="h-4 w-4 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-600"
-                  />
-                  {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
-                </button>
+                  <ArrowPathIcon class="h-3 w-3 shrink-0 text-indigo-700" aria-hidden="true" />
+                  {{ t('request_detail.badge_recurring') }}
+                </span>
               </div>
-
-              <div
-                v-if="req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
-                class="flex w-full gap-2 sm:w-auto"
-              >
-                <Button
-                  variant="danger"
-                  :loading="acting"
-                  class="min-h-[2.75rem] flex-1 justify-center !border-rose-200 !bg-white !py-2.5 text-sm font-semibold !text-rose-700 shadow-sm hover:!bg-rose-50 sm:flex-initial sm:px-4"
-                  @click="onDecideClick('reject')"
-                >
-                  Từ chối
-                </Button>
-                <Button
-                  :loading="acting"
-                  class="min-h-[2.75rem] flex-1 justify-center !bg-teal-600 !py-2.5 text-sm font-semibold text-white shadow-sm hover:!bg-teal-700 sm:flex-initial sm:px-5"
-                  @click="onDecideClick('approve')"
-                >
-                  Phê duyệt
-                </Button>
-              </div>
+              <p class="mt-0.5 text-[11px] text-slate-600 sm:text-xs">
+                Tạo lúc: {{ fmt(req.created_at) }}
+                <template v-if="req.trip">
+                  <span class="text-slate-300"> · </span>
+                  <RouterLink
+                    :to="`/trips/${req.trip.id}`"
+                    class="font-medium text-teal-700 underline decoration-teal-600/30 underline-offset-2 hover:decoration-teal-800"
+                  >
+                    Chuyến #{{ req.trip.id }}
+                  </RouterLink>
+                </template>
+              </p>
             </div>
           </div>
 
-          <p
-            v-if="msg && req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
-            class="mt-4 rounded-lg border border-amber-200/90 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950"
-          >
-            {{ msg }}
-          </p>
+          <div class="flex w-full shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <button
+              type="button"
+              class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-medium shadow-sm transition sm:text-sm"
+              :class="
+                pdfExportDisabled
+                  ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
+                  : 'border-teal-200 bg-white text-teal-800 hover:bg-teal-50'
+              "
+              :disabled="pdfBusy || pdfExportDisabled"
+              :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
+              @click="downloadRequestPdf"
+            >
+              <span
+                v-if="pdfBusy"
+                class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-600"
+              />
+              {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
+            </button>
+
+            <div
+              v-if="req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
+              class="flex gap-2"
+            >
+              <Button
+                variant="danger"
+                :loading="acting"
+                class="min-h-9 !border-rose-200 !bg-white !px-3 !py-2 text-xs font-semibold !text-rose-700 shadow-sm hover:!bg-rose-50 sm:text-sm"
+                @click="onDecideClick('reject')"
+              >
+                Từ chối
+              </Button>
+              <Button
+                :loading="acting"
+                class="min-h-9 !bg-teal-600 !px-4 !py-2 text-xs font-semibold text-white shadow-sm hover:!bg-teal-700 sm:text-sm"
+                @click="onDecideClick('approve')"
+              >
+                Phê duyệt
+              </Button>
+            </div>
+          </div>
         </div>
+
+        <p
+          v-if="msg && req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
+          class="border-t border-amber-100 bg-amber-50/80 px-4 py-1.5 text-xs font-medium text-amber-950 sm:text-sm"
+        >
+          {{ msg }}
+        </p>
       </header>
 
-      <div class="mx-auto max-w-[1600px] space-y-6 px-4 pb-12 pt-6">
-        <section
-          v-if="showResetCloneBtn || showPassengerAdjustSection"
-          class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
+        <aside
+          class="w-full shrink-0 overflow-y-auto border-b border-slate-200 bg-slate-50/90 lg:w-72 lg:max-h-none lg:border-b-0 lg:border-r xl:w-80"
+          :class="'max-h-[min(40vh,22rem)] lg:max-h-full'"
         >
-          <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
-          <StudentCountField
-            v-if="showPassengerAdjustSection"
-            v-model:passenger-count="passengerDraft"
-            :locked="passengerDepartLocked"
-            :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
-            :saving="passengerSaving"
-            :error="passengerPatchErr"
-            :class="showResetCloneBtn ? 'mt-5 border-t border-slate-100 pt-5' : ''"
-            @save="savePassengerDraft"
-          />
-        </section>
-
-        <CostLimitAlert v-if="req.dispatch_package_cost_alert" :alert="req.dispatch_package_cost_alert" />
-
-        <section v-if="showApprovalDecisionPanel" class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm">
-          <h2 class="border-b border-slate-200 pb-3 text-base font-bold text-slate-900">Cơ sở phê duyệt</h2>
-          <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Trạng thái</dt>
-              <dd class="mt-1">
-                <StatusBadge :status="req.status" />
-              </dd>
-            </div>
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Loại chuyến</dt>
-              <dd class="mt-1 font-semibold text-slate-900">
-                {{ labelTripType(req.trip_type) }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Người yêu cầu</dt>
-              <dd class="mt-1 font-semibold text-slate-900">
-                {{ req.requester?.name ?? '—' }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Đơn vị</dt>
-              <dd class="mt-1 text-slate-900">
-                {{ req.wizard_snapshot?.form?.requester_unit || requesterSubtitle || '—' }}
-              </dd>
-            </div>
-            <div class="sm:col-span-2">
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Thời gian sử dụng</dt>
-              <dd class="mt-1 font-medium text-slate-900">
-                {{ fmtDateVi(req.depart_at) }} · {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
-              </dd>
-            </div>
-            <div class="lg:col-span-3">
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Lộ trình</dt>
-              <dd class="mt-1 font-medium text-slate-900">
-                <span>{{ req.origin || '—' }}</span>
-                <span class="mx-2 text-slate-400">→</span>
-                <span>{{ req.destination || '—' }}</span>
-              </dd>
-            </div>
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Số người / tải</dt>
-              <dd class="mt-1 font-medium text-slate-900">
-                {{ passengerOrCargoLine }}
-              </dd>
-            </div>
-            <div v-if="wizardPurpose" class="sm:col-span-2">
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Mục đích</dt>
-              <dd class="mt-1 text-slate-900">
-                {{ wizardPurpose }}
-              </dd>
-            </div>
-            <div v-if="costEstimate">
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tổng chi phí (khai báo)</dt>
-              <dd class="mt-1 text-lg font-bold tabular-nums text-teal-700">
-                {{ formatVndCurrency(costEstimate.total) }}
-              </dd>
-            </div>
-            <div v-if="showDeptDecisionSection && req.service_price != null">
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Đơn giá (Điều vận)</dt>
-              <dd class="mt-1 text-lg font-bold tabular-nums text-violet-800">
-                {{ formatVndCurrency(req.service_price) }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Số tệp đính kèm</dt>
-              <dd class="mt-1 font-semibold text-slate-900">
-                {{ generalAttachments.length }}
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        <PriceFillSection
-          v-if="showFillPriceSection"
-          :reference-pricing-url="referencePricingUrl"
-          :service-price="fillPriceForm.service_price"
-          :submitting="fillPriceActing"
-          :message="fillPriceMsg"
-          @update:service-price="onFillPriceServicePriceInput"
-          @submit="submitFillPrice"
-        />
-
-        <SignedPaperUpload
-          v-if="showSignedPaperSection"
-          :attachments="signedPaperAttachments"
-          :upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
-          :upload-fn="uploadSignedPaper"
-          :error="signedUploadErr"
-          @download="downloadFile"
-          @uploaded="onSignedUploaded"
-        />
-
-        <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
-          <aside class="w-full shrink-0 space-y-6 lg:w-80 xl:w-72">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Người yêu cầu</p>
-              <div class="mt-4 flex items-center gap-3">
+          <div class="space-y-4 p-4">
+            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Người yêu cầu</p>
+              <div class="mt-3 flex items-center gap-2.5">
                 <img
                   v-if="req.requester?.avatar_url"
                   :src="req.requester.avatar_url"
                   alt=""
-                  class="h-12 w-12 rounded-full object-cover ring-2 ring-slate-100"
+                  class="h-10 w-10 rounded-full object-cover ring-2 ring-slate-100"
                 />
                 <div
                   v-else
-                  class="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-sm font-bold text-teal-800 ring-2 ring-teal-50"
+                  class="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 ring-2 ring-teal-50"
                 >
                   {{ requesterInitials }}
                 </div>
                 <div class="min-w-0">
-                  <p class="font-semibold text-slate-900">{{ req.requester?.name ?? '—' }}</p>
-                  <p class="text-sm text-slate-600">{{ requesterSubtitle }}</p>
+                  <p class="text-sm font-semibold text-slate-900">{{ req.requester?.name ?? '—' }}</p>
+                  <p class="text-xs text-slate-600">{{ requesterSubtitle }}</p>
                 </div>
               </div>
-              <ul class="mt-4 space-y-2.5 border-t border-slate-100 pt-4 text-sm text-slate-700">
+              <ul class="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-700">
                 <li v-if="req.requester?.email" class="flex gap-2">
                   <span class="shrink-0 font-medium text-slate-500">Email</span>
                   <span class="min-w-0 break-all text-slate-800">{{ req.requester.email }}</span>
@@ -323,40 +148,44 @@
               </ul>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Yêu cầu phương tiện</p>
-              <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                <TruckIcon class="h-4 w-4 text-teal-600" aria-hidden="true" />
+            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Yêu cầu phương tiện</p>
+              <div
+                class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700"
+              >
+                <TruckIcon class="h-3.5 w-3.5 text-teal-600" aria-hidden="true" />
                 {{ labelTripType(req.trip_type) }}
               </div>
-              <dl class="mt-4 space-y-3 border-t border-slate-100 pt-4 text-sm">
+              <dl class="mt-3 space-y-2 border-t border-slate-100 pt-3 text-xs">
                 <div>
-                  <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Số người / Khối lượng</dt>
-                  <dd class="mt-1 flex items-center gap-2 text-slate-900">
-                    <CubeIcon class="h-5 w-5 shrink-0 text-teal-600" />
+                  <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Số người / Khối lượng</dt>
+                  <dd class="mt-1 flex items-center gap-1.5 text-slate-900">
+                    <CubeIcon class="h-4 w-4 shrink-0 text-teal-600" />
                     <span>{{ passengerOrCargoLine }}</span>
                   </dd>
                 </div>
               </dl>
-              <div v-if="hasRequestNotesBlock" class="mt-4 border-t border-slate-100 pt-4">
-                <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">{{ requestNotesLabel }}</p>
+              <div v-if="hasRequestNotesBlock" class="mt-3 border-t border-slate-100 pt-3">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">{{ requestNotesLabel }}</p>
                 <p
                   v-if="requestNotesVisualSections.banner"
-                  class="mt-3 rounded-lg border border-teal-100 bg-teal-50/50 px-3 py-2 text-sm font-semibold text-slate-900"
+                  class="mt-2 rounded-lg border border-teal-100 bg-teal-50/50 px-2.5 py-1.5 text-xs font-semibold text-slate-900"
                 >
                   {{ requestNotesVisualSections.banner }}
                 </p>
-                <div class="mt-3 space-y-3">
+                <div class="mt-2 max-h-48 space-y-2 overflow-y-auto">
                   <div
                     v-for="(sec, idx) in requestNotesVisualSections.sections"
                     :key="idx"
-                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                    class="overflow-hidden rounded-lg border border-slate-200 bg-white"
                   >
-                    <h3 class="border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-700">
+                    <h3
+                      class="border-b border-slate-100 bg-slate-50 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-700"
+                    >
                       {{ sec.title }}
                     </h3>
                     <div
-                      class="max-h-[min(20rem,50vh)] overflow-y-auto whitespace-pre-wrap break-words px-3 py-2.5 text-sm leading-relaxed text-slate-800 [overflow-wrap:anywhere] sm:max-h-[min(28rem,55vh)]"
+                      class="max-h-48 overflow-y-auto whitespace-pre-wrap break-words px-2 py-2 text-xs leading-relaxed text-slate-800 [overflow-wrap:anywhere]"
                     >
                       {{ sec.content }}
                     </div>
@@ -364,135 +193,404 @@
                 </div>
               </div>
             </div>
-          </aside>
+          </div>
+        </aside>
 
-          <div class="min-w-0 flex-1 space-y-6">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                <div class="flex items-center gap-2 text-teal-600">
-                  <InformationCircleIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
-                  <h2 class="text-base font-semibold text-slate-900">Lộ trình di chuyển</h2>
-                </div>
-                <span
-                  class="inline-flex items-center rounded-full bg-teal-50 px-3 py-1 text-xs font-bold tabular-nums text-teal-800 ring-1 ring-teal-600/20"
-                >
-                  {{ costEstimate?.distanceLabel != null ? `~ ${costEstimate.distanceLabel}` : 'Khoảng cách: —' }}
-                </span>
-              </div>
-              <div class="mt-5 flex flex-wrap items-center gap-3 text-sm text-slate-700">
-                <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 font-medium ring-1 ring-slate-200/80">
-                  <CalendarDaysIcon class="h-4 w-4 text-slate-400" />
-                  {{ fmtDateVi(req.depart_at) }}
-                </span>
-                <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 font-medium ring-1 ring-slate-200/80">
-                  <ClockIcon class="h-4 w-4 text-slate-400" />
-                  {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
-                </span>
-              </div>
-              <div class="mt-6 flex gap-4">
-                <div class="flex flex-col items-center pt-1">
-                  <span class="h-3 w-3 rounded-full border-2 border-teal-500 bg-white shadow-sm" />
-                  <span class="mt-1 min-h-[3rem] w-px flex-1 bg-gradient-to-b from-teal-400 to-teal-200" />
-                  <span class="h-3 w-3 rounded-full border-2 border-teal-500 bg-white shadow-sm" />
-                </div>
-                <div class="min-w-0 flex-1 space-y-6">
-                  <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-teal-700/90">Điểm đi</p>
-                    <p class="mt-1 font-semibold text-slate-900">{{ req.origin || '—' }}</p>
-                    <p v-if="routeSubFrom" class="mt-0.5 text-sm text-slate-500">{{ routeSubFrom }}</p>
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50">
+          <nav
+            class="flex shrink-0 gap-1 border-b border-slate-200 bg-white px-2 py-1.5 sm:px-3"
+            role="tablist"
+            aria-label="Chi tiết yêu cầu"
+          >
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'route'"
+              class="rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
+              :class="
+                activeTab === 'route'
+                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
+                  : 'text-slate-600 hover:bg-slate-50'
+              "
+              @click="activeTab = 'route'"
+            >
+              Lộ trình
+            </button>
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'approval'"
+              class="relative inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
+              :class="
+                activeTab === 'approval'
+                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
+                  : 'text-slate-600 hover:bg-slate-50'
+              "
+              @click="activeTab = 'approval'"
+            >
+              Phê duyệt
+              <span
+                v-if="approvalTabNeedsFocus"
+                class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-teal-500"
+                aria-hidden="true"
+              />
+            </button>
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'docs'"
+              class="rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
+              :class="
+                activeTab === 'docs'
+                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
+                  : 'text-slate-600 hover:bg-slate-50'
+              "
+              @click="activeTab = 'docs'"
+            >
+              Tài liệu
+            </button>
+          </nav>
+
+          <div class="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+            <div v-show="activeTab === 'route'" class="space-y-4">
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Tiến trình</p>
+                <div class="mt-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+                  <div class="flex items-start" :class="stepperTrackMinClass">
+                    <template v-for="(step, idx) in stepperSteps" :key="step.key">
+                      <div class="flex min-w-0 flex-1 flex-col items-center text-center">
+                        <div
+                          class="flex h-7 w-7 items-center justify-center rounded-full border-2 text-[10px] font-semibold transition-colors"
+                          :class="stepCircleClass(step.state)"
+                        >
+                          <CheckIcon v-if="step.state === 'done'" class="h-3.5 w-3.5" />
+                          <HandThumbUpIcon
+                            v-else-if="
+                              step.key === 'approved' && (step.state === 'upcoming' || step.state === 'current')
+                            "
+                            class="h-3.5 w-3.5"
+                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                          />
+                          <CurrencyDollarIcon
+                            v-else-if="step.key === 'price_pending' && step.state !== 'done'"
+                            class="h-3.5 w-3.5"
+                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                          />
+                          <BuildingOffice2Icon
+                            v-else-if="step.key === 'dept_pending' && step.state !== 'done'"
+                            class="h-3.5 w-3.5"
+                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                          />
+                          <Cog6ToothIcon
+                            v-else-if="step.key === 'dispatch' && step.state !== 'done'"
+                            class="h-3.5 w-3.5"
+                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                          />
+                          <TruckIcon
+                            v-else-if="step.key === 'running' && step.state !== 'done'"
+                            class="h-3.5 w-3.5"
+                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                          />
+                          <FlagIcon
+                            v-else-if="step.key === 'done' && step.state !== 'done'"
+                            class="h-3.5 w-3.5"
+                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
+                          />
+                          <span
+                            v-else-if="step.state === 'current'"
+                            class="h-1.5 w-1.5 rounded-full bg-teal-600"
+                          />
+                          <span v-else-if="step.state === 'rejected'" class="text-[10px] font-bold">!</span>
+                          <span v-else class="text-slate-300">·</span>
+                        </div>
+                        <p
+                          class="mt-1 text-[9px] font-semibold leading-tight text-slate-800 sm:text-[10px]"
+                        >
+                          {{ step.label }}
+                        </p>
+                      </div>
+                      <div
+                        v-if="idx < stepperSteps.length - 1"
+                        class="mx-0.5 mt-3 h-0.5 w-2 shrink-0 sm:mt-3.5 sm:w-4"
+                        :class="step.state === 'done' ? 'bg-teal-500' : 'bg-slate-200'"
+                        aria-hidden="true"
+                      />
+                    </template>
                   </div>
-                  <div>
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-teal-700/90">Điểm đến</p>
-                    <p class="mt-1 font-semibold text-slate-900">{{ req.destination || '—' }}</p>
-                    <p v-if="routeSubTo" class="mt-0.5 text-sm text-slate-500">{{ routeSubTo }}</p>
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div class="flex items-center gap-2 text-teal-600">
+                    <InformationCircleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">Lộ trình di chuyển</h2>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
-                <div class="flex items-center gap-2 text-teal-600">
-                  <CalculatorIcon class="h-6 w-6 shrink-0" />
-                  <h2 class="text-base font-semibold text-slate-900">Dự toán chi phí</h2>
-                </div>
-              </div>
-              <dl class="mt-5 space-y-3 text-sm">
-                <div class="flex justify-between gap-3 border-b border-slate-50 pb-3">
-                  <dt class="text-slate-500">Quãng đường ước tính</dt>
-                  <dd class="text-right font-medium text-slate-900">{{ costEstimate?.distanceLabel ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between gap-3 border-b border-slate-50 pb-3">
-                  <dt class="text-slate-500">Loại xe đề xuất</dt>
-                  <dd class="text-right font-medium text-slate-900">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between gap-3 border-b border-slate-50 pb-3">
-                  <dt class="text-slate-500">Đơn giá tham chiếu</dt>
-                  <dd class="text-right font-medium text-slate-900">{{ costEstimate?.refUnitLabel ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between gap-3 border-b border-slate-50 pb-3">
-                  <dt class="text-slate-500">Phí cầu đường (dự kiến)</dt>
-                  <dd class="text-right font-medium text-slate-900">{{ costEstimate?.tollLabel ?? '—' }}</dd>
-                </div>
-              </dl>
-              <div class="mt-5 rounded-xl bg-teal-50/90 px-4 py-4 ring-1 ring-teal-600/10">
-                <p class="text-xs font-medium text-teal-900/90">Tổng (theo khai báo)</p>
-                <p class="mt-1 text-xl font-bold tabular-nums text-teal-600 sm:text-2xl">
-                  {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
-                </p>
-              </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div class="flex items-start gap-3 border-b border-slate-100 pb-4">
-                <div
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-600/10"
-                >
-                  <PaperClipIcon class="h-5 w-5" aria-hidden="true" />
-                </div>
-                <div class="min-w-0 flex-1">
-                  <h2 class="text-base font-semibold text-slate-900">Tài liệu đính kèm</h2>
-                </div>
-              </div>
-
-              <ul v-if="generalAttachments.length" class="mt-4 space-y-1.5">
-                <li
-                  v-for="a in generalAttachments"
-                  :key="a.id"
-                  class="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/40 px-3 py-2.5 text-sm shadow-sm transition hover:border-teal-200/70 hover:bg-white"
-                >
-                  <span class="flex min-w-0 flex-1 items-center gap-2">
-                    <DocumentIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                    <span class="truncate font-medium text-slate-800" :title="a.original_name || `File #${a.id}`">
-                      {{ a.original_name || `File #${a.id}` }}
-                    </span>
+                  <span
+                    class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold tabular-nums text-teal-800 ring-1 ring-teal-600/20 sm:text-xs"
+                  >
+                    {{ costEstimate?.distanceLabel != null ? `~ ${costEstimate.distanceLabel}` : 'Khoảng cách: —' }}
                   </span>
-                  <div class="flex shrink-0 items-center gap-0.5">
-                    <button
-                      type="button"
-                      class="rounded-md px-2 py-1 text-[11px] font-semibold text-teal-700 transition hover:bg-teal-100/80 hover:text-teal-900"
-                      @click="downloadFile(a)"
-                    >
-                      Tải
-                    </button>
-                    <button
-                      v-if="canDeleteAttachment"
-                      type="button"
-                      class="rounded-md px-2 py-1 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
-                      :disabled="deletingId === a.id"
-                      @click="removeAttachment(a)"
-                    >
-                      {{ deletingId === a.id ? '…' : 'Xóa' }}
-                    </button>
+                </div>
+                <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-700 sm:text-sm">
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1 font-medium ring-1 ring-slate-200/80"
+                  >
+                    <CalendarDaysIcon class="h-3.5 w-3.5 text-slate-400" />
+                    {{ fmtDateVi(req.depart_at) }}
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1 font-medium ring-1 ring-slate-200/80"
+                  >
+                    <ClockIcon class="h-3.5 w-3.5 text-slate-400" />
+                    {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
+                  </span>
+                </div>
+                <div class="mt-5 flex gap-3">
+                  <div class="flex flex-col items-center pt-0.5">
+                    <span class="h-2.5 w-2.5 rounded-full border-2 border-teal-500 bg-white shadow-sm" />
+                    <span class="mt-0.5 min-h-[2.5rem] w-px flex-1 bg-gradient-to-b from-teal-400 to-teal-200" />
+                    <span class="h-2.5 w-2.5 rounded-full border-2 border-teal-500 bg-white shadow-sm" />
                   </div>
-                </li>
-              </ul>
-
-              <div v-if="attachErr" class="mt-3 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">
-                {{ attachErr }}
+                  <div class="min-w-0 flex-1 space-y-5">
+                    <div>
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">Điểm đi</p>
+                      <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ req.origin || '—' }}</p>
+                      <p v-if="routeSubFrom" class="mt-0.5 text-xs text-slate-500">{{ routeSubFrom }}</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">Điểm đến</p>
+                      <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ req.destination || '—' }}</p>
+                      <p v-if="routeSubTo" class="mt-0.5 text-xs text-slate-500">{{ routeSubTo }}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div class="mt-4">
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div class="flex items-center gap-2 text-teal-600">
+                    <CalculatorIcon class="h-5 w-5 shrink-0" />
+                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">Dự toán chi phí</h2>
+                  </div>
+                </div>
+                <dl class="mt-4 space-y-2 text-xs sm:text-sm">
+                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
+                    <dt class="text-slate-500">Quãng đường ước tính</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.distanceLabel ?? '—' }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
+                    <dt class="text-slate-500">Loại xe đề xuất</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
+                    <dt class="text-slate-500">Đơn giá tham chiếu</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.refUnitLabel ?? '—' }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
+                    <dt class="text-slate-500">Phí cầu đường (dự kiến)</dt>
+                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.tollLabel ?? '—' }}</dd>
+                  </div>
+                </dl>
+                <div class="mt-4 rounded-xl bg-teal-50/90 px-3 py-3 ring-1 ring-teal-600/10 sm:px-4 sm:py-4">
+                  <p class="text-[11px] font-medium text-teal-900/90">Tổng (theo khai báo)</p>
+                  <p class="mt-0.5 text-lg font-bold tabular-nums text-teal-600 sm:text-xl">
+                    {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
+                  </p>
+                </div>
+              </div>
+
+              <section
+                v-if="showApprovalDecisionPanel"
+                class="rounded-xl border-2 border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <h2 class="border-b border-slate-200 pb-2 text-sm font-bold text-slate-900 sm:text-base">
+                  Cơ sở phê duyệt
+                </h2>
+                <dl class="mt-3 grid gap-3 text-xs sm:grid-cols-2 sm:text-sm lg:grid-cols-3">
+                  <div>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Trạng thái</dt>
+                    <dd class="mt-1">
+                      <StatusBadge :status="req.status" />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Loại chuyến</dt>
+                    <dd class="mt-1 font-semibold text-slate-900">
+                      {{ labelTripType(req.trip_type) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Người yêu cầu</dt>
+                    <dd class="mt-1 font-semibold text-slate-900">
+                      {{ req.requester?.name ?? '—' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Đơn vị</dt>
+                    <dd class="mt-1 text-slate-900">
+                      {{ req.wizard_snapshot?.form?.requester_unit || requesterSubtitle || '—' }}
+                    </dd>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Thời gian sử dụng</dt>
+                    <dd class="mt-1 font-medium text-slate-900">
+                      {{ fmtDateVi(req.depart_at) }} · {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
+                    </dd>
+                  </div>
+                  <div class="lg:col-span-3">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Lộ trình</dt>
+                    <dd class="mt-1 font-medium text-slate-900">
+                      <span>{{ req.origin || '—' }}</span>
+                      <span class="mx-2 text-slate-400">→</span>
+                      <span>{{ req.destination || '—' }}</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Số người / tải</dt>
+                    <dd class="mt-1 font-medium text-slate-900">
+                      {{ passengerOrCargoLine }}
+                    </dd>
+                  </div>
+                  <div v-if="wizardPurpose" class="sm:col-span-2">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Mục đích</dt>
+                    <dd class="mt-1 text-slate-900">
+                      {{ wizardPurpose }}
+                    </dd>
+                  </div>
+                  <div v-if="costEstimate">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                      Tổng chi phí (khai báo)
+                    </dt>
+                    <dd class="mt-1 text-base font-bold tabular-nums text-teal-700 sm:text-lg">
+                      {{ formatVndCurrency(costEstimate.total) }}
+                    </dd>
+                  </div>
+                  <div v-if="showDeptDecisionSection && req.service_price != null">
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Đơn giá (Điều vận)</dt>
+                    <dd class="mt-1 text-base font-bold tabular-nums text-violet-800 sm:text-lg">
+                      {{ formatVndCurrency(req.service_price) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Số tệp đính kèm</dt>
+                    <dd class="mt-1 font-semibold text-slate-900">
+                      {{ generalAttachments.length }}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            </div>
+
+            <div v-show="activeTab === 'approval'" class="space-y-4">
+              <CostLimitAlert v-if="req.dispatch_package_cost_alert" :alert="req.dispatch_package_cost_alert" />
+
+              <section
+                v-if="showResetCloneBtn || showPassengerAdjustSection"
+                class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
+                <StudentCountField
+                  v-if="showPassengerAdjustSection"
+                  v-model:passenger-count="passengerDraft"
+                  :locked="passengerDepartLocked"
+                  :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
+                  :saving="passengerSaving"
+                  :error="passengerPatchErr"
+                  :class="showResetCloneBtn ? 'mt-4 border-t border-slate-100 pt-4' : ''"
+                  @save="savePassengerDraft"
+                />
+              </section>
+
+              <PriceFillSection
+                v-if="showFillPriceSection"
+                :reference-pricing-url="referencePricingUrl"
+                :service-price="fillPriceForm.service_price"
+                :submitting="fillPriceActing"
+                :message="fillPriceMsg"
+                @update:service-price="onFillPriceServicePriceInput"
+                @submit="submitFillPrice"
+              />
+
+              <DeptApprovalSection
+                v-if="showDeptDecisionSection"
+                :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
+                :acting="deptActing"
+                :inline-message="deptMsg"
+                :reject-modal-open="deptRejectOpen"
+                @approve="onDeptApproveClick"
+                @reject="openDeptReject"
+              />
+
+              <SignedPaperUpload
+                v-if="showSignedPaperSection"
+                :attachments="signedPaperAttachments"
+                :upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
+                :upload-fn="uploadSignedPaper"
+                :error="signedUploadErr"
+                @download="downloadFile"
+                @uploaded="onSignedUploaded"
+              />
+
+              <div
+                v-if="!approvalTabNeedsFocus"
+                class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500"
+              >
+                Không có hành động cần xử lý
+              </div>
+            </div>
+
+            <div v-show="activeTab === 'docs'" class="space-y-4">
+              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-start gap-3 border-b border-slate-100 pb-3">
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-600/10"
+                  >
+                    <PaperClipIcon class="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">Tài liệu đính kèm</h2>
+                  </div>
+                </div>
+
+                <ul v-if="generalAttachments.length" class="mt-3 space-y-1.5">
+                  <li
+                    v-for="a in generalAttachments"
+                    :key="a.id"
+                    class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/40 px-2.5 py-2 text-xs shadow-sm transition hover:border-teal-200/70 hover:bg-white sm:text-sm"
+                  >
+                    <span class="flex min-w-0 flex-1 items-center gap-2">
+                      <DocumentIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                      <span class="truncate font-medium text-slate-800" :title="a.original_name || `File #${a.id}`">
+                        {{ a.original_name || `File #${a.id}` }}
+                      </span>
+                    </span>
+                    <div class="flex shrink-0 items-center gap-0.5">
+                      <button
+                        type="button"
+                        class="rounded-md px-2 py-1 text-[10px] font-semibold text-teal-700 transition hover:bg-teal-100/80 hover:text-teal-900"
+                        @click="downloadFile(a)"
+                      >
+                        Tải
+                      </button>
+                      <button
+                        v-if="canDeleteAttachment"
+                        type="button"
+                        class="rounded-md px-2 py-1 text-[10px] font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                        :disabled="deletingId === a.id"
+                        @click="removeAttachment(a)"
+                      >
+                        {{ deletingId === a.id ? '…' : 'Xóa' }}
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+
+                <div v-if="attachErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">
+                  {{ attachErr }}
+                </div>
+
+                <div class="mt-3">
                   <FileUpload
                     v-if="canUploadAttachment"
                     :key="`doc-${route.params.id}-${generalAttachments.length}`"
@@ -502,216 +600,186 @@
                     :upload-fn="uploadRequestDocument"
                     @uploaded="onDocUploaded"
                   />
-                <p
-                  v-else
-                  class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 text-center text-xs text-slate-500"
-                >
-                  Bạn không có quyền tải file đính kèm.
-                </p>
-              </div>
-            </div>
-
-            <DeptApprovalSection
-              v-if="showDeptDecisionSection"
-              :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
-              :acting="deptActing"
-              :inline-message="deptMsg"
-              :reject-modal-open="deptRejectOpen"
-              @approve="onDeptApproveClick"
-              @reject="openDeptReject"
-            />
-          </div>
-
-          <aside class="w-full shrink-0 space-y-6 lg:w-96 xl:w-80">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tổng hợp chi phí</p>
-              <dl class="mt-4 space-y-2.5 text-sm">
-                <div class="flex justify-between gap-2 border-b border-slate-50 pb-2.5">
-                  <dt class="text-slate-500">Đơn giá tham chiếu</dt>
-                  <dd class="text-right font-medium text-slate-900">{{ costEstimate?.refUnitLabel ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between gap-2 border-b border-slate-50 pb-2.5">
-                  <dt class="text-slate-500">Phí cầu đường</dt>
-                  <dd class="text-right font-medium text-slate-900">{{ costEstimate?.tollLabel ?? '—' }}</dd>
-                </div>
-                <div class="flex justify-between gap-2 border-b border-slate-50 pb-2.5">
-                  <dt class="text-slate-500">Loại xe đề xuất</dt>
-                  <dd class="text-right font-medium text-slate-900">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
-                </div>
-              </dl>
-              <div class="mt-5 rounded-xl bg-teal-50 px-4 py-4 ring-1 ring-teal-600/15">
-                <p class="text-xs font-semibold text-teal-900/80">Tổng chi phí ước tính</p>
-                <p class="mt-1 text-3xl font-bold tabular-nums tracking-tight text-teal-600">
-                  {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
-                </p>
-              </div>
-            </div>
-
-            <div
-              v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending' || req.paper_status === 'received'"
-              class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                <div class="flex items-start gap-3">
-                  <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200"
+                  <p
+                    v-else
+                    class="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2.5 text-center text-xs text-slate-500"
                   >
-                    <DocumentTextIcon class="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div class="min-w-0">
-                    <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
-                  </div>
-                </div>
-                <span
-                  v-if="req.paper_status === 'received'"
-                  class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-800 ring-1 ring-teal-600/20"
-                >
-                  Đã nhận phiếu
-                </span>
-                <span
-                  v-else-if="req.paper_status === 'pending'"
-                  class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 ring-1 ring-amber-600/20"
-                >
-                  Chưa nhận phiếu
-                </span>
-              </div>
-
-              <ul v-if="paperScans.length" class="mt-4 space-y-2 text-sm">
-                <li
-                  v-for="a in paperScans"
-                  :key="a.id"
-                  class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 shadow-sm"
-                >
-                  <div class="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      class="max-w-full truncate text-left text-xs font-semibold text-teal-700 hover:underline"
-                      :title="a.original_name || 'Tải file'"
-                      @click="downloadFile(a)"
-                    >
-                      {{ a.original_name || 'Tải file' }}
-                    </button>
-                    <span v-if="a.mime_type" class="rounded bg-white px-1.5 py-0.5 text-[10px] text-slate-500 ring-1 ring-slate-200">
-                      {{ a.mime_type }}
-                    </span>
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      class="!border-slate-200 !px-2 !py-1 !text-[11px] !font-semibold"
-                      :loading="ocrBusy === a.id"
-                      @click="runOcr(a.id)"
-                    >
-                      {{ a.ocr_processed_at ? 'OCR lại' : 'Chạy OCR' }}
-                    </Button>
-                    <button
-                      v-if="canDeleteAttachment"
-                      type="button"
-                      class="ml-auto text-[11px] font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50"
-                      :disabled="deletingId === a.id"
-                      @click="removeAttachment(a)"
-                    >
-                      {{ deletingId === a.id ? '…' : 'Xóa scan' }}
-                    </button>
-                  </div>
-                  <p v-if="a.ocr_processed_at" class="mt-1.5 text-[11px] text-slate-500">
-                    OCR: {{ fmt(a.ocr_processed_at) }}
+                    Bạn không có quyền tải file đính kèm.
                   </p>
-                  <pre
-                    v-if="a.ocr_text"
-                    class="mt-2 max-h-36 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-100 bg-white p-2 text-[11px] leading-relaxed text-slate-800"
-                  >{{ a.ocr_text }}</pre>
-                </li>
-              </ul>
-
-              <div v-if="ocrErr" class="mt-3 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">{{ ocrErr }}</div>
-
-              <div v-if="canUploadAttachment" class="mt-4">
-                <FileUpload
-                  :key="`paper-${route.params.id}-${paperScans.length}`"
-                  label="Đính kèm phiếu / scan"
-                  drag-drop
-                  compact
-                  :upload-fn="uploadPaperScan"
-                  @uploaded="load"
-                />
+                </div>
               </div>
 
               <div
-                v-if="req.paper_status === 'received' && !canManagePaper"
-                class="mt-4 border-t border-slate-100 pt-3 text-[11px] text-slate-600"
+                v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending' || req.paper_status === 'received'"
+                class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
               >
-                <p v-if="req.paper_reference">
-                  <span class="font-medium text-slate-500">Số phiếu / tham chiếu:</span>
-                  {{ req.paper_reference }}
-                </p>
-                <p v-if="req.paper_received_at" class="mt-1">
-                  <span class="font-medium text-slate-500">Thời điểm nhận:</span>
-                  {{ fmt(req.paper_received_at) }}
-                </p>
-              </div>
-
-              <div v-if="req.paper_status === 'pending' && canManagePaper" class="mt-4 border-t border-slate-100 pt-3">
-                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Xác nhận đã nhận phiếu giấy</h3>
-                <form class="mt-3 grid gap-2.5" @submit.prevent="doMarkPaper">
-                  <Input
-                    v-model="paperForm.paper_reference"
-                    label="Số phiếu / mã tham chiếu"
-                    placeholder="Ví dụ: PG-2026-00123"
-                  />
-                  <Input
-                    v-model="paperForm.paper_received_at"
-                    label="Thời điểm nhận phiếu"
-                    type="datetime-local"
-                  />
-                  <div class="flex flex-wrap items-center gap-2 pt-0.5">
-                    <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Đánh dấu đã nhận</Button>
-                    <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
-                  </div>
-                </form>
-              </div>
-
-              <div v-else-if="req.paper_status === 'received' && canManagePaper" class="mt-4 border-t border-slate-100 pt-3">
-                <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Cập nhật / hoàn tác phiếu giấy</h3>
-                <form class="mt-3 grid gap-2.5" @submit.prevent="doMarkPaper">
-                  <Input
-                    v-model="paperForm.paper_reference"
-                    label="Số phiếu / mã tham chiếu"
-                    placeholder="Ví dụ: PG-2026-00123"
-                  />
-                  <Input
-                    v-model="paperForm.paper_received_at"
-                    label="Thời điểm nhận phiếu"
-                    type="datetime-local"
-                  />
-                  <div class="flex flex-wrap items-center gap-2 pt-0.5">
-                    <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Lưu thay đổi</Button>
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
-                      :disabled="paperActing || paperRevertActing"
-                      @click="doRevertPaper"
+                <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div class="flex items-start gap-2">
+                    <div
+                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200"
                     >
-                      Hoàn tác (chưa nhận phiếu)
-                    </Button>
-                    <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                      <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <div class="min-w-0">
+                      <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
+                    </div>
                   </div>
-                </form>
+                  <span
+                    v-if="req.paper_status === 'received'"
+                    class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-teal-800 ring-1 ring-teal-600/20"
+                  >
+                    Đã nhận phiếu
+                  </span>
+                  <span
+                    v-else-if="req.paper_status === 'pending'"
+                    class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-900 ring-1 ring-amber-600/20"
+                  >
+                    Chưa nhận phiếu
+                  </span>
+                </div>
+
+                <ul v-if="paperScans.length" class="mt-3 space-y-2 text-xs sm:text-sm">
+                  <li
+                    v-for="a in paperScans"
+                    :key="a.id"
+                    class="rounded-lg border border-slate-100 bg-slate-50/50 p-2.5 shadow-sm sm:p-3"
+                  >
+                    <div class="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        class="max-w-full truncate text-left text-[11px] font-semibold text-teal-700 hover:underline sm:text-xs"
+                        :title="a.original_name || 'Tải file'"
+                        @click="downloadFile(a)"
+                      >
+                        {{ a.original_name || 'Tải file' }}
+                      </button>
+                      <span
+                        v-if="a.mime_type"
+                        class="rounded bg-white px-1 py-0.5 text-[9px] text-slate-500 ring-1 ring-slate-200"
+                      >
+                        {{ a.mime_type }}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        type="button"
+                        class="!border-slate-200 !px-2 !py-1 !text-[10px] !font-semibold"
+                        :loading="ocrBusy === a.id"
+                        @click="runOcr(a.id)"
+                      >
+                        {{ a.ocr_processed_at ? 'OCR lại' : 'Chạy OCR' }}
+                      </Button>
+                      <button
+                        v-if="canDeleteAttachment"
+                        type="button"
+                        class="ml-auto text-[10px] font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50 sm:text-[11px]"
+                        :disabled="deletingId === a.id"
+                        @click="removeAttachment(a)"
+                      >
+                        {{ deletingId === a.id ? '…' : 'Xóa scan' }}
+                      </button>
+                    </div>
+                    <p v-if="a.ocr_processed_at" class="mt-1 text-[10px] text-slate-500">
+                      OCR: {{ fmt(a.ocr_processed_at) }}
+                    </p>
+                    <pre
+                      v-if="a.ocr_text"
+                      class="mt-2 max-h-36 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-100 bg-white p-2 text-[10px] leading-relaxed text-slate-800 sm:text-[11px]"
+                    >{{ a.ocr_text }}</pre>
+                  </li>
+                </ul>
+
+                <div v-if="ocrErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">
+                  {{ ocrErr }}
+                </div>
+
+                <div v-if="canUploadAttachment" class="mt-3">
+                  <FileUpload
+                    :key="`paper-${route.params.id}-${paperScans.length}`"
+                    label="Đính kèm phiếu / scan"
+                    drag-drop
+                    compact
+                    :upload-fn="uploadPaperScan"
+                    @uploaded="load"
+                  />
+                </div>
+
+                <div
+                  v-if="req.paper_status === 'received' && !canManagePaper"
+                  class="mt-3 border-t border-slate-100 pt-3 text-[10px] text-slate-600 sm:text-[11px]"
+                >
+                  <p v-if="req.paper_reference">
+                    <span class="font-medium text-slate-500">Số phiếu / tham chiếu:</span>
+                    {{ req.paper_reference }}
+                  </p>
+                  <p v-if="req.paper_received_at" class="mt-1">
+                    <span class="font-medium text-slate-500">Thời điểm nhận:</span>
+                    {{ fmt(req.paper_received_at) }}
+                  </p>
+                </div>
+
+                <div v-if="req.paper_status === 'pending' && canManagePaper" class="mt-3 border-t border-slate-100 pt-3">
+                  <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
+                    Xác nhận đã nhận phiếu giấy
+                  </h3>
+                  <form class="mt-2 grid gap-2" @submit.prevent="doMarkPaper">
+                    <Input
+                      v-model="paperForm.paper_reference"
+                      label="Số phiếu / mã tham chiếu"
+                      placeholder="Ví dụ: PG-2026-00123"
+                    />
+                    <Input v-model="paperForm.paper_received_at" label="Thời điểm nhận phiếu" type="datetime-local" />
+                    <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                      <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
+                        Đánh dấu đã nhận
+                      </Button>
+                      <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                    </div>
+                  </form>
+                </div>
+
+                <div v-else-if="req.paper_status === 'received' && canManagePaper" class="mt-3 border-t border-slate-100 pt-3">
+                  <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
+                    Cập nhật / hoàn tác phiếu giấy
+                  </h3>
+                  <form class="mt-2 grid gap-2" @submit.prevent="doMarkPaper">
+                    <Input
+                      v-model="paperForm.paper_reference"
+                      label="Số phiếu / mã tham chiếu"
+                      placeholder="Ví dụ: PG-2026-00123"
+                    />
+                    <Input v-model="paperForm.paper_received_at" label="Thời điểm nhận phiếu" type="datetime-local" />
+                    <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                      <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
+                        Lưu thay đổi
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        type="button"
+                        class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
+                        :disabled="paperActing || paperRevertActing"
+                        @click="doRevertPaper"
+                      >
+                        Hoàn tác (chưa nhận phiếu)
+                      </Button>
+                      <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
-          </aside>
+          </div>
         </div>
-
-        <RejectReasonModal
-          :open="deptRejectOpen"
-          :reason="deptRejectReason"
-          :acting="deptActing"
-          :error-message="deptMsg"
-          @update:reason="deptRejectReason = $event"
-          @close="closeDeptReject"
-          @confirm="submitDeptReject"
-        />
       </div>
+
+      <RejectReasonModal
+        :open="deptRejectOpen"
+        :reason="deptRejectReason"
+        :acting="deptActing"
+        :error-message="deptMsg"
+        @update:reason="deptRejectReason = $event"
+        @close="closeDeptReject"
+        @confirm="submitDeptReject"
+      />
     </template>
   </div>
 </template>
@@ -870,8 +938,8 @@ const canManagePaper = computed(() => auth.hasPermission('request.paper.manage')
 const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
 
 const stepperTrackMinClass = computed(() => {
-  if (!req.value) return 'min-w-[700px]'
-  return req.value.trip_type === 'door_to_door' ? 'min-w-[700px]' : 'min-w-[860px]'
+  if (!req.value) return 'min-w-[560px]'
+  return req.value.trip_type === 'door_to_door' ? 'min-w-[560px]' : 'min-w-[720px]'
 })
 
 const referencePricingUrl = computed(() => {
@@ -944,6 +1012,30 @@ const showResetCloneBtn = computed(
     isCurrentUserRequester.value &&
     auth.hasPermission('request.create') &&
     ['approved', 'rejected'].includes(String(req.value?.status || '')),
+)
+
+const activeTab = ref('route')
+
+/** Tab Phê duyệt: có cảnh báo / thao tác cần xem (hiển thị badge + empty state khi false). */
+const approvalTabNeedsFocus = computed(() => {
+  const r = req.value
+  if (!r) return false
+  return !!(
+    r.dispatch_package_cost_alert ||
+    showResetCloneBtn.value ||
+    showPassengerAdjustSection.value ||
+    showFillPriceSection.value ||
+    showDeptDecisionSection.value ||
+    showSignedPaperSection.value
+  )
+})
+
+watch(
+  approvalTabNeedsFocus,
+  (need, was) => {
+    if (need && was !== true && req.value) activeTab.value = 'approval'
+  },
+  { immediate: true },
 )
 
 const showRecurringBadge = computed(() => !!req.value?.dispatch_request_template_id)
