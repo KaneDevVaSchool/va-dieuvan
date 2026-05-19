@@ -10,7 +10,6 @@
       </div>
       <div class="min-w-0 flex-1">
         <h2 class="text-base font-semibold tracking-tight text-slate-900">{{ t('request_detail.dept_decision_title') }}</h2>
-        <p class="mt-1 text-sm leading-snug text-slate-600">{{ t('request_detail.dept_decision_lead') }}</p>
         <p v-if="servicePriceDisplay != null" class="mt-2 text-sm font-medium text-slate-800">
           {{ t('request_detail.service_price_label') }}:
           {{ servicePriceDisplay }}

@@ -52,9 +52,6 @@
             </div>
 
             <div class="min-w-0 w-full lg:max-w-2xl lg:flex-1 xl:max-w-3xl">
-              <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:hidden">
-                Tiến trình yêu cầu
-              </p>
               <div class="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
                 <div class="flex items-start" :class="stepperTrackMinClass">
                   <template v-for="(step, idx) in stepperSteps" :key="step.key">
@@ -104,36 +101,6 @@
                       <p v-if="step.sub" class="mt-0.5 hidden max-w-[6.5rem] truncate text-[10px] text-slate-500 sm:block sm:max-w-none">
                         {{ step.sub }}
                       </p>
-                      <p
-                        v-if="step.key === 'pending' && step.state === 'current' && req.status === 'pending'"
-                        class="mt-0.5 text-[10px] font-medium text-teal-600"
-                      >
-                        Đang xử lý
-                      </p>
-                      <p
-                        v-if="step.key === 'price_pending' && step.state === 'current' && req.status === 'pending'"
-                        class="mt-0.5 text-[10px] font-medium text-teal-600"
-                      >
-                        {{ t('request_detail.step_price_pending') }}
-                      </p>
-                      <p
-                        v-if="step.key === 'dept_pending' && step.state === 'current' && req.status === 'price_filled'"
-                        class="mt-0.5 text-[10px] font-medium text-teal-600"
-                      >
-                        {{ t('request_detail.step_dept_pending') }}
-                      </p>
-                      <p
-                        v-if="step.key === 'pending' && req.status === 'rejected'"
-                        class="mt-0.5 text-[10px] font-medium text-rose-600"
-                      >
-                        Đã từ chối
-                      </p>
-                      <p
-                        v-if="step.key === 'dept_pending' && req.status === 'rejected'"
-                        class="mt-0.5 text-[10px] font-medium text-rose-600"
-                      >
-                        Đã từ chối
-                      </p>
                     </div>
                     <div
                       v-if="idx < stepperSteps.length - 1"
@@ -166,9 +133,6 @@
                   />
                   {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
                 </button>
-                <p v-if="pdfExportDisabled" class="text-center text-[11px] leading-snug text-slate-500 lg:text-left">
-                  {{ t('request_detail.pdf_locked_tooltip') }}
-                </p>
               </div>
 
               <div
@@ -222,6 +186,80 @@
         </section>
 
         <CostLimitAlert v-if="req.dispatch_package_cost_alert" :alert="req.dispatch_package_cost_alert" />
+
+        <section v-if="showApprovalDecisionPanel" class="rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm">
+          <h2 class="border-b border-slate-200 pb-3 text-base font-bold text-slate-900">Cơ sở phê duyệt</h2>
+          <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Trạng thái</dt>
+              <dd class="mt-1">
+                <StatusBadge :status="req.status" />
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Loại chuyến</dt>
+              <dd class="mt-1 font-semibold text-slate-900">
+                {{ labelTripType(req.trip_type) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Người yêu cầu</dt>
+              <dd class="mt-1 font-semibold text-slate-900">
+                {{ req.requester?.name ?? '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Đơn vị</dt>
+              <dd class="mt-1 text-slate-900">
+                {{ req.wizard_snapshot?.form?.requester_unit || requesterSubtitle || '—' }}
+              </dd>
+            </div>
+            <div class="sm:col-span-2">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Thời gian sử dụng</dt>
+              <dd class="mt-1 font-medium text-slate-900">
+                {{ fmtDateVi(req.depart_at) }} · {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
+              </dd>
+            </div>
+            <div class="lg:col-span-3">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Lộ trình</dt>
+              <dd class="mt-1 font-medium text-slate-900">
+                <span>{{ req.origin || '—' }}</span>
+                <span class="mx-2 text-slate-400">→</span>
+                <span>{{ req.destination || '—' }}</span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Số người / tải</dt>
+              <dd class="mt-1 font-medium text-slate-900">
+                {{ passengerOrCargoLine }}
+              </dd>
+            </div>
+            <div v-if="wizardPurpose" class="sm:col-span-2">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Mục đích</dt>
+              <dd class="mt-1 text-slate-900">
+                {{ wizardPurpose }}
+              </dd>
+            </div>
+            <div v-if="costEstimate">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tổng chi phí (khai báo)</dt>
+              <dd class="mt-1 text-lg font-bold tabular-nums text-teal-700">
+                {{ formatVndCurrency(costEstimate.total) }}
+              </dd>
+            </div>
+            <div v-if="showDeptDecisionSection && req.service_price != null">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Đơn giá (Điều vận)</dt>
+              <dd class="mt-1 text-lg font-bold tabular-nums text-violet-800">
+                {{ formatVndCurrency(req.service_price) }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">Số tệp đính kèm</dt>
+              <dd class="mt-1 font-semibold text-slate-900">
+                {{ generalAttachments.length }}
+              </dd>
+            </div>
+          </dl>
+        </section>
 
         <PriceFillSection
           v-if="showFillPriceSection"
@@ -299,12 +337,12 @@
                     <span>{{ passengerOrCargoLine }}</span>
                   </dd>
                 </div>
-                <div v-if="hasUserNotes">
-                  <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Ghi chú</dt>
+                <div v-if="hasRequestNotesBlock">
+                  <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ requestNotesLabel }}</dt>
                   <dd
-                    class="mt-1 max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-800 [overflow-wrap:anywhere]"
+                    class="mt-1 max-h-[min(36rem,70vh)] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-800 [overflow-wrap:anywhere]"
                   >
-                    {{ userNotesFormatted }}
+                    {{ requestNotesCombined }}
                   </dd>
                 </div>
               </dl>
@@ -385,9 +423,6 @@
                 <p class="mt-1 text-xl font-bold tabular-nums text-teal-600 sm:text-2xl">
                   {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
                 </p>
-                <p class="mt-2 text-[11px] leading-snug text-teal-800/85">
-                  * Chi phí thực tế có thể thay đổi theo lộ trình và điều kiện vận hành.
-                </p>
               </div>
             </div>
 
@@ -400,9 +435,6 @@
                 </div>
                 <div class="min-w-0 flex-1">
                   <h2 class="text-base font-semibold text-slate-900">Tài liệu đính kèm</h2>
-                  <p class="mt-1 text-xs leading-relaxed text-slate-500">
-                    Chứng từ, ảnh hoặc file liên quan · tối đa 10&nbsp;MB · kéo thả hoặc chọn tệp.
-                  </p>
                 </div>
               </div>
 
@@ -444,16 +476,15 @@
               </div>
 
               <div class="mt-4">
-                <FileUpload
-                  v-if="canUploadAttachment"
-                  :key="`doc-${route.params.id}-${generalAttachments.length}`"
-                  label="Thêm tài liệu"
-                  hint="Ảnh, PDF, Word…"
-                  drag-drop
-                  compact
-                  :upload-fn="uploadRequestDocument"
-                  @uploaded="onDocUploaded"
-                />
+                  <FileUpload
+                    v-if="canUploadAttachment"
+                    :key="`doc-${route.params.id}-${generalAttachments.length}`"
+                    label="Thêm tài liệu"
+                    drag-drop
+                    compact
+                    :upload-fn="uploadRequestDocument"
+                    @uploaded="onDocUploaded"
+                  />
                 <p
                   v-else
                   class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 text-center text-xs text-slate-500"
@@ -512,9 +543,6 @@
                   </div>
                   <div class="min-w-0">
                     <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
-                    <p v-if="paperScans.length" class="mt-1 text-[11px] leading-snug text-slate-500">
-                      Đọc chữ từ ảnh/PDF phiếu giấy. Có thể xóa scan sai hoặc chạy OCR lại.
-                    </p>
                   </div>
                 </div>
                 <span
@@ -584,7 +612,6 @@
                 <FileUpload
                   :key="`paper-${route.params.id}-${paperScans.length}`"
                   label="Đính kèm phiếu / scan"
-                  hint="Ảnh hoặc PDF · loại paper_scan"
                   drag-drop
                   compact
                   :upload-fn="uploadPaperScan"
@@ -608,21 +635,16 @@
 
               <div v-if="req.paper_status === 'pending' && canManagePaper" class="mt-4 border-t border-slate-100 pt-3">
                 <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Xác nhận đã nhận phiếu giấy</h3>
-                <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
-                  Điền khi bộ phận điều vận đã nhận bản giấy đúng với yêu cầu. Cần quyền quản lý phiếu trên hệ thống.
-                </p>
                 <form class="mt-3 grid gap-2.5" @submit.prevent="doMarkPaper">
                   <Input
                     v-model="paperForm.paper_reference"
                     label="Số phiếu / mã tham chiếu"
-                    placeholder="Ví dụ: PG-2026-00123 (nếu có)"
-                    hint="Có thể để trống nếu chỉ cần ghi nhận thời điểm nhận."
+                    placeholder="Ví dụ: PG-2026-00123"
                   />
                   <Input
                     v-model="paperForm.paper_received_at"
                     label="Thời điểm nhận phiếu"
                     type="datetime-local"
-                    hint="Chọn ngày giờ thực tế khi nhận được phiếu. Chạm vào ô để mở lịch — không cần bấm biểu tượng."
                   />
                   <div class="flex flex-wrap items-center gap-2 pt-0.5">
                     <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Đánh dấu đã nhận</Button>
@@ -633,21 +655,16 @@
 
               <div v-else-if="req.paper_status === 'received' && canManagePaper" class="mt-4 border-t border-slate-100 pt-3">
                 <h3 class="text-xs font-bold uppercase tracking-wide text-slate-500">Cập nhật / hoàn tác phiếu giấy</h3>
-                <p class="mt-1 text-[11px] leading-relaxed text-slate-500">
-                  Sửa số phiếu hoặc thời điểm nhận nếu nhập sai. Hoàn tác để trả trạng thái về «chưa nhận phiếu» (file scan và OCR giữ nguyên).
-                </p>
                 <form class="mt-3 grid gap-2.5" @submit.prevent="doMarkPaper">
                   <Input
                     v-model="paperForm.paper_reference"
                     label="Số phiếu / mã tham chiếu"
-                    placeholder="Ví dụ: PG-2026-00123 (nếu có)"
-                    hint="Để trống nếu không có mã."
+                    placeholder="Ví dụ: PG-2026-00123"
                   />
                   <Input
                     v-model="paperForm.paper_received_at"
                     label="Thời điểm nhận phiếu"
                     type="datetime-local"
-                    hint="Đổi nếu cần chỉnh lại thời điểm ghi nhận."
                   />
                   <div class="flex flex-wrap items-center gap-2 pt-0.5">
                     <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Lưu thay đổi</Button>
@@ -663,71 +680,6 @@
                     <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
                   </div>
                 </form>
-              </div>
-            </div>
-
-            <div
-              v-if="showDeptDecisionSection || (req.status === 'pending' && canApprove && req.trip_type === 'door_to_door')"
-              class="rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/80 via-white to-white p-5 shadow-md ring-1 ring-teal-600/10"
-            >
-              <div class="flex items-start gap-3">
-                <div
-                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-md shadow-teal-900/10"
-                >
-                  <ClipboardDocumentCheckIcon class="h-6 w-6" aria-hidden="true" />
-                </div>
-                <div class="min-w-0 flex-1">
-                  <h2 class="text-base font-semibold text-slate-900">Ghi chú phê duyệt</h2>
-                  <p class="mt-1 text-xs leading-relaxed text-slate-600">
-                    <template v-if="showDeptDecisionSection">
-                      Ghi chú hoặc soạn lý do từ chối trước khi bấm «Từ chối có cấp phòng ban» ở khối bên dưới. Phê duyệt không bắt buộc nhập
-                      ghi chú.
-                    </template>
-                    <template v-else>
-                      Xác nhận yêu cầu door-to-door bằng các nút «Phê duyệt» / «Từ chối» trên thanh tiêu đề.
-                    </template>
-                  </p>
-                </div>
-              </div>
-
-              <div class="mt-4">
-                <label class="block text-[11px] font-bold uppercase tracking-wide text-slate-500" for="dept-approval-notes">
-                  Nội dung
-                </label>
-                <textarea
-                  id="dept-approval-notes"
-                  v-model="deptRejectReason"
-                  rows="4"
-                  class="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-inner outline-none ring-teal-600/20 transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-2"
-                  :placeholder="
-                    showDeptDecisionSection ? 'Nhập ghi chú hoặc lý do từ chối (nếu có)…' : 'Ghi chú nội bộ (tuỳ chọn) — không gửi kèm API.'
-                  "
-                  :disabled="deptActing || acting"
-                />
-                <p v-if="deptMsg && !deptRejectOpen && showDeptDecisionSection" class="mt-2 text-xs font-medium text-rose-600">
-                  {{ deptMsg }}
-                </p>
-              </div>
-
-              <Button
-                v-if="showDeptDecisionSection"
-                class="mt-4 inline-flex !h-11 w-full items-center justify-center gap-2 !bg-teal-600 text-[15px] font-semibold !text-white shadow-sm hover:!bg-teal-700"
-                :loading="deptActing"
-                type="button"
-                @click="onDeptApproveClick"
-              >
-                Gửi quyết định
-                <HandThumbUpIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-              </Button>
-
-              <div
-                v-if="req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
-                class="mt-4 border-t border-teal-100/90 pt-4 text-center"
-              >
-                <p class="text-xs leading-relaxed text-slate-600">
-                  Bạn có thể <span class="font-semibold text-slate-800">Phê duyệt</span> hoặc
-                  <span class="font-semibold text-slate-800">Từ chối</span> ngay trên thanh tiêu đề phía trên.
-                </p>
               </div>
             </div>
           </aside>
@@ -757,7 +709,6 @@ import {
   BuildingOffice2Icon,
   CalculatorIcon,
   CalendarDaysIcon,
-  ClipboardDocumentCheckIcon,
   ClockIcon,
   Cog6ToothIcon,
   CubeIcon,
@@ -800,6 +751,7 @@ import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripType } from '../../util/labels'
 import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock } from '../../util/formatDispatchNotes'
+import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../../util/datetime'
@@ -847,17 +799,35 @@ const passengerSaving = ref(false)
 const passengerPatchErr = ref('')
 const resetCloneBusy = ref(false)
 
-const hasUserNotes = computed(() => {
-  const n = req.value?.notes?.trim()
-  if (!n) return false
-  return !isLegacyBm03NotesBlock(n)
+const bm03FromSnapshotRaw = computed(() => {
+  const s = buildBm03BodyFromWizardSnapshot(req.value?.wizard_snapshot)
+  return s && String(s).trim() ? String(s).trim() : ''
 })
 
-const userNotesFormatted = computed(() => {
+/** BM.03 trong notes (bản cũ) + nội dung tái tạo từ wizard_snapshot + ghi chú tự do. */
+const requestNotesCombined = computed(() => {
   const n = req.value?.notes?.trim()
-  if (!n || isLegacyBm03NotesBlock(n)) return ''
-  return formatDispatchRequestNotesForDisplay(n)
+  const snap = bm03FromSnapshotRaw.value
+
+  if (n && isLegacyBm03NotesBlock(n)) {
+    return formatDispatchRequestNotesForDisplay(n)
+  }
+
+  const userPart = n && !isLegacyBm03NotesBlock(n) ? formatDispatchRequestNotesForDisplay(n) : ''
+  const snapPart = snap ? formatDispatchRequestNotesForDisplay(snap) : ''
+
+  if (snapPart && userPart) {
+    return `${snapPart}\n\n———\n\nGhi chú thêm:\n\n${userPart}`
+  }
+  if (snapPart) return snapPart
+  if (userPart) return userPart
+  return ''
 })
+
+const hasRequestNotesBlock = computed(() => !!requestNotesCombined.value.trim())
+
+/** Một nhãn cố định — tránh nhiều dòng chú thích. */
+const requestNotesLabel = computed(() => 'Chi tiết đề nghị')
 
 const requestRefCode = computed(() => {
   const r = req.value
@@ -898,6 +868,18 @@ const showFillPriceSection = computed(
 const showDeptDecisionSection = computed(
   () => req.value?.status === 'price_filled' && auth.hasPermission('request.approve_dept'),
 )
+
+const wizardPurpose = computed(() => {
+  const p = req.value?.wizard_snapshot?.form?.purpose
+  return p && String(p).trim() ? String(p).trim() : ''
+})
+
+const showApprovalDecisionPanel = computed(() => {
+  const r = req.value
+  if (!r) return false
+  if (showDeptDecisionSection.value) return true
+  return r.status === 'pending' && canApprove.value && r.trip_type === 'door_to_door'
+})
 
 const isCurrentUserRequester = computed(
   () =>
