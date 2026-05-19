@@ -85,6 +85,7 @@ import {
   UserIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../ui/Button.vue'
+import { labelTripType } from '../../util/labels'
 
 const props = defineProps({
   req: { type: Object, required: true },
@@ -102,7 +103,7 @@ const { t, locale } = useI18n()
 const tripTypeLabel = computed(() => {
   const k = props.req.trip_type
   if (!k) return '—'
-  return t(`request_detail.trip_type.${k}`)
+  return labelTripType(k)
 })
 
 const statusLabel = computed(() => {

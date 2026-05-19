@@ -229,6 +229,7 @@ import { formatApiError } from '../../api/http'
 import DeptRequestCard from '../../components/dept/DeptRequestCard.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { labelTripType } from '../../util/labels'
 
 const FILTER_VISIBILITY_KEY = 'va.dept.rejected.filter_vis_v1'
 const DEFAULT_PER_PAGE = 20
@@ -275,7 +276,7 @@ const tripTypeFilterOptions = computed(() => [
   { value: '', label: t('dept.filter_trip_type_all') },
   ...TRIP_TYPES.map((value) => ({
     value,
-    label: t(`request_detail.trip_type.${value}`),
+    label: labelTripType(value),
   })),
 ])
 
@@ -295,7 +296,7 @@ const activeFilterCount = computed(() => {
 
 function tripTypeLabel(value) {
   if (!value) return t('dept.filter_trip_type_all')
-  return t(`request_detail.trip_type.${value}`)
+  return labelTripType(value)
 }
 
 let searchDebounceId = null
