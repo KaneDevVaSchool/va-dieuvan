@@ -483,6 +483,22 @@
             </div>
 
             <div v-show="activeTab === 'approval'" class="space-y-4">
+              <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <p class="text-sm font-medium text-slate-800">
+                    {{ t('request_detail.pricing_modal_title') }}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    class="shrink-0 !border-teal-200 !text-teal-900 hover:!bg-teal-50"
+                    @click="pricingModalOpen = true"
+                  >
+                    {{ t('request_detail.reference_pricing_link') }}
+                  </Button>
+                </div>
+              </section>
+
               <CostLimitAlert v-if="req.dispatch_package_cost_alert" :alert="req.dispatch_package_cost_alert" />
 
               <section
@@ -780,6 +796,39 @@
         @close="closeDeptReject"
         @confirm="submitDeptReject"
       />
+
+      <Teleport to="body">
+        <div
+          v-if="pricingModalOpen"
+          class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pricing-modal-title"
+          @click.self="pricingModalOpen = false"
+        >
+          <div
+            class="max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-2xl"
+            @click.stop
+          >
+            <div class="border-b border-teal-100 bg-teal-50/80 px-4 py-3">
+              <h3 id="pricing-modal-title" class="text-base font-semibold text-teal-950">
+                {{ t('request_detail.pricing_modal_title') }}
+              </h3>
+              <p class="mt-1 text-xs text-teal-900/85">
+                {{ t('request_detail.pricing_modal_lead') }}
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2 p-4">
+              <Button type="button" class="!bg-teal-600 hover:!bg-teal-700" @click="openPricingInApp">
+                {{ t('request_detail.pricing_modal_open_app') }}
+              </Button>
+              <Button variant="secondary" type="button" @click="pricingModalOpen = false">
+                {{ t('app.cancel') }}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
     </template>
   </div>
 </template>
@@ -843,6 +892,7 @@ import { toDatetimeLocalValue } from '../../util/datetime'
 import { useAuthStore } from '../../store'
 import { confirmAction } from '../../composables/useConfirm'
 import { showAppSuccess, showAppError } from '../../composables/appMessage'
+import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
 
 const route = useRoute()
 const router = useRouter()
@@ -883,6 +933,10 @@ const passengerDraft = ref(1)
 const passengerSaving = ref(false)
 const passengerPatchErr = ref('')
 const resetCloneBusy = ref(false)
+
+/** Đường dẫn SPA tới bảng giá (vd. /mng/pricing). */
+const pricingAppPath = buildStaffPrefixedPath('/pricing')
+const pricingModalOpen = ref(false)
 
 const bm03FromSnapshotRaw = computed(() => {
   const s = buildBm03BodyFromWizardSnapshot(req.value?.wizard_snapshot)
@@ -1725,6 +1779,11 @@ function uploadSignedPaper(file, onProgress) {
 function onSignedUploaded() {
   signedUploadErr.value = ''
   load()
+}
+
+function openPricingInApp() {
+  pricingModalOpen.value = false
+  router.push(pricingAppPath)
 }
 
 onMounted(load)
