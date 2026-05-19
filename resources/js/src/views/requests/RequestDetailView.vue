@@ -6,7 +6,7 @@
     ]"
   >
     <div v-if="loading" class="flex flex-1 items-center justify-center px-4 py-12 text-sm text-slate-500">
-      Đang tải…
+      {{ t('request_detail.page_loading') }}
     </div>
 
     <template v-else-if="req">
@@ -18,7 +18,7 @@
             <RouterLink
               :to="isDeptRequestDetailRoute ? { name: 'deptDashboard' } : '/requests'"
               class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-              :aria-label="isDeptRequestDetailRoute ? t('dept.nav_pending') : 'Quay lại danh sách'"
+              :aria-label="isDeptRequestDetailRoute ? t('dept.aria_back_pending') : t('request_detail.aria_back_list')"
             >
               <ArrowLeftIcon class="h-4 w-4" />
             </RouterLink>
@@ -42,14 +42,14 @@
                 </span>
               </div>
               <p class="mt-0.5 text-[11px] text-slate-600 sm:text-xs">
-                Tạo lúc: {{ fmt(req.created_at) }}
+                {{ t('request_detail.meta_created', { dt: fmt(req.created_at) }) }}
                 <template v-if="req.trip">
                   <span class="text-slate-300"> · </span>
                   <RouterLink
                     :to="`/trips/${req.trip.id}`"
                     class="font-medium text-teal-700 underline decoration-teal-600/30 underline-offset-2 hover:decoration-teal-800"
                   >
-                    Chuyến #{{ req.trip.id }}
+                    {{ t('request_detail.trip_link', { id: req.trip.id }) }}
                   </RouterLink>
                 </template>
               </p>
@@ -86,14 +86,14 @@
                 class="min-h-9 !border-rose-200 !bg-white !px-3 !py-2 text-xs font-semibold !text-rose-700 shadow-sm hover:!bg-rose-50 sm:text-sm"
                 @click="onDecideClick('reject')"
               >
-                Từ chối
+                {{ t('request_detail.dept_reject') }}
               </Button>
               <Button
                 :loading="acting"
                 class="min-h-9 !bg-teal-600 !px-4 !py-2 text-xs font-semibold text-white shadow-sm hover:!bg-teal-700 sm:text-sm"
                 @click="onDecideClick('approve')"
               >
-                Phê duyệt
+                {{ t('request_detail.header_approve') }}
               </Button>
             </div>
           </div>
@@ -114,7 +114,7 @@
         >
           <div class="space-y-4 p-4">
             <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Người yêu cầu</p>
+              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.aside_requester') }}</p>
               <div class="mt-3 flex items-center gap-2.5">
                 <img
                   v-if="req.requester?.avatar_url"
@@ -135,26 +135,26 @@
               </div>
               <ul class="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-700">
                 <li v-if="req.requester?.email" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">Email</span>
+                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_email') }}</span>
                   <span class="min-w-0 break-all text-slate-800">{{ req.requester.email }}</span>
                 </li>
                 <li v-if="req.requester?.phone" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">Điện thoại</span>
+                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_phone') }}</span>
                   <span class="text-slate-800">{{ req.requester.phone }}</span>
                 </li>
                 <li v-if="req.requester?.employee_code" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">Mã NV</span>
+                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_employee_code') }}</span>
                   <span class="text-slate-800">{{ req.requester.employee_code }}</span>
                 </li>
                 <li v-if="req.wizard_snapshot?.form?.requester_unit" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">Đơn vị</span>
+                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_requester_unit') }}</span>
                   <span class="text-slate-800">{{ req.wizard_snapshot.form.requester_unit }}</span>
                 </li>
               </ul>
             </div>
 
             <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Yêu cầu phương tiện</p>
+              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.aside_vehicle_request') }}</p>
               <div
                 class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700"
               >
@@ -163,7 +163,7 @@
               </div>
               <dl class="mt-3 space-y-2 border-t border-slate-100 pt-3 text-xs">
                 <div>
-                  <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Số người / Khối lượng</dt>
+                  <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('request_detail.lbl_passenger_load') }}</dt>
                   <dd class="mt-1 flex items-center gap-1.5 text-slate-900">
                     <CubeIcon class="h-4 w-4 shrink-0 text-teal-600" />
                     <span>{{ passengerOrCargoLine }}</span>
@@ -178,7 +178,7 @@
           <nav
             class="flex shrink-0 flex-wrap gap-1 border-b border-slate-200 bg-white px-2 py-1.5 sm:px-3"
             role="tablist"
-            aria-label="Chi tiết yêu cầu"
+            :aria-label="t('request_detail.tablist_aria')"
           >
             <button
               type="button"
@@ -192,7 +192,7 @@
               "
               @click="activeTab = 'route'"
             >
-              Lộ trình
+              {{ t('request_detail.tab_route') }}
             </button>
             <button
               type="button"
@@ -206,7 +206,7 @@
               "
               @click="activeTab = 'form'"
             >
-              Phiếu Đề Xuất
+              {{ t('request_detail.tab_form') }}
               <span
                 v-if="approvalTabNeedsFocus"
                 class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-teal-500"
@@ -225,14 +225,14 @@
               "
               @click="activeTab = 'docs'"
             >
-              Tài liệu
+              {{ t('request_detail.tab_docs') }}
             </button>
           </nav>
 
           <div class="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
             <div v-show="activeTab === 'route'" class="space-y-4">
               <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Tiến trình</p>
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.section_progress') }}</p>
                 <div class="mt-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
                   <div class="flex items-start" :class="stepperTrackMinClass">
                     <template v-for="(step, idx) in stepperSteps" :key="step.key">
@@ -302,12 +302,16 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div class="flex items-center gap-2 text-teal-600">
                     <InformationCircleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">Lộ trình di chuyển</h2>
+                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">{{ t('request_detail.route_map_heading') }}</h2>
                   </div>
                   <span
                     class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold tabular-nums text-teal-800 ring-1 ring-teal-600/20 sm:text-xs"
                   >
-                    {{ costEstimate?.distanceLabel != null ? `~ ${costEstimate.distanceLabel}` : 'Khoảng cách: —' }}
+                    {{
+                      costEstimate?.distanceLabel != null
+                        ? t('request_detail.distance_badge_approx', { label: costEstimate.distanceLabel })
+                        : t('request_detail.distance_badge_empty')
+                    }}
                   </span>
                 </div>
                 <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-700 sm:text-sm">
@@ -332,12 +336,12 @@
                   </div>
                   <div class="min-w-0 flex-1 space-y-5">
                     <div>
-                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">Điểm đi</p>
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">{{ t('request_detail.lbl_origin') }}</p>
                       <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ req.origin || '—' }}</p>
                       <p v-if="routeSubFrom" class="mt-0.5 text-xs text-slate-500">{{ routeSubFrom }}</p>
                     </div>
                     <div>
-                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">Điểm đến</p>
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">{{ t('request_detail.lbl_destination') }}</p>
                       <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ req.destination || '—' }}</p>
                       <p v-if="routeSubTo" class="mt-0.5 text-xs text-slate-500">{{ routeSubTo }}</p>
                     </div>
@@ -349,7 +353,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                   <div class="flex items-center gap-2 text-teal-600">
                     <CalculatorIcon class="h-5 w-5 shrink-0" />
-                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">Dự toán chi phí</h2>
+                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">{{ t('request_detail.cost_estimate_heading') }}</h2>
                   </div>
                   <Button
                     type="button"
@@ -362,24 +366,24 @@
                 </div>
                 <dl class="mt-4 space-y-2 text-xs sm:text-sm">
                   <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">Quãng đường ước tính</dt>
+                    <dt class="text-slate-500">{{ t('request_detail.lbl_est_distance') }}</dt>
                     <dd class="text-right font-medium text-slate-900">{{ costEstimate?.distanceLabel ?? '—' }}</dd>
                   </div>
                   <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">Loại xe đề xuất</dt>
+                    <dt class="text-slate-500">{{ t('request_detail.lbl_suggested_vehicle_type') }}</dt>
                     <dd class="text-right font-medium text-slate-900">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
                   </div>
                   <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">Đơn giá tham chiếu</dt>
+                    <dt class="text-slate-500">{{ t('request_detail.lbl_ref_unit_price_estimate') }}</dt>
                     <dd class="text-right font-medium text-slate-900">{{ costEstimate?.refUnitLabel ?? '—' }}</dd>
                   </div>
                   <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">Phí cầu đường (dự kiến)</dt>
+                    <dt class="text-slate-500">{{ t('request_detail.lbl_toll_estimate') }}</dt>
                     <dd class="text-right font-medium text-slate-900">{{ costEstimate?.tollLabel ?? '—' }}</dd>
                   </div>
                 </dl>
                 <div class="mt-4 rounded-xl bg-teal-50/90 px-3 py-3 ring-1 ring-teal-600/10 sm:px-4 sm:py-4">
-                  <p class="text-[11px] font-medium text-teal-900/90">Tổng (theo khai báo)</p>
+                  <p class="text-[11px] font-medium text-teal-900/90">{{ t('request_detail.total_per_declaration') }}</p>
                   <p class="mt-0.5 text-lg font-bold tabular-nums text-teal-600 sm:text-xl">
                     {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
                   </p>
@@ -391,41 +395,41 @@
                 class="rounded-xl border-2 border-slate-200 bg-white p-4 shadow-sm"
               >
                 <h2 class="border-b border-slate-200 pb-2 text-sm font-bold text-slate-900 sm:text-base">
-                  Cơ sở phê duyệt
+                  {{ t('request_detail.approval_basis_heading') }}
                 </h2>
                 <dl class="mt-3 grid gap-3 text-xs sm:grid-cols-2 sm:text-sm lg:grid-cols-3">
                   <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Trạng thái</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_status_short') }}</dt>
                     <dd class="mt-1">
                       <StatusBadge :status="req.status" />
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Loại chuyến</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_trip_type_short') }}</dt>
                     <dd class="mt-1 font-semibold text-slate-900">
                       {{ labelTripType(req.trip_type) }}
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Người yêu cầu</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_requester_name') }}</dt>
                     <dd class="mt-1 font-semibold text-slate-900">
                       {{ req.requester?.name ?? '—' }}
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Đơn vị</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_requester_unit') }}</dt>
                     <dd class="mt-1 text-slate-900">
                       {{ req.wizard_snapshot?.form?.requester_unit || requesterSubtitle || '—' }}
                     </dd>
                   </div>
                   <div class="sm:col-span-2">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Thời gian sử dụng</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_usage_window') }}</dt>
                     <dd class="mt-1 font-medium text-slate-900">
                       {{ fmtDateVi(req.depart_at) }} · {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
                     </dd>
                   </div>
                   <div class="lg:col-span-3">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Lộ trình</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_route_line') }}</dt>
                     <dd class="mt-1 font-medium text-slate-900">
                       <span>{{ req.origin || '—' }}</span>
                       <span class="mx-2 text-slate-400">→</span>
@@ -433,33 +437,33 @@
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Số người / tải</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_people_load_compact') }}</dt>
                     <dd class="mt-1 font-medium text-slate-900">
                       {{ passengerOrCargoLine }}
                     </dd>
                   </div>
                   <div v-if="wizardPurpose" class="sm:col-span-2">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Mục đích</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_purpose') }}</dt>
                     <dd class="mt-1 text-slate-900">
                       {{ wizardPurpose }}
                     </dd>
                   </div>
                   <div v-if="costEstimate">
                     <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                      Tổng chi phí (khai báo)
+                      {{ t('request_detail.lbl_total_cost_declared') }}
                     </dt>
                     <dd class="mt-1 text-base font-bold tabular-nums text-teal-700 sm:text-lg">
                       {{ formatVndCurrency(costEstimate.total) }}
                     </dd>
                   </div>
                   <div v-if="showDeptDecisionSection && req.service_price != null">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Đơn giá (Điều vận)</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_dispatcher_unit_price') }}</dt>
                     <dd class="mt-1 text-base font-bold tabular-nums text-violet-800 sm:text-lg">
                       {{ formatVndCurrency(req.service_price) }}
                     </dd>
                   </div>
                   <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Số tệp đính kèm</dt>
+                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_attachment_count') }}</dt>
                     <dd class="mt-1 font-semibold text-slate-900">
                       {{ generalAttachments.length }}
                     </dd>
@@ -515,7 +519,7 @@
                     <PaperClipIcon class="h-4 w-4" aria-hidden="true" />
                   </div>
                   <div class="min-w-0 flex-1">
-                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">Tài liệu đính kèm</h2>
+                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">{{ t('request_detail.docs_section_heading') }}</h2>
                   </div>
                 </div>
 
@@ -527,8 +531,8 @@
                   >
                     <span class="flex min-w-0 flex-1 items-center gap-2">
                       <DocumentIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span class="truncate font-medium text-slate-800" :title="a.original_name || `File #${a.id}`">
-                        {{ a.original_name || `File #${a.id}` }}
+                      <span class="truncate font-medium text-slate-800" :title="a.original_name || t('request_detail.file_fallback_name', { id: a.id })">
+                        {{ a.original_name || t('request_detail.file_fallback_name', { id: a.id }) }}
                       </span>
                     </span>
                     <div class="flex shrink-0 items-center gap-0.5">
@@ -537,7 +541,7 @@
                         class="rounded-md px-2 py-1 text-[10px] font-semibold text-teal-700 transition hover:bg-teal-100/80 hover:text-teal-900"
                         @click="downloadFile(a)"
                       >
-                        Tải
+                        {{ t('request_detail.download_action') }}
                       </button>
                       <button
                         v-if="canDeleteAttachment"
@@ -546,7 +550,7 @@
                         :disabled="deletingId === a.id"
                         @click="removeAttachment(a)"
                       >
-                        {{ deletingId === a.id ? '…' : 'Xóa' }}
+                        {{ deletingId === a.id ? '…' : t('request_detail.delete_action') }}
                       </button>
                     </div>
                   </li>
@@ -560,7 +564,7 @@
                   <FileUpload
                     v-if="canUploadAttachment"
                     :key="`doc-${route.params.id}-${generalAttachments.length}`"
-                    label="Thêm tài liệu"
+                    :label="t('request_detail.add_attachment_label')"
                     drag-drop
                     compact
                     :upload-fn="uploadRequestDocument"
@@ -570,7 +574,7 @@
                     v-else
                     class="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2.5 text-center text-xs text-slate-500"
                   >
-                    Bạn không có quyền tải file đính kèm.
+                    {{ t('request_detail.no_attachment_download_perm') }}
                   </p>
                 </div>
               </div>
@@ -587,20 +591,20 @@
                       <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
                     </div>
                     <div class="min-w-0">
-                      <h2 class="text-sm font-semibold text-slate-900">Phiếu giấy &amp; OCR</h2>
+                      <h2 class="text-sm font-semibold text-slate-900">{{ t('request_detail.paper_ocr_heading') }}</h2>
                     </div>
                   </div>
                   <span
                     v-if="req.paper_status === 'received'"
                     class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-teal-800 ring-1 ring-teal-600/20"
                   >
-                    Đã nhận phiếu
+                    {{ t('request_detail.paper_received_badge') }}
                   </span>
                   <span
                     v-else-if="req.paper_status === 'pending'"
                     class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-900 ring-1 ring-amber-600/20"
                   >
-                    Chưa nhận phiếu
+                    {{ t('request_detail.paper_pending_badge') }}
                   </span>
                 </div>
 
@@ -614,10 +618,10 @@
                       <button
                         type="button"
                         class="max-w-full truncate text-left text-[11px] font-semibold text-teal-700 hover:underline sm:text-xs"
-                        :title="a.original_name || 'Tải file'"
+                        :title="a.original_name || t('request_detail.download_file_fallback')"
                         @click="downloadFile(a)"
                       >
-                        {{ a.original_name || 'Tải file' }}
+                        {{ a.original_name || t('request_detail.download_file_fallback') }}
                       </button>
                       <span
                         v-if="a.mime_type"
@@ -632,7 +636,7 @@
                         :loading="ocrBusy === a.id"
                         @click="runOcr(a.id)"
                       >
-                        {{ a.ocr_processed_at ? 'OCR lại' : 'Chạy OCR' }}
+                        {{ a.ocr_processed_at ? t('request_detail.ocr_rerun') : t('request_detail.ocr_run') }}
                       </Button>
                       <button
                         v-if="canDeleteAttachment"
@@ -641,11 +645,11 @@
                         :disabled="deletingId === a.id"
                         @click="removeAttachment(a)"
                       >
-                        {{ deletingId === a.id ? '…' : 'Xóa scan' }}
+                        {{ deletingId === a.id ? '…' : t('request_detail.delete_scan_action') }}
                       </button>
                     </div>
                     <p v-if="a.ocr_processed_at" class="mt-1 text-[10px] text-slate-500">
-                      OCR: {{ fmt(a.ocr_processed_at) }}
+                      {{ t('request_detail.ocr_result_prefix') }} {{ fmt(a.ocr_processed_at) }}
                     </p>
                     <pre
                       v-if="a.ocr_text"
@@ -661,7 +665,7 @@
                 <div v-if="canUploadAttachment" class="mt-3">
                   <FileUpload
                     :key="`paper-${route.params.id}-${paperScans.length}`"
-                    label="Đính kèm phiếu / scan"
+                    :label="t('request_detail.attach_paper_scan_label')"
                     drag-drop
                     compact
                     :upload-fn="uploadPaperScan"
@@ -674,29 +678,29 @@
                   class="mt-3 border-t border-slate-100 pt-3 text-[10px] text-slate-600 sm:text-[11px]"
                 >
                   <p v-if="req.paper_reference">
-                    <span class="font-medium text-slate-500">Số phiếu / tham chiếu:</span>
+                    <span class="font-medium text-slate-500">{{ t('request_detail.paper_ref_label_short') }}</span>
                     {{ req.paper_reference }}
                   </p>
                   <p v-if="req.paper_received_at" class="mt-1">
-                    <span class="font-medium text-slate-500">Thời điểm nhận:</span>
+                    <span class="font-medium text-slate-500">{{ t('request_detail.paper_received_at_short') }}</span>
                     {{ fmt(req.paper_received_at) }}
                   </p>
                 </div>
 
                 <div v-if="req.paper_status === 'pending' && canManagePaper" class="mt-3 border-t border-slate-100 pt-3">
                   <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
-                    Xác nhận đã nhận phiếu giấy
+                    {{ t('request_detail.paper_confirm_received_title') }}
                   </h3>
                   <form class="mt-2 grid gap-2" @submit.prevent="doMarkPaper">
                     <Input
                       v-model="paperForm.paper_reference"
-                      label="Số phiếu / mã tham chiếu"
-                      placeholder="Ví dụ: PG-2026-00123"
+                      :label="t('request_detail.paper_ref_input_label')"
+                      :placeholder="t('request_detail.paper_ref_placeholder')"
                     />
-                    <Input v-model="paperForm.paper_received_at" label="Thời điểm nhận phiếu" type="datetime-local" />
+                    <Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" />
                     <div class="flex flex-wrap items-center gap-2 pt-0.5">
                       <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                        Đánh dấu đã nhận
+                        {{ t('request_detail.paper_mark_received_btn') }}
                       </Button>
                       <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
                     </div>
@@ -705,18 +709,18 @@
 
                 <div v-else-if="req.paper_status === 'received' && canManagePaper" class="mt-3 border-t border-slate-100 pt-3">
                   <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
-                    Cập nhật / hoàn tác phiếu giấy
+                    {{ t('request_detail.paper_update_section_title') }}
                   </h3>
                   <form class="mt-2 grid gap-2" @submit.prevent="doMarkPaper">
                     <Input
                       v-model="paperForm.paper_reference"
-                      label="Số phiếu / mã tham chiếu"
-                      placeholder="Ví dụ: PG-2026-00123"
+                      :label="t('request_detail.paper_ref_input_label')"
+                      :placeholder="t('request_detail.paper_ref_placeholder')"
                     />
-                    <Input v-model="paperForm.paper_received_at" label="Thời điểm nhận phiếu" type="datetime-local" />
+                    <Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" />
                     <div class="flex flex-wrap items-center gap-2 pt-0.5">
                       <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                        Lưu thay đổi
+                        {{ t('request_detail.paper_save_changes_btn') }}
                       </Button>
                       <Button
                         variant="secondary"
@@ -725,7 +729,7 @@
                         :disabled="paperActing || paperRevertActing"
                         @click="doRevertPaper"
                       >
-                        Hoàn tác (chưa nhận phiếu)
+                        {{ t('request_detail.paper_revert_btn') }}
                       </Button>
                       <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
                     </div>
@@ -858,7 +862,7 @@ import { buildStaffPrefixedPath } from '../../config/dispatchWebBase'
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const req = ref(null)
 const loading = ref(true)
@@ -1072,7 +1076,7 @@ const requesterSubtitle = computed(() => {
   const u = req.value?.wizard_snapshot?.form?.requester_unit
   if (u?.trim()) return u.trim()
   const code = req.value?.requester?.employee_code
-  if (code) return `Mã NV: ${code}`
+  if (code) return t('request_detail.requester_employee_line', { code })
   return req.value?.requester?.email ?? '—'
 })
 
@@ -1107,11 +1111,12 @@ const passengerOrCargoLine = computed(() => {
     const weights = r.wizard_snapshot.cargoRows.map((x) => x.weight).filter((w) => String(w).trim())
     if (weights.length) {
       const joined = weights.join(', ')
-      return `${joined}${/tấn|kg|ton/i.test(joined) ? '' : ' (khối lượng theo khai báo)'}`
+      const hint = /tấn|kg|ton/i.test(joined) ? '' : t('request_detail.cargo_weight_declared_hint')
+      return `${joined}${hint}`
     }
   }
   if (r.passenger_count != null && r.passenger_count > 0) {
-    return `${r.passenger_count} hành khách`
+    return t('request_detail.passengers_count_line', { n: r.passenger_count })
   }
   return '—'
 })
@@ -1142,18 +1147,16 @@ const costEstimate = computed(() => {
   const busU = snap.businessRows?.[0]?.unit_price
   const refRaw = passU || busU
   const refUnitLabel =
-    refRaw != null && String(refRaw).trim() !== ''
-      ? `${new Intl.NumberFormat('vi-VN').format(cargoExtra(refRaw))} VNĐ`
-      : null
+    refRaw != null && String(refRaw).trim() !== '' ? formatVndCurrency(cargoExtra(refRaw)) : null
 
   const toll = f.interprovincial ? cargoExtra(f.interprovincial_cost) : 0
-  const tollLabel = f.interprovincial && toll > 0 ? `${new Intl.NumberFormat('vi-VN').format(toll)} VNĐ` : null
+  const tollLabel = f.interprovincial && toll > 0 ? formatVndCurrency(toll) : null
 
   const wRaw = (snap.cargoRows ?? []).map((c) => c.weight).find((x) => String(x ?? '').trim())
   let vehicleHint = null
   if (wRaw) {
     const n = parseFloat(String(wRaw).replace(',', '.'))
-    if (Number.isFinite(n)) vehicleHint = `Tải ~${n} tấn (tham khảo)`
+    if (Number.isFinite(n)) vehicleHint = t('request_detail.vehicle_load_estimate_tons', { n })
     else vehicleHint = String(wRaw)
   }
 
@@ -1166,15 +1169,22 @@ const costEstimate = computed(() => {
   }
 })
 
+function requestDetailLocaleTag() {
+  return locale.value === 'en' ? 'en-GB' : 'vi-VN'
+}
+
 function fmtStepDetail(v) {
   if (!v) return '—'
   try {
-    return new Date(v).toLocaleString('vi-VN', {
+    const loc = requestDetailLocaleTag()
+    const hour12 = locale.value === 'en'
+    return new Date(v).toLocaleString(loc, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12,
     })
   } catch {
     return '—'
@@ -1208,12 +1218,12 @@ const stepperSteps = computed(() => {
 
   if (!deptFlow) {
     const steps = [
-      { key: 'created', label: 'Tạo', sub: fmtStepDetail(r.created_at), state: 'upcoming' },
-      { key: 'pending', label: 'CHỜ DUYỆT', sub: '', state: 'upcoming' },
-      { key: 'approved', label: 'Đã Duyệt', sub: '', state: 'upcoming' },
-      { key: 'dispatch', label: 'Điều Phối', sub: '', state: 'upcoming' },
-      { key: 'running', label: 'Đang Chạy', sub: '', state: 'upcoming' },
-      { key: 'done', label: 'Hoàn Tất', sub: '', state: 'upcoming' },
+      { key: 'created', label: t('request_detail.step_label_created'), sub: fmtStepDetail(r.created_at), state: 'upcoming' },
+      { key: 'pending', label: t('request_detail.step_label_pending'), sub: '', state: 'upcoming' },
+      { key: 'approved', label: t('request_detail.step_label_approved_short'), sub: '', state: 'upcoming' },
+      { key: 'dispatch', label: t('request_detail.step_label_dispatch'), sub: '', state: 'upcoming' },
+      { key: 'running', label: t('request_detail.step_label_running'), sub: '', state: 'upcoming' },
+      { key: 'done', label: t('request_detail.step_label_done'), sub: '', state: 'upcoming' },
     ]
 
     steps[1].sub =
@@ -1278,7 +1288,7 @@ const stepperSteps = computed(() => {
   }
 
   const steps = [
-    { key: 'created', label: 'Tạo', sub: fmtStepDetail(r.created_at), state: 'upcoming' },
+    { key: 'created', label: t('request_detail.step_label_created'), sub: fmtStepDetail(r.created_at), state: 'upcoming' },
     {
       key: 'price_pending',
       label: t('request_detail.step_price_pending'),
@@ -1291,10 +1301,10 @@ const stepperSteps = computed(() => {
       sub: '',
       state: 'upcoming',
     },
-    { key: 'approved', label: 'Đã Duyệt', sub: '', state: 'upcoming' },
-    { key: 'dispatch', label: 'Điều Phối', sub: '', state: 'upcoming' },
-    { key: 'running', label: 'Đang Chạy', sub: '', state: 'upcoming' },
-    { key: 'done', label: 'Hoàn Tất', sub: '', state: 'upcoming' },
+    { key: 'approved', label: t('request_detail.step_label_approved_short'), sub: '', state: 'upcoming' },
+    { key: 'dispatch', label: t('request_detail.step_label_dispatch'), sub: '', state: 'upcoming' },
+    { key: 'running', label: t('request_detail.step_label_running'), sub: '', state: 'upcoming' },
+    { key: 'done', label: t('request_detail.step_label_done'), sub: '', state: 'upcoming' },
   ]
 
   steps[1].sub = st === 'pending' ? fmtStepDetail(r.created_at) : '—'
@@ -1370,31 +1380,55 @@ function stepCircleClass(state) {
 }
 
 function fmt(v) {
-  return v ? new Date(v).toLocaleString('vi-VN') : '-'
+  if (!v) return '—'
+  const d = new Date(v)
+  if (Number.isNaN(d.getTime())) return '—'
+  const loc = requestDetailLocaleTag()
+  const hour12 = locale.value === 'en'
+  return d.toLocaleString(loc, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12,
+  })
 }
 
 function fmtShort(v) {
   if (!v) return ''
   const d = new Date(v)
-  return d.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  if (Number.isNaN(d.getTime())) return ''
+  const loc = requestDetailLocaleTag()
+  const hour12 = locale.value === 'en'
+  return d.toLocaleString(loc, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12 })
 }
 
 function fmtDateVi(iso) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('vi-VN')
+  try {
+    const loc = requestDetailLocaleTag()
+    return new Date(iso).toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: 'numeric' })
+  } catch {
+    return '—'
+  }
 }
 
 function fmtTimeWindow(depart, arrive) {
   if (!depart) return '—'
-  const opt = { hour: '2-digit', minute: '2-digit' }
-  const a = new Date(depart).toLocaleTimeString('vi-VN', opt)
+  const loc = requestDetailLocaleTag()
+  const hour12 = locale.value === 'en'
+  const opt = { hour: '2-digit', minute: '2-digit', hour12 }
+  const a = new Date(depart).toLocaleTimeString(loc, opt)
   if (!arrive) return a
-  const b = new Date(arrive).toLocaleTimeString('vi-VN', opt)
+  const b = new Date(arrive).toLocaleTimeString(loc, opt)
   return `${a} - ${b}`
 }
 
 function formatVndCurrency(n) {
-  return `${new Intl.NumberFormat('vi-VN').format(Number(n))} VNĐ`
+  const loc = requestDetailLocaleTag()
+  const num = new Intl.NumberFormat(loc).format(Number(n))
+  return `${num} ${t('dept.currency_suffix')}`
 }
 
 async function onResetCloneRequest() {
@@ -1453,7 +1487,7 @@ async function runOcr(attachmentId) {
     await runAttachmentOcr(attachmentId)
     await load()
   } catch (e) {
-    ocrErr.value = e?.response?.data?.message ?? 'OCR thất bại.'
+    ocrErr.value = e?.response?.data?.message ?? t('request_detail.ocr_failed_fallback')
   } finally {
     ocrBusy.value = null
   }
@@ -1489,16 +1523,18 @@ async function downloadFile(a) {
   try {
     await downloadBinaryAttachmentFromApi(a.id, a.original_name || 'download')
   } catch (e) {
-    attachErr.value = e?.response?.data?.message ?? 'Không tải được file.'
+    attachErr.value = e?.response?.data?.message ?? t('request_detail.download_failed_fallback')
   }
 }
 
 async function removeAttachment(a) {
   if (!canDeleteAttachment.value) return
   const ok = await confirmAction({
-    title: 'Xóa tệp đính kèm?',
-    message: `Bạn có chắc muốn xóa «${a.original_name || 'tệp này'}»? Thao tác không thể hoàn tác.`,
-    confirmLabel: 'Xóa tệp',
+    title: t('request_detail.delete_attachment_confirm_title'),
+    message: t('request_detail.delete_attachment_confirm_message', {
+      name: a.original_name || t('request_detail.delete_attachment_this_file'),
+    }),
+    confirmLabel: t('request_detail.delete_attachment_confirm_btn'),
     danger: true,
   })
   if (!ok) return
@@ -1507,9 +1543,9 @@ async function removeAttachment(a) {
   try {
     await deleteAttachment(a.id)
     await load()
-    showAppSuccess('Đã xóa tệp đính kèm.', 'Đã xử lý')
+    showAppSuccess(t('request_detail.toast_attachment_removed_msg'), t('request_detail.toast_attachment_removed_title'))
   } catch (e) {
-    attachErr.value = e?.response?.data?.message ?? 'Không xóa được file.'
+    attachErr.value = e?.response?.data?.message ?? t('request_detail.attachment_delete_failed_fallback')
   } finally {
     deletingId.value = null
   }
@@ -1532,13 +1568,13 @@ async function doMarkPaper() {
     }
     await markPaperReceived(route.params.id, payload)
     if (wasReceived) {
-      showAppSuccess('Đã lưu thay đổi thông tin phiếu.', 'Đã xử lý')
+      showAppSuccess(t('request_detail.paper_saved_toast_msg'), t('request_detail.toast_attachment_removed_title'))
     } else {
-      showAppSuccess('Đã đánh dấu đã nhận phiếu.', 'Đã xử lý')
+      showAppSuccess(t('request_detail.paper_marked_toast_msg'), t('request_detail.toast_attachment_removed_title'))
     }
     await load()
   } catch (e) {
-    paperMsg.value = e?.response?.data?.message ?? 'Lỗi'
+    paperMsg.value = e?.response?.data?.message ?? t('request_detail.paper_error_generic')
   } finally {
     paperActing.value = false
   }
@@ -1546,9 +1582,9 @@ async function doMarkPaper() {
 
 async function doRevertPaper() {
   const ok = await confirmAction({
-    title: 'Hoàn tác trạng thái phiếu?',
-    message: 'Yêu cầu sẽ chuyển về chưa nhận phiếu giấy. Bạn có chắc?',
-    confirmLabel: 'Hoàn tác',
+    title: t('request_detail.paper_revert_confirm_title'),
+    message: t('request_detail.paper_revert_confirm_message'),
+    confirmLabel: t('request_detail.paper_revert_confirm_btn'),
     danger: true,
   })
   if (!ok) return
@@ -1556,10 +1592,10 @@ async function doRevertPaper() {
   paperRevertActing.value = true
   try {
     await revertPaperReceived(route.params.id)
-    showAppSuccess('Đã hoàn tác trạng thái phiếu.', 'Đã xử lý')
+    showAppSuccess(t('request_detail.paper_reverted_toast_msg'), t('request_detail.toast_attachment_removed_title'))
     await load()
   } catch (e) {
-    paperMsg.value = e?.response?.data?.message ?? 'Lỗi'
+    paperMsg.value = e?.response?.data?.message ?? t('request_detail.paper_error_generic')
   } finally {
     paperRevertActing.value = false
   }
@@ -1568,17 +1604,16 @@ async function doRevertPaper() {
 async function onDecideClick(d) {
   if (d === 'approve') {
     const ok = await confirmAction({
-      title: 'Duyệt yêu cầu?',
-      message:
-        'Sau khi duyệt, yêu cầu có thể được phân công chuyến. Bạn có chắc muốn duyệt yêu cầu này?',
-      confirmLabel: 'Duyệt',
+      title: t('request_detail.d2d_approve_confirm_title'),
+      message: t('request_detail.d2d_approve_confirm_message'),
+      confirmLabel: t('request_detail.d2d_approve_confirm_btn'),
     })
     if (!ok) return
   } else {
     const ok = await confirmAction({
-      title: 'Từ chối yêu cầu?',
-      message: 'Yêu cầu sẽ chuyển sang trạng thái từ chối. Bạn có chắc?',
-      confirmLabel: 'Từ chối',
+      title: t('request_detail.d2d_reject_confirm_title'),
+      message: t('request_detail.d2d_reject_confirm_message'),
+      confirmLabel: t('request_detail.d2d_reject_confirm_btn'),
       danger: true,
     })
     if (!ok) return
@@ -1636,7 +1671,7 @@ async function downloadRequestPdf() {
     const blob = await exportDispatchRequestPdf(Number(route.params.id))
     saveAs(blob, `de-nghi-dieu-van-${route.params.id}.pdf`)
   } catch (e) {
-    pdfErr.value = e?.response?.data?.message ?? 'Không xuất được PDF.'
+    pdfErr.value = e?.response?.data?.message ?? t('request_detail.pdf_export_failed_fallback')
     window.alert(pdfErr.value)
   } finally {
     pdfBusy.value = false

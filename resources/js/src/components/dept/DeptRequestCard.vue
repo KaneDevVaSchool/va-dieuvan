@@ -9,7 +9,7 @@
   >
     <div class="px-4 py-4 sm:px-5">
       <div class="flex flex-wrap items-center gap-2">
-        <span class="text-sm font-bold text-[#800020]">REQ-{{ req.id }}</span>
+        <span class="text-sm font-bold text-[#800020]">{{ t('dept.request_code_short', { id: req.id }) }}</span>
         <span
           class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700"
         >
@@ -97,7 +97,7 @@ const props = defineProps({
 
 defineEmits(['detail', 'approve', 'reject'])
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const tripTypeLabel = computed(() => {
   const k = props.req.trip_type
@@ -125,14 +125,15 @@ const cardTitle = computed(() => {
   const o = (props.req.origin || '').trim()
   const d = (props.req.destination || '').trim()
   if (o && d) return `${o} — ${d}`
-  return o || d || props.req.notes?.slice(0, 120) || `REQ-${props.req.id}`
+  return o || d || props.req.notes?.slice(0, 120) || t('dept.request_code_short', { id: props.req.id })
 })
 
 const departLabel = computed(() => {
   const raw = props.req.depart_at
   if (!raw) return '—'
   try {
-    return new Date(raw).toLocaleString('vi-VN', {
+    const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+    return new Date(raw).toLocaleString(loc, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -147,6 +148,8 @@ const priceLabel = computed(() => {
   if (p == null || p === '') return null
   const n = Number(p)
   if (!Number.isFinite(n)) return null
-  return `${n.toLocaleString('vi-VN')} đ`
+  const loc = locale.value === 'en' ? 'en-GB' : 'vi-VN'
+  const num = new Intl.NumberFormat(loc).format(n)
+  return `${num} ${t('dept.currency_suffix')}`
 })
 </script>

@@ -7,7 +7,7 @@
       v-if="mobileOpen"
       type="button"
       class="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] md:hidden"
-      aria-label="Close menu"
+      :aria-label="t('dept.aria_close_menu')"
       @click="mobileOpen = false"
     />
 
@@ -104,7 +104,7 @@
 
       <nav
         class="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-y-contain scrollbar-hidden px-1 py-2 md:px-2 md:py-2.5"
-        aria-label="Dept nav"
+        :aria-label="t('dept.aria_nav')"
       >
         <p
           v-if="!compactNav"
