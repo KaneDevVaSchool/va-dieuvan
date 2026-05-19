@@ -19,6 +19,7 @@ import {
   getPortalFormTemplate,
   getPortalFormTemplates,
   patchDispatchRequestWizard,
+  searchUsersForPortalForm,
   updatePortalFormTemplate,
 } from '../api/requests'
 import { getDispatchFormSettings } from '../api/dispatchSettings'
@@ -593,7 +594,7 @@ export function useDispatchRequestWizard(options = {}) {
     coordinatorSearchLoading.value = true
     coordinatorDropdownOpen.value = true
     try {
-      coordinatorSearchResults.value = await searchUsersForDispatchForm(q)
+      coordinatorSearchResults.value = await (isPortal ? searchUsersForPortalForm : searchUsersForDispatchForm)(q)
       coordinatorSearchError.value = ''
       coordinatorDropdownOpen.value = true
     } catch (e) {

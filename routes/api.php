@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Portal\PortalFormTemplateController;
 use App\Http\Controllers\Api\Portal\PortalNotificationController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\UserSearchForDispatchFormController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,6 +46,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Biểu mẫu đã lưu (portal form templates)
         Route::get('/portal/form-templates', [PortalFormTemplateController::class, 'index']);
         Route::get('/portal/form-templates/{portalFormTemplate}', [PortalFormTemplateController::class, 'show']);
+
+        Route::get('/portal/users/for-dispatch-form', UserSearchForDispatchFormController::class);
     });
 
     Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {

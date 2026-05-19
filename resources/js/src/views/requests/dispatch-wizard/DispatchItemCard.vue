@@ -51,7 +51,6 @@
             :placeholder="t('dispatch_wizard.s3.readonly_depart_empty')"
           />
           <span v-if="errs.departTime" class="text-xs font-medium text-rose-600">{{ errs.departTime }}</span>
-          <span v-else class="text-xs text-slate-500">{{ t('dispatch_wizard.s3.trip_out_time_from_step2') }}</span>
         </div>
         <BaseInput
           :label="t('dispatch_wizard.s3.place')"
@@ -72,9 +71,6 @@
             :error="errs.returnTime"
             @update:model-value="setReturn"
           />
-          <p v-if="returnTimeAmPmDisplay" class="text-xs text-slate-500">
-            {{ t('dispatch_wizard.s3.time_ampm_readout', { time: returnTimeAmPmDisplay }) }}
-          </p>
           <p v-if="tripDurationLabel" class="text-xs font-medium text-slate-600">
             {{ tripDurationLabel }}
           </p>
@@ -98,10 +94,10 @@
       />
     </template>
 
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-3">
+    <div :class="detailGridClass">
       <template v-if="variant !== 'cargo'">
         <BaseInput
-          class="col-span-2 sm:col-span-1"
+          :class="guestsInputClass"
           type="number"
           min="1"
           :label="t('dispatch_wizard.s3.guests')"
@@ -114,7 +110,7 @@
 
       <BaseInput
         v-if="variant === 'passenger'"
-        class="col-span-2 sm:col-span-2"
+        :class="picInputClass"
         :label="t('dispatch_wizard.s3.owner')"
         :model-value="row.person_in_charge"
         :placeholder="t('dispatch_wizard.s3.pic_ph')"
@@ -123,42 +119,46 @@
 
       <template v-if="variant !== 'cargo'">
         <BaseInput
-          class="col-span-2 sm:col-span-1 lg:col-span-1"
+          :class="moneyFieldClass"
           inputmode="numeric"
           autocomplete="off"
           :label="t('dispatch_wizard.s3.unit_price')"
           :model-value="row.unit_price"
           :placeholder="t('dispatch_wizard.s3.vnd_ph')"
+          :disabled="lockDetailPricing"
           @update:model-value="(v) => vndRow(row, 'unit_price', v)"
         />
         <BaseInput
-          class="col-span-2 sm:col-span-1 lg:col-span-1"
+          :class="moneyFieldClass"
           inputmode="numeric"
           autocomplete="off"
           :label="t('dispatch_wizard.s3.extra_fee')"
           :model-value="row.extra_fee"
           :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
+          :disabled="lockDetailPricing"
           @update:model-value="(v) => vndRow(row, 'extra_fee', v)"
         />
       </template>
 
       <template v-else>
         <BaseInput
-          class="col-span-2 sm:col-span-1"
+          :class="costFieldClass"
           inputmode="numeric"
           autocomplete="off"
           :label="t('dispatch_wizard.s3.cost')"
           :model-value="row.cost"
           :placeholder="t('dispatch_wizard.s3.vnd_ph')"
+          :disabled="lockCargoRowMoney"
           @update:model-value="(v) => vndRow(row, 'cost', v)"
         />
       </template>
 
       <BaseInput
-        class="col-span-2 sm:col-span-3 lg:col-span-1"
+        :class="notesFieldClass"
         :label="t('dispatch_wizard.s3.notes')"
         :model-value="notesModel"
         :placeholder="notesPh"
+        :disabled="isPortalUser"
         @update:model-value="setNotes"
       />
     </div>
@@ -228,7 +228,6 @@ import BaseInput from '../../../components/base/BaseInput.vue'
 import BaseDateTime from '../../../components/base/BaseDateTime.vue'
 import { dispatchScheduleRowErrors } from '../../../composables/dispatchScheduleRowErrors'
 import { formatVndWhileTyping } from '../../../util/money'
-import { formatDatetimeLocalAmPm } from '../../../util/datetime'
 import { DISPATCH_WIZARD_KEY } from './injectionKeys'
 
 const props = defineProps({
@@ -247,13 +246,48 @@ const { t } = useI18n()
 
 const wizard = inject(DISPATCH_WIZARD_KEY, null)
 
+const isPortalUser = computed(() => Boolean(wizard?.isPortal))
+
+const detailGridClass = computed(() =>
+  isPortalUser.value
+    ? 'grid grid-cols-2 gap-3'
+    : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-3',
+)
+
+const guestsInputClass = computed(() => {
+  if (!isPortalUser.value) return 'col-span-2 sm:col-span-1'
+  return props.variant === 'business' ? 'col-span-2' : 'col-span-1'
+})
+
+const picInputClass = computed(() => {
+  if (!isPortalUser.value) return 'col-span-2 sm:col-span-2'
+  return 'col-span-1'
+})
+
+const lockDetailPricing = computed(() => isPortalUser.value && props.variant !== 'cargo')
+
+const lockCargoRowMoney = computed(() => isPortalUser.value && props.variant === 'cargo')
+
+const moneyFieldClass = computed(() => {
+  const base = 'col-span-2 sm:col-span-1 lg:col-span-1'
+  return lockDetailPricing.value ? `${base} opacity-50 pointer-events-none` : base
+})
+
+const notesFieldClass = computed(() => {
+  if (isPortalUser.value) return 'col-span-2 opacity-50 pointer-events-none'
+  return 'col-span-2 sm:col-span-3 lg:col-span-1'
+})
+
+const costFieldClass = computed(() => {
+  const base = 'col-span-2 sm:col-span-1'
+  return lockCargoRowMoney.value ? `${base} opacity-50 pointer-events-none` : base
+})
+
 const formattedTripStart = computed(() => wizard?.formattedRequestedDateTime?.value ?? '')
 
 const returnModel = computed(() =>
   props.variant === 'cargo' ? props.row.delivery_at ?? '' : props.row.return_at ?? '',
 )
-
-const returnTimeAmPmDisplay = computed(() => formatDatetimeLocalAmPm(returnModel.value))
 
 const tripDurationLabel = computed(() => {
   const startRaw = wizard?.requestedDateTime?.value?.trim() ?? ''

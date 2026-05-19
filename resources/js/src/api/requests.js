@@ -66,6 +66,12 @@ export async function createPortalDispatchRequest(payload, opts = {}) {
   return data.data
 }
 
+/** Tìm nhân sự (form portal — không cần dispatch.staff). @param {string} q */
+export async function searchUsersForPortalForm(q) {
+  const { data } = await http.get('/portal/users/for-dispatch-form', { params: { q } })
+  return data.data
+}
+
 /**
  * Portal dashboard KPI counts (scoped to current requester).
  * @returns {Promise<{ processing: number, pending: number, completed_this_month: number, rejected: number }>}
