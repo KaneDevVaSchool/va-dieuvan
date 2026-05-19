@@ -192,30 +192,16 @@
             <button
               type="button"
               role="tab"
-              :aria-selected="activeTab === 'proposal'"
-              class="rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
-              :class="
-                activeTab === 'proposal'
-                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
-                  : 'text-slate-600 hover:bg-slate-50'
-              "
-              @click="activeTab = 'proposal'"
-            >
-              {{ t('request_detail.proposal_detail_label') }}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="activeTab === 'approval'"
+              :aria-selected="activeTab === 'form'"
               class="relative inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
               :class="
-                activeTab === 'approval'
+                activeTab === 'form'
                   ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
                   : 'text-slate-600 hover:bg-slate-50'
               "
-              @click="activeTab = 'approval'"
+              @click="activeTab = 'form'"
             >
-              Phê duyệt
+              Biểu mẫu BM.03
               <span
                 v-if="approvalTabNeedsFocus"
                 class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-teal-500"
@@ -469,280 +455,52 @@
               </section>
             </div>
 
-            <div v-show="activeTab === 'proposal'" class="space-y-5">
-              <section v-if="req" class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
-                <div class="border-b border-slate-200 pb-4">
-                  <h2 class="text-base font-semibold text-slate-900">Thông tin để đối chiếu giá</h2>
-                  <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                    Các mục dưới đây lấy từ đơn đề nghị và hệ thống tính sơ bộ. Khi nhập
-                    <strong class="font-semibold text-slate-800">đơn giá dịch vụ</strong>, mở thêm tab
-                    <strong class="font-semibold text-slate-800">Phê duyệt</strong> (nút “Bảng giá tham chiếu” nếu cần).
-                  </p>
-                </div>
-                <dl class="divide-y divide-slate-100 text-sm">
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="flex items-start gap-2 font-medium text-slate-600">
-                      <MapPinIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span>Lộ trình xe</span>
-                    </dt>
-                    <dd class="font-medium text-slate-900 [overflow-wrap:anywhere] sm:text-base">
-                      <span>{{ req.origin || '—' }}</span>
-                      <span class="mx-1.5 text-slate-400">→</span>
-                      <span>{{ req.destination || '—' }}</span>
-                    </dd>
-                  </div>
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="flex items-start gap-2 font-medium text-slate-600">
-                      <InformationCircleIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span>Khoảng cách (ước tính)</span>
-                    </dt>
-                    <dd class="text-slate-900 sm:text-base">
-                      {{ costEstimate?.distanceLabel != null ? `khoảng ${costEstimate.distanceLabel}` : '—' }}
-                    </dd>
-                  </div>
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="flex items-start gap-2 font-medium text-slate-600">
-                      <CalendarDaysIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span>Ngày dùng xe</span>
-                    </dt>
-                    <dd class="text-slate-900 sm:text-base">
-                      {{ fmtDateVi(req.depart_at) }}
-                    </dd>
-                  </div>
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="flex items-start gap-2 font-medium text-slate-600">
-                      <ClockIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span>Giờ đi — giờ về</span>
-                    </dt>
-                    <dd class="text-slate-900 sm:text-base">
-                      {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
-                    </dd>
-                  </div>
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="flex items-start gap-2 font-medium text-slate-600">
-                      <CubeIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span>Số người hoặc tải</span>
-                    </dt>
-                    <dd class="text-slate-900 sm:text-base">{{ passengerOrCargoLine }}</dd>
-                  </div>
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="flex items-start gap-2 font-medium text-slate-600">
-                      <TruckIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span>Gợi ý loại xe</span>
-                    </dt>
-                    <dd class="text-slate-900 sm:text-base">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
-                  </div>
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="flex items-start gap-2 font-medium text-slate-600">
-                      <CurrencyDollarIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span>Đơn giá người gửi đã khai</span>
-                    </dt>
-                    <dd class="font-medium tabular-nums text-slate-900 sm:text-base">
-                      {{ costEstimate?.refUnitLabel ?? '—' }}
-                    </dd>
-                  </div>
-                  <div class="grid gap-1 py-3 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4 sm:py-3.5">
-                    <dt class="font-medium text-slate-600 sm:pl-6">Phí cầu đường (dự kiến)</dt>
-                    <dd class="tabular-nums text-slate-900 sm:text-base">{{ costEstimate?.tollLabel ?? '—' }}</dd>
-                  </div>
-                  <div class="grid gap-1 border-t-2 border-slate-200 py-4 sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4">
-                    <dt class="flex items-start gap-2 font-semibold text-slate-800">
-                      <CalculatorIcon class="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                      <span>Tổng chi phí sơ bộ</span>
-                    </dt>
-                    <dd class="text-lg font-semibold tabular-nums text-slate-900 sm:text-xl">
-                      {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
-                    </dd>
-                  </div>
-                </dl>
-              </section>
-
-              <template v-if="hasVisibleProposalNotesContent">
-                <div class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
-                  <h2 class="text-base font-semibold text-slate-900">
-                    {{ t('request_detail.proposal_detail_label') }}
-                  </h2>
-                  <p class="mt-1 text-sm text-slate-600">
-                    Nội dung do người gửi đơn khai báo; các dòng có
-                    <span class="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 text-xs font-medium text-slate-800"
-                      >ĐG / PS</span
-                    >
-                    là đơn giá và phát sinh (nếu có).
-                  </p>
-                  <p
-                    v-if="requestNotesProposalDisplay.banner"
-                    class="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
-                  >
-                    {{ requestNotesProposalDisplay.banner }}
-                  </p>
-                  <div class="mt-5 space-y-4">
-                    <div
-                      v-for="(sec, idx) in requestNotesProposalDisplay.sections"
-                      :key="idx"
-                      class="rounded-lg border border-slate-200"
-                    >
-                      <h3 class="border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-900">
-                        {{ sec.title }}
-                      </h3>
-                      <div class="space-y-2 px-3 py-3 text-sm text-slate-800 [overflow-wrap:anywhere]">
-                        <template v-for="(item, iidx) in parseSectionContent(sec.content)" :key="iidx">
-                          <div
-                            v-if="item.type === 'kv'"
-                            class="grid gap-0.5 rounded-md border border-slate-100 py-2 pl-3 pr-3 sm:grid-cols-[minmax(0,40%)_1fr] sm:gap-3"
-                          >
-                            <dt class="text-sm font-medium text-slate-600">
-                              {{ item.key }}
-                            </dt>
-                            <dd class="text-sm font-medium text-slate-900">
-                              {{ item.value }}
-                            </dd>
-                          </div>
-
-                          <div
-                            v-else-if="item.type === 'row'"
-                            class="overflow-hidden rounded-lg border border-slate-200 bg-white"
-                          >
-                            <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                              <span
-                                class="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded bg-slate-700 px-1.5 text-xs font-bold text-white"
-                              >
-                                {{ item.index }}
-                              </span>
-                              <span class="text-xs font-medium text-slate-600">Dòng khai báo thứ {{ item.index }}</span>
-                            </div>
-                            <div class="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 lg:grid-cols-3">
-                              <template v-for="(cell, ci) in item.cells" :key="ci">
-                                <div
-                                  v-if="cell.kind === 'kv'"
-                                  class="flex min-w-0 flex-col gap-0.5 rounded-md border px-2 py-1.5"
-                                  :class="
-                                    cell.highlight
-                                      ? 'border-amber-300 bg-amber-50/70'
-                                      : 'border-slate-200 bg-slate-50/80'
-                                  "
-                                >
-                                  <span class="text-[11px] font-medium text-slate-500">{{ cell.key }}</span>
-                                  <span
-                                    class="text-sm font-medium leading-snug text-slate-900 [overflow-wrap:anywhere]"
-                                    >{{ cell.value }}</span
-                                  >
-                                </div>
-                                <div
-                                  v-else
-                                  class="min-w-0 rounded-md border px-2 py-1.5 text-sm leading-snug [overflow-wrap:anywhere]"
-                                  :class="
-                                    cell.highlight
-                                      ? 'border-amber-400 bg-amber-50 font-medium text-amber-950'
-                                      : 'border-slate-200 bg-white text-slate-800'
-                                  "
-                                >
-                                  {{ cell.text }}
-                                </div>
-                              </template>
-                            </div>
-                          </div>
-
-                          <div
-                            v-else-if="item.type === 'total'"
-                            class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-300 bg-white px-3 py-3"
-                          >
-                            <span class="text-sm font-medium text-slate-700">{{ item.label }}</span>
-                            <span class="text-base font-semibold tabular-nums text-slate-900 sm:text-lg">{{
-                              item.amount
-                            }}</span>
-                          </div>
-
-                          <p v-else-if="item.type === 'raw' && item.text" class="whitespace-pre-wrap text-sm text-slate-700">
-                            {{ item.text }}
-                          </p>
-                        </template>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </template>
-              <div
-                v-else
-                class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-12 text-center text-sm text-slate-600"
-              >
-                {{ t('request_detail.proposal_detail_empty') }}
-              </div>
-            </div>
-
-            <div v-show="activeTab === 'approval'" class="space-y-4">
-              <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <p class="text-sm font-medium text-slate-800">
-                    {{ t('request_detail.pricing_modal_title') }}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    class="shrink-0 !border-teal-200 !text-teal-900 hover:!bg-teal-50"
-                    @click="pricingModalOpen = true"
-                  >
-                    {{ t('request_detail.reference_pricing_link') }}
-                  </Button>
-                </div>
-              </section>
-
-              <CostLimitAlert v-if="req.dispatch_package_cost_alert" :alert="req.dispatch_package_cost_alert" />
-
-              <section
-                v-if="showResetCloneBtn || showPassengerAdjustSection"
-                class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-              >
-                <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
-                <StudentCountField
-                  v-if="showPassengerAdjustSection"
-                  v-model:passenger-count="passengerDraft"
-                  :locked="passengerDepartLocked"
-                  :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
-                  :saving="passengerSaving"
-                  :error="passengerPatchErr"
-                  :class="showResetCloneBtn ? 'mt-4 border-t border-slate-100 pt-4' : ''"
-                  @save="savePassengerDraft"
-                />
-              </section>
-
-              <PriceFillSection
-                v-if="showFillPriceSection"
+            <div v-show="activeTab === 'form'" class="space-y-5">
+              <RequestBm03FormTab
+                v-if="req"
+                v-model:paper-form="paperForm"
+                v-model:passenger-draft="passengerDraft"
+                :req="req"
                 :reference-pricing-url="referencePricingUrl"
-                :service-price="fillPriceForm.service_price"
-                :submitting="fillPriceActing"
-                :message="fillPriceMsg"
-                @update:service-price="onFillPriceServicePriceInput"
-                @submit="submitFillPrice"
-              />
-
-              <DeptApprovalSection
-                v-if="showDeptDecisionSection"
+                :fill-price-form="fillPriceForm"
+                :fill-price-acting="fillPriceActing"
+                :fill-price-msg="fillPriceMsg"
+                :dept-acting="deptActing"
+                :dept-msg="deptMsg"
+                :dept-reject-open="deptRejectOpen"
+                :signed-paper-attachments="signedPaperAttachments"
+                :signed-upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
+                :upload-signed-fn="uploadSignedPaper"
+                :signed-upload-err="signedUploadErr"
+                :passenger-saving="passengerSaving"
+                :passenger-patch-err="passengerPatchErr"
+                :passenger-depart-locked="passengerDepartLocked"
+                :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
+                :show-fill-price-section="showFillPriceSection"
+                :show-dept-decision-section="showDeptDecisionSection"
+                :show-signed-paper-section="showSignedPaperSection"
+                :show-reset-clone-btn="showResetCloneBtn"
+                :show-passenger-adjust-section="showPassengerAdjustSection"
+                :approval-tab-needs-focus="approvalTabNeedsFocus"
+                :reset-clone-busy="resetCloneBusy"
                 :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
-                :acting="deptActing"
-                :inline-message="deptMsg"
-                :reject-modal-open="deptRejectOpen"
-                @approve="onDeptApproveClick"
-                @reject="openDeptReject"
+                :paper-acting="paperActing"
+                :paper-msg="paperMsg"
+                :paper-revert-acting="paperRevertActing"
+                :can-manage-paper="canManagePaper"
+                @open-pricing-modal="pricingModalOpen = true"
+                @update:fill-price-service-price="onFillPriceServicePriceInput"
+                @submit-fill-price="submitFillPrice"
+                @dept-approve="onDeptApproveClick"
+                @dept-reject="openDeptReject"
+                @download-signed="downloadFile"
+                @signed-uploaded="onSignedUploaded"
+                @save-passenger="savePassengerDraft"
+                @reset-clone="onResetCloneRequest"
+                @mark-paper="doMarkPaper"
+                @revert-paper="doRevertPaper"
               />
-
-              <SignedPaperUpload
-                v-if="showSignedPaperSection"
-                :attachments="signedPaperAttachments"
-                :upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
-                :upload-fn="uploadSignedPaper"
-                :error="signedUploadErr"
-                @download="downloadFile"
-                @uploaded="onSignedUploaded"
-              />
-
-              <div
-                v-if="!approvalTabNeedsFocus"
-                class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500"
-              >
-                Không có hành động cần xử lý
-              </div>
             </div>
-
             <div v-show="activeTab === 'docs'" class="space-y-4">
               <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div class="flex items-start gap-3 border-b border-slate-100 pb-3">
@@ -1039,7 +797,6 @@ import {
   FlagIcon,
   HandThumbUpIcon,
   InformationCircleIcon,
-  MapPinIcon,
   PaperClipIcon,
   TruckIcon,
 } from '@heroicons/vue/24/outline'
@@ -1048,13 +805,8 @@ import Button from '../../components/ui/Button.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
-import PriceFillSection from '../../components/requests/PriceFillSection.vue'
-import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
+import RequestBm03FormTab from '../../components/requests/RequestBm03FormTab.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
-import SignedPaperUpload from '../../components/requests/SignedPaperUpload.vue'
-import CostLimitAlert from '../../components/requests/CostLimitAlert.vue'
-import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
-import StudentCountField from '../../components/recurring/StudentCountField.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
 import { getDispatchFormSettings } from '../../api/dispatchSettings'
 import {
@@ -1072,8 +824,6 @@ import { formatApiError } from '../../api/http'
 import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripType } from '../../util/labels'
-import { formatDispatchRequestNotesForDisplay, isLegacyBm03NotesBlock, splitDispatchRequestNotesVisualSections } from '../../util/formatDispatchNotes'
-import { buildBm03BodyFromWizardSnapshot } from '../../util/buildBm03BodyFromSnapshot'
 import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../../util/datetime'
@@ -1125,61 +875,6 @@ const resetCloneBusy = ref(false)
 /** Đường dẫn SPA tới bảng giá (vd. /mng/pricing). */
 const pricingAppPath = buildStaffPrefixedPath('/pricing')
 const pricingModalOpen = ref(false)
-
-const bm03FromSnapshotRaw = computed(() => {
-  const s = buildBm03BodyFromWizardSnapshot(req.value?.wizard_snapshot)
-  return s && String(s).trim() ? String(s).trim() : ''
-})
-
-/** BM.03 trong notes (bản cũ) + nội dung tái tạo từ wizard_snapshot + ghi chú tự do. */
-const requestNotesCombined = computed(() => {
-  const n = req.value?.notes?.trim()
-  const snap = bm03FromSnapshotRaw.value
-
-  if (n && isLegacyBm03NotesBlock(n)) {
-    return formatDispatchRequestNotesForDisplay(n)
-  }
-
-  const userPart = n && !isLegacyBm03NotesBlock(n) ? formatDispatchRequestNotesForDisplay(n) : ''
-  const snapPart = snap ? formatDispatchRequestNotesForDisplay(snap) : ''
-
-  if (snapPart && userPart) {
-    return `${snapPart}\n\n———\n\nGhi chú thêm:\n\n${userPart}`
-  }
-  if (snapPart) return snapPart
-  if (userPart) return userPart
-  return ''
-})
-
-const requestNotesVisualSections = computed(() =>
-  splitDispatchRequestNotesVisualSections(requestNotesCombined.value),
-)
-
-/** Ẩn dòng banner === ... === của phiếu BM.03 bản điện tử (chỉ UI, không đổi dữ liệu gốc). */
-function isHiddenProposalBanner(banner) {
-  const s = String(banner || '').trim()
-  if (!s) return false
-  return (
-    /đề\s*nghị\s*điều\s*vận/i.test(s) ||
-    /BM\.03/i.test(s) ||
-    /MH\.QT\.04/i.test(s) ||
-    /bản\s*điện\s*tử/i.test(s)
-  )
-}
-
-const requestNotesProposalDisplay = computed(() => {
-  const { banner, sections } = requestNotesVisualSections.value
-  const showBanner = banner && !isHiddenProposalBanner(banner) ? banner : null
-  const showSections = sections.filter(
-    (sec) => sec.title !== 'Hệ thống' && sec.title !== 'Chi tiết đề nghị',
-  )
-  return { banner: showBanner, sections: showSections }
-})
-
-const hasVisibleProposalNotesContent = computed(
-  () =>
-    !!(requestNotesProposalDisplay.value.banner || requestNotesProposalDisplay.value.sections.length),
-)
 
 const requestRefCode = computed(() => {
   const r = req.value
@@ -1279,7 +974,7 @@ const showResetCloneBtn = computed(
 
 const activeTab = ref('route')
 
-/** Tab Phê duyệt: có cảnh báo / thao tác cần xem (hiển thị badge + empty state khi false). */
+/** Tab Biểu mẫu BM.03 — badge khi có hành động / cảnh báo cần xem (empty state trong tab). */
 const approvalTabNeedsFocus = computed(() => {
   const r = req.value
   if (!r) return false
@@ -1296,7 +991,7 @@ const approvalTabNeedsFocus = computed(() => {
 watch(
   approvalTabNeedsFocus,
   (need, was) => {
-    if (need && was !== true && req.value) activeTab.value = 'approval'
+    if (need && was !== true && req.value) activeTab.value = 'form'
   },
   { immediate: true },
 )
@@ -1641,110 +1336,6 @@ function fmtTimeWindow(depart, arrive) {
   if (!arrive) return a
   const b = new Date(arrive).toLocaleTimeString('vi-VN', opt)
   return `${a} - ${b}`
-}
-
-/** Chuẩn hoá chuỗi ISO (…T…) trong một đoạn hiển thị thành ngày giờ theo vi-VN. */
-function formatIsoInText(str) {
-  return String(str).replace(
-    /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})?/gi,
-    (iso) => {
-      const d = new Date(iso)
-      if (Number.isNaN(d.getTime())) return iso
-      return d.toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    },
-  )
-}
-
-/**
- * Một ô trong hàng BM (sau khi tách bởi |).
- * @returns {{ kind: 'kv'; key: string; value: string; highlight: boolean } | { kind: 'text'; text: string; highlight: boolean }}
- */
-function toProposalRowCell(seg) {
-  const raw = String(seg).trim()
-  const withDates = formatIsoInText(raw)
-  const highlight = segmentHighlightsPricing(withDates)
-  const colonIdx = withDates.indexOf(':')
-  if (colonIdx > 0 && colonIdx <= 34) {
-    const key = withDates.slice(0, colonIdx).trim()
-    const value = withDates.slice(colonIdx + 1).trim()
-    if (key.length <= 32 && value.length > 0 && !key.includes('|')) {
-      return { kind: 'kv', key, value, highlight }
-    }
-  }
-  return { kind: 'text', text: withDates, highlight }
-}
-
-/**
- * Parse BM.03 / notes section body into structured items for the proposal tab.
- * @param {string|null|undefined} content
- * @returns {Array<{ type: 'kv'; key: string; value: string } | { type: 'row'; index: number; segments: string[]; cells: ReturnType<typeof toProposalRowCell>[] } | { type: 'total'; label: string; amount: string } | { type: 'raw'; text: string }>}
- */
-function parseSectionContent(content) {
-  const text = String(content ?? '').replace(/\r\n/g, '\n')
-  const lines = text.split('\n')
-  /** @type {ReturnType<typeof parseSectionContent>} */
-  const items = []
-
-  for (const raw of lines) {
-    const t = raw.trim()
-    if (!t) continue
-
-    // Indented detail lines (e.g. cargo pickup/delivery breakdown)
-    if (/^\s{2,}/.test(raw)) {
-      items.push({ type: 'raw', text: t })
-      continue
-    }
-
-    const totalMatch = t.match(/^(Tổng[^:]{0,120}):\s*(.+)$/i)
-    if (totalMatch && /^Tổng/i.test(totalMatch[1].trim())) {
-      items.push({
-        type: 'total',
-        label: totalMatch[1].trim(),
-        amount: totalMatch[2].trim(),
-      })
-      continue
-    }
-
-    const rowMatch = t.match(/^(\d+)\.\s+(.+)$/)
-    if (rowMatch) {
-      const body = rowMatch[2]
-      const segments = body.includes('|')
-        ? body.split('|').map((s) => s.trim()).filter(Boolean)
-        : [body.trim()]
-      items.push({
-        type: 'row',
-        index: Number(rowMatch[1]),
-        segments,
-        cells: segments.map((s) => toProposalRowCell(s)),
-      })
-      continue
-    }
-
-    const kvMatch = t.match(/^-\s+(.+?):\s*(.*)$/)
-    if (kvMatch) {
-      items.push({
-        type: 'kv',
-        key: kvMatch[1].trim(),
-        value: kvMatch[2].trim(),
-      })
-      continue
-    }
-
-    items.push({ type: 'raw', text: t })
-  }
-
-  return items
-}
-
-/** Highlight pipe segment when it carries pricing cues (ĐG / PS / ĐG+PS, etc.). */
-function segmentHighlightsPricing(seg) {
-  return /ĐG|Đơn giá|phát sinh|\+ PS|\bPS\b|ĐG\+PS|Chi phí:/i.test(String(seg))
 }
 
 function formatVndCurrency(n) {
