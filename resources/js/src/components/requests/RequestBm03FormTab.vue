@@ -476,16 +476,6 @@
       />
     </section>
 
-    <DeptApprovalSection
-      v-if="showDeptDecisionSection"
-      :service-price-display="servicePriceDisplay"
-      :acting="deptActing"
-      :inline-message="deptMsg"
-      :reject-modal-open="deptRejectOpen"
-      @approve="$emit('deptApprove')"
-      @reject="$emit('deptReject')"
-    />
-
     <SignedPaperUpload
       v-if="showSignedPaperSection"
       :attachments="signedPaperAttachments"
@@ -509,7 +499,6 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
-import DeptApprovalSection from './DeptApprovalSection.vue'
 import SignedPaperUpload from './SignedPaperUpload.vue'
 import CostLimitAlert from './CostLimitAlert.vue'
 import ResetCloneSection from './ResetCloneSection.vue'
@@ -527,9 +516,6 @@ const props = defineProps({
   req: { type: Object, default: null },
   fillPriceActing: { type: Boolean, default: false },
   fillPriceMsg: { type: String, default: '' },
-  deptActing: { type: Boolean, default: false },
-  deptMsg: { type: String, default: '' },
-  deptRejectOpen: { type: Boolean, default: false },
   signedPaperAttachments: { type: Array, default: () => [] },
   signedUploadComponentKey: { type: String, default: 'signed' },
   uploadSignedFn: {
@@ -544,13 +530,11 @@ const props = defineProps({
   passengerDepartLocked: { type: Boolean, default: true },
   departAtFormatted: { type: String, default: '' },
   showFillPriceSection: { type: Boolean, default: false },
-  showDeptDecisionSection: { type: Boolean, default: false },
   showSignedPaperSection: { type: Boolean, default: false },
   showResetCloneBtn: { type: Boolean, default: false },
   showPassengerAdjustSection: { type: Boolean, default: false },
   approvalTabNeedsFocus: { type: Boolean, default: false },
   resetCloneBusy: { type: Boolean, default: false },
-  servicePriceDisplay: { type: String, default: null },
 })
 
 const passengerDraftModel = defineModel('passengerDraft', {
@@ -561,8 +545,6 @@ const passengerDraftModel = defineModel('passengerDraft', {
 const emit = defineEmits([
   'save-row-prices',
   'open-reference-pricing',
-  'deptApprove',
-  'deptReject',
   'downloadSigned',
   'signedUploaded',
   'savePassenger',

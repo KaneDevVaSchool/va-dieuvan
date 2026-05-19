@@ -11,9 +11,9 @@
         <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
           <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <RouterLink
-              to="/requests"
+              :to="isDeptRequestDetailRoute ? { name: 'deptDashboard' } : '/requests'"
               class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-              aria-label="Quay lại danh sách"
+              :aria-label="isDeptRequestDetailRoute ? t('dept.nav_pending') : 'Quay lại danh sách'"
             >
               <ArrowLeftIcon class="h-4 w-4" />
             </RouterLink>
@@ -464,15 +464,21 @@
             </div>
 
             <div v-show="activeTab === 'form'" class="space-y-5">
+              <DeptApprovalSection
+                v-if="showDeptDecisionSection"
+                :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
+                :acting="deptActing"
+                :inline-message="deptMsg"
+                :reject-modal-open="deptRejectOpen"
+                @approve="onDeptApproveClick"
+                @reject="openDeptReject"
+              />
               <RequestBm03FormTab
                 v-if="req"
                 v-model:passenger-draft="passengerDraft"
                 :req="req"
                 :fill-price-acting="fillPriceActing"
                 :fill-price-msg="fillPriceMsg"
-                :dept-acting="deptActing"
-                :dept-msg="deptMsg"
-                :dept-reject-open="deptRejectOpen"
                 :signed-paper-attachments="signedPaperAttachments"
                 :signed-upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
                 :upload-signed-fn="uploadSignedPaper"
@@ -482,17 +488,13 @@
                 :passenger-depart-locked="passengerDepartLocked"
                 :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
                 :show-fill-price-section="showFillPriceSection"
-                :show-dept-decision-section="showDeptDecisionSection"
                 :show-signed-paper-section="showSignedPaperSection"
                 :show-reset-clone-btn="showResetCloneBtn"
                 :show-passenger-adjust-section="showPassengerAdjustSection"
                 :approval-tab-needs-focus="approvalTabNeedsFocus"
                 :reset-clone-busy="resetCloneBusy"
-                :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
                 @save-row-prices="onSaveRowPrices"
                 @open-reference-pricing="pricingModalOpen = true"
-                @dept-approve="onDeptApproveClick"
-                @dept-reject="openDeptReject"
                 @download-signed="downloadFile"
                 @signed-uploaded="onSignedUploaded"
                 @save-passenger="savePassengerDraft"
@@ -819,6 +821,7 @@ import StatusBadge from '../../components/ui/StatusBadge.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import RequestBm03FormTab from '../../components/requests/RequestBm03FormTab.vue'
+import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import ReferencePricingReadOnlyBody from '../../components/pricing/ReferencePricingReadOnlyBody.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
@@ -954,8 +957,13 @@ const showFillPriceSection = computed(
     auth.hasPermission('request.fill_price'),
 )
 
+const isDeptRequestDetailRoute = computed(() => route.name === 'deptRequestDetail')
+
 const showDeptDecisionSection = computed(
-  () => req.value?.status === 'price_filled' && auth.hasPermission('request.approve_dept'),
+  () =>
+    isDeptRequestDetailRoute.value &&
+    req.value?.status === 'price_filled' &&
+    auth.hasPermission('request.approve_dept'),
 )
 
 const wizardPurpose = computed(() => {
