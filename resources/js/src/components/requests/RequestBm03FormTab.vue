@@ -256,7 +256,24 @@
                       />
                       <BmRoTd v-else :model-value="fmtMoneyRow(row.extra_fee)" align-right />
                     </td>
-                    <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.notes" /></td>
+                    <td
+                      class="border border-slate-300 px-1 py-0.5 align-top"
+                      :class="
+                        showFillPriceSection && idx < passengerRowCount ? 'min-w-[7rem] max-w-[220px]' : ''
+                      "
+                    >
+                      <textarea
+                        v-if="showFillPriceSection && idx < passengerRowCount"
+                        :value="passengerNotesDraft[idx]"
+                        rows="3"
+                        maxlength="2000"
+                        autocomplete="off"
+                        class="box-border w-full min-h-[4rem] resize-y rounded border border-teal-200/70 bg-white px-2 py-1 text-[11px] leading-snug text-slate-900 outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        aria-label="Ghi chú dòng hành trình"
+                        @input="onPassengerNotesInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="row.notes" />
+                    </td>
                   </tr>
                   <tr class="bg-slate-100 font-semibold">
                     <td colspan="10" class="border border-slate-300 px-2 py-1 text-right">Tổng ước tính:</td>
@@ -290,7 +307,24 @@
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="nz(row.description) || 'Công tác'" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.guests" class="text-center" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.waypoint" /></td>
-                    <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.notes" /></td>
+                    <td
+                      class="border border-slate-300 px-1 py-0.5 align-top"
+                      :class="
+                        showFillPriceSection && idx < businessRowCount ? 'min-w-[7rem] max-w-[220px]' : ''
+                      "
+                    >
+                      <textarea
+                        v-if="showFillPriceSection && idx < businessRowCount"
+                        :value="businessNotesDraft[idx]"
+                        rows="3"
+                        maxlength="2000"
+                        autocomplete="off"
+                        class="box-border w-full min-h-[4rem] resize-y rounded border border-teal-200/70 bg-white px-2 py-1 text-[11px] leading-snug text-slate-900 outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        aria-label="Ghi chú dòng công tác"
+                        @input="onBusinessNotesInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="row.notes" />
+                    </td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.depart_at" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.pickup" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.return_at" /></td>
@@ -702,8 +736,22 @@ const businessFilled = computed(() =>
 
 const passengerPriceDraftUnit = ref([])
 const passengerPriceDraftExtra = ref([])
+const passengerNotesDraft = ref([])
 const businessPriceDraftUnit = ref([])
 const businessPriceDraftExtra = ref([])
+const businessNotesDraft = ref([])
+
+/** Đồng bộ tối đa với fill-price.rows.*.notes (backend max:2000) */
+function clampNoteDraft(s) {
+  if (s == null) return ''
+  const t = String(s)
+  return t.length > 2000 ? t.slice(0, 2000) : t
+}
+
+function normalizeNoteFromSnapshot(v) {
+  if (v == null) return ''
+  return clampNoteDraft(String(v))
+}
 
 function fmtDraftStored(v) {
   if (v == null || v === '') return ''
@@ -718,11 +766,13 @@ function syncInlinePriceDrafts() {
   const pa = Array.isArray(pr) ? pr : []
   passengerPriceDraftUnit.value = pa.map((r) => fmtDraftStored(r?.unit_price))
   passengerPriceDraftExtra.value = pa.map((r) => fmtDraftStored(r?.extra_fee))
+  passengerNotesDraft.value = pa.map((r) => normalizeNoteFromSnapshot(r?.notes))
 
   const br = props.req?.wizard_snapshot?.businessRows
   const ba = Array.isArray(br) ? br : []
   businessPriceDraftUnit.value = ba.map((r) => fmtDraftStored(r?.unit_price))
   businessPriceDraftExtra.value = ba.map((r) => fmtDraftStored(r?.extra_fee))
+  businessNotesDraft.value = ba.map((r) => normalizeNoteFromSnapshot(r?.notes))
 }
 
 watch(
@@ -799,6 +849,20 @@ function onBusinessExtraInput(idx, raw) {
   businessPriceDraftExtra.value = cp
 }
 
+function onPassengerNotesInput(idx, raw) {
+  const cp = [...passengerNotesDraft.value]
+  if (idx < 0 || idx >= cp.length) return
+  cp[idx] = clampNoteDraft(raw)
+  passengerNotesDraft.value = cp
+}
+
+function onBusinessNotesInput(idx, raw) {
+  const cp = [...businessNotesDraft.value]
+  if (idx < 0 || idx >= cp.length) return
+  cp[idx] = clampNoteDraft(raw)
+  businessNotesDraft.value = cp
+}
+
 const grandTotalSum = computed(() => {
   if (isCargo.value) {
     return cargoFilled.value.reduce((s, r) => s + parseMoney(r.cost), 0)
@@ -837,6 +901,7 @@ function buildRowsPayload() {
       out.push({
         unit_price: parseMoneyVnd(businessPriceDraftUnit.value[i] ?? ''),
         extra_fee: parseMoneyVnd(businessPriceDraftExtra.value[i] ?? ''),
+        notes: clampNoteDraft(businessNotesDraft.value[i] ?? ''),
       })
     }
     return out
@@ -847,6 +912,7 @@ function buildRowsPayload() {
     out.push({
       unit_price: parseMoneyVnd(passengerPriceDraftUnit.value[i] ?? ''),
       extra_fee: parseMoneyVnd(passengerPriceDraftExtra.value[i] ?? ''),
+      notes: clampNoteDraft(passengerNotesDraft.value[i] ?? ''),
     })
   }
   return out

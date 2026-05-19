@@ -172,6 +172,9 @@ class DispatchRequestController extends Controller
                 if (array_key_exists('extra_fee', $row)) {
                     $snap[$rowKey][$i]['extra_fee'] = $row['extra_fee'];
                 }
+                if (array_key_exists('notes', $row)) {
+                    $snap[$rowKey][$i]['notes'] = $row['notes'];
+                }
             }
         }
 
