@@ -43,7 +43,7 @@ class DispatchRequestController extends Controller
         $this->authorize('view', $dispatchRequest);
 
         $dispatchRequest->load([
-            'requester:id,name,email,employee_code,avatar_url',
+            'requester:id,name,email,employee_code,avatar_url,department_id',
             'approver:id,name,email,employee_code',
             'priceFiller:id,name,email,employee_code',
             'trip',
