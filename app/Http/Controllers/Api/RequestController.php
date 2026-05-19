@@ -11,6 +11,7 @@ use App\Http\Requests\Api\Requests\ListRequestsRequest;
 use App\Models\DispatchRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class RequestController extends Controller
@@ -125,6 +126,61 @@ class RequestController extends Controller
                 'last_page' => $results->lastPage(),
             ],
             'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Tổng hợp KPI cho màn hình trưởng đơn vị (scoped theo bộ phận).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deptSummary(Request $request)
+    {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(401);
+        }
+
+        if (! $user->isSuperAdmin() && ! $user->hasPermission('request.approve_dept')) {
+            abort(403);
+        }
+
+        $base = $this->scopedDispatchRequestsQuery($user);
+
+        $pendingCount = (int) (clone $base)->where('status', 'price_filled')->count();
+
+        $startToday = now()->startOfDay();
+        $endToday = now()->endOfDay();
+        $pendingToday = (int) (clone $base)
+            ->where('status', 'price_filled')
+            ->whereNotNull('price_filled_at')
+            ->whereBetween('price_filled_at', [$startToday, $endToday])
+            ->count();
+
+        $startMonth = now()->startOfMonth();
+        $endMonth = now()->endOfMonth();
+        $approvedThisMonth = (int) (clone $base)
+            ->where('status', 'approved')
+            ->whereBetween('updated_at', [$startMonth, $endMonth])
+            ->count();
+
+        $since30 = now()->copy()->subDays(30)->startOfDay();
+        $approved30 = (int) (clone $base)
+            ->where('status', 'approved')
+            ->where('updated_at', '>=', $since30)
+            ->count();
+        $rejected30 = (int) (clone $base)
+            ->where('status', 'rejected')
+            ->where('updated_at', '>=', $since30)
+            ->count();
+        $decided30 = $approved30 + $rejected30;
+        $approvalRate30d = $decided30 > 0 ? (int) round(($approved30 / $decided30) * 100) : null;
+
+        return $this->ok([
+            'pending_count' => $pendingCount,
+            'pending_today' => $pendingToday,
+            'approved_this_month' => $approvedThisMonth,
+            'approval_rate_30d' => $approvalRate30d,
         ]);
     }
 

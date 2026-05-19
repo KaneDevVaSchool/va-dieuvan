@@ -15,7 +15,7 @@ class UserProfileController extends Controller
 {
     public function show(Request $request, CmsUserInfoService $cms, FeatureToggleService $featureToggles): JsonResponse
     {
-        $user = $request->user()->load(['roles:id,name,display_name,guard_name']);
+        $user = $request->user()->load(['roles:id,name,display_name,guard_name', 'department:id,name,code']);
         $permissions = $user->getAllPermissions()->pluck('name')->unique()->values()->all();
         $payload = array_merge($user->toArray(), [
             'permissions' => $permissions,
@@ -80,7 +80,7 @@ class UserProfileController extends Controller
             $user->save();
         }
 
-        $user->refresh()->load(['roles:id,name,display_name,guard_name']);
+        $user->refresh()->load(['roles:id,name,display_name,guard_name', 'department:id,name,code']);
         $permissions = $user->getAllPermissions()->pluck('name')->unique()->values()->all();
         $payload = array_merge($user->toArray(), [
             'permissions' => $permissions,

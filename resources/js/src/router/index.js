@@ -4,6 +4,7 @@ import {
     DISPATCH_WEB_BASE,
     buildStaffPrefixedPath,
     shouldRewriteLegacyStaffPath,
+    isDispatchStaffHomePath,
 } from "../config/dispatchWebBase";
 import { useAuthStore } from "../store";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
@@ -25,6 +26,10 @@ function pathIsUnderStaffBase(path) {
 
 function routeHasPortalMeta(to) {
     return to.matched.some((record) => record.meta.portal === true);
+}
+
+function routeHasDeptHeadMeta(to) {
+    return to.matched.some((record) => record.meta.deptHead === true);
 }
 
 const staffChildRoutes = [
@@ -351,6 +356,37 @@ const router = createRouter({
             ],
         },
         {
+            path: "/dept",
+            component: () => import("../views/dept/DeptLayout.vue"),
+            meta: { deptHead: true },
+            children: [
+                {
+                    path: "",
+                    name: "deptDashboard",
+                    component: () => import("../views/dept/DeptDashboardView.vue"),
+                    meta: { deptHead: true, title: "Chờ duyệt", subtitle: "Trưởng đơn vị" },
+                },
+                {
+                    path: "approved",
+                    name: "deptApproved",
+                    component: () => import("../views/dept/DeptApprovedView.vue"),
+                    meta: { deptHead: true, title: "Đã duyệt", subtitle: "Trưởng đơn vị" },
+                },
+                {
+                    path: "rejected",
+                    name: "deptRejected",
+                    component: () => import("../views/dept/DeptRejectedView.vue"),
+                    meta: { deptHead: true, title: "Đã từ chối", subtitle: "Trưởng đơn vị" },
+                },
+                {
+                    path: "all",
+                    name: "deptAll",
+                    component: () => import("../views/dept/DeptAllRequestsView.vue"),
+                    meta: { deptHead: true, title: "Tất cả phiếu", subtitle: "Trưởng đơn vị" },
+                },
+            ],
+        },
+        {
             path: DISPATCH_WEB_BASE,
             component: () => import("../views/layout/StaffRouteOutlet.vue"),
             children: staffChildRoutes,
@@ -469,6 +505,17 @@ router.beforeEach(async (to) => {
             return { path: "/driver", replace: true };
         }
         return { name: "dashboard" };
+    }
+
+    if (routeHasDeptHeadMeta(to) && !auth.isDeptHeadOnly()) {
+        return { name: "dashboard" };
+    }
+
+    if (auth.isDeptHeadOnly() && !portalUser && !driverOnly) {
+        const p = to.path;
+        if (p === "/" || p === "" || isDispatchStaffHomePath(p)) {
+            return { path: "/dept", replace: true };
+        }
     }
 
     if (driverOnly) {

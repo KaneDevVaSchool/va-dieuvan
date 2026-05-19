@@ -767,6 +767,51 @@
         "filter_date_from": "From",
         "filter_date_to": "To"
     },
+    "dept": {
+        "pending_heading": "Pending approvals — {dept}",
+        "pending_subtitle": "{count} request(s) awaiting confirmation after pricing was filled",
+        "kpi_pending": "Pending",
+        "kpi_pending_sub": "today",
+        "kpi_approved_month": "Approved this month",
+        "kpi_approved_sub": "requests",
+        "kpi_rate": "Approval rate",
+        "kpi_rate_sub": "last 30 days",
+        "approve_btn": "Approve",
+        "reject_btn": "Reject",
+        "nav_dashboard": "Dashboard",
+        "nav_pending": "Pending",
+        "nav_approved": "Approved",
+        "nav_rejected": "Rejected",
+        "nav_all": "All requests",
+        "nav_reports": "Reports",
+        "nav_section_overview": "Overview",
+        "nav_section_approval": "Approvals",
+        "nav_section_track": "Tracking",
+        "role_badge": "Department head",
+        "dept_fallback": "Department",
+        "view_detail": "View details",
+        "badge_new_pending": "New — pending",
+        "badge_waiting_price": "Pending",
+        "list_pending_title": "Pending list",
+        "list_approved_title": "Approved requests",
+        "list_rejected_title": "Rejected requests",
+        "list_all_title": "All department requests",
+        "filter_btn": "Filter",
+        "loading": "Loading…",
+        "empty_pending": "No pending items.",
+        "empty_approved": "No approved requests yet.",
+        "empty_rejected": "No rejected requests yet.",
+        "empty_all": "No requests.",
+        "load_error": "Could not load data.",
+        "action_error": "Action failed. Try again.",
+        "reject_modal_title": "Reject request",
+        "reject_modal_desc": "Enter a reason (required).",
+        "reject_placeholder": "Reason…",
+        "reject_reason_required": "Please enter a rejection reason.",
+        "cancel": "Cancel",
+        "tab_all": "All",
+        "load_more": "Load more"
+    },
     "routes_meta": {
         "login": {
             "title": "Sign in",
@@ -828,6 +873,22 @@
         "requestDetail": {
             "title": "Request details",
             "subtitle": ""
+        },
+        "deptDashboard": {
+            "title": "Pending",
+            "subtitle": "Department head"
+        },
+        "deptApproved": {
+            "title": "Approved",
+            "subtitle": "Department head"
+        },
+        "deptRejected": {
+            "title": "Rejected",
+            "subtitle": "Department head"
+        },
+        "deptAll": {
+            "title": "All requests",
+            "subtitle": "Department head"
         },
         "dispatchRequestNew": {
             "title": "New dispatch request",

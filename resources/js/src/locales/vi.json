@@ -828,6 +828,51 @@
         "template_rename_save": "Lưu tên",
         "template_updated_at": "Cập nhật: {date}"
     },
+    "dept": {
+        "pending_heading": "Phiếu chờ duyệt — {dept}",
+        "pending_subtitle": "{count} phiếu đang chờ xác nhận sau khi Điều vận đã fill giá",
+        "kpi_pending": "Chờ duyệt",
+        "kpi_pending_sub": "phiếu hôm nay",
+        "kpi_approved_month": "Đã duyệt tháng này",
+        "kpi_approved_sub": "phiếu",
+        "kpi_rate": "Tỷ lệ duyệt",
+        "kpi_rate_sub": "trong 30 ngày",
+        "approve_btn": "Duyệt phiếu",
+        "reject_btn": "Từ chối",
+        "nav_dashboard": "Dashboard",
+        "nav_pending": "Chờ duyệt",
+        "nav_approved": "Đã duyệt",
+        "nav_rejected": "Đã từ chối",
+        "nav_all": "Tất cả phiếu",
+        "nav_reports": "Báo cáo",
+        "nav_section_overview": "Tổng quan",
+        "nav_section_approval": "Duyệt phiếu",
+        "nav_section_track": "Theo dõi",
+        "role_badge": "Trưởng bộ phận",
+        "dept_fallback": "Đơn vị",
+        "view_detail": "Xem chi tiết",
+        "badge_new_pending": "Mới — chờ duyệt",
+        "badge_waiting_price": "Chờ duyệt",
+        "list_pending_title": "Danh sách phiếu chờ duyệt",
+        "list_approved_title": "Phiếu đã duyệt",
+        "list_rejected_title": "Phiếu đã từ chối",
+        "list_all_title": "Tất cả phiếu trong đơn vị",
+        "filter_btn": "Lọc",
+        "loading": "Đang tải…",
+        "empty_pending": "Không có phiếu chờ.",
+        "empty_approved": "Chưa có phiếu đã duyệt.",
+        "empty_rejected": "Chưa có phiếu bị từ chối.",
+        "empty_all": "Không có phiếu.",
+        "load_error": "Không tải được dữ liệu.",
+        "action_error": "Không thực hiện được. Thử lại.",
+        "reject_modal_title": "Từ chối phiếu",
+        "reject_modal_desc": "Nhập lý do từ chối (bắt buộc).",
+        "reject_placeholder": "Lý do…",
+        "reject_reason_required": "Vui lòng nhập lý do từ chối.",
+        "cancel": "Huỷ",
+        "tab_all": "Tất cả",
+        "load_more": "Tải thêm"
+    },
     "routes_meta": {
         "login": {
             "title": "Đăng nhập",
@@ -893,6 +938,22 @@
         "requestDetail": {
             "title": "Chi tiết yêu cầu",
             "subtitle": ""
+        },
+        "deptDashboard": {
+            "title": "Chờ duyệt",
+            "subtitle": "Trưởng đơn vị"
+        },
+        "deptApproved": {
+            "title": "Đã duyệt",
+            "subtitle": "Trưởng đơn vị"
+        },
+        "deptRejected": {
+            "title": "Đã từ chối",
+            "subtitle": "Trưởng đơn vị"
+        },
+        "deptAll": {
+            "title": "Tất cả phiếu",
+            "subtitle": "Trưởng đơn vị"
         },
         "dispatchRequestNew": {
             "title": "Tạo yêu cầu điều vận",

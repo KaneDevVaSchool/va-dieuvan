@@ -41,6 +41,7 @@ Route::get('/users/for-dispatch-form', UserSearchForDispatchFormController::clas
 
 Route::controller(RequestController::class)->group(function () {
     Route::get('/requests', 'index');
+    Route::get('/dept/summary', 'deptSummary')->middleware('permission:request.approve_dept');
 });
 
 Route::controller(ReportController::class)->group(function () {

@@ -19,6 +19,11 @@ export function normalizeRequestListParams(params) {
   return p
 }
 
+export async function getDeptSummary() {
+  const { data } = await http.get('/dept/summary')
+  return data.data
+}
+
 export async function listRequests(params = {}) {
   const { data } = await http.get('/requests', { params: normalizeRequestListParams(params) })
   return data.data

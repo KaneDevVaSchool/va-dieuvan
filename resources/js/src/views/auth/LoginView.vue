@@ -55,6 +55,7 @@ import {
   normalizeLoginRouteQuery,
   loginRouteNeedsSanitizeReplace,
 } from '../../util/loginRedirect'
+import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 
 /** `public/images/logo/...` */
 const LOGO_PWA_URL = '/images/logo/logo-2.png'
@@ -117,6 +118,11 @@ onMounted(async () => {
       const ok = target.startsWith('/driver')
       if (!ok) {
         target = '/driver'
+      }
+    }
+    if (auth.canAccessDispatchWebApp() && auth.isDeptHeadOnly()) {
+      if (target === '/' || target === '/mng' || isDispatchStaffHomePath(target)) {
+        target = '/dept'
       }
     }
     await router.replace(target)

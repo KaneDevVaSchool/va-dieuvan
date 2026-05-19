@@ -149,6 +149,19 @@ export const useAuthStore = defineStore('auth', {
       const p = this.user.permissions ?? []
       return names.some((n) => p.includes(n))
     },
+    /**
+     * Chỉ trưởng đơn vị (không đồng thời admin/dispatcher/superadmin).
+     * Dùng cho layout /dept và redirect mặc định.
+     */
+    isDeptHeadOnly() {
+      const u = this.user
+      if (!u) return false
+      if (u.is_superadmin) return false
+      const roles = (u.roles ?? []).map((r) => r?.name).filter(Boolean)
+      if (!roles.includes('department_head')) return false
+      const block = new Set(['admin', 'dispatcher', 'superadmin'])
+      return !roles.some((r) => block.has(r))
+    },
     /** User đăng nhập nhưng chưa có role staff/driver — chỉ dùng /portal. */
     isPortalUser() {
       const u = this.user
