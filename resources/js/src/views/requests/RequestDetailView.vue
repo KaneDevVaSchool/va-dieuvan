@@ -600,30 +600,45 @@
 
                           <div
                             v-else-if="item.type === 'row'"
-                            class="flex gap-3 rounded-md border border-slate-200 bg-slate-50/50 p-3"
+                            class="overflow-hidden rounded-lg border border-slate-200 bg-white"
                           >
-                            <div
-                              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 bg-white text-sm font-semibold text-slate-800"
-                              aria-hidden="true"
-                            >
-                              {{ item.index }}
+                            <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-2.5 py-1.5">
+                              <span
+                                class="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded bg-slate-700 px-1.5 text-xs font-bold text-white"
+                              >
+                                {{ item.index }}
+                              </span>
+                              <span class="text-xs font-medium text-slate-600">Dòng khai báo thứ {{ item.index }}</span>
                             </div>
-                            <div class="min-w-0 flex-1">
-                              <p class="sr-only">Hàng {{ item.index }}</p>
-                              <div class="flex flex-wrap gap-2">
-                                <span
-                                  v-for="(seg, si) in item.segments"
-                                  :key="si"
-                                  class="inline-flex max-w-full break-words rounded-md border px-2 py-1 text-xs sm:text-sm"
+                            <div class="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 lg:grid-cols-3">
+                              <template v-for="(cell, ci) in item.cells" :key="ci">
+                                <div
+                                  v-if="cell.kind === 'kv'"
+                                  class="flex min-w-0 flex-col gap-0.5 rounded-md border px-2 py-1.5"
                                   :class="
-                                    segmentHighlightsPricing(seg)
+                                    cell.highlight
+                                      ? 'border-amber-300 bg-amber-50/70'
+                                      : 'border-slate-200 bg-slate-50/80'
+                                  "
+                                >
+                                  <span class="text-[11px] font-medium text-slate-500">{{ cell.key }}</span>
+                                  <span
+                                    class="text-sm font-medium leading-snug text-slate-900 [overflow-wrap:anywhere]"
+                                    >{{ cell.value }}</span
+                                  >
+                                </div>
+                                <div
+                                  v-else
+                                  class="min-w-0 rounded-md border px-2 py-1.5 text-sm leading-snug [overflow-wrap:anywhere]"
+                                  :class="
+                                    cell.highlight
                                       ? 'border-amber-400 bg-amber-50 font-medium text-amber-950'
                                       : 'border-slate-200 bg-white text-slate-800'
                                   "
                                 >
-                                  {{ seg }}
-                                </span>
-                              </div>
+                                  {{ cell.text }}
+                                </div>
+                              </template>
                             </div>
                           </div>
 
@@ -1628,10 +1643,47 @@ function fmtTimeWindow(depart, arrive) {
   return `${a} - ${b}`
 }
 
+/** Chuẩn hoá chuỗi ISO (…T…) trong một đoạn hiển thị thành ngày giờ theo vi-VN. */
+function formatIsoInText(str) {
+  return String(str).replace(
+    /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})?/gi,
+    (iso) => {
+      const d = new Date(iso)
+      if (Number.isNaN(d.getTime())) return iso
+      return d.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    },
+  )
+}
+
+/**
+ * Một ô trong hàng BM (sau khi tách bởi |).
+ * @returns {{ kind: 'kv'; key: string; value: string; highlight: boolean } | { kind: 'text'; text: string; highlight: boolean }}
+ */
+function toProposalRowCell(seg) {
+  const raw = String(seg).trim()
+  const withDates = formatIsoInText(raw)
+  const highlight = segmentHighlightsPricing(withDates)
+  const colonIdx = withDates.indexOf(':')
+  if (colonIdx > 0 && colonIdx <= 34) {
+    const key = withDates.slice(0, colonIdx).trim()
+    const value = withDates.slice(colonIdx + 1).trim()
+    if (key.length <= 32 && value.length > 0 && !key.includes('|')) {
+      return { kind: 'kv', key, value, highlight }
+    }
+  }
+  return { kind: 'text', text: withDates, highlight }
+}
+
 /**
  * Parse BM.03 / notes section body into structured items for the proposal tab.
  * @param {string|null|undefined} content
- * @returns {Array<{ type: 'kv'; key: string; value: string } | { type: 'row'; index: number; segments: string[] } | { type: 'total'; label: string; amount: string } | { type: 'raw'; text: string }>}
+ * @returns {Array<{ type: 'kv'; key: string; value: string } | { type: 'row'; index: number; segments: string[]; cells: ReturnType<typeof toProposalRowCell>[] } | { type: 'total'; label: string; amount: string } | { type: 'raw'; text: string }>}
  */
 function parseSectionContent(content) {
   const text = String(content ?? '').replace(/\r\n/g, '\n')
@@ -1669,6 +1721,7 @@ function parseSectionContent(content) {
         type: 'row',
         index: Number(rowMatch[1]),
         segments,
+        cells: segments.map((s) => toProposalRowCell(s)),
       })
       continue
     }
