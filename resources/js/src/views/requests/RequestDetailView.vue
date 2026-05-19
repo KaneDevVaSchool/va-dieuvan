@@ -490,6 +490,7 @@
                 :reset-clone-busy="resetCloneBusy"
                 :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
                 @save-row-prices="onSaveRowPrices"
+                @open-reference-pricing="pricingModalOpen = true"
                 @dept-approve="onDeptApproveClick"
                 @dept-reject="openDeptReject"
                 @download-signed="downloadFile"

@@ -329,11 +329,35 @@
               </table>
             </div>
 
-            <div v-if="showFillPriceSection && !isCargo" class="flex flex-wrap items-center gap-3 border-t border-slate-100 px-3 py-4 sm:px-4">
-              <Button type="button" class="shrink-0 !bg-teal-600 hover:!bg-teal-700" :loading="fillPriceActing" @click="emitSaveRowPrices">
-                Lưu giá &amp; chuyển Trưởng đơn vị duyệt
-              </Button>
-              <span v-if="fillPriceMsg" class="text-xs text-slate-600">{{ fillPriceMsg }}</span>
+            <div
+              v-if="showFillPriceSection && !isCargo"
+              class="border-t border-teal-200/70 bg-gradient-to-r from-teal-50/90 via-teal-50/40 to-slate-50/80 px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] sm:px-4"
+            >
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div class="flex flex-wrap items-center gap-2 rounded-xl bg-white/80 p-2 ring-1 ring-teal-600/10 sm:gap-2.5">
+                  <Button
+                    type="button"
+                    class="shadow-sm sm:min-h-[2.375rem] !bg-teal-600 hover:!bg-teal-700 focus-visible:!ring-teal-500"
+                    :loading="fillPriceActing"
+                    @click="emitSaveRowPrices"
+                  >
+                    Lưu giá &amp; chuyển Trưởng đơn vị duyệt
+                  </Button>
+                  <span class="hidden h-6 w-px shrink-0 bg-teal-200/80 sm:block" aria-hidden="true" />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    :disabled="fillPriceActing"
+                    class="!border-teal-300/70 !bg-white !text-teal-900 shadow-sm ring-1 ring-teal-500/10 hover:!border-teal-400 hover:!bg-teal-50/90 disabled:opacity-50 sm:min-h-[2.375rem]"
+                    @click="emit('open-reference-pricing')"
+                  >
+                    {{ t('request_detail.reference_pricing_link') }}
+                  </Button>
+                </div>
+                <p v-if="fillPriceMsg" class="flex-1 rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs leading-relaxed text-amber-950 sm:flex-none sm:max-w-md sm:text-right">
+                  {{ fillPriceMsg }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -427,6 +451,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 import DeptApprovalSection from './DeptApprovalSection.vue'
 import SignedPaperUpload from './SignedPaperUpload.vue'
@@ -438,6 +463,8 @@ import BmRoTd from './RequestBm03RoTd.vue'
 import { TARGET_OPTIONS, isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
 import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { labelTripType } from '../../util/labels'
+
+const { t } = useI18n()
 
 const props = defineProps({
   req: { type: Object, default: null },
@@ -476,6 +503,7 @@ const passengerDraftModel = defineModel('passengerDraft', {
 
 const emit = defineEmits([
   'save-row-prices',
+  'open-reference-pricing',
   'deptApprove',
   'deptReject',
   'downloadSigned',
