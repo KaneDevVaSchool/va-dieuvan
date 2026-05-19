@@ -1586,7 +1586,17 @@ async function decide(d) {
     if (d === 'approve') {
       const code = requestRefCode.value || `REQ-${route.params.id}`
       const tripId = res?.trip?.id
-      if (tripId) {
+      if (auth.isDeptHeadOnly()) {
+        if (tripId) {
+          await router.push({ name: 'deptDashboard' })
+          showAppSuccess(t('requests_page.approve_success_body_trip', { code }), t('requests_page.approve_success_title'))
+        } else {
+          showAppSuccess(t('requests_page.approve_success_body', { code }), t('requests_page.approve_success_title'), {
+            navigateTo: '/dept',
+            primaryLabel: t('requests_page.approve_success_go_trips'),
+          })
+        }
+      } else if (tripId) {
         await router.push(`/trips/${tripId}`)
         showAppSuccess(t('requests_page.approve_success_body_trip', { code }), t('requests_page.approve_success_title'))
       } else {
@@ -1630,7 +1640,11 @@ async function onSaveRowPrices(payload) {
   }
   fillPriceActing.value = true
   try {
-    await fillPriceDispatchRequest(Number(route.params.id), { service_price: n, rows: payload?.rows ?? [] })
+    await fillPriceDispatchRequest(Number(route.params.id), {
+      service_price: n,
+      rows: payload?.rows ?? [],
+      dept_head_user_id: payload?.dept_head_user_id ?? null,
+    })
     showAppSuccess(t('request_detail.fill_price_success'), 'Đã xử lý')
     await load()
   } catch (e) {
@@ -1688,7 +1702,17 @@ async function onDeptApproveClick() {
     const res = await deptDecideDispatchRequest(Number(route.params.id), { decision: 'approve' })
     const code = requestRefCode.value || `REQ-${route.params.id}`
     const tripId = res?.trip?.id
-    if (tripId) {
+    if (auth.isDeptHeadOnly()) {
+      if (tripId) {
+        await router.push({ name: 'deptDashboard' })
+        showAppSuccess(t('requests_page.approve_success_body_trip', { code }), t('requests_page.approve_success_title'))
+      } else {
+        showAppSuccess(t('requests_page.approve_success_body', { code }), t('requests_page.approve_success_title'), {
+          navigateTo: '/dept',
+          primaryLabel: t('requests_page.approve_success_go_trips'),
+        })
+      }
+    } else if (tripId) {
       await router.push(`/trips/${tripId}`)
       showAppSuccess(t('requests_page.approve_success_body_trip', { code }), t('requests_page.approve_success_title'))
     } else {

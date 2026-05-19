@@ -10,6 +10,10 @@ final class Messages
 
     public const REQUEST_FILL_PRICE_NOT_APPLICABLE = 'Loại yêu cầu này không áp dụng bước điền giá (door-to-door).';
 
+    public const REQUEST_INVALID_DEPT_HEAD = 'Người được chỉ định không phải trưởng đơn vị của phòng đề xuất.';
+
+    public const REQUEST_DEPT_HEAD_REQUIRES_DEPARTMENT = 'Không thể chỉ định trưởng đơn vị khi người đề xuất chưa thuộc phòng ban.';
+
     public const REQUEST_NOT_PRICE_FILLED = 'Yêu cầu chưa ở trạng thái đã điền giá; không thể duyệt theo quy trình này.';
 
     public const REQUEST_PAPER_NOT_RECEIVED = 'Phiếu giấy chưa ở trạng thái đã nhận; không thể hoàn tác.';

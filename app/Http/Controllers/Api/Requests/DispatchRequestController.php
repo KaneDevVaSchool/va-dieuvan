@@ -154,6 +154,27 @@ class DispatchRequestController extends Controller
         $user = $request->user();
         $before = $dispatchRequest->toArray();
 
+        $dispatchRequest->loadMissing('requester:id,department_id');
+        $requesterDeptId = $dispatchRequest->requester?->department_id;
+
+        $chosenDeptHeadId = isset($data['dept_head_user_id']) ? (int) $data['dept_head_user_id'] : null;
+        if ($chosenDeptHeadId === 0) {
+            $chosenDeptHeadId = null;
+        }
+        if ($chosenDeptHeadId !== null) {
+            if ($requesterDeptId === null) {
+                abort(422, Messages::REQUEST_DEPT_HEAD_REQUIRES_DEPARTMENT);
+            }
+            $eligible = User::query()
+                ->role('department_head')
+                ->where('department_id', (int) $requesterDeptId)
+                ->whereKey($chosenDeptHeadId)
+                ->exists();
+            if (! $eligible) {
+                abort(422, Messages::REQUEST_INVALID_DEPT_HEAD);
+            }
+        }
+
         $snap = $dispatchRequest->wizard_snapshot ?? [];
 
         $tripType = $dispatchRequest->trip_type ?? '';
@@ -184,6 +205,7 @@ class DispatchRequestController extends Controller
             'wizard_snapshot' => $snap,
             'price_filled_by' => $user->id,
             'price_filled_at' => now(),
+            'assigned_dept_head_id' => $chosenDeptHeadId,
         ]);
 
         app(AuditLogger::class)->log(
@@ -194,20 +216,21 @@ class DispatchRequestController extends Controller
             after: $dispatchRequest->fresh()->toArray(),
             metadata: [
                 'service_price' => $data['service_price'],
+                'assigned_dept_head_id' => $chosenDeptHeadId,
             ],
         );
 
         if (Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
-            $dispatchRequest->loadMissing('requester:id,department_id');
-            $requesterDeptId = $dispatchRequest->requester?->department_id;
             if ($requesterDeptId !== null) {
                 $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
                 $summaryLine = $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id;
 
-                $recipients = User::query()
-                    ->role('department_head')
-                    ->where('department_id', (int) $requesterDeptId)
-                    ->get();
+                $recipients = $chosenDeptHeadId !== null
+                    ? User::query()->whereKey($chosenDeptHeadId)->get()
+                    : User::query()
+                        ->role('department_head')
+                        ->where('department_id', (int) $requesterDeptId)
+                        ->get();
                 if ($recipients->isNotEmpty()) {
                     Notification::send(
                         $recipients,
@@ -221,6 +244,33 @@ class DispatchRequestController extends Controller
         }
 
         return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
+    }
+
+    /**
+     * Trưởng đơn vị cùng department với người đề xuất (cho bước gán người duyệt khi điền giá).
+     */
+    public function availableDeptHeads(ShowDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
+    {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $this->authorize('view', $dispatchRequest);
+
+        $dispatchRequest->loadMissing('requester:id,department_id');
+        $deptId = $dispatchRequest->requester?->department_id;
+
+        if ($deptId === null || ! Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+            return $this->ok([]);
+        }
+
+        $users = User::query()
+            ->role('department_head')
+            ->where('department_id', (int) $deptId)
+            ->orderBy('name')
+            ->get(['id', 'name', 'employee_code']);
+
+        return $this->ok($users);
     }
 
     public function exportPdf(ExportDispatchRequestPdfRequest $request, DispatchRequest $dispatchRequest)

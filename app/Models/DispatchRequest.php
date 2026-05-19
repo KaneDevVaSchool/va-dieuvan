@@ -35,6 +35,7 @@ class DispatchRequest extends Model
         'service_price',
         'price_filled_by',
         'price_filled_at',
+        'assigned_dept_head_id',
         'status',
         'paper_status',
         'paper_received_at',
@@ -73,6 +74,11 @@ class DispatchRequest extends Model
     public function priceFiller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'price_filled_by');
+    }
+
+    public function assignedDeptHead(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_dept_head_id');
     }
 
     public function trip(): HasOne

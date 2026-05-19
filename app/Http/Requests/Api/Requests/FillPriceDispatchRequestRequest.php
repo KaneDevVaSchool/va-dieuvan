@@ -15,6 +15,7 @@ class FillPriceDispatchRequestRequest extends ApiFormRequest
     {
         return [
             'service_price' => ['required', 'numeric', 'min:0'],
+            'dept_head_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'rows' => ['nullable', 'array'],
             'rows.*.unit_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'rows.*.extra_fee' => ['sometimes', 'nullable', 'numeric', 'min:0'],

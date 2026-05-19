@@ -30,7 +30,6 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { listRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
-import { DISPATCH_WEB_BASE } from '../../config/dispatchWebBase'
 import DeptRequestCard from '../../components/dept/DeptRequestCard.vue'
 
 const { t } = useI18n()
@@ -68,7 +67,7 @@ async function loadMore() {
 }
 
 function goDetail(id) {
-  router.push({ path: `${DISPATCH_WEB_BASE}/requests/${id}` })
+  router.push({ name: 'deptRequestDetail', params: { id: String(id) } })
 }
 
 onMounted(async () => {

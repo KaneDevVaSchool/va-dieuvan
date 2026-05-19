@@ -365,30 +365,52 @@
 
             <div
               v-if="showFillPriceSection && !isCargo"
-              class="border-t border-teal-200/70 bg-gradient-to-r from-teal-50/90 via-teal-50/40 to-slate-50/80 px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] sm:px-4"
+              class="border-t border-slate-200 bg-slate-50 px-3 py-4 sm:px-4"
             >
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <div class="flex flex-wrap items-center gap-2 rounded-xl bg-white/80 p-2 ring-1 ring-teal-600/10 sm:gap-2.5">
+              <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
+                <div class="flex min-w-[10rem] max-w-xs flex-col gap-1">
+                  <label class="text-xs font-medium text-slate-600" for="bm03-assign-dept-head">
+                    {{ t('request_detail.assign_dept_head_label') }}
+                  </label>
+                  <select
+                    id="bm03-assign-dept-head"
+                    v-model="selectedDeptHeadId"
+                    :disabled="fillPriceActing || deptHeadsLoading"
+                    class="w-full rounded-md border border-slate-300 bg-white px-2 py-2 text-sm text-slate-800 outline-none ring-slate-500/20 focus:border-slate-500 focus:ring-1 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <option value="">{{ t('request_detail.assign_dept_head_placeholder') }}</option>
+                    <option v-for="u in deptHeadOptions" :key="u.id" :value="String(u.id)">
+                      {{ u.name }}{{ u.employee_code ? ` (${u.employee_code})` : '' }}
+                    </option>
+                  </select>
+                  <p v-if="deptHeadsLoadErr" class="text-xs text-slate-600">{{ deptHeadsLoadErr }}</p>
+                  <p v-else-if="deptHeadsLoading" class="text-xs text-slate-500">
+                    {{ t('request_detail.assign_dept_head_loading') }}
+                  </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
                   <Button
                     type="button"
-                    class="shadow-sm sm:min-h-[2.375rem] !bg-teal-600 hover:!bg-teal-700 focus-visible:!ring-teal-500"
+                    class="min-h-[2.375rem] shadow-sm sm:min-h-[2.375rem]"
                     :loading="fillPriceActing"
                     @click="emitSaveRowPrices"
                   >
-                    Lưu giá &amp; chuyển Trưởng đơn vị duyệt
+                    {{ t('request_detail.fill_price_submit') }}
                   </Button>
-                  <span class="hidden h-6 w-px shrink-0 bg-teal-200/80 sm:block" aria-hidden="true" />
                   <Button
                     type="button"
                     variant="secondary"
                     :disabled="fillPriceActing"
-                    class="!border-teal-300/70 !bg-white !text-teal-900 shadow-sm ring-1 ring-teal-500/10 hover:!border-teal-400 hover:!bg-teal-50/90 disabled:opacity-50 sm:min-h-[2.375rem]"
+                    class="min-h-[2.375rem]"
                     @click="emit('open-reference-pricing')"
                   >
                     {{ t('request_detail.reference_pricing_link') }}
                   </Button>
                 </div>
-                <p v-if="fillPriceMsg" class="flex-1 rounded-lg border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs leading-relaxed text-amber-950 sm:flex-none sm:max-w-md sm:text-right">
+                <p
+                  v-if="fillPriceMsg"
+                  class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-800 sm:w-auto sm:flex-1 sm:min-w-[12rem]"
+                >
                   {{ fillPriceMsg }}
                 </p>
               </div>
@@ -494,6 +516,7 @@ import ResetCloneSection from './ResetCloneSection.vue'
 import StudentCountField from '../recurring/StudentCountField.vue'
 import BmRoField from './RequestBm03RoField.vue'
 import BmRoTd from './RequestBm03RoTd.vue'
+import { getAvailableDeptHeads } from '../../api/requests'
 import { TARGET_OPTIONS, isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
 import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { labelTripType } from '../../util/labels'
@@ -545,6 +568,43 @@ const emit = defineEmits([
   'savePassenger',
   'resetClone',
 ])
+
+const deptHeadOptions = ref([])
+const deptHeadsLoading = ref(false)
+const deptHeadsLoadErr = ref('')
+const selectedDeptHeadId = ref('')
+
+watch(
+  () => [props.showFillPriceSection, props.req?.id],
+  async ([show, id]) => {
+    if (!show || id == null) {
+      deptHeadOptions.value = []
+      return
+    }
+    deptHeadsLoading.value = true
+    deptHeadsLoadErr.value = ''
+    try {
+      deptHeadOptions.value = await getAvailableDeptHeads(id)
+    } catch (e) {
+      deptHeadsLoadErr.value =
+        typeof e?.response?.data?.message === 'string'
+          ? e.response.data.message
+          : t('request_detail.assign_dept_head_load_err')
+      deptHeadOptions.value = []
+    } finally {
+      deptHeadsLoading.value = false
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.req?.assigned_dept_head_id,
+  (id) => {
+    selectedDeptHeadId.value = id != null ? String(id) : ''
+  },
+  { immediate: true },
+)
 
 /** Indices 0..12 matching cargo PDF columns → cost last */
 const cargoColIndexes = Array.from({ length: 13 }, (_, i) => i)
@@ -919,7 +979,13 @@ function buildRowsPayload() {
 }
 
 function emitSaveRowPrices() {
-  emit('save-row-prices', { rows: buildRowsPayload(), service_price: grandTotalSum.value })
+  const raw = selectedDeptHeadId.value
+  const dept_head_user_id = raw === '' || raw == null ? null : Number(raw)
+  emit('save-row-prices', {
+    rows: buildRowsPayload(),
+    service_price: grandTotalSum.value,
+    dept_head_user_id,
+  })
 }
 
 const porterMoney = computed(() => parseMoney(form.value.porter_cost))

@@ -141,7 +141,6 @@ import { ArrowDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '../../store'
 import { deptDecideDispatchRequest, getDeptSummary, listRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
-import { DISPATCH_WEB_BASE } from '../../config/dispatchWebBase'
 import DeptRequestCard from '../../components/dept/DeptRequestCard.vue'
 import Modal from '../../components/ui/Modal.vue'
 import Button from '../../components/ui/Button.vue'
@@ -287,7 +286,7 @@ async function loadMore() {
 }
 
 function goDetail(id) {
-  router.push({ path: `${DISPATCH_WEB_BASE}/requests/${id}` })
+  router.push({ name: 'deptRequestDetail', params: { id: String(id) } })
 }
 
 async function onApprove(id) {

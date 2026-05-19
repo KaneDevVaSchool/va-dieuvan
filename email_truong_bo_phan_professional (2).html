@@ -1,0 +1,174 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.outer{padding:1.5rem 0;font-family:var(--font-sans);}
+.email-client{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);overflow:hidden;border:0.5px solid var(--color-border-tertiary);}
+.client-bar{background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);padding:10px 16px;display:flex;align-items:center;gap:10px;}
+.client-bar-dot{width:10px;height:10px;border-radius:50%;background:var(--color-border-secondary);}
+.client-bar-label{font-size:12px;color:var(--color-text-tertiary);margin-left:4px;}
+.email-meta{background:var(--color-background-primary);padding:14px 24px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.meta-row{display:flex;gap:8px;font-size:12px;padding:3px 0;}
+.meta-label{color:var(--color-text-tertiary);width:48px;flex-shrink:0;}
+.meta-val{color:var(--color-text-secondary);}
+.meta-subject{font-size:15px;font-weight:500;color:var(--color-text-primary);padding:10px 0 4px;}
+.email-canvas{background:var(--color-background-secondary);padding:24px 20px;}
+.email-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;max-width:580px;margin:0 auto;}
+.ecard-header{background:#8B1A3A;padding:20px 28px 18px;}
+.ecard-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.logo-chip{background:rgba(255,255,255,0.18);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:500;color:#fff;letter-spacing:0.04em;}
+.header-badge{font-size:11px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);padding:3px 10px;border-radius:10px;}
+.ecard-header h1{font-size:17px;font-weight:500;color:#fff;line-height:1.4;margin-bottom:4px;}
+.ecard-header p{font-size:12px;color:rgba(255,255,255,0.7);}
+.ecard-body{padding:22px 28px;}
+.greeting{font-size:14px;color:var(--color-text-primary);margin-bottom:8px;font-weight:500;}
+.intro-text{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:18px;}
+.notice-bar{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:var(--border-radius-md);background:#FFF7ED;border:0.5px solid #EF9F27;margin-bottom:18px;}
+.notice-bar i{color:#BA7517;font-size:16px;flex-shrink:0;margin-top:1px;}
+.notice-bar-text{font-size:12px;color:#633806;line-height:1.5;}
+.notice-bar-text strong{color:#412402;}
+.section-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-tertiary);margin-bottom:10px;}
+.info-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px;}
+.info-table tr td{padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.info-table tr:last-child td{border-bottom:none;}
+.info-table td:first-child{color:var(--color-text-secondary);width:44%;padding-right:12px;vertical-align:top;}
+.info-table td:last-child{color:var(--color-text-primary);font-weight:500;}
+.cost-block{background:#8B1A3A08;border:0.5px solid #8B1A3A22;border-radius:var(--border-radius-md);padding:14px 16px;margin-bottom:20px;}
+.cost-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+.cost-row span:first-child{color:var(--color-text-secondary);}
+.cost-row span:last-child{color:var(--color-text-primary);font-weight:500;}
+.cost-divider{border:none;border-top:0.5px solid #8B1A3A22;margin:8px 0;}
+.cost-total{display:flex;justify-content:space-between;padding-top:8px;}
+.cost-total span:first-child{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.cost-total span:last-child{font-size:16px;font-weight:500;color:#8B1A3A;}
+.action-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.5;}
+.cta-row{display:flex;gap:10px;margin-bottom:8px;}
+.btn-primary{flex:1;padding:11px 0;background:#8B1A3A;color:#fff;border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-secondary{padding:11px 18px;background:transparent;color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.view-link{text-align:center;margin-bottom:20px;}
+.view-link a{font-size:12px;color:#8B1A3A;text-decoration:none;}
+.view-link a i{font-size:12px;vertical-align:-1px;margin-left:3px;}
+.ecard-divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:0 28px;}
+.ecard-footer{padding:16px 28px;}
+.footer-workflow{display:flex;gap:0;margin-bottom:14px;}
+.wf-step{flex:1;text-align:center;position:relative;}
+.wf-step:not(:last-child)::after{content:"";position:absolute;top:12px;right:0;width:50%;height:0.5px;background:var(--color-border-secondary);}
+.wf-step:not(:first-child)::before{content:"";position:absolute;top:12px;left:0;width:50%;height:0.5px;background:var(--color-border-secondary);}
+.wf-dot{width:24px;height:24px;border-radius:50%;margin:0 auto 5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;position:relative;z-index:1;}
+.wf-dot.done{background:#8B1A3A15;color:#8B1A3A;border:0.5px solid #8B1A3A40;}
+.wf-dot.current{background:#8B1A3A;color:#fff;}
+.wf-dot.pending{background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-tertiary);}
+.wf-label{font-size:10px;color:var(--color-text-tertiary);}
+.wf-label.active{color:#8B1A3A;font-weight:500;}
+.footer-note{font-size:11px;color:var(--color-text-tertiary);line-height:1.6;}
+.footer-note a{color:var(--color-text-secondary);}
+.scope-note{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-tertiary);padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);margin-top:10px;}
+</style>
+
+
+<div class="outer">
+<div class="email-client">
+
+  <div class="email-canvas">
+  <div class="email-card">
+
+    <div class="ecard-header">
+      <div class="ecard-header-top">
+        <span class="logo-chip">VA Schools · Điều vận</span>
+        <span class="header-badge"><i class="ti ti-clock" style="font-size:11px;vertical-align:-1px" aria-hidden="true"></i> Chờ xác nhận</span>
+      </div>
+      <h1>Phiếu đề xuất chờ duyệt của bạn</h1>
+      <p>Điều vận đã hoàn tất cập nhật chi phí — cần xác nhận để điều phối xe</p>
+    </div>
+
+    <div class="ecard-body">
+
+      <p class="greeting">Kính gửi Nguyễn Lan Anh,</p>
+      <p class="intro-text">Nhân viên điều vận vừa hoàn tất cập nhật giá dịch vụ cho phiếu đề xuất bên dưới. Phiếu đang chờ xác nhận của bạn để tiến hành điều phối phương tiện và tài xế.</p>
+
+      <div class="notice-bar">
+        <i class="ti ti-clock-exclamation" aria-hidden="true"></i>
+        <div class="notice-bar-text">
+          <strong>Hạn duyệt: trước 17:00 ngày 21/05/2026.</strong><br>
+          Quá hạn, hệ thống sẽ tự động gửi nhắc lại cho bạn và thông báo đến Điều vận.
+        </div>
+      </div>
+
+      <div class="section-title">Thông tin phiếu đề xuất</div>
+      <table class="info-table">
+        <tr><td>Mã phiếu</td><td>XCT-2026-047</td></tr>
+        <tr><td>Loại dịch vụ</td><td>Xe công tác</td></tr>
+        <tr><td>Người đề xuất</td><td>Trần Minh Khoa — Phòng Hành chính</td></tr>
+        <tr><td>Hành trình</td><td>TP. Hồ Chí Minh → Hà Nội</td></tr>
+        <tr><td>Thời gian</td><td>22/05/2026 – 24/05/2026 (3 ngày)</td></tr>
+        <tr><td>Trưởng đoàn</td><td>Nguyễn Văn Bình</td></tr>
+        <tr><td>Mục đích</td><td>BGH tham dự hội nghị đối tác giáo dục phía Bắc</td></tr>
+      </table>
+
+      <div class="section-title">Chi phí dịch vụ</div>
+      <div class="cost-block">
+        <div class="cost-row"><span>Đơn giá dịch vụ</span><span>2.400.000 đ</span></div>
+        <div class="cost-row"><span>Chi phí phát sinh</span><span>350.000 đ</span></div>
+        <div class="cost-row" style="font-size:12px;"><span style="color:var(--color-text-tertiary);font-style:italic">Phí cầu đường, gửi xe</span><span style="color:var(--color-text-tertiary)"></span></div>
+        <hr class="cost-divider">
+        <div class="cost-total"><span>Tổng chi phí</span><span>2.750.000 đ</span></div>
+      </div>
+
+      <p class="action-label">Vui lòng xác nhận phiếu này để Điều vận tiến hành bước tiếp theo. Nếu từ chối, bạn cần nhập lý do cụ thể — Người đề xuất sẽ nhận thông báo để chỉnh sửa và gửi lại.</p>
+
+      <div class="cta-row">
+        <button class="btn-primary"><i class="ti ti-circle-check" aria-hidden="true"></i> Duyệt phiếu</button>
+        <button class="btn-secondary"><i class="ti ti-circle-x" aria-hidden="true"></i> Từ chối</button>
+      </div>
+
+      <div class="view-link">
+        <a href="#">Xem đầy đủ chi tiết phiếu trên hệ thống <i class="ti ti-external-link" aria-hidden="true"></i></a>
+      </div>
+
+    </div>
+
+    <hr class="ecard-divider">
+
+    <div class="ecard-footer">
+
+      <div class="section-title" style="margin-bottom:12px;">Tiến trình xử lý phiếu</div>
+      <div class="footer-workflow">
+        <div class="wf-step">
+          <div class="wf-dot done"><i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i></div>
+          <div class="wf-label">Tạo phiếu</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-dot done"><i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i></div>
+          <div class="wf-label">Fill giá</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-dot current">3</div>
+          <div class="wf-label active">Trưởng BP duyệt</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-dot pending">4</div>
+          <div class="wf-label">Điều phối xe</div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-dot pending">5</div>
+          <div class="wf-label">Lưu trữ</div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Sau khi bạn duyệt: Người đề xuất nhận thông báo và có thể xuất PDF để trình ký. Điều vận sẽ đồng thời tiến hành điều phối xe — hai bước diễn ra song song.<br><br>
+        Đây là email tự động từ hệ thống Điều Vận VA Schools. Vui lòng không trả lời trực tiếp email này.<br>
+        Cần hỗ trợ: <a href="#">it-helpdesk@va-schools.edu.vn</a>
+      </div>
+
+      <div class="scope-note">
+        <i class="ti ti-lock" style="font-size:12px" aria-hidden="true"></i>
+        Bạn chỉ nhận email này vì là Trưởng bộ phận của Phòng Hành chính. Phiếu từ phòng ban khác sẽ không được gửi đến bạn.
+      </div>
+
+    </div>
+
+  </div>
+  </div>
+
+</div>
+</div>

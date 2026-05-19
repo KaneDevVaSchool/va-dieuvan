@@ -27,6 +27,8 @@ Route::post('/notifications/{notification}/read', [InboxController::class, 'mark
     ->whereUuid('notification');
 
 Route::get('/dispatch-requests/{dispatchRequest}', [DispatchRequestController::class, 'show']);
+Route::get('/dispatch-requests/{dispatchRequest}/available-dept-heads', [DispatchRequestController::class, 'availableDeptHeads'])
+    ->middleware(['permission:request.fill_price', 'throttle:60,1']);
 Route::get('/dispatch-requests/{dispatchRequest}/export-pdf', [DispatchRequestController::class, 'exportPdf'])
     ->middleware('throttle:30,1')
     ->name('dispatch-requests.export-pdf');

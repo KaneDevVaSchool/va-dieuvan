@@ -280,11 +280,23 @@ export async function decideDispatchRequest(dispatchRequestId, payload, { idempo
 }
 
 /**
- * @param {{ service_price: number|string, rows?: Array<{ unit_price?: number, extra_fee?: number, notes?: string|null }> }} payload
+ * @param {{
+ *   service_price: number|string,
+ *   rows?: Array<{ unit_price?: number, extra_fee?: number, notes?: string|null }>,
+ *   dept_head_user_id?: number|null,
+ * }} payload
  */
 export async function fillPriceDispatchRequest(dispatchRequestId, payload) {
   const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/fill-price`, payload)
   return data.data
+}
+
+/**
+ * @returns {Promise<Array<{ id: number, name: string, employee_code: string|null }>>}
+ */
+export async function getAvailableDeptHeads(dispatchRequestId) {
+  const { data } = await http.get(`/dispatch-requests/${dispatchRequestId}/available-dept-heads`)
+  return data.data ?? []
 }
 
 /**

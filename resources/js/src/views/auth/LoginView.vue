@@ -123,6 +123,9 @@ onMounted(async () => {
     if (auth.canAccessDispatchWebApp() && auth.isDeptHeadOnly()) {
       if (target === '/' || target === '/mng' || isDispatchStaffHomePath(target)) {
         target = '/dept'
+      } else if (target.startsWith('/mng/')) {
+        const rm = target.match(/^\/mng\/requests\/(\d+)/)
+        target = rm ? `/dept/requests/${rm[1]}` : '/dept'
       }
     }
     await router.replace(target)

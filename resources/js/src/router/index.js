@@ -4,7 +4,6 @@ import {
     DISPATCH_WEB_BASE,
     buildStaffPrefixedPath,
     shouldRewriteLegacyStaffPath,
-    isDispatchStaffHomePath,
 } from "../config/dispatchWebBase";
 import { useAuthStore } from "../store";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
@@ -384,6 +383,16 @@ const router = createRouter({
                     component: () => import("../views/dept/DeptAllRequestsView.vue"),
                     meta: { deptHead: true, title: "Tất cả phiếu", subtitle: "Trưởng đơn vị" },
                 },
+                {
+                    path: "requests/:id(\\d+)",
+                    name: "deptRequestDetail",
+                    component: () => import("../views/requests/RequestDetailView.vue"),
+                    meta: {
+                        deptHead: true,
+                        title: "Chi tiết yêu cầu",
+                        subtitle: "Trưởng đơn vị",
+                    },
+                },
             ],
         },
         {
@@ -504,6 +513,9 @@ router.beforeEach(async (to) => {
         if (driverOnly) {
             return { path: "/driver", replace: true };
         }
+        if (auth.isDeptHeadOnly()) {
+            return { path: "/dept", replace: true };
+        }
         return { name: "dashboard" };
     }
 
@@ -511,11 +523,18 @@ router.beforeEach(async (to) => {
         return { name: "dashboard" };
     }
 
-    if (auth.isDeptHeadOnly() && !portalUser && !driverOnly) {
-        const p = to.path;
-        if (p === "/" || p === "" || isDispatchStaffHomePath(p)) {
-            return { path: "/dept", replace: true };
+    /** Trưởng đơn vị (chỉ dept_head): không dùng ứng dụng `/mng`. */
+    if (auth.isDeptHeadOnly() && !portalUser && !driverOnly && pathIsUnderStaffBase(to.path)) {
+        const m = to.path.match(/^\/mng\/requests\/(\d+)\/?(?:\?.*)?$/);
+        if (m) {
+            return {
+                path: `/dept/requests/${m[1]}`,
+                query: to.query,
+                hash: to.hash,
+                replace: true,
+            };
         }
+        return { path: "/dept", replace: true };
     }
 
     if (driverOnly) {
@@ -529,8 +548,36 @@ router.beforeEach(async (to) => {
         }
     }
     if (
+        auth.isDeptHeadOnly() &&
+        !portalUser &&
+        !driverOnly &&
+        to.path !== "/login" &&
+        !to.path.startsWith("/auth") &&
+        !pathIsUnderStaffBase(to.path) &&
+        shouldRewriteLegacyStaffPath(to.path)
+    ) {
+        if (to.path === "/profile" || to.path.startsWith("/profile/")) {
+            return true;
+        }
+        const idMatch = to.path.match(/^\/requests\/(\d+)\/?/);
+        if (idMatch) {
+            return {
+                path: `/dept/requests/${idMatch[1]}`,
+                query: to.query,
+                hash: to.hash,
+                replace: true,
+            };
+        }
+        if (to.path === "/requests" || to.path.startsWith("/requests?")) {
+            return { path: "/dept/all", query: to.query, hash: to.hash, replace: true };
+        }
+        return { path: "/dept", query: to.query, hash: to.hash, replace: true };
+    }
+
+    if (
         auth.canAccessDispatchWebApp() &&
         !driverOnly &&
+        !auth.isDeptHeadOnly() &&
         to.path !== "/login" &&
         !to.path.startsWith("/auth") &&
         !pathIsUnderStaffBase(to.path) &&
