@@ -23,6 +23,8 @@
 | Giải pháp | Đặt `QUEUE_CONNECTION=redis` hoặc `database`; `php artisan migrate`; Supervisor chạy `queue:work`; kiểm tra `DISPATCH_NOTIFICATIONS_QUEUE_*` khớp `--queue=` |
 | Phòng ngừa | Monitor worker uptime; log `dispatch.debug_notification_log` khi cần |
 
+**Lỗi `getaddrinfo for mailpit failed` khi tạo yêu cầu (portal/staff):** `.env` production đang để `MAIL_HOST=mailpit` (tên host chỉ có trong Docker dev). Sửa `MAIL_*` sang SMTP thật, hoặc `MAIL_MAILER=log`, hoặc `DISPATCH_MAIL_FOR_NEW_REQUESTS=false` để chỉ dùng kênh database (ứng dụng vẫn gửi notification database; từ bản vá mailpit guard, kênh mail cũng tự bỏ qua khi không phải `local`/`testing`).
+
 ---
 
 ## Permission / 403

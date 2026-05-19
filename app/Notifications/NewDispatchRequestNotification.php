@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class NewDispatchRequestNotification extends Notification implements ShouldQueue, ShouldQueueAfterCommit
 {
@@ -26,7 +27,35 @@ class NewDispatchRequestNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        $channels = ['database'];
+        if ($this->shouldDeliverMail()) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
+    }
+
+    /**
+     * Tránh lỗi SMTP khi production vô tình để MAIL_HOST=mailpit (chỉ có trong Docker dev).
+     */
+    protected function shouldDeliverMail(): bool
+    {
+        if (! config('dispatch.mail_for_new_dispatch_requests')) {
+            return false;
+        }
+
+        if (config('mail.default') !== 'smtp') {
+            return true;
+        }
+
+        $host = strtolower((string) config('mail.mailers.smtp.host', ''));
+        if ($host === 'mailpit' && ! app()->environment(['local', 'testing'])) {
+            Log::warning('Mail skipped for NewDispatchRequestNotification: MAIL_HOST=mailpit is for local dev. Configure production MAIL_* or set DISPATCH_MAIL_FOR_NEW_REQUESTS=false.');
+
+            return false;
+        }
+
+        return true;
     }
 
     /**

@@ -56,6 +56,17 @@ GOOGLE_CLIENT_SECRET=...
 GOOGLE_REDIRECT_URI=https://dispatch.example.com/auth/google/callback
 GOOGLE_ALLOWED_EMAIL_DOMAINS=your-school.edu.vn
 
+# SMTP production — không để MAIL_HOST=mailpit (chỉ dùng với Docker/Mailpit local).
+# DISPATCH_MAIL_FOR_NEW_REQUESTS=false  # tạm tắt email "yêu cầu mới", vẫn có notification database
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=no-reply@example.com
+MAIL_FROM_NAME="${APP_NAME}"
+
 VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
 VAPID_SUBJECT=mailto:ops@example.com
