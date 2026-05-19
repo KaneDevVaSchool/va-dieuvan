@@ -16,10 +16,10 @@
           <span class="relative inline-flex">
             <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
             <span
-              v-if="r.activeFilterCount > 0"
+              v-if="activeFilterCount > 0"
               class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
             >
-              {{ r.activeFilterCount }}
+              {{ activeFilterCount }}
             </span>
           </span>
           <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -32,17 +32,17 @@
           </p>
           <div class="p-3 pt-2">
             <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-              <li class="font-medium text-slate-900 dark:text-slate-100">{{ r.currentPresetLabel }}</li>
+              <li class="font-medium text-slate-900 dark:text-slate-100">{{ currentPresetLabel }}</li>
               <li class="tabular-nums text-slate-600 dark:text-slate-400">
-                {{ r.rangeDisplayFormatted }}
+                {{ rangeDisplayFormatted }}
                 <span
-                  v-if="r.rangeValid && r.rangeDaySpan > 0"
+                  v-if="rangeValid && rangeDaySpan > 0"
                   class="ml-1.5 inline-block rounded-md bg-violet-100/90 px-1.5 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
                 >
-                  {{ t('dashboard_analytics.date_range_span', { n: r.rangeDaySpan }) }}
+                  {{ t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) }}
                 </span>
               </li>
-              <li v-for="(row, i) in r.activeFilterLines" :key="i" class="border-t border-slate-100 pt-2 dark:border-slate-700">
+              <li v-for="(row, i) in activeFilterLines" :key="i" class="border-t border-slate-100 pt-2 dark:border-slate-700">
                 <span class="text-slate-500 dark:text-slate-400">{{ row?.label ?? '—' }}:</span>
                 <span class="font-medium text-slate-800 dark:text-slate-200">{{ row?.value ?? '—' }}</span>
               </li>
@@ -55,10 +55,10 @@
                 {{ t('dashboard_analytics.filter_optional_hint') }}
               </p>
               <ul class="mt-2 max-h-[min(50vh,240px)] space-y-2 overflow-y-auto pr-0.5">
-                <li v-for="fd in r.dimensionFilters" :key="fd.id" class="flex items-start gap-2">
+                <li v-for="fd in dimensionFilters" :key="fd.id" class="flex items-start gap-2">
                   <input
                     :id="'rep-bar-vis-' + fd.id"
-                    v-model="r.dimensionFilterBarVisible[fd.id]"
+                    v-model="dimensionFilterBarVisible[fd.id]"
                     type="checkbox"
                     class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
                   />
@@ -74,7 +74,7 @@
             <button
               type="button"
               class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-              @click="r.resetFilters"
+              @click="resetFilters"
             >
               {{ t('dashboard_analytics.filter_clear_all') }}
             </button>
@@ -91,7 +91,7 @@
               {{ t('dashboard_analytics.filter_period_label') }}
             </span>
             <span class="max-w-[10rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-              {{ r.currentPresetLabel }}
+              {{ currentPresetLabel }}
             </span>
             <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           </summary>
@@ -99,16 +99,16 @@
             class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
           >
             <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-              <li v-for="p in r.presetDefs" :key="p.id">
+              <li v-for="p in presetDefs" :key="p.id">
                 <button
                   type="button"
                   :class="[
                     'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
-                    r.preset === p.id
+                    preset === p.id
                       ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
                       : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
                   ]"
-                  @click="r.applyPreset(p.id)"
+                  @click="applyPreset(p.id)"
                 >
                   {{ p?.label ?? '—' }}
                 </button>
@@ -126,13 +126,13 @@
             </span>
             <span class="flex min-w-0 max-w-[11rem] items-center gap-1.5 sm:max-w-[14rem]">
               <span class="min-w-0 truncate text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-                {{ r.rangeDisplayFormatted }}
+                {{ rangeDisplayFormatted }}
               </span>
               <span
-                v-if="r.rangeValid && r.rangeDaySpan > 0"
+                v-if="rangeValid && rangeDaySpan > 0"
                 class="shrink-0 rounded-md bg-violet-100/90 px-1.5 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
               >
-                {{ r.rangeDaySpan }}
+                {{ rangeDaySpan }}
               </span>
             </span>
             <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
@@ -156,11 +156,11 @@
             <div class="p-3">
               <div class="flex flex-wrap gap-1.5">
                 <button
-                  v-for="chip in r.dateQuickChips"
+                  v-for="chip in dateQuickChips"
                   :key="chip.kind"
                   type="button"
                   class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
-                  @click="r.applyQuickDateRange(chip.kind)"
+                  @click="applyQuickDateRange(chip.kind)"
                 >
                   {{ chip?.label ?? '—' }}
                 </button>
@@ -177,17 +177,17 @@
                   </label>
                   <input
                     id="rep-range-from"
-                    v-model="r.rangeFrom"
+                    v-model="rangeFrom"
                     type="date"
-                    :max="r.rangeTo || undefined"
+                    :max="rangeTo || undefined"
                     class="rep-date-input mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm transition focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    @change="r.onRangeFromChange"
+                    @change="onRangeFromChange"
                   />
                 </div>
                 <div class="flex items-center justify-center gap-2 px-1">
                   <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
                   <span class="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-950/80 dark:text-violet-200">
-                    {{ r.rangeValid ? t('dashboard_analytics.date_range_span', { n: r.rangeDaySpan }) : '—' }}
+                    {{ rangeValid ? t('dashboard_analytics.date_range_span', { n: rangeDaySpan }) : '—' }}
                   </span>
                   <span class="h-px flex-1 bg-gradient-to-r from-transparent via-violet-200 to-transparent dark:via-violet-800/60" />
                 </div>
@@ -202,30 +202,30 @@
                   </label>
                   <input
                     id="rep-range-to"
-                    v-model="r.rangeTo"
+                    v-model="rangeTo"
                     type="date"
-                    :min="r.rangeFrom || undefined"
+                    :min="rangeFrom || undefined"
                     class="rep-date-input mt-1.5 h-10 w-full rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 text-sm font-medium tabular-nums text-slate-900 shadow-sm transition focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    @change="r.onRangeToChange"
+                    @change="onRangeToChange"
                   />
                 </div>
               </div>
               <button
-                v-if="r.preset === 'custom'"
+                v-if="preset === 'custom'"
                 type="button"
                 class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-teal-600/25 transition hover:from-teal-700 hover:to-teal-600 disabled:opacity-50 dark:shadow-teal-900/30"
-                :disabled="r.loading || !r.rangeValid"
-                @click="r.reloadSummary"
+                :disabled="loading || !rangeValid"
+                @click="reloadSummary"
               >
                 {{ t('dashboard_analytics.apply_range') }}
               </button>
-              <p v-if="!r.rangeValid" class="mt-2 text-center text-xs text-rose-600 dark:text-rose-400">
+              <p v-if="!rangeValid" class="mt-2 text-center text-xs text-rose-600 dark:text-rose-400">
                 {{ t('dashboard_analytics.range_invalid') }}
               </p>
             </div>
           </div>
         </details>
-        <template v-for="fd in r.visibleDimensionFilters" :key="fd.id">
+        <template v-for="fd in visibleDimensionFilters" :key="fd.id">
           <details class="group relative min-w-0">
             <summary
               class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -273,7 +273,29 @@ import AppFilterBar from '../filters/AppFilterBar.vue'
 import { useTransportReportSummary } from '../../composables/useTransportReportSummary'
 
 const { t } = useI18n()
-const r = useTransportReportSummary()
+const {
+  activeFilterCount,
+  activeFilterLines,
+  applyPreset,
+  applyQuickDateRange,
+  currentPresetLabel,
+  dateQuickChips,
+  dimensionFilterBarVisible,
+  dimensionFilters,
+  loading,
+  onRangeFromChange,
+  onRangeToChange,
+  preset,
+  presetDefs,
+  rangeDaySpan,
+  rangeDisplayFormatted,
+  rangeFrom,
+  rangeTo,
+  rangeValid,
+  reloadSummary,
+  resetFilters,
+  visibleDimensionFilters,
+} = useTransportReportSummary()
 </script>
 
 <style scoped>
