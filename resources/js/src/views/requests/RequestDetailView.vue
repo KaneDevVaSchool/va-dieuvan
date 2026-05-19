@@ -201,7 +201,7 @@
               "
               @click="activeTab = 'form'"
             >
-              Biểu mẫu BM.03
+              Phiếu Đề Xuất
               <span
                 v-if="approvalTabNeedsFocus"
                 class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-teal-500"
@@ -743,30 +743,45 @@
       <Teleport to="body">
         <div
           v-if="pricingModalOpen"
-          class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+          class="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-3 sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="pricing-modal-title"
           @click.self="pricingModalOpen = false"
         >
           <div
-            class="max-h-[90vh] w-full max-w-md overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-2xl"
+            class="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-2xl ring-1 ring-slate-900/5"
             @click.stop
           >
-            <div class="border-b border-teal-100 bg-teal-50/80 px-4 py-3">
+            <div class="shrink-0 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-white px-4 py-3 sm:px-5">
               <h3 id="pricing-modal-title" class="text-base font-semibold text-teal-950">
                 {{ t('request_detail.pricing_modal_title') }}
               </h3>
-              <p class="mt-1 text-xs text-teal-900/85">
+              <p class="mt-1 text-xs leading-relaxed text-teal-900/85">
                 {{ t('request_detail.pricing_modal_lead') }}
               </p>
             </div>
-            <div class="flex flex-wrap gap-2 p-4">
-              <Button type="button" class="!bg-teal-600 hover:!bg-teal-700" @click="openPricingInApp">
-                {{ t('request_detail.pricing_modal_open_app') }}
+            <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-3 sm:px-5 sm:pt-4">
+              <ReferencePricingReadOnlyBody
+                :loading="pricingModalLoading"
+                :error="pricingModalError"
+                :passenger-fares="pricingModalData.passenger_fares"
+                :cargo-fares="pricingModalData.cargo_fares"
+                :notes="pricingModalData.notes"
+              />
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center gap-2 border-t border-slate-100 bg-slate-50/80 px-4 py-3 sm:flex-nowrap sm:px-5">
+              <Button
+                v-if="canOpenPricingManagePage"
+                type="button"
+                variant="secondary"
+                class="w-full !border-teal-200 !text-teal-900 hover:!bg-teal-50 sm:me-auto sm:w-auto"
+                @click="openPricingManagePage"
+              >
+                {{ t('request_detail.reference_pricing_manage_link') }}
               </Button>
-              <Button variant="secondary" type="button" @click="pricingModalOpen = false">
-                {{ t('app.cancel') }}
+              <Button type="button" class="ms-auto !bg-teal-600 hover:!bg-teal-700 sm:ms-0" @click="pricingModalOpen = false">
+                {{ t('app.close') }}
               </Button>
             </div>
           </div>
@@ -805,6 +820,7 @@ import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import RequestBm03FormTab from '../../components/requests/RequestBm03FormTab.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
+import ReferencePricingReadOnlyBody from '../../components/pricing/ReferencePricingReadOnlyBody.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
 import { getDispatchFormSettings } from '../../api/dispatchSettings'
 import {
@@ -818,6 +834,7 @@ import {
   cloneDispatchRequest,
   patchPassengerCount,
 } from '../../api/requests'
+import { getReferencePricing } from '../../api/pricing'
 import { formatApiError } from '../../api/http'
 import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -871,6 +888,35 @@ const resetCloneBusy = ref(false)
 /** Đường dẫn SPA tới bảng giá (vd. /mng/pricing). */
 const pricingAppPath = buildStaffPrefixedPath('/pricing')
 const pricingModalOpen = ref(false)
+const pricingModalLoading = ref(false)
+const pricingModalError = ref('')
+const pricingModalData = ref({
+  passenger_fares: [],
+  cargo_fares: [],
+  notes: [],
+})
+
+watch(pricingModalOpen, async (open) => {
+  if (!open) return
+  pricingModalLoading.value = true
+  pricingModalError.value = ''
+  try {
+    const d = await getReferencePricing()
+    pricingModalData.value = {
+      passenger_fares: Array.isArray(d.passenger_fares) ? d.passenger_fares : [],
+      cargo_fares: Array.isArray(d.cargo_fares) ? d.cargo_fares : [],
+      notes: Array.isArray(d.notes) ? d.notes : [],
+    }
+  } catch (e) {
+    pricingModalError.value =
+      typeof e?.response?.data?.message === 'string'
+        ? e.response.data.message
+        : t('request_detail.reference_pricing_load_error')
+    pricingModalData.value = { passenger_fares: [], cargo_fares: [], notes: [] }
+  } finally {
+    pricingModalLoading.value = false
+  }
+})
 
 const requestRefCode = computed(() => {
   const r = req.value
@@ -888,6 +934,8 @@ const canApprove = computed(
 const canUploadAttachment = computed(() => auth.hasPermission('attachment.upload'))
 const canDeleteAttachment = computed(() => auth.hasPermission('attachment.upload'))
 const canManagePaper = computed(() => auth.hasPermission('request.paper.manage'))
+
+const canOpenPricingManagePage = computed(() => auth.hasPermission('reference_pricing.manage'))
 
 const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
 
@@ -1672,7 +1720,7 @@ function onSignedUploaded() {
   load()
 }
 
-function openPricingInApp() {
+function openPricingManagePage() {
   pricingModalOpen.value = false
   router.push(pricingAppPath)
 }
