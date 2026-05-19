@@ -154,9 +154,31 @@ class DispatchRequestController extends Controller
         $user = $request->user();
         $before = $dispatchRequest->toArray();
 
+        $snap = $dispatchRequest->wizard_snapshot ?? [];
+
+        $tripType = $dispatchRequest->trip_type ?? '';
+        if ($tripType !== '' && $tripType !== 'cargo' && ! empty($data['rows'])) {
+            $rowKey = $tripType === 'business' ? 'businessRows' : 'passengerRows';
+            foreach ($data['rows'] as $i => $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                if (! isset($snap[$rowKey][$i]) || ! is_array($snap[$rowKey][$i])) {
+                    continue;
+                }
+                if (array_key_exists('unit_price', $row)) {
+                    $snap[$rowKey][$i]['unit_price'] = $row['unit_price'];
+                }
+                if (array_key_exists('extra_fee', $row)) {
+                    $snap[$rowKey][$i]['extra_fee'] = $row['extra_fee'];
+                }
+            }
+        }
+
         $dispatchRequest->update([
             'status' => 'price_filled',
             'service_price' => $data['service_price'],
+            'wizard_snapshot' => $snap,
             'price_filled_by' => $user->id,
             'price_filled_at' => now(),
         ]);

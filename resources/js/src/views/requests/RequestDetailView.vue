@@ -346,6 +346,14 @@
                     <CalculatorIcon class="h-5 w-5 shrink-0" />
                     <h2 class="text-sm font-semibold text-slate-900 sm:text-base">Dự toán chi phí</h2>
                   </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    class="shrink-0 !border-teal-200 !text-teal-900 hover:!bg-teal-50"
+                    @click="pricingModalOpen = true"
+                  >
+                    {{ t('request_detail.reference_pricing_link') }}
+                  </Button>
                 </div>
                 <dl class="mt-4 space-y-2 text-xs sm:text-sm">
                   <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
@@ -458,11 +466,8 @@
             <div v-show="activeTab === 'form'" class="space-y-5">
               <RequestBm03FormTab
                 v-if="req"
-                v-model:paper-form="paperForm"
                 v-model:passenger-draft="passengerDraft"
                 :req="req"
-                :reference-pricing-url="referencePricingUrl"
-                :fill-price-form="fillPriceForm"
                 :fill-price-acting="fillPriceActing"
                 :fill-price-msg="fillPriceMsg"
                 :dept-acting="deptActing"
@@ -484,21 +489,13 @@
                 :approval-tab-needs-focus="approvalTabNeedsFocus"
                 :reset-clone-busy="resetCloneBusy"
                 :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
-                :paper-acting="paperActing"
-                :paper-msg="paperMsg"
-                :paper-revert-acting="paperRevertActing"
-                :can-manage-paper="canManagePaper"
-                @open-pricing-modal="pricingModalOpen = true"
-                @update:fill-price-service-price="onFillPriceServicePriceInput"
-                @submit-fill-price="submitFillPrice"
+                @save-row-prices="onSaveRowPrices"
                 @dept-approve="onDeptApproveClick"
                 @dept-reject="openDeptReject"
                 @download-signed="downloadFile"
                 @signed-uploaded="onSignedUploaded"
                 @save-passenger="savePassengerDraft"
                 @reset-clone="onResetCloneRequest"
-                @mark-paper="doMarkPaper"
-                @revert-paper="doRevertPaper"
               />
             </div>
             <div v-show="activeTab === 'docs'" class="space-y-4">
@@ -824,7 +821,7 @@ import { formatApiError } from '../../api/http'
 import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { labelTripType } from '../../util/labels'
-import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
+import { parseMoneyVnd } from '../../util/money'
 import { downloadBinaryAttachmentFromApi } from '../../util/downloadPdfAttachment'
 import { toDatetimeLocalValue } from '../../util/datetime'
 import { useAuthStore } from '../../store'
@@ -856,10 +853,8 @@ const formSettings = ref(null)
 const pdfBusy = ref(false)
 const pdfErr = ref('')
 
-const fillPriceForm = ref({ service_price: '' })
 const fillPriceActing = ref(false)
 const fillPriceMsg = ref('')
-
 const deptActing = ref(false)
 const deptMsg = ref('')
 const deptRejectOpen = ref(false)
@@ -900,10 +895,8 @@ const stepperTrackMinClass = computed(() => {
   return req.value.trip_type === 'door_to_door' ? 'min-w-[560px]' : 'min-w-[720px]'
 })
 
-const referencePricingUrl = computed(() => {
-  const u = formSettings.value?.reference_pricing_url
-  return u && String(u).trim() !== '' ? String(u).trim() : ''
-})
+
+
 
 const showFillPriceSection = computed(
   () =>
@@ -1380,10 +1373,6 @@ async function load() {
     ])
     req.value = dr
     formSettings.value = fs
-    fillPriceForm.value.service_price =
-      dr?.service_price != null && dr.service_price !== ''
-        ? formatVndWhileTyping(String(dr.service_price))
-        : ''
     paperForm.value.paper_reference = req.value?.paper_reference ?? ''
     paperForm.value.paper_received_at = req.value?.paper_received_at
       ? toDatetimeLocalValue(new Date(req.value.paper_received_at))
@@ -1582,20 +1571,17 @@ async function downloadRequestPdf() {
   }
 }
 
-function onFillPriceServicePriceInput(v) {
-  fillPriceForm.value.service_price = formatVndWhileTyping(v)
-}
-
-async function submitFillPrice() {
+async function onSaveRowPrices(payload) {
   fillPriceMsg.value = ''
-  const n = parseMoneyVnd(fillPriceForm.value.service_price)
+  const total = payload?.service_price
+  const n = typeof total === 'number' ? total : Number(total)
   if (!Number.isFinite(n) || n < 0) {
-    fillPriceMsg.value = 'Nhập đơn giá hợp lệ.'
+    fillPriceMsg.value = 'Tổng giá không hợp lệ.'
     return
   }
   fillPriceActing.value = true
   try {
-    await fillPriceDispatchRequest(Number(route.params.id), { service_price: n })
+    await fillPriceDispatchRequest(Number(route.params.id), { service_price: n, rows: payload?.rows ?? [] })
     showAppSuccess(t('request_detail.fill_price_success'), 'Đã xử lý')
     await load()
   } catch (e) {

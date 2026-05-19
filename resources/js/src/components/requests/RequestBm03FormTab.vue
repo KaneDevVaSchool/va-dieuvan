@@ -223,7 +223,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(row, idx) in passengerDisplayRows" :key="'p-' + idx" class="odd:bg-white even:bg-slate-50/70">
+                  <tr v-for="(row, idx) in passengerSnapshotTableRows" :key="'p-' + idx" class="odd:bg-white even:bg-slate-50/70">
                     <td class="border border-slate-300 px-1 py-0.5 text-center align-top">{{ idx + 1 }}</td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="passDesc(row)" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="passQty(row)" class="text-center" /></td>
@@ -232,8 +232,30 @@
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="fmtShortDt(row.return_at)" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="passDropoff(row)" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.person_in_charge" /></td>
-                    <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="fmtMoneyRow(row.unit_price)" align-right /></td>
-                    <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="fmtMoneyRow(row.extra_fee)" align-right /></td>
+                    <td class="border border-slate-300 px-1 py-0.5 align-top">
+                      <input
+                        v-if="showFillPriceSection && idx < passengerRowCount"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        class="w-full min-w-[5.5rem] rounded border border-teal-200/70 bg-white px-1 py-0.5 text-right text-[11px] tabular-nums outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        :value="passengerPriceDraftUnit[idx]"
+                        @input="onPassengerUnitInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="fmtMoneyRow(row.unit_price)" align-right />
+                    </td>
+                    <td class="border border-slate-300 px-1 py-0.5 align-top">
+                      <input
+                        v-if="showFillPriceSection && idx < passengerRowCount"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        class="w-full min-w-[5.5rem] rounded border border-teal-200/70 bg-white px-1 py-0.5 text-right text-[11px] tabular-nums outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        :value="passengerPriceDraftExtra[idx]"
+                        @input="onPassengerExtraInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="fmtMoneyRow(row.extra_fee)" align-right />
+                    </td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.notes" /></td>
                   </tr>
                   <tr class="bg-slate-100 font-semibold">
@@ -257,11 +279,13 @@
                     <th class="border border-slate-300 px-1 py-1">Điểm đi</th>
                     <th class="border border-slate-300 px-1 py-1 text-center">TG về</th>
                     <th class="border border-slate-300 px-1 py-1">Điểm đến</th>
+                    <th class="border border-slate-300 px-1 py-1 text-right">Đơn giá</th>
+                    <th class="border border-slate-300 px-1 py-1 text-right">Phụ thu</th>
                     <th class="border border-slate-300 px-1 py-1">Khác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(row, idx) in businessDisplayRows" :key="'b-' + idx" class="odd:bg-white even:bg-slate-50/70">
+                  <tr v-for="(row, idx) in businessSnapshotTableRows" :key="'b-' + idx" class="odd:bg-white even:bg-slate-50/70">
                     <td class="border border-slate-300 px-1 py-0.5 text-center align-top">{{ idx + 1 }}</td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="nz(row.description) || 'Công tác'" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.guests" class="text-center" /></td>
@@ -271,14 +295,45 @@
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.pickup" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.return_at" /></td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.dropoff" /></td>
+                    <td class="border border-slate-300 px-1 py-0.5 align-top">
+                      <input
+                        v-if="showFillPriceSection && idx < businessRowCount"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        class="w-full min-w-[5.5rem] rounded border border-teal-200/70 bg-white px-1 py-0.5 text-right text-[11px] tabular-nums outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        :value="businessPriceDraftUnit[idx]"
+                        @input="onBusinessUnitInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="fmtMoneyRow(row.unit_price)" align-right />
+                    </td>
+                    <td class="border border-slate-300 px-1 py-0.5 align-top">
+                      <input
+                        v-if="showFillPriceSection && idx < businessRowCount"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        class="w-full min-w-[5.5rem] rounded border border-teal-200/70 bg-white px-1 py-0.5 text-right text-[11px] tabular-nums outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        :value="businessPriceDraftExtra[idx]"
+                        @input="onBusinessExtraInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="fmtMoneyRow(row.extra_fee)" align-right />
+                    </td>
                     <td class="border border-slate-300 px-0.5 py-0 align-top"><BmRoTd :model-value="row.other || '—'" class="text-center" /></td>
                   </tr>
                   <tr class="bg-slate-100 font-semibold">
-                    <td colspan="9" class="border border-slate-300 px-2 py-1 text-right">Tổng (ước tính):</td>
+                    <td colspan="11" class="border border-slate-300 px-2 py-1 text-right">Tổng (ước tính):</td>
                     <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ grandTotalFmt }}</td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            <div v-if="showFillPriceSection && !isCargo" class="flex flex-wrap items-center gap-3 border-t border-slate-100 px-3 py-4 sm:px-4">
+              <Button type="button" class="shrink-0 !bg-teal-600 hover:!bg-teal-700" :loading="fillPriceActing" @click="emitSaveRowPrices">
+                Lưu giá &amp; chuyển Trưởng đơn vị duyệt
+              </Button>
+              <span v-if="fillPriceMsg" class="text-xs text-slate-600">{{ fillPriceMsg }}</span>
             </div>
           </div>
         </div>
@@ -319,77 +374,6 @@
             </table>
           </div>
         </div>
-
-        <!-- G -->
-        <div class="pt-5">
-          <div class="flex items-center gap-2 rounded-t-lg bg-slate-50 px-3 py-2.5 sm:px-4">
-            <span class="inline-flex items-center justify-center rounded bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">G</span>
-            <span class="text-xs font-bold uppercase tracking-wide text-slate-700">Phần xác nhận của phòng Mua Hàng</span>
-          </div>
-          <div class="-mt-px space-y-4 rounded-b-lg border border-t-0 border-slate-200 px-3 py-4 sm:px-4">
-            <div class="flex flex-wrap gap-x-6 gap-y-3">
-              <BmRoField class="min-w-[12rem] flex-1" label="g.1 Mã vận đơn (PO)" :model-value="poCode || '—'" />
-              <BmRoField class="min-w-[12rem] flex-1" label="g.2 Ngày nhận đề nghị (đã được phê duyệt)" :model-value="g2Display || '—'" />
-            </div>
-
-            <div v-if="req?.paper_status === 'pending' && canManagePaper" class="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
-              <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-600">Xác nhận đã nhận phiếu giấy</h3>
-              <form class="mt-2 grid gap-2" @submit.prevent="$emit('markPaper')">
-                <Input v-model="paperFormModel.paper_reference" label="Số phiếu / mã tham chiếu" placeholder="Ví dụ: PG-2026-00123" />
-                <Input v-model="paperFormModel.paper_received_at" label="Thời điểm nhận phiếu" type="datetime-local" />
-                <div class="flex flex-wrap items-center gap-2 pt-0.5">
-                  <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Đánh dấu đã nhận</Button>
-                  <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
-                </div>
-              </form>
-            </div>
-
-            <div v-else-if="req?.paper_status === 'received' && canManagePaper" class="rounded-lg border border-slate-200 bg-slate-50/80 p-3">
-              <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-600">Cập nhật / hoàn tác phiếu giấy</h3>
-              <form class="mt-2 grid gap-2" @submit.prevent="$emit('markPaper')">
-                <Input v-model="paperFormModel.paper_reference" label="Số phiếu / mã tham chiếu" placeholder="Ví dụ: PG-2026-00123" />
-                <Input v-model="paperFormModel.paper_received_at" label="Thời điểm nhận phiếu" type="datetime-local" />
-                <div class="flex flex-wrap items-center gap-2 pt-0.5">
-                  <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">Lưu thay đổi</Button>
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
-                    :disabled="paperActing || paperRevertActing"
-                    @click="$emit('revertPaper')"
-                  >
-                    Hoàn tác (chưa nhận phiếu)
-                  </Button>
-                  <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
-                </div>
-              </form>
-            </div>
-
-            <div v-if="req?.paper_status === 'received' && !canManagePaper" class="border-t border-slate-100 pt-3 text-[11px] text-slate-600">
-              <p v-if="req?.paper_reference">
-                <span class="font-medium text-slate-500">Số phiếu / tham chiếu:</span>
-                {{ req.paper_reference }}
-              </p>
-              <p v-if="req?.paper_received_at" class="mt-1">
-                <span class="font-medium text-slate-500">Thời điểm nhận:</span>
-                {{ fmtFull(req?.paper_received_at) }}
-              </p>
-            </div>
-
-            <footer class="border-t border-slate-200 pt-3 text-center text-[11px] text-slate-500">
-              BM.03/MH.QT.04 · Đề Nghị Điều Vận · Vietnam America Schools
-            </footer>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm font-medium text-slate-800">{{ t('request_detail.pricing_modal_title') }}</p>
-        <Button type="button" variant="secondary" class="shrink-0 !border-teal-200 !text-teal-900 hover:!bg-teal-50" @click="$emit('openPricingModal')">
-          {{ t('request_detail.reference_pricing_link') }}
-        </Button>
       </div>
     </section>
 
@@ -411,16 +395,6 @@
         @save="$emit('savePassenger')"
       />
     </section>
-
-    <PriceFillSection
-      v-if="showFillPriceSection"
-      :reference-pricing-url="referencePricingUrl"
-      :service-price="fillPriceForm.service_price"
-      :submitting="fillPriceActing"
-      :message="fillPriceMsg"
-      @update:service-price="$emit('update:fillPriceServicePrice', $event)"
-      @submit="$emit('submitFillPrice')"
-    />
 
     <DeptApprovalSection
       v-if="showDeptDecisionSection"
@@ -452,11 +426,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, ref, watch } from 'vue'
 import Button from '../ui/Button.vue'
-import Input from '../ui/Input.vue'
-import PriceFillSection from './PriceFillSection.vue'
 import DeptApprovalSection from './DeptApprovalSection.vue'
 import SignedPaperUpload from './SignedPaperUpload.vue'
 import CostLimitAlert from './CostLimitAlert.vue'
@@ -464,18 +435,12 @@ import ResetCloneSection from './ResetCloneSection.vue'
 import StudentCountField from '../recurring/StudentCountField.vue'
 import BmRoField from './RequestBm03RoField.vue'
 import BmRoTd from './RequestBm03RoTd.vue'
-import {
-  TARGET_OPTIONS,
-  isPassengerRowFilled,
-  isBusinessRowFilled,
-} from '../../composables/dispatchWizardConstants'
-import { parseMoneyVnd } from '../../util/money'
+import { TARGET_OPTIONS, isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
+import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
 import { labelTripType } from '../../util/labels'
 
 const props = defineProps({
   req: { type: Object, default: null },
-  referencePricingUrl: { type: String, default: '' },
-  fillPriceForm: { type: Object, default: () => ({ service_price: '' }) },
   fillPriceActing: { type: Boolean, default: false },
   fillPriceMsg: { type: String, default: '' },
   deptActing: { type: Boolean, default: false },
@@ -502,15 +467,6 @@ const props = defineProps({
   approvalTabNeedsFocus: { type: Boolean, default: false },
   resetCloneBusy: { type: Boolean, default: false },
   servicePriceDisplay: { type: String, default: null },
-  paperActing: { type: Boolean, default: false },
-  paperMsg: { type: String, default: '' },
-  paperRevertActing: { type: Boolean, default: false },
-  canManagePaper: { type: Boolean, default: false },
-})
-
-const paperFormModel = defineModel('paperForm', {
-  type: Object,
-  default: () => ({ paper_reference: '', paper_received_at: '' }),
 })
 
 const passengerDraftModel = defineModel('passengerDraft', {
@@ -518,21 +474,15 @@ const passengerDraftModel = defineModel('passengerDraft', {
   default: 1,
 })
 
-defineEmits([
-  'openPricingModal',
-  'update:fillPriceServicePrice',
-  'submitFillPrice',
+const emit = defineEmits([
+  'save-row-prices',
   'deptApprove',
   'deptReject',
   'downloadSigned',
   'signedUploaded',
   'savePassenger',
   'resetClone',
-  'markPaper',
-  'revertPaper',
 ])
-
-const { t } = useI18n()
 
 /** Indices 0..12 matching cargo PDF columns → cost last */
 const cargoColIndexes = Array.from({ length: 13 }, (_, i) => i)
@@ -618,15 +568,6 @@ function fmtShortDt(v) {
   return s
 }
 
-function fmtFull(iso) {
-  if (!iso) return ''
-  try {
-    return new Date(iso).toLocaleString('vi-VN')
-  } catch {
-    return String(iso)
-  }
-}
-
 function padRows(rows, min, factory) {
   const out = [...rows]
   while (out.length < min) out.push(factory())
@@ -674,6 +615,8 @@ const EMPTY_BIZ = () => ({
   return_at: '',
   dropoff: '',
   other: '',
+  unit_price: '',
+  extra_fee: '',
 })
 
 const cargoFilled = computed(() =>
@@ -682,6 +625,24 @@ const cargoFilled = computed(() =>
 const cargoDisplayRows = computed(() =>
   padRows(cargoFilled.value.map((r) => ({ ...EMPTY_CARGO(), ...r })), 10, EMPTY_CARGO),
 )
+
+const passengerRowCount = computed(() =>
+  Array.isArray(snap.value.passengerRows) ? snap.value.passengerRows.length : 0,
+)
+const passengerSnapshotTableRows = computed(() => {
+  const raw = Array.isArray(snap.value.passengerRows) ? snap.value.passengerRows : []
+  const merged = raw.map((r) => ({ ...EMPTY_PASS(), ...r }))
+  return padRows(merged, 5, EMPTY_PASS)
+})
+
+const businessRowCount = computed(() =>
+  Array.isArray(snap.value.businessRows) ? snap.value.businessRows.length : 0,
+)
+const businessSnapshotTableRows = computed(() => {
+  const raw = Array.isArray(snap.value.businessRows) ? snap.value.businessRows : []
+  const merged = raw.map((r) => ({ ...EMPTY_BIZ(), ...r }))
+  return padRows(merged, 5, EMPTY_BIZ)
+})
 
 /** Column order: name,qty,dim,weight,notes, puT,puPl,puC, delT,delPl,delC, transport, cost */
 function cargoCell(row, ci) {
@@ -706,15 +667,40 @@ function cargoCell(row, ci) {
 const passengerFilled = computed(() =>
   (Array.isArray(snap.value.passengerRows) ? snap.value.passengerRows : []).filter(isPassengerRowFilled),
 )
-const passengerDisplayRows = computed(() =>
-  padRows(passengerFilled.value.map((r) => ({ ...EMPTY_PASS(), ...r })), 5, EMPTY_PASS),
-)
 
 const businessFilled = computed(() =>
   (Array.isArray(snap.value.businessRows) ? snap.value.businessRows : []).filter(isBusinessRowFilled),
 )
-const businessDisplayRows = computed(() =>
-  padRows(businessFilled.value.map((r) => ({ ...EMPTY_BIZ(), ...r })), 5, EMPTY_BIZ),
+
+const passengerPriceDraftUnit = ref([])
+const passengerPriceDraftExtra = ref([])
+const businessPriceDraftUnit = ref([])
+const businessPriceDraftExtra = ref([])
+
+function fmtDraftStored(v) {
+  if (v == null || v === '') return ''
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    return formatVndWhileTyping(String(Math.round(v)))
+  }
+  return formatVndWhileTyping(String(v))
+}
+
+function syncInlinePriceDrafts() {
+  const pr = props.req?.wizard_snapshot?.passengerRows
+  const pa = Array.isArray(pr) ? pr : []
+  passengerPriceDraftUnit.value = pa.map((r) => fmtDraftStored(r?.unit_price))
+  passengerPriceDraftExtra.value = pa.map((r) => fmtDraftStored(r?.extra_fee))
+
+  const br = props.req?.wizard_snapshot?.businessRows
+  const ba = Array.isArray(br) ? br : []
+  businessPriceDraftUnit.value = ba.map((r) => fmtDraftStored(r?.unit_price))
+  businessPriceDraftExtra.value = ba.map((r) => fmtDraftStored(r?.extra_fee))
+}
+
+watch(
+  () => [props.req?.id, props.req?.wizard_snapshot?.passengerRows, props.req?.wizard_snapshot?.businessRows],
+  syncInlinePriceDrafts,
+  { deep: true, immediate: true },
 )
 
 function parseMoney(v) {
@@ -753,25 +739,95 @@ function passDropoff(r) {
   return nz(r.dropoff_place) || nz(r.dropoff)
 }
 
-const grandTotalFmt = computed(() => {
-  let sum = 0
+function onPassengerUnitInput(idx, raw) {
+  const next = formatVndWhileTyping(raw)
+  const cp = [...passengerPriceDraftUnit.value]
+  if (idx < 0 || idx >= cp.length) return
+  cp[idx] = next
+  passengerPriceDraftUnit.value = cp
+}
+
+function onPassengerExtraInput(idx, raw) {
+  const next = formatVndWhileTyping(raw)
+  const cp = [...passengerPriceDraftExtra.value]
+  if (idx < 0 || idx >= cp.length) return
+  cp[idx] = next
+  passengerPriceDraftExtra.value = cp
+}
+
+function onBusinessUnitInput(idx, raw) {
+  const next = formatVndWhileTyping(raw)
+  const cp = [...businessPriceDraftUnit.value]
+  if (idx < 0 || idx >= cp.length) return
+  cp[idx] = next
+  businessPriceDraftUnit.value = cp
+}
+
+function onBusinessExtraInput(idx, raw) {
+  const next = formatVndWhileTyping(raw)
+  const cp = [...businessPriceDraftExtra.value]
+  if (idx < 0 || idx >= cp.length) return
+  cp[idx] = next
+  businessPriceDraftExtra.value = cp
+}
+
+const grandTotalSum = computed(() => {
   if (isCargo.value) {
-    sum = cargoFilled.value.reduce((s, r) => s + parseMoney(r.cost), 0)
-  } else if (isBusiness.value) {
-    sum = businessFilled.value.reduce((s, r) => s + parseMoney(r.unit_price) + parseMoney(r.extra_fee), 0)
-  } else {
-    sum = passengerFilled.value.reduce((s, r) => s + parseMoney(r.unit_price) + parseMoney(r.extra_fee), 0)
+    return cargoFilled.value.reduce((s, r) => s + parseMoney(r.cost), 0)
   }
-  return `${new Intl.NumberFormat('vi-VN').format(sum)} đ`
+  if (props.showFillPriceSection && !isCargo.value && isBusiness.value) {
+    let s = 0
+    const n = businessRowCount.value
+    for (let i = 0; i < n; i++) {
+      s += parseMoneyVnd(businessPriceDraftUnit.value[i] ?? '')
+      s += parseMoneyVnd(businessPriceDraftExtra.value[i] ?? '')
+    }
+    return s
+  }
+  if (props.showFillPriceSection && !isCargo.value && !isBusiness.value) {
+    let s = 0
+    const n = passengerRowCount.value
+    for (let i = 0; i < n; i++) {
+      s += parseMoneyVnd(passengerPriceDraftUnit.value[i] ?? '')
+      s += parseMoneyVnd(passengerPriceDraftExtra.value[i] ?? '')
+    }
+    return s
+  }
+  if (isBusiness.value) {
+    return businessFilled.value.reduce((acc, r) => acc + parseMoney(r.unit_price) + parseMoney(r.extra_fee), 0)
+  }
+  return passengerFilled.value.reduce((acc, r) => acc + parseMoney(r.unit_price) + parseMoney(r.extra_fee), 0)
 })
+
+const grandTotalFmt = computed(() => `${new Intl.NumberFormat('vi-VN').format(grandTotalSum.value)} đ`)
+
+function buildRowsPayload() {
+  if (isBusiness.value) {
+    const n = businessRowCount.value
+    const out = []
+    for (let i = 0; i < n; i++) {
+      out.push({
+        unit_price: parseMoneyVnd(businessPriceDraftUnit.value[i] ?? ''),
+        extra_fee: parseMoneyVnd(businessPriceDraftExtra.value[i] ?? ''),
+      })
+    }
+    return out
+  }
+  const n = passengerRowCount.value
+  const out = []
+  for (let i = 0; i < n; i++) {
+    out.push({
+      unit_price: parseMoneyVnd(passengerPriceDraftUnit.value[i] ?? ''),
+      extra_fee: parseMoneyVnd(passengerPriceDraftExtra.value[i] ?? ''),
+    })
+  }
+  return out
+}
+
+function emitSaveRowPrices() {
+  emit('save-row-prices', { rows: buildRowsPayload(), service_price: grandTotalSum.value })
+}
 
 const porterMoney = computed(() => parseMoney(form.value.porter_cost))
 const interprovincialMoney = computed(() => parseMoney(form.value.interprovincial_cost))
-
-const poCode = computed(() => nz(props.req?.paper_reference))
-
-const g2Display = computed(() => {
-  if (!props.req?.paper_received_at) return ''
-  return fmtFull(props.req.paper_received_at)
-})
 </script>

@@ -275,7 +275,7 @@ export async function decideDispatchRequest(dispatchRequestId, payload, { idempo
 }
 
 /**
- * @param {{ service_price: number|string }} payload
+ * @param {{ service_price: number|string, rows?: Array<{ unit_price?: number, extra_fee?: number }> }} payload
  */
 export async function fillPriceDispatchRequest(dispatchRequestId, payload) {
   const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/fill-price`, payload)
