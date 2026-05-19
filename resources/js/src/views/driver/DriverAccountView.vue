@@ -242,9 +242,11 @@ import { getDriverSummary } from '../../api/driver'
 import { listTripsAll } from '../../api/trips'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import { useAuthStore } from '../../store'
+import { useAuthLogout } from '../../composables/useAuthLogout'
 const { t } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const { performLogout } = useAuthLogout()
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -483,8 +485,7 @@ async function fetchData() {
 
 async function confirmLogout() {
   logoutConfirmOpen.value = false
-  await auth.logout()
-  await router.push({ name: 'login' })
+  await performLogout()
 }
 
 onMounted(async () => {

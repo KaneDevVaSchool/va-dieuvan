@@ -54,7 +54,9 @@ const isDeptShell = computed(
     route.matched.some((record) => record.meta.deptHead === true),
 )
 
-const isLoginLayout = computed(() => route.name === 'login' || isPortalShell.value)
+const isLoginLayout = computed(
+  () => route.name === 'login' || route.name === 'home' || isPortalShell.value,
+)
 const isDriverApp = computed(() => !!route.meta?.driverApp)
 const isAuthenticated = computed(() => auth.isAuthenticated)
 

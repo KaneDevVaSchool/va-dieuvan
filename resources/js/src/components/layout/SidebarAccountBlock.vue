@@ -291,6 +291,7 @@ import { useUiStore } from '../../store/ui'
 import { profilePathForAuth } from '../../config/dispatchWebBase'
 import { setLocale } from '../../i18n'
 import { applyRouteDocumentTitle } from '../../util/routeDocumentTitle'
+import { useAuthLogout } from '../../composables/useAuthLogout'
 
 const props = defineProps({
   layout: { type: String, required: true, validator: (v) => v === 'vertical' || v === 'horizontal' },
@@ -303,6 +304,7 @@ const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const ui = useUiStore()
+const { performLogout } = useAuthLogout()
 
 const profileTo = computed(() => profilePathForAuth(auth.canAccessDispatchWebApp()))
 
@@ -356,8 +358,7 @@ function openLogoutConfirmFromMenu() {
 async function confirmLogout() {
   logoutConfirmOpen.value = false
   accountMenuOpen.value = false
-  await auth.logout()
-  await router.push({ name: 'login' })
+  await performLogout()
 }
 
 function onLocale(v) {

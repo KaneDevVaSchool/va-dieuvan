@@ -306,6 +306,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import NotificationBell from '../../components/notifications/NotificationBell.vue'
 import { useAuthStore } from '../../store'
+import { useAuthLogout } from '../../composables/useAuthLogout'
 import { getDeptSummary } from '../../api/requests'
 
 const logoUrl = '/images/logo/logo-2.png'
@@ -436,11 +437,12 @@ watch(
 
 provide('deptLoadSummary', loadSummary)
 
+const { performLogout } = useAuthLogout()
+
 async function onLogout() {
   loggingOut.value = true
   try {
-    await auth.logout()
-    await router.replace({ name: 'login' })
+    await performLogout()
   } finally {
     loggingOut.value = false
   }

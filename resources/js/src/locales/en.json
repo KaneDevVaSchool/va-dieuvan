@@ -2487,7 +2487,9 @@
         "axis_horizontal": "Top",
         "logout_confirm_title": "Sign out?",
         "logout_confirm_body": "You will need to sign in again to continue.",
-        "logout_confirm_action": "Sign out"
+        "logout_confirm_action": "Sign out",
+        "logout_success": "You have been signed out. Sign in again when you need to continue.",
+        "logout_success_title": "Signed out"
     },
     "trip_detail": {
         "loading": "Loading…",

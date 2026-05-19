@@ -2315,7 +2315,9 @@
         "axis_horizontal": "Ngang",
         "logout_confirm_title": "Đăng xuất?",
         "logout_confirm_body": "Bạn sẽ cần đăng nhập lại để tiếp tục.",
-        "logout_confirm_action": "Đăng xuất"
+        "logout_confirm_action": "Đăng xuất",
+        "logout_success": "Bạn đã đăng xuất. Đăng nhập lại khi cần tiếp tục.",
+        "logout_success_title": "Đăng xuất thành công"
     },
     "trip_detail": {
         "loading": "Đang tải…",

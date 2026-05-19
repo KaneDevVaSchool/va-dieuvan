@@ -297,6 +297,16 @@ const router = createRouter({
     },
     routes: [
         {
+            path: "/",
+            name: "home",
+            component: () => import("../views/auth/LoginView.vue"),
+            meta: {
+                public: true,
+                title: "Đăng nhập",
+                subtitle: "Đăng nhập Google",
+            },
+        },
+        {
             path: "/login",
             name: "login",
             component: () => import("../views/auth/LoginView.vue"),

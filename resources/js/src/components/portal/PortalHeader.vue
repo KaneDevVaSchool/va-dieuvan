@@ -207,6 +207,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import ThemeSwitcher from '../layout/ThemeSwitcher.vue'
 import { useAuthStore } from '../../store'
+import { useAuthLogout } from '../../composables/useAuthLogout'
 import { fetchPortalNotifications } from '../../api/notifications'
 import { confirmAction } from '../../composables/useConfirm'
 import { setLocale } from '../../i18n'
@@ -217,6 +218,7 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const { performLogout } = useAuthLogout()
 
 function onLocale(lang) {
   setLocale(lang)
@@ -300,8 +302,7 @@ async function onLogout() {
   loggingOut.value = true
   try {
     sessionStorage.removeItem('portal_form_dirty')
-    await auth.logout()
-    await router.replace({ name: 'login' })
+    await performLogout()
   } finally {
     loggingOut.value = false
   }
