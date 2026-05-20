@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
+use App\Services\RecurringDispatch\RecurringPackageBudgetService;
 use App\Support\Messages;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
@@ -196,9 +197,13 @@ class DispatchRequestTemplateController extends Controller
         $planLabel = trim((string) ($data['plan_label'] ?? data_get($data, 'wizard_snapshot.form.plan_name', '')));
         if ($planLabel !== '' && self::payloadIsExtracurricularRecurring($data)) {
             $sessionCount = max(1, app(DispatchRecurringMaintenanceService::class)->countTargetOccurrences($template));
+            $packageBudget = RecurringPackageBudgetService::parseVndAmount(
+                data_get($data, 'wizard_snapshot.form.estimated_vehicle_cost'),
+            );
             $pkg = DispatchPackage::create([
                 'trip_type' => $template->trip_type,
                 'label' => $planLabel,
+                'monthly_budget' => $packageBudget,
                 'total_sessions' => $sessionCount,
                 'sessions_used' => 0,
             ]);
@@ -252,9 +257,13 @@ class DispatchRequestTemplateController extends Controller
         DB::transaction(function () use ($template, $label) {
             if ($template->dispatch_package_id === null) {
                 $sessionCount = max(1, app(DispatchRecurringMaintenanceService::class)->countTargetOccurrences($template));
+                $packageBudget = RecurringPackageBudgetService::parseVndAmount(
+                    data_get($template->wizard_snapshot, 'form.estimated_vehicle_cost'),
+                );
                 $pkg = DispatchPackage::create([
                     'trip_type' => $template->trip_type,
                     'label' => $label,
+                    'monthly_budget' => $packageBudget,
                     'total_sessions' => $sessionCount,
                     'sessions_used' => 0,
                 ]);

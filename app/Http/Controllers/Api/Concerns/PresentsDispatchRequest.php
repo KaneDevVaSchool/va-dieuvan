@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Concerns;
 use App\Models\DispatchRequest;
 use App\Models\DispatchSetting;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
+use App\Services\RecurringDispatch\RecurringPackageBudgetService;
 
 trait PresentsDispatchRequest
 {
@@ -36,6 +37,7 @@ trait PresentsDispatchRequest
             $arr['dispatch_package_sessions'] = null;
             $arr['dispatch_package_cost_alert'] = null;
             $arr['dispatch_package_budget_alert'] = null;
+            $arr['dispatch_package_budget_usage'] = null;
             if ($pkg !== null) {
                 $total = (int) $pkg->total_sessions;
                 $used = (int) $pkg->sessions_used;
@@ -70,6 +72,11 @@ trait PresentsDispatchRequest
                 );
                 if ($budgetAlert !== null) {
                     $arr['dispatch_package_budget_alert'] = $budgetAlert;
+                }
+
+                $usage = app(RecurringPackageBudgetService::class)->summarize($pkg);
+                if ($usage !== null) {
+                    $arr['dispatch_package_budget_usage'] = $usage;
                 }
             }
         }

@@ -5,8 +5,9 @@
       :key="group.key"
       class="xc-portal-group-card"
     >
+      <div class="xc-portal-group-header flex flex-col gap-0">
       <div
-        class="xc-portal-group-header flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-violet-950"
+        class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-violet-950"
       >
         <button
           type="button"
@@ -22,12 +23,6 @@
           />
           <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
             <span class="truncate">{{ group.label }}</span>
-            <span
-              v-if="tripCostDisplayForGroup(group)"
-              class="shrink-0 text-xs font-medium tabular-nums text-violet-800/85"
-            >
-              {{ t('portal.extracurricular_list.group_trip_cost', { amount: tripCostDisplayForGroup(group) }) }}
-            </span>
           </span>
         </button>
 
@@ -94,6 +89,35 @@
         </button>
       </div>
 
+      <div
+        v-if="packageBudgetUsageForGroup(group)"
+        class="flex flex-wrap items-center gap-2 border-t border-violet-100/70 px-4 py-2 text-xs font-medium"
+        :class="packageBudgetBannerClass(packageBudgetUsageForGroup(group))"
+      >
+        <span class="tabular-nums text-slate-800">
+          {{
+            t('portal.extracurricular_list.package_budget_line', {
+              used: formatVnd(packageBudgetUsageForGroup(group).used),
+              budget: formatVnd(packageBudgetUsageForGroup(group).budget),
+              remaining: formatVnd(packageBudgetUsageForGroup(group).remaining),
+            })
+          }}
+        </span>
+        <span
+          v-if="packageBudgetUsageForGroup(group).severity === 'warning'"
+          class="rounded-full bg-amber-200/90 px-2 py-0.5 font-semibold text-amber-950"
+        >
+          {{ t('portal.extracurricular_list.package_budget_warning') }}
+        </span>
+        <span
+          v-else-if="packageBudgetUsageForGroup(group).severity === 'exceeded'"
+          class="rounded-full bg-rose-200/90 px-2 py-0.5 font-semibold text-rose-950"
+        >
+          {{ t('portal.extracurricular_list.package_budget_exceeded') }}
+        </span>
+      </div>
+      </div>
+
       <div v-show="isGroupOpen(group.key)" class="hidden border-t border-violet-100/80 md:block">
         <div class="xc-portal-table-scroll">
           <table class="xc-portal-table">
@@ -131,7 +155,19 @@
                 {{ row.planStudentCount(req) ?? '—' }}
               </td>
               <td class="whitespace-nowrap text-right text-sm tabular-nums text-slate-700">
-                {{ tripCostDisplayForReq(req) || '—' }}
+                <span v-if="tripCostFilledByDispatch(req)" class="font-semibold text-slate-900">
+                  {{ tripCostDisplayForReq(req) }}
+                </span>
+                <span v-else-if="tripCostDisplayForReq(req)" class="text-slate-600">
+                  {{ tripCostDisplayForReq(req) }}
+                </span>
+                <span v-else class="text-slate-400">—</span>
+                <span
+                  v-if="tripCostFilledByDispatch(req)"
+                  class="mt-0.5 block text-[10px] font-medium uppercase tracking-wide text-teal-700"
+                >
+                  {{ t('portal.extracurricular_table.cost_filled_dispatch') }}
+                </span>
               </td>
               <td>
                 <StudentCountCell
@@ -198,7 +234,9 @@
             v-if="tripCostDisplayForReq(req)"
             class="mt-1 flex items-center justify-between text-xs"
           >
-            <span class="text-slate-500">{{ t('portal.extracurricular_table.col_trip_cost') }}</span>
+            <span class="text-slate-500">
+              {{ tripCostFilledByDispatch(req) ? t('portal.extracurricular_table.col_trip_cost_filled') : t('portal.extracurricular_table.col_trip_cost') }}
+            </span>
             <span class="font-semibold tabular-nums text-slate-800">{{ tripCostDisplayForReq(req) }}</span>
           </div>
           <div class="mt-2">
@@ -349,30 +387,42 @@ function lockHintFor(req) {
   return k ? t(`${i18nPrefix}.${k}`) : ''
 }
 
-function estimatedTripCostAmount(req) {
+function tripCostFilledByDispatch(req) {
+  const sp = Number(req?.service_price)
+  return Number.isFinite(sp) && sp > 0
+}
+
+function estimatedTripCostPerReq(req) {
   if (!req) return null
   const raw =
     req?.wizard_snapshot?.form?.estimated_vehicle_cost
     ?? req?.dispatch_request_template?.wizard_snapshot?.form?.estimated_vehicle_cost
     ?? ''
   const fromSnap = parseMoneyVnd(raw)
-  if (fromSnap > 0) return fromSnap
-  const sp = Number(req?.service_price)
-  if (Number.isFinite(sp) && sp > 0) return sp
-  return null
+  return fromSnap > 0 ? fromSnap : null
 }
 
 function tripCostDisplayForReq(req) {
-  const n = estimatedTripCostAmount(req)
-  return n != null ? formatVnd(n) : ''
+  if (tripCostFilledByDispatch(req)) {
+    return formatVnd(Number(req.service_price))
+  }
+  const est = estimatedTripCostPerReq(req)
+  return est != null ? formatVnd(est) : ''
 }
 
-function tripCostDisplayForGroup(group) {
+function packageBudgetUsageForGroup(group) {
   for (const req of group?.items || []) {
-    const label = tripCostDisplayForReq(req)
-    if (label) return label
+    const u = req?.dispatch_package_budget_usage
+    if (u && u.budget > 0) return u
   }
-  return ''
+  return null
+}
+
+function packageBudgetBannerClass(usage) {
+  if (!usage) return 'bg-slate-50/80'
+  if (usage.severity === 'exceeded') return 'bg-rose-50/90'
+  if (usage.severity === 'warning') return 'bg-amber-50/90'
+  return 'bg-violet-50/50'
 }
 
 function templateIdFromReq(req) {
