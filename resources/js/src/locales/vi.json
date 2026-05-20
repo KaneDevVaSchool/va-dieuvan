@@ -777,7 +777,7 @@
                 "b2_download": "Tải tệp",
                 "b2_download_fail": "Không tải được tệp căn cứ.",
                 "c1_proposed": "c.1 Ngày đề xuất",
-                "c1_proposed_hint": "Ngày lập phiếu / gửi đề nghị.",
+                "c1_proposed_hint": "Ngày gửi đề nghị cho điều vận (tự ghi nhận khi bấm Gửi điều vận).",
                 "c2_needed": "c.2 Ngày cần sử dụng xe",
                 "c2_needed_hint": "Thường trùng ngày khởi hành chuyến.",
                 "depart_hint": "Phải còn ít nhất 24 giờ so với hiện tại khi lưu.",

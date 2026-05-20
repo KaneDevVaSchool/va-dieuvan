@@ -201,7 +201,7 @@
               :hint="t('portal.recurring_edit.bm03_fields.c1_proposed_hint')"
               :error="fieldErrors.proposedDate"
               type="date"
-              :disabled="!canEditForm"
+              :disabled="true"
             />
             <Bm03FormField
               v-model="draft.dateNeeded"
@@ -628,10 +628,6 @@ function validateClient() {
     fieldErrors.basis = t('portal.recurring_edit.bm03_err.basis_required')
     ok = false
   }
-  if (!draft.proposedDate) {
-    fieldErrors.proposedDate = t('portal.recurring_edit.bm03_err.required')
-    ok = false
-  }
   if (!draft.dateNeeded) {
     fieldErrors.dateNeeded = t('portal.recurring_edit.bm03_err.required')
     ok = false
@@ -753,7 +749,7 @@ function syncFromReq(r) {
   draft.requesterUnit = reqA.unit
   draft.purpose = form.purpose || ''
   draft.proposedDate = toDateInput(form.proposed_date)
-  draft.dateNeeded = toDateInput(form.date_needed || r.depart_at)
+  draft.dateNeeded = toDateInput(form.date_needed) || toDateInput(r.depart_at)
   draft.departAtLocal = toLocalInput(r.depart_at)
   draft.arriveByLocal = toLocalInput(r.arrive_by)
   const raw = form.targets
@@ -802,13 +798,15 @@ function buildPayload() {
     requester_unit: draft.requesterUnit.trim(),
     purpose: draft.purpose.trim(),
     basis_ref: '',
-    proposed_date: draft.proposedDate || null,
     date_needed: draft.dateNeeded || null,
     targets: [...draft.targets],
     coordinator_name: draft.coordinatorName.trim(),
     coordinator_email: draft.coordinatorEmail.trim(),
     coordinator_phone: draft.coordinatorPhone.trim(),
     point_purpose_kind: 'extracurricular',
+  }
+  if (props.req?.student_count_submitted_at && draft.proposedDate) {
+    snapForm.proposed_date = draft.proposedDate
   }
   if (existingBasis.value?.original_name) {
     snapForm.basisFileName = existingBasis.value.original_name

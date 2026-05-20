@@ -734,7 +734,7 @@
                 "b2_download": "Download",
                 "b2_download_fail": "Could not download the basis file.",
                 "c1_proposed": "c.1 Proposal date",
-                "c1_proposed_hint": "Date the form is prepared.",
+                "c1_proposed_hint": "Recorded when you submit to dispatch.",
                 "c2_needed": "c.2 Date vehicle needed",
                 "c2_needed_hint": "Usually matches departure date.",
                 "depart_hint": "Must be at least 24 hours from now when saving.",

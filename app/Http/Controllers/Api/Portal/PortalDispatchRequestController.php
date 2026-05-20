@@ -21,6 +21,7 @@ use App\Models\DispatchRequest;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
+use App\Services\RecurringDispatch\PortalRecurringBm03GroupSyncService;
 use App\Support\Messages;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
@@ -279,6 +280,9 @@ class PortalDispatchRequestController extends Controller
         $snap['form'] = $form;
         $dispatchRequest->forceFill(['wizard_snapshot' => $snap])->saveQuietly();
 
+        app(PortalRecurringBm03GroupSyncService::class)
+            ->syncSharedBm03FromInstance($dispatchRequest->fresh());
+
         app(AuditLogger::class)->log(
             actorId: $user?->id,
             event: 'attachment.upload',
@@ -407,6 +411,15 @@ class PortalDispatchRequestController extends Controller
             $dispatchRequest->update($updates);
         }
 
+        $fresh = $dispatchRequest->fresh();
+        $shouldSyncBm03Group = isset($updates['wizard_snapshot'])
+            || isset($updates['origin'])
+            || isset($updates['destination']);
+        if ($shouldSyncBm03Group && $fresh !== null) {
+            app(PortalRecurringBm03GroupSyncService::class)
+                ->syncSharedBm03FromInstance($fresh);
+        }
+
         app(AuditLogger::class)->log(
             actorId: $user->id,
             event: 'request.recurring_instance_updated',
@@ -424,6 +437,9 @@ class PortalDispatchRequestController extends Controller
     ): \Illuminate\Http\JsonResponse {
         $user = $request->user();
         $before = $dispatchRequest->toArray();
+
+        app(PortalRecurringBm03GroupSyncService::class)
+            ->stampProposedDateOnSubmit($dispatchRequest);
 
         $dispatchRequest->update([
             'student_count_submitted_at' => now(),
