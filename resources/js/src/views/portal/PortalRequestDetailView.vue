@@ -65,14 +65,19 @@
         </div>
       </div>
 
-      <PortalStatusTimeline class="mt-8" :title="t('portal.timeline_heading')" :steps="timelineSteps" />
-
       <PortalExtracurricularBm03EditForm
         v-if="showExtracurricularInstanceEdit"
         ref="bm03FormRef"
-        class="mt-8"
+        class="mt-6"
         :req="req"
         @saved="load"
+      />
+
+      <PortalStatusTimeline
+        v-if="!showExtracurricularInstanceEdit"
+        class="mt-8"
+        :title="t('portal.timeline_heading')"
+        :steps="timelineSteps"
       />
 
       <section
@@ -215,7 +220,7 @@
         </div>
       </div>
 
-      <div class="mt-8 w-full space-y-6">
+      <div v-if="!showExtracurricularInstanceEdit" class="mt-8 w-full space-y-6">
         <PortalSignedDocUpload
           v-if="showSignedSection"
           :attachments="signedPaperAttachments"
@@ -273,7 +278,7 @@ import { usePortalExtracurricularModule } from '../../composables/usePortalExtra
 import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
 
 const route = useRoute()
-const { routes: portalRoutes } = usePortalExtracurricularModule()
+const { routes: portalRoutes, isExtracurricularModule } = usePortalExtracurricularModule()
 const router = useRouter()
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -456,18 +461,20 @@ const canSubmitPassengerCount = computed(() => {
 })
 
 function isExtracurricularReq(r) {
+  if (!r) return false
   const snap = r?.wizard_snapshot
   const kind = snap?.form?.point_purpose_kind ?? snap?.point_purpose_kind
-  return kind === 'extracurricular'
+  if (kind === 'extracurricular') return true
+  if (isExtracurricularModule.value && r.dispatch_request_template_id) return true
+  return false
 }
 
 const showExtracurricularInstanceEdit = computed(() => {
   const r = req.value
   if (!r?.dispatch_request_template_id || !isExtracurricularReq(r)) return false
-  return (
-    isCurrentUserRequester.value &&
-    ['pending', 'price_filled'].includes(String(r?.status || ''))
-  )
+  if (!isCurrentUserRequester.value) return false
+  if (r.student_count_submitted_at) return false
+  return ['pending', 'price_filled'].includes(String(r?.status || ''))
 })
 
 function scrollToBm03Form() {
