@@ -746,7 +746,7 @@
                 "a1_name_hint": "Thông tin lấy từ tài khoản — có thể chỉnh nếu cần khớp BM.03.",
                 "a2_email": "a.2 Email VA của nhân viên",
                 "a2_email_ph": "ten{'@'}vaschools.edu.vn",
-                "a2_email_hint": "Email @vaschools.edu.vn hoặc @va.edu.vn dùng để liên hệ.",
+                "a2_email_hint": "Email {'@'}vaschools.edu.vn hoặc {'@'}va.edu.vn dùng để liên hệ.",
                 "a3_phone": "a.3 Số điện thoại",
                 "a3_phone_hint": "Số di động hoặc nội bộ, chỉ gồm chữ số và dấu +.",
                 "a4_unit": "a.4 Đơn vị",

@@ -703,7 +703,7 @@
                 "a1_name_hint": "Prefilled from your account — adjust if needed for BM.03.",
                 "a2_email": "a.2 VA staff email",
                 "a2_email_ph": "name{'@'}vaschools.edu.vn",
-                "a2_email_hint": "Contact email (@vaschools.edu.vn or @va.edu.vn).",
+                "a2_email_hint": "Use a {'@'}vaschools.edu.vn or {'@'}va.edu.vn address.",
                 "a3_phone": "a.3 Phone",
                 "a3_phone_hint": "Mobile or internal number.",
                 "a4_unit": "a.4 Unit",
