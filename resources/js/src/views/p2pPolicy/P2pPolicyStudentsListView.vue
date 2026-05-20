@@ -206,7 +206,7 @@ import Card from '../../components/ui/Card.vue'
 import { useP2pPolicyStudentFilters } from '../../composables/useP2pPolicyStudentFilters'
 import { showAppError } from '../../composables/appMessage'
 import { formatApiError } from '../../api/http'
-import { useStore } from '../../store'
+import { useAuthStore } from '../../store'
 import {
   downloadPolicyStudentsExport,
   downloadPolicyStudentsImportTemplate,
@@ -218,10 +218,10 @@ import {
 } from '../../api/p2pPolicy'
 
 const { t } = useI18n()
-const store = useStore()
+const auth = useAuthStore()
 const { filters, visibility, apiParams, activeFilterCount, clearFilters, filterDefs } = useP2pPolicyStudentFilters()
 
-const canImportExport = computed(() => store.hasPermission('p2p_policy.import_export'))
+const canImportExport = computed(() => auth.hasPermission('p2p_policy.import_export'))
 
 const items = ref([])
 const meta = ref({ total: 0 })
