@@ -3834,6 +3834,11 @@
         "workflow_next_activate": "Next: Activate",
         "workflow_need_term": "Save or select a shuttle term first",
         "routes_assign_roster": "Manage roster",
+        "routes_assign_required": "Select both a vehicle and a driver before saving.",
+        "routes_assign_saved": "Vehicle and driver assignment saved for this route.",
+        "routes_create_saved": "Route created.",
+        "routes_activate_trips": "Activate trips",
+        "routes_activate_started": "Term activation started — trips are being generated.",
         "students_focus_route": "Managing students on route: {route}.",
         "students_back_routes": "Back to route list"
     },

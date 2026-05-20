@@ -293,7 +293,7 @@
                 <th class="px-3 py-2.5">{{ t('p2p_policy_page.routes_col_route') }}</th>
                 <th class="hidden px-3 py-2.5 sm:table-cell">{{ t('p2p_policy_page.routes_col_students') }}</th>
                 <th class="px-3 py-2.5">{{ t('p2p_policy_page.routes_col_assign') }}</th>
-                <th class="w-[4.5rem] px-3 py-2.5 text-right" />
+                <th class="min-w-[9rem] px-3 py-2.5 text-right">{{ t('p2p_policy_page.col_actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -351,13 +351,25 @@
                 </td>
                 <td class="px-3 py-2.5 text-right">
                   <div class="flex flex-col items-end gap-1.5">
-                    <button
-                      type="button"
-                      class="rounded-lg bg-va-800 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-va-900"
-                      @click="saveAssign(r.id)"
-                    >
-                      {{ t('p2p_policy_page.save') }}
-                    </button>
+                    <div class="flex flex-wrap justify-end gap-1.5">
+                      <button
+                        type="button"
+                        class="rounded-lg bg-va-800 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-va-900 disabled:opacity-50"
+                        :disabled="savingAssignId === r.id"
+                        @click="saveAssign(r.id)"
+                      >
+                        {{ savingAssignId === r.id ? t('common.processing') : t('p2p_policy_page.save') }}
+                      </button>
+                      <button
+                        v-if="canActivateTerm"
+                        type="button"
+                        class="rounded-lg border border-teal-300 bg-teal-50 px-2.5 py-1.5 text-xs font-semibold text-teal-900 hover:bg-teal-100 disabled:opacity-50 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
+                        :disabled="activating"
+                        @click="openActivateTerm"
+                      >
+                        {{ t('p2p_policy_page.routes_activate_trips') }}
+                      </button>
+                    </div>
                     <RouterLink
                       :to="p2pStudentsForRoute(workflowTermId, r.id)"
                       class="text-xs font-medium text-teal-700 hover:underline sm:hidden dark:text-teal-300"
@@ -498,6 +510,36 @@
         </div>
       </form>
     </dialog>
+
+    <dialog
+      ref="activateDialog"
+      class="w-[min(100%,28rem)] rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-900/50 dark:border-slate-700 dark:bg-slate-900"
+    >
+      <form class="p-6" @submit.prevent="confirmActivateTerm">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ t('p2p_policy_page.activate_modal_title') }}</h3>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300 whitespace-pre-line">{{ activateSummary }}</p>
+        <label class="mt-5 flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-sm dark:border-slate-600 dark:bg-slate-800/50">
+          <input v-model="activateChecked" type="checkbox" class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
+          <span class="text-slate-700 dark:text-slate-200">{{ t('p2p_policy_page.activate_confirm_checkbox') }}</span>
+        </label>
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            class="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            @click="closeActivateTerm"
+          >
+            {{ t('p2p_policy_page.cancel') }}
+          </button>
+          <button
+            type="submit"
+            class="rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-va-900 disabled:opacity-50"
+            :disabled="!activateChecked || activating"
+          >
+            {{ t('p2p_policy_page.activate_confirm') }}
+          </button>
+        </div>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -517,6 +559,7 @@ import {
 } from '../../composables/useP2pPolicyRoutesFilters'
 import {
   assignPolicyRoute,
+  activateP2pPolicyTerm,
   createCampus,
   createP2pPolicyTerm,
   createPolicyRoute,
@@ -525,6 +568,9 @@ import {
   listP2pPolicyTerms,
   listPolicyRoutes,
 } from '../../api/p2pPolicy'
+import { formatApiError } from '../../api/http'
+import { showAppError, showAppSuccess } from '../../composables/appMessage'
+import { useAuthStore } from '../../store'
 import {
   p2pStepTo,
   p2pStudentsForRoute,
@@ -536,6 +582,7 @@ import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon, InformationCircleIcon } fro
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const auth = useAuthStore()
 const { filters, visibility, filterControlDefs, activeFilterCount, apiParams, clearFilters, resetPage } =
   useP2pPolicyRoutesFilters()
 
@@ -553,6 +600,33 @@ const campuses = ref([])
 const vehicles = ref([])
 const drivers = ref([])
 const assignDraft = reactive({})
+const savingAssignId = ref(null)
+const activating = ref(false)
+const activateDialog = ref(null)
+const activateChecked = ref(false)
+
+const workflowTerm = computed(() => {
+  const id = workflowTermId.value
+  if (!id) return null
+  return terms.value.find((x) => String(x.id) === String(id)) ?? null
+})
+
+const canActivateTerm = computed(
+  () =>
+    auth.hasPermission('p2p_policy.activate') &&
+    workflowTerm.value?.status === 'draft',
+)
+
+const activateSummary = computed(() => {
+  const term = workflowTerm.value
+  if (!term) return ''
+  const year = term.academic_term?.academic_year ?? '—'
+  return t('p2p_policy_page.activate_modal_body', {
+    year,
+    from: term.operating_from ?? '—',
+    to: term.operating_to ?? '—',
+  })
+})
 
 const activeOptClass = 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
 const inactiveOptClass = 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -717,18 +791,62 @@ async function load() {
 }
 
 async function create() {
-  await createPolicyRoute({ ...createForm })
-  createForm.name = ''
-  await loadRoutes()
+  try {
+    await createPolicyRoute({ ...createForm })
+    showAppSuccess(t('p2p_policy_page.routes_create_saved'))
+    createForm.name = ''
+    await loadRoutes()
+  } catch (e) {
+    showAppError(formatApiError(e))
+  }
 }
 
 async function saveAssign(routeId) {
   const p = assignDraft[routeId]
-  await assignPolicyRoute(routeId, {
-    vehicle_id: Number(p.vehicle_id),
-    driver_id: Number(p.driver_id),
-  })
-  await loadRoutes()
+  if (!p?.vehicle_id || !p?.driver_id) {
+    showAppError(t('p2p_policy_page.routes_assign_required'))
+    return
+  }
+  savingAssignId.value = routeId
+  try {
+    await assignPolicyRoute(routeId, {
+      vehicle_id: Number(p.vehicle_id),
+      driver_id: Number(p.driver_id),
+    })
+    showAppSuccess(t('p2p_policy_page.routes_assign_saved'))
+    await loadRoutes()
+  } catch (e) {
+    showAppError(formatApiError(e))
+  } finally {
+    savingAssignId.value = null
+  }
+}
+
+function openActivateTerm() {
+  if (!canActivateTerm.value || !workflowTermId.value) return
+  activateChecked.value = false
+  activateDialog.value?.showModal()
+}
+
+function closeActivateTerm() {
+  activateDialog.value?.close()
+}
+
+async function confirmActivateTerm() {
+  const termId = workflowTermId.value
+  if (!termId || !activateChecked.value) return
+  activating.value = true
+  try {
+    await activateP2pPolicyTerm(termId, `p2p-policy-activate-${termId}-${Date.now()}`)
+    showAppSuccess(t('p2p_policy_page.routes_activate_started'))
+    closeActivateTerm()
+    await loadTerms()
+    await loadRoutes()
+  } catch (e) {
+    showAppError(formatApiError(e))
+  } finally {
+    activating.value = false
+  }
 }
 
 function openCampusModal() {

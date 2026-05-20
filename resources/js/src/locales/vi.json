@@ -3920,6 +3920,11 @@
         "workflow_next_activate": "Tiếp: Kích hoạt",
         "workflow_need_term": "Lưu hoặc chọn kỳ P2P trước",
         "routes_assign_roster": "Gán roster",
+        "routes_assign_required": "Chọn cả xe và tài xế trước khi lưu.",
+        "routes_assign_saved": "Đã lưu phân công xe và tài xế cho tuyến.",
+        "routes_create_saved": "Đã thêm tuyến mới.",
+        "routes_activate_trips": "Kích hoạt chuyến",
+        "routes_activate_started": "Đã bắt đầu kích hoạt kỳ — hệ thống đang sinh chuyến.",
         "students_focus_route": "Đang quản lý học sinh trên tuyến: {route}.",
         "students_back_routes": "Quay lại danh sách tuyến"
     }
