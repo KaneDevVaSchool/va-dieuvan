@@ -82,7 +82,9 @@
                 :req="req"
                 :variant="variant"
                 :detail-route-name="detailRouteName"
-                :show-complete-slip="variant === 'portal'"
+                :show-complete-bm03="variant === 'portal' && row.needsPortalBm03Completion(req)"
+                :can-complete-bm03="row.canOpenPortalBm03Completion(req)"
+                :complete-disabled-hint="completeBm03HintFor(req)"
                 :show-clone="row.canShowCloneSimilar(req)"
                 :can-clone="row.canCloneReset(req)"
                 :clone-busy="cloneBusyId === req.id"
@@ -151,21 +153,24 @@
             @save="onSaveRow(req)"
             @submit="submitRow(req)"
           />
-          <ExtracurricularRowActions
-            :req="req"
-            :variant="variant"
-            :detail-route-name="detailRouteName"
-            :show-complete-slip="variant === 'portal'"
-            :show-clone="row.canShowCloneSimilar(req)"
-            :can-clone="row.canCloneReset(req)"
-            :clone-busy="cloneBusyId === req.id"
-            :clone-label="t(`${i18nPrefix}.clone_similar`)"
-            :clone-busy-label="t(`${i18nPrefix}.clone_similar_busy`)"
-            :clone-disabled-hint="t(`${i18nPrefix}.clone_similar_disabled_hint`)"
-            block
-            @clone="$emit('clone', req)"
-            @open-detail="openDetail(req)"
-          />
+          <div class="flex justify-end border-t border-slate-100 pt-3">
+            <ExtracurricularRowActions
+              :req="req"
+              :variant="variant"
+              :detail-route-name="detailRouteName"
+              :show-complete-bm03="variant === 'portal' && row.needsPortalBm03Completion(req)"
+              :can-complete-bm03="row.canOpenPortalBm03Completion(req)"
+              :complete-disabled-hint="completeBm03HintFor(req)"
+              :show-clone="row.canShowCloneSimilar(req)"
+              :can-clone="row.canCloneReset(req)"
+              :clone-busy="cloneBusyId === req.id"
+              :clone-label="t(`${i18nPrefix}.clone_similar`)"
+              :clone-busy-label="t(`${i18nPrefix}.clone_similar_busy`)"
+              :clone-disabled-hint="t(`${i18nPrefix}.clone_similar_disabled_hint`)"
+              @clone="$emit('clone', req)"
+              @open-detail="openDetail(req)"
+            />
+          </div>
         </div>
       </article>
     </div>
@@ -256,6 +261,16 @@ const localeTag = computed(() => (locale.value === 'vi' ? 'vi-VN' : 'en-US'))
 function lockHintFor(req) {
   const k = row.lockHintKey(req)
   return k ? t(`${i18nPrefix.value}.${k}`) : ''
+}
+
+function completeBm03HintFor(req) {
+  if (row.canOpenPortalBm03Completion(req)) return ''
+  const k = row.lockHintKey(req)
+  if (k) return t(`${i18nPrefix.value}.${k}`)
+  if (req?.student_count_submitted_at) {
+    return t('portal.extracurricular_list.action_complete_bm03_done')
+  }
+  return t('portal.extracurricular_list.action_complete_bm03_unavailable')
 }
 
 function submitHintFor(req) {

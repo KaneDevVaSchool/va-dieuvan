@@ -297,7 +297,7 @@ export function usePortalRecurringPlanCreate() {
       const pack = await createPortalDispatchRequestTemplate(payload, { idempotencyKey })
       created.value = pack?.dispatch_request ?? null
       clearDraft()
-      await router.push({ name: 'portalExtracurricularList' })
+      await router.push({ name: 'portalExtracurricularList', query: { plan_created: '1' } })
     } catch (e) {
       error.value = formatApiError(e, t('dispatch_wizard.validate.create_fail'))
     } finally {

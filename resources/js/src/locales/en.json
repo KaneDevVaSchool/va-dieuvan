@@ -658,11 +658,13 @@
             "group_by_day": "By day",
             "group_by_route": "By route",
             "group_by_status": "By status",
-            "schedule_group_label": "Group by"
+            "schedule_group_label": "Group by",
+            "created_list_hint": "Plan created. Trip tickets are not sent to dispatch yet — use Actions on each row to complete BM.03 and submit."
         },
         "recurring_edit": {
             "title": "Edit trip ticket",
-            "lead": "Update at least 24 hours before departure, then submit to dispatch.",
+            "lead": "Tickets from a plan are not sent to dispatch until you complete this BM.03-style form and submit — at least 24 hours before departure.",
+            "workflow_steps": "1. Save student count (list or here) · 2. Complete the form · 3. Send to dispatch",
             "sec_trip": "Trip info",
             "sec_time": "Schedule",
             "sec_route": "Pickup / drop-off",
@@ -874,7 +876,7 @@
         "filter_extracurricular_only": "Extracurricular only (incl. recurring)",
         "extracurricular_table": {
             "banner_title": "Extracurricular activity list",
-            "banner_lead": "Update count applies to the selected trip only. Clone similar creates a new request from a template (not the Recurring filter on the toolbar).",
+            "banner_lead": "After creating a plan, each ticket is not sent to dispatch yet. Save student count on the list if needed; use Actions → Complete BM.03 to fill the form and submit to dispatch.",
             "col_request": "Request",
             "col_route": "Route",
             "col_depart": "Departure",
@@ -900,7 +902,7 @@
             "submit_save_first_hint": "Save the actual count before sending.",
             "submit_confirm_title": "Submit student count?",
             "submit_confirm_message": "Actual count {count} will be sent to dispatch. You cannot edit after submit.",
-            "tracking_not_updated": "Not updated",
+            "tracking_not_updated": "BM.03 not completed",
             "tracking_updated": "Updated",
             "tracking_submitted": "Sent",
             "tracking_coordinated": "Coordinated",
@@ -912,7 +914,12 @@
             "complete_slip": "Complete slip",
             "group_summary": "{count} tickets",
             "pending_hs_short": "no count",
-            "collapse_hint": "Expand or collapse group"
+            "collapse_hint": "Expand or collapse group",
+            "action_menu_label": "Actions",
+            "action_complete_bm03": "Complete BM.03 & send to dispatch",
+            "action_complete_bm03_hint": "Fill the PDF-style form, then submit",
+            "action_complete_bm03_done": "Already sent to dispatch.",
+            "action_complete_bm03_unavailable": "Cannot complete this ticket in its current state."
         },
         "filter_date_from": "From",
         "filter_date_to": "To"

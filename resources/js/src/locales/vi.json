@@ -701,11 +701,13 @@
             "group_by_day": "Theo ngày",
             "group_by_route": "Theo tuyến",
             "group_by_status": "Theo trạng thái",
-            "schedule_group_label": "Nhóm theo"
+            "schedule_group_label": "Nhóm theo",
+            "created_list_hint": "Kế hoạch đã tạo. Các phiếu chuyến chưa gửi điều vận — mở menu Thao tác trên từng dòng để hoàn thành BM.03 và gửi chốt."
         },
         "recurring_edit": {
             "title": "Chỉnh sửa phiếu chuyến",
-            "lead": "Cập nhật trước 24 giờ khởi hành, sau đó gửi chốt tới điều vận.",
+            "lead": "Phiếu được tạo từ kế hoạch chưa gửi điều vận. Điền đủ các mục dưới đây (giống phiếu BM.03), lưu nháp nếu cần, rồi bấm «Gửi điều vận» để chốt — trước 24 giờ khởi hành.",
+            "workflow_steps": "1. Lưu số HS (danh sách hoặc tại đây) · 2. Hoàn thành biểu mẫu · 3. Gửi điều vận",
             "sec_trip": "Thông tin chuyến",
             "sec_time": "Thời gian",
             "sec_route": "Điểm đón / trả",
@@ -917,7 +919,7 @@
         "filter_extracurricular_only": "Chỉ ngoại khóa (gồm định kỳ)",
         "extracurricular_table": {
             "banner_title": "Danh sách hoạt động ngoại khóa",
-            "banner_lead": "«Cập nhật số HS» chỉ áp dụng cho phiếu/chuyến đang chọn. «Đặt lại phiếu tương tự» là tạo phiếu mới từ mẫu (khác với lọc Định kỳ trên thanh công cụ).",
+            "banner_lead": "Sau khi tạo kế hoạch, từng phiếu chưa gửi tới điều vận. Trên danh sách có thể lưu số HS nhanh; dùng menu Thao tác → «Hoàn thành BM.03» để điền phiếu và gửi chốt tới điều vận.",
             "col_request": "Phiếu",
             "col_route": "Tuyến",
             "col_depart": "Khởi hành",
@@ -943,7 +945,7 @@
             "submit_save_first_hint": "Lưu số HS trước khi gửi điều vận.",
             "submit_confirm_title": "Gửi chốt số học sinh?",
             "submit_confirm_message": "Số HS thực tế {count} sẽ được gửi tới bộ phận điều vận. Sau khi gửi bạn không thể chỉnh số HS trên cổng người dùng.",
-            "tracking_not_updated": "Chưa cập nhật",
+            "tracking_not_updated": "Chưa hoàn thành BM.03",
             "tracking_updated": "Đã cập nhật",
             "tracking_submitted": "Đã gửi ĐV",
             "tracking_coordinated": "Đã điều phối",
@@ -955,7 +957,12 @@
             "complete_slip": "Hoàn tất phiếu",
             "group_summary": "{count} phiếu",
             "pending_hs_short": "chưa HS",
-            "collapse_hint": "Mở hoặc thu gọn nhóm"
+            "collapse_hint": "Mở hoặc thu gọn nhóm",
+            "action_menu_label": "Thao tác",
+            "action_complete_bm03": "Hoàn thành BM.03 & gửi điều vận",
+            "action_complete_bm03_hint": "Điền phiếu như PDF, sau đó gửi chốt",
+            "action_complete_bm03_done": "Phiếu đã gửi tới điều vận.",
+            "action_complete_bm03_unavailable": "Không thể hoàn thành phiếu ở trạng thái hiện tại."
         },
         "filter_date_from": "Từ ngày",
         "filter_date_to": "Đến ngày",

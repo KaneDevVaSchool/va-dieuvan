@@ -392,6 +392,20 @@
 
         <div v-else class="mt-8 space-y-4">
           <div
+            v-if="isExtracurricularMode && showPlanCreatedHint"
+            class="flex gap-3 rounded-xl border border-teal-200 bg-teal-50/90 px-4 py-3 text-sm text-teal-950"
+            role="status"
+          >
+            <p class="min-w-0 flex-1 leading-relaxed">{{ t('portal.recurring_plan.created_list_hint') }}</p>
+            <button
+              type="button"
+              class="shrink-0 text-xs font-semibold text-teal-800 underline hover:text-teal-950"
+              @click="dismissPlanCreatedHint"
+            >
+              {{ t('portal.welcome_banner_dismiss') }}
+            </button>
+          </div>
+          <div
             v-if="isExtracurricularMode"
             class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
           >
@@ -530,7 +544,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { cloneDispatchRequest, listPortalRequests } from '../../api/requests'
@@ -560,6 +574,7 @@ function readStoredPerPage() {
 }
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const { isExtracurricularModule, routes: portalRoutes } = usePortalExtracurricularModule()
 
@@ -1007,6 +1022,23 @@ function onPerPageChange() {
   }
   reloadFromStart()
 }
+
+const showPlanCreatedHint = ref(false)
+
+function dismissPlanCreatedHint() {
+  showPlanCreatedHint.value = false
+  const q = { ...route.query }
+  delete q.plan_created
+  router.replace({ query: q })
+}
+
+watch(
+  () => route.query.plan_created,
+  (v) => {
+    showPlanCreatedHint.value = String(v) === '1'
+  },
+  { immediate: true },
+)
 
 onMounted(() => {
   if (isExtracurricularModule.value) {

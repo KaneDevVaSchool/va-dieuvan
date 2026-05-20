@@ -75,20 +75,16 @@
                 />
               </td>
               <td class="px-4 py-3 text-right">
-                <div class="flex flex-col items-end gap-1.5">
-                  <RouterLink
-                    :to="operateTo(req.id)"
-                    class="inline-flex min-h-[32px] items-center rounded-lg bg-violet-600 px-3 text-xs font-semibold text-white hover:bg-violet-500"
-                  >
-                    {{ t('portal.extracurricular_list.complete_slip') }}
-                  </RouterLink>
-                  <RouterLink
-                    :to="{ name: detailRouteName, params: { id: req.id } }"
-                    class="text-xs font-medium text-indigo-700 hover:underline"
-                  >
-                    {{ t('portal.extracurricular_table.open_detail') }}
-                  </RouterLink>
-                </div>
+                <ExtracurricularRowActions
+                  :req="req"
+                  variant="portal"
+                  :detail-route-name="detailRouteName"
+                  :show-complete-bm03="row.needsPortalBm03Completion(req)"
+                  :can-complete-bm03="row.canOpenPortalBm03Completion(req)"
+                  :complete-disabled-hint="completeBm03HintFor(req)"
+                  :show-clone="false"
+                  @open-detail="openDetail(req)"
+                />
               </td>
             </tr>
           </tbody>
@@ -101,9 +97,21 @@
           :key="'m-' + req.id"
           class="rounded-xl border border-slate-200 bg-slate-50/50 p-3"
         >
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-mono text-sm font-bold text-slate-900">#{{ req.id }}</span>
-            <StatusBadge :status="req.status" size="sm" />
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div class="min-w-0">
+              <span class="font-mono text-sm font-bold text-slate-900">#{{ req.id }}</span>
+              <StatusBadge class="mt-1" :status="req.status" size="sm" />
+            </div>
+            <ExtracurricularRowActions
+              :req="req"
+              variant="portal"
+              :detail-route-name="detailRouteName"
+              :show-complete-bm03="row.needsPortalBm03Completion(req)"
+              :can-complete-bm03="row.canOpenPortalBm03Completion(req)"
+              :complete-disabled-hint="completeBm03HintFor(req)"
+              :show-clone="false"
+              @open-detail="openDetail(req)"
+            />
           </div>
           <p class="mt-1 text-sm text-slate-800">{{ routeLine(req) }}</p>
           <p class="text-xs text-slate-500">{{ departFmt(req) }}</p>
@@ -127,12 +135,6 @@
               @save="saveCount(req)"
             />
           </div>
-          <RouterLink
-            :to="operateTo(req.id)"
-            class="mt-3 flex min-h-[40px] w-full items-center justify-center rounded-xl bg-violet-600 text-sm font-semibold text-white"
-          >
-            {{ t('portal.extracurricular_list.complete_slip') }}
-          </RouterLink>
         </article>
       </div>
     </details>
@@ -141,7 +143,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../../ui/StatusBadge.vue'
@@ -150,6 +152,7 @@ import StudentCountTrackingBadge from '../../requests/extracurricular/StudentCou
 import { useAuthStore } from '../../../store'
 import { useExtracurricularRequestRow } from '../../../composables/useExtracurricularRequestRow'
 import { useExtracurricularInlineStudentCount } from '../../../composables/useExtracurricularInlineStudentCount'
+import ExtracurricularRowActions from '../../requests/extracurricular/ExtracurricularRowActions.vue'
 
 const props = defineProps({
   requests: { type: Array, default: () => [] },
@@ -160,6 +163,7 @@ const props = defineProps({
 const emit = defineEmits(['refresh'])
 
 const { t, locale } = useI18n()
+const router = useRouter()
 const auth = useAuthStore()
 const row = useExtracurricularRequestRow(auth, computed(() => auth.user))
 
@@ -201,12 +205,18 @@ const grouped = computed(() => {
   return arr
 })
 
-function operateTo(id) {
-  return {
-    name: props.detailRouteName,
-    params: { id: String(id) },
-    query: { operate: '1' },
+function openDetail(req) {
+  router.push({ name: props.detailRouteName, params: { id: String(req.id) } })
+}
+
+function completeBm03HintFor(req) {
+  if (row.canOpenPortalBm03Completion(req)) return ''
+  const k = row.lockHintKey(req)
+  if (k) return t(`${i18nPrefix}.${k}`)
+  if (req?.student_count_submitted_at) {
+    return t('portal.extracurricular_list.action_complete_bm03_done')
   }
+  return t('portal.extracurricular_list.action_complete_bm03_unavailable')
 }
 
 function lockHintFor(req) {

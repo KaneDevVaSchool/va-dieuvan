@@ -84,6 +84,17 @@ export function useExtracurricularRequestRow(auth, userRef) {
   }
 
   /** Suffix for i18n key `{portal|requests_page}.extracurricular_table.*` */
+  /** Phiếu CLB định kỳ chưa gửi chốt tới điều vận (cần hoàn thành BM.03 trên cổng). */
+  function needsPortalBm03Completion(req) {
+    if (!isRecurringInstance(req)) return false
+    if (req?.student_count_submitted_at) return false
+    return ['pending', 'price_filled'].includes(String(req?.status || ''))
+  }
+
+  function canOpenPortalBm03Completion(req) {
+    return needsPortalBm03Completion(req) && !passengerDepartLocked(req)
+  }
+
   function lockHintKey(req) {
     if (!isRecurringInstance(req)) return 'not_recurring'
     if (req?.student_count_submitted_at && !auth.hasPermission('trip.view_all')) {
@@ -114,5 +125,7 @@ export function useExtracurricularRequestRow(auth, userRef) {
     canCloneReset,
     canShowCloneSimilar,
     lockHintKey,
+    needsPortalBm03Completion,
+    canOpenPortalBm03Completion,
   }
 }

@@ -7,6 +7,11 @@
         </h2>
         <p class="mt-1 text-xs font-medium text-slate-600 sm:text-sm">{{ bm.tripSubtitle }}</p>
         <p class="mt-2 text-sm text-slate-600">{{ t('portal.recurring_edit.lead') }}</p>
+        <p
+          class="mt-2 rounded-lg border border-violet-200 bg-violet-50/80 px-3 py-2 text-xs font-medium text-violet-950"
+        >
+          {{ t('portal.recurring_edit.workflow_steps') }}
+        </p>
       </div>
       <div
         class="mx-auto grid w-full max-w-[13rem] shrink-0 gap-px overflow-hidden rounded border border-slate-300 text-[11px] sm:mx-0"

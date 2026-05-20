@@ -1,67 +1,100 @@
 <template>
-  <div :class="block ? 'flex flex-col gap-2' : 'flex flex-col items-end gap-1.5 sm:flex-row sm:justify-end'">
+  <AppRowActionsMenu
+    align="end"
+    :aria-label="t('portal.extracurricular_list.action_menu_label')"
+    :trigger-sr-only="t('portal.extracurricular_list.action_menu_label')"
+    root-class="text-right"
+  >
+    <button
+      v-if="showCompleteBm03"
+      type="button"
+      role="menuitem"
+      class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-semibold text-violet-900 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
+      :disabled="!canCompleteBm03"
+      :title="!canCompleteBm03 ? completeDisabledHint : undefined"
+      @click="goCompleteBm03"
+    >
+      <DocumentTextIcon class="h-4 w-4 shrink-0 text-violet-600" aria-hidden="true" />
+      <span class="min-w-0">
+        <span class="block">{{ t('portal.extracurricular_list.action_complete_bm03') }}</span>
+        <span v-if="variant === 'portal'" class="block text-[11px] font-normal text-violet-700/90">
+          {{ t('portal.extracurricular_list.action_complete_bm03_hint') }}
+        </span>
+      </span>
+    </button>
+    <button
+      type="button"
+      role="menuitem"
+      class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
+      @click="$emit('open-detail')"
+    >
+      <EyeIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+      {{ variant === 'portal' ? t('portal.extracurricular_table.open_detail') : t('requests_page.cta_detail') }}
+    </button>
     <button
       v-if="showClone"
       type="button"
-      class="inline-flex min-h-[36px] items-center justify-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-55"
-      :class="
-        canClone
-          ? 'border-violet-300 bg-violet-50 text-violet-950 hover:bg-violet-100'
-          : 'border-slate-200 bg-slate-50 text-slate-500'
-      "
+      role="menuitem"
+      class="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
       :disabled="!canClone || cloneBusy"
       :title="!canClone ? cloneDisabledHint : undefined"
       @click="canClone && $emit('clone')"
     >
-      <DocumentDuplicateIcon v-if="!cloneBusy" class="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
+      <DocumentDuplicateIcon
+        v-if="!cloneBusy"
+        class="h-4 w-4 shrink-0 text-slate-500"
+        aria-hidden="true"
+      />
       <span
         v-else
-        class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-violet-600/30 border-t-violet-700"
+        class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600"
         aria-hidden="true"
       />
       {{ cloneBusy ? cloneBusyLabel : cloneLabel }}
     </button>
-    <RouterLink
-      v-if="showCompleteSlip && detailRouteName"
-      :to="{
-        name: detailRouteName,
-        params: { id: String(req.id) },
-        query: { operate: '1' },
-      }"
-      class="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-violet-300 bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-violet-500"
-    >
-      {{ t('portal.extracurricular_list.complete_slip') }}
-    </RouterLink>
-    <button
-      type="button"
-      class="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/60 hover:text-indigo-800"
-      @click="$emit('open-detail')"
-    >
-      {{ variant === 'portal' ? t('portal.open_request', { id: req.id }) : t('requests_page.cta_detail') }}
-    </button>
-  </div>
+  </AppRowActionsMenu>
 </template>
 
 <script setup>
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
-import { DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
+import { useRouter } from 'vue-router'
+import {
+  DocumentDuplicateIcon,
+  DocumentTextIcon,
+  EyeIcon,
+} from '@heroicons/vue/24/outline'
+import AppRowActionsMenu from '../../ui/AppRowActionsMenu.vue'
 
-defineProps({
+const props = defineProps({
   req: { type: Object, required: true },
   variant: { type: String, default: 'portal' },
   detailRouteName: { type: String, default: '' },
-  showCompleteSlip: { type: Boolean, default: false },
+  showCompleteBm03: { type: Boolean, default: false },
+  canCompleteBm03: { type: Boolean, default: true },
+  completeDisabledHint: { type: String, default: '' },
   showClone: { type: Boolean, default: true },
   canClone: { type: Boolean, default: false },
   cloneBusy: { type: Boolean, default: false },
-  cloneLabel: { type: String, required: true },
-  cloneBusyLabel: { type: String, required: true },
-  cloneDisabledHint: { type: String, required: true },
-  block: { type: Boolean, default: false },
+  cloneLabel: { type: String, default: '' },
+  cloneBusyLabel: { type: String, default: '' },
+  cloneDisabledHint: { type: String, default: '' },
 })
 
 defineEmits(['clone', 'open-detail'])
 
 const { t } = useI18n()
+const router = useRouter()
+
+function goCompleteBm03() {
+  if (!props.canCompleteBm03) return
+  if (props.variant === 'portal' && props.detailRouteName) {
+    router.push({
+      name: props.detailRouteName,
+      params: { id: String(props.req.id) },
+      query: { operate: '1' },
+    })
+  } else {
+    router.push(`/requests/${props.req.id}`)
+  }
+}
 </script>

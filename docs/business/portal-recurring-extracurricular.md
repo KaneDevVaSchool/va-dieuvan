@@ -22,7 +22,7 @@ Người đề xuất = tài khoản đăng nhập (không nhập form liên h�
 
 Preview hiển thị số chuyến và danh sách ngày trước khi **Tạo kế hoạch**.
 
-Sau tạo → mẫu `dispatch_request_template` + materialize đủ phiếu `dispatch_request` độc lập trong chuỗi (không trùng mốc khởi hành).
+Sau tạo → mẫu `dispatch_request_template` + materialize đủ phiếu `dispatch_request` độc lập trong chuỗi (không trùng mốc khởi hành). **Chưa gửi điều vận** — mỗi phiếu ở trạng thái chờ cho đến khi người đề xuất hoàn thành BM.03 và bấm gửi chốt trên chi tiết phiếu.
 
 ## Sửa kế hoạch (regenerate)
 
@@ -34,7 +34,7 @@ Sau tạo → mẫu `dispatch_request_template` + materialize đủ phiếu `dis
 
 ## Danh sách — số HS nhanh
 
-Trên **bảng lịch trình** (và bảng chi tiết): cột **HS thực tế** — chỉ **Lưu** (`PATCH` số HS), không gửi chốt tại list. Mỗi dòng có **Hoàn tất phiếu** → mở chi tiết với form BM.03.
+Trên **bảng lịch trình** (và bảng chi tiết): cột **HS thực tế** — chỉ **Lưu** (`PATCH` số HS), không gửi chốt tại list. Cột **Thao tác** (menu ⋮): **Hoàn thành BM.03 & gửi điều vận** → chi tiết form BM.03; **Mở phiếu** xem tiến trình.
 
 ## Sửa từng phiếu (trước 24h)
 
