@@ -391,6 +391,41 @@
         </PortalEmptyState>
 
         <div v-else class="mt-8 space-y-4">
+          <div
+            v-if="isExtracurricularMode"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
+          >
+            <div class="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">
+              <button
+                v-for="mode in listViewModes"
+                :key="mode.id"
+                type="button"
+                class="rounded-md px-3 py-1.5 text-xs font-semibold transition"
+                :class="
+                  extracurricularListView === mode.id
+                    ? 'bg-white text-indigo-800 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                "
+                @click="extracurricularListView = mode.id"
+              >
+                {{ mode.label }}
+              </button>
+            </div>
+            <label
+              v-if="extracurricularListView === 'schedule'"
+              class="flex items-center gap-2 text-sm text-slate-600"
+            >
+              <span>{{ t('portal.recurring_plan.schedule_group_label') }}</span>
+              <select
+                v-model="scheduleGroupBy"
+                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-900"
+              >
+                <option value="day">{{ t('portal.recurring_plan.group_by_day') }}</option>
+                <option value="route">{{ t('portal.recurring_plan.group_by_route') }}</option>
+                <option value="status">{{ t('portal.recurring_plan.group_by_status') }}</option>
+              </select>
+            </label>
+          </div>
           <div class="flex flex-wrap items-center justify-end gap-2">
             <label class="flex items-center gap-2">
               <span class="text-sm text-slate-600">{{ t('portal.filter_per_page') }}</span>
@@ -404,8 +439,19 @@
               </select>
             </label>
           </div>
+          <ExtracurricularRequestsCalendar
+            v-if="isExtracurricularMode && extracurricularListView === 'calendar'"
+            :requests="items"
+            :detail-route-name="portalRoutes.detail"
+          />
+          <ExtracurricularScheduleTable
+            v-else-if="isExtracurricularMode && extracurricularListView === 'schedule'"
+            :requests="items"
+            :group-by="scheduleGroupBy"
+            :detail-route-name="portalRoutes.detail"
+          />
           <ExtracurricularRequestsDataTable
-            v-if="isExtracurricularMode"
+            v-else-if="isExtracurricularMode"
             ref="extracurricularTableRef"
             :requests="items"
             variant="portal"
@@ -494,6 +540,8 @@ import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
+import ExtracurricularRequestsCalendar from '../../components/portal/extracurricular/ExtracurricularRequestsCalendar.vue'
+import ExtracurricularScheduleTable from '../../components/portal/extracurricular/ExtracurricularScheduleTable.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 
 const PER_PAGE_OPTIONS = [5, 10, 15, 20]
@@ -519,6 +567,14 @@ const isExtracurricularMode = computed(
 )
 
 const extracurricularTableRef = ref(null)
+const extracurricularListView = ref('schedule')
+const scheduleGroupBy = ref('day')
+
+const listViewModes = computed(() => [
+  { id: 'calendar', label: t('portal.recurring_plan.list_view_calendar') },
+  { id: 'schedule', label: t('portal.recurring_plan.list_view_schedule') },
+  { id: 'detail', label: t('portal.recurring_plan.list_view_detail') },
+])
 
 // ── List state ───────────────────────────────────────────────
 const loading = ref(true)

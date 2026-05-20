@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\StorePortalDispatchRequestTemplateRequest;
+use App\Http\Requests\Api\Portal\UpdatePortalDispatchRequestTemplateRequest;
 use App\Http\Requests\Api\Requests\StoreDispatchRequestTemplateRequest;
 use App\Models\DispatchRequest;
 use App\Models\DispatchRequestTemplate;
@@ -184,6 +185,80 @@ class DispatchRequestTemplateController extends Controller
         return $this->created([
             'dispatch_request_template_id' => $template->id,
             'dispatch_request' => $this->presentDispatchRequest($dispatchRequest->fresh()),
+        ]);
+    }
+
+    public function updatePortal(
+        UpdatePortalDispatchRequestTemplateRequest $request,
+        DispatchRequestTemplate $dispatchRequestTemplate,
+    ) {
+        return $this->applyTemplateUpdate($request, $dispatchRequestTemplate);
+    }
+
+    protected function applyTemplateUpdate(
+        UpdatePortalDispatchRequestTemplateRequest|StoreDispatchRequestTemplateRequest $request,
+        DispatchRequestTemplate $template,
+    ) {
+        $data = $request->validated();
+
+        $departAt = Carbon::parse($data['depart_at']);
+        $arriveOffset = null;
+        if (! empty($data['arrive_by'])) {
+            $arriveBy = Carbon::parse($data['arrive_by']);
+            $delta = $departAt->diffInMinutes($arriveBy, false);
+            if ($delta < 0) {
+                abort(422, 'Giờ đến phải sau hoặc cùng giờ khởi hành.');
+            }
+            $arriveOffset = (int) $delta;
+        } elseif (! empty($data['return_time'])) {
+            $departMinutes = (int) $departAt->format('H') * 60 + (int) $departAt->format('i');
+            $returnParts = explode(':', (string) $data['return_time']);
+            $returnMinutes = ((int) ($returnParts[0] ?? 0)) * 60 + ((int) ($returnParts[1] ?? 0));
+            $delta = $returnMinutes - $departMinutes;
+            if ($delta < 0) {
+                $delta += 24 * 60;
+            }
+            $arriveOffset = $delta;
+        }
+
+        $recurrenceTime = $departAt->format('H:i:s');
+        $startDate = isset($data['start_date']) ? Carbon::parse($data['start_date'])->toDateString() : $departAt->toDateString();
+        $returnTime = isset($data['return_time']) ? (strlen((string) $data['return_time']) === 5
+            ? $data['return_time'].':00'
+            : $data['return_time']) : null;
+
+        $user = $request->user();
+        $before = $template->toArray();
+
+        $template->update([
+            'trip_type' => $data['trip_type'],
+            'origin' => $data['origin'] ?? null,
+            'destination' => $data['destination'] ?? null,
+            'passenger_count' => $data['passenger_count'] ?? null,
+            'notes' => $data['notes'] ?? null,
+            'arrive_offset_minutes' => $arriveOffset,
+            'recurrence_rule' => $data['recurrence_rule'],
+            'recurrence_end_date' => $data['recurrence_end_date'] ?? null,
+            'repeat_count' => $data['repeat_count'] ?? null,
+            'recurrence_time' => $recurrenceTime,
+            'start_date' => $startDate,
+            'return_time' => $returnTime,
+            'wizard_snapshot' => $data['wizard_snapshot'] ?? $template->wizard_snapshot,
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'template.updated',
+            auditable: $template,
+            before: $before,
+            after: $template->fresh()->toArray(),
+        );
+
+        $sync = app(DispatchRecurringMaintenanceService::class)->syncInstancesForTemplate($template->fresh());
+
+        return $this->ok([
+            'dispatch_request_template_id' => $template->id,
+            'sync' => $sync,
         ]);
     }
 }

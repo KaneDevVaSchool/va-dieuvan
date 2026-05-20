@@ -140,6 +140,125 @@ class DispatchRecurringMaintenanceService
     }
 
     /**
+     * Đồng bộ instance theo lịch template: thêm thiếu, hủy pending thừa (chưa chốt, chưa có chuyến).
+     *
+     * @return array{materialized: int, cancelled: int}
+     */
+    public function syncInstancesForTemplate(DispatchRequestTemplate $template): array
+    {
+        $timezone = config('app.timezone') ?: 'UTC';
+        $targetKeys = $this->targetDepartAtKeys($template, $timezone);
+
+        $cancelled = 0;
+        $instances = DispatchRequest::query()
+            ->where('dispatch_request_template_id', $template->id)
+            ->get();
+
+        foreach ($instances as $instance) {
+            $key = $this->departAtMinuteKey($instance->depart_at, $timezone);
+            if (isset($targetKeys[$key])) {
+                continue;
+            }
+            if (! $this->canCancelInstanceForSync($instance)) {
+                continue;
+            }
+            $before = $instance->toArray();
+            $instance->update(['status' => 'cancelled']);
+            app(AuditLogger::class)->log(
+                actorId: null,
+                event: 'request.recurring_instance_cancelled',
+                auditable: $instance,
+                before: $before,
+                after: $instance->fresh()->toArray(),
+                metadata: ['dispatch_request_template_id' => $template->id],
+            );
+            $cancelled++;
+        }
+
+        $materialized = $this->materializeForTemplate($template->fresh());
+
+        return ['materialized' => $materialized, 'cancelled' => $cancelled];
+    }
+
+    /**
+     * @return array<string, true> keys Y-m-d H:i
+     */
+    protected function targetDepartAtKeys(DispatchRequestTemplate $template, string $timezone): array
+    {
+        $keys = [];
+        foreach ($this->collectTargetDepartCandidates($template, $timezone) as $depart) {
+            $keys[$this->departAtMinuteKey($depart, $timezone)] = true;
+        }
+
+        return $keys;
+    }
+
+    /**
+     * @return list<Carbon>
+     */
+    protected function collectTargetDepartCandidates(DispatchRequestTemplate $template, string $timezone): array
+    {
+        $ruleEndDay = $template->effectiveRecurrenceEndDay($timezone);
+        if ($ruleEndDay === null) {
+            return [];
+        }
+
+        $frequency = strtolower((string) data_get($template->recurrence_rule, 'freq', 'weekly'));
+        $interval = max(1, (int) data_get($template->recurrence_rule, 'interval', 1));
+
+        if ($template->start_date !== null) {
+            $anchor = Carbon::parse((string) $template->start_date, $timezone)->startOfDay();
+        } else {
+            $anchor = ($template->created_at ?? Carbon::now($timezone))->copy()->timezone($timezone)->startOfDay();
+        }
+
+        $timeStrRaw = $template->getAttributes()['recurrence_time'] ?? '08:00:00';
+        $timeStr = is_object($timeStrRaw) && method_exists($timeStrRaw, 'format')
+            ? $timeStrRaw->format('H:i:s')
+            : preg_replace('/\.\d+$/', '', (string) $timeStrRaw);
+        if ($timeStr !== null && preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $timeStr ?? '') !== 1) {
+            $timeStr = '08:00:00';
+        }
+
+        $out = [];
+        $dayCursor = $anchor->copy();
+        $untilDay = $ruleEndDay->copy()->startOfDay();
+
+        for (; $dayCursor->lte($untilDay); $dayCursor->addDay()) {
+            if (! self::frequencyMatchesDay($frequency, $interval, $template->recurrence_rule, $anchor, $dayCursor, $timezone)) {
+                continue;
+            }
+            $departCandidate = Carbon::parse(
+                $dayCursor->format('Y-m-d').' '.($timeStr ?? '08:00:00'),
+                $timezone,
+            )->startOfMinute();
+            $out[] = $departCandidate;
+        }
+
+        return $out;
+    }
+
+    protected function departAtMinuteKey(mixed $departAt, string $timezone): string
+    {
+        return Carbon::parse($departAt, $timezone)->startOfMinute()->format('Y-m-d H:i');
+    }
+
+    protected function canCancelInstanceForSync(DispatchRequest $instance): bool
+    {
+        if ((string) $instance->status !== 'pending') {
+            return false;
+        }
+        if ($instance->student_count_submitted_at !== null) {
+            return false;
+        }
+        if ($instance->trip()->exists()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @param  array<string, mixed>|null  $rule
      */
     protected static function frequencyMatchesDay(string $frequency, int $interval, ?array $rule, Carbon $anchor, Carbon $day, string $timezone): bool

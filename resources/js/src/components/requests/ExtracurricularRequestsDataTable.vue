@@ -179,7 +179,12 @@ import StudentCountTrackingBadge from './extracurricular/StudentCountTrackingBad
 import ExtracurricularRowActions from './extracurricular/ExtracurricularRowActions.vue'
 import { useExtracurricularRequestRow } from '../../composables/useExtracurricularRequestRow'
 import { useAuthStore } from '../../store'
-import { patchPassengerCount, submitStudentCount } from '../../api/requests'
+import {
+  patchPassengerCount,
+  patchPortalRecurringInstance,
+  submitPortalRecurringInstance,
+  submitStudentCount,
+} from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import { confirmAction } from '../../composables/useConfirm'
 
@@ -301,7 +306,11 @@ async function submitRow(req) {
   submittingId.value = req.id
   delete errors[req.id]
   try {
-    await submitStudentCount(req.id)
+    if (props.variant === 'portal') {
+      await submitPortalRecurringInstance(req.id)
+    } else {
+      await submitStudentCount(req.id)
+    }
     emit('refresh')
   } catch (e) {
     errors[req.id] = formatApiError(e, t(`${i18nPrefix.value}.submit_fail`))
@@ -321,7 +330,11 @@ async function saveRow(req) {
   savingId.value = id
   delete errors[id]
   try {
-    await patchPassengerCount(id, n)
+    if (props.variant === 'portal') {
+      await patchPortalRecurringInstance(id, { student_count_actual: n })
+    } else {
+      await patchPassengerCount(id, n)
+    }
     emit('refresh')
   } catch (e) {
     errors[id] = formatApiError(e, t(`${i18nPrefix.value}.save_fail`))

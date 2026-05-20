@@ -237,6 +237,25 @@ export async function createPortalDispatchRequestTemplate(payload, opts = {}) {
   return data.data
 }
 
+export async function updatePortalDispatchRequestTemplate(templateId, payload) {
+  const { data } = await http.patch(`/portal/dispatch-request-templates/${templateId}`, payload)
+  return data.data
+}
+
+/** Sửa phiếu instance định kỳ CLB (portal). */
+export async function patchPortalRecurringInstance(dispatchRequestId, payload) {
+  const { data } = await http.patch(
+    `/portal/dispatch-requests/${dispatchRequestId}/recurring-instance`,
+    payload,
+  )
+  return data.data
+}
+
+export async function submitPortalRecurringInstance(dispatchRequestId) {
+  const { data } = await http.post(`/portal/dispatch-requests/${dispatchRequestId}/submit-recurring`)
+  return data.data
+}
+
 /**
  * @param {number} dispatchRequestId
  * @param {{ idempotencyKey?: string }} [opts]

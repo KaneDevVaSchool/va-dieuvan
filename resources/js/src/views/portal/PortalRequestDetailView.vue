@@ -67,8 +67,15 @@
 
       <PortalStatusTimeline class="mt-8" :title="t('portal.timeline_heading')" :steps="timelineSteps" />
 
+      <PortalExtracurricularInstanceEditView
+        v-if="showExtracurricularInstanceEdit"
+        class="mt-8"
+        :req="req"
+        @saved="load"
+      />
+
       <section
-        v-if="showRecurringExtras"
+        v-else-if="showRecurringExtras"
         class="mt-8 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >
         <CostLimitAlert
@@ -262,6 +269,7 @@ import PortalSignedDocUpload from '../../components/portal/PortalSignedDocUpload
 import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
+import PortalExtracurricularInstanceEditView from './PortalExtracurricularInstanceEditView.vue'
 
 const route = useRoute()
 const { routes: portalRoutes } = usePortalExtracurricularModule()
@@ -442,7 +450,23 @@ const canSubmitPassengerCount = computed(() => {
   return extracurricularRow.canSubmitStudentCount(req.value)
 })
 
+function isExtracurricularReq(r) {
+  const snap = r?.wizard_snapshot
+  const kind = snap?.form?.point_purpose_kind ?? snap?.point_purpose_kind
+  return kind === 'extracurricular'
+}
+
+const showExtracurricularInstanceEdit = computed(() => {
+  const r = req.value
+  if (!r?.dispatch_request_template_id || !isExtracurricularReq(r)) return false
+  return (
+    isCurrentUserRequester.value &&
+    ['pending', 'price_filled'].includes(String(r?.status || ''))
+  )
+})
+
 const showPassengerAdjustSection = computed(() => {
+  if (showExtracurricularInstanceEdit.value) return false
   if (!req.value?.dispatch_request_template_id) return false
   return (
     isCurrentUserRequester.value &&

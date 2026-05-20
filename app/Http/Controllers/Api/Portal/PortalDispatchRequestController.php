@@ -7,9 +7,13 @@ use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\CreatePortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\IndexPortalDispatchRequestsRequest;
+use App\Http\Requests\Api\Portal\PatchPortalRecurringDispatchInstanceRequest;
 use App\Http\Requests\Api\Portal\PortalUploadSignedPaperRequest;
 use App\Http\Requests\Api\Portal\ShowPortalDispatchRequestRequest;
+use App\Http\Requests\Api\Portal\SubmitPortalRecurringDispatchInstanceRequest;
 use App\Http\Requests\Api\Portal\SummaryPortalDispatchRequestsRequest;
+use App\Models\Role;
+use App\Notifications\RecurringStudentCountSubmittedNotification;
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Models\Attachment;
 use App\Models\DispatchRequest;
@@ -295,5 +299,101 @@ class PortalDispatchRequestController extends Controller
         }
 
         return $this->created($this->presentDispatchRequest($dispatchRequest));
+    }
+
+    public function patchRecurringInstance(
+        PatchPortalRecurringDispatchInstanceRequest $request,
+        DispatchRequest $dispatchRequest,
+    ): \Illuminate\Http\JsonResponse {
+        $data = $request->validated();
+        $user = $request->user();
+        $before = $dispatchRequest->toArray();
+
+        $updates = [];
+        if (array_key_exists('student_count_actual', $data)) {
+            $updates['student_count_actual'] = $data['student_count_actual'];
+        }
+        if (! empty($data['depart_at'])) {
+            $updates['depart_at'] = Carbon::parse($data['depart_at']);
+        }
+        if (array_key_exists('arrive_by', $data)) {
+            $updates['arrive_by'] = ! empty($data['arrive_by']) ? Carbon::parse($data['arrive_by']) : null;
+        }
+        if (array_key_exists('origin', $data)) {
+            $updates['origin'] = $data['origin'];
+        }
+        if (array_key_exists('destination', $data)) {
+            $updates['destination'] = $data['destination'];
+        }
+        if (array_key_exists('notes', $data)) {
+            $updates['notes'] = $data['notes'];
+        }
+        if (! empty($data['wizard_snapshot']) && is_array($data['wizard_snapshot'])) {
+            $merged = is_array($dispatchRequest->wizard_snapshot)
+                ? $dispatchRequest->wizard_snapshot
+                : [];
+            $updates['wizard_snapshot'] = array_replace_recursive($merged, $data['wizard_snapshot']);
+        }
+
+        if ($updates !== []) {
+            $dispatchRequest->update($updates);
+        }
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.recurring_instance_updated',
+            auditable: $dispatchRequest,
+            before: $before,
+            after: $dispatchRequest->fresh()->toArray(),
+        );
+
+        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
+    }
+
+    public function submitRecurringInstance(
+        SubmitPortalRecurringDispatchInstanceRequest $request,
+        DispatchRequest $dispatchRequest,
+    ): \Illuminate\Http\JsonResponse {
+        $user = $request->user();
+        $before = $dispatchRequest->toArray();
+
+        $dispatchRequest->update([
+            'student_count_submitted_at' => now(),
+            'student_count_submitted_by' => $user->id,
+            'locked_at' => $dispatchRequest->locked_at ?? now(),
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.student_count_submitted',
+            auditable: $dispatchRequest,
+            before: $before,
+            after: $dispatchRequest->fresh()->toArray(),
+            metadata: [
+                'student_count_actual' => $dispatchRequest->student_count_actual,
+                'channel' => 'portal',
+            ],
+        );
+
+        $fresh = $dispatchRequest->fresh();
+
+        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
+            $recipients = User::query()
+                ->role('dispatcher')
+                ->get();
+            if ($recipients->isNotEmpty()) {
+                Notification::send(
+                    $recipients,
+                    new RecurringStudentCountSubmittedNotification(
+                        $fresh->id,
+                        (int) $fresh->student_count_actual,
+                    ),
+                );
+            }
+        }
+
+        return $this->ok([
+            'dispatch_request' => $this->presentDispatchRequest($fresh),
+        ]);
     }
 }
