@@ -54,8 +54,8 @@ import {
   sanitizeLoginRedirect,
   normalizeLoginRouteQuery,
   loginRouteNeedsSanitizeReplace,
+  resolvePostLoginTarget,
 } from '../../util/loginRedirect'
-import { isDispatchStaffHomePath } from '../../config/dispatchWebBase'
 
 /** `public/images/logo/...` */
 const LOGO_PWA_URL = '/images/logo/logo-2.png'
@@ -106,28 +106,7 @@ onMounted(async () => {
   try {
     auth.setToken(String(q.token))
     await auth.fetchMe()
-    if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
-      await router.replace('/portal')
-      return
-    }
-    let target = sanitizeLoginRedirect(q.redirect != null && q.redirect !== '' ? q.redirect : '/')
-    if (!auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp()) {
-      if (target === '/profile' || target.startsWith('/profile/')) {
-        target = '/driver/account'
-      }
-      const ok = target.startsWith('/driver')
-      if (!ok) {
-        target = '/driver'
-      }
-    }
-    if (auth.canAccessDispatchWebApp() && auth.isDeptHeadOnly()) {
-      if (target === '/' || target === '/mng' || isDispatchStaffHomePath(target)) {
-        target = '/dept'
-      } else if (target.startsWith('/mng/')) {
-        const rm = target.match(/^\/mng\/requests\/(\d+)/)
-        target = rm ? `/dept/requests/${rm[1]}` : '/dept'
-      }
-    }
+    const target = resolvePostLoginTarget(auth, q.redirect)
     await router.replace(target)
   } catch (e) {
     auth.setToken(null)

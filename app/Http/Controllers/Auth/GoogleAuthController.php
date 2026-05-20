@@ -133,13 +133,12 @@ class GoogleAuthController extends Controller
 
         $token = $user->createToken('web')->plainTextToken;
         $next = $this->sanitizePostLoginRedirect(session()->pull('oauth_redirect', '/'));
-        if ($next === '' || $next === '/') {
-            $next = '/';
-        }
 
         if (! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
             Log::notice('google.oauth.login_no_roles_portal', ['user_id' => $user->getKey()]);
             $next = '/portal';
+        } elseif ($next === '' || $next === '/') {
+            $next = $this->defaultWebAppHome($user);
         }
 
         Log::info('google.oauth.callback_success', ['user_id' => $user->getKey()]);
@@ -270,6 +269,32 @@ class GoogleAuthController extends Controller
         }
 
         return $s;
+    }
+
+    private function defaultWebAppHome(User $user): string
+    {
+        if (! $user->canAccessDispatchWebApp() && $user->canAccessDriverWebApp()) {
+            return '/driver';
+        }
+
+        if ($this->isDeptHeadOnly($user)) {
+            return '/dept';
+        }
+
+        return '/mng';
+    }
+
+    private function isDeptHeadOnly(User $user): bool
+    {
+        if ($user->isSuperAdmin()) {
+            return false;
+        }
+
+        if (! $user->hasRole('department_head')) {
+            return false;
+        }
+
+        return ! $user->hasAnyRole(['admin', 'dispatcher', 'superadmin']);
     }
 
     /**

@@ -1,3 +1,5 @@
+import { DISPATCH_WEB_BASE, isDispatchStaffHomePath } from '../config/dispatchWebBase'
+
 /**
  * Post-login redirect từ query `redirect`, 401 interceptor, hoặc session Laravel.
  * Chặn lồng /auth/google (kể cả khi %-encode chồng như …/redirect=/auth/google?redirect=%252F).
@@ -89,6 +91,65 @@ export function sanitizeLoginRedirect(raw) {
   }
 
   return s || '/'
+}
+
+/**
+ * @param {{ canAccessDispatchWebApp: () => boolean, canAccessDriverWebApp: () => boolean, isDeptHeadOnly: () => boolean }} auth
+ */
+function defaultPostLoginHome(auth) {
+  if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
+    return '/portal'
+  }
+  if (!auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp()) {
+    return '/driver'
+  }
+  if (auth.isDeptHeadOnly()) {
+    return '/dept'
+  }
+  return DISPATCH_WEB_BASE
+}
+
+/**
+ * Đích sau OAuth / login: sanitize `redirect`, không để `/` hoặc `/login` (vẫn là màn đăng nhập).
+ *
+ * @param {{ canAccessDispatchWebApp: () => boolean, canAccessDriverWebApp: () => boolean, isDeptHeadOnly: () => boolean }} auth
+ * @param {unknown} rawRedirect
+ * @returns {string}
+ */
+export function resolvePostLoginTarget(auth, rawRedirect) {
+  if (!auth.canAccessDispatchWebApp() && !auth.canAccessDriverWebApp()) {
+    return '/portal'
+  }
+
+  let target = sanitizeLoginRedirect(
+    rawRedirect != null && rawRedirect !== '' ? rawRedirect : '/',
+  )
+
+  if (target === '/' || target === '/login') {
+    return defaultPostLoginHome(auth)
+  }
+
+  if (!auth.canAccessDispatchWebApp() && auth.canAccessDriverWebApp()) {
+    if (target === '/profile' || target.startsWith('/profile/')) {
+      return '/driver/account'
+    }
+    if (!target.startsWith('/driver')) {
+      return '/driver'
+    }
+    return target
+  }
+
+  if (auth.canAccessDispatchWebApp() && auth.isDeptHeadOnly()) {
+    if (target === '/mng' || isDispatchStaffHomePath(target)) {
+      return '/dept'
+    }
+    if (target.startsWith('/mng/')) {
+      const rm = target.match(/^\/mng\/requests\/(\d+)/)
+      return rm ? `/dept/requests/${rm[1]}` : '/dept'
+    }
+  }
+
+  return target
 }
 
 /**
