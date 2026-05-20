@@ -63,6 +63,9 @@ class PortalRecurringInstanceTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('data.origin', 'Pickup X');
 
+        $dr->refresh();
+        $this->assertSame(22, (int) $dr->passenger_count);
+
         $this->postJson("/api/portal/dispatch-requests/{$dr->id}/submit-recurring")
             ->assertOk();
 

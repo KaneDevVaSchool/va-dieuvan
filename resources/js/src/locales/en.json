@@ -956,6 +956,7 @@
             "col_status": "Status",
             "col_tracking": "Students",
             "col_plan": "Planned",
+            "col_trip_cost": "Cost/trip",
             "col_actual": "Actual",
             "col_actions": "Actions",
             "open_detail": "Open",
@@ -988,6 +989,7 @@
         "extracurricular_list": {
             "complete_slip": "Complete slip",
             "group_summary": "{count} tickets",
+            "group_trip_cost": "Cost/trip: {amount}",
             "pending_hs_short": "no count",
             "collapse_hint": "Expand or collapse group",
             "action_menu_label": "Actions",
@@ -2433,6 +2435,7 @@
             "col_status": "Status",
             "col_tracking": "Students",
             "col_plan": "Planned",
+            "col_trip_cost": "Cost/trip",
             "col_actual": "Actual",
             "col_actions": "Actions",
             "no_route": "No route",

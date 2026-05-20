@@ -20,7 +20,15 @@
             :class="{ 'rotate-90': isGroupOpen(group.key) }"
             aria-hidden="true"
           />
-          <span class="truncate">{{ group.label }}</span>
+          <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+            <span class="truncate">{{ group.label }}</span>
+            <span
+              v-if="tripCostDisplayForGroup(group)"
+              class="shrink-0 text-xs font-medium tabular-nums text-violet-800/85"
+            >
+              {{ t('portal.extracurricular_list.group_trip_cost', { amount: tripCostDisplayForGroup(group) }) }}
+            </span>
+          </span>
         </button>
 
         <div
@@ -96,6 +104,7 @@
                 <th class="min-w-[10rem]">{{ t('portal.extracurricular_table.col_route') }}</th>
                 <th>{{ t('portal.extracurricular_table.col_status') }}</th>
                 <th class="text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
+                <th class="whitespace-nowrap text-right">{{ t('portal.extracurricular_table.col_trip_cost') }}</th>
                 <th class="min-w-[9rem]">{{ t('portal.extracurricular_table.col_actual') }}</th>
                 <th class="text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
               </tr>
@@ -120,6 +129,9 @@
               </td>
               <td class="text-center tabular-nums font-medium text-slate-700">
                 {{ row.planStudentCount(req) ?? '—' }}
+              </td>
+              <td class="whitespace-nowrap text-right text-sm tabular-nums text-slate-700">
+                {{ tripCostDisplayForReq(req) || '—' }}
               </td>
               <td>
                 <StudentCountCell
@@ -182,6 +194,13 @@
             <span class="text-slate-500">{{ t('portal.extracurricular_table.col_plan') }}</span>
             <span class="font-semibold tabular-nums">{{ row.planStudentCount(req) ?? '—' }}</span>
           </div>
+          <div
+            v-if="tripCostDisplayForReq(req)"
+            class="mt-1 flex items-center justify-between text-xs"
+          >
+            <span class="text-slate-500">{{ t('portal.extracurricular_table.col_trip_cost') }}</span>
+            <span class="font-semibold tabular-nums text-slate-800">{{ tripCostDisplayForReq(req) }}</span>
+          </div>
           <div class="mt-2">
             <StudentCountCell
               :req="req"
@@ -211,6 +230,8 @@ import { useI18n } from 'vue-i18n'
 import { ChevronRightIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
 import { updatePortalDispatchPlanLabel } from '../../../api/requests'
 import { formatApiError } from '../../../api/http'
+import { parseMoneyVnd } from '../../../util/money'
+import { formatVnd } from '../../../util/labels'
 import StatusBadge from '../../ui/StatusBadge.vue'
 import StudentCountCell from '../../requests/extracurricular/StudentCountCell.vue'
 import StudentCountTrackingBadge from '../../requests/extracurricular/StudentCountTrackingBadge.vue'
@@ -326,6 +347,32 @@ function completeBm03HintFor(req) {
 function lockHintFor(req) {
   const k = row.lockHintKey(req)
   return k ? t(`${i18nPrefix}.${k}`) : ''
+}
+
+function estimatedTripCostAmount(req) {
+  if (!req) return null
+  const raw =
+    req?.wizard_snapshot?.form?.estimated_vehicle_cost
+    ?? req?.dispatch_request_template?.wizard_snapshot?.form?.estimated_vehicle_cost
+    ?? ''
+  const fromSnap = parseMoneyVnd(raw)
+  if (fromSnap > 0) return fromSnap
+  const sp = Number(req?.service_price)
+  if (Number.isFinite(sp) && sp > 0) return sp
+  return null
+}
+
+function tripCostDisplayForReq(req) {
+  const n = estimatedTripCostAmount(req)
+  return n != null ? formatVnd(n) : ''
+}
+
+function tripCostDisplayForGroup(group) {
+  for (const req of group?.items || []) {
+    const label = tripCostDisplayForReq(req)
+    if (label) return label
+  }
+  return ''
 }
 
 function templateIdFromReq(req) {

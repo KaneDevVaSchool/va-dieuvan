@@ -714,6 +714,7 @@ import {
   labelTripStatus,
   labelTripType,
 } from '../../util/labels'
+import { dispatchRequestEffectivePassengerCount } from '../../util/dispatchRequestPassengers'
 import { tripStatusAdminPillClass } from '../../constants/tripStatus'
 import { useVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useAuthStore } from '../../store'
@@ -1271,9 +1272,9 @@ function driverInitials(name) {
 }
 
 function passengerMetaSummary(trip) {
-  const pc = trip.dispatch_request?.passenger_count
-  if (pc != null && pc !== '') {
-    return t('trips_page.meta_passengers', { n: pc })
+  const n = dispatchRequestEffectivePassengerCount(trip.dispatch_request)
+  if (n > 0) {
+    return t('trips_page.meta_passengers', { n })
   }
   return labelTripType(trip.dispatch_request?.trip_type)
 }

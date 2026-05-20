@@ -384,6 +384,9 @@ class PortalDispatchRequestController extends Controller
         $updates = [];
         if (array_key_exists('student_count_actual', $data)) {
             $updates['student_count_actual'] = $data['student_count_actual'];
+            if ($dispatchRequest->dispatch_request_template_id !== null) {
+                $updates['passenger_count'] = $data['student_count_actual'];
+            }
         }
         if (! empty($data['depart_at'])) {
             $updates['depart_at'] = Carbon::parse($data['depart_at']);

@@ -999,6 +999,7 @@
             "col_status": "Trạng thái",
             "col_tracking": "Số HS",
             "col_plan": "HS kế hoạch",
+            "col_trip_cost": "Chi phí/chuyến",
             "col_actual": "HS thực tế",
             "col_actions": "Thao tác",
             "open_detail": "Mở phiếu",
@@ -1031,6 +1032,7 @@
         "extracurricular_list": {
             "complete_slip": "Hoàn tất phiếu",
             "group_summary": "{count} phiếu",
+            "group_trip_cost": "CP/chuyến: {amount}",
             "pending_hs_short": "chưa HS",
             "collapse_hint": "Mở hoặc thu gọn nhóm",
             "action_menu_label": "Thao tác",
@@ -2261,6 +2263,7 @@
             "col_status": "Trạng thái",
             "col_tracking": "Số HS",
             "col_plan": "HS kế hoạch",
+            "col_trip_cost": "Chi phí/chuyến",
             "col_actual": "HS thực tế",
             "col_actions": "Thao tác",
             "no_route": "Chưa có tuyến",

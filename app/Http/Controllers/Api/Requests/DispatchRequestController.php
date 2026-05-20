@@ -556,9 +556,11 @@ class DispatchRequestController extends Controller
         $before = $dispatchRequest->toArray();
         $beforeCount = $dispatchRequest->student_count_actual;
 
-        $dispatchRequest->update([
-            'student_count_actual' => $data['student_count_actual'],
-        ]);
+        $updates = ['student_count_actual' => $data['student_count_actual']];
+        if ($dispatchRequest->dispatch_request_template_id !== null) {
+            $updates['passenger_count'] = $data['student_count_actual'];
+        }
+        $dispatchRequest->update($updates);
 
         $event = 'request.student_count_actual_updated';
         if ($dispatchRequest->locked_at !== null && $user->hasPermission('trip.view_all')) {

@@ -132,8 +132,8 @@
                             :status-label-override="tripStatusLabelOverride"
                             :countdown="countdown"
                             :passenger-count="
-                                Number(
-                                    trip.dispatch_request?.passenger_count ?? 0,
+                                dispatchRequestEffectivePassengerCount(
+                                    trip.dispatch_request,
                                 )
                             "
                             :schedule-date-long="scheduleDateLong"
@@ -790,6 +790,7 @@ import {
     isLegacyBm03NotesBlock,
 } from "../../util/formatDispatchNotes";
 import { parseMoneyVnd } from "../../util/money";
+import { dispatchRequestEffectivePassengerCount } from "../../util/dispatchRequestPassengers";
 import {
     emptyPassengerRow,
     emptyBusinessRow,
@@ -1175,7 +1176,7 @@ async function saveNamedPassengerSlot(rowIndex, draft) {
     const tid = trip.value?.id;
     const dr = trip.value?.dispatch_request;
     if (!tid || !dr) return false;
-    const count = Number(dr.passenger_count) || 0;
+    const count = dispatchRequestEffectivePassengerCount(dr);
     const totalSlots = Math.max(count, rowIndex + 1);
     const tplist = Array.isArray(trip.value?.trip_passengers)
         ? trip.value.trip_passengers
@@ -1507,9 +1508,7 @@ const passengerRowsDisplay = computed(() => {
     /** @type {Array<Record<string, unknown>> | undefined} */
     const tplist = trip.value?.trip_passengers;
     if (tripType === "door_to_door" || tripType === "point_to_point") {
-        const drCountRaw = Number(dr?.passenger_count);
-        const targetN =
-            Number.isFinite(drCountRaw) && drCountRaw > 0 ? drCountRaw : 0;
+        const targetN = dispatchRequestEffectivePassengerCount(dr);
         if (targetN === 0) return [];
         const kind = inferRoleKind(tripType);
         const roleLabel =
@@ -1647,10 +1646,11 @@ const passengerRowsDisplay = computed(() => {
         });
     }
 
-    if (!rows.length && dr.passenger_count != null && dr.passenger_count > 0) {
+    const fallbackN = dispatchRequestEffectivePassengerCount(dr);
+    if (!rows.length && fallbackN > 0) {
         rows.push({
             name: t("trip_detail.passengers.unlisted", {
-                n: dr.passenger_count,
+                n: fallbackN,
             }),
             roleKind: inferRoleKind(tripType),
             roleLabel:
@@ -1690,9 +1690,10 @@ const specialNeedsSummary = computed(() => {
 });
 
 const neededSeats = computed(() => {
-    const c = trip.value?.dispatch_request?.passenger_count;
-    const n = c != null ? Number(c) : 0;
-    if (Number.isFinite(n) && n > 0) return n;
+    const n = dispatchRequestEffectivePassengerCount(
+        trip.value?.dispatch_request,
+    );
+    if (n > 0) return n;
     const guests = passengerRowsDisplay.value.length;
     return guests > 0 ? guests : 1;
 });
