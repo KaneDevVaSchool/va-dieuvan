@@ -91,6 +91,15 @@ class RequestController extends Controller
 
         $q->when(! empty($data['extracurricular_only']), fn (Builder $b) => $b->extracurricularOnly());
 
+        if (array_key_exists('student_count_submitted', $data) && $data['student_count_submitted'] !== null) {
+            if ($data['student_count_submitted']) {
+                $q->whereNotNull('student_count_submitted_at');
+            } else {
+                $q->whereNull('student_count_submitted_at')
+                    ->whereNotNull('dispatch_request_template_id');
+            }
+        }
+
         // Khoảng ngày khởi hành: bản ghi depart_at null (một số luồng cũ / nhập tay) vẫn lọc theo created_at trong khoảng.
         $q->when(isset($data['from']) || isset($data['to']), function (Builder $b) use ($data) {
             $from = isset($data['from']) ? Carbon::parse($data['from'])->startOfDay() : null;

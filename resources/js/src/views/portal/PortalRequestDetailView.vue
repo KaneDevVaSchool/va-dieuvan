@@ -77,18 +77,42 @@
           :budget-alert="req.dispatch_package_budget_alert"
         />
         <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
-        <StudentCountField
+        <div
           v-if="showPassengerAdjustSection"
-          v-model:passenger-count="passengerDraft"
-          :student-count-plan="req.passenger_count != null ? Number(req.passenger_count) : null"
-          :locked="passengerDepartLocked"
-          :is-dispatcher-override="false"
-          :depart-at-formatted="departAtFormattedShort"
-          :saving="passengerSaving"
-          :error="passengerPatchErr"
           :class="showResetCloneBtn ? 'border-t border-slate-100 pt-4' : ''"
-          @save="savePassengerDraft"
-        />
+        >
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="text-xs font-medium text-slate-500">{{ t('portal.extracurricular_table.col_tracking') }}</span>
+            <StudentCountTrackingBadge
+              v-if="req"
+              :tracking-key="extracurricularRow.studentCountTrackingKey(req)"
+              i18n-prefix="portal.extracurricular_table"
+            />
+          </div>
+          <StudentCountField
+            v-model:passenger-count="passengerDraft"
+            :student-count-plan="req.passenger_count != null ? Number(req.passenger_count) : null"
+            :locked="passengerDepartLocked"
+            :is-dispatcher-override="false"
+            :depart-at-formatted="departAtFormattedShort"
+            :saving="passengerSaving"
+            :error="passengerPatchErr"
+            @save="savePassengerDraft"
+          />
+          <button
+            v-if="canSubmitPassengerCount"
+            type="button"
+            class="mt-3 inline-flex min-h-[40px] items-center rounded-xl bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-violet-500 disabled:opacity-50"
+            :disabled="passengerSubmitting || passengerSaving"
+            @click="submitPassengerCount"
+          >
+            {{
+              passengerSubmitting
+                ? t('portal.extracurricular_table.submit_dispatch_busy')
+                : t('portal.extracurricular_table.submit_dispatch')
+            }}
+          </button>
+        </div>
       </section>
 
       <section
@@ -218,6 +242,7 @@ import {
   exportPortalDispatchRequestPdf,
   getPortalDispatchRequest,
   patchPassengerCount,
+  submitStudentCount,
   uploadPortalSignedPaper,
 } from '../../api/requests'
 import { formatApiError } from '../../api/http'
@@ -225,6 +250,9 @@ import { useAuthStore } from '../../store'
 import CostLimitAlert from '../../components/requests/CostLimitAlert.vue'
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import StudentCountField from '../../components/recurring/StudentCountField.vue'
+import StudentCountTrackingBadge from '../../components/requests/extracurricular/StudentCountTrackingBadge.vue'
+import { useExtracurricularRequestRow } from '../../composables/useExtracurricularRequestRow'
+import { confirmAction } from '../../composables/useConfirm'
 import { usePortalTimelineSteps } from '../../composables/usePortalTimelineSteps.js'
 import { usePortalDetailPoll } from '../../composables/usePortalDetailPoll.js'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
@@ -247,6 +275,8 @@ const req = ref(null)
 
 const passengerDraft = ref(1)
 const passengerSaving = ref(false)
+const passengerSubmitting = ref(false)
+const extracurricularRow = useExtracurricularRequestRow(auth, computed(() => auth.user))
 const passengerPatchErr = ref('')
 const resetCloneBusy = ref(false)
 
@@ -403,12 +433,13 @@ function hoursUntilDepartIso(iso) {
 }
 
 const passengerDepartLocked = computed(() => {
-  if (!isCurrentUserRequester.value || !req.value?.dispatch_request_template_id) return true
-  if (req.value?.locked_at) return true
-  const st = req.value?.status
-  if (st !== 'pending' && st !== 'price_filled') return true
-  const h = hoursUntilDepartIso(req.value?.depart_at)
-  return h == null || h < 24
+  if (!req.value) return true
+  return extracurricularRow.passengerDepartLocked(req.value)
+})
+
+const canSubmitPassengerCount = computed(() => {
+  if (!req.value) return false
+  return extracurricularRow.canSubmitStudentCount(req.value)
 })
 
 const showPassengerAdjustSection = computed(() => {
@@ -440,7 +471,7 @@ async function onResetCloneRequest() {
   resetCloneBusy.value = true
   try {
     const dr = await cloneDispatchRequest(req.value.id)
-    await router.push({ name: 'portalCreate', query: { replace: String(dr.id) } })
+    await router.push({ name: portalRoutes.value.create, query: { replace: String(dr.id) } })
   } catch (e) {
     window.alert(formatApiError(e, t('request_detail.reset_clone_fail')))
   } finally {
@@ -460,6 +491,27 @@ async function savePassengerDraft() {
     passengerPatchErr.value = formatApiError(e, t('request_detail.passenger_save_fail'))
   } finally {
     passengerSaving.value = false
+  }
+}
+
+async function submitPassengerCount() {
+  if (!req.value?.id || !canSubmitPassengerCount.value || passengerSubmitting.value) return
+  const n = extracurricularRow.actualStudentCount(req.value)
+  const ok = await confirmAction({
+    title: t('portal.extracurricular_table.submit_confirm_title'),
+    message: t('portal.extracurricular_table.submit_confirm_message', { count: n }),
+    confirmLabel: t('portal.extracurricular_table.submit_dispatch'),
+  })
+  if (!ok) return
+  passengerSubmitting.value = true
+  passengerPatchErr.value = ''
+  try {
+    await submitStudentCount(req.value.id)
+    await load()
+  } catch (e) {
+    passengerPatchErr.value = formatApiError(e, t('portal.extracurricular_table.submit_fail'))
+  } finally {
+    passengerSubmitting.value = false
   }
 }
 

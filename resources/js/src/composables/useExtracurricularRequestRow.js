@@ -1,3 +1,5 @@
+import { extracurricularStudentCountTrackingKey } from './useExtracurricularStudentCountTracking'
+
 /**
  * Shared rules for extracurricular list rows (portal + staff).
  * @param {import('vue').Ref|import('vue').ComputedRef} userRef
@@ -48,6 +50,7 @@ export function useExtracurricularRequestRow(auth, userRef) {
   function passengerDepartLocked(req) {
     if (auth.hasPermission('trip.view_all')) return false
     if (!isRequester(req) || !isRecurringInstance(req)) return true
+    if (req?.student_count_submitted_at) return true
     if (req?.locked_at) return true
     const st = req?.status
     if (st !== 'pending' && st !== 'price_filled') return true
@@ -57,6 +60,15 @@ export function useExtracurricularRequestRow(auth, userRef) {
 
   function canEditStudentCount(req) {
     return showPassengerAdjust(req) && !passengerDepartLocked(req)
+  }
+
+  function canSubmitStudentCount(req) {
+    if (!canEditStudentCount(req)) return false
+    return req?.student_count_actual != null && req?.student_count_actual !== ''
+  }
+
+  function studentCountTrackingKey(req) {
+    return extracurricularStudentCountTrackingKey(req)
   }
 
   function canCloneReset(req) {
@@ -74,6 +86,9 @@ export function useExtracurricularRequestRow(auth, userRef) {
   /** Suffix for i18n key `{portal|requests_page}.extracurricular_table.*` */
   function lockHintKey(req) {
     if (!isRecurringInstance(req)) return 'not_recurring'
+    if (req?.student_count_submitted_at && !auth.hasPermission('trip.view_all')) {
+      return 'already_submitted'
+    }
     if (req?.locked_at && !auth.hasPermission('trip.view_all')) return 'locked'
     const st = req?.status
     if (st !== 'pending' && st !== 'price_filled' && !auth.hasPermission('trip.view_all')) {
@@ -94,6 +109,8 @@ export function useExtracurricularRequestRow(auth, userRef) {
     showPassengerAdjust,
     passengerDepartLocked,
     canEditStudentCount,
+    canSubmitStudentCount,
+    studentCountTrackingKey,
     canCloneReset,
     canShowCloneSimilar,
     lockHintKey,

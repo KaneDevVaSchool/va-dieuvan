@@ -16,7 +16,7 @@
       <button
         type="button"
         class="inline-flex h-9 items-center rounded-lg bg-teal-600 px-3 text-xs font-semibold text-white shadow-sm hover:bg-teal-500 disabled:opacity-50"
-        :disabled="saving"
+        :disabled="saving || submitting"
         @click="$emit('save')"
       >
         <span
@@ -25,6 +25,21 @@
           aria-hidden="true"
         />
         {{ saving ? saveBusyText : saveText }}
+      </button>
+      <button
+        v-if="showSubmit"
+        type="button"
+        class="inline-flex h-9 items-center rounded-lg border border-violet-400 bg-violet-600 px-3 text-xs font-semibold text-white shadow-sm hover:bg-violet-500 disabled:opacity-50"
+        :disabled="!canSubmit || saving || submitting"
+        :title="submitDisabledHint || undefined"
+        @click="$emit('submit')"
+      >
+        <span
+          v-if="submitting"
+          class="mr-1.5 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+          aria-hidden="true"
+        />
+        {{ submitting ? submitBusyText : submitText }}
       </button>
     </div>
     <div v-else>
@@ -51,9 +66,15 @@ const props = defineProps({
   mobile: { type: Boolean, default: false },
   saveLabelKey: { type: String, default: '' },
   saveBusyLabelKey: { type: String, default: '' },
+  showSubmit: { type: Boolean, default: false },
+  canSubmit: { type: Boolean, default: false },
+  submitting: { type: Boolean, default: false },
+  submitLabelKey: { type: String, default: '' },
+  submitBusyLabelKey: { type: String, default: '' },
+  submitDisabledHint: { type: String, default: '' },
 })
 
-defineEmits(['update:draft', 'save'])
+defineEmits(['update:draft', 'save', 'submit'])
 
 const { t } = useI18n()
 
@@ -62,6 +83,12 @@ const saveText = computed(() =>
 )
 const saveBusyText = computed(() =>
   props.saveBusyLabelKey ? t(props.saveBusyLabelKey) : t('request_detail.passenger_save_busy'),
+)
+const submitText = computed(() =>
+  props.submitLabelKey ? t(props.submitLabelKey) : t('portal.extracurricular_table.submit_dispatch'),
+)
+const submitBusyText = computed(() =>
+  props.submitBusyLabelKey ? t(props.submitBusyLabelKey) : t('portal.extracurricular_table.submit_dispatch_busy'),
 )
 
 const inputId = computed(() => `extracurricular-sc-${props.req?.id}`)

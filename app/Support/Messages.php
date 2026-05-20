@@ -44,6 +44,12 @@ final class Messages
 
     public const REQUEST_RECURRING_PASSENGER_COUNT_LOCKED = 'Chỉ cập nhật số hành khách trước giờ khởi hành ít nhất 24 giờ.';
 
+    public const REQUEST_RECURRING_STUDENT_COUNT_NOT_SAVED = 'Vui lòng lưu số học sinh thực tế trước khi gửi điều vận.';
+
+    public const REQUEST_RECURRING_STUDENT_COUNT_ALREADY_SUBMITTED = 'Số học sinh đã được gửi chốt cho chuyến này.';
+
+    public const REQUEST_RECURRING_STUDENT_COUNT_SUBMIT_LOCKED = 'Chỉ gửi chốt số học sinh trước giờ khởi hành ít nhất 24 giờ.';
+
     public const REQUEST_RECURRING_TEMPLATE_POINT_TO_POINT_ONLY = 'Đề xuất định kỳ chỉ áp dụng cho chuyến điểm–điểm (P2P).';
 
     public const REQUEST_RECURRING_TEMPLATE_EXTRACURRICULAR_ONLY = 'Đề xuất định kỳ chỉ áp dụng cho mục đích hoạt động ngoại khóa (CLB).';

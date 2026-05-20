@@ -8,7 +8,7 @@ use App\Support\Messages;
 use Carbon\Carbon;
 use Illuminate\Validation\Validator;
 
-class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
+class SubmitRecurringDispatchRequestStudentCountRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
@@ -20,7 +20,7 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
             return false;
         }
 
-        return $user !== null && $user->can('adjustPassengerCount', $dr);
+        return $user !== null && $user->can('submitStudentCount', $dr);
     }
 
     /**
@@ -28,9 +28,7 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
      */
     public function rules(): array
     {
-        return [
-            'student_count_actual' => ['required', 'integer', 'min:1', 'max:999'],
-        ];
+        return [];
     }
 
     public function withValidator(Validator $validator): void
@@ -52,13 +50,24 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
                 $v->errors()->add('dispatch_request_template_id', Messages::REQUEST_NOT_RECURRING_INSTANCE);
             }
 
-            if ($user !== null && $user->hasPermission('trip.view_all')) {
-                return;
+            if ($dr->student_count_submitted_at !== null) {
+                $v->errors()->add('student_count_submitted_at', Messages::REQUEST_RECURRING_STUDENT_COUNT_ALREADY_SUBMITTED);
             }
 
-            if ($dr->student_count_submitted_at !== null) {
-                $v->errors()->add('student_count_actual', Messages::REQUEST_RECURRING_STUDENT_COUNT_ALREADY_SUBMITTED);
+            if ($dr->student_count_actual === null) {
+                $v->errors()->add('student_count_actual', Messages::REQUEST_RECURRING_STUDENT_COUNT_NOT_SAVED);
+            }
 
+            $count = (int) $dr->student_count_actual;
+            if ($count < 1 || $count > 999) {
+                $v->errors()->add('student_count_actual', 'Số học sinh phải từ 1 đến 999.');
+            }
+
+            if (in_array((string) $dr->status, ['rejected'], true)) {
+                $v->errors()->add('status', 'Không thể gửi chốt cho phiếu đã từ chối.');
+            }
+
+            if ($user !== null && $user->hasPermission('trip.view_all')) {
                 return;
             }
 
@@ -73,10 +82,7 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
             }
 
             if (! $departAt->greaterThan(now()->copy()->addHours(24))) {
-                if ($dr->locked_at === null) {
-                    $dr->forceFill(['locked_at' => now()])->saveQuietly();
-                }
-                $v->errors()->add('student_count_actual', Messages::REQUEST_RECURRING_PASSENGER_COUNT_LOCKED);
+                $v->errors()->add('depart_at', Messages::REQUEST_RECURRING_STUDENT_COUNT_SUBMIT_LOCKED);
             }
         });
     }

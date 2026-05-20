@@ -35,6 +35,8 @@ class DispatchRequest extends Model
         'passenger_count',
         'student_count_actual',
         'locked_at',
+        'student_count_submitted_at',
+        'student_count_submitted_by',
         'notes',
         'service_price',
         'price_filled_by',
@@ -58,6 +60,7 @@ class DispatchRequest extends Model
         'service_price' => 'decimal:2',
         'price_filled_at' => 'datetime',
         'locked_at' => 'datetime',
+        'student_count_submitted_at' => 'datetime',
         'wizard_snapshot' => 'array',
     ];
 
@@ -84,6 +87,11 @@ class DispatchRequest extends Model
     public function priceFiller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'price_filled_by');
+    }
+
+    public function studentCountSubmittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'student_count_submitted_by');
     }
 
     public function assignedDeptHead(): BelongsTo

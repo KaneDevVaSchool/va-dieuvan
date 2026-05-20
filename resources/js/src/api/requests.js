@@ -18,6 +18,8 @@ export function normalizeRequestListParams(params) {
   if (p.recurring_only === false) delete p.recurring_only
   if (p.extracurricular_only === true) p.extracurricular_only = 1
   if (p.extracurricular_only === false) delete p.extracurricular_only
+  if (p.student_count_submitted === true) p.student_count_submitted = 1
+  if (p.student_count_submitted === false) p.student_count_submitted = 0
   return p
 }
 
@@ -270,6 +272,15 @@ export async function patchPassengerCount(dispatchRequestId, student_count_actua
   const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/passenger-count`, {
     student_count_actual,
   })
+  return data.data
+}
+
+/**
+ * Chốt số HS thực tế và gửi thông tin tới điều vận (chuyến định kỳ).
+ * @param {number} dispatchRequestId
+ */
+export async function submitStudentCount(dispatchRequestId) {
+  const { data } = await http.post(`/dispatch-requests/${dispatchRequestId}/submit-student-count`)
   return data.data
 }
 

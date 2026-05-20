@@ -27,6 +27,10 @@ Route::patch('/dispatch-requests/{dispatchRequest}/passenger-count', [DispatchRe
     ->middleware(['throttle:60,1', 'permission:any,request.update_own,trip.view_all'])
     ->name('api.dispatch-requests.patch-passenger-count');
 
+Route::post('/dispatch-requests/{dispatchRequest}/submit-student-count', [DispatchRequestController::class, 'submitRecurringStudentCount'])
+    ->middleware(['throttle:30,1', 'permission:any,request.update_own,trip.view_all'])
+    ->name('api.dispatch-requests.submit-student-count');
+
 Route::patch('/dispatch-requests/{dispatchRequest}/wizard', [DispatchRequestController::class, 'patchWizard'])
     ->middleware(['throttle:20,1', 'idempotency', 'permission:request.create'])
     ->name('api.dispatch-requests.patch-wizard');

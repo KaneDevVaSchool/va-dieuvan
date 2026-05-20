@@ -458,6 +458,36 @@
           </button>
 
           <button
+            v-if="filters.extracurricular_only"
+            type="button"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+            :class="
+              filters.student_count_submitted === true
+                ? 'border-sky-300 bg-sky-50 text-sky-950 ring-1 ring-sky-400/25 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-100'
+                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
+            "
+            :title="t('requests_page.student_count_submitted_toggle')"
+            @click="toggleStudentCountSubmittedFilter"
+          >
+            {{ t('requests_page.student_count_submitted_chip') }}
+          </button>
+
+          <button
+            v-if="filters.extracurricular_only"
+            type="button"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+            :class="
+              filters.student_count_submitted === false
+                ? 'border-amber-300 bg-amber-50 text-amber-950 ring-1 ring-amber-400/25 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
+                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
+            "
+            :title="t('requests_page.student_count_pending_toggle')"
+            @click="toggleStudentCountPendingFilter"
+          >
+            {{ t('requests_page.student_count_pending_chip') }}
+          </button>
+
+          <button
             type="button"
             class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
             :aria-expanded="extraFiltersOpen"
@@ -1321,6 +1351,7 @@ const filters = reactive({
   sla_risk_only: false,
   recurring_only: false,
   extracurricular_only: false,
+  student_count_submitted: undefined,
   per_page: 10,
   page: 1,
   sort: 'created_desc',
@@ -1340,6 +1371,7 @@ const activeFilterCount = computed(() => {
   if (filters.sla_risk_only) n++
   if (filters.recurring_only) n++
   if (filters.extracurricular_only) n++
+  if (filters.student_count_submitted === true || filters.student_count_submitted === false) n++
   if (filters.per_page !== 10) n++
   if (filters.sort && filters.sort !== 'created_desc') n++
   return n
@@ -1737,6 +1769,9 @@ function buildListParams() {
   if (params.sla_risk_only === false) delete params.sla_risk_only
   if (params.recurring_only === false) delete params.recurring_only
   if (params.extracurricular_only === false) delete params.extracurricular_only
+  if (params.student_count_submitted !== true && params.student_count_submitted !== false) {
+    delete params.student_count_submitted
+  }
   if (params.only_trashed === false) delete params.only_trashed
   if (params.sort === 'created_desc') delete params.sort
 
@@ -1920,10 +1955,27 @@ function toggleRecurringOnly() {
 
 function toggleExtracurricularOnly() {
   filters.extracurricular_only = !filters.extracurricular_only
+  if (!filters.extracurricular_only) {
+    filters.student_count_submitted = undefined
+  }
   filters.page = 1
   const hadPage = !!route.query.page
   syncRoutePageAfterReset()
   if (!hadPage) reload()
+}
+
+function toggleStudentCountSubmittedFilter() {
+  filters.student_count_submitted = filters.student_count_submitted === true ? undefined : true
+  filters.page = 1
+  syncRoutePageAfterReset()
+  reload()
+}
+
+function toggleStudentCountPendingFilter() {
+  filters.student_count_submitted = filters.student_count_submitted === false ? undefined : false
+  filters.page = 1
+  syncRoutePageAfterReset()
+  reload()
 }
 
 async function onExtracurricularClone(req) {

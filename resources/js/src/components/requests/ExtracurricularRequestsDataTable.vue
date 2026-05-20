@@ -27,6 +27,7 @@
             <th class="min-w-[12rem] px-4 py-3">{{ t(`${i18nPrefix}.col_route`) }}</th>
             <th class="whitespace-nowrap px-4 py-3">{{ t(`${i18nPrefix}.col_depart`) }}</th>
             <th class="px-4 py-3">{{ t(`${i18nPrefix}.col_status`) }}</th>
+            <th class="px-4 py-3">{{ t(`${i18nPrefix}.col_tracking`) }}</th>
             <th class="whitespace-nowrap px-4 py-3 text-center">{{ t(`${i18nPrefix}.col_plan`) }}</th>
             <th class="min-w-[10rem] px-4 py-3">{{ t(`${i18nPrefix}.col_actual`) }}</th>
             <th class="w-40 px-4 py-3 text-right">{{ t(`${i18nPrefix}.col_actions`) }}</th>
@@ -46,6 +47,12 @@
             <td class="px-4 py-3 align-top">
               <StatusBadge :status="req.status" size="sm" />
             </td>
+            <td class="px-4 py-3 align-top">
+              <StudentCountTrackingBadge
+                :tracking-key="row.studentCountTrackingKey(req)"
+                :i18n-prefix="i18nPrefix"
+              />
+            </td>
             <td class="px-4 py-3 align-top text-center tabular-nums text-slate-700">
               {{ row.planStudentCount(req) ?? '—' }}
             </td>
@@ -54,13 +61,20 @@
                 :req="req"
                 :draft="draftFor(req.id)"
                 :saving="savingId === req.id"
+                :submitting="submittingId === req.id"
                 :error="errors[req.id]"
                 :can-edit="row.canEditStudentCount(req)"
                 :lock-hint="lockHintFor(req)"
+                :show-submit="variant === 'portal'"
+                :can-submit="row.canSubmitStudentCount(req)"
+                :submit-disabled-hint="submitHintFor(req)"
                 :save-label-key="`${i18nPrefix}.update_count`"
                 :save-busy-label-key="`${i18nPrefix}.update_count_busy`"
+                :submit-label-key="`${i18nPrefix}.submit_dispatch`"
+                :submit-busy-label-key="`${i18nPrefix}.submit_dispatch_busy`"
                 @update:draft="setDraft(req.id, $event)"
                 @save="saveRow(req)"
+                @submit="submitRow(req)"
               />
             </td>
             <td class="px-4 py-3 align-top text-right">
@@ -100,6 +114,13 @@
             <span class="text-xs font-medium text-slate-500">{{ t(`${i18nPrefix}.col_status`) }}</span>
             <StatusBadge :status="req.status" size="sm" />
           </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-medium text-slate-500">{{ t(`${i18nPrefix}.col_tracking`) }}</span>
+            <StudentCountTrackingBadge
+              :tracking-key="row.studentCountTrackingKey(req)"
+              :i18n-prefix="i18nPrefix"
+            />
+          </div>
           <div class="flex justify-between gap-4 text-sm">
             <div>
               <p class="text-[10px] font-semibold uppercase tracking-wide text-violet-700">
@@ -112,14 +133,21 @@
             :req="req"
             :draft="draftFor(req.id)"
             :saving="savingId === req.id"
+            :submitting="submittingId === req.id"
             :error="errors[req.id]"
             :can-edit="row.canEditStudentCount(req)"
             :lock-hint="lockHintFor(req)"
+            :show-submit="variant === 'portal'"
+            :can-submit="row.canSubmitStudentCount(req)"
+            :submit-disabled-hint="submitHintFor(req)"
             :save-label-key="`${i18nPrefix}.update_count`"
             :save-busy-label-key="`${i18nPrefix}.update_count_busy`"
+            :submit-label-key="`${i18nPrefix}.submit_dispatch`"
+            :submit-busy-label-key="`${i18nPrefix}.submit_dispatch_busy`"
             mobile
             @update:draft="setDraft(req.id, $event)"
             @save="saveRow(req)"
+            @submit="submitRow(req)"
           />
           <ExtracurricularRowActions
             :req="req"
@@ -147,11 +175,13 @@ import { useRouter } from 'vue-router'
 import { AcademicCapIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
 import StudentCountCell from './extracurricular/StudentCountCell.vue'
+import StudentCountTrackingBadge from './extracurricular/StudentCountTrackingBadge.vue'
 import ExtracurricularRowActions from './extracurricular/ExtracurricularRowActions.vue'
 import { useExtracurricularRequestRow } from '../../composables/useExtracurricularRequestRow'
 import { useAuthStore } from '../../store'
-import { patchPassengerCount } from '../../api/requests'
+import { patchPassengerCount, submitStudentCount } from '../../api/requests'
 import { formatApiError } from '../../api/http'
+import { confirmAction } from '../../composables/useConfirm'
 
 const RequestIdCell = defineComponent({
   name: 'RequestIdCell',
@@ -199,6 +229,7 @@ const row = useExtracurricularRequestRow(auth, computed(() => auth.user))
 const drafts = reactive({})
 const errors = reactive({})
 const savingId = ref(null)
+const submittingId = ref(null)
 const cloneBusyId = ref(null)
 
 watch(
@@ -227,6 +258,14 @@ function lockHintFor(req) {
   return k ? t(`${i18nPrefix.value}.${k}`) : ''
 }
 
+function submitHintFor(req) {
+  if (row.canSubmitStudentCount(req)) return ''
+  if (req?.student_count_actual == null || req?.student_count_actual === '') {
+    return t(`${i18nPrefix.value}.submit_save_first_hint`)
+  }
+  return ''
+}
+
 function routeLine(req) {
   const o = (req.origin || '').trim()
   const d = (req.destination || '').trim()
@@ -247,6 +286,27 @@ function departFmt(req) {
     })
   } catch {
     return '—'
+  }
+}
+
+async function submitRow(req) {
+  if (!row.canSubmitStudentCount(req) || submittingId.value) return
+  const n = row.actualStudentCount(req)
+  const ok = await confirmAction({
+    title: t(`${i18nPrefix.value}.submit_confirm_title`),
+    message: t(`${i18nPrefix.value}.submit_confirm_message`, { count: n }),
+    confirmLabel: t(`${i18nPrefix.value}.submit_dispatch`),
+  })
+  if (!ok) return
+  submittingId.value = req.id
+  delete errors[req.id]
+  try {
+    await submitStudentCount(req.id)
+    emit('refresh')
+  } catch (e) {
+    errors[req.id] = formatApiError(e, t(`${i18nPrefix.value}.submit_fail`))
+  } finally {
+    submittingId.value = null
   }
 }
 

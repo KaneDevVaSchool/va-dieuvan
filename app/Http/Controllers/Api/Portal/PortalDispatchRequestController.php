@@ -75,7 +75,7 @@ class PortalDispatchRequestController extends Controller
 
         $query = DispatchRequest::query()
             ->where('requester_id', $user->getKey())
-            ->with(['dispatchRequestTemplate.dispatchPackage']);
+            ->with(['dispatchRequestTemplate.dispatchPackage', 'trip:id,dispatch_request_id,status']);
 
         match ($filter) {
             'pending' => $query->whereIn('status', ['pending', 'price_filled']),

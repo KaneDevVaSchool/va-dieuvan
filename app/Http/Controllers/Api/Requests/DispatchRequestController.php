@@ -23,6 +23,8 @@ use App\Models\User;
 use App\Notifications\DeptHeadApprovalRequestedNotification;
 use App\Notifications\DeptHeadDecisionNotification;
 use App\Notifications\NewDispatchRequestNotification;
+use App\Notifications\RecurringStudentCountSubmittedNotification;
+use App\Http\Requests\Api\Requests\SubmitRecurringDispatchRequestStudentCountRequest;
 use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
 use App\Support\DispatchCargoShipmentProvisioner;
@@ -585,6 +587,57 @@ class DispatchRequestController extends Controller
         ]);
     }
 
+    public function submitRecurringStudentCount(
+        SubmitRecurringDispatchRequestStudentCountRequest $request,
+        DispatchRequest $dispatchRequest,
+    ) {
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $user = $request->user();
+        $before = $dispatchRequest->toArray();
+
+        $dispatchRequest->update([
+            'student_count_submitted_at' => now(),
+            'student_count_submitted_by' => $user->id,
+            'locked_at' => $dispatchRequest->locked_at ?? now(),
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'request.student_count_submitted',
+            auditable: $dispatchRequest,
+            before: $before,
+            after: $dispatchRequest->fresh()->toArray(),
+            metadata: [
+                'student_count_actual' => $dispatchRequest->student_count_actual,
+            ],
+        );
+
+        $fresh = $dispatchRequest->fresh();
+
+        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
+            $recipients = User::query()
+                ->role('dispatcher')
+                ->get();
+            if ($recipients->isNotEmpty()) {
+                $summary = trim(($fresh->origin ?? '').' → '.($fresh->destination ?? ''));
+                Notification::send(
+                    $recipients,
+                    new RecurringStudentCountSubmittedNotification(
+                        $fresh->id,
+                        (int) $fresh->student_count_actual,
+                    ),
+                );
+            }
+        }
+
+        return $this->ok([
+            'dispatch_request' => $this->presentDispatchRequest($fresh),
+        ]);
+    }
+
     public function patchWizard(UpdateDispatchRequestWizardRequest $request, DispatchRequest $dispatchRequest)
     {
         if ($dispatchRequest->trashed()) {
@@ -671,6 +724,8 @@ class DispatchRequestController extends Controller
         $new->cloned_from_id = $dispatchRequest->id;
         $new->student_count_actual = null;
         $new->locked_at = null;
+        $new->student_count_submitted_at = null;
+        $new->student_count_submitted_by = null;
         $new->status = 'pending';
         $new->service_price = null;
         $new->price_filled_by = null;
