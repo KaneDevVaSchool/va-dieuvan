@@ -1,6 +1,9 @@
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 
 const VIS_STORAGE_KEY = 'p2p-policy-student-filter-vis'
+
+export const P2P_STUDENTS_PER_PAGE_OPTIONS = [5, 10, 15, 20]
+export const P2P_STUDENTS_DEFAULT_PER_PAGE = 10
 
 const DEFAULT_VISIBILITY = {
   p2p_policy_term_id: true,
@@ -11,6 +14,7 @@ const DEFAULT_VISIBILITY = {
   is_active: true,
   policy_type: true,
   weekday_iso: false,
+  per_page: true,
 }
 
 export function useP2pPolicyStudentFilters() {
@@ -25,7 +29,8 @@ export function useP2pPolicyStudentFilters() {
     is_active: '',
     policy_type: '',
     weekday_iso: '',
-    per_page: 100,
+    per_page: P2P_STUDENTS_DEFAULT_PER_PAGE,
+    page: 1,
   })
 
   const visibility = reactive(loadVisibility())
@@ -55,7 +60,10 @@ export function useP2pPolicyStudentFilters() {
   )
 
   const apiParams = computed(() => {
-    const p = {}
+    const p = {
+      per_page: filters.per_page,
+      page: filters.page,
+    }
     if (filters.q.trim()) p.q = filters.q.trim()
     if (filters.academic_year) p.academic_year = filters.academic_year
     if (filters.academic_term_id) p.academic_term_id = filters.academic_term_id
@@ -66,7 +74,6 @@ export function useP2pPolicyStudentFilters() {
     if (filters.is_active !== '') p.is_active = filters.is_active
     if (filters.policy_type) p.policy_type = filters.policy_type
     if (filters.weekday_iso) p.weekday_iso = filters.weekday_iso
-    p.per_page = filters.per_page
     return p
   })
 
@@ -81,6 +88,7 @@ export function useP2pPolicyStudentFilters() {
     if (filters.is_active !== '') n++
     if (filters.policy_type) n++
     if (filters.weekday_iso) n++
+    if (filters.per_page !== P2P_STUDENTS_DEFAULT_PER_PAGE) n++
     return n
   })
 
@@ -95,9 +103,13 @@ export function useP2pPolicyStudentFilters() {
     filters.is_active = ''
     filters.policy_type = ''
     filters.weekday_iso = ''
+    filters.per_page = P2P_STUDENTS_DEFAULT_PER_PAGE
+    filters.page = 1
   }
 
-  const page = ref(1)
+  function resetPage() {
+    filters.page = 1
+  }
 
   return {
     filters,
@@ -105,16 +117,17 @@ export function useP2pPolicyStudentFilters() {
     apiParams,
     activeFilterCount,
     clearFilters,
-    page,
+    resetPage,
     filterDefs: [
       { id: 'p2p_policy_term_id', labelKey: 'p2p_policy_page.filter_p2p_term' },
       { id: 'academic_term_id', labelKey: 'p2p_policy_page.filter_term' },
-      { id: 'policy_route_id', labelKey: 'p2p_policy_page.filter_assigned_group' },
+      { id: 'policy_route_id', labelKey: 'p2p_policy_page.filter_route' },
       { id: 'campus_id', labelKey: 'p2p_policy_page.filter_campus' },
       { id: 'class_name', labelKey: 'p2p_policy_page.filter_class' },
       { id: 'is_active', labelKey: 'p2p_policy_page.filter_active' },
       { id: 'policy_type', labelKey: 'p2p_policy_page.filter_policy_type' },
       { id: 'weekday_iso', labelKey: 'p2p_policy_page.filter_weekday' },
+      { id: 'per_page', labelKey: 'filter_bar.per_page' },
     ],
   }
 }

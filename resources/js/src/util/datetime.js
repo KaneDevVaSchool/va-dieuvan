@@ -28,6 +28,30 @@ export function formatDatetimeLocalAmPm(isoLocal) {
   return `${day}/${month}/${year} ${h12}:${min} ${suf}`
 }
 
+/**
+ * Ngày từ ISO / datetime API → hiển thị theo locale (không giờ UTC thô).
+ * @param {string | null | undefined} iso
+ * @param {'vi' | 'en'} [locale]
+ */
+export function formatIsoDate(iso, locale = 'vi') {
+  if (iso == null || iso === '') return '—'
+  const s = String(iso)
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  let d
+  if (m) {
+    d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+  } else {
+    d = new Date(iso)
+  }
+  if (Number.isNaN(d.getTime())) return '—'
+  const loc = locale === 'en' ? 'en-US' : 'vi-VN'
+  return d.toLocaleDateString(loc, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
 /** @param {Date} d */
 export function toDatetimeLocalValue(d) {
   const pad = (n) => String(n).padStart(2, '0')

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\P2pPolicy;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\P2pPolicy\BulkAssignPolicyStudentsRequest;
+use App\Http\Requests\Api\P2pPolicy\BulkDeletePolicyStudentsRequest;
 use App\Http\Requests\Api\P2pPolicy\CommitPolicyStudentsImportRequest;
 use App\Http\Requests\Api\P2pPolicy\ImportPolicyStudentsRequest;
 use App\Http\Requests\Api\P2pPolicy\ListPolicyStudentsRequest;
@@ -138,6 +140,40 @@ class PolicyStudentController extends Controller
         app(AuditLogger::class)->log($request->user()->id, 'p2p_policy.student.delete', $policyStudent, $before, []);
 
         return $this->ok(['deleted' => true]);
+    }
+
+    public function bulkDestroy(BulkDeletePolicyStudentsRequest $request)
+    {
+        $ids = collect($request->validated('ids'))->unique()->values()->all();
+        $rows = PolicyStudent::query()->whereIn('id', $ids)->get();
+        $logger = app(AuditLogger::class);
+        $userId = (int) $request->user()->id;
+
+        foreach ($rows as $row) {
+            $before = $row->toArray();
+            $row->delete();
+            $logger->log($userId, 'p2p_policy.student.delete', $row, $before, []);
+        }
+
+        return $this->ok(['deleted_count' => $rows->count()]);
+    }
+
+    public function bulkAssign(BulkAssignPolicyStudentsRequest $request)
+    {
+        $data = $request->validated();
+        $routeId = (int) $data['policy_route_id'];
+        $ids = collect($data['ids'])->unique()->values()->all();
+        $rows = PolicyStudent::query()->whereIn('id', $ids)->get();
+        $logger = app(AuditLogger::class);
+        $userId = (int) $request->user()->id;
+
+        foreach ($rows as $row) {
+            $before = $row->toArray();
+            $row->update(['policy_route_id' => $routeId]);
+            $logger->log($userId, 'p2p_policy.student.update', $row, $before, $row->fresh()->toArray());
+        }
+
+        return $this->ok(['updated_count' => $rows->count()]);
     }
 
     public function import(ImportPolicyStudentsRequest $request)

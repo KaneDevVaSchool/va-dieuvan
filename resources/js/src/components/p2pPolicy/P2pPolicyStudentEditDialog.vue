@@ -1,16 +1,19 @@
 <template>
   <dialog
     ref="dialogEl"
-    class="w-[min(100vw-2rem,32rem)] max-w-lg rounded-2xl border p-0 shadow-2xl backdrop:bg-slate-900/40 dark:border-slate-700 dark:bg-slate-900"
+    class="w-[min(100vw-2rem,32rem)] max-h-[90vh] overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-900/40 dark:border-slate-700 dark:bg-slate-900"
     @close="onDialogClose"
+    @cancel.prevent="close"
   >
-    <form v-if="form" class="max-h-[min(90vh,640px)] overflow-y-auto p-6" @submit.prevent="submit">
-      <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.students_edit_title') }}</h3>
-      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.students_edit_hint') }}</p>
+    <form v-if="form" class="flex max-h-[90vh] flex-col" @submit.prevent="submit">
+      <header class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.students_edit_title') }}</h2>
+        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.students_edit_hint') }}</p>
+      </header>
 
-      <div class="mt-5 space-y-4">
+      <div class="flex-1 space-y-4 overflow-y-auto px-5 py-4">
         <div>
-          <P2pPolicyFieldLabel :label="t('p2p_policy_page.filter_assigned_group')" required />
+          <P2pPolicyFieldLabel :label="t('p2p_policy_page.filter_route')" required />
           <select v-model="form.policy_route_id" required class="p2p-term-input mt-2 w-full">
             <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.name }}</option>
           </select>
@@ -57,18 +60,21 @@
           <input v-model="form.is_active" type="checkbox" class="rounded border-slate-300 text-teal-600" />
           {{ t('p2p_policy_page.active_yes') }}
         </label>
+        <p v-if="error" class="text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
       </div>
 
-      <p v-if="error" class="mt-4 text-sm text-rose-600 dark:text-rose-400">{{ error }}</p>
-
-      <div class="mt-6 flex justify-end gap-2">
+      <footer class="flex justify-end gap-2 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
         <button type="button" class="rounded-lg border px-4 py-2 text-sm dark:border-slate-600" @click="close">
           {{ t('p2p_policy_page.cancel') }}
         </button>
-        <button type="submit" class="rounded-lg bg-va-800 px-4 py-2 text-sm text-white hover:bg-va-900 disabled:opacity-50" :disabled="saving">
+        <button
+          type="submit"
+          class="rounded-lg bg-va-800 px-4 py-2 text-sm font-medium text-white hover:bg-va-900 disabled:opacity-50"
+          :disabled="saving"
+        >
           {{ t('p2p_policy_page.save') }}
         </button>
-      </div>
+      </footer>
     </form>
   </dialog>
 </template>

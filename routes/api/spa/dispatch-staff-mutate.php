@@ -182,6 +182,8 @@ Route::prefix('p2p-policy')->group(function () {
     });
 
     Route::controller(PolicyStudentController::class)->group(function () {
+        Route::post('/students/bulk-delete', 'bulkDestroy')->middleware('permission:p2p_policy.manage');
+        Route::post('/students/bulk-assign', 'bulkAssign')->middleware('permission:p2p_policy.manage');
         Route::post('/students', 'store')->middleware('permission:p2p_policy.manage');
         Route::patch('/students/{policyStudent}', 'update')->middleware('permission:p2p_policy.manage');
         Route::delete('/students/{policyStudent}', 'destroy')->middleware('permission:p2p_policy.manage');

@@ -5,9 +5,6 @@ namespace App\Services\P2pPolicy;
 use App\Models\P2pPolicyTerm;
 use App\Models\PolicyGenerationRun;
 use App\Models\PolicyRoute;
-use App\Models\PolicyStudent;
-use App\Support\Messages;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -18,20 +15,20 @@ class P2pPolicyReadinessValidator
     ) {}
 
     /**
-     * @return array{ready: bool, issues: list<string>}
+     * @return array{ready: bool, issues: list<array{code: string, route?: string}>}
      */
     public function assess(P2pPolicyTerm $term): array
     {
         $issues = [];
 
         if ($term->status !== 'draft') {
-            $issues[] = Messages::P2P_POLICY_TERM_NOT_DRAFT;
+            $issues[] = ['code' => 'term_not_draft'];
         }
 
         if ($term->operating_from === null || $term->operating_to === null) {
-            $issues[] = Messages::P2P_POLICY_OPERATING_DATES_REQUIRED;
+            $issues[] = ['code' => 'operating_dates_required'];
         } elseif ($term->operating_from->gt($term->operating_to)) {
-            $issues[] = Messages::P2P_POLICY_OPERATING_RANGE_INVALID;
+            $issues[] = ['code' => 'operating_range_invalid'];
         }
 
         $running = PolicyGenerationRun::query()
@@ -39,7 +36,7 @@ class P2pPolicyReadinessValidator
             ->where('status', 'running')
             ->exists();
         if ($running) {
-            $issues[] = Messages::P2P_POLICY_GENERATION_IN_PROGRESS;
+            $issues[] = ['code' => 'generation_in_progress'];
         }
 
         /** @var Collection<int, PolicyRoute> $routes */
@@ -49,12 +46,12 @@ class P2pPolicyReadinessValidator
             ->get();
 
         if ($routes->isEmpty()) {
-            $issues[] = Messages::P2P_POLICY_NO_ACTIVE_ROUTES;
+            $issues[] = ['code' => 'no_active_routes'];
         }
 
         foreach ($routes as $route) {
             if ($route->vehicle_id === null || $route->driver_id === null) {
-                $issues[] = sprintf(Messages::P2P_POLICY_ROUTE_MISSING_ASSIGNMENT, $route->name);
+                $issues[] = ['code' => 'route_missing_assignment', 'route' => $route->name];
 
                 continue;
             }
@@ -63,7 +60,7 @@ class P2pPolicyReadinessValidator
                 (int) floor($term->operating_from->diffInDays($term->operating_to) / 2),
             );
             if ($this->roster->activeStudentsForRouteOnDate($route, $mid)->isEmpty()) {
-                $issues[] = sprintf(Messages::P2P_POLICY_ROUTE_NO_STUDENTS, $route->name);
+                $issues[] = ['code' => 'route_no_students', 'route' => $route->name];
             }
         }
 

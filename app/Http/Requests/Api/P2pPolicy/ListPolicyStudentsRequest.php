@@ -14,6 +14,7 @@ class ListPolicyStudentsRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
+            'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'p2p_policy_term_id' => ['nullable', 'integer'],
             'policy_route_id' => ['nullable', 'integer'],

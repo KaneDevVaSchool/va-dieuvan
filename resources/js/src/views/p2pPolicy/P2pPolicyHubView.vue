@@ -144,14 +144,14 @@
                 <CalendarIcon class="h-3.5 w-3.5 text-sky-500" aria-hidden="true" />
                 {{ t('p2p_policy_page.field_operating_from') }}
               </dt>
-              <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{{ selectedTerm.operating_from ?? '—' }}</dd>
+              <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{{ formatOperatingDate(selectedTerm.operating_from) }}</dd>
             </div>
             <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
               <dt class="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                 <CalendarIcon class="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
                 {{ t('p2p_policy_page.field_operating_to') }}
               </dt>
-              <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{{ selectedTerm.operating_to ?? '—' }}</dd>
+              <dd class="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{{ formatOperatingDate(selectedTerm.operating_to) }}</dd>
             </div>
             <div class="rounded-lg bg-amber-50/80 p-3 dark:bg-amber-950/20 sm:col-span-2">
               <dt class="flex items-center gap-1.5 text-xs font-medium text-amber-800/80 dark:text-amber-200/80">
@@ -208,7 +208,7 @@
             class="flex gap-3 rounded-lg border border-amber-200/80 bg-white/70 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-800/50 dark:bg-slate-900/50 dark:text-amber-100"
           >
             <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" aria-hidden="true" />
-            <span>{{ issue }}</span>
+            <span>{{ readinessIssueText(issue) }}</span>
           </li>
         </ul>
 
@@ -315,8 +315,9 @@ import {
   listP2pPolicyTerms,
 } from '../../api/p2pPolicy'
 import { p2pStepTo } from '../../composables/useP2pPolicyWorkflow'
+import { formatIsoDate } from '../../util/datetime'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -409,10 +410,24 @@ const activateSummary = computed(() => {
   const ay = term.academic_term?.academic_year ?? ''
   return t('p2p_policy_page.activate_modal_body', {
     year: ay,
-    from: term.operating_from,
-    to: term.operating_to,
+    from: formatOperatingDate(term.operating_from),
+    to: formatOperatingDate(term.operating_to),
   })
 })
+
+function formatOperatingDate(val) {
+  const loc = locale.value === 'en' ? 'en' : 'vi'
+  return formatIsoDate(val, loc)
+}
+
+function readinessIssueText(issue) {
+  if (typeof issue === 'string') return issue
+  const code = issue?.code
+  if (!code) return ''
+  const key = `p2p_policy_page.readiness_issue_${code}`
+  const translated = t(key, { route: issue.route ?? '' })
+  return translated === key ? code : translated
+}
 
 const readinessPanelClass = computed(() => {
   if (readiness.value?.ready) {

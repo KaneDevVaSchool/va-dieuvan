@@ -74,6 +74,21 @@ export async function updatePolicyStudent(id, payload) {
   return data.data
 }
 
+export async function deletePolicyStudent(id) {
+  const { data } = await http.delete(`/p2p-policy/students/${id}`)
+  return data.data
+}
+
+export async function bulkDeletePolicyStudents(payload) {
+  const { data } = await http.post('/p2p-policy/students/bulk-delete', payload)
+  return data.data
+}
+
+export async function bulkAssignPolicyStudents(payload) {
+  const { data } = await http.post('/p2p-policy/students/bulk-assign', payload)
+  return data.data
+}
+
 export async function listCampuses(params = {}) {
   const { data } = await http.get('/campuses', { params })
   return data.data
