@@ -823,7 +823,7 @@
         "filter_extracurricular_only": "Chỉ ngoại khóa (gồm định kỳ)",
         "extracurricular_table": {
             "banner_title": "Danh sách hoạt động ngoại khóa",
-            "banner_lead": "Cập nhật số học sinh trực tiếp trên bảng (phiếu định kỳ, trước 24h khởi hành). Có thể đặt lại phiếu tương tự khi đã duyệt hoặc bị từ chối.",
+            "banner_lead": "«Cập nhật số HS» chỉ áp dụng cho phiếu/chuyến đang chọn. «Đặt lại phiếu tương tự» là tạo phiếu mới từ mẫu (khác với lọc Định kỳ trên thanh công cụ).",
             "col_request": "Phiếu",
             "col_route": "Tuyến",
             "col_depart": "Khởi hành",
@@ -837,7 +837,12 @@
             "not_recurring": "Phiếu một lần — chỉ xem số HS kế hoạch.",
             "locked": "Đã khóa chỉnh sửa số học sinh.",
             "status_locked": "Chỉ chỉnh khi phiếu đang chờ duyệt.",
-            "depart_soon": "Khóa chỉnh sửa trước 24 giờ khởi hành."
+            "depart_soon": "Khóa chỉnh sửa trước 24 giờ khởi hành.",
+            "update_count": "Cập nhật số HS",
+            "update_count_busy": "Đang lưu…",
+            "clone_similar": "Đặt lại phiếu tương tự",
+            "clone_similar_busy": "Đang tạo…",
+            "clone_similar_disabled_hint": "Chỉ dùng khi phiếu đã duyệt hoặc bị từ chối (tạo phiếu mới từ mẫu cũ)."
         },
         "filter_date_from": "Từ ngày",
         "filter_date_to": "Đến ngày",
@@ -2044,7 +2049,7 @@
         "extracurricular_filter_chip": "Ngoại khóa",
         "extracurricular_table": {
             "banner_title": "Danh sách hoạt động ngoại khóa",
-            "banner_lead": "Cập nhật số học sinh trực tiếp; đặt lại phiếu tương tự khi đã duyệt hoặc từ chối.",
+            "banner_lead": "Cập nhật số HS = phiếu đang chọn. Đặt lại phiếu tương tự = phiếu mới từ mẫu (khác nút lọc Định kỳ).",
             "col_request": "Phiếu",
             "col_route": "Tuyến",
             "col_depart": "Khởi hành",
@@ -2058,7 +2063,12 @@
             "not_recurring": "Phiếu một lần — chỉ xem số HS kế hoạch.",
             "locked": "Đã khóa chỉnh sửa số học sinh.",
             "status_locked": "Chỉ chỉnh khi phiếu đang chờ duyệt.",
-            "depart_soon": "Khóa chỉnh sửa trước 24 giờ khởi hành."
+            "depart_soon": "Khóa chỉnh sửa trước 24 giờ khởi hành.",
+            "update_count": "Cập nhật số HS",
+            "update_count_busy": "Đang lưu…",
+            "clone_similar": "Đặt lại phiếu tương tự",
+            "clone_similar_busy": "Đang tạo…",
+            "clone_similar_disabled_hint": "Chỉ dùng khi phiếu đã duyệt hoặc bị từ chối."
         },
         "badge_recurring": "Định kỳ",
         "apply_filters": "Áp dụng",

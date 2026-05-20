@@ -57,6 +57,8 @@
                 :error="errors[req.id]"
                 :can-edit="row.canEditStudentCount(req)"
                 :lock-hint="lockHintFor(req)"
+                :save-label-key="`${i18nPrefix}.update_count`"
+                :save-busy-label-key="`${i18nPrefix}.update_count_busy`"
                 @update:draft="setDraft(req.id, $event)"
                 @save="saveRow(req)"
               />
@@ -65,8 +67,12 @@
               <ExtracurricularRowActions
                 :req="req"
                 :variant="variant"
+                :show-clone="row.canShowCloneSimilar(req)"
                 :can-clone="row.canCloneReset(req)"
                 :clone-busy="cloneBusyId === req.id"
+                :clone-label="t(`${i18nPrefix}.clone_similar`)"
+                :clone-busy-label="t(`${i18nPrefix}.clone_similar_busy`)"
+                :clone-disabled-hint="t(`${i18nPrefix}.clone_similar_disabled_hint`)"
                 @clone="$emit('clone', req)"
                 @open-detail="openDetail(req)"
               />
@@ -109,6 +115,8 @@
             :error="errors[req.id]"
             :can-edit="row.canEditStudentCount(req)"
             :lock-hint="lockHintFor(req)"
+            :save-label-key="`${i18nPrefix}.update_count`"
+            :save-busy-label-key="`${i18nPrefix}.update_count_busy`"
             mobile
             @update:draft="setDraft(req.id, $event)"
             @save="saveRow(req)"
@@ -116,8 +124,12 @@
           <ExtracurricularRowActions
             :req="req"
             :variant="variant"
+            :show-clone="row.canShowCloneSimilar(req)"
             :can-clone="row.canCloneReset(req)"
             :clone-busy="cloneBusyId === req.id"
+            :clone-label="t(`${i18nPrefix}.clone_similar`)"
+            :clone-busy-label="t(`${i18nPrefix}.clone_similar_busy`)"
+            :clone-disabled-hint="t(`${i18nPrefix}.clone_similar_disabled_hint`)"
             block
             @clone="$emit('clone', req)"
             @open-detail="openDetail(req)"

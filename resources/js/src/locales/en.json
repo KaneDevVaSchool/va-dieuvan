@@ -780,7 +780,7 @@
         "filter_extracurricular_only": "Extracurricular only (incl. recurring)",
         "extracurricular_table": {
             "banner_title": "Extracurricular activity list",
-            "banner_lead": "Update student counts inline (recurring trips, more than 24h before departure). Clone a similar request when approved or rejected.",
+            "banner_lead": "Update count applies to the selected trip only. Clone similar creates a new request from a template (not the Recurring filter on the toolbar).",
             "col_request": "Request",
             "col_route": "Route",
             "col_depart": "Departure",
@@ -794,7 +794,12 @@
             "not_recurring": "One-off trip — planned count only.",
             "locked": "Student count is locked.",
             "status_locked": "Editable only while pending approval.",
-            "depart_soon": "Locked within 24 hours of departure."
+            "depart_soon": "Locked within 24 hours of departure.",
+            "update_count": "Update count",
+            "update_count_busy": "Saving…",
+            "clone_similar": "Clone similar request",
+            "clone_similar_busy": "Creating…",
+            "clone_similar_disabled_hint": "Only when the request is approved or rejected (creates a new draft from this one)."
         },
         "filter_date_from": "From",
         "filter_date_to": "To"
@@ -2216,7 +2221,7 @@
         "extracurricular_filter_chip": "Extracurricular",
         "extracurricular_table": {
             "banner_title": "Extracurricular activity list",
-            "banner_lead": "Update student counts inline; clone a similar request when approved or rejected.",
+            "banner_lead": "Update count = this request. Clone similar = new draft (not the Recurring toolbar filter).",
             "col_request": "Request",
             "col_route": "Route",
             "col_depart": "Departure",
@@ -2230,7 +2235,12 @@
             "not_recurring": "One-off trip — planned count only.",
             "locked": "Student count is locked.",
             "status_locked": "Editable only while pending approval.",
-            "depart_soon": "Locked within 24 hours of departure."
+            "depart_soon": "Locked within 24 hours of departure.",
+            "update_count": "Update count",
+            "update_count_busy": "Saving…",
+            "clone_similar": "Clone similar request",
+            "clone_similar_busy": "Creating…",
+            "clone_similar_disabled_hint": "Only when approved or rejected."
         },
         "badge_recurring": "Recurring",
         "apply_filters": "Apply",

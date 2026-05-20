@@ -1,18 +1,25 @@
 <template>
   <div :class="block ? 'flex flex-col gap-2' : 'flex flex-col items-end gap-1.5 sm:flex-row sm:justify-end'">
     <button
-      v-if="canClone"
+      v-if="showClone"
       type="button"
-      class="inline-flex min-h-[36px] items-center justify-center gap-1 rounded-xl border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100 disabled:opacity-50"
-      :disabled="cloneBusy"
-      @click="$emit('clone')"
+      class="inline-flex min-h-[36px] items-center justify-center gap-1 rounded-xl border px-3 py-1.5 text-xs font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-55"
+      :class="
+        canClone
+          ? 'border-violet-300 bg-violet-50 text-violet-950 hover:bg-violet-100'
+          : 'border-slate-200 bg-slate-50 text-slate-500'
+      "
+      :disabled="!canClone || cloneBusy"
+      :title="!canClone ? cloneDisabledHint : undefined"
+      @click="canClone && $emit('clone')"
     >
+      <DocumentDuplicateIcon v-if="!cloneBusy" class="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
       <span
-        v-if="cloneBusy"
-        class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal-600/30 border-t-teal-700"
+        v-else
+        class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-violet-600/30 border-t-violet-700"
         aria-hidden="true"
       />
-      {{ cloneBusy ? t('request_detail.reset_clone_busy') : t('request_detail.reset_clone') }}
+      {{ cloneBusy ? cloneBusyLabel : cloneLabel }}
     </button>
     <button
       type="button"
@@ -26,12 +33,17 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n'
+import { DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 
 defineProps({
   req: { type: Object, required: true },
   variant: { type: String, default: 'portal' },
+  showClone: { type: Boolean, default: true },
   canClone: { type: Boolean, default: false },
   cloneBusy: { type: Boolean, default: false },
+  cloneLabel: { type: String, required: true },
+  cloneBusyLabel: { type: String, required: true },
+  cloneDisabledHint: { type: String, required: true },
   block: { type: Boolean, default: false },
 })
 

@@ -24,7 +24,7 @@
           class="mr-1.5 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
           aria-hidden="true"
         />
-        {{ saving ? t('request_detail.passenger_save_busy') : t('request_detail.passenger_save') }}
+        {{ saving ? saveBusyText : saveText }}
       </button>
     </div>
     <div v-else>
@@ -49,11 +49,20 @@ const props = defineProps({
   canEdit: { type: Boolean, default: false },
   lockHint: { type: String, default: '' },
   mobile: { type: Boolean, default: false },
+  saveLabelKey: { type: String, default: '' },
+  saveBusyLabelKey: { type: String, default: '' },
 })
 
 defineEmits(['update:draft', 'save'])
 
 const { t } = useI18n()
+
+const saveText = computed(() =>
+  props.saveLabelKey ? t(props.saveLabelKey) : t('request_detail.passenger_save'),
+)
+const saveBusyText = computed(() =>
+  props.saveBusyLabelKey ? t(props.saveBusyLabelKey) : t('request_detail.passenger_save_busy'),
+)
 
 const inputId = computed(() => `extracurricular-sc-${props.req?.id}`)
 

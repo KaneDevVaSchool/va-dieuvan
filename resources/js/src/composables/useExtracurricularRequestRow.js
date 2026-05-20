@@ -60,8 +60,13 @@ export function useExtracurricularRequestRow(auth, userRef) {
   }
 
   function canCloneReset(req) {
+    if (!canShowCloneSimilar(req)) return false
+    return ['approved', 'rejected'].includes(String(req?.status || ''))
+  }
+
+  /** Hiển thị nút «Đặt lại phiếu tương tự» (có thể disabled nếu trạng thái chưa đủ). */
+  function canShowCloneSimilar(req) {
     if (!auth.hasPermission('request.create')) return false
-    if (!['approved', 'rejected'].includes(String(req?.status || ''))) return false
     if (auth.hasPermission('trip.view_all')) return true
     return isRequester(req)
   }
@@ -90,6 +95,7 @@ export function useExtracurricularRequestRow(auth, userRef) {
     passengerDepartLocked,
     canEditStudentCount,
     canCloneReset,
+    canShowCloneSimilar,
     lockHintKey,
   }
 }
