@@ -629,6 +629,21 @@
             "blocker_route": "Enter pickup and drop-off",
             "blocker_schedule": "Complete trip route details before submitting"
         },
+        "recurring_plan": {
+            "step_info": "Plan details",
+            "mode_aria": "Recurrence mode",
+            "mode_daily": "By date range",
+            "mode_weekly": "By week / weekday",
+            "mode_daily_hint": "Every calendar day from start through end date (same depart/return times).",
+            "preset_weekdays": "Mon–Fri",
+            "preset_all": "All week",
+            "preview_count": "Will create {n} trips",
+            "preview_empty": "No trips yet — check start/end dates and weekdays (weekly mode).",
+            "preview_more": "… and {n} more days",
+            "blocker_no_occurrences": "No matching dates — adjust the range or weekdays",
+            "blocker_guests": "Enter planned student count (at least 1)",
+            "blocker_file_too_large": "Basis file must be 10 MB or less"
+        },
         "home_sidebar_title": "Account",
         "sidebar_hint": "View submitted requests",
         "home_heading": "My requests",

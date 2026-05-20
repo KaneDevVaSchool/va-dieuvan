@@ -4,5 +4,5 @@ import PortalCreateView from './PortalCreateView.vue'
 </script>
 
 <template>
-  <PortalCreateView mode="general" />
+  <PortalCreateView />
 </template>

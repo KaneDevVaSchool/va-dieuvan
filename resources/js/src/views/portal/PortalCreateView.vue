@@ -10,16 +10,10 @@
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">
-          {{
-            isExtracurricularCreate ? t('portal.extracurricular_module.badge') : t('portal.nav_title')
-          }}
+          {{ t('portal.nav_title') }}
         </p>
         <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
-          {{
-            isExtracurricularCreate
-              ? t('portal.extracurricular_module.create_heading')
-              : t('portal.create.page_title')
-          }}
+          {{ t('portal.create.page_title') }}
         </h1>
         <p v-if="dispatchFormSettingsError && !dispatchFormSettingsLoading" class="mt-1 text-xs text-amber-700">
           {{ dispatchFormSettingsError }}
@@ -135,22 +129,15 @@
           </button>
         </div>
         <p v-if="draftSaveError" class="text-xs font-medium text-rose-600 sm:text-right">{{ draftSaveError }}</p>
-        <ul
-          v-if="isExtracurricularCreate && portalClbStepBlockers.length && headerPrimaryDisabled"
-          class="mt-2 max-w-md list-inside list-disc text-right text-xs font-medium text-amber-800 sm:ml-auto"
-          role="status"
-        >
-          <li v-for="(msg, i) in portalClbStepBlockers" :key="i">{{ msg }}</li>
-        </ul>
       </div>
     </header>
 
     <PortalStepper
       :steps="stepperSteps"
-      :current="stepperCurrent"
+      :current="step"
       :steps-nav-label="t('portal.steps_nav')"
       interactive
-      :max-reached-step="stepperMaxReached"
+      :max-reached-step="maxReachedStep"
       @select="goStepFromStepper"
     />
 
@@ -158,7 +145,7 @@
       <!-- Main card -->
       <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
         <!-- Step 1 -->
-        <div v-show="step === 0 && !isExtracurricularCreate">
+        <div v-show="step === 0">
           <PortalTripTypeGrid
             :trip-types="TRIP_TYPES"
             :trip-type="form.trip_type"
@@ -180,68 +167,8 @@
             <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
           </div>
 
-          <section v-if="isExtracurricularCreate" class="dw-fieldset">
-            <h3 class="dw-section-title">{{ t('portal.extracurricular_create.sec_schedule') }}</h3>
-            <RecurringConfigSection
-              fixed-enabled
-              :trip-type="form.trip_type"
-              :point-purpose-kind="form.point_purpose_kind"
-              :replace-draft-request-id="replaceDraftRequestId"
-              v-model:recurring-enabled="form.recurring_enabled"
-              v-model:start-date="form.recurrence_start_date"
-              v-model:depart-time="form.recurrence_depart_time"
-              v-model:return-time="form.recurrence_return_time"
-              v-model:recurrence-end-date="form.recurrence_end_date"
-              v-model:recurrence-end-mode="form.recurrence_end_mode"
-              v-model:repeat-count="form.recurrence_repeat_count"
-              :weekday-options="e1WeekdayOptions"
-              :weekdays="form.e1_weekdays"
-              end-mode-radio-name="portal_recurrence_end_mode"
-              @toggle-weekday="toggleE1Weekday"
-            />
-          </section>
-
-          <section v-if="isExtracurricularCreate" class="dw-fieldset space-y-4">
-            <h3 class="dw-section-title">{{ t('portal.extracurricular_create.sec_route') }}</h3>
-            <p class="text-sm text-slate-600">{{ t('portal.extracurricular_create.route_lead') }}</p>
-            <div class="grid gap-4 sm:grid-cols-2">
-              <label class="block sm:col-span-2">
-                <span class="dw-label-text">{{ t('dispatch_wizard.s3.place') }} ({{ t('dispatch_wizard.s3.trip_out') }}) <span class="dw-req" aria-hidden="true">*</span></span>
-                <input
-                  v-model="passengerRows[0].pickup"
-                  type="text"
-                  class="dw-input mt-1"
-                  :placeholder="t('dispatch_wizard.s3.pickup_ph')"
-                />
-              </label>
-              <label class="block sm:col-span-2">
-                <span class="dw-label-text">{{ t('dispatch_wizard.s3.place') }} ({{ t('dispatch_wizard.s3.trip_back') }}) <span class="dw-req" aria-hidden="true">*</span></span>
-                <input
-                  v-model="passengerRows[0].dropoff"
-                  type="text"
-                  class="dw-input mt-1"
-                  :placeholder="t('dispatch_wizard.s3.dropoff_ph')"
-                />
-              </label>
-              <label class="block">
-                <span class="dw-label-text">{{ t('dispatch_wizard.s3.guests') }} <span class="dw-req" aria-hidden="true">*</span></span>
-                <input
-                  v-model="passengerRows[0].guests"
-                  type="number"
-                  min="1"
-                  inputmode="numeric"
-                  class="dw-input mt-1"
-                  :placeholder="t('dispatch_wizard.s3.guests_ph')"
-                />
-              </label>
-            </div>
-          </section>
-
-          <!-- Người đề nghị (+ Thời gian chỉ phiếu lẻ trên portal chung) -->
-          <div
-            class="grid gap-5 lg:items-start lg:gap-6"
-            :class="isExtracurricularCreate ? '' : 'lg:grid-cols-2'"
-          >
+          <!-- Người đề nghị (+ Thời gian) -->
+          <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
             <!-- Người đề nghị -->
             <div class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
@@ -343,8 +270,7 @@
               </label>
             </div>
 
-            <!-- Thời gian (module CLB định kỳ: dùng lịch lặp, không nhập ngày đề xuất) -->
-            <div v-if="!isExtracurricularCreate" class="dw-fieldset space-y-4">
+            <div class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
 
               <!-- Ngày đề xuất + Ngày giờ cần xe -->
@@ -440,7 +366,7 @@
           <div class="dw-fieldset">
             <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
             <div
-              v-if="form.trip_type === 'point_to_point' && !isExtracurricularCreate"
+              v-if="form.trip_type === 'point_to_point'"
               class="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3"
               role="radiogroup"
               :aria-label="t('dispatch_wizard.create.purpose_tab_aria')"
@@ -664,7 +590,7 @@
         </div>
 
         <!-- Step 3 — lazy chunk + chỉ mount khi step === 2 -->
-        <DispatchWizardStep3 v-if="step === 2 && !isExtracurricularCreate" />
+        <DispatchWizardStep3 v-if="step === 2" />
 
         <!-- Step 4 -->
         <ConfirmSummary v-if="step === 3" />
@@ -677,7 +603,7 @@
           <button
             type="button"
             class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
-            :disabled="step === 0 || (isExtracurricularCreate && step === 1)"
+            :disabled="step === 0"
             @click="prevStep"
           >
             {{ t('dispatch_wizard.create.back') }}
@@ -1199,31 +1125,15 @@ import {
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from '../requests/dispatch-wizard/injectionKeys'
 import ConfirmSummary from '../requests/dispatch-wizard/ConfirmSummary.vue'
-import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
 import PortalStepper from '../../components/portal/PortalStepper.vue'
 import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
-import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
-
-const props = defineProps({
-  /** `general` = yêu cầu mới portal; `extracurricular` = CLB định kỳ (route riêng). */
-  mode: {
-    type: String,
-    default: 'general',
-    validator: (v) => v === 'general' || v === 'extracurricular',
-  },
-})
 
 const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const isExtracurricularCreate = computed(() => props.mode === 'extracurricular')
-const { routes: portalRoutes } = usePortalExtracurricularModule()
-const wizard = useDispatchRequestWizard({
-  isPortal: true,
-  portalExtracurricularCreate: props.mode === 'extracurricular',
-})
+const wizard = useDispatchRequestWizard({ isPortal: true })
 provide(DISPATCH_WIZARD_KEY, wizard)
 
 const DispatchWizardStep3 = defineAsyncComponent(() =>
@@ -1234,8 +1144,6 @@ const {
   steps,
   step,
   maxReachedStep,
-  stepperCurrent,
-  stepperMaxReached,
   passengerRows,
   loading,
   error,
@@ -1269,9 +1177,6 @@ const {
   lastAutoSavedAt,
   step2CoordinatorEmailInvalid,
   requestedDateTime,
-  e1WeekdayOptions,
-  toggleE1Weekday,
-  computedDepartAt,
   openDatePickerFromInput,
   onRequesterPhoneInput,
   onCoordinatorPhoneInput,
@@ -1304,7 +1209,6 @@ const {
   nextStep,
   headerPrimaryLabel,
   headerPrimaryDisabled,
-  portalClbStepBlockers,
   primaryAction,
   saveDraft,
   openClearDraftModal,
@@ -1377,27 +1281,7 @@ function onPortalTripTypeClick(value) {
   form.value.trip_type = value
 }
 
-function applyExtracurricularCreateDefaults() {
-  if (!isExtracurricularCreate.value) return
-  form.value.trip_type = 'point_to_point'
-  form.value.point_purpose_kind = 'extracurricular'
-  form.value.recurring_enabled = true
-  if (step.value === 0) enterStep(1)
-}
-
-function applyGeneralPortalCreateDefaults() {
-  if (isExtracurricularCreate.value) return
-  if (form.value.point_purpose_kind === 'extracurricular') {
-    form.value.point_purpose_kind = 'point_to_point'
-  }
-  form.value.recurring_enabled = false
-}
-
 function applyShortcutTripType() {
-  if (isExtracurricularCreate.value) {
-    applyExtracurricularCreateDefaults()
-    return
-  }
   const raw = String(route.query.type ?? '').trim().toLowerCase()
   if (!TRIP_TYPES.includes(raw)) return
   form.value.trip_type = raw
@@ -1406,14 +1290,10 @@ function applyShortcutTripType() {
 
 function handlePortalCancel() {
   if (created.value) {
-    router.push({
-      name: isExtracurricularCreate.value ? portalRoutes.value.home : 'portalHome',
-    })
+    router.push({ name: 'portalHome' })
     return
   }
-  router.push({
-    name: isExtracurricularCreate.value ? portalRoutes.value.list : 'portalRequestList',
-  })
+  router.push({ name: 'portalRequestList' })
 }
 
 // --- Template save modal local state ---
@@ -1452,14 +1332,12 @@ const TRIP_TYPE_LABELS = {
 }
 
 watch(() => route.query.type, applyShortcutTripType)
-watch(isExtracurricularCreate, () => {
-  applyExtracurricularCreateDefaults()
-  applyGeneralPortalCreateDefaults()
-})
 onMounted(() => {
   applyShortcutTripType()
-  applyExtracurricularCreateDefaults()
-  applyGeneralPortalCreateDefaults()
+  if (form.value.point_purpose_kind === 'extracurricular') {
+    form.value.point_purpose_kind = 'point_to_point'
+  }
+  form.value.recurring_enabled = false
 })
 </script>
 

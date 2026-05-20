@@ -672,6 +672,21 @@
             "blocker_route": "Nhập điểm đón và điểm trả",
             "blocker_schedule": "Hoàn thiện thông tin chuyến (đón/trả) trước khi gửi"
         },
+        "recurring_plan": {
+            "step_info": "Thông tin kế hoạch",
+            "mode_aria": "Kiểu lặp lịch",
+            "mode_daily": "Theo khoảng ngày",
+            "mode_weekly": "Theo tuần / thứ",
+            "mode_daily_hint": "Mỗi ngày lịch từ ngày bắt đầu đến ngày kết thúc (cùng giờ đi / về).",
+            "preset_weekdays": "T2–T6",
+            "preset_all": "Cả tuần",
+            "preview_count": "Sẽ tạo {n} chuyến",
+            "preview_empty": "Chưa có chuyến — kiểm tra ngày bắt đầu, kết thúc và thứ (nếu lặp theo tuần).",
+            "preview_more": "… và {n} ngày nữa",
+            "blocker_no_occurrences": "Không có ngày nào khớp lịch — chỉnh khoảng ngày hoặc thứ trong tuần",
+            "blocker_guests": "Nhập số học sinh kế hoạch (ít nhất 1)",
+            "blocker_file_too_large": "File căn cứ tối đa 10 MB"
+        },
         "home_sidebar_title": "Tài khoản",
         "sidebar_hint": "Xem các yêu cầu bạn đã gửi",
         "home_heading": "Yêu cầu của tôi",

@@ -56,57 +56,32 @@ import {
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
 /**
- * @param {{ isPortal?: boolean, portalExtracurricularCreate?: boolean }} [options]
+ * @param {{ isPortal?: boolean }} [options]
  */
 export function useDispatchRequestWizard(options = {}) {
-  const { isPortal = false, portalExtracurricularCreate = false } = options
+  const { isPortal = false } = options
   const router = useRouter()
   const route = useRoute()
   const auth = useAuthStore()
   const { t, locale } = useI18n()
 
-  const steps = computed(() => {
-    const all = [
-      { id: 'type', title: t('dispatch_wizard.steps.type') },
-      { id: 'info', title: t('dispatch_wizard.steps.info') },
-      { id: 'detail', title: t('dispatch_wizard.steps.detail') },
-      { id: 'confirm', title: t('dispatch_wizard.steps.confirm') },
-    ]
-    if (portalExtracurricularCreate) {
-      return all.filter((s) => s.id !== 'type' && s.id !== 'detail')
-    }
-    return all
-  })
-
-  const stepperCurrent = computed(() => {
-    if (!portalExtracurricularCreate) return step.value
-    if (step.value >= 3) return 1
-    return 0
-  })
-
-  const stepperMaxReached = computed(() => {
-    if (!portalExtracurricularCreate) return maxReachedStep.value
-    if (maxReachedStep.value >= 3) return 1
-    return 0
-  })
+  const steps = computed(() => [
+    { id: 'type', title: t('dispatch_wizard.steps.type') },
+    { id: 'info', title: t('dispatch_wizard.steps.info') },
+    { id: 'detail', title: t('dispatch_wizard.steps.detail') },
+    { id: 'confirm', title: t('dispatch_wizard.steps.confirm') },
+  ])
   const targetOptions = TARGET_OPTIONS
   const e1WeekdayOptions = computed(() =>
     E1_WEEKDAY_KEYS.map((k) => ({ k, label: t(`dispatch_wizard.weekday.${k}`) })),
   )
 
   function draftKeyForUser(userId) {
-    const base = userId != null ? `${LEGACY_DRAFT_KEY}-u${userId}` : LEGACY_DRAFT_KEY
-    if (isPortal && portalExtracurricularCreate) {
-      return `${base}-extracurricular`
-    }
-    return base
+    return userId != null ? `${LEGACY_DRAFT_KEY}-u${userId}` : LEGACY_DRAFT_KEY
   }
 
-  /** Con trỏ nháp đang mở — tách CLB khỏi yêu cầu portal chung. */
   function activeDraftPointerKey(uid) {
-    const base = draftActiveStorageKey(uid)
-    if (isPortal && portalExtracurricularCreate) return `${base}-extracurricular`
-    return base
+    return draftActiveStorageKey(uid)
   }
 
   function currentDraftStorageKey() {
@@ -213,7 +188,6 @@ export function useDispatchRequestWizard(options = {}) {
     })
     requesterEmailTouched.value = false
     coordinatorEmailTouched.value = false
-    applyPortalExtracurricularCreateDefaults()
   }
 
   const step = ref(0)
@@ -752,15 +726,10 @@ export function useDispatchRequestWizard(options = {}) {
 
   const formattedRequestedDateTime = computed(() => formatDatetimeLocalAmPm(requestedDateTime.value))
 
-  const isPortalExtracurricularRecurring = computed(
-    () => isPortal && portalExtracurricularCreate,
-  )
-
   const wantsRecurringTemplate = computed(() => {
     if (replaceDraftRequestId.value) return false
     if (form.value.trip_type !== 'point_to_point') return false
     if (form.value.point_purpose_kind !== 'extracurricular') return false
-    if (isPortalExtracurricularRecurring.value) return true
     return !!form.value.recurring_enabled
   })
 
@@ -1074,20 +1043,7 @@ export function useDispatchRequestWizard(options = {}) {
         !!form.value.purpose?.trim() &&
         (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
       if (wantsRecurringTemplate.value) {
-        const scheduleOk = base && recurringStep1Complete()
-        if (portalExtracurricularCreate) {
-          return (
-            scheduleOk &&
-            recurringStep2Complete() &&
-            !!computedDepartAt.value?.trim() &&
-            passengerRows.value.every(
-              (r) =>
-                !isPassengerRouteFilled(r) ||
-                Object.keys(scheduleRowErrors(r, 'passenger')).length === 0,
-            )
-          )
-        }
-        return scheduleOk
+        return base && recurringStep1Complete()
       }
       return (
         base &&
@@ -1121,64 +1077,28 @@ export function useDispatchRequestWizard(options = {}) {
   })
 
   function goStep(i) {
-    let target = Number(i)
-    if (portalExtracurricularCreate && target === 2) target = 1
+    const target = Number(i)
     if (target <= maxReachedStep.value) step.value = target
   }
 
   function goStepFromStepper(stepperIndex) {
-    if (!portalExtracurricularCreate) {
-      goStep(stepperIndex)
-      return
-    }
-    enterStep(stepperIndex === 0 ? 1 : 3)
+    goStep(stepperIndex)
   }
 
   function prevStep() {
-    if (portalExtracurricularCreate) {
-      if (step.value === 3) step.value = 1
-      else if (step.value > 0) step.value--
-      return
-    }
     if (step.value > 0) step.value--
   }
 
-  /** Nhảy tới bước (vd. CLB bỏ qua chọn loại); cập nhật maxReachedStep để goStep(1) không bị chặn. */
   function enterStep(i) {
     const target = Math.max(0, Math.min(3, Number(i)))
     if (target > maxReachedStep.value) maxReachedStep.value = target
     step.value = target
   }
 
-  /** Giữ phiếu CLB đúng loại sau khi hydrate nháp / template (tránh canGoNext bắt ngày đề xuất). */
-  function applyPortalExtracurricularCreateDefaults() {
-    if (!portalExtracurricularCreate) return
-    form.value.trip_type = 'point_to_point'
-    form.value.point_purpose_kind = 'extracurricular'
-    form.value.recurring_enabled = true
-    if (step.value === 0) enterStep(1)
-    if (step.value === 2) step.value = 1
-  }
-
   function nextStep() {
     if (!canGoNext.value) return
-    if (portalExtracurricularCreate && step.value === 1) {
-      step.value = 3
-      return
-    }
     if (step.value < 3) step.value++
   }
-
-  watchEffect(() => {
-    if (
-      portalExtracurricularCreate &&
-      step.value === 0 &&
-      form.value.trip_type === 'point_to_point' &&
-      form.value.point_purpose_kind === 'extracurricular'
-    ) {
-      enterStep(1)
-    }
-  })
 
   function addPassengerRow() {
     passengerRows.value.push(emptyPassengerRow())
@@ -1297,44 +1217,6 @@ export function useDispatchRequestWizard(options = {}) {
     if (loading.value) return true
     if (step.value < 3) return !canGoNext.value
     return !canSubmitApi.value || !schedulesPassForSubmit.value
-  })
-
-  const portalClbStepBlockers = computed(() => {
-    if (!portalExtracurricularCreate || !wantsRecurringTemplate.value || loading.value) return []
-    const blockers = []
-    const f = form.value
-    if (step.value === 1) {
-      if (!f.requester_name?.trim()) blockers.push(t('portal.extracurricular_create.blocker_requester_name'))
-      if (!f.requester_email?.trim() || requesterEmailFormatInvalid.value) {
-        blockers.push(t('portal.extracurricular_create.blocker_requester_email'))
-      }
-      if (!f.purpose?.trim()) blockers.push(t('portal.extracurricular_create.blocker_purpose'))
-      if (!String(f.recurrence_start_date || '').trim()) {
-        blockers.push(t('portal.extracurricular_create.blocker_start_date'))
-      }
-      if (!normalizeTimeHhMm(f.recurrence_depart_time)) {
-        blockers.push(t('portal.extracurricular_create.blocker_depart_time'))
-      }
-      if (!normalizeTimeHhMm(f.recurrence_return_time)) {
-        blockers.push(t('portal.extracurricular_create.blocker_return_time'))
-      }
-      const mode = f.recurrence_end_mode || 'date'
-      if (mode === 'date' && !String(f.recurrence_end_date || '').trim()) {
-        blockers.push(t('portal.extracurricular_create.blocker_end_date'))
-      }
-      if (mode === 'weeks') {
-        const n = Number(f.recurrence_repeat_count)
-        if (!Number.isFinite(n) || n < 1) blockers.push(t('portal.extracurricular_create.blocker_repeat_weeks'))
-      }
-      if (!recurringHasWeekday()) blockers.push(t('portal.extracurricular_create.blocker_weekdays'))
-      if (!passengerRows.value.some(isPassengerRouteFilled)) {
-        blockers.push(t('portal.extracurricular_create.blocker_route'))
-      }
-    }
-    if (step.value === 3 && headerPrimaryDisabled.value) {
-      if (!schedulesPassForSubmit.value) blockers.push(t('portal.extracurricular_create.blocker_schedule'))
-    }
-    return blockers
   })
 
   function computeApiOriginDestination() {
@@ -1746,22 +1628,6 @@ export function useDispatchRequestWizard(options = {}) {
           return
         }
       }
-      if (portalExtracurricularCreate) {
-        try {
-          const legacyRaw = localStorage.getItem(draftKeyForUser(uid))
-          if (legacyRaw) {
-            const data = JSON.parse(legacyRaw)
-            applyDraftPayload(data)
-            refreshDraftsList()
-            return
-          }
-        } catch {
-          /* ignore */
-        }
-        hasDraftSnapshot.value = false
-        refreshDraftsList()
-        return
-      }
       const { items } = readDraftList(uid)
       if (items.length) {
         const sorted = [...items].sort((a, b) => b.savedAt - a.savedAt)
@@ -1860,11 +1726,11 @@ export function useDispatchRequestWizard(options = {}) {
   }
 
   function portalDetailRouteName() {
-    return portalExtracurricularCreate ? 'portalExtracurricularDetail' : 'portalRequestDetail'
+    return 'portalRequestDetail'
   }
 
   function portalHomeRouteName() {
-    return portalExtracurricularCreate ? 'portalExtracurricularHome' : 'portalHome'
+    return 'portalHome'
   }
 
   function navigateToSubmittedRequestDetail() {
@@ -2015,7 +1881,6 @@ export function useDispatchRequestWizard(options = {}) {
     } else {
       loadDraftFromStorage()
     }
-    applyPortalExtracurricularCreateDefaults()
     if (auth.user) {
       if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
       if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
@@ -2062,10 +1927,6 @@ export function useDispatchRequestWizard(options = {}) {
   watch(
     step,
     (s) => {
-      if (portalExtracurricularCreate && s === 2) {
-        step.value = 1
-        return
-      }
       if (s > maxReachedStep.value) maxReachedStep.value = s
       if (s !== 2) detailStepSchedulesValid.value = true
     },
@@ -2105,8 +1966,6 @@ export function useDispatchRequestWizard(options = {}) {
     steps,
     step,
     maxReachedStep,
-    stepperCurrent,
-    stepperMaxReached,
     goStepFromStepper,
     prevStep,
     loading,
@@ -2206,9 +2065,7 @@ export function useDispatchRequestWizard(options = {}) {
     confirmSubmitAttempted,
     headerPrimaryLabel,
     headerPrimaryDisabled,
-    portalClbStepBlockers,
     wantsRecurringTemplate,
-    portalExtracurricularCreate,
     primaryAction,
     saveDraft,
     openClearDraftModal,

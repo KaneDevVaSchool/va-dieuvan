@@ -1,8 +1,8 @@
 <script setup>
-/** Portal — CLB / hoạt động ngoại khóa định kỳ (tách khỏi yêu cầu mới). */
-import PortalCreateView from './PortalCreateView.vue'
+/** Portal — CLB / hoạt động ngoại khóa định kỳ (module tách riêng). */
+import PortalRecurringPlanCreateView from './PortalRecurringPlanCreateView.vue'
 </script>
 
 <template>
-  <PortalCreateView mode="extracurricular" />
+  <PortalRecurringPlanCreateView />
 </template>
