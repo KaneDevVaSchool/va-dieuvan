@@ -63,6 +63,7 @@
             v-model:form="form"
             :weekday-options="e1WeekdayOptions"
             :preview-dates="occurrencePreview.dates"
+            :preview-hint="previewHint"
             :format-date="formatIsoDateDisplay"
             @toggle-weekday="toggleWeekday"
             @preset="setWeekdayPreset"
@@ -93,6 +94,36 @@
           </div>
         </div>
       </div>
+
+      <div
+        v-if="stepBlockers.length"
+        class="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+        role="status"
+      >
+        <p class="font-semibold">{{ t('portal.recurring_plan.blockers_title') }}</p>
+        <ul class="mt-2 list-inside list-disc space-y-0.5 text-xs font-medium">
+          <li v-for="(msg, i) in stepBlockers" :key="i">{{ msg }}</li>
+        </ul>
+      </div>
+
+      <div class="mt-8 flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-slate-600">
+          {{
+            formComplete
+              ? t('portal.recurring_plan.ready_to_create')
+              : t('portal.recurring_plan.complete_form_hint')
+          }}
+        </p>
+        <button
+          type="button"
+          class="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-va-800 px-6 text-sm font-bold text-white shadow-md hover:bg-va-900 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
+          :disabled="headerPrimaryDisabled"
+          @click="primaryAction"
+        >
+          <span v-if="loading" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          {{ loading ? t('dispatch_wizard.header.sending') : t('portal.recurring_plan.submit_create') }}
+        </button>
+      </div>
     </section>
   </div>
 </template>
@@ -114,6 +145,8 @@ const {
   draftSaveFlash,
   e1WeekdayOptions,
   occurrencePreview,
+  previewHint,
+  formComplete,
   stepBlockers,
   headerPrimaryDisabled,
   toggleWeekday,

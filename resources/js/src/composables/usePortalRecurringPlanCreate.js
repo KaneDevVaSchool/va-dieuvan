@@ -10,6 +10,21 @@ import { buildIsoWeekdaysFromE1, computeRecurringOccurrenceDates } from '../util
 
 const DRAFT_VERSION = 'portal-recurring-plan-v2'
 
+function addDaysYmd(ymd, days) {
+  const parts = String(ymd || '')
+    .trim()
+    .slice(0, 10)
+    .split('-')
+    .map(Number)
+  if (parts.length < 3 || !parts[0]) return ymd
+  const dt = new Date(parts[0], parts[1] - 1, parts[2])
+  dt.setDate(dt.getDate() + days)
+  const y = dt.getFullYear()
+  const m = String(dt.getMonth() + 1).padStart(2, '0')
+  const d = String(dt.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 function createEmptyWeekdays() {
   return Object.fromEntries(E1_WEEKDAY_KEYS.map((k) => [k, k !== 'sat' && k !== 'sun']))
 }
@@ -18,7 +33,7 @@ export function createPortalRecurringPlanForm() {
   const today = todayISODate()
   return {
     recurrence_start_date: today,
-    recurrence_end_date: '',
+    recurrence_end_date: addDaysYmd(today, 6),
     recurrence_depart_time: '07:00',
     recurrence_return_time: '17:00',
     e1_weekdays: createEmptyWeekdays(),
@@ -76,16 +91,47 @@ export function usePortalRecurringPlanCreate() {
 
   const firstOccurrenceDate = computed(() => occurrencePreview.value.dates[0] || '')
 
-  function formComplete() {
+  function scheduleDateRangeValid(f) {
+    const start = String(f.recurrence_start_date || '').trim()
+    const end = String(f.recurrence_end_date || '').trim()
+    if (!start || !end) return false
+    return end >= start
+  }
+
+  function scheduleComplete() {
     const f = form.value
     if (!String(f.recurrence_start_date || '').trim()) return false
     if (!String(f.recurrence_end_date || '').trim()) return false
+    if (!scheduleDateRangeValid(f)) return false
     if (!normalizeTimeHhMm(f.recurrence_depart_time)) return false
     if (!normalizeTimeHhMm(f.recurrence_return_time)) return false
     if (!buildIsoWeekdaysFromE1(f.e1_weekdays).length) return false
-    if (!f.pickup?.trim() || !f.dropoff?.trim()) return false
     return occurrencePreview.value.count >= 1
   }
+
+  const formComplete = computed(() => {
+    const f = form.value
+    if (!scheduleComplete()) return false
+    if (!f.pickup?.trim() || !f.dropoff?.trim()) return false
+    return true
+  })
+
+  const previewHint = computed(() => {
+    const f = form.value
+    if (!String(f.recurrence_end_date || '').trim()) {
+      return t('portal.extracurricular_create.blocker_end_date')
+    }
+    if (!scheduleDateRangeValid(f)) {
+      return t('portal.recurring_plan.blocker_end_before_start')
+    }
+    if (!buildIsoWeekdaysFromE1(f.e1_weekdays).length) {
+      return t('portal.extracurricular_create.blocker_weekdays')
+    }
+    if (occurrencePreview.value.count < 1) {
+      return t('portal.recurring_plan.blocker_no_occurrences')
+    }
+    return ''
+  })
 
   const stepBlockers = computed(() => {
     if (loading.value) return []
@@ -96,6 +142,8 @@ export function usePortalRecurringPlanCreate() {
     }
     if (!String(f.recurrence_end_date || '').trim()) {
       blockers.push(t('portal.extracurricular_create.blocker_end_date'))
+    } else if (!scheduleDateRangeValid(f)) {
+      blockers.push(t('portal.recurring_plan.blocker_end_before_start'))
     }
     if (!normalizeTimeHhMm(f.recurrence_depart_time)) {
       blockers.push(t('portal.extracurricular_create.blocker_depart_time'))
@@ -298,9 +346,27 @@ export function usePortalRecurringPlanCreate() {
     }
   }
 
-  onMounted(() => loadDraftFromStorage())
+  onMounted(() => {
+    loadDraftFromStorage()
+    ensureEndDateAfterStart()
+  })
 
   onUnmounted(() => clearTimeout(draftSaveFlashTimer))
+
+  function ensureEndDateAfterStart() {
+    const f = form.value
+    const start = String(f.recurrence_start_date || '').trim()
+    if (!start) return
+    const end = String(f.recurrence_end_date || '').trim()
+    if (!end || end < start) {
+      form.value.recurrence_end_date = addDaysYmd(start, 6)
+    }
+  }
+
+  watch(
+    () => form.value.recurrence_start_date,
+    () => ensureEndDateAfterStart(),
+  )
 
   let autosaveTimer = null
   watch(
@@ -320,6 +386,8 @@ export function usePortalRecurringPlanCreate() {
     draftSaveFlash,
     e1WeekdayOptions,
     occurrencePreview,
+    previewHint,
+    scheduleComplete,
     stepBlockers,
     headerPrimaryDisabled,
     toggleWeekday,

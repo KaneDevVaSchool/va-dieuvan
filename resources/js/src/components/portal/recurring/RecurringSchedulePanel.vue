@@ -71,7 +71,13 @@
       </div>
     </section>
 
-    <RecurringOccurrencePreview :dates="previewDates" :format-date="formatDate" />
+    <RecurringOccurrencePreview
+      :dates="previewDates"
+      :format-date="formatDate"
+      :depart-time="form.recurrence_depart_time"
+      :return-time="form.recurrence_return_time"
+      :hint="previewHint"
+    />
   </div>
 </template>
 
@@ -86,6 +92,7 @@ defineProps({
   weekdayOptions: { type: Array, default: () => [] },
   previewDates: { type: Array, default: () => [] },
   formatDate: { type: Function, required: true },
+  previewHint: { type: String, default: '' },
 })
 
 defineEmits(['toggle-weekday', 'preset'])
