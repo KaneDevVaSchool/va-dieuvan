@@ -1,4 +1,6 @@
 <template>
+  <!-- Overlay che form khi đang xử lý OAuth token (tránh flash nếu fetchMe chậm > 800ms) -->
+  <div v-if="bootstrapping" class="fixed inset-0 z-[9998] bg-[#78001e]" aria-hidden="true" />
   <div class="login-page">
     <div class="login-container">
       <div class="logo-container">

@@ -21,6 +21,7 @@ use App\Models\Role;
 use App\Models\Trip;
 use App\Models\User;
 use App\Notifications\DeptHeadApprovalRequestedNotification;
+use App\Notifications\DeptHeadDecisionNotification;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
@@ -500,6 +501,11 @@ class DispatchRequestController extends Controller
                     metadata: ['reason' => $dispatchRequest->rejection_reason],
                 );
 
+                $dispatchRequest->loadMissing('requester');
+                if ($requester = $dispatchRequest->requester) {
+                    $requester->notify(new DeptHeadDecisionNotification($dispatchRequest->id, 'reject'));
+                }
+
                 return $this->ok($dispatchRequest->fresh());
             }
 
@@ -528,6 +534,11 @@ class DispatchRequestController extends Controller
                 after: $dispatchRequest->toArray(),
                 metadata: ['trip_id' => $trip->id],
             );
+
+            $dispatchRequest->loadMissing('requester');
+            if ($requester = $dispatchRequest->requester) {
+                $requester->notify(new DeptHeadDecisionNotification($dispatchRequest->id, 'approve'));
+            }
 
             return $this->ok(['request' => $dispatchRequest->fresh(), 'trip' => $trip]);
         });

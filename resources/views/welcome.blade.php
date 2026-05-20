@@ -22,7 +22,7 @@
    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
-  <body class="min-h-full bg-[#020B0B] antialiased">
+  <body class="min-h-full antialiased" style="background:#8b1a1a">
     <div id="app" class="min-h-full bg-[#020B0B]"></div>
   </body>
 </html>

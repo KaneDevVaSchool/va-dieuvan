@@ -4,27 +4,118 @@ import { Workbox } from 'workbox-window'
 /** @type {(reloadPage?: boolean) => Promise<void>} */
 let updateSW = async () => {}
 
+let pwaUpdatePending = false
+
+const DESKTOP_AUTO_UPDATE_MQ = '(min-width: 1024px)'
+
+export function takePendingPwaUpdate() {
+  const v = pwaUpdatePending
+  pwaUpdatePending = false
+  return v
+}
+
+function isDesktopViewport() {
+  return typeof window !== 'undefined' && window.matchMedia(DESKTOP_AUTO_UPDATE_MQ).matches
+}
+
+function notifyPwaUpdateAvailable() {
+  pwaUpdatePending = true
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('pwa:update-available'))
+  }
+}
+
+async function tryAutoApplyOnDesktop() {
+  if (!isDesktopViewport()) return
+  try {
+    await applyServiceWorkerUpdate()
+  } catch {
+    window.location.reload()
+  }
+}
+
+function onServiceWorkerUpdateDetected() {
+  notifyPwaUpdateAvailable()
+  void tryAutoApplyOnDesktop()
+}
+
+/** @param {ServiceWorkerRegistration | undefined | null} reg */
+function inspectRegistrationForWaiting(reg) {
+  if (reg?.waiting) {
+    onServiceWorkerUpdateDetected()
+  }
+}
+
+async function pollServiceWorkerUpdate() {
+  if (!('serviceWorker' in navigator)) return
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/')
+    await reg?.update()
+    inspectRegistrationForWaiting(reg)
+  } catch {
+    /* ignore */
+  }
+}
+
+function attachRegistrationUpdateListener(reg) {
+  if (!reg) return
+  reg.addEventListener('updatefound', () => {
+    const installing = reg.installing
+    if (!installing) return
+    installing.addEventListener('statechange', () => {
+      if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+        inspectRegistrationForWaiting(reg)
+      }
+    })
+  })
+}
+
+function attachVisibilityUpdateHooks() {
+  if (typeof document === 'undefined') return
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      void pollServiceWorkerUpdate()
+    }
+  })
+
+  window.addEventListener('focus', () => {
+    void pollServiceWorkerUpdate()
+  })
+
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      void pollServiceWorkerUpdate()
+    }
+  })
+}
+
 /**
  * Đăng ký service worker (prod + dev khi bật devOptions.enabled).
  * Trả về hàm áp dụng bản cập nhật Workbox (gọi sau khi user xác nhận).
  */
 export function setupServiceWorker() {
+  attachVisibilityUpdateHooks()
+
   if (import.meta.env.DEV) {
     updateSW = registerSW({
       onNeedRefresh() {
-        window.dispatchEvent(new CustomEvent('pwa:update-available'))
+        onServiceWorkerUpdateDetected()
       },
       onOfflineReady() {
         console.info('[PWA] App ready for offline use')
       },
       onRegisteredSW(_swUrl, registration) {
+        inspectRegistrationForWaiting(registration)
+        attachRegistrationUpdateListener(registration)
         if (registration) {
           setInterval(() => {
             registration.update().catch(() => {})
-          }, 1000 * 60 * 60)
+          }, 1000 * 60 * 15)
         }
       },
     })
+    void pollServiceWorkerUpdate()
     return { updateSW }
   }
 
@@ -35,7 +126,7 @@ export function setupServiceWorker() {
   const wb = new Workbox('/sw.js', { scope: '/', type: 'module' })
 
   wb.addEventListener('waiting', () => {
-    window.dispatchEvent(new CustomEvent('pwa:update-available'))
+    onServiceWorkerUpdateDetected()
   })
 
   wb.addEventListener('controlling', (event) => {
@@ -51,12 +142,16 @@ export function setupServiceWorker() {
   })
 
   wb.register().then((registration) => {
+    inspectRegistrationForWaiting(registration)
+    attachRegistrationUpdateListener(registration)
     if (registration) {
       setInterval(() => {
         registration.update().catch(() => {})
-      }, 1000 * 60 * 60)
+      }, 1000 * 60 * 15)
     }
   })
+
+  void pollServiceWorkerUpdate()
 
   updateSW = async (reloadPage = true) => {
     if (reloadPage) {

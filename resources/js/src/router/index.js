@@ -7,6 +7,7 @@ import {
 } from "../config/dispatchWebBase";
 import { useAuthStore } from "../store";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
+import { resolvePostLoginTarget } from "../util/loginRedirect";
 
 function scrollAppMainToTop() {
     if (typeof document === "undefined") return;
@@ -492,6 +493,13 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
     if (to.meta.public) {
+        // Redirect user đã đăng nhập ra khỏi trang login (trừ OAuth callback có ?token)
+        if ((to.name === "login" || to.name === "home") && !to.query.token) {
+            const auth = useAuthStore();
+            if (auth.user) {
+                return resolvePostLoginTarget(auth, to.query.redirect);
+            }
+        }
         return true;
     }
     const auth = useAuthStore();

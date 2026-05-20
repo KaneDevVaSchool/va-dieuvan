@@ -4,21 +4,20 @@
     :app-ready="splashAppReady"
     @done="showSplash = false"
   />
-    <template v-else>
-      <Onboarding
-        v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !isPortalShell && !isDeptShell"
-        @done="completeOnboarding"
-      />
-    <template v-else>
-      <LayoutDriver v-if="isDriverApp">
-        <RouterView />
-      </LayoutDriver>
-      <AppShell v-else-if="!isLoginLayout && !isDeptShell">
-        <RouterView />
-      </AppShell>
-      <RouterView v-else-if="isDeptShell" />
-      <RouterView v-else />
-    </template>
+  <PwaUpdateBanner />
+  <Onboarding
+    v-if="onboardingViewportOk && !hasOnboarded && isAuthenticated && !isPortalShell && !isDeptShell"
+    @done="completeOnboarding"
+  />
+  <template v-else>
+    <LayoutDriver v-if="isDriverApp">
+      <RouterView />
+    </LayoutDriver>
+    <AppShell v-else-if="!isLoginLayout && !isDeptShell">
+      <RouterView />
+    </AppShell>
+    <RouterView v-else-if="isDeptShell" />
+    <RouterView v-else />
   </template>
 
   <AppMessageModal />
@@ -41,6 +40,7 @@ import SplashScreen from './components/SplashScreen.vue'
 import Onboarding from './components/Onboarding.vue'
 import NotificationCenter from './components/notifications/NotificationCenter.vue'
 import NotificationToast from './components/notifications/NotificationToast.vue'
+import PwaUpdateBanner from './components/pwa/PwaUpdateBanner.vue'
 
 const route = useRoute()
 const auth = useAuthStore()

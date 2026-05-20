@@ -107,6 +107,41 @@
         </p>
       </header>
 
+      <div
+        v-if="req.status === 'rejected'"
+        class="shrink-0 border-b-2 border-rose-400 bg-gradient-to-r from-rose-100 via-rose-50 to-white px-4 py-4 shadow-sm ring-1 ring-rose-500/15 sm:px-6"
+        role="alert"
+      >
+        <div class="flex items-start gap-3">
+          <XCircleIcon class="h-9 w-9 shrink-0 text-rose-600" aria-hidden="true" />
+          <div class="min-w-0 flex-1">
+            <p class="text-base font-bold text-rose-950 sm:text-lg">{{ rejectionBannerTitle }}</p>
+            <p
+              v-if="req.rejection_reason"
+              class="mt-2 text-xs font-bold uppercase tracking-wide text-rose-800/90 sm:text-sm"
+            >
+              {{ t('request_detail.dept_reject_reason_label') }}
+            </p>
+            <p
+              v-if="req.rejection_reason"
+              class="mt-2 whitespace-pre-wrap rounded-xl border-2 border-rose-300/80 bg-white px-4 py-3 text-sm font-semibold leading-relaxed text-rose-950 shadow-inner sm:text-base"
+            >
+              {{ req.rejection_reason }}
+            </p>
+            <p v-else class="mt-2 text-sm text-rose-800/90">{{ t('request_detail.rejected_no_reason') }}</p>
+            <button
+              v-if="req.rejection_reason"
+              type="button"
+              class="mt-3 inline-flex min-h-[40px] items-center gap-2 rounded-lg border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-900 shadow-sm transition hover:bg-rose-50 sm:text-sm"
+              @click="copyRejectionReason"
+            >
+              <ClipboardDocumentIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ copyRejectionFeedback ? t('request_detail.copied') : t('request_detail.copy_rejection') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
         <aside
           class="w-full shrink-0 overflow-y-auto border-b border-slate-200 bg-slate-50/90 lg:w-72 lg:max-h-none lg:border-b-0 lg:border-r xl:w-80"
@@ -803,8 +838,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { RouterLink, use Route, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
@@ -812,6 +847,7 @@ import {
   BuildingOffice2Icon,
   CalculatorIcon,
   CalendarDaysIcon,
+  ClipboardDocumentIcon,
   ClockIcon,
   Cog6ToothIcon,
   CubeIcon,
@@ -823,6 +859,7 @@ import {
   InformationCircleIcon,
   PaperClipIcon,
   TruckIcon,
+  XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { CheckIcon } from '@heroicons/vue/24/solid'
 import Button from '../../components/ui/Button.vue'
@@ -889,6 +926,8 @@ const deptActing = ref(false)
 const deptMsg = ref('')
 const deptRejectOpen = ref(false)
 const deptRejectReason = ref('')
+const copyRejectionFeedback = ref(false)
+let copyRejectionTimer = null
 
 const signedUploadErr = ref('')
 
@@ -937,6 +976,15 @@ const requestRefCode = computed(() => {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   return `REQ-${y}${m}-${String(r.id).padStart(3, '0')}`
+})
+
+const rejectionBannerTitle = computed(() => {
+  const r = req.value
+  if (!r || r.status !== 'rejected') return ''
+  if (r.trip_type !== 'door_to_door') {
+    return t('request_detail.dept_rejected_banner_title')
+  }
+  return t('request_detail.rejected_banner_title_generic')
 })
 
 const canApprove = computed(
@@ -1798,5 +1846,24 @@ function openPricingManagePage() {
 }
 
 onMounted(load)
+
+onBeforeUnmount(() => {
+  if (copyRejectionTimer) clearTimeout(copyRejectionTimer)
+})
+
+async function copyRejectionReason() {
+  const text = String(req.value?.rejection_reason ?? '').trim()
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+    copyRejectionFeedback.value = true
+    if (copyRejectionTimer) clearTimeout(copyRejectionTimer)
+    copyRejectionTimer = setTimeout(() => {
+      copyRejectionFeedback.value = false
+    }, 2000)
+  } catch {
+    showAppError(t('request_detail.copy_rejection_failed'))
+  }
+}
 watch(() => route.params.id, load)
 </script>

@@ -41,7 +41,7 @@ function scheduleHide() {
   if (!props.appReady) return
   const elapsed =
     (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startedAt.value
-  const minMs = 1200
+  const minMs = 800
   const wait = Math.max(0, minMs - elapsed)
   window.setTimeout(() => {
     visible.value = false
