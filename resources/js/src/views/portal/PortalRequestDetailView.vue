@@ -27,7 +27,7 @@
     </div>
 
     <template v-else-if="req">
-      <div class="flex flex-col gap-4 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-start lg:justify-between">
+      <div class="border-b border-slate-200/80 pb-6">
         <div class="flex min-w-0 items-start gap-3">
           <RouterLink
             :to="{ name: 'portalHome' }"
@@ -56,32 +56,6 @@
               <span v-if="pollingRefreshing" class="font-medium text-teal-700">{{ t('portal.auto_refresh_indicator') }}</span>
             </div>
           </div>
-        </div>
-
-        <div class="flex w-full shrink-0 flex-col gap-2 sm:max-w-sm lg:w-[14rem]">
-          <button
-            type="button"
-            class="inline-flex min-h-[48px] w-full flex-col rounded-2xl border px-4 py-2.5 text-left text-sm font-semibold shadow-md transition-all"
-            :class="
-              pdfExportDisabled ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-400 opacity-95' : 'border-teal-200 bg-teal-50 text-teal-900 hover:bg-teal-100'
-            "
-            :disabled="pdfBusy || pdfExportDisabled"
-            :title="pdfExportDisabled ? t('portal.pdf_locked_tooltip') : t('portal.pdf_btn_label')"
-            @click="downloadPdf"
-          >
-            <span class="flex items-center gap-2">
-              <span
-                v-if="pdfBusy"
-                class="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-teal-600/35 border-t-teal-800"
-              />
-              <DocumentArrowDownIcon v-else-if="!pdfExportDisabled" class="h-5 w-5 shrink-0 text-teal-800" aria-hidden="true" />
-              <DocumentArrowDownIcon v-else class="h-5 w-5 shrink-0 text-slate-300" aria-hidden="true" />
-              <span>{{ pdfPrimaryLabel }}</span>
-            </span>
-          </button>
-          <p v-if="pdfExportDisabled" class="max-w-xl text-xs leading-snug text-slate-500">
-            {{ t('portal.pdf_locked_tooltip') }}
-          </p>
         </div>
       </div>
 
@@ -179,32 +153,8 @@
         </div>
       </div>
 
-      <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div class="min-w-0 space-y-8">
-          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm text-sm">
-            <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('portal.detail_facts') }}</h2>
-            <dl class="mt-4 grid gap-3 sm:grid-cols-2">
-              <div>
-                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.origin') }}</dt>
-                <dd class="mt-0.5 font-medium text-slate-900">{{ req.origin || '—' }}</dd>
-              </div>
-              <div>
-                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.destination') }}</dt>
-                <dd class="mt-0.5 font-medium text-slate-900">{{ req.destination || '—' }}</dd>
-              </div>
-              <div class="sm:col-span-2">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.notes') }}</dt>
-                <dd class="mt-0.5 whitespace-pre-wrap text-slate-800">{{ req.notes || '—' }}</dd>
-              </div>
-              <div v-if="servicePriceFmt">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.service_price_label') }}</dt>
-                <dd class="mt-0.5 font-medium text-slate-900">{{ servicePriceFmt }}</dd>
-              </div>
-            </dl>
-          </section>
-        </div>
-
-        <aside class="min-w-0 space-y-8 lg:border-l lg:border-slate-200/75 lg:pl-8 xl:space-y-8">
+      <div class="mt-8 lg:flex lg:justify-end">
+        <aside class="w-full min-w-0 lg:max-w-md">
           <div class="sticky top-[5.75rem] space-y-6">
             <PortalSignedDocUpload
               v-if="showSignedSection"
@@ -273,12 +223,6 @@ const copyRejectionFeedback = ref(false)
 let copyRejectionTimer = null
 
 const timelineSteps = usePortalTimelineSteps(req, t)
-
-const pdfPrimaryLabel = computed(() => {
-  if (pdfBusy.value) return t('portal.pdf_export_loading')
-  if (pdfExportDisabled.value) return t('portal.export_pdf')
-  return t('portal.pdf_btn_label')
-})
 
 function revokePdfPreviewUrl() {
   if (pdfBlobUrl.value && pdfBlobUrl.value.startsWith('blob:')) {
@@ -399,12 +343,6 @@ const pdfIframeSrc = computed(() => {
   const url = pdfBlobUrl.value
   if (!url) return ''
   return `${url}#view=FitH`
-})
-
-const servicePriceFmt = computed(() => {
-  const p = req.value?.service_price
-  if (p == null || p === '') return null
-  return `${new Intl.NumberFormat('vi-VN').format(Number(p))} VNĐ`
 })
 
 async function copyRejectionReason() {

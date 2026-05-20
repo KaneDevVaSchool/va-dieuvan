@@ -257,6 +257,7 @@
 
         table.data td.tr {
             text-align: right;
+            white-space: nowrap;
         }
 
         table.data td.tc {
@@ -611,12 +612,12 @@
                         <th rowspan="2" class="col-info tc" style="width:8%; font-style:normal;">
                             Loại hình<br /><span class="th-sub">(NV điều phối)</span>
                         </th>
-                        <th rowspan="2" class="col-info tc" style="width:8%;">
+                        <th rowspan="2" class="col-info tc" style="width:10%;">
                             Chi phí<br /><span class="th-sub">(Gồm VAT)</span>
                         </th>
                     </tr>
                     <tr>
-                        <th class="col-info tl" style="width:12%;">Tên hàng hóa</th>
+                        <th class="col-info tl" style="width:10%;">Tên hàng hóa</th>
                         <th class="col-info tc" style="width:6%;">SL</th>
                         <th class="col-info tc" style="width:10%;">Kích thước (DxRxC)</th>
                         <th class="col-info tc" style="width:8%;">Khối lượng</th>
@@ -689,15 +690,15 @@
                 <thead>
                     <tr>
                         <th class="col-info tc" style="width:4%;">STT</th>
-                        <th class="col-info tl" style="width:14%;">Diễn giải</th>
+                        <th class="col-info tl" style="width:12%;">Diễn giải</th>
                         <th class="col-info tc" style="width:5%;">SL</th>
                         <th class="col-go   tc" style="width:9%;">TG đi</th>
                         <th class="col-go   tl" style="width:11%;">Điểm đón</th>
                         <th class="col-back tc" style="width:9%;">TG về</th>
                         <th class="col-back tl" style="width:11%;">Điểm trả</th>
-                        <th class="col-info tl" style="width:11%;">Phụ trách</th>
-                        <th class="col-info tc" style="width:9%;">Đơn giá</th>
-                        <th class="col-info tc" style="width:8%;">Phụ thu</th>
+                        <th class="col-info tl" style="width:9%;">Phụ trách</th>
+                        <th class="col-info tc" style="width:11%;">Đơn giá</th>
+                        <th class="col-info tc" style="width:10%;">Phụ thu</th>
                         <th class="col-info tl" style="width:9%;">Ghi chú</th>
                     </tr>
                 </thead>
