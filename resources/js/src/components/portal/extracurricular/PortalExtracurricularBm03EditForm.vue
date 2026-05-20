@@ -57,7 +57,7 @@
             v-model="draft.requesterPhone"
             field-id="bm03-a3-phone"
             :label="t('portal.recurring_edit.bm03_fields.a3_phone')"
-            :placeholder="t('dispatch_wizard.s3.coord_phone_ph')"
+            :placeholder="t('portal.recurring_edit.bm03_fields.a3_phone_ph')"
             :hint="t('portal.recurring_edit.bm03_fields.a3_phone_hint')"
             :error="fieldErrors.requesterPhone"
             type="tel"
@@ -89,7 +89,7 @@
             v-model="draft.purpose"
             field-id="bm03-b1-purpose"
             :label="t('portal.recurring_edit.bm03_fields.b1_purpose')"
-            :placeholder="t('portal.purpose_ph')"
+            :placeholder="t('portal.recurring_edit.bm03_fields.b1_purpose_ph')"
             :hint="t('portal.recurring_edit.bm03_fields.b1_purpose_hint')"
             :error="fieldErrors.purpose"
             multiline
@@ -274,7 +274,7 @@
               v-model="draft.coordinatorName"
               field-id="bm03-d2-name"
               :label="t('portal.recurring_edit.bm03_fields.d2_coord_name')"
-              :placeholder="t('dispatch_wizard.s3.coord_name_ph')"
+              :placeholder="t('portal.recurring_edit.bm03_fields.d2_coord_name_ph')"
               :hint="t('portal.recurring_edit.bm03_fields.d2_coord_hint')"
               :error="fieldErrors.coordinatorName"
               autocomplete="name"
@@ -283,9 +283,9 @@
             <Bm03FormField
               v-model="draft.coordinatorEmail"
               field-id="bm03-d2-email"
-              label="Email"
-              :placeholder="t('dispatch_wizard.s3.coord_email_ph')"
-              :hint="t('dispatch_wizard.s3.coord_search_title')"
+              :label="t('portal.recurring_edit.bm03_fields.d2_coord_email_label')"
+              :placeholder="t('portal.recurring_edit.bm03_fields.d2_coord_email_ph')"
+              :hint="t('portal.recurring_edit.bm03_fields.d2_coord_hint')"
               :error="fieldErrors.coordinatorEmail"
               type="email"
               autocomplete="email"
@@ -294,8 +294,8 @@
             <Bm03FormField
               v-model="draft.coordinatorPhone"
               field-id="bm03-d2-phone"
-              label="SĐT"
-              :placeholder="t('dispatch_wizard.s3.coord_phone_ph')"
+              :label="t('portal.recurring_edit.bm03_fields.d2_coord_phone_label')"
+              :placeholder="t('portal.recurring_edit.bm03_fields.d2_coord_phone_ph')"
               :error="fieldErrors.coordinatorPhone"
               type="tel"
               autocomplete="tel"
@@ -317,7 +317,7 @@
             v-model="draft.origin"
             field-id="bm03-e-pickup"
             :label="t('portal.recurring_edit.bm03_fields.e_pickup')"
-            :placeholder="t('dispatch_wizard.s3.pickup_ph')"
+            :placeholder="t('portal.recurring_edit.bm03_fields.e_pickup_ph')"
             :hint="t('portal.recurring_edit.bm03_fields.e_route_hint')"
             :error="fieldErrors.origin"
             autocomplete="off"
@@ -327,7 +327,7 @@
             v-model="draft.destination"
             field-id="bm03-e-dropoff"
             :label="t('portal.recurring_edit.bm03_fields.e_dropoff')"
-            :placeholder="t('dispatch_wizard.s3.dropoff_ph')"
+            :placeholder="t('portal.recurring_edit.bm03_fields.e_dropoff_ph')"
             :error="fieldErrors.destination"
             autocomplete="off"
             :disabled="!canEditForm"
@@ -335,48 +335,6 @@
         </div>
       </div>
 
-      <!-- G -->
-      <div class="bg-white">
-        <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-100 px-4 py-2.5">
-          <span class="inline-flex h-6 w-6 items-center justify-center rounded bg-slate-800 text-xs font-bold text-white">G</span>
-          <span class="text-xs font-bold uppercase tracking-wide text-slate-800">{{ t('portal.recurring_edit.bm03_sec_g') }}</span>
-        </div>
-        <div class="space-y-4 px-4 py-4 sm:px-5">
-          <p class="text-xs text-slate-600">{{ t('portal.recurring_edit.bm03_fields.g_lead') }}</p>
-          <div class="flex flex-wrap items-end gap-6">
-            <div>
-              <p class="text-[11px] font-semibold uppercase text-slate-500">{{ t('portal.extracurricular_table.col_plan') }}</p>
-              <p class="mt-1 text-lg font-bold tabular-nums text-slate-800">{{ planStudentDisplay }}</p>
-            </div>
-            <div class="min-w-[12rem] flex-1">
-              <StudentCountCell
-                :req="req"
-                :draft="draftStudentCount"
-                :saving="savingCount"
-                :error="fieldErrors.studentCount || countSaveError"
-                :can-edit="canEditForm"
-                :lock-hint="lockHint"
-                :show-submit="false"
-                :save-label-key="'portal.extracurricular_table.update_count'"
-                :save-busy-label-key="'portal.extracurricular_table.update_count_busy'"
-                @update:draft="draftStudentCount = $event"
-                @save="saveStudentCountOnly"
-              />
-            </div>
-          </div>
-          <Bm03FormField
-            v-model="draft.notes"
-            field-id="bm03-g-notes"
-            :label="t('portal.recurring_edit.sec_notes')"
-            :placeholder="t('portal.recurring_edit.bm03_fields.g_notes_ph')"
-            :hint="t('portal.recurring_edit.bm03_fields.g_notes_hint')"
-            multiline
-            :rows="4"
-            autocomplete="off"
-            :disabled="!canEditForm"
-          />
-        </div>
-      </div>
     </div>
 
     <p v-if="formError" class="border-t border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700 sm:px-6" role="alert">
@@ -428,7 +386,6 @@ import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CloudArrowUpIcon, InformationCircleIcon, PaperClipIcon } from '@heroicons/vue/24/outline'
 import Bm03FormField from './Bm03FormField.vue'
-import StudentCountCell from '../../requests/extracurricular/StudentCountCell.vue'
 import {
   patchPortalRecurringInstance,
   submitPortalRecurringInstance,
@@ -465,8 +422,6 @@ const saving = ref(false)
 const submitting = ref(false)
 const formError = ref('')
 const fieldErrors = reactive({})
-const countSaveError = ref('')
-
 const basisFileInput = ref(null)
 const basisPendingFile = ref(null)
 const basisDragOver = ref(false)
@@ -490,11 +445,7 @@ const draft = reactive({
   coordinatorPhone: '',
   origin: '',
   destination: '',
-  notes: '',
 })
-
-const draftStudentCount = ref(1)
-const savingCount = ref(false)
 
 const existingBasis = computed(() => {
   const list = props.req?.attachments ?? []
@@ -520,11 +471,6 @@ const isPdfBasis = computed(() => {
   return mime === 'application/pdf' || name.endsWith('.pdf')
 })
 
-const planStudentDisplay = computed(() => {
-  const n = props.req?.passenger_count
-  return n != null && n !== '' ? String(n) : '—'
-})
-
 const tripTypeDisplay = computed(() => labelTripType(props.req?.trip_type) || '—')
 
 const tripSubtitle = computed(() => {
@@ -543,11 +489,6 @@ const canEditForm = computed(() => {
 })
 
 const canSubmit = computed(() => row.canSubmitStudentCount(props.req))
-
-const lockHint = computed(() => {
-  const k = row.lockHintKey(props.req)
-  return k ? t(`portal.extracurricular_table.${k}`) : ''
-})
 
 const submitBlockedHint = computed(() => {
   if (canSubmit.value || !canEditForm.value) return ''
@@ -718,7 +659,7 @@ function validateClient() {
   }
   const coordEmail = draft.coordinatorEmail.trim()
   if (coordEmail && !EMAIL_RE.test(coordEmail)) {
-    fieldErrors.coordinatorEmail = t('dispatch_wizard.s3.coord_email_invalid')
+    fieldErrors.coordinatorEmail = t('portal.recurring_edit.bm03_err.coord_email')
     ok = false
   }
   if (!draft.origin.trim()) {
@@ -727,11 +668,6 @@ function validateClient() {
   }
   if (!draft.destination.trim()) {
     fieldErrors.destination = t('portal.recurring_edit.bm03_err.required')
-    ok = false
-  }
-  const sc = Math.round(Number(draftStudentCount.value))
-  if (!Number.isFinite(sc) || sc < 1 || sc > 999) {
-    fieldErrors.studentCount = t('portal.extracurricular_table.invalid_count')
     ok = false
   }
   if (!ok) {
@@ -794,8 +730,6 @@ function syncFromReq(r) {
   draft.coordinatorPhone = form.coordinator_phone || ''
   draft.origin = r.origin || ''
   draft.destination = r.destination || ''
-  draft.notes = r.notes || ''
-  draftStudentCount.value = row.actualStudentCount(r)
   basisPendingFile.value = null
   if (basisFileInput.value) basisFileInput.value.value = ''
   revokeBasisPreview()
@@ -851,8 +785,6 @@ function buildPayload() {
   const payload = {
     origin: draft.origin.trim(),
     destination: draft.destination.trim(),
-    notes: draft.notes.trim() || null,
-    student_count_actual: Math.round(Number(draftStudentCount.value)),
     wizard_snapshot: { form: snapForm },
   }
   if (dep) payload.depart_at = dep
@@ -865,26 +797,6 @@ async function uploadBasisIfNeeded() {
   await uploadPortalProposalBasis(props.req.id, basisPendingFile.value)
   basisPendingFile.value = null
   if (basisFileInput.value) basisFileInput.value.value = ''
-}
-
-async function saveStudentCountOnly() {
-  if (!canEditForm.value || savingCount.value) return
-  const n = Math.round(Number(draftStudentCount.value))
-  if (!Number.isFinite(n) || n < 1 || n > 999) {
-    fieldErrors.studentCount = t('portal.extracurricular_table.invalid_count')
-    return
-  }
-  savingCount.value = true
-  countSaveError.value = ''
-  fieldErrors.studentCount = ''
-  try {
-    await patchPortalRecurringInstance(props.req.id, { student_count_actual: n })
-    emit('saved')
-  } catch (e) {
-    countSaveError.value = formatApiError(e, t('portal.extracurricular_table.save_fail'))
-  } finally {
-    savingCount.value = false
-  }
 }
 
 async function save() {
