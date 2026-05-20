@@ -128,7 +128,12 @@
                 <th class="min-w-[10rem]">{{ t('portal.extracurricular_table.col_route') }}</th>
                 <th>{{ t('portal.extracurricular_table.col_status') }}</th>
                 <th class="text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
-                <th class="whitespace-nowrap text-right">{{ t('portal.extracurricular_table.col_trip_cost') }}</th>
+                <th
+                  v-if="groupHasFilledTripCost(group)"
+                  class="whitespace-nowrap text-right"
+                >
+                  {{ t('portal.extracurricular_table.col_trip_cost') }}
+                </th>
                 <th class="min-w-[9rem]">{{ t('portal.extracurricular_table.col_actual') }}</th>
                 <th class="text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
               </tr>
@@ -154,20 +159,16 @@
               <td class="text-center tabular-nums font-medium text-slate-700">
                 {{ row.planStudentCount(req) ?? '—' }}
               </td>
-              <td class="whitespace-nowrap text-right text-sm tabular-nums text-slate-700">
-                <span v-if="tripCostFilledByDispatch(req)" class="font-semibold text-slate-900">
-                  {{ tripCostDisplayForReq(req) }}
-                </span>
-                <span v-else-if="tripCostDisplayForReq(req)" class="text-slate-600">
-                  {{ tripCostDisplayForReq(req) }}
-                </span>
-                <span v-else class="text-slate-400">—</span>
-                <span
-                  v-if="tripCostFilledByDispatch(req)"
-                  class="mt-0.5 block text-[10px] font-medium uppercase tracking-wide text-teal-700"
-                >
-                  {{ t('portal.extracurricular_table.cost_filled_dispatch') }}
-                </span>
+              <td
+                v-if="groupHasFilledTripCost(group)"
+                class="whitespace-nowrap text-right text-sm tabular-nums text-slate-700"
+              >
+                <template v-if="reqHasFilledTripCost(req)">
+                  <span class="font-semibold text-slate-900">{{ tripCostDisplayForReq(req) }}</span>
+                  <span class="mt-0.5 block text-[10px] font-medium uppercase tracking-wide text-teal-700">
+                    {{ t('portal.extracurricular_table.cost_filled_dispatch') }}
+                  </span>
+                </template>
               </td>
               <td>
                 <StudentCountCell
@@ -231,12 +232,10 @@
             <span class="font-semibold tabular-nums">{{ row.planStudentCount(req) ?? '—' }}</span>
           </div>
           <div
-            v-if="tripCostDisplayForReq(req)"
+            v-if="reqHasFilledTripCost(req)"
             class="mt-1 flex items-center justify-between text-xs"
           >
-            <span class="text-slate-500">
-              {{ tripCostFilledByDispatch(req) ? t('portal.extracurricular_table.col_trip_cost_filled') : t('portal.extracurricular_table.col_trip_cost') }}
-            </span>
+            <span class="text-slate-500">{{ t('portal.extracurricular_table.col_trip_cost_filled') }}</span>
             <span class="font-semibold tabular-nums text-slate-800">{{ tripCostDisplayForReq(req) }}</span>
           </div>
           <div class="mt-2">
@@ -268,7 +267,6 @@ import { useI18n } from 'vue-i18n'
 import { ChevronRightIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
 import { updatePortalDispatchPlanLabel } from '../../../api/requests'
 import { formatApiError } from '../../../api/http'
-import { parseMoneyVnd } from '../../../util/money'
 import { formatVnd } from '../../../util/labels'
 import StatusBadge from '../../ui/StatusBadge.vue'
 import StudentCountCell from '../../requests/extracurricular/StudentCountCell.vue'
@@ -387,33 +385,24 @@ function lockHintFor(req) {
   return k ? t(`${i18nPrefix}.${k}`) : ''
 }
 
-function tripCostFilledByDispatch(req) {
+function reqHasFilledTripCost(req) {
   const sp = Number(req?.service_price)
   return Number.isFinite(sp) && sp > 0
 }
 
-function estimatedTripCostPerReq(req) {
-  if (!req) return null
-  const raw =
-    req?.wizard_snapshot?.form?.estimated_vehicle_cost
-    ?? req?.dispatch_request_template?.wizard_snapshot?.form?.estimated_vehicle_cost
-    ?? ''
-  const fromSnap = parseMoneyVnd(raw)
-  return fromSnap > 0 ? fromSnap : null
+function tripCostDisplayForReq(req) {
+  if (!reqHasFilledTripCost(req)) return ''
+  return formatVnd(Number(req.service_price))
 }
 
-function tripCostDisplayForReq(req) {
-  if (tripCostFilledByDispatch(req)) {
-    return formatVnd(Number(req.service_price))
-  }
-  const est = estimatedTripCostPerReq(req)
-  return est != null ? formatVnd(est) : ''
+function groupHasFilledTripCost(group) {
+  return (group?.items || []).some((req) => reqHasFilledTripCost(req))
 }
 
 function packageBudgetUsageForGroup(group) {
   for (const req of group?.items || []) {
     const u = req?.dispatch_package_budget_usage
-    if (u && u.budget > 0) return u
+    if (u && u.budget > 0 && u.used > 0) return u
   }
   return null
 }
