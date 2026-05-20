@@ -21,6 +21,8 @@ class NavBadgesController extends Controller
             $q = DispatchRequest::query()->where('status', 'pending');
             if (! $user->hasPermission('trip.view_all')) {
                 $q->where('requester_id', $user->id);
+            } else {
+                $q->visibleOnStaffRequestIndex();
             }
             $pendingDispatchRequests = $q->count();
         }

@@ -208,7 +208,8 @@ class DispatchRequestTemplateController extends Controller
 
         app(DispatchRecurringMaintenanceService::class)->materializeForTemplate($template);
 
-        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
+        if (! $isExtracurricularRecurring
+            && Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
             $recipients = User::query()
                 ->role('dispatcher')
                 ->get();

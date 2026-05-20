@@ -154,4 +154,31 @@ class DispatchRequest extends Model
                     ->orWhere('wizard_snapshot->point_purpose_kind', 'extracurricular');
             });
     }
+
+    /**
+     * Phiếu CLB định kỳ chưa gửi chốt số HS / điều vận (portal).
+     *
+     * @param  Builder<DispatchRequest>  $query
+     * @return Builder<DispatchRequest>
+     */
+    public function scopeExtracurricularRecurringDraft(Builder $query): Builder
+    {
+        return $query
+            ->whereNotNull('dispatch_request_template_id')
+            ->whereNull('student_count_submitted_at')
+            ->extracurricularOnly();
+    }
+
+    /**
+     * Danh sách điều vận (mng/requests): ẩn bản nháp CLB cho đến khi portal gửi chốt.
+     *
+     * @param  Builder<DispatchRequest>  $query
+     * @return Builder<DispatchRequest>
+     */
+    public function scopeVisibleOnStaffRequestIndex(Builder $query): Builder
+    {
+        return $query->whereNot(function (Builder $draft) {
+            $draft->extracurricularRecurringDraft();
+        });
+    }
 }

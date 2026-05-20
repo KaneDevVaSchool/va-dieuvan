@@ -29,6 +29,10 @@ class RequestController extends Controller
 
         $q = $this->scopedDispatchRequestsQuery($user);
 
+        if (! $this->staffListIncludesExtracurricularDrafts($data)) {
+            $q->visibleOnStaffRequestIndex();
+        }
+
         if ($onlyTrashed) {
             $q->onlyTrashed();
         }
@@ -156,7 +160,7 @@ class RequestController extends Controller
             abort(403);
         }
 
-        $base = $this->scopedDispatchRequestsQuery($user);
+        $base = $this->scopedDispatchRequestsQuery($user)->visibleOnStaffRequestIndex();
 
         $pendingCount = (int) (clone $base)->where('status', 'price_filled')->count();
 
@@ -263,7 +267,7 @@ class RequestController extends Controller
      */
     private function buildStats(User $user): array
     {
-        $base = $this->scopedDispatchRequestsQuery($user);
+        $base = $this->scopedDispatchRequestsQuery($user)->visibleOnStaffRequestIndex();
 
         $statusCounts = (clone $base)
             ->selectRaw('status, count(*) as c')
@@ -373,5 +377,17 @@ class RequestController extends Controller
         $q->where('requester_id', $user->id);
 
         return $q;
+    }
+
+    /**
+     * Cho phép lọc "chưa gửi số HS" (student_count_submitted=0) xem bản nháp CLB trên SPA điều vận.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function staffListIncludesExtracurricularDrafts(array $data): bool
+    {
+        return array_key_exists('student_count_submitted', $data)
+            && $data['student_count_submitted'] !== null
+            && $data['student_count_submitted'] === false;
     }
 }
