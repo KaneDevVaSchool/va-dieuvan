@@ -101,6 +101,10 @@ class PortalDispatchRequestController extends Controller
             $query->whereDate('depart_at', '<=', $data['date_to']);
         }
 
+        if (! empty($data['extracurricular_only'])) {
+            $query->extracurricularOnly();
+        }
+
         $qRaw = isset($data['q']) ? trim((string) $data['q']) : '';
         if ($qRaw !== '') {
             $like = '%'.addcslashes($qRaw, '%_\\').'%';

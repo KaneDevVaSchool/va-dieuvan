@@ -16,6 +16,8 @@ export function normalizeRequestListParams(params) {
   if (p.sla_risk_only === false) delete p.sla_risk_only
   if (p.recurring_only === true) p.recurring_only = 1
   if (p.recurring_only === false) delete p.recurring_only
+  if (p.extracurricular_only === true) p.extracurricular_only = 1
+  if (p.extracurricular_only === false) delete p.extracurricular_only
   return p
 }
 
@@ -87,10 +89,10 @@ export async function getPortalRequestsSummary() {
 }
 
 /**
- * @param {{ per_page?: number, page?: number, q?: string, sort?: 'depart_desc'|'depart_asc'|'created_desc'|'created_asc', filter?: 'all'|'pending'|'approved'|'rejected'|'returned', trip_type?: 'business'|'cargo'|'door_to_door'|'point_to_point', is_urgent?: 0|1, date_from?: string, date_to?: string }} [params]
+ * @param {{ per_page?: number, page?: number, q?: string, sort?: 'depart_desc'|'depart_asc'|'created_desc'|'created_asc', filter?: 'all'|'pending'|'approved'|'rejected'|'returned', trip_type?: 'business'|'cargo'|'door_to_door'|'point_to_point', is_urgent?: 0|1, extracurricular_only?: 0|1, date_from?: string, date_to?: string }} [params]
  */
 export async function listPortalRequests(params = {}) {
-  const { data } = await http.get('/portal/dispatch-requests', { params })
+  const { data } = await http.get('/portal/dispatch-requests', { params: normalizeRequestListParams(params) })
   return data.data
 }
 

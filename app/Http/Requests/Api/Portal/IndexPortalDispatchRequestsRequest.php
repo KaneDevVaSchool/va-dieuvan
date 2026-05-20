@@ -14,6 +14,27 @@ class IndexPortalDispatchRequestsRequest extends ApiFormRequest
         return $this->portalUserMayAccess($this->user());
     }
 
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+
+        foreach (['is_urgent', 'extracurricular_only'] as $key) {
+            if (! $this->has($key)) {
+                continue;
+            }
+            $v = $this->input($key);
+            if ($v === 'true' || $v === '1' || $v === 1 || $v === true) {
+                $merge[$key] = true;
+            } elseif ($v === 'false' || $v === '0' || $v === 0 || $v === false) {
+                $merge[$key] = false;
+            }
+        }
+
+        if ($merge !== []) {
+            $this->merge($merge);
+        }
+    }
+
     /** @return array<string, mixed> */
     public function rules(): array
     {
@@ -25,6 +46,7 @@ class IndexPortalDispatchRequestsRequest extends ApiFormRequest
             'filter' => ['sometimes', 'string', 'in:all,pending,approved,rejected,returned'],
             'trip_type' => ['sometimes', 'string', 'in:business,cargo,door_to_door,point_to_point'],
             'is_urgent' => ['sometimes', 'boolean'],
+            'extracurricular_only' => ['sometimes', 'boolean'],
             'date_from' => ['sometimes', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'date_format:Y-m-d'],
         ];

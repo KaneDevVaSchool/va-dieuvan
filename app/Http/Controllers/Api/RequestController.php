@@ -89,6 +89,8 @@ class RequestController extends Controller
 
         $q->when(! empty($data['recurring_only']), fn (Builder $b) => $b->whereNotNull('dispatch_request_template_id'));
 
+        $q->when(! empty($data['extracurricular_only']), fn (Builder $b) => $b->extracurricularOnly());
+
         // Khoảng ngày khởi hành: bản ghi depart_at null (một số luồng cũ / nhập tay) vẫn lọc theo created_at trong khoảng.
         $q->when(isset($data['from']) || isset($data['to']), function (Builder $b) use ($data) {
             $from = isset($data['from']) ? Carbon::parse($data['from'])->startOfDay() : null;

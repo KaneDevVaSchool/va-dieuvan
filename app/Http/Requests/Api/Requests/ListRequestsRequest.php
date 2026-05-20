@@ -19,7 +19,7 @@ class ListRequestsRequest extends ApiFormRequest
     {
         $merge = [];
 
-        foreach (['is_urgent', 'sla_risk_only', 'only_trashed', 'recurring_only'] as $key) {
+        foreach (['is_urgent', 'sla_risk_only', 'only_trashed', 'recurring_only', 'extracurricular_only'] as $key) {
             if (! $this->has($key)) {
                 continue;
             }
@@ -61,6 +61,7 @@ class ListRequestsRequest extends ApiFormRequest
             'is_urgent' => ['nullable', 'boolean'],
             'sla_risk_only' => ['nullable', 'boolean'],
             'recurring_only' => ['nullable', 'boolean'],
+            'extracurricular_only' => ['nullable', 'boolean'],
             'from' => ['nullable', 'date'],
             'to' => $toRules,
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],

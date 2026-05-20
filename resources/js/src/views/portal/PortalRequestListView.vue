@@ -274,6 +274,32 @@
                 </ul>
               </AppFilterDropdown>
 
+              <!-- Extracurricular chip -->
+              <AppFilterDropdown
+                v-if="filterDropdownVisible.extracurricular !== false"
+                :label="t('portal.filter_label_extracurricular')"
+                :summary-text="currentExtracurricularLabel"
+                panel-class="min-w-[240px] py-1"
+                class="shrink-0 snap-start"
+              >
+                <ul class="max-h-[min(60vh,300px)] overflow-y-auto px-1 py-1">
+                  <li v-for="opt in extracurricularOptions" :key="opt.key">
+                    <button
+                      type="button"
+                      :class="[
+                        'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',
+                        filterExtracurricular === opt.key
+                          ? 'bg-teal-50 font-medium text-teal-900'
+                          : 'text-slate-700 hover:bg-slate-50',
+                      ]"
+                      @click="onExtracurricular(opt.key)"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </li>
+                </ul>
+              </AppFilterDropdown>
+
               <!-- Date range chip -->
               <AppFilterDropdown
                 v-if="filterDropdownVisible.date_range !== false"
@@ -324,7 +350,7 @@
         </AppFilterBar>
       </div>
 
-      <PortalRequestSkeleton v-if="loading && !loadingMore" class="mt-8" :aria-label="t('portal.loading_requests')" />
+      <PortalRequestSkeleton v-if="loading" class="mt-8" :aria-label="t('portal.loading_requests')" />
 
       <div v-else-if="fetchError" class="mt-8 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
         {{ fetchError }}
@@ -348,16 +374,81 @@
         </PortalEmptyState>
 
         <div v-else class="mt-8 space-y-4">
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <label class="flex items-center gap-2">
+              <span class="text-sm text-slate-600">{{ t('portal.filter_per_page') }}</span>
+              <select
+                v-model.number="perPage"
+                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                :aria-label="t('portal.filter_per_page')"
+                @change="onPerPageChange"
+              >
+                <option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option>
+              </select>
+            </label>
+          </div>
           <PortalRequestsTable :requests="items" />
-          <button
-            v-if="pagination && pagination.current_page < pagination.last_page"
-            type="button"
-            class="relative z-30 flex w-full min-h-[52px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow transition hover:border-indigo-200 hover:bg-indigo-50/60 disabled:opacity-50"
-            :disabled="loadingMore"
-            @click="loadMore"
+          <nav
+            v-if="pagination && (pagination.last_page ?? 1) > 1"
+            class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+            :aria-label="t('portal.filter_per_page')"
           >
-            {{ loadingMore ? t('portal.loading_more') : t('portal.load_more') }}
-          </button>
+            <p class="text-sm text-slate-500">
+              {{
+                t('portal.pagination_summary', {
+                  from: pageFrom,
+                  to: pageTo,
+                  total: pagination.total ?? 0,
+                })
+              }}
+            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                class="min-h-[40px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-50"
+                :disabled="(pagination.current_page ?? 1) <= 1 || loading"
+                @click="goPage((pagination.current_page ?? 1) - 1)"
+              >
+                {{ t('portal.page_prev') }}
+              </button>
+              <div class="flex items-center gap-1">
+                <button
+                  v-for="p in pageNumbers"
+                  :key="p"
+                  type="button"
+                  class="min-w-[2.25rem] rounded-lg px-2 py-1.5 text-sm"
+                  :class="
+                    p === pagination.current_page
+                      ? 'bg-indigo-600 font-semibold text-white'
+                      : 'text-slate-600 hover:bg-slate-100'
+                  "
+                  @click="goPage(p)"
+                >
+                  {{ p }}
+                </button>
+              </div>
+              <button
+                type="button"
+                class="min-h-[40px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-50"
+                :disabled="(pagination.current_page ?? 1) >= (pagination.last_page ?? 1) || loading"
+                @click="goPage((pagination.current_page ?? 1) + 1)"
+              >
+                {{ t('portal.page_next') }}
+              </button>
+            </div>
+          </nav>
+          <p
+            v-else-if="pagination && (pagination.total ?? 0) > 0"
+            class="text-center text-sm text-slate-500"
+          >
+            {{
+              t('portal.pagination_summary', {
+                from: pageFrom,
+                to: pageTo,
+                total: pagination.total ?? 0,
+              })
+            }}
+          </p>
         </div>
       </template>
     </section>
@@ -377,23 +468,35 @@ import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
 
-const PER_PAGE = 15
+const PER_PAGE_OPTIONS = [5, 10, 15, 20]
+const PER_PAGE_KEY = 'portal-list-per-page'
 const SUGGEST_PER_PAGE = 8
 const VIS_KEY = 'portal-filter-vis'
+
+function readStoredPerPage() {
+  try {
+    const n = parseInt(localStorage.getItem(PER_PAGE_KEY) ?? '10', 10)
+    return PER_PAGE_OPTIONS.includes(n) ? n : 10
+  } catch {
+    return 10
+  }
+}
 
 const { t } = useI18n()
 
 // ── List state ───────────────────────────────────────────────
 const loading = ref(true)
-const loadingMore = ref(false)
 const fetchError = ref('')
 const items = ref([])
 const pagination = ref(null)
+const perPage = ref(readStoredPerPage())
+const perPageOptions = PER_PAGE_OPTIONS
 
 // ── Filter state ─────────────────────────────────────────────
 const filterStatus = ref('all')
 const filterTripType = ref('all')
 const filterUrgent = ref('all')
+const filterExtracurricular = ref('all')
 const sort = ref('depart_desc')
 const searchInput = ref('')
 const debouncedQ = ref('')
@@ -436,6 +539,7 @@ const visibilityOptions = computed(() => [
   { id: 'sort', label: t('portal.filter_label_sort') },
   { id: 'trip_type', label: t('portal.filter_label_trip_type') },
   { id: 'urgent', label: t('portal.filter_label_urgent') },
+  { id: 'extracurricular', label: t('portal.filter_label_extracurricular') },
   { id: 'date_range', label: t('portal.filter_label_date_range') },
 ])
 
@@ -469,6 +573,11 @@ const urgentOptions = computed(() => [
   { key: 'normal', label: t('portal.filter_urgent_no') },
 ])
 
+const extracurricularOptions = computed(() => [
+  { key: 'all', label: t('portal.filter_extracurricular_all') },
+  { key: 'extracurricular', label: t('portal.filter_extracurricular_only') },
+])
+
 const currentStatusLabel = computed(
   () => filterOptions.value.find((o) => o.key === filterStatus.value)?.label ?? filterStatus.value,
 )
@@ -485,6 +594,12 @@ const currentUrgentLabel = computed(
   () => urgentOptions.value.find((o) => o.key === filterUrgent.value)?.label ?? filterUrgent.value,
 )
 
+const currentExtracurricularLabel = computed(
+  () =>
+    extracurricularOptions.value.find((o) => o.key === filterExtracurricular.value)?.label
+    ?? filterExtracurricular.value,
+)
+
 const currentDateRangeLabel = computed(() => {
   if (dateFrom.value && dateTo.value) return `${dateFrom.value} — ${dateTo.value}`
   if (dateFrom.value) return `${t('portal.filter_date_from')}: ${dateFrom.value}`
@@ -498,6 +613,7 @@ const activeFilterCount = computed(() => {
   if (filterStatus.value !== 'all') n++
   if (filterTripType.value !== 'all') n++
   if (filterUrgent.value !== 'all') n++
+  if (filterExtracurricular.value !== 'all') n++
   if (sort.value !== 'depart_desc') n++
   if (debouncedQ.value) n++
   if (dateFrom.value || dateTo.value) n++
@@ -515,6 +631,12 @@ const activeFilterLines = computed(() => {
   if (filterUrgent.value !== 'all') {
     lines.push({ label: t('portal.filter_label_urgent'), value: currentUrgentLabel.value })
   }
+  if (filterExtracurricular.value !== 'all') {
+    lines.push({
+      label: t('portal.filter_label_extracurricular'),
+      value: currentExtracurricularLabel.value,
+    })
+  }
   if (sort.value !== 'depart_desc') {
     lines.push({ label: t('portal.filter_label_sort'), value: currentSortLabel.value })
   }
@@ -525,6 +647,32 @@ const activeFilterLines = computed(() => {
     lines.push({ label: t('portal.search_placeholder'), value: debouncedQ.value })
   }
   return lines
+})
+
+const pageFrom = computed(() => {
+  const cur = pagination.value?.current_page ?? 1
+  const per = pagination.value?.per_page ?? perPage.value
+  const total = pagination.value?.total ?? 0
+  if (total === 0) return 0
+  return (cur - 1) * per + 1
+})
+
+const pageTo = computed(() => {
+  const cur = pagination.value?.current_page ?? 1
+  const per = pagination.value?.per_page ?? perPage.value
+  const total = pagination.value?.total ?? 0
+  return Math.min(cur * per, total)
+})
+
+const pageNumbers = computed(() => {
+  const last = pagination.value?.last_page ?? 1
+  const cur = pagination.value?.current_page ?? 1
+  const window = 3
+  const start = Math.max(1, cur - 1)
+  const end = Math.min(last, start + window - 1)
+  const list = []
+  for (let p = start; p <= end; p++) list.push(p)
+  return list
 })
 
 // ── Search autocomplete ──────────────────────────────────────
@@ -672,6 +820,11 @@ function onUrgent(key) {
   reloadFromStart()
 }
 
+function onExtracurricular(key) {
+  filterExtracurricular.value = key
+  reloadFromStart()
+}
+
 function onSort(value) {
   sort.value = value
   reloadFromStart()
@@ -681,6 +834,7 @@ function resetFilters() {
   filterStatus.value = 'all'
   filterTripType.value = 'all'
   filterUrgent.value = 'all'
+  filterExtracurricular.value = 'all'
   sort.value = 'depart_desc'
   clearTimeout(debounceTimer)
   searchInput.value = ''
@@ -695,7 +849,7 @@ function resetFilters() {
 // ── API ──────────────────────────────────────────────────────
 function listParams(page) {
   return {
-    per_page: PER_PAGE,
+    per_page: perPage.value,
     page,
     sort: sort.value,
     filter: filterStatus.value === 'all' ? undefined : filterStatus.value,
@@ -703,16 +857,17 @@ function listParams(page) {
     trip_type: filterTripType.value !== 'all' ? filterTripType.value : undefined,
     is_urgent:
       filterUrgent.value !== 'all' ? (filterUrgent.value === 'urgent' ? 1 : 0) : undefined,
+    extracurricular_only: filterExtracurricular.value === 'extracurricular' ? true : undefined,
     date_from: dateFrom.value || undefined,
     date_to: dateTo.value || undefined,
   }
 }
 
-async function loadFirst() {
+async function loadPage(page = 1) {
   loading.value = true
   fetchError.value = ''
   try {
-    const data = await listPortalRequests(listParams(1))
+    const data = await listPortalRequests(listParams(page))
     items.value = data.items ?? []
     pagination.value = data.meta ?? null
   } catch (e) {
@@ -724,29 +879,28 @@ async function loadFirst() {
   }
 }
 
-async function loadMore() {
-  if (!pagination.value || loadingMore.value) return
-  const nextPage = (pagination.value.current_page ?? 1) + 1
-  if (nextPage > (pagination.value.last_page ?? 1)) return
-
-  loadingMore.value = true
-  try {
-    const data = await listPortalRequests(listParams(nextPage))
-    items.value = [...items.value, ...(data.items ?? [])]
-    pagination.value = data.meta ?? pagination.value
-  } catch (e) {
-    fetchError.value = formatApiError(e, t('portal.load_requests_fail'))
-  } finally {
-    loadingMore.value = false
-  }
+function reloadFromStart() {
+  loadPage(1)
 }
 
-function reloadFromStart() {
-  loadFirst()
+function goPage(page) {
+  if (loading.value) return
+  const last = pagination.value?.last_page ?? 1
+  const p = Math.max(1, Math.min(page, last))
+  loadPage(p)
+}
+
+function onPerPageChange() {
+  try {
+    localStorage.setItem(PER_PAGE_KEY, String(perPage.value))
+  } catch {
+    // ignore
+  }
+  reloadFromStart()
 }
 
 onMounted(() => {
-  loadFirst()
+  loadPage(1)
 })
 
 onBeforeUnmount(() => {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -129,5 +130,20 @@ class DispatchRequest extends Model
     public function isUrgentAuto(): bool
     {
         return $this->urgent_trigger === 'auto';
+    }
+
+    /**
+     * P2P hoạt động ngoại khóa (CLB), gồm phiếu sinh từ đề xuất định kỳ (snapshot sao chép từ template).
+     *
+     * @param  Builder<DispatchRequest>  $query
+     * @return Builder<DispatchRequest>
+     */
+    public function scopeExtracurricularOnly(Builder $query): Builder
+    {
+        return $query->where('trip_type', 'point_to_point')
+            ->where(function (Builder $q) {
+                $q->where('wizard_snapshot->form->point_purpose_kind', 'extracurricular')
+                    ->orWhere('wizard_snapshot->point_purpose_kind', 'extracurricular');
+            });
     }
 }

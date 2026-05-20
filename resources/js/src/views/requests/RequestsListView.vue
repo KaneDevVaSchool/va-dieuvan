@@ -240,6 +240,10 @@
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.recurring_toggle') }}</span>
               <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
             </li>
+            <li v-if="filters.extracurricular_only" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.extracurricular_toggle') }}</span>
+              <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
+            </li>
             <li v-if="filters.per_page !== 10" class="flex justify-between gap-2">
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
               <span class="font-medium">{{ filters.per_page }}</span>
@@ -438,6 +442,23 @@
 
           <button
             type="button"
+            role="switch"
+            :aria-checked="filters.extracurricular_only"
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+            :class="
+              filters.extracurricular_only
+                ? 'border-violet-300 bg-violet-50 text-violet-950 ring-1 ring-violet-400/25 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-100'
+                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
+            "
+            :title="t('requests_page.extracurricular_toggle')"
+            @click="toggleExtracurricularOnly"
+          >
+            <AcademicCapIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
+            {{ t('requests_page.extracurricular_filter_chip') }}
+          </button>
+
+          <button
+            type="button"
             class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
             :aria-expanded="extraFiltersOpen"
             @click="extraFiltersOpen = !extraFiltersOpen"
@@ -483,6 +504,22 @@
             />
           </button>
           <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.recurring_toggle') }}</span>
+        </label>
+        <label class="inline-flex cursor-pointer items-center gap-2">
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="filters.extracurricular_only"
+            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600"
+            :class="filters.extracurricular_only ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
+            @click="toggleExtracurricularOnly"
+          >
+            <span
+              class="pointer-events-none inline-block h-5 w-5 translate-x-0.5 translate-y-0.5 rounded-full bg-white shadow transition"
+              :class="filters.extracurricular_only ? 'translate-x-5' : ''"
+            />
+          </button>
+          <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.extracurricular_toggle') }}</span>
         </label>
         <label class="inline-flex items-center gap-2">
           <span class="text-sm text-slate-600 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
@@ -1268,6 +1305,7 @@ const filters = reactive({
   priority: '',
   sla_risk_only: false,
   recurring_only: false,
+  extracurricular_only: false,
   per_page: 10,
   page: 1,
   sort: 'created_desc',
@@ -1286,6 +1324,7 @@ const activeFilterCount = computed(() => {
   if (filters.priority === 'urgent') n++
   if (filters.sla_risk_only) n++
   if (filters.recurring_only) n++
+  if (filters.extracurricular_only) n++
   if (filters.per_page !== 10) n++
   if (filters.sort && filters.sort !== 'created_desc') n++
   return n
@@ -1373,6 +1412,7 @@ function saveFilterPreset() {
       priority: filters.priority,
       sla_risk_only: filters.sla_risk_only,
       recurring_only: filters.recurring_only,
+      extracurricular_only: filters.extracurricular_only,
       per_page: filters.per_page,
       sort: filters.sort,
       q: searchInput.value.trim(),
@@ -1401,6 +1441,7 @@ function loadFilterPreset() {
     if (typeof o.priority === 'string') filters.priority = o.priority
     if (typeof o.sla_risk_only === 'boolean') filters.sla_risk_only = o.sla_risk_only
     if (typeof o.recurring_only === 'boolean') filters.recurring_only = o.recurring_only
+    if (typeof o.extracurricular_only === 'boolean') filters.extracurricular_only = o.extracurricular_only
     if (typeof o.per_page === 'number' && [10, 20, 50, 100].includes(o.per_page)) filters.per_page = o.per_page
     if (typeof o.sort === 'string' && REQUEST_SORT_VALUES.includes(o.sort)) filters.sort = o.sort
     if ('q' in o) searchInput.value = typeof o.q === 'string' ? o.q : ''
@@ -1680,6 +1721,7 @@ function buildListParams() {
   })
   if (params.sla_risk_only === false) delete params.sla_risk_only
   if (params.recurring_only === false) delete params.recurring_only
+  if (params.extracurricular_only === false) delete params.extracurricular_only
   if (params.only_trashed === false) delete params.only_trashed
   if (params.sort === 'created_desc') delete params.sort
 
@@ -1861,6 +1903,14 @@ function toggleRecurringOnly() {
   if (!hadPage) reload()
 }
 
+function toggleExtracurricularOnly() {
+  filters.extracurricular_only = !filters.extracurricular_only
+  filters.page = 1
+  const hadPage = !!route.query.page
+  syncRoutePageAfterReset()
+  if (!hadPage) reload()
+}
+
 function resetFilters() {
   activeTab.value = 'all'
   filters.trip_type = ''
@@ -1871,6 +1921,7 @@ function resetFilters() {
   filters.priority = ''
   filters.sla_risk_only = false
   filters.recurring_only = false
+  filters.extracurricular_only = false
   filters.per_page = 10
   filters.page = 1
   filters.sort = 'created_desc'
