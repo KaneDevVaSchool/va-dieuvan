@@ -55,8 +55,7 @@ class DispatchRequestPolicy
             return true;
         }
 
-        return (int) $dispatchRequest->requester_id === (int) $user->id
-            && $user->hasPermission('request.update_own');
+        return $this->requesterMayManagePortalRecurringInstance($user, $dispatchRequest);
     }
 
     public function submitStudentCount(User $user, DispatchRequest $dispatchRequest): bool
@@ -73,8 +72,23 @@ class DispatchRequestPolicy
             return true;
         }
 
-        return (int) $dispatchRequest->requester_id === (int) $user->id
-            && $user->hasPermission('request.update_own');
+        return $this->requesterMayManagePortalRecurringInstance($user, $dispatchRequest);
+    }
+
+    /**
+     * Người đề xuất phiếu CLB định kỳ — cùng điều kiện quyền như tạo kế hoạch trên portal.
+     */
+    private function requesterMayManagePortalRecurringInstance(User $user, DispatchRequest $dispatchRequest): bool
+    {
+        if ((int) $dispatchRequest->requester_id !== (int) $user->id) {
+            return false;
+        }
+
+        if ($user->hasPermission('request.update_own') || $user->hasPermission('request.create')) {
+            return true;
+        }
+
+        return ! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp();
     }
 
     /**

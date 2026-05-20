@@ -151,12 +151,16 @@ export function humanizeApiMessage(raw, status) {
     return 'Không tìm thấy dữ liệu (có thể đã bị xóa).'
   }
 
-  if (/unauthorized|unauthenticated|token.*invalid|session expired/i.test(low)) {
+  if (/this action is unauthorized|does not have the right permission/i.test(low)) {
+    return 'Tài khoản của bạn không có quyền thực hiện thao tác này.'
+  }
+
+  if (/unauthenticated|token.*invalid|session expired/i.test(low)) {
     return 'Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
   }
 
-  if (/this action is unauthorized|does not have the right permission/i.test(low)) {
-    return 'Tài khoản của bạn không có quyền thực hiện thao tác này.'
+  if (/\bunauthorized\b/i.test(low) && status === 401) {
+    return 'Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
   }
 
   if (/the .* field is required|field is required/i.test(low)) {

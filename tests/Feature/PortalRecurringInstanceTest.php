@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\DispatchRequest;
 use App\Models\DispatchRequestTemplate;
+use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,6 +93,29 @@ class PortalRecurringInstanceTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('data.wizard_snapshot.form.purpose', 'CLB bóng đá')
             ->assertJsonPath('data.wizard_snapshot.form.requester_name', 'Nguyễn A');
+    }
+
+    public function test_portal_only_user_without_update_own_permission_may_patch_student_count(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        Role::query()->firstOrCreate(
+            ['name' => 'portal_club_coordinator', 'guard_name' => 'web'],
+            ['display_name' => 'Điều phối CLB (portal)'],
+        );
+
+        $requester = User::factory()->create(['is_active' => true]);
+        $requester->assignRole('portal_club_coordinator');
+        $this->assertFalse($requester->canAccessDispatchWebApp());
+
+        $dr = $this->recurringRequestFor($requester);
+
+        $this->actingAs($requester);
+
+        $this->patchJson("/api/portal/dispatch-requests/{$dr->id}/recurring-instance", [
+            'student_count_actual' => 18,
+        ])->assertOk()
+            ->assertJsonPath('data.student_count_actual', 18);
     }
 
     public function test_portal_patch_rejected_within_24h_of_depart(): void
