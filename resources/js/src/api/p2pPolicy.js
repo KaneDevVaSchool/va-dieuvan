@@ -74,6 +74,11 @@ export async function listAcademicTerms(params = {}) {
   return data.data
 }
 
+export async function createAcademicTerm(payload) {
+  const { data } = await http.post('/academic-terms', payload)
+  return data.data
+}
+
 export async function importPolicyStudents(formData) {
   const { data } = await http.post('/p2p-policy/students/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
