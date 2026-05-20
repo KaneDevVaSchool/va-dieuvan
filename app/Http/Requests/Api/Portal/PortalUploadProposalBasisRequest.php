@@ -5,7 +5,6 @@ namespace App\Http\Requests\Api\Portal;
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Http\Requests\Api\Portal\Concerns\ValidatesPortalRecurringExtracurricularInstance;
 use App\Models\DispatchRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class PortalUploadProposalBasisRequest extends ApiFormRequest
@@ -39,7 +38,7 @@ class PortalUploadProposalBasisRequest extends ApiFormRequest
                 'required',
                 'file',
                 'max:10240',
-                Rule::mimes(['pdf', 'jpg', 'jpeg', 'png', 'webp']),
+                'mimes:pdf,jpg,jpeg,png,webp',
             ],
         ];
     }

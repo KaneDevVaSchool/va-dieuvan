@@ -2,6 +2,7 @@ import { reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { patchPassengerCount, patchPortalRecurringInstance } from '../api/requests'
 import { formatApiError } from '../api/http'
+import { showAppSuccess } from './appMessage'
 
 /**
  * Inline draft + save for extracurricular student count (list views).
@@ -53,6 +54,13 @@ export function useExtracurricularInlineStudentCount(requestsRef, row, options) 
       } else {
         await patchPassengerCount(id, n)
       }
+      if (req.student_count_actual !== undefined) {
+        req.student_count_actual = n
+      }
+      showAppSuccess(
+        t(`${p}.save_success`, { count: n, id }),
+        t(`${p}.save_success_title`),
+      )
       options.onSaved?.()
       return true
     } catch (e) {
