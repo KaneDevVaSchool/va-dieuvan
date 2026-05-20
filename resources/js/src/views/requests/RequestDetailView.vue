@@ -839,7 +839,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RouterLink, use Route, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
