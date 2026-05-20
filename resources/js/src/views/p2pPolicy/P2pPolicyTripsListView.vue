@@ -169,7 +169,11 @@
               </td>
               <td class="px-3 py-2.5 text-center text-slate-700 dark:text-slate-300">{{ row.passenger_count ?? '—' }}</td>
               <td class="px-3 py-2.5">
-                <span v-if="row.trip_status" class="text-xs font-medium text-slate-800 dark:text-slate-200">
+                <span
+                  v-if="row.trip_status"
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  :class="tripStatusAdminPillClass(row.trip_status)"
+                >
                   {{ labelTripStatus(row.trip_status) }}
                 </span>
                 <span v-else class="text-slate-400">—</span>
@@ -274,6 +278,7 @@ import { p2pStepTo, p2pWorkflowQuery, resolveP2pTermIdFromRoute } from '../../co
 import { p2pTermStatusLabel } from '../../utils/p2pPolicyStudentLabels'
 import { formatIsoDate, formatIsoDateTime } from '../../util/datetime'
 import { labelTripStatus } from '../../util/labels'
+import { tripStatusAdminPillClass } from '../../constants/tripStatus'
 
 const { t, locale } = useI18n()
 const route = useRoute()
