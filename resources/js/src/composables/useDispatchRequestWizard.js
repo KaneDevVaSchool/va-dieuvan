@@ -55,10 +55,10 @@ import {
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
 
 /**
- * @param {{ isPortal?: boolean }} [options]
+ * @param {{ isPortal?: boolean, portalExtracurricularCreate?: boolean }} [options]
  */
 export function useDispatchRequestWizard(options = {}) {
-  const { isPortal = false } = options
+  const { isPortal = false, portalExtracurricularCreate = false } = options
   const router = useRouter()
   const route = useRoute()
   const auth = useAuthStore()
@@ -76,7 +76,11 @@ export function useDispatchRequestWizard(options = {}) {
   )
 
   function draftKeyForUser(userId) {
-    return userId != null ? `${LEGACY_DRAFT_KEY}-u${userId}` : LEGACY_DRAFT_KEY
+    const base = userId != null ? `${LEGACY_DRAFT_KEY}-u${userId}` : LEGACY_DRAFT_KEY
+    if (isPortal && portalExtracurricularCreate) {
+      return `${base}-extracurricular`
+    }
+    return base
   }
 
   function currentDraftStorageKey() {
@@ -722,7 +726,7 @@ export function useDispatchRequestWizard(options = {}) {
   const formattedRequestedDateTime = computed(() => formatDatetimeLocalAmPm(requestedDateTime.value))
 
   const isPortalExtracurricularRecurring = computed(
-    () => isPortal && route.meta.portalExtracurricular === true,
+    () => isPortal && portalExtracurricularCreate,
   )
 
   const wantsRecurringTemplate = computed(() => {
@@ -1681,15 +1685,11 @@ export function useDispatchRequestWizard(options = {}) {
   }
 
   function portalDetailRouteName() {
-    return route.meta.portalExtracurricular === true
-      ? 'portalExtracurricularDetail'
-      : 'portalRequestDetail'
+    return portalExtracurricularCreate ? 'portalExtracurricularDetail' : 'portalRequestDetail'
   }
 
   function portalHomeRouteName() {
-    return route.meta.portalExtracurricular === true
-      ? 'portalExtracurricularHome'
-      : 'portalHome'
+    return portalExtracurricularCreate ? 'portalExtracurricularHome' : 'portalHome'
   }
 
   function navigateToSubmittedRequestDetail() {

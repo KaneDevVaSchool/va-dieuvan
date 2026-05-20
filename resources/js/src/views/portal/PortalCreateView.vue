@@ -11,12 +11,12 @@
       <div>
         <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">
           {{
-            isExtracurricularModule ? t('portal.extracurricular_module.badge') : t('portal.nav_title')
+            isExtracurricularCreate ? t('portal.extracurricular_module.badge') : t('portal.nav_title')
           }}
         </p>
         <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
           {{
-            isExtracurricularModule
+            isExtracurricularCreate
               ? t('portal.extracurricular_module.create_heading')
               : t('portal.create.page_title')
           }}
@@ -36,7 +36,7 @@
           <button
             type="button"
             class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-            @click="onCancel"
+            @click="handlePortalCancel"
           >
             {{ t('dispatch_wizard.create.cancel') }}
           </button>
@@ -151,7 +151,7 @@
       <!-- Main card -->
       <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
         <!-- Step 1 -->
-        <div v-show="step === 0 && !isExtracurricularModule">
+        <div v-show="step === 0 && !isExtracurricularCreate">
           <PortalTripTypeGrid
             :trip-types="TRIP_TYPES"
             :trip-type="form.trip_type"
@@ -176,7 +176,7 @@
           <!-- Người đề nghị (+ Thời gian chỉ phiếu lẻ trên portal chung) -->
           <div
             class="grid gap-5 lg:items-start lg:gap-6"
-            :class="isExtracurricularModule ? '' : 'lg:grid-cols-2'"
+            :class="isExtracurricularCreate ? '' : 'lg:grid-cols-2'"
           >
             <!-- Người đề nghị -->
             <div class="dw-fieldset space-y-4">
@@ -280,7 +280,7 @@
             </div>
 
             <!-- Thời gian (module CLB định kỳ: dùng lịch lặp, không nhập ngày đề xuất) -->
-            <div v-if="!isExtracurricularModule" class="dw-fieldset space-y-4">
+            <div v-if="!isExtracurricularCreate" class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
 
               <!-- Ngày đề xuất + Ngày giờ cần xe -->
@@ -376,7 +376,7 @@
           <div class="dw-fieldset">
             <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
             <div
-              v-if="form.trip_type === 'point_to_point' && !isExtracurricularModule"
+              v-if="form.trip_type === 'point_to_point' && !isExtracurricularCreate"
               class="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3"
               role="radiogroup"
               :aria-label="t('dispatch_wizard.create.purpose_tab_aria')"
@@ -405,7 +405,7 @@
               </label>
             </div>
             <RecurringConfigSection
-              v-if="isExtracurricularModule"
+              v-if="isExtracurricularCreate"
               fixed-enabled
               :trip-type="form.trip_type"
               :point-purpose-kind="form.point_purpose_kind"
@@ -1133,7 +1133,7 @@
 
 <script setup>
 import { computed, defineAsyncComponent, onMounted, onUnmounted, provide, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRightIcon,
@@ -1159,12 +1159,26 @@ import PortalStepper from '../../components/portal/PortalStepper.vue'
 import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 
+const props = defineProps({
+  /** `general` = yêu cầu mới portal; `extracurricular` = CLB định kỳ (route riêng). */
+  mode: {
+    type: String,
+    default: 'general',
+    validator: (v) => v === 'general' || v === 'extracurricular',
+  },
+})
+
 const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
 const { t } = useI18n()
 const route = useRoute()
-const { isExtracurricularModule } = usePortalExtracurricularModule()
-const wizard = useDispatchRequestWizard({ isPortal: true })
+const router = useRouter()
+const isExtracurricularCreate = computed(() => props.mode === 'extracurricular')
+const { routes: portalRoutes } = usePortalExtracurricularModule()
+const wizard = useDispatchRequestWizard({
+  isPortal: true,
+  portalExtracurricularCreate: props.mode === 'extracurricular',
+})
 provide(DISPATCH_WIZARD_KEY, wizard)
 
 const DispatchWizardStep3 = defineAsyncComponent(() =>
@@ -1311,23 +1325,43 @@ function onPortalTripTypeClick(value) {
   form.value.trip_type = value
 }
 
-function applyExtracurricularModuleDefaults() {
-  if (!isExtracurricularModule.value) return
+function applyExtracurricularCreateDefaults() {
+  if (!isExtracurricularCreate.value) return
   form.value.trip_type = 'point_to_point'
   form.value.point_purpose_kind = 'extracurricular'
   form.value.recurring_enabled = true
   if (step.value === 0) goStep(1)
 }
 
+function applyGeneralPortalCreateDefaults() {
+  if (isExtracurricularCreate.value) return
+  if (form.value.point_purpose_kind === 'extracurricular') {
+    form.value.point_purpose_kind = 'point_to_point'
+  }
+  form.value.recurring_enabled = false
+}
+
 function applyShortcutTripType() {
-  if (isExtracurricularModule.value) {
-    applyExtracurricularModuleDefaults()
+  if (isExtracurricularCreate.value) {
+    applyExtracurricularCreateDefaults()
     return
   }
   const raw = String(route.query.type ?? '').trim().toLowerCase()
   if (!TRIP_TYPES.includes(raw)) return
   form.value.trip_type = raw
   goStep(1)
+}
+
+function handlePortalCancel() {
+  if (created.value) {
+    router.push({
+      name: isExtracurricularCreate.value ? portalRoutes.value.home : 'portalHome',
+    })
+    return
+  }
+  router.push({
+    name: isExtracurricularCreate.value ? portalRoutes.value.list : 'portalRequestList',
+  })
 }
 
 // --- Template save modal local state ---
@@ -1366,10 +1400,14 @@ const TRIP_TYPE_LABELS = {
 }
 
 watch(() => route.query.type, applyShortcutTripType)
-watch(isExtracurricularModule, () => applyExtracurricularModuleDefaults())
+watch(isExtracurricularCreate, () => {
+  applyExtracurricularCreateDefaults()
+  applyGeneralPortalCreateDefaults()
+})
 onMounted(() => {
   applyShortcutTripType()
-  applyExtracurricularModuleDefaults()
+  applyExtracurricularCreateDefaults()
+  applyGeneralPortalCreateDefaults()
 })
 </script>
 

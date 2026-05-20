@@ -335,7 +335,7 @@ const router = createRouter({
                 {
                     path: "new",
                     name: "portalCreate",
-                    component: () => import("../views/portal/PortalCreateView.vue"),
+                    component: () => import("../views/portal/PortalGeneralCreateView.vue"),
                     meta: {
                         portal: true,
                     },

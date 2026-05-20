@@ -4,8 +4,9 @@ Tài liệu nghiệp vụ cho stakeholder. Phiên bản đồng bộ với tri�
 
 ## Phạm vi
 
-- **Tạo:** `/portal/extracurricular/new` — cấu hình lịch lặp (tuần, thứ, kết thúc theo ngày hoặc số tuần), tuyến P2P ngoại khóa, số HS kế hoạch.
-- **Danh sách:** `/portal/extracurricular/requests` — từng chuyến (instance) sinh từ mẫu định kỳ.
+- **Yêu cầu mới (portal chung):** `/portal/new` — công tác, hàng, cửa–cửa, điểm–điểm lẻ; **không** tạo CLB định kỳ tại đây.
+- **Tạo CLB định kỳ:** `/portal/extracurricular/new` — lịch lặp (tuần, thứ, giờ đi/về, kết thúc), tuyến P2P ngoại khóa, số HS kế hoạch.
+- **Danh sách CLB:** `/portal/extracurricular/requests` — từng chuyến (instance) sinh từ mẫu định kỳ.
 
 ## Luồng tạo
 
@@ -13,7 +14,7 @@ Tài liệu nghiệp vụ cho stakeholder. Phiên bản đồng bộ với tri�
 2. Người đề xuất xác nhận → hệ thống tạo **mẫu** + **chuyến đầu** + **materialize** các chuyến còn lại trong chuỗi.
 3. Mỗi chuyến: trạng thái duyệt riêng (`pending` …), số HS kế hoạch trên `passenger_count`.
 
-Tạo phiếu định kỳ CLB **chỉ** qua `/portal/extracurricular/new`, không gộp với form đề xuất chung `/portal/new`.
+Hai luồng tạo tách route, component entry (`PortalGeneralCreateView` / `PortalExtracurricularCreateView`) và bản nháp localStorage riêng.
 
 ## Luồng số HS thực tế (hai bước)
 
