@@ -153,28 +153,24 @@
         </div>
       </div>
 
-      <div class="mt-8 lg:flex lg:justify-end">
-        <aside class="w-full min-w-0 lg:max-w-md">
-          <div class="sticky top-[5.75rem] space-y-6">
-            <PortalSignedDocUpload
-              v-if="showSignedSection"
-              :attachments="signedPaperAttachments"
-              :upload-component-key="`portal-signed-${req.id}-${uploadKeySeed}`"
-              :upload-fn="uploadSignedPaper"
-              :error="signedUploadErr"
-              @download="downloadAttachment"
-              @uploaded="onSignedUploaded"
-            />
-            <template v-else>
-              <PortalStatusHint :req="req" />
-              <p class="text-xs leading-relaxed text-slate-500">{{ t('portal.signed_gate_hint') }}</p>
-            </template>
+      <div class="mt-8 w-full space-y-6">
+        <PortalSignedDocUpload
+          v-if="showSignedSection"
+          :attachments="signedPaperAttachments"
+          :upload-component-key="`portal-signed-${req.id}-${uploadKeySeed}`"
+          :upload-fn="uploadSignedPaper"
+          :error="signedUploadErr"
+          @download="downloadAttachment"
+          @uploaded="onSignedUploaded"
+        />
+        <template v-else>
+          <PortalStatusHint :req="req" />
+          <p class="text-sm leading-relaxed text-slate-600 sm:text-base">{{ t('portal.signed_gate_hint') }}</p>
+        </template>
 
-            <div class="flex flex-wrap gap-3 text-xs font-semibold text-slate-500">
-              {{ t('portal.detail_help_footer') }}
-            </div>
-          </div>
-        </aside>
+        <p class="text-sm font-medium text-slate-500 sm:text-base">
+          {{ t('portal.detail_help_footer') }}
+        </p>
       </div>
     </template>
   </div>

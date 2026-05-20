@@ -1,33 +1,36 @@
 <template>
   <section
-    class="overflow-hidden rounded-2xl border border-emerald-200/90 bg-white p-5 shadow-sm ring-1 ring-emerald-600/10"
+    class="w-full overflow-hidden rounded-2xl border border-emerald-200/90 bg-white p-6 shadow-sm ring-1 ring-emerald-600/10 sm:p-8"
   >
-    <h2 class="text-base font-semibold text-slate-900">{{ t('portal.signed_upload_title') }}</h2>
-    <p class="mt-1 text-sm text-slate-600">{{ t('portal.signed_upload_lead') }}</p>
-    <ul v-if="attachments.length" class="mt-3 space-y-1.5">
+    <h2 class="text-lg font-bold text-slate-900 sm:text-xl">{{ t('portal.signed_upload_title') }}</h2>
+    <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base">{{ t('portal.signed_upload_lead') }}</p>
+    <ul v-if="attachments.length" class="mt-5 space-y-2">
       <li
         v-for="a in attachments"
         :key="a.id"
-        class="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/80 px-2.5 py-2 text-sm"
+        class="flex flex-col gap-2 rounded-xl border border-slate-200/90 bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
       >
-        <span class="min-w-0 truncate font-medium text-slate-800">{{ a.original_name || `File #${a.id}` }}</span>
-        <button type="button" class="min-h-[40px] shrink-0 px-2 text-xs font-semibold text-teal-700 hover:underline" @click="$emit('download', a)">
+        <span class="min-w-0 text-sm font-semibold text-slate-800 sm:text-base">{{ a.original_name || `File #${a.id}` }}</span>
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-xl border border-teal-200 bg-white px-4 text-sm font-semibold text-teal-800 shadow-sm transition hover:bg-teal-50 sm:min-h-[40px]"
+          @click="$emit('download', a)"
+        >
           {{ t('portal.signed_download') }}
         </button>
       </li>
     </ul>
-    <div class="mt-3">
+    <div class="mt-5">
       <FileUpload
         :key="uploadComponentKey"
         :label="t('portal.signed_add')"
         :hint="t('portal.signed_hints')"
         drag-drop
-        compact
         :upload-fn="uploadFn"
         @uploaded="$emit('uploaded')"
       />
     </div>
-    <p v-if="error" class="mt-2 text-xs font-medium text-rose-600">{{ error }}</p>
+    <p v-if="error" class="mt-3 text-sm font-medium text-rose-600 sm:text-base">{{ error }}</p>
   </section>
 </template>
 
