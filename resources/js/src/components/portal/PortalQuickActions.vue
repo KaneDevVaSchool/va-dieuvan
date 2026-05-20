@@ -3,6 +3,19 @@
     <h2 class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{{ t('portal.quick_actions_title') }}</h2>
     <div class="mt-4 grid gap-3">
       <RouterLink
+        :to="extracurricularQuick.to"
+        class="group flex min-h-[52px] items-center gap-3 rounded-2xl border border-violet-200/80 bg-violet-50/60 px-4 py-3 text-left shadow-sm transition hover:border-violet-300 hover:bg-violet-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+      >
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-violet-200/80">
+          <component :is="extracurricularQuick.icon" class="h-6 w-6 text-violet-700" aria-hidden="true" />
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-sm font-semibold text-slate-900">{{ extracurricularQuick.label }}</span>
+          <span class="mt-0.5 block text-xs text-slate-500">{{ extracurricularQuick.hint }}</span>
+        </span>
+        <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400 transition group-hover:text-violet-600" aria-hidden="true" />
+      </RouterLink>
+      <RouterLink
         v-for="item in items"
         :key="item.type"
         :to="{ name: 'portalCreate', query: { type: item.type } }"
@@ -25,7 +38,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { BriefcaseIcon, ChevronRightIcon, CubeIcon, MapPinIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
+import { AcademicCapIcon, BriefcaseIcon, ChevronRightIcon, CubeIcon, MapPinIcon } from '@heroicons/vue/24/outline'
 
 const { t } = useI18n()
 
@@ -48,11 +61,12 @@ const items = computed(() => [
     hint: t('portal.quick_d2d_hint'),
     icon: MapPinIcon,
   },
-  {
-    type: 'point_to_point',
-    label: t('portal.quick_p2p_label'),
-    hint: t('portal.quick_p2p_hint'),
-    icon: UserGroupIcon,
-  },
 ])
+
+const extracurricularQuick = computed(() => ({
+  to: { name: 'portalExtracurricularHome' },
+  label: t('portal.quick_extracurricular_label'),
+  hint: t('portal.quick_extracurricular_hint'),
+  icon: AcademicCapIcon,
+}))
 </script>

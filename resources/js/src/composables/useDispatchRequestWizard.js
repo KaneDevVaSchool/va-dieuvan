@@ -1581,12 +1581,24 @@ export function useDispatchRequestWizard(options = {}) {
     draftsModalOpen.value = false
   }
 
+  function portalDetailRouteName() {
+    return route.meta.portalExtracurricular === true
+      ? 'portalExtracurricularDetail'
+      : 'portalRequestDetail'
+  }
+
+  function portalHomeRouteName() {
+    return route.meta.portalExtracurricular === true
+      ? 'portalExtracurricularHome'
+      : 'portalHome'
+  }
+
   function navigateToSubmittedRequestDetail() {
     const id = created.value?.id
     if (!id) return
     if (isPortal) {
       router.push({
-        name: 'portalRequestDetail',
+        name: portalDetailRouteName(),
         params: { id: String(id) },
         query: { created: '1' },
       })
@@ -1684,7 +1696,7 @@ export function useDispatchRequestWizard(options = {}) {
 
   function onCancel() {
     if (created.value) {
-      if (isPortal) router.push({ name: 'portalHome' })
+      if (isPortal) router.push({ name: portalHomeRouteName() })
       else router.push(staffPath('/requests'))
       return
     }

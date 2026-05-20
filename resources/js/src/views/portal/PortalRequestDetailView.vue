@@ -23,14 +23,14 @@
 
     <div v-else-if="detailError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
       {{ detailError }}
-      <RouterLink :to="{ name: 'portalHome' }" class="mt-3 block font-semibold text-indigo-700 underline">{{ t('portal.back_home') }}</RouterLink>
+      <RouterLink :to="{ name: portalRoutes.home }" class="mt-3 block font-semibold text-indigo-700 underline">{{ t('portal.back_home') }}</RouterLink>
     </div>
 
     <template v-else-if="req">
       <div class="border-b border-slate-200/80 pb-6">
         <div class="flex min-w-0 items-start gap-3">
           <RouterLink
-            :to="{ name: 'portalHome' }"
+            :to="{ name: portalRoutes.list }"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/70 hover:text-indigo-700"
             :aria-label="t('portal.back_list')"
           >
@@ -233,8 +233,10 @@ import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.v
 import PortalSignedDocUpload from '../../components/portal/PortalSignedDocUpload.vue'
 import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
+import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 
 const route = useRoute()
+const { routes: portalRoutes } = usePortalExtracurricularModule()
 const router = useRouter()
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -274,7 +276,7 @@ function revokePdfPreviewUrl() {
 watch(
   () => route.params.id,
   () => {
-    if (route.name === 'portalRequestDetail') {
+    if (route.name === 'portalRequestDetail' || route.name === 'portalExtracurricularDetail') {
       welcomeOpen.value = false
       revokePdfPreviewUrl()
       load()

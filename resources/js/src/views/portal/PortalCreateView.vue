@@ -9,8 +9,18 @@
     <!-- Header -->
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">{{ t('portal.nav_title') }}</p>
-        <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{{ t('portal.create.page_title') }}</h1>
+        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">
+          {{
+            isExtracurricularModule ? t('portal.extracurricular_module.badge') : t('portal.nav_title')
+          }}
+        </p>
+        <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
+          {{
+            isExtracurricularModule
+              ? t('portal.extracurricular_module.create_heading')
+              : t('portal.create.page_title')
+          }}
+        </h1>
         <p v-if="dispatchFormSettingsError && !dispatchFormSettingsLoading" class="mt-1 text-xs text-amber-700">
           {{ dispatchFormSettingsError }}
         </p>
@@ -141,7 +151,7 @@
       <!-- Main card -->
       <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 lg:p-10">
         <!-- Step 1 -->
-        <div v-show="step === 0">
+        <div v-show="step === 0 && !isExtracurricularModule">
           <PortalTripTypeGrid
             :trip-types="TRIP_TYPES"
             :trip-type="form.trip_type"
@@ -363,7 +373,7 @@
           <div class="dw-fieldset">
             <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_purpose') }}</h3>
             <div
-              v-if="form.trip_type === 'point_to_point'"
+              v-if="form.trip_type === 'point_to_point' && !isExtracurricularModule"
               class="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3"
               role="radiogroup"
               :aria-label="t('dispatch_wizard.create.purpose_tab_aria')"
@@ -1142,11 +1152,13 @@ import ConfirmSummary from '../requests/dispatch-wizard/ConfirmSummary.vue'
 import RecurringConfigSection from '../../components/recurring/RecurringConfigSection.vue'
 import PortalStepper from '../../components/portal/PortalStepper.vue'
 import PortalTripTypeGrid from '../../components/portal/PortalTripTypeGrid.vue'
+import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 
 const TRIP_TYPES = ['door_to_door', 'point_to_point', 'business', 'cargo']
 
 const { t } = useI18n()
 const route = useRoute()
+const { isExtracurricularModule } = usePortalExtracurricularModule()
 const wizard = useDispatchRequestWizard({ isPortal: true })
 provide(DISPATCH_WIZARD_KEY, wizard)
 
@@ -1310,7 +1322,18 @@ function onPortalTripTypeClick(value) {
   form.value.trip_type = value
 }
 
+function applyExtracurricularModuleDefaults() {
+  if (!isExtracurricularModule.value) return
+  form.value.trip_type = 'point_to_point'
+  form.value.point_purpose_kind = 'extracurricular'
+  if (step.value === 0) goStep(1)
+}
+
 function applyShortcutTripType() {
+  if (isExtracurricularModule.value) {
+    applyExtracurricularModuleDefaults()
+    return
+  }
   const raw = String(route.query.type ?? '').trim().toLowerCase()
   if (!TRIP_TYPES.includes(raw)) return
   form.value.trip_type = raw
@@ -1353,8 +1376,10 @@ const TRIP_TYPE_LABELS = {
 }
 
 watch(() => route.query.type, applyShortcutTripType)
+watch(isExtracurricularModule, () => applyExtracurricularModuleDefaults())
 onMounted(() => {
   applyShortcutTripType()
+  applyExtracurricularModuleDefaults()
 })
 </script>
 

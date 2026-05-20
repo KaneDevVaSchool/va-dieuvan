@@ -4,16 +4,33 @@
       <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <RouterLink
-            :to="{ name: 'portalHome' }"
+            :to="{ name: portalRoutes.home }"
             class="text-xs font-semibold text-indigo-600 underline-offset-2 hover:underline"
           >
-            ← {{ t('portal.back_dashboard') }}
+            ←
+            {{
+              isExtracurricularModule
+                ? t('portal.extracurricular_module.back_hub')
+                : t('portal.back_dashboard')
+            }}
           </RouterLink>
-          <h1 class="mt-3 text-2xl font-bold tracking-tight text-slate-900">{{ t('portal.list_page_heading') }}</h1>
-          <p class="mt-2 text-sm text-slate-600">{{ t('portal.list_page_lead') }}</p>
+          <h1 class="mt-3 text-2xl font-bold tracking-tight text-slate-900">
+            {{
+              isExtracurricularModule
+                ? t('portal.extracurricular_module.list_heading')
+                : t('portal.list_page_heading')
+            }}
+          </h1>
+          <p class="mt-2 text-sm text-slate-600">
+            {{
+              isExtracurricularModule
+                ? t('portal.extracurricular_module.list_lead')
+                : t('portal.list_page_lead')
+            }}
+          </p>
         </div>
         <RouterLink
-          :to="{ name: 'portalCreate' }"
+          :to="{ name: portalRoutes.create }"
           class="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-2xl bg-indigo-600 px-6 text-sm font-bold text-white shadow-md hover:bg-indigo-700"
         >
           {{ t('portal.cta_primary') }}
@@ -276,7 +293,7 @@
 
               <!-- Extracurricular chip -->
               <AppFilterDropdown
-                v-if="filterDropdownVisible.extracurricular !== false"
+                v-if="!isExtracurricularModule && filterDropdownVisible.extracurricular !== false"
                 :label="t('portal.filter_label_extracurricular')"
                 :summary-text="currentExtracurricularLabel"
                 panel-class="min-w-[240px] py-1"
@@ -365,7 +382,7 @@
         >
           <template #action>
             <RouterLink
-              :to="{ name: 'portalCreate' }"
+              :to="{ name: portalRoutes.create }"
               class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-indigo-600 px-8 text-sm font-semibold text-white shadow-md hover:bg-indigo-700"
             >
               {{ t('portal.cta_primary') }}
@@ -392,6 +409,7 @@
             ref="extracurricularTableRef"
             :requests="items"
             variant="portal"
+            :detail-route-name="portalRoutes.detail"
             @refresh="reloadFromStart"
             @clone="onCloneFromList"
           />
@@ -476,6 +494,7 @@ import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
+import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 
 const PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const PER_PAGE_KEY = 'portal-list-per-page'
@@ -493,8 +512,11 @@ function readStoredPerPage() {
 
 const { t } = useI18n()
 const router = useRouter()
+const { isExtracurricularModule, routes: portalRoutes } = usePortalExtracurricularModule()
 
-const isExtracurricularMode = computed(() => filterExtracurricular.value === 'extracurricular')
+const isExtracurricularMode = computed(
+  () => isExtracurricularModule.value || filterExtracurricular.value === 'extracurricular',
+)
 
 const extracurricularTableRef = ref(null)
 
@@ -871,7 +893,10 @@ function listParams(page) {
     trip_type: filterTripType.value !== 'all' ? filterTripType.value : undefined,
     is_urgent:
       filterUrgent.value !== 'all' ? (filterUrgent.value === 'urgent' ? 1 : 0) : undefined,
-    extracurricular_only: filterExtracurricular.value === 'extracurricular' ? true : undefined,
+    extracurricular_only:
+      isExtracurricularModule.value || filterExtracurricular.value === 'extracurricular'
+        ? true
+        : undefined,
     date_from: dateFrom.value || undefined,
     date_to: dateTo.value || undefined,
   }
@@ -909,7 +934,7 @@ async function onCloneFromList(req) {
   extracurricularTableRef.value?.setCloneBusy?.(req.id, true)
   try {
     const dr = await cloneDispatchRequest(req.id)
-    await router.push({ name: 'portalCreate', query: { replace: String(dr.id) } })
+    await router.push({ name: portalRoutes.value.create, query: { replace: String(dr.id) } })
   } catch (e) {
     fetchError.value = formatApiError(e, t('request_detail.reset_clone_fail'))
   } finally {
@@ -927,6 +952,9 @@ function onPerPageChange() {
 }
 
 onMounted(() => {
+  if (isExtracurricularModule.value) {
+    filterExtracurricular.value = 'extracurricular'
+  }
   loadPage(1)
 })
 

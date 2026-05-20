@@ -37,7 +37,7 @@
           <span class="hidden sm:inline">{{ t('portal.nav_home') }}</span>
         </RouterLink>
         <RouterLink
-          :to="{ name: 'portalRequestList' }"
+          :to="{ name: listRouteName }"
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
             isList
@@ -51,7 +51,21 @@
           <span class="hidden sm:inline">{{ t('portal.nav_list') }}</span>
         </RouterLink>
         <RouterLink
-          :to="{ name: 'portalCreate' }"
+          :to="{ name: 'portalExtracurricularHome' }"
+          class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
+          :class="
+            isExtracurricularModule
+              ? 'bg-violet-50 text-violet-800 ring-1 ring-inset ring-violet-200'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          "
+          :aria-current="isExtracurricularModule ? 'page' : undefined"
+          :title="t('portal.nav_extracurricular')"
+        >
+          <AcademicCapIcon class="h-5 w-5 shrink-0 sm:mr-1.5" aria-hidden="true" />
+          <span class="hidden lg:inline">{{ t('portal.nav_extracurricular') }}</span>
+        </RouterLink>
+        <RouterLink
+          :to="{ name: createRouteName }"
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
             isCreate
@@ -198,6 +212,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  AcademicCapIcon,
   ArrowRightStartOnRectangleIcon,
   BellIcon as BellOutlineIcon,
   ChevronDownIcon,
@@ -205,6 +220,7 @@ import {
   ListBulletIcon,
   PlusCircleIcon,
 } from '@heroicons/vue/24/outline'
+import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import ThemeSwitcher from '../layout/ThemeSwitcher.vue'
 import { useAuthStore } from '../../store'
 import { useAuthLogout } from '../../composables/useAuthLogout'
@@ -228,13 +244,33 @@ const loggingOut = ref(false)
 const menuOpen = ref(false)
 const menuRootRef = ref(null)
 
+const { isExtracurricularModule } = usePortalExtracurricularModule()
+
 const isHome = computed(() => route.name === 'portalHome')
-const isCreate = computed(() => route.name === 'portalCreate')
-const isDetail = computed(() => route.name === 'portalRequestDetail')
-const isList = computed(() => route.name === 'portalRequestList')
+const listRouteName = computed(() =>
+  isExtracurricularModule.value ? 'portalExtracurricularList' : 'portalRequestList',
+)
+const createRouteName = computed(() =>
+  isExtracurricularModule.value ? 'portalExtracurricularCreate' : 'portalCreate',
+)
+
+const isCreate = computed(
+  () => route.name === 'portalCreate' || route.name === 'portalExtracurricularCreate',
+)
+const isDetail = computed(
+  () => route.name === 'portalRequestDetail' || route.name === 'portalExtracurricularDetail',
+)
+const isList = computed(
+  () => route.name === 'portalRequestList' || route.name === 'portalExtracurricularList',
+)
 
 /** Detail là phần mở rộng của trang chủ portal → highlight Home nav */
-const homeNavActive = computed(() => isHome.value || isDetail.value)
+const homeNavActive = computed(() => {
+  if (isExtracurricularModule.value) {
+    return route.name === 'portalExtracurricularHome'
+  }
+  return isHome.value || isDetail.value
+})
 
 const unreadBadge = ref(0)
 let unreadPollTimer = null

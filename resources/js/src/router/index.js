@@ -364,6 +364,43 @@ const router = createRouter({
                         portal: true,
                     },
                 },
+                {
+                    path: "extracurricular",
+                    name: "portalExtracurricularHome",
+                    component: () =>
+                        import("../views/portal/PortalExtracurricularHomeView.vue"),
+                    meta: {
+                        portal: true,
+                        portalExtracurricular: true,
+                    },
+                },
+                {
+                    path: "extracurricular/requests",
+                    name: "portalExtracurricularList",
+                    component: () => import("../views/portal/PortalRequestListView.vue"),
+                    meta: {
+                        portal: true,
+                        portalExtracurricular: true,
+                    },
+                },
+                {
+                    path: "extracurricular/new",
+                    name: "portalExtracurricularCreate",
+                    component: () => import("../views/portal/PortalCreateView.vue"),
+                    meta: {
+                        portal: true,
+                        portalExtracurricular: true,
+                    },
+                },
+                {
+                    path: "extracurricular/requests/:id(\\d+)",
+                    name: "portalExtracurricularDetail",
+                    component: () => import("../views/portal/PortalRequestDetailView.vue"),
+                    meta: {
+                        portal: true,
+                        portalExtracurricular: true,
+                    },
+                },
             ],
         },
         {

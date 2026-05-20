@@ -181,6 +181,7 @@ const RequestIdCell = defineComponent({
 const props = defineProps({
   requests: { type: Array, required: true },
   variant: { type: String, default: 'portal' },
+  detailRouteName: { type: String, default: 'portalRequestDetail' },
 })
 
 const emit = defineEmits(['refresh', 'clone'])
@@ -271,7 +272,7 @@ async function saveRow(req) {
 
 function openDetail(req) {
   if (props.variant === 'portal') {
-    router.push({ name: 'portalRequestDetail', params: { id: String(req.id) } })
+    router.push({ name: props.detailRouteName, params: { id: String(req.id) } })
   } else {
     router.push(`/requests/${req.id}`)
   }
