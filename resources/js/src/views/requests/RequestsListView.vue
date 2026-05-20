@@ -290,7 +290,24 @@
             full-width-summary
             panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
           >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  @click="applyDepartRangePreset('week', $event)"
+                >
+                  {{ t('requests_page.filter_depart_this_week') }}
+                </button>
+                <button
+                  type="button"
+                  class="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  @click="applyDepartRangePreset('month', $event)"
+                >
+                  {{ t('requests_page.filter_depart_this_month') }}
+                </button>
+              </div>
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 v-model="filters.from"
                 type="date"
@@ -304,6 +321,7 @@
                 class="h-9 w-full rounded-md border-0 bg-white px-2 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 sm:w-auto dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
                 @change="onFilterDropdownChange"
               />
+              </div>
             </div>
           </AppFilterDropdown>
 
@@ -1696,6 +1714,34 @@ function applyFilterPatch(ev, patch) {
 }
 
 function onFilterDropdownChange(ev) {
+  closeParentDetails(ev)
+  onFilterChange()
+}
+
+function isoDateLocal(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function applyDepartRangePreset(kind, ev) {
+  const now = new Date()
+  if (kind === 'week') {
+    const day = now.getDay()
+    const diffToMon = day === 0 ? -6 : 1 - day
+    const mon = new Date(now)
+    mon.setDate(now.getDate() + diffToMon)
+    const sun = new Date(mon)
+    sun.setDate(mon.getDate() + 6)
+    filters.from = isoDateLocal(mon)
+    filters.to = isoDateLocal(sun)
+  } else if (kind === 'month') {
+    const first = new Date(now.getFullYear(), now.getMonth(), 1)
+    const last = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    filters.from = isoDateLocal(first)
+    filters.to = isoDateLocal(last)
+  }
   closeParentDetails(ev)
   onFilterChange()
 }

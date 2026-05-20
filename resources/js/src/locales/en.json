@@ -2169,6 +2169,8 @@
         "filter_channel": "Channel",
         "filter_paper": "Paper form",
         "filter_depart_range": "Departure date",
+        "filter_depart_this_week": "This week",
+        "filter_depart_this_month": "This month",
         "filter_priority": "Priority",
         "filter_priority_all": "All",
         "filter_priority_urgent": "Urgent",

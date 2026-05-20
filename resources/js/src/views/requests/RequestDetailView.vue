@@ -1085,7 +1085,7 @@ const showPassengerAdjustSection = computed(() => {
 
 const showResetCloneBtn = computed(() => {
   if (!isCurrentUserRequester.value || !auth.hasPermission('request.create')) return false
-  return String(req.value?.status || '') === 'approved'
+  return ['approved', 'rejected'].includes(String(req.value?.status || ''))
 })
 
 const activeTab = ref('route')

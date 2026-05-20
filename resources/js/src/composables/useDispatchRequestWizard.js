@@ -1147,7 +1147,6 @@ export function useDispatchRequestWizard(options = {}) {
     submitApiIssueItems.value = []
     const items = buildConfirmReviewIssues(confirmIssuesContext())
     const wantsRecurring =
-      !isPortal &&
       form.value.recurring_enabled &&
       form.value.trip_type === 'point_to_point' &&
       form.value.point_purpose_kind === 'extracurricular' &&
@@ -1238,7 +1237,6 @@ export function useDispatchRequestWizard(options = {}) {
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
       const wantsRecurring =
-        !isPortal &&
         form.value.recurring_enabled &&
         form.value.trip_type === 'point_to_point' &&
         form.value.point_purpose_kind === 'extracurricular' &&
@@ -1265,7 +1263,7 @@ export function useDispatchRequestWizard(options = {}) {
         }
         const pack = await createDispatchRequestTemplate(tmplPayload, { idempotencyKey })
         createdResult = pack?.dispatch_request ?? null
-      } else if (replaceDraftRequestId.value && !isPortal) {
+      } else if (replaceDraftRequestId.value) {
         const rid = replaceDraftRequestId.value
         createdResult = await patchDispatchRequestWizard(rid, payload, { idempotencyKey })
         replaceDraftRequestId.value = null
@@ -1720,7 +1718,7 @@ export function useDispatchRequestWizard(options = {}) {
     }
     migrateLegacyDraft()
     const rawReplace = route.query.replace ?? route.query.clone
-    if (!isPortal && rawReplace != null && String(rawReplace).trim() !== '') {
+    if (rawReplace != null && String(rawReplace).trim() !== '') {
       const num = Number(rawReplace)
       if (Number.isFinite(num) && num >= 1) {
         await hydrateFromPendingReplace(num)
@@ -1764,7 +1762,6 @@ export function useDispatchRequestWizard(options = {}) {
   watch(
     () => route.query.replace ?? route.query.clone,
     async (raw) => {
-      if (isPortal) return
       if (raw == null || String(raw).trim() === '') return
       const num = Number(raw)
       if (!Number.isFinite(num) || num < 1) return

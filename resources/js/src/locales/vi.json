@@ -1997,6 +1997,8 @@
         "filter_channel": "Kênh",
         "filter_paper": "Phiếu giấy",
         "filter_depart_range": "Ngày khởi hành",
+        "filter_depart_this_week": "Tuần này",
+        "filter_depart_this_month": "Tháng này",
         "filter_priority": "Ưu tiên",
         "filter_priority_all": "Tất cả",
         "filter_priority_urgent": "Gấp / ưu tiên",

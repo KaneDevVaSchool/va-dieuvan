@@ -416,7 +416,11 @@
               v-model:recurrence-end-date="form.recurrence_end_date"
               v-model:recurrence-end-mode="form.recurrence_end_mode"
               v-model:repeat-count="form.recurrence_repeat_count"
-              :weekday-labels="recurringSelectedWeekdayLabels"
+              :weekday-options="e1WeekdayOptions"
+              :weekdays="form.e1_weekdays"
+              :depart-time-display="recurringDepartTimeDisplay"
+              end-mode-radio-name="staff_recurrence_end_mode"
+              @toggle-weekday="toggleE1Weekday"
               @go-schedule-step="goStep(2)"
             />
             <label class="block">
@@ -967,6 +971,8 @@ const {
   requestedDateTime,
   tripTypeOptions,
   e1WeekdayOptions,
+  toggleE1Weekday,
+  computedDepartAt,
   openDatePickerFromInput,
   onRequesterPhoneInput,
   onCoordinatorPhoneInput,
@@ -1021,9 +1027,21 @@ const urgentExplainTooltip = computed(() =>
   }),
 )
 
-const recurringSelectedWeekdayLabels = computed(() =>
-  e1WeekdayOptions.value.filter((wd) => form.value.e1_weekdays?.[wd.k]).map((wd) => wd.label),
-)
+const recurringDepartTimeDisplay = computed(() => {
+  const raw = computedDepartAt.value?.trim()
+  if (!raw) return ''
+  const m = raw.match(/T(\d{2}:\d{2})/)
+  if (m) return m[1]
+  try {
+    const d = new Date(raw)
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
+    }
+  } catch {
+    /* ignore */
+  }
+  return ''
+})
 </script>
 
 <style src="./dispatch-wizard/dispatchWizard.styles.css"></style>

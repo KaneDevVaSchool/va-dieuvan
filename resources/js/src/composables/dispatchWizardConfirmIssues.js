@@ -148,15 +148,6 @@ export function buildConfirmReviewIssues(ctx) {
   if (!ctx.detailStepSchedulesValid) add('schedule', t('dispatch_wizard.confirm.issue_schedule_invalid'))
   if (!ctx.computedDepartAt?.trim()) add('general', t('dispatch_wizard.validate.depart_time'))
 
-  if (
-    ctx.isPortal &&
-    f.recurring_enabled &&
-    f.trip_type === 'point_to_point' &&
-    f.point_purpose_kind === 'extracurricular'
-  ) {
-    add('general', t('portal.create.recurring_not_supported'))
-  }
-
   return issues
 }
 
@@ -218,11 +209,7 @@ export function navigateToFirstInvalidWizardStep(ctx) {
     !f.date_needed ||
     ctx.coordinatorEmailFormatInvalid ||
     ctx.step2DateOrderInvalid ||
-    (f.is_urgent && !f.urgent_reason?.trim()) ||
-    (ctx.isPortal &&
-      f.recurring_enabled &&
-      f.trip_type === 'point_to_point' &&
-      f.point_purpose_kind === 'extracurricular')
+    (f.is_urgent && !f.urgent_reason?.trim())
   ) {
     ctx.setStep(1)
     return true

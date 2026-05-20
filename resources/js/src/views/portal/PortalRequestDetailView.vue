@@ -41,6 +41,12 @@
               <h1 class="font-mono text-lg font-bold text-slate-900 sm:text-xl">#{{ req.id }}</h1>
               <StatusBadge :status="req.status" />
               <span
+                v-if="req.dispatch_request_template_id"
+                class="inline-flex items-center rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800"
+              >
+                {{ t('request_detail.badge_recurring') }}
+              </span>
+              <span
                 v-if="req.is_urgent"
                 class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700"
               >
@@ -60,6 +66,30 @@
       </div>
 
       <PortalStatusTimeline class="mt-8" :title="t('portal.timeline_heading')" :steps="timelineSteps" />
+
+      <section
+        v-if="showRecurringExtras"
+        class="mt-8 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <CostLimitAlert
+          v-if="req.dispatch_package_cost_alert || req.dispatch_package_budget_alert"
+          :alert="req.dispatch_package_cost_alert"
+          :budget-alert="req.dispatch_package_budget_alert"
+        />
+        <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
+        <StudentCountField
+          v-if="showPassengerAdjustSection"
+          v-model:passenger-count="passengerDraft"
+          :student-count-plan="req.passenger_count != null ? Number(req.passenger_count) : null"
+          :locked="passengerDepartLocked"
+          :is-dispatcher-override="false"
+          :depart-at-formatted="departAtFormattedShort"
+          :saving="passengerSaving"
+          :error="passengerPatchErr"
+          :class="showResetCloneBtn ? 'border-t border-slate-100 pt-4' : ''"
+          @save="savePassengerDraft"
+        />
+      </section>
 
       <section
         v-if="req.status === 'approved'"
@@ -183,12 +213,18 @@ import { useI18n } from 'vue-i18n'
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ClipboardDocumentIcon, DocumentArrowDownIcon, XCircleIcon } from '@heroicons/vue/24/outline'
 import { saveAs } from 'file-saver'
 import {
+  cloneDispatchRequest,
   downloadPortalAttachmentBlob,
   exportPortalDispatchRequestPdf,
   getPortalDispatchRequest,
+  patchPassengerCount,
   uploadPortalSignedPaper,
 } from '../../api/requests'
 import { formatApiError } from '../../api/http'
+import { useAuthStore } from '../../store'
+import CostLimitAlert from '../../components/requests/CostLimitAlert.vue'
+import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
+import StudentCountField from '../../components/recurring/StudentCountField.vue'
 import { usePortalTimelineSteps } from '../../composables/usePortalTimelineSteps.js'
 import { usePortalDetailPoll } from '../../composables/usePortalDetailPoll.js'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
@@ -201,10 +237,16 @@ import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const auth = useAuthStore()
 
 const loading = ref(true)
 const detailError = ref('')
 const req = ref(null)
+
+const passengerDraft = ref(1)
+const passengerSaving = ref(false)
+const passengerPatchErr = ref('')
+const resetCloneBusy = ref(false)
 
 const pdfBusy = ref(false)
 const pdfBlobUrl = ref('')
@@ -266,6 +308,9 @@ async function load(opts = {}) {
     }
     const data = await getPortalDispatchRequest(id)
     req.value = data
+    const actual = data.student_count_actual ?? data.passenger_count
+    passengerDraft.value = Math.max(1, Math.min(999, Math.round(Number(actual) || 1)))
+    passengerPatchErr.value = ''
     if (!silent) detailError.value = ''
   } catch (e) {
     if (!silent) {
@@ -320,6 +365,101 @@ const departFmt = computed(() => {
     return ''
   }
 })
+
+const departAtFormattedShort = computed(() => {
+  const r = req.value
+  if (!r?.depart_at) return ''
+  try {
+    return new Date(r.depart_at).toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return ''
+  }
+})
+
+const isCurrentUserRequester = computed(
+  () =>
+    auth.user?.id != null &&
+    req.value?.requester_id != null &&
+    Number(auth.user.id) === Number(req.value.requester_id),
+)
+
+function hoursUntilDepartIso(iso) {
+  if (!iso) return null
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return null
+    return (d.getTime() - Date.now()) / 3600000
+  } catch {
+    return null
+  }
+}
+
+const passengerDepartLocked = computed(() => {
+  if (!isCurrentUserRequester.value || !req.value?.dispatch_request_template_id) return true
+  if (req.value?.locked_at) return true
+  const st = req.value?.status
+  if (st !== 'pending' && st !== 'price_filled') return true
+  const h = hoursUntilDepartIso(req.value?.depart_at)
+  return h == null || h < 24
+})
+
+const showPassengerAdjustSection = computed(() => {
+  if (!req.value?.dispatch_request_template_id) return false
+  return (
+    isCurrentUserRequester.value &&
+    ['pending', 'price_filled'].includes(String(req.value?.status || ''))
+  )
+})
+
+const showResetCloneBtn = computed(() => {
+  if (!isCurrentUserRequester.value || !auth.hasPermission('request.create')) return false
+  return ['approved', 'rejected'].includes(String(req.value?.status || ''))
+})
+
+const showRecurringExtras = computed(() => {
+  const r = req.value
+  if (!r) return false
+  return !!(
+    r.dispatch_package_cost_alert ||
+    r.dispatch_package_budget_alert ||
+    showResetCloneBtn.value ||
+    showPassengerAdjustSection.value
+  )
+})
+
+async function onResetCloneRequest() {
+  if (!req.value?.id || resetCloneBusy.value) return
+  resetCloneBusy.value = true
+  try {
+    const dr = await cloneDispatchRequest(req.value.id)
+    await router.push({ name: 'portalCreate', query: { replace: String(dr.id) } })
+  } catch (e) {
+    window.alert(formatApiError(e, t('request_detail.reset_clone_fail')))
+  } finally {
+    resetCloneBusy.value = false
+  }
+}
+
+async function savePassengerDraft() {
+  if (!req.value?.id || passengerSaving.value || passengerDepartLocked.value) return
+  passengerSaving.value = true
+  passengerPatchErr.value = ''
+  try {
+    const n = Math.round(Number(passengerDraft.value))
+    await patchPassengerCount(req.value.id, n)
+    await load()
+  } catch (e) {
+    passengerPatchErr.value = formatApiError(e, t('request_detail.passenger_save_fail'))
+  } finally {
+    passengerSaving.value = false
+  }
+}
 
 const tripTypeLabel = computed(() => {
   const tt = req.value?.trip_type
