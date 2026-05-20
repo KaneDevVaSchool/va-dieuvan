@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 const VIS_STORAGE_KEY = 'p2p-policy-student-filter-vis'
 
 const DEFAULT_VISIBILITY = {
+  p2p_policy_term_id: true,
   academic_term_id: true,
   policy_route_id: true,
   campus_id: true,
@@ -106,6 +107,7 @@ export function useP2pPolicyStudentFilters() {
     clearFilters,
     page,
     filterDefs: [
+      { id: 'p2p_policy_term_id', labelKey: 'p2p_policy_page.filter_p2p_term' },
       { id: 'academic_term_id', labelKey: 'p2p_policy_page.filter_term' },
       { id: 'policy_route_id', labelKey: 'p2p_policy_page.filter_route' },
       { id: 'campus_id', labelKey: 'p2p_policy_page.filter_campus' },

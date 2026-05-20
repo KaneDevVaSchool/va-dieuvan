@@ -1,5 +1,10 @@
 import { http } from './http'
 
+export async function listP2pPolicyFixedHolidays(params = {}) {
+  const { data } = await http.get('/p2p-policy/fixed-holidays', { params })
+  return data.data
+}
+
 export async function listP2pPolicyTerms(params = {}) {
   const { data } = await http.get('/p2p-policy/terms', { params })
   return data.data
@@ -79,6 +84,11 @@ export async function createAcademicTerm(payload) {
   return data.data
 }
 
+export async function createCampus(payload) {
+  const { data } = await http.post('/campuses', payload)
+  return data.data
+}
+
 export async function importPolicyStudents(formData) {
   const { data } = await http.post('/p2p-policy/students/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -86,11 +96,9 @@ export async function importPolicyStudents(formData) {
   return data.data
 }
 
-export function policyStudentsExportUrl(params = {}) {
-  const qs = new URLSearchParams()
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null && v !== '') qs.set(k, String(v))
-  }
-  const q = qs.toString()
-  return `/api/p2p-policy/students/export${q ? `?${q}` : ''}`
-}
+export {
+  downloadPolicyStudentsExport,
+  downloadPolicyStudentsImportTemplate,
+  previewPolicyStudentsImport,
+  commitPolicyStudentsImport,
+} from './p2pPolicySpreadsheet'

@@ -14,8 +14,10 @@ use App\Models\PolicyTermHoliday;
 use App\Models\PolicyTermSkipDate;
 use App\Services\Auditing\AuditLogger;
 use App\Services\P2pPolicy\P2pPolicyActivationService;
+use App\Services\P2pPolicy\P2pPolicyFixedHolidays;
 use App\Services\P2pPolicy\P2pPolicyReadinessValidator;
 use App\Support\P2pPolicy;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class P2pPolicyTermController extends Controller
@@ -61,6 +63,18 @@ class P2pPolicyTermController extends Controller
         return $this->ok($validator->assess($p2pPolicyTerm));
     }
 
+    public function fixedHolidays(ListP2pPolicyTermsRequest $request, P2pPolicyFixedHolidays $fixed)
+    {
+        $data = $request->validate([
+            'from' => ['required', 'date'],
+            'to' => ['required', 'date', 'after_or_equal:from'],
+        ]);
+
+        $items = $fixed->datesInRange(Carbon::parse($data['from']), Carbon::parse($data['to']));
+
+        return $this->ok(['items' => $items]);
+    }
+
     public function store(StoreP2pPolicyTermRequest $request)
     {
         $data = $request->validated();
@@ -73,6 +87,9 @@ class P2pPolicyTermController extends Controller
             'default_afternoon_start' => $this->timeValue($data['default_afternoon_start'] ?? '15:30'),
             'default_afternoon_end' => $this->timeValue($data['default_afternoon_end'] ?? '16:30'),
             'weekdays_mask' => $data['weekdays_mask'] ?? P2pPolicy::DEFAULT_WEEKDAYS_MASK,
+            'exclude_fixed_holidays' => array_key_exists('exclude_fixed_holidays', $data)
+                ? (bool) $data['exclude_fixed_holidays']
+                : true,
             'status' => 'draft',
         ]);
 

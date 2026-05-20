@@ -21,6 +21,7 @@ class UpdateP2pPolicyTermRequest extends ApiFormRequest
             'default_afternoon_start' => ['nullable', 'date_format:H:i'],
             'default_afternoon_end' => ['nullable', 'date_format:H:i'],
             'weekdays_mask' => ['nullable', 'integer', 'min:1', 'max:127'],
+            'exclude_fixed_holidays' => ['nullable', 'boolean'],
         ];
     }
 }

@@ -9,22 +9,6 @@ use OpenSpout\Writer\XLSX\Writer;
 
 class PolicyStudentExportService
 {
-    /** @var list<string> */
-    private const HEADERS = [
-        'route_name',
-        'student_code',
-        'student_name',
-        'class_name',
-        'direction',
-        'policy_type',
-        'contract_number',
-        'sbs_contract',
-        'effective_from',
-        'effective_to',
-        'is_active',
-        'policy_note',
-    ];
-
     /**
      * @param  Builder<PolicyStudent>  $query
      */
@@ -33,7 +17,7 @@ class PolicyStudentExportService
         $writer = new Writer;
         $writer->openToFile('php://output');
 
-        $writer->addRow(Row::fromValues(self::HEADERS));
+        $this->writeDataSheetHeader($writer);
 
         $query->chunk(500, function ($rows) use ($writer) {
             foreach ($rows as $ps) {
@@ -56,6 +40,8 @@ class PolicyStudentExportService
             }
         });
 
+        $this->writeGuideSheet($writer);
+
         $writer->close();
     }
 
@@ -63,7 +49,27 @@ class PolicyStudentExportService
     {
         $writer = new Writer;
         $writer->openToFile('php://output');
-        $writer->addRow(Row::fromValues(self::HEADERS));
+
+        $this->writeDataSheetHeader($writer);
+        $this->writeGuideSheet($writer);
+
         $writer->close();
+    }
+
+    private function writeDataSheetHeader(Writer $writer): void
+    {
+        $writer->getCurrentSheet()->setName('Danh_sach');
+        $writer->addRow(Row::fromValues(PolicyStudentSpreadsheetSpec::LABELS_VI));
+        $writer->addRow(Row::fromValues(PolicyStudentSpreadsheetSpec::KEYS));
+    }
+
+    private function writeGuideSheet(Writer $writer): void
+    {
+        $writer->addNewSheetAndMakeItCurrent();
+        $writer->getCurrentSheet()->setName('Huong_dan');
+        $writer->addRow(Row::fromValues(['Cột (key)', 'Nhãn', 'Hướng dẫn']));
+        foreach (PolicyStudentSpreadsheetSpec::guideRows() as $g) {
+            $writer->addRow(Row::fromValues([$g['key'], $g['label_vi'], $g['hint']]));
+        }
     }
 }

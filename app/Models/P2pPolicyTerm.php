@@ -17,6 +17,7 @@ class P2pPolicyTerm extends Model
         'default_afternoon_start',
         'default_afternoon_end',
         'weekdays_mask',
+        'exclude_fixed_holidays',
         'status',
         'activated_at',
         'activated_by',
@@ -28,6 +29,7 @@ class P2pPolicyTerm extends Model
         'operating_to' => 'date',
         'activated_at' => 'datetime',
         'weekdays_mask' => 'integer',
+        'exclude_fixed_holidays' => 'boolean',
     ];
 
     public function academicTerm(): BelongsTo

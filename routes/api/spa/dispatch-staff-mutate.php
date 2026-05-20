@@ -186,5 +186,7 @@ Route::prefix('p2p-policy')->group(function () {
         Route::patch('/students/{policyStudent}', 'update')->middleware('permission:p2p_policy.manage');
         Route::delete('/students/{policyStudent}', 'destroy')->middleware('permission:p2p_policy.manage');
         Route::post('/students/import', 'import')->middleware(['permission:p2p_policy.import_export', 'throttle:10,1']);
+        Route::post('/students/import/preview', 'importPreview')->middleware(['permission:p2p_policy.import_export', 'throttle:20,1']);
+        Route::post('/students/import/commit', 'importCommit')->middleware(['permission:p2p_policy.import_export', 'throttle:10,1']);
     });
 });

@@ -83,6 +83,7 @@ Route::get('/academic-terms', [AcademicTermController::class, 'index'])->middlew
 
 Route::prefix('p2p-policy')->middleware('permission:p2p_policy.view')->group(function () {
     Route::get('/terms', [P2pPolicyTermController::class, 'index']);
+    Route::get('/fixed-holidays', [P2pPolicyTermController::class, 'fixedHolidays']);
     Route::get('/terms/{p2pPolicyTerm}', [P2pPolicyTermController::class, 'show']);
     Route::get('/terms/{p2pPolicyTerm}/readiness', [P2pPolicyTermController::class, 'readiness']);
     Route::get('/routes', [PolicyRouteController::class, 'index']);

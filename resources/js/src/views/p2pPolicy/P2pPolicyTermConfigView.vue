@@ -108,9 +108,58 @@
         </div>
       </form>
 
-      <section v-if="termId" class="xl:col-span-5">
+      <section v-if="termId" class="xl:col-span-5 space-y-5">
+        <div
+          class="rounded-xl border border-sky-200/80 bg-sky-50/90 px-4 py-3 text-sm leading-relaxed text-sky-950 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-100"
+        >
+          {{ t('p2p_policy_page.exclusion_banner') }}
+        </div>
+
+        <Card :hint="t('p2p_policy_page.tip_fixed_holidays')">
+          <h2 class="mb-1 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950/50">
+              <CalendarDaysIcon class="h-5 w-5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+            </span>
+            {{ t('p2p_policy_page.fixed_holidays_title') }}
+          </h2>
+          <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.fixed_holidays_desc') }}</p>
+          <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-600 dark:bg-slate-800/40">
+            <input
+              v-model="excludeFixedHolidays"
+              type="checkbox"
+              class="mt-1 h-5 w-5 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+            />
+            <span class="text-base">{{ t('p2p_policy_page.exclude_fixed_holidays') }}</span>
+          </label>
+          <p v-if="!form.operating_from || !form.operating_to" class="mt-3 text-sm text-slate-500">
+            {{ t('p2p_policy_page.fixed_holidays_need_dates') }}
+          </p>
+          <ul
+            v-else-if="excludeFixedHolidays && fixedHolidayPreview.length"
+            class="mt-4 max-h-[min(40vh,240px)] space-y-1.5 overflow-y-auto text-sm"
+          >
+            <li
+              v-for="h in fixedHolidayPreview"
+              :key="h.holiday_date"
+              class="flex items-center gap-2 rounded-md bg-white/80 px-2.5 py-1.5 dark:bg-slate-900/50"
+            >
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ formatHolidayDate(h.holiday_date) }}</span>
+              <span class="text-slate-500 dark:text-slate-400">— {{ h.label }}</span>
+            </li>
+          </ul>
+          <p v-else-if="excludeFixedHolidays && fixedHolidayPreviewLoaded" class="mt-3 text-sm text-slate-500">
+            {{ t('p2p_policy_page.fixed_holidays_empty_range') }}
+          </p>
+        </Card>
+
         <Card :hint="t('p2p_policy_page.tip_holidays')">
-          <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.holidays_title') }}</h2>
+          <h2 class="mb-1 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/50">
+              <StarIcon class="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            </span>
+            {{ t('p2p_policy_page.holidays_title') }}
+          </h2>
+          <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.holidays_desc') }}</p>
           <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <input v-model="holidayDate" type="date" class="p2p-term-input min-w-[10rem] flex-1" />
             <input
@@ -127,7 +176,7 @@
               {{ t('p2p_policy_page.add') }}
             </button>
           </div>
-          <ul v-if="holidays.length" class="mt-4 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-base">
+          <ul v-if="holidays.length" class="mt-4 max-h-[min(40vh,240px)] space-y-2 overflow-y-auto text-base">
             <li
               v-for="(h, i) in holidays"
               :key="i"
@@ -140,14 +189,54 @@
             </li>
           </ul>
           <p v-else class="mt-4 text-base text-slate-500">{{ t('p2p_policy_page.holidays_empty') }}</p>
-          <button
-            type="button"
-            class="mt-4 w-full rounded-lg bg-slate-800 px-4 py-2.5 text-base font-medium text-white hover:bg-slate-900 sm:w-auto"
-            @click="saveCalendar"
-          >
-            {{ t('p2p_policy_page.save_calendar') }}
-          </button>
         </Card>
+
+        <Card :hint="t('p2p_policy_page.tip_skip_dates')">
+          <h2 class="mb-1 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950/50">
+              <NoSymbolIcon class="h-5 w-5 text-violet-600 dark:text-violet-400" aria-hidden="true" />
+            </span>
+            {{ t('p2p_policy_page.skip_dates_title') }}
+          </h2>
+          <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.skip_dates_desc') }}</p>
+          <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <input v-model="skipDate" type="date" class="p2p-term-input min-w-[10rem] flex-1" />
+            <input
+              v-model="skipReason"
+              type="text"
+              :placeholder="t('p2p_policy_page.skip_reason_placeholder')"
+              class="p2p-term-input min-w-[12rem] flex-[2]"
+            />
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 px-4 py-2.5 text-base font-medium hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
+              @click="addSkipDate"
+            >
+              {{ t('p2p_policy_page.add') }}
+            </button>
+          </div>
+          <ul v-if="skipDates.length" class="mt-4 max-h-[min(40vh,240px)] space-y-2 overflow-y-auto text-base">
+            <li
+              v-for="(s, i) in skipDates"
+              :key="i"
+              class="flex items-center justify-between gap-2 rounded-lg bg-violet-50/80 px-3 py-2 dark:bg-violet-950/25"
+            >
+              <span>{{ formatHolidayDate(s.skip_date) }} — {{ s.reason || '—' }}</span>
+              <button type="button" class="text-sm text-rose-600 hover:underline" @click="removeSkipDate(i)">
+                {{ t('p2p_policy_page.remove') }}
+              </button>
+            </li>
+          </ul>
+          <p v-else class="mt-4 text-base text-slate-500">{{ t('p2p_policy_page.skip_dates_empty') }}</p>
+        </Card>
+
+        <button
+          type="button"
+          class="w-full rounded-xl bg-slate-800 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-slate-900 sm:w-auto"
+          @click="saveCalendar"
+        >
+          {{ t('p2p_policy_page.save_calendar') }}
+        </button>
       </section>
 
       <section v-else class="xl:col-span-5">
@@ -213,8 +302,8 @@
 </template>
 
 <script setup>
-import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
-import { computed, defineComponent, h, onMounted, reactive, ref } from 'vue'
+import { ArrowLeftIcon, CalendarDaysIcon, NoSymbolIcon, StarIcon } from '@heroicons/vue/24/outline'
+import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { InformationCircleIcon } from '@heroicons/vue/24/outline'
@@ -224,6 +313,7 @@ import {
   createP2pPolicyTerm,
   getP2pPolicyTerm,
   listAcademicTerms,
+  listP2pPolicyFixedHolidays,
   syncP2pPolicyTermCalendar,
   updateP2pPolicyTerm,
 } from '../../api/p2pPolicy'
@@ -270,6 +360,7 @@ const academicTerms = ref([])
 const termId = computed(() => (route.query.id ? Number(route.query.id) : null))
 const saving = ref(false)
 const includeWeekend = ref(false)
+const excludeFixedHolidays = ref(true)
 
 const form = reactive({
   academic_term_id: '',
@@ -285,6 +376,13 @@ const form = reactive({
 const holidays = ref([])
 const holidayDate = ref('')
 const holidayLabel = ref('')
+
+const skipDates = ref([])
+const skipDate = ref('')
+const skipReason = ref('')
+
+const fixedHolidayPreview = ref([])
+const fixedHolidayPreviewLoaded = ref(false)
 
 const academicDialog = ref(null)
 const academicSaving = ref(false)
@@ -320,10 +418,16 @@ async function load() {
     form.default_afternoon_start = (term.default_afternoon_start ?? '15:30:00').slice(0, 5)
     form.default_afternoon_end = (term.default_afternoon_end ?? '16:30:00').slice(0, 5)
     includeWeekend.value = (term.weekdays_mask & 96) !== 0
+    excludeFixedHolidays.value = term.exclude_fixed_holidays !== false
     holidays.value = (term.holidays ?? []).map((h) => ({
       holiday_date: formatHolidayDate(h.holiday_date),
       label: h.label ?? '',
     }))
+    skipDates.value = (term.skip_dates ?? term.skipDates ?? []).map((s) => ({
+      skip_date: formatHolidayDate(s.skip_date),
+      reason: s.reason ?? '',
+    }))
+    await refreshFixedHolidayPreview()
   } else if (academicTerms.value[0]) {
     form.academic_term_id = academicTerms.value[0].id
   }
@@ -332,11 +436,12 @@ async function load() {
 async function save() {
   saving.value = true
   form.weekdays_mask = includeWeekend.value ? 127 : 31
+  const payload = { ...form, exclude_fixed_holidays: excludeFixedHolidays.value }
   try {
     if (termId.value) {
-      await updateP2pPolicyTerm(termId.value, { ...form })
+      await updateP2pPolicyTerm(termId.value, payload)
     } else {
-      const created = await createP2pPolicyTerm({ ...form })
+      const created = await createP2pPolicyTerm(payload)
       await router.replace({ query: { id: created.id } })
     }
     await load()
@@ -344,6 +449,26 @@ async function save() {
     saving.value = false
   }
 }
+
+async function refreshFixedHolidayPreview() {
+  fixedHolidayPreviewLoaded.value = false
+  fixedHolidayPreview.value = []
+  if (!form.operating_from || !form.operating_to) return
+  try {
+    const res = await listP2pPolicyFixedHolidays({
+      from: form.operating_from,
+      to: form.operating_to,
+    })
+    fixedHolidayPreview.value = res.items ?? []
+  } finally {
+    fixedHolidayPreviewLoaded.value = true
+  }
+}
+
+watch(
+  () => [form.operating_from, form.operating_to],
+  () => refreshFixedHolidayPreview(),
+)
 
 function addHoliday() {
   if (!holidayDate.value) return
@@ -356,9 +481,24 @@ function removeHoliday(index) {
   holidays.value.splice(index, 1)
 }
 
+function addSkipDate() {
+  if (!skipDate.value) return
+  skipDates.value.push({ skip_date: skipDate.value, reason: skipReason.value })
+  skipDate.value = ''
+  skipReason.value = ''
+}
+
+function removeSkipDate(index) {
+  skipDates.value.splice(index, 1)
+}
+
 async function saveCalendar() {
   if (!termId.value) return
-  await syncP2pPolicyTermCalendar(termId.value, { holidays: holidays.value })
+  await syncP2pPolicyTermCalendar(termId.value, {
+    holidays: holidays.value,
+    skip_dates: skipDates.value,
+  })
+  await load()
 }
 
 function openAcademicModal() {

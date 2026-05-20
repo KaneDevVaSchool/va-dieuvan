@@ -35,6 +35,7 @@ class PolicyStudentImportJob implements ShouldQueue
             $this->storagePath,
             $this->p2pPolicyTermId,
             $this->originalFilename,
+            $this->userId,
         );
 
         Cache::put("p2p_policy_import:{$this->importJobId}", [

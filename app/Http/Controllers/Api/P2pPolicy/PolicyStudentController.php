@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\P2pPolicy;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\P2pPolicy\CommitPolicyStudentsImportRequest;
 use App\Http\Requests\Api\P2pPolicy\ImportPolicyStudentsRequest;
 use App\Http\Requests\Api\P2pPolicy\ListPolicyStudentsRequest;
 use App\Http\Requests\Api\P2pPolicy\StorePolicyStudentRequest;
@@ -13,6 +14,7 @@ use App\Models\PolicyStudent;
 use App\Models\Student;
 use App\Services\Auditing\AuditLogger;
 use App\Services\P2pPolicy\PolicyStudentExportService;
+use App\Services\P2pPolicy\PolicyStudentImportService;
 use App\Services\P2pPolicy\PolicyStudentIndexQuery;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -119,6 +121,32 @@ class PolicyStudentController extends Controller
             'import_job_id' => $jobId,
             'message' => 'File đang được xử lý trong hàng đợi.',
         ]);
+    }
+
+    public function importPreview(ImportPolicyStudentsRequest $request, PolicyStudentImportService $importer)
+    {
+        $path = $request->file('file')->store('p2p-policy-imports');
+        $result = $importer->previewFromStoragePath(
+            $path,
+            (int) $request->validated()['p2p_policy_term_id'],
+            $request->file('file')->getClientOriginalName(),
+        );
+
+        if ($result['preview_id'] === '') {
+            abort(422, 'Không đọc được file.');
+        }
+
+        return $this->ok($result);
+    }
+
+    public function importCommit(CommitPolicyStudentsImportRequest $request, PolicyStudentImportService $importer)
+    {
+        $result = $importer->commitPreview(
+            $request->validated()['preview_id'],
+            (int) $request->user()->id,
+        );
+
+        return $this->ok($result);
     }
 
     public function export(ListPolicyStudentsRequest $request, PolicyStudentIndexQuery $queryBuilder, PolicyStudentExportService $export): StreamedResponse

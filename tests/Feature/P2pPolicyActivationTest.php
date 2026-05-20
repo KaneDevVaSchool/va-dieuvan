@@ -147,6 +147,43 @@ class P2pPolicyActivationTest extends TestCase
         $this->assertSame('skipped', $afternoon);
     }
 
+    public function test_skips_fixed_holiday_when_enabled(): void
+    {
+        $fx = $this->seedPolicyFixture();
+        $fx['term']->update([
+            'operating_from' => '2025-01-01',
+            'operating_to' => '2025-01-01',
+            'exclude_fixed_holidays' => true,
+        ]);
+
+        $materializer = app(P2pPolicyTripMaterializer::class);
+        $term = P2pPolicyTerm::findOrFail($fx['term']->id);
+        $date = Carbon::parse('2025-01-01');
+
+        $result = $materializer->materializeSlot($term, $fx['route'], $date, P2pPolicy::LEG_MORNING, $fx['dispatcher']->id);
+        $this->assertSame('skipped', $result);
+    }
+
+    public function test_skips_designated_skip_date(): void
+    {
+        $fx = $this->seedPolicyFixture();
+        $fx['term']->update(['operating_from' => '2025-08-12', 'operating_to' => '2025-08-12']);
+
+        \App\Models\PolicyTermSkipDate::create([
+            'p2p_policy_term_id' => $fx['term']->id,
+            'skip_date' => '2025-08-12',
+            'reason' => 'Test skip',
+        ]);
+
+        $materializer = app(P2pPolicyTripMaterializer::class);
+        $term = P2pPolicyTerm::findOrFail($fx['term']->id);
+        $term->load('skipDates');
+        $date = Carbon::parse('2025-08-12');
+
+        $result = $materializer->materializeSlot($term, $fx['route'], $date, P2pPolicy::LEG_MORNING, $fx['dispatcher']->id);
+        $this->assertSame('skipped', $result);
+    }
+
     public function test_rbac_denies_view_without_permission(): void
     {
         $this->seed(RbacSeeder::class);

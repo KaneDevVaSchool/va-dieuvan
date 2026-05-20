@@ -9,6 +9,7 @@ class P2pPolicyCalendar
 {
     public function __construct(
         private readonly P2pPolicyRosterResolver $roster,
+        private readonly P2pPolicyFixedHolidays $fixedHolidays,
     ) {}
 
     public function shouldSkipDate(P2pPolicyTerm $term, Carbon $date): bool
@@ -42,6 +43,10 @@ class P2pPolicyCalendar
             if ($term->skipDates()->whereDate('skip_date', $dateStr)->exists()) {
                 return true;
             }
+        }
+
+        if ($term->exclude_fixed_holidays && $this->fixedHolidays->isFixedHoliday($date)) {
+            return true;
         }
 
         return false;
