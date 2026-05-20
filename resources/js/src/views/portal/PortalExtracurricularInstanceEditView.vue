@@ -141,7 +141,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import StatusBadge from '../../components/requests/StatusBadge.vue'
+import StatusBadge from '../../components/ui/StatusBadge.vue'
 import StudentCountTrackingBadge from '../../components/requests/extracurricular/StudentCountTrackingBadge.vue'
 import { patchPortalRecurringInstance, submitPortalRecurringInstance } from '../../api/requests'
 import { formatApiError } from '../../api/http'

@@ -54,8 +54,8 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import StatusBadge from '../../requests/StatusBadge.vue'
-import StudentCountTrackingBadge from '../../requests/extracurricular/StudentCountTrackingBadge.vue'
+import StatusBadge from '../../ui/StatusBadge.vue'
+import StudentCountTrackingBadge from '../../../requests/extracurricular/StudentCountTrackingBadge.vue'
 import { useAuthStore } from '../../../store'
 import { useExtracurricularRequestRow } from '../../../composables/useExtracurricularRequestRow'
 
