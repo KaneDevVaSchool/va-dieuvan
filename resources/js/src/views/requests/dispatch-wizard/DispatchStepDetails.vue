@@ -43,8 +43,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, inject, onMounted, unref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { DISPATCH_WIZARD_KEY } from './injectionKeys'
 import DispatchItemCard from './DispatchItemCard.vue'
 import DispatchToolbar from './DispatchToolbar.vue'
 import {
@@ -68,7 +69,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:valid'])
 
+const wizard = inject(DISPATCH_WIZARD_KEY, null)
+
 const { t, locale } = useI18n()
+
+const scheduleRowErrorOptions = computed(() => {
+  if (
+    props.variant === 'passenger' &&
+    wizard?.wantsRecurringTemplate &&
+    unref(wizard.wantsRecurringTemplate)
+  ) {
+    return { timesFromRecurringTemplate: true }
+  }
+  return undefined
+})
 
 const rows = computed(() => props.modelValue)
 
@@ -85,7 +99,7 @@ const grandTotal = computed(() => {
 /** Danh sách rỗng không chặn Next (door có thể chỉ điền e.1 hoặc chỉ e.2); có dòng thì phải hợp lệ. */
 const schedulesValid = computed(() => {
   if (!props.modelValue.length) return true
-  return rowsHaveNoInlineErrors(props.modelValue, props.variant)
+  return rowsHaveNoInlineErrors(props.modelValue, props.variant, scheduleRowErrorOptions.value)
 })
 
 watch(

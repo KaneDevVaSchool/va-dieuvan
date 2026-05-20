@@ -84,6 +84,13 @@ export function useDispatchRequestWizard(options = {}) {
     return base
   }
 
+  /** Con trỏ nháp đang mở — tách CLB khỏi yêu cầu portal chung. */
+  function activeDraftPointerKey(uid) {
+    const base = draftActiveStorageKey(uid)
+    if (isPortal && portalExtracurricularCreate) return `${base}-extracurricular`
+    return base
+  }
+
   function currentDraftStorageKey() {
     return draftKeyForUser(auth.user?.id)
   }
@@ -152,7 +159,7 @@ export function useDispatchRequestWizard(options = {}) {
       localStorage.setItem(draftItemStorageKey(uid, id), raw)
       const meta = buildDraftMeta(id, data)
       writeDraftList(uid, [meta])
-      localStorage.setItem(draftActiveStorageKey(uid), id)
+      localStorage.setItem(activeDraftPointerKey(uid), id)
       localStorage.removeItem(draftKeyForUser(uid))
     } catch {
       /* ignore */
@@ -1059,11 +1066,16 @@ export function useDispatchRequestWizard(options = {}) {
       )
     }
     if (step.value === 2) {
-      if (!detailStepSchedulesValid.value) return false
       if (!computedDepartAt.value?.trim()) return false
       if (wantsRecurringTemplate.value) {
-        return recurringStep2Complete()
+        if (!recurringStep2Complete()) return false
+        return passengerRows.value.every(
+          (r) =>
+            !isPassengerRouteFilled(r) ||
+            Object.keys(scheduleRowErrors(r, 'passenger')).length === 0,
+        )
       }
+      if (!detailStepSchedulesValid.value) return false
       if (isCargo.value) {
         return cargoRows.value.some((r) => r.name?.trim())
       }
@@ -1503,7 +1515,7 @@ export function useDispatchRequestWizard(options = {}) {
           let { items } = readDraftList(uid)
           items = items.filter((x) => x.id !== submittedDraftId)
           writeDraftList(uid, items)
-          localStorage.removeItem(draftActiveStorageKey(uid))
+          localStorage.removeItem(activeDraftPointerKey(uid))
         }
         activeDraftId.value = null
       } catch {
@@ -1570,7 +1582,7 @@ export function useDispatchRequestWizard(options = {}) {
         if (activeDraftId.value === removed.id) {
           activeDraftId.value = null
           try {
-            localStorage.removeItem(draftActiveStorageKey(uid))
+            localStorage.removeItem(activeDraftPointerKey(uid))
           } catch {
             /* ignore */
           }
@@ -1628,7 +1640,7 @@ export function useDispatchRequestWizard(options = {}) {
       let id = activeDraftId.value
       if (!id) {
         try {
-          id = localStorage.getItem(draftActiveStorageKey(uid)) || null
+          id = localStorage.getItem(activeDraftPointerKey(uid)) || null
         } catch {
           id = null
         }
@@ -1638,7 +1650,7 @@ export function useDispatchRequestWizard(options = {}) {
       const json = JSON.stringify(data)
       const meta = buildDraftMeta(id, data)
       try {
-        localStorage.setItem(draftActiveStorageKey(uid), id)
+        localStorage.setItem(activeDraftPointerKey(uid), id)
       } catch {
         /* ignore */
       }
@@ -1670,7 +1682,7 @@ export function useDispatchRequestWizard(options = {}) {
         return
       }
       migrateV1SingleDraftToMulti(uid)
-      const activeStored = localStorage.getItem(draftActiveStorageKey(uid))
+      const activeStored = localStorage.getItem(activeDraftPointerKey(uid))
       if (activeStored) {
         const raw = localStorage.getItem(draftItemStorageKey(uid, activeStored))
         if (raw) {
@@ -1681,6 +1693,22 @@ export function useDispatchRequestWizard(options = {}) {
           return
         }
       }
+      if (portalExtracurricularCreate) {
+        try {
+          const legacyRaw = localStorage.getItem(draftKeyForUser(uid))
+          if (legacyRaw) {
+            const data = JSON.parse(legacyRaw)
+            applyDraftPayload(data)
+            refreshDraftsList()
+            return
+          }
+        } catch {
+          /* ignore */
+        }
+        hasDraftSnapshot.value = false
+        refreshDraftsList()
+        return
+      }
       const { items } = readDraftList(uid)
       if (items.length) {
         const sorted = [...items].sort((a, b) => b.savedAt - a.savedAt)
@@ -1690,7 +1718,7 @@ export function useDispatchRequestWizard(options = {}) {
           applyDraftPayload(data)
           activeDraftId.value = sorted[0].id
           try {
-            localStorage.setItem(draftActiveStorageKey(uid), sorted[0].id)
+            localStorage.setItem(activeDraftPointerKey(uid), sorted[0].id)
           } catch {
             /* ignore */
           }
@@ -1714,7 +1742,7 @@ export function useDispatchRequestWizard(options = {}) {
       const data = JSON.parse(raw)
       applyDraftPayload(data)
       activeDraftId.value = draftId
-      localStorage.setItem(draftActiveStorageKey(uid), draftId)
+      localStorage.setItem(activeDraftPointerKey(uid), draftId)
       if (form.value.requester_name?.trim()) requesterSearchQ.value = form.value.requester_name
       if (form.value.coordinator_name?.trim()) coordinatorSearchQ.value = form.value.coordinator_name
       form.value.requester_phone = sanitizeVnPhoneDigits(form.value.requester_phone)
@@ -1739,7 +1767,7 @@ export function useDispatchRequestWizard(options = {}) {
       writeDraftList(uid, items)
       if (wasActive) {
         try {
-          localStorage.removeItem(draftActiveStorageKey(uid))
+          localStorage.removeItem(activeDraftPointerKey(uid))
         } catch {
           /* ignore */
         }
@@ -1756,7 +1784,7 @@ export function useDispatchRequestWizard(options = {}) {
     const uid = uidOrNull()
     if (uid != null) {
       try {
-        localStorage.removeItem(draftActiveStorageKey(uid))
+        localStorage.removeItem(activeDraftPointerKey(uid))
       } catch {
         /* ignore */
       }
@@ -1982,6 +2010,7 @@ export function useDispatchRequestWizard(options = {}) {
     step,
     (s) => {
       if (s > maxReachedStep.value) maxReachedStep.value = s
+      if (s !== 2) detailStepSchedulesValid.value = true
     },
     { immediate: true },
   )

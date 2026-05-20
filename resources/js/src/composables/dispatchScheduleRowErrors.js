@@ -71,7 +71,7 @@ export function dispatchScheduleRowErrors(row, variant, options = {}) {
   return e
 }
 
-export function rowsHaveNoInlineErrors(rows, variant) {
-  if (!rows.length) return false
-  return rows.every((r) => Object.keys(dispatchScheduleRowErrors(r, variant)).length === 0)
+export function rowsHaveNoInlineErrors(rows, variant, options) {
+  if (!rows.length) return true
+  return rows.every((r) => Object.keys(dispatchScheduleRowErrors(r, variant, options)).length === 0)
 }

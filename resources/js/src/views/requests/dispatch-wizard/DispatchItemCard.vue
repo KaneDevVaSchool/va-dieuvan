@@ -222,7 +222,7 @@
 </template>
 
 <script setup>
-import { computed, inject } from 'vue'
+import { computed, inject, unref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseInput from '../../../components/base/BaseInput.vue'
 import BaseDateTime from '../../../components/base/BaseDateTime.vue'
@@ -354,7 +354,20 @@ function setNotes(v) {
   else props.row.notes = v
 }
 
-const rawErrors = computed(() => dispatchScheduleRowErrors(props.row, props.variant))
+const scheduleRowErrorOptions = computed(() => {
+  if (
+    props.variant === 'passenger' &&
+    wizard?.wantsRecurringTemplate &&
+    unref(wizard.wantsRecurringTemplate)
+  ) {
+    return { timesFromRecurringTemplate: true }
+  }
+  return undefined
+})
+
+const rawErrors = computed(() =>
+  dispatchScheduleRowErrors(props.row, props.variant, scheduleRowErrorOptions.value),
+)
 
 const errs = computed(() => {
   const r = rawErrors.value
