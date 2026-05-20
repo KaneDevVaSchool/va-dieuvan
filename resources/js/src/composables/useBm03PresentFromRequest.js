@@ -65,9 +65,19 @@ export function useBm03PresentFromRequest(reqRef) {
   })
 
   const targetsSet = computed(() => {
-    const raw = Array.isArray(form.value.targets) ? form.value.targets : []
-    return new Set(raw.map((x) => String(x).trim()).filter(Boolean))
+    const raw = form.value.targets
+    let list = []
+    if (Array.isArray(raw)) {
+      list = raw
+    } else if (raw && typeof raw === 'object') {
+      list = Object.values(raw)
+    }
+    return new Set(list.map((x) => String(x).trim()).filter(Boolean))
   })
+
+  function hasTarget(opt) {
+    return targetsSet.value.has(String(opt))
+  }
 
   return {
     TARGET_OPTIONS,
@@ -85,6 +95,7 @@ export function useBm03PresentFromRequest(reqRef) {
     isUrgent: computed(() => !!form.value.is_urgent),
     urgentReason: computed(() => nz(form.value.urgent_reason) || '—'),
     targetsSet,
+    hasTarget,
     coordinatorName: computed(() => nz(form.value.coordinator_name) || '—'),
     coordinatorEmail: computed(() => nz(form.value.coordinator_email) || '—'),
     coordinatorPhone: computed(() => nz(form.value.coordinator_phone) || '—'),

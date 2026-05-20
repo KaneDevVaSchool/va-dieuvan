@@ -122,7 +122,7 @@
               <input
                 type="checkbox"
                 class="mt-0.5 h-4 w-4 rounded border-slate-300"
-                :checked="bm.targetsSet.has(opt)"
+                :checked="bm.hasTarget(opt)"
                 disabled
               />
               <span class="leading-snug">{{ opt }}</span>
