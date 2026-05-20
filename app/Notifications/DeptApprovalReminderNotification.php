@@ -12,7 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class DeptHeadApprovalRequestedNotification extends Notification implements ShouldQueue, ShouldQueueAfterCommit
+class DeptApprovalReminderNotification extends Notification implements ShouldQueue, ShouldQueueAfterCommit
 {
     use AddsMailWhenValidEmail;
     use Queueable;
@@ -35,8 +35,8 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
         $dispatchRequest = $this->freshDispatchRequest();
 
         return (new MailMessage)
-            ->subject('Phiếu đề xuất chờ duyệt — '.DispatchRequestMailPresenter::referenceCode($dispatchRequest))
-            ->view('mail.dept-head-approval-requested', $this->viewData($dispatchRequest, $notifiable));
+            ->subject('Nhắc duyệt phiếu — '.DispatchRequestMailPresenter::referenceCode($dispatchRequest))
+            ->view('mail.dept-approval-reminder', $this->viewData($dispatchRequest, $notifiable));
     }
 
     /**
@@ -49,10 +49,10 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
         $summaryLine = $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id;
 
         return [
-            'title' => 'Phiếu điều xe chờ duyệt phòng ban',
+            'title' => 'Nhắc: phiếu chờ duyệt phòng ban',
             'body' => $summaryLine,
             'dispatch_request_id' => $dispatchRequest->id,
-            'event' => 'dispatch_request.dept_approval_requested',
+            'event' => 'dispatch_request.dept_approval_reminder',
             'url' => '/dept/requests/'.$dispatchRequest->id,
         ];
     }
@@ -61,8 +61,7 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
     {
         return DispatchRequest::query()
             ->with([
-                'requester:id,name,email,employee_code,department_id',
-                'requester.department:id,name,code',
+                'requester:id,name,email',
             ])
             ->findOrFail($this->dispatchRequestId);
     }
@@ -79,10 +78,10 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
         }
         $privacyScopeFooter = $receiverDept !== ''
             ? sprintf(
-                'Bạn nhận email vì được Điều vận gán là người duyệt cho phiếu này. Đơn vị ghi trên hồ sơ của bạn: %s.',
+                'Bạn nhận email nhắc duyệt vì được gán là Trưởng BP cho phiếu này (%s).',
                 $receiverDept,
             )
-            : 'Bạn nhận email vì được Điều vận gán là người duyệt (Trưởng BP) cho phiếu này.';
+            : 'Bạn nhận email nhắc duyệt vì được gán là Trưởng BP cho phiếu này.';
 
         return array_merge(
             [
@@ -98,7 +97,7 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
                     ['label' => 'Điều xe'],
                     ['label' => 'Lưu trữ'],
                 ],
-                'closingNote' => 'Sau khi bạn duyệt: Người đề xuất nhận thông báo và có thể xuất PDF. Điều vận tiến hành điều phối xe trong chuyển sang bước tiếp theo.',
+                'closingNote' => 'Đây là email nhắc tự động — phiếu vẫn đang chờ xác nhận của bạn.',
             ],
             DispatchRequestMailPresenter::buildRequestSummary($dr),
             DispatchRequestMailPresenter::buildPriceSummary($dr),

@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('cargo:sla-check')->everyFiveMinutes();
         $schedule->command('dispatch:materialize-recurring-requests')->hourly();
         $schedule->command('route:generate-daily-trips')->dailyAt('22:00');
+        $schedule->command('dispatch:remind-dept-approvals')->dailyAt('08:00');
     }
 
     /**

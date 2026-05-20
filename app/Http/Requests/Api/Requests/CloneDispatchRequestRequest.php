@@ -36,7 +36,7 @@ class CloneDispatchRequestRequest extends ApiFormRequest
             return;
         }
 
-        if (! is_string($dr->status) || ! in_array($dr->status, ['approved', 'rejected'], true)) {
+        if (! is_string($dr->status) || $dr->status !== 'approved') {
             abort(422, Messages::REQUEST_CLONE_INVALID_STATUS);
         }
     }

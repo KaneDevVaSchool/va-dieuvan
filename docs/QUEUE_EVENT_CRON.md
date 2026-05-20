@@ -39,11 +39,13 @@ Thư mục `app/Jobs/` **không chứa job class** trong repo hiện tại — h
 | Class | Queue | Ghi chú |
 |-------|-------|---------|
 | `TripAssignedNotification` | `default` hoặc `urgent-notifications` | `ShouldQueue` + `ShouldQueueAfterCommit` |
-| `NewDispatchRequestNotification` | Theo cờ urgent | `ShouldQueue` + `ShouldQueueAfterCommit`; kênh `database` (Web Push qua listener sau khi lưu DB) |
+| `NewDispatchRequestNotification` | Theo cờ urgent | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** khi `is_urgent` |
 | `CargoSlaBreachedNotification` | default constructor | `ShouldQueue` — broadcast qua `Notification::send` trong command; `toArray()` trả `title`, `body`, `event`, `url` |
 | `DispatchPackageSessionsLowBalanceNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit` — cảnh báo gần hết buổi trong gói |
-| `DeptHeadApprovalRequestedNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit` |
-| `PriceFilledDispatchRequestNotification` | `notifications_queue_default` | `ShouldQueue` |
+| `DeptHeadApprovalRequestedNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** |
+| `DeptHeadDecisionNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** (người đề xuất) |
+| `DeptApprovalReminderNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; cron `dispatch:remind-dept-approvals` |
+| `TripAssignedNotification` | default hoặc urgent | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** (tài xế) |
 
 Queue name lấy từ `config/dispatch.php`:
 
@@ -86,6 +88,7 @@ Queue name lấy từ `config/dispatch.php`:
 ```php
 $schedule->command('cargo:sla-check')->everyFiveMinutes();
 $schedule->command('dispatch:materialize-recurring-requests')->hourly();
+$schedule->command('dispatch:remind-dept-approvals')->dailyAt('08:00');
 ```
 
 **Yêu cầu vận hành:** crontab gọi `php artisan schedule:run` **mỗi phút**.

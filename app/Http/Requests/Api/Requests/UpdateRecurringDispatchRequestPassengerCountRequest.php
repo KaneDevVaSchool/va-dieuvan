@@ -29,7 +29,7 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'passenger_count' => ['required', 'integer', 'min:1', 'max:999'],
+            'student_count_actual' => ['required', 'integer', 'min:1', 'max:999'],
         ];
     }
 
@@ -38,6 +38,7 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
         $validator->after(function (Validator $v): void {
             /** @var mixed $dr */
             $dr = $this->route('dispatchRequest');
+            $user = $this->user();
 
             if (! $dr instanceof DispatchRequest) {
                 return;
@@ -51,11 +52,8 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
                 $v->errors()->add('dispatch_request_template_id', Messages::REQUEST_NOT_RECURRING_INSTANCE);
             }
 
-            if (! is_string($dr->status) || ! in_array($dr->status, ['pending', 'price_filled'], true)) {
-                $v->errors()->add(
-                    'passenger_count',
-                    'Chỉ cập nhật khi phiếu đang chờ điều xử lý hoặc đã điền giá (chưa duyệt).'
-                );
+            if ($user !== null && $user->hasPermission('trip.view_all')) {
+                return;
             }
 
             if ($dr->depart_at === null) {
@@ -69,7 +67,10 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
             }
 
             if (! $departAt->greaterThan(now()->copy()->addHours(24))) {
-                $v->errors()->add('passenger_count', Messages::REQUEST_RECURRING_PASSENGER_COUNT_LOCKED);
+                if ($dr->locked_at === null) {
+                    $dr->forceFill(['locked_at' => now()])->saveQuietly();
+                }
+                $v->errors()->add('student_count_actual', Messages::REQUEST_RECURRING_PASSENGER_COUNT_LOCKED);
             }
         });
     }

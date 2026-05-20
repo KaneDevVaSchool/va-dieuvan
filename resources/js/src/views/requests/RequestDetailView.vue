@@ -530,6 +530,7 @@
                 :passenger-saving="passengerSaving"
                 :passenger-patch-err="passengerPatchErr"
                 :passenger-depart-locked="passengerDepartLocked"
+                :passenger-dispatcher-override="passengerDispatcherOverride"
                 :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
                 :show-fill-price-section="showFillPriceSection"
                 :show-signed-paper-section="showSignedPaperSection"
@@ -1057,27 +1058,35 @@ function hoursUntilDepartIso(iso) {
   }
 }
 
+const passengerDispatcherOverride = computed(
+  () => auth.hasPermission('trip.view_all') && !!req.value?.locked_at,
+)
+
 const passengerDepartLocked = computed(() => {
+  if (auth.hasPermission('trip.view_all')) return false
   const st = req.value?.status
   if (!isCurrentUserRequester.value || !req.value?.dispatch_request_template_id) return true
+  if (req.value?.locked_at) return true
   if (st !== 'pending' && st !== 'price_filled') return true
   const h = hoursUntilDepartIso(req.value?.depart_at)
   return h == null || h < 24
 })
 
-const showPassengerAdjustSection = computed(
-  () =>
+const showPassengerAdjustSection = computed(() => {
+  if (!req.value?.dispatch_request_template_id) return false
+  if (auth.hasPermission('trip.view_all')) {
+    return ['pending', 'price_filled', 'approved'].includes(String(req.value?.status || ''))
+  }
+  return (
     isCurrentUserRequester.value &&
-    !!req.value?.dispatch_request_template_id &&
-    ['pending', 'price_filled'].includes(String(req.value?.status || '')),
-)
+    ['pending', 'price_filled'].includes(String(req.value?.status || ''))
+  )
+})
 
-const showResetCloneBtn = computed(
-  () =>
-    isCurrentUserRequester.value &&
-    auth.hasPermission('request.create') &&
-    ['approved', 'rejected'].includes(String(req.value?.status || '')),
-)
+const showResetCloneBtn = computed(() => {
+  if (!isCurrentUserRequester.value || !auth.hasPermission('request.create')) return false
+  return String(req.value?.status || '') === 'approved'
+})
 
 const activeTab = ref('route')
 
@@ -1087,6 +1096,7 @@ const approvalTabNeedsFocus = computed(() => {
   if (!r) return false
   return !!(
     r.dispatch_package_cost_alert ||
+    r.dispatch_package_budget_alert ||
     showResetCloneBtn.value ||
     showPassengerAdjustSection.value ||
     showFillPriceSection.value ||
@@ -1521,7 +1531,8 @@ async function load() {
     paperForm.value.paper_received_at = req.value?.paper_received_at
       ? toDatetimeLocalValue(new Date(req.value.paper_received_at))
       : ''
-    passengerDraft.value = Math.max(1, Math.min(999, Math.round(Number(dr.passenger_count) || 1)))
+    const actual = dr.student_count_actual ?? dr.passenger_count
+    passengerDraft.value = Math.max(1, Math.min(999, Math.round(Number(actual) || 1)))
     passengerPatchErr.value = ''
   } finally {
     loading.value = false

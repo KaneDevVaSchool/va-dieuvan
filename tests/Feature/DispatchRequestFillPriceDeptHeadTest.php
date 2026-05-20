@@ -5,7 +5,11 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\DispatchRequest;
 use App\Models\User;
+use App\Notifications\DeptApprovalReminderNotification;
 use App\Notifications\DeptHeadApprovalRequestedNotification;
+use App\Notifications\DeptHeadDecisionNotification;
+use App\Notifications\NewDispatchRequestNotification;
+use App\Notifications\TripAssignedNotification;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -276,5 +280,170 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame('approved', DispatchRequest::query()->findOrFail($dr->id)->status);
+    }
+
+    public function test_dept_decision_notifies_requester_on_approve(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $dept = Department::query()->create(['name' => 'Phòng A', 'code' => 'PHA']);
+
+        $requester = User::factory()->create([
+            'department_id' => $dept->id,
+            'is_active' => true,
+            'email' => 'requester@example.test',
+        ]);
+        $requester->assignRole('internal_user');
+
+        $head = User::factory()->create([
+            'department_id' => $dept->id,
+            'is_active' => true,
+            'email' => 'head@example.test',
+            'name' => 'Trưởng Test',
+        ]);
+        $head->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(3),
+            'status' => 'price_filled',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'service_price' => 200000,
+            'assigned_dept_head_id' => $head->id,
+            'wizard_snapshot' => [],
+        ]);
+
+        Notification::fake();
+
+        $this->actingAs($head);
+
+        $this->postJson("/api/dispatch-requests/{$dr->id}/dept-decision", [
+            'decision' => 'approve',
+        ], ['Idempotency-Key' => 'dept-decision-approve-'.$dr->id])
+            ->assertSuccessful();
+
+        Notification::assertSentTo($requester, DeptHeadDecisionNotification::class, function (DeptHeadDecisionNotification $n) use ($dr): bool {
+            return $n->dispatchRequestId === $dr->id && $n->decision === 'approve';
+        });
+
+        $fresh = DispatchRequest::query()->findOrFail($dr->id);
+        $mail = (new DeptHeadDecisionNotification($fresh->id, 'approve'))->toMail($requester);
+        $html = (string) (method_exists($mail, 'render') ? $mail->render() : '');
+
+        $this->assertStringContainsString('Phiếu đề xuất đã được duyệt', $mail->subject);
+        $this->assertStringContainsString('/requests/'.$fresh->id, $html);
+    }
+
+    public function test_dept_decision_notifies_requester_on_reject_with_mail_body(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $dept = Department::query()->create(['name' => 'Phòng B', 'code' => 'PHB']);
+
+        $requester = User::factory()->create([
+            'department_id' => $dept->id,
+            'is_active' => true,
+            'email' => 'requester.reject@example.test',
+        ]);
+        $requester->assignRole('internal_user');
+
+        $head = User::factory()->create(['department_id' => $dept->id, 'is_active' => true]);
+        $head->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(5),
+            'status' => 'price_filled',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'service_price' => 100000,
+            'assigned_dept_head_id' => $head->id,
+            'wizard_snapshot' => [],
+        ]);
+
+        Notification::fake();
+
+        $this->actingAs($head);
+
+        $this->postJson("/api/dispatch-requests/{$dr->id}/dept-decision", [
+            'decision' => 'reject',
+            'rejection_reason' => 'Không đủ ngân sách',
+        ], ['Idempotency-Key' => 'dept-decision-reject-'.$dr->id])
+            ->assertSuccessful();
+
+        Notification::assertSentTo($requester, DeptHeadDecisionNotification::class, function (DeptHeadDecisionNotification $n) use ($dr): bool {
+            return $n->dispatchRequestId === $dr->id && $n->decision === 'reject';
+        });
+
+        $fresh = DispatchRequest::query()->findOrFail($dr->id);
+        $mail = (new DeptHeadDecisionNotification($fresh->id, 'reject'))->toMail($requester);
+        $html = (string) (method_exists($mail, 'render') ? $mail->render() : '');
+
+        $this->assertStringContainsString('Phiếu đề xuất bị từ chối', $mail->subject);
+        $this->assertStringContainsString('Không đủ ngân sách', $html);
+    }
+
+    public function test_all_dispatch_mail_views_render_without_blade_errors(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $head = User::factory()->create(['is_active' => true, 'email' => 'head@example.test', 'name' => 'Head']);
+        $head->assignRole('department_head');
+
+        $requester = User::factory()->create(['is_active' => true, 'email' => 'req@example.test', 'name' => 'Requester']);
+        $requester->assignRole('internal_user');
+
+        $driver = User::factory()->create(['is_active' => true, 'email' => 'driver@example.test', 'name' => 'Driver']);
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(2),
+            'arrive_by' => now()->addDays(2)->addHours(4),
+            'status' => 'price_filled',
+            'source_channel' => 'portal',
+            'is_urgent' => true,
+            'paper_status' => 'pending',
+            'service_price' => 120000,
+            'price_filled_at' => now()->subHours(30),
+            'assigned_dept_head_id' => $head->id,
+            'approved_by' => $head->id,
+            'wizard_snapshot' => [
+                'form' => ['purpose' => 'Test', 'coordinator_name' => 'Coord'],
+                'businessRows' => [['unit_price' => 100000, 'extra_fee' => 20000]],
+            ],
+        ]);
+
+        $mails = [
+            (new DeptHeadApprovalRequestedNotification($dr->id))->toMail($head),
+            (new DeptHeadDecisionNotification($dr->id, 'approve'))->toMail($requester),
+            (new DeptHeadDecisionNotification($dr->id, 'reject'))->toMail($requester),
+            (new NewDispatchRequestNotification($dr->id, 'A → B', true))->toMail($head),
+            (new TripAssignedNotification(
+                tripId: 99,
+                tripType: 'business',
+                origin: 'A',
+                destination: 'B',
+                departAt: now()->addDay()->toIso8601String(),
+                isUrgent: true,
+            ))->toMail($driver),
+            (new DeptApprovalReminderNotification($dr->id))->toMail($head),
+        ];
+
+        foreach ($mails as $mail) {
+            $html = (string) (method_exists($mail, 'render') ? $mail->render() : '');
+            $this->assertNotSame('', trim($html));
+        }
     }
 }

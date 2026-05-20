@@ -11,6 +11,7 @@ use App\Models\Trip;
 use App\Models\TripEvent;
 use App\Services\Auditing\AuditLogger;
 use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
+use App\Services\RecurringDispatch\RecurringBudgetAlertService;
 use App\Support\TripVisibility;
 use Illuminate\Support\Facades\DB;
 
@@ -63,6 +64,12 @@ class TripOpsController extends Controller
         if ($newStatus === 'completed' && $beforeStatus !== 'completed') {
             $trip->refresh();
             app(DispatchRecurringMaintenanceService::class)->consumePackageSessionAfterTripCompletion($trip);
+            app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($trip);
+        }
+
+        if (in_array($newStatus, ['cancelled'], true) && $beforeStatus !== 'cancelled') {
+            $trip->refresh();
+            app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($trip);
         }
 
         return $response;

@@ -26,4 +26,7 @@ return [
 
     /** Footer email chờ duyệt trưởng đơn vị (mailto hoặc chuỗi hiển thị). */
     'mail_helpdesk' => env('DISPATCH_MAIL_HELPDESK', ''),
+
+    /** Sau bao nhiêu giờ kể từ fill giá mà gửi nhắc Trưởng BP (cron dispatch:remind-dept-approvals). */
+    'dept_approval_reminder_after_hours' => max(1, (int) env('DISPATCH_DEPT_APPROVAL_REMIND_AFTER_HOURS', 24)),
 ];

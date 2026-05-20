@@ -76,7 +76,11 @@
             "depart_time": "Choose the full date and time for “Vehicle needed on” in the Requester & schedule step.",
             "attach_fail": "Request created but basis file upload failed. You may retry from the request detail (if allowed).",
             "create_fail": "Failed to create request.",
-            "recurring_weekday": "Select at least one weekday for recurring schedules (Details step)."
+            "recurring_weekday": "Select at least one weekday for recurring schedules (Details step).",
+            "recurrence_start_required": "Enter the recurring series start date.",
+            "recurrence_return_time_required": "Enter the return time for recurring trips.",
+            "recurrence_end_required": "Enter an end date or choose a week count.",
+            "recurrence_repeat_count_required": "Enter the number of weeks (at least 1)."
         },
         "request_status": {
             "draft": "Draft",
@@ -217,7 +221,13 @@
             "recurring_weekdays_preview_label": "Selected weekdays",
             "recurring_weekdays_empty": "No weekdays yet — open the Details step to select days on the schedule.",
             "recurring_go_schedule_step": "Pick weekdays → Details step",
-            "recurrence_end_label": "Repeat until date (optional)",
+            "recurrence_start_label": "Series start date",
+            "recurrence_return_time_label": "Return time (HH:mm)",
+            "recurrence_stop_legend": "End of series",
+            "recurrence_stop_by_date": "End by date",
+            "recurrence_stop_by_weeks": "End by week count",
+            "recurrence_repeat_count_label": "Number of weeks",
+            "recurrence_end_label": "End date",
             "replace_banner": "Editing a reset draft — submitting updates this pending request.",
             "basis_label": "Supporting documents",
             "basis_title": "Upload memo / basis (PDF, image). Max 10MB.",

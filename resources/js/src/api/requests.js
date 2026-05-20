@@ -253,11 +253,11 @@ export async function patchDispatchRequestWizard(dispatchRequestId, payload, opt
 
 /**
  * @param {number} dispatchRequestId
- * @param {number} passenger_count
+ * @param {number} student_count_actual
  */
-export async function patchPassengerCount(dispatchRequestId, passenger_count) {
+export async function patchPassengerCount(dispatchRequestId, student_count_actual) {
   const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/passenger-count`, {
-    passenger_count,
+    student_count_actual,
   })
   return data.data
 }

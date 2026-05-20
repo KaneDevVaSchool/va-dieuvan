@@ -32,13 +32,9 @@ class DispatchRecurringMaintenanceService
         $cursorEnd = $now->copy()->addDays($horizonDays)->endOfDay();
 
         $untilDay = $cursorEnd->copy();
-        /** @phpstan-ignore-next-line */
-        if ($template->recurrence_end_date !== null) {
-            /** @phpstan-ignore-next-line */
-            $ruleEndDay = Carbon::parse((string) $template->recurrence_end_date, $timezone)->endOfDay();
-            if ($ruleEndDay->lt($untilDay)) {
-                $untilDay = $ruleEndDay;
-            }
+        $ruleEndDay = $template->effectiveRecurrenceEndDay($timezone);
+        if ($ruleEndDay !== null && $ruleEndDay->lt($untilDay)) {
+            $untilDay = $ruleEndDay;
         }
 
         /** @phpstan-ignore-next-line */
@@ -46,10 +42,12 @@ class DispatchRecurringMaintenanceService
         /** @phpstan-ignore-next-line */
         $interval = max(1, (int) data_get($template->recurrence_rule, 'interval', 1));
 
-        /** @phpstan-ignore-next-line */
-        $anchor = (
+        if ($template->start_date !== null) {
+            $anchor = Carbon::parse((string) $template->start_date, $timezone)->startOfDay();
+        } else {
             /** @phpstan-ignore-next-line */
-            $template->created_at ?? $now)->copy()->timezone($timezone)->startOfDay();
+            $anchor = ($template->created_at ?? $now)->copy()->timezone($timezone)->startOfDay();
+        }
 
         $timeStrRaw = $template->getAttributes()['recurrence_time'] ?? '08:00:00';
         /** @phpstan-ignore-next-line */
@@ -67,7 +65,10 @@ class DispatchRecurringMaintenanceService
 
         $created = 0;
 
-        $dayCursor = $now->copy()->startOfDay();
+        $dayCursor = $anchor->copy();
+        if ($dayCursor->lt($now->copy()->startOfDay())) {
+            $dayCursor = $now->copy()->startOfDay();
+        }
         /** @phpstan-ignore-next-line */
         for (; $dayCursor->lte($untilDay->copy()->startOfDay()); $dayCursor->addDay()) {
             if (! self::frequencyMatchesDay($frequency, $interval, $template->recurrence_rule, $anchor, $dayCursor, $timezone)) {

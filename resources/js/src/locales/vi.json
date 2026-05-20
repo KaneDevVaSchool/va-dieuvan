@@ -1707,6 +1707,7 @@
         "created_at_label": "Tạo chuyến:",
         "tabs_aria_label": "Lọc theo loại chuyến",
         "badge_urgent": "Ưu tiên",
+        "badge_recurring": "Định kỳ",
         "request_status_prefix": "YC:",
         "depart_at_label": "Khởi hành dự kiến",
         "arrive_by_label": "Đến nơi dự kiến",
@@ -2279,7 +2280,8 @@
         "passenger_section_title": "Cập nhật số học sinh (định kỳ)",
         "passenger_count_label": "Số học sinh",
         "passenger_section_lead": "Chỉ trước giờ khởi hành ít nhất 24 giờ; chỉ khi phiếu chưa duyệt.",
-        "passenger_locked": "Đã khóa: chỉ chỉnh được khi phiếu chưa duyệt và trước giờ khởi hành ít nhất 24 giờ.",
+        "passenger_locked": "Đã qua thời hạn cập nhật (trước 24 giờ khởi hành). Liên hệ Điều vận nếu cần thay đổi khẩn.",
+        "passenger_dispatcher_override_hint": "Chỉnh sửa sau thời hạn (quyền Điều vận)",
         "passenger_save": "Lưu số học sinh",
         "passenger_save_busy": "Đang lưu…",
         "passenger_saved": "Đã cập nhật số học sinh.",
@@ -2287,7 +2289,12 @@
         "package_cost_alert_exceeded_title": "Gói dịch vụ đã hết số buổi",
         "package_cost_alert_warning_title": "Gói dịch vụ sắp hết số buổi",
         "package_cost_alert_body": "Gói «{label}»: đã dùng {used}/{total} buổi, còn {remaining} buổi (ngưỡng cảnh báo: còn tối đa {threshold} buổi).",
-        "package_cost_alert_note": "Đây chỉ là cảnh báo — không chặn tạo phiếu hoặc duyệt. Liên hệ Điều vận nếu cần điều chỉnh gói."
+        "package_cost_alert_note": "Đây chỉ là cảnh báo — không chặn tạo phiếu hoặc duyệt. Liên hệ Điều vận nếu cần điều chỉnh gói.",
+        "package_budget_alert_title": "Cảnh báo vượt ngưỡng chi phí gói",
+        "package_budget_alert_body": "Chi phí gói «{label}» tháng {month} đã đạt {cost} (ngưỡng {budget}). Vui lòng tạo đề xuất bổ sung để phê duyệt thêm ngân sách.",
+        "package_budget_alert_note": "Liên hệ Kế toán hoặc BGH để phê duyệt bổ sung ngân sách tháng.",
+        "passenger_count_plan_label": "Số lượng học sinh (kế hoạch)",
+        "passenger_count_actual_label": "Số lượng học sinh thực tế"
     },
     "app": {
         "title": "VA Dispatch · Điều vận",

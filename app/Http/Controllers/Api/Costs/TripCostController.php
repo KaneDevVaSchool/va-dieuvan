@@ -18,6 +18,7 @@ use App\Models\TripCost;
 use App\Services\Auditing\AuditLogger;
 use App\Support\FinancialDataLock;
 use App\Support\Messages;
+use App\Services\RecurringDispatch\RecurringBudgetAlertService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -126,6 +127,8 @@ class TripCostController extends Controller
             metadata: ['trip_id' => $trip->id],
         );
 
+        app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($trip->fresh());
+
         return $this->created($cost);
     }
 
@@ -172,6 +175,8 @@ class TripCostController extends Controller
             after: $tripCost->toArray(),
         );
 
+        app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($tripCost->trip->fresh());
+
         return $this->ok($tripCost);
     }
 
@@ -205,6 +210,10 @@ class TripCostController extends Controller
             after: null,
             metadata: ['deleted_trip_cost_id' => $deletedId],
         );
+
+        if ($relatedTrip) {
+            app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($relatedTrip->fresh());
+        }
 
         return $this->ok(['deleted' => true, 'id' => $deletedId]);
     }

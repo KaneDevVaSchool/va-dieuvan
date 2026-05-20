@@ -1157,6 +1157,22 @@ export function useDispatchRequestWizard(options = {}) {
       if (!hasWd) {
         items.push({ section: 'schedule', message: t('dispatch_wizard.validate.recurring_weekday') })
       }
+      if (!String(form.value.recurrence_start_date || '').trim()) {
+        items.push({ section: 'purpose', message: t('dispatch_wizard.validate.recurrence_start_required') })
+      }
+      if (!String(form.value.recurrence_return_time || '').trim()) {
+        items.push({ section: 'purpose', message: t('dispatch_wizard.validate.recurrence_return_time_required') })
+      }
+      const mode = form.value.recurrence_end_mode || 'date'
+      if (mode === 'date' && !String(form.value.recurrence_end_date || '').trim()) {
+        items.push({ section: 'purpose', message: t('dispatch_wizard.validate.recurrence_end_required') })
+      }
+      if (mode === 'weeks') {
+        const n = Number(form.value.recurrence_repeat_count)
+        if (!Number.isFinite(n) || n < 1) {
+          items.push({ section: 'purpose', message: t('dispatch_wizard.validate.recurrence_repeat_count_required') })
+        }
+      }
     }
     if (items.length) {
       confirmSubmitAttempted.value = true
@@ -1230,14 +1246,22 @@ export function useDispatchRequestWizard(options = {}) {
 
       let createdResult = null
       if (wantsRecurring) {
+        const endMode = form.value.recurrence_end_mode || 'date'
         const tmplPayload = {
           ...payload,
+          start_date: form.value.recurrence_start_date?.trim() || undefined,
+          return_time: form.value.recurrence_return_time?.trim() || undefined,
           recurrence_rule: {
             freq: 'weekly',
             interval: 1,
             byweekday: buildIsoWeekdaysFromE1(form.value.e1_weekdays),
           },
-          recurrence_end_date: form.value.recurrence_end_date?.trim() || undefined,
+          recurrence_end_date:
+            endMode === 'date' ? form.value.recurrence_end_date?.trim() || undefined : undefined,
+          repeat_count:
+            endMode === 'weeks'
+              ? Math.max(1, Math.round(Number(form.value.recurrence_repeat_count) || 0))
+              : undefined,
         }
         const pack = await createDispatchRequestTemplate(tmplPayload, { idempotencyKey })
         createdResult = pack?.dispatch_request ?? null

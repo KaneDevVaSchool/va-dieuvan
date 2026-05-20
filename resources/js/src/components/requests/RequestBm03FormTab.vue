@@ -571,7 +571,11 @@
       </div>
     </section>
 
-    <CostLimitAlert v-if="req?.dispatch_package_cost_alert" :alert="req.dispatch_package_cost_alert" />
+    <CostLimitAlert
+      v-if="req?.dispatch_package_cost_alert || req?.dispatch_package_budget_alert"
+      :alert="req?.dispatch_package_cost_alert"
+      :budget-alert="req?.dispatch_package_budget_alert"
+    />
 
     <section
       v-if="showResetCloneBtn || showPassengerAdjustSection"
@@ -581,7 +585,9 @@
       <StudentCountField
         v-if="showPassengerAdjustSection"
         v-model:passenger-count="passengerDraftModel"
+        :student-count-plan="req?.passenger_count != null ? Number(req.passenger_count) : null"
         :locked="passengerDepartLocked"
+        :is-dispatcher-override="passengerDispatcherOverride"
         :depart-at-formatted="departAtFormatted"
         :saving="passengerSaving"
         :error="passengerPatchErr"
@@ -642,6 +648,7 @@ const props = defineProps({
   passengerSaving: { type: Boolean, default: false },
   passengerPatchErr: { type: String, default: '' },
   passengerDepartLocked: { type: Boolean, default: true },
+  passengerDispatcherOverride: { type: Boolean, default: false },
   departAtFormatted: { type: String, default: '' },
   showFillPriceSection: { type: Boolean, default: false },
   showSignedPaperSection: { type: Boolean, default: false },

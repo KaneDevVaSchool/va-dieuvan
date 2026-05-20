@@ -50,46 +50,8 @@
                         </table>
                         @endif
 
-                        <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;font-weight:600;">Thông tin phiếu đề xuất</p>
-                        <table width="100%" cellspacing="0" cellpadding="8" role="presentation" style="border-collapse:collapse;margin:0 0 18px;font-size:13px;">
-                            <tr><td width="42%" style="border-bottom:1px solid #e2e8f0;color:#64748b;padding:8px 0;">Mã phiếu</td><td style="border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">{{ $requestRefCode }}</td></tr>
-                            <tr><td style="border-bottom:1px solid #e2e8f0;color:#64748b;padding:8px 0;">Loại dịch vụ</td><td style="border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">{{ $tripTypeLabel }}</td></tr>
-                            <tr><td style="border-bottom:1px solid #e2e8f0;color:#64748b;padding:8px 0;">Người đề xuất</td><td style="border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">{{ $requesterLine }}</td></tr>
-                            <tr><td style="border-bottom:1px solid #e2e8f0;color:#64748b;padding:8px 0;">Hành trình</td><td style="border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">{{ $routeLine }}</td></tr>
-                            <tr><td style="border-bottom:1px solid #e2e8f0;color:#64748b;padding:8px 0;">Khởi hành</td><td style="border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">{{ $timeLineDepart }}</td></tr>
-                            <tr><td style="border-bottom:1px solid #e2e8f0;color:#64748b;padding:8px 0;">Kết thúc dự kiến</td><td style="border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">{{ $timeLineArrive }}</td></tr>
-                            <tr><td style="border-bottom:1px solid #e2e8f0;color:#64748b;padding:8px 0;">Điều phối / Trưởng đoàn</td><td style="border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600;">{{ $leaderLine }}</td></tr>
-                            <tr><td style="padding:8px 0;color:#64748b;">Mục đích</td><td style="padding:8px 0;color:#0f172a;font-weight:600;">{{ $purposeLine }}</td></tr>
-                        </table>
-
-                        <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;font-weight:600;">Chi phí dịch vụ</p>
-                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:rgba(139,26,58,0.06);border:1px solid rgba(139,26,58,0.15);border-radius:10px;margin:0 0 18px;">
-                            <tr>
-                                <td style="padding:14px 16px;font-size:13px;line-height:1.6;color:#475569;">
-                                    @if($showPriceBreakdown)
-                                    <table width="100%" cellspacing="0" cellpadding="6" role="presentation">
-                                        <tr>
-                                            <td style="padding:4px 0;color:#475569;">Tổng đơn giá (cột Đơn giá BM.03)</td>
-                                            <td align="right" style="padding:4px 0;color:#0f172a;font-weight:600;">{{ $unitPriceTotalFmt }}</td>
-                                        </tr>
-                                        @if($showExtraLine)
-                                        <tr>
-                                            <td style="padding:4px 0;color:#475569;font-size:12px;">Tổng phụ thu (cột Phụ thu BM.03)</td>
-                                            <td align="right" style="padding:4px 0;color:#64748b;">{{ $extraFeesFmt }}</td>
-                                        </tr>
-                                        @endif
-                                    </table>
-                                    <hr style="border:none;border-top:1px solid rgba(139,26,58,0.15);margin:10px 0;">
-                                    @endif
-                                    <table width="100%" cellspacing="0" cellpadding="6" role="presentation">
-                                        <tr>
-                                            <td style="color:#0f172a;font-weight:600;">{{ $showPriceBreakdown ? 'Tổng cộng (sau Fill giá)' : 'Tổng chi phí dịch vụ' }}</td>
-                                            <td align="right" style="font-size:16px;font-weight:700;color:#8B1A3A;">{{ $grandTotalFmt }}</td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
+                        @include('mail.partials.request-summary-table')
+                        @include('mail.partials.price-breakdown')
 
                         <p style="margin:0 0 12px;color:#475569;font-size:13px;">Vui lòng mở phiếu trên hệ thống Điều vận để duyệt hoặc từ chối. Nếu từ chối, bạn cần nhập lý do — Người đề xuất sẽ nhận thông báo để chỉnh sửa.</p>
 
@@ -102,32 +64,7 @@
                         </table>
                         <p style="margin:0 0 22px;text-align:center;font-size:12px;"><a href="{{ $detailUrl }}" style="color:#8B1A3A;text-decoration:none;">Hoặc mở liên kết trực tiếp trong trình duyệt của bạn</a></p>
 
-                        <hr style="border:none;border-top:1px solid #e2e8f0;margin:18px 0;">
-
-                        <p style="margin:0 0 14px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#64748b;font-weight:600;">Tiến trình xử lý</p>
-                        <table width="100%" cellspacing="0" cellpadding="0" role="presentation" style="font-size:11px;color:#64748b;margin-bottom:14px;text-align:center;">
-                            <tr>
-                                <td>✔ Tạo phiếu</td>
-                                <td>✔ Fill giá</td>
-                                <td style="color:#8B1A3A;font-weight:700;">3 Trưởng BP</td>
-                                <td>Điều xe</td>
-                                <td>Lưu trữ</td>
-                            </tr>
-                        </table>
-
-                        <p style="margin:0 0 14px;color:#64748b;font-size:11px;line-height:1.65;">
-                            Sau khi bạn duyệt: Người đề xuất nhận thông báo và có thể xuất PDF. Điều vận tiến hành điều phối xe trong chuyển sang bước tiếp theo.<br><br>
-                            Đây là email tự động từ VA Schools Điều vận — vui lòng không trả lời trực tiếp email này.
-                            @if($helpdesk !== '')
-                                <br>Nếu cần hỗ trợ: {{ $helpdesk }}
-                            @else
-                                <br>Nếu cần hỗ trợ, liên hệ IT Helpdesk của trường.
-                            @endif
-                        </p>
-
-                        <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;line-height:1.5;">
-                            🔒 {{ $privacyScopeFooter }}
-                        </p>
+                        @include('mail.partials.footer')
                     </td>
                 </tr>
             </table>

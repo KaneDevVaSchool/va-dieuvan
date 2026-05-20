@@ -1878,6 +1878,7 @@
         "created_at_label": "Trip created:",
         "tabs_aria_label": "Filter by trip type",
         "badge_urgent": "Priority",
+        "badge_recurring": "Recurring",
         "request_status_prefix": "Request:",
         "depart_at_label": "Scheduled departure",
         "arrive_by_label": "Expected arrival",
@@ -2451,7 +2452,8 @@
         "passenger_section_title": "Update student count (recurring)",
         "passenger_count_label": "Passenger count",
         "passenger_section_lead": "Only more than 24 hours before departure and before approval.",
-        "passenger_locked": "Locked: edits allowed only before 24 hours or while still pending.",
+        "passenger_locked": "The update window has closed (must be at least 24 hours before departure). Contact Dispatch for urgent changes.",
+        "passenger_dispatcher_override_hint": "Editing after the deadline (dispatch override)",
         "passenger_save": "Save passenger count",
         "passenger_save_busy": "Saving…",
         "passenger_saved": "Passenger count updated.",
@@ -2459,7 +2461,12 @@
         "package_cost_alert_exceeded_title": "Service package sessions exhausted",
         "package_cost_alert_warning_title": "Service package running low on sessions",
         "package_cost_alert_body": "Package «{label}»: used {used}/{total} sessions, {remaining} remaining (alert threshold: up to {threshold} sessions left).",
-        "package_cost_alert_note": "This is informational only — it does not block creating or approving requests. Contact dispatch if you need package changes."
+        "package_cost_alert_note": "This is informational only — it does not block creating or approving requests. Contact dispatch if you need package changes.",
+        "package_budget_alert_title": "Package monthly budget exceeded",
+        "package_budget_alert_body": "Package «{label}» in month {month}: cost {cost} (budget {budget}). Please submit a supplemental request for additional budget approval.",
+        "package_budget_alert_note": "Contact Accounting or school leadership to approve additional monthly budget.",
+        "passenger_count_plan_label": "Planned student count",
+        "passenger_count_actual_label": "Actual student count"
     },
     "app": {
         "title": "VA Dispatch",

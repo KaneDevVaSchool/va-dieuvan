@@ -57,9 +57,23 @@ class DispatchRequestTemplateController extends Controller
                 abort(422, 'Giờ đến phải sau hoặc cùng giờ khởi hành.');
             }
             $arriveOffset = (int) $delta;
+        } elseif (! empty($data['return_time'])) {
+            $departMinutes = (int) $departAt->format('H') * 60 + (int) $departAt->format('i');
+            $returnParts = explode(':', (string) $data['return_time']);
+            $returnMinutes = ((int) ($returnParts[0] ?? 0)) * 60 + ((int) ($returnParts[1] ?? 0));
+            $delta = $returnMinutes - $departMinutes;
+            if ($delta < 0) {
+                $delta += 24 * 60;
+            }
+            $arriveOffset = $delta;
+            $arriveBy = $departAt->copy()->addMinutes($delta);
         }
 
         $recurrenceTime = $departAt->format('H:i:s');
+        $startDate = isset($data['start_date']) ? Carbon::parse($data['start_date'])->toDateString() : $departAt->toDateString();
+        $returnTime = isset($data['return_time']) ? (strlen((string) $data['return_time']) === 5
+            ? $data['return_time'].':00'
+            : $data['return_time']) : null;
 
         /** @var DispatchRequestTemplate $template */
         /** @var DispatchRequest $dispatchRequest */
@@ -70,6 +84,8 @@ class DispatchRequestTemplateController extends Controller
             $arriveBy,
             $arriveOffset,
             $recurrenceTime,
+            $startDate,
+            $returnTime,
             $finalUrgent,
             $urgentTrigger,
             $urgentReasonTrim,
@@ -87,7 +103,10 @@ class DispatchRequestTemplateController extends Controller
                 'arrive_offset_minutes' => $arriveOffset,
                 'recurrence_rule' => $data['recurrence_rule'],
                 'recurrence_end_date' => $data['recurrence_end_date'] ?? null,
+                'repeat_count' => $data['repeat_count'] ?? null,
                 'recurrence_time' => $recurrenceTime,
+                'start_date' => $startDate,
+                'return_time' => $returnTime,
                 'wizard_snapshot' => $data['wizard_snapshot'] ?? null,
             ]);
 

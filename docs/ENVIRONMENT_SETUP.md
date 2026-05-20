@@ -132,6 +132,7 @@ Output Vite: `public/build/` (gitignored).
 | `VAPID_SUBJECT`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`                                          | Web Push                                                              |
 | `DISPATCH_NOTIFICATIONS_QUEUE_DEFAULT`, `DISPATCH_NOTIFICATIONS_QUEUE_URGENT`                     | Tên queue thông báo                                                   |
 | `DISPATCH_MAIL_HELPDESK`                                                                          | Chuỗi hiển thị / mailto ở footer email chờ duyệt Trưởng đơn vị          |
+| `DISPATCH_DEPT_APPROVAL_REMIND_AFTER_HOURS`                                                       | Số giờ sau fill giá trước khi cron nhắc Trưởng BP (`dispatch:remind-dept-approvals`) |
 | `DISPATCH_DEBUG_NOTIFICATION_LOG`                                                                 | Log chi tiết luồng notify                                             |
 | `DISPATCH_PASSENGER_URGENT_HOURS`, `DISPATCH_CARGO_URGENT_HOURS`                                  | Ngưỡng “urgent” fallback                                              |
 | `AWS_*`                                                                                           | S3 nếu dùng                                                           |
@@ -202,7 +203,7 @@ Windows dev: chạy thủ công `php artisan cargo:sla-check` hoặc Task Schedu
 
 ## Mail & storage
 
-- **Mail dev**: `.env.example` trỏ Mailpit `MAIL_HOST=mailpit`, `MAIL_PORT=1025`. Thông báo trong app chủ yếu **database/Web Push**; riêng khi điều vận **«Lưu giá & chuyển duyệt»**, `DeptHeadApprovalRequestedNotification` cũng dùng kênh **mail** — cần cấu hình `MAIL_*` và **`php artisan queue:work`** khi queue không phải `sync`. Tuỳ chọn: **`DISPATCH_MAIL_HELPDESK`** trong `config/dispatch.php` hiển thị ở cuối email.
+- **Mail dev**: `.env.example` trỏ Mailpit `MAIL_HOST=mailpit`, `MAIL_PORT=1025`. Nhiều notification dùng thêm kênh **mail** (chờ/duyệt Trưởng BP, kết quả duyệt cho người đề xuất, phiếu **gấp** cho điều vận, gán chuyến tài xế, nhắc duyệt cron) — cần `MAIL_*` và **`php artisan queue:work`** khi queue không phải `sync`. Tuỳ chọn: **`DISPATCH_MAIL_HELPDESK`**, **`DISPATCH_DEPT_APPROVAL_REMIND_AFTER_HOURS`** trong `config/dispatch.php`.
 - **Filesystem**: `FILESYSTEM_DISK=local` + `storage/app/public`; nhớ `php artisan storage:link`.
 
 ---

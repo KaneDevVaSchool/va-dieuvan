@@ -396,7 +396,11 @@
               :point-purpose-kind="form.point_purpose_kind"
               :replace-draft-request-id="replaceDraftRequestId"
               v-model:recurring-enabled="form.recurring_enabled"
+              v-model:start-date="form.recurrence_start_date"
+              v-model:return-time="form.recurrence_return_time"
               v-model:recurrence-end-date="form.recurrence_end_date"
+              v-model:recurrence-end-mode="form.recurrence_end_mode"
+              v-model:repeat-count="form.recurrence_repeat_count"
               :weekday-labels="recurringSelectedWeekdayLabels"
               @go-schedule-step="goStep(2)"
             />

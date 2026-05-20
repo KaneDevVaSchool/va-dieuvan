@@ -76,7 +76,11 @@
             "depart_time": "Chọn đầy đủ ngày giờ cần sử dụng xe ở bước «Người đề nghị & thời gian».",
             "attach_fail": "Đã tạo yêu cầu nhưng không tải được file căn cứ. Bạn có thể thử lại từ chi tiết yêu cầu (nếu được phép).",
             "create_fail": "Tạo yêu cầu thất bại.",
-            "recurring_weekday": "Chọn ít nhất một thứ trong tuần cho lịch định kỳ (bước Chi tiết)."
+            "recurring_weekday": "Chọn ít nhất một thứ trong tuần cho lịch định kỳ (bước Chi tiết).",
+            "recurrence_start_required": "Nhập ngày bắt đầu chuỗi định kỳ.",
+            "recurrence_return_time_required": "Nhập giờ về cho chuyến định kỳ.",
+            "recurrence_end_required": "Nhập ngày kết thúc hoặc chọn số tuần lặp.",
+            "recurrence_repeat_count_required": "Nhập số tuần lặp (ít nhất 1)."
         },
         "request_status": {
             "draft": "Nháp",
@@ -217,7 +221,13 @@
             "recurring_weekdays_preview_label": "Ngày trong tuần đã chọn",
             "recurring_weekdays_empty": "Chưa chọn thứ — vào bước Chi tiết để bật các thứ trong lịch.",
             "recurring_go_schedule_step": "Chọn ngày trong tuần → Bước Chi tiết",
-            "recurrence_end_label": "Lặp đến hết ngày (tuỳ chọn)",
+            "recurrence_start_label": "Ngày bắt đầu chuỗi",
+            "recurrence_return_time_label": "Giờ về (HH:mm)",
+            "recurrence_stop_legend": "Kết thúc chuỗi",
+            "recurrence_stop_by_date": "Theo ngày kết thúc",
+            "recurrence_stop_by_weeks": "Theo số tuần lặp",
+            "recurrence_repeat_count_label": "Số tuần lặp",
+            "recurrence_end_label": "Ngày kết thúc",
             "replace_banner": "Bạn đang chỉnh sửa bản «Đặt lại» đã tạo — gửi sẽ cập nhật phiếu nháp này.",
             "basis_label": "Căn cứ đề xuất — đính kèm",
             "basis_title": "Tải tờ trình, văn bản căn cứ (PDF, ảnh). Tối đa 10MB.",

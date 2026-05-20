@@ -437,7 +437,12 @@
                   >
                     {{ labelPaperStatus(trip.dispatch_request.paper_status) }}
                   </span>
-             
+                  <span
+                    v-if="trip.dispatch_request?.dispatch_request_template_id"
+                    class="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100"
+                  >
+                    {{ t('trips_page.badge_recurring') }}
+                  </span>
                 </div>
               </div>
             </div>

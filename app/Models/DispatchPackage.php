@@ -10,14 +10,18 @@ class DispatchPackage extends Model
     protected $fillable = [
         'trip_type',
         'label',
+        'monthly_budget',
         'total_sessions',
         'sessions_used',
         'alert_when_remaining_sessions',
         'last_low_sessions_notified_at',
+        'last_budget_alert_notified_at',
     ];
 
     protected $casts = [
+        'monthly_budget' => 'decimal:2',
         'last_low_sessions_notified_at' => 'datetime',
+        'last_budget_alert_notified_at' => 'datetime',
     ];
 
     public function templates(): HasMany

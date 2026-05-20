@@ -430,6 +430,8 @@ class DispatchRequestController extends Controller
                     metadata: ['reason' => $data['reason'] ?? null],
                 );
 
+                $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'reject');
+
                 return $this->ok($dispatchRequest);
             }
 
@@ -458,6 +460,8 @@ class DispatchRequestController extends Controller
                 after: $dispatchRequest->toArray(),
                 metadata: ['trip_id' => $trip->id],
             );
+
+            $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'approve');
 
             return $this->ok(['request' => $dispatchRequest, 'trip' => $trip]);
         });
@@ -501,10 +505,7 @@ class DispatchRequestController extends Controller
                     metadata: ['reason' => $dispatchRequest->rejection_reason],
                 );
 
-                $dispatchRequest->loadMissing('requester');
-                if ($requester = $dispatchRequest->requester) {
-                    $requester->notify(new DeptHeadDecisionNotification($dispatchRequest->id, 'reject'));
-                }
+                $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'reject');
 
                 return $this->ok($dispatchRequest->fresh());
             }
@@ -535,10 +536,7 @@ class DispatchRequestController extends Controller
                 metadata: ['trip_id' => $trip->id],
             );
 
-            $dispatchRequest->loadMissing('requester');
-            if ($requester = $dispatchRequest->requester) {
-                $requester->notify(new DeptHeadDecisionNotification($dispatchRequest->id, 'approve'));
-            }
+            $this->scheduleRequesterDeptDecisionNotification($dispatchRequest->id, 'approve');
 
             return $this->ok(['request' => $dispatchRequest->fresh(), 'trip' => $trip]);
         });
@@ -554,22 +552,37 @@ class DispatchRequestController extends Controller
         $user = $request->user();
 
         $before = $dispatchRequest->toArray();
-        $beforeCount = $dispatchRequest->passenger_count;
+        $beforeCount = $dispatchRequest->student_count_actual;
 
         $dispatchRequest->update([
-            'passenger_count' => $data['passenger_count'],
+            'student_count_actual' => $data['student_count_actual'],
         ]);
+
+        $event = 'request.student_count_actual_updated';
+        if ($dispatchRequest->locked_at !== null && $user->hasPermission('trip.view_all')) {
+            $event = 'request.student_count_actual_updated_after_lock';
+        }
 
         app(AuditLogger::class)->log(
             actorId: $user->id,
-            event: 'request.passenger_count_updated',
+            event: $event,
             auditable: $dispatchRequest,
             before: $before,
             after: $dispatchRequest->fresh()->toArray(),
-            metadata: ['passenger_count_before' => $beforeCount, 'passenger_count_after' => $data['passenger_count']],
+            metadata: [
+                'student_count_actual_before' => $beforeCount,
+                'student_count_actual_after' => $data['student_count_actual'],
+            ],
         );
 
-        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
+        $fresh = $dispatchRequest->fresh();
+
+        return $this->ok([
+            'trip_id' => $fresh->id,
+            'student_count_actual' => $fresh->student_count_actual,
+            'updated_by' => $user->id,
+            'dispatch_request' => $this->presentDispatchRequest($fresh),
+        ]);
     }
 
     public function patchWizard(UpdateDispatchRequestWizardRequest $request, DispatchRequest $dispatchRequest)
@@ -655,6 +668,9 @@ class DispatchRequestController extends Controller
         $new = $dispatchRequest->replicate();
 
         $new->dispatch_request_template_id = null;
+        $new->cloned_from_id = $dispatchRequest->id;
+        $new->student_count_actual = null;
+        $new->locked_at = null;
         $new->status = 'pending';
         $new->service_price = null;
         $new->price_filled_by = null;
@@ -681,5 +697,30 @@ class DispatchRequestController extends Controller
         );
 
         return $this->created($this->presentDispatchRequest($new->fresh()));
+    }
+
+    private function scheduleRequesterDeptDecisionNotification(int $dispatchRequestId, string $decision): void
+    {
+        if (! in_array($decision, ['approve', 'reject'], true)) {
+            return;
+        }
+
+        DB::afterCommit(function () use ($dispatchRequestId, $decision): void {
+            $dispatchRequest = DispatchRequest::query()->find($dispatchRequestId);
+            if (! $dispatchRequest) {
+                return;
+            }
+
+            $dispatchRequest->loadMissing('requester');
+            $requester = $dispatchRequest->requester;
+            if (! $requester instanceof User) {
+                return;
+            }
+
+            Notification::send(
+                $requester,
+                new DeptHeadDecisionNotification($dispatchRequestId, $decision),
+            );
+        });
     }
 }

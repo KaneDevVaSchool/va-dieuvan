@@ -22,6 +22,7 @@ class DispatchRequest extends Model
     protected $fillable = [
         'requester_id',
         'dispatch_request_template_id',
+        'cloned_from_id',
         'approved_by',
         'source_channel',
         'is_urgent',
@@ -31,6 +32,8 @@ class DispatchRequest extends Model
         'depart_at',
         'arrive_by',
         'passenger_count',
+        'student_count_actual',
+        'locked_at',
         'notes',
         'service_price',
         'price_filled_by',
@@ -53,6 +56,7 @@ class DispatchRequest extends Model
         'paper_received_at' => 'datetime',
         'service_price' => 'decimal:2',
         'price_filled_at' => 'datetime',
+        'locked_at' => 'datetime',
         'wizard_snapshot' => 'array',
     ];
 
@@ -64,6 +68,11 @@ class DispatchRequest extends Model
     public function dispatchRequestTemplate(): BelongsTo
     {
         return $this->belongsTo(DispatchRequestTemplate::class, 'dispatch_request_template_id');
+    }
+
+    public function clonedFrom(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'cloned_from_id');
     }
 
     public function approver(): BelongsTo

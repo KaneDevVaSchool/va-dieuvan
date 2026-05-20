@@ -19,7 +19,10 @@ class StoreDispatchRequestTemplateRequest extends CreateDispatchRequestRequest
             'recurrence_rule.interval' => ['nullable', 'integer', 'min:1', 'max:52'],
             'recurrence_rule.byweekday' => ['nullable', 'array'],
             'recurrence_rule.byweekday.*' => ['integer', Rule::in([1, 2, 3, 4, 5, 6, 7])],
-            'recurrence_end_date' => ['nullable', 'date'],
+            'recurrence_end_date' => ['nullable', 'date', 'required_without:repeat_count'],
+            'repeat_count' => ['nullable', 'integer', 'min:1', 'max:520', 'required_without:recurrence_end_date'],
+            'start_date' => ['required', 'date'],
+            'return_time' => ['required', 'date_format:H:i'],
             'dispatch_package_id' => ['nullable', 'integer', 'exists:dispatch_packages,id'],
         ]);
     }
