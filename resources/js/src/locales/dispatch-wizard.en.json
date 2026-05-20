@@ -217,6 +217,7 @@
             "purpose_label": "Purpose of use",
             "purpose_ph": "Short description of trip purpose…",
             "recurring_toggle": "Recurring proposal",
+            "recurring_schedule_heading": "Recurring schedule (weekdays, times, end of series)",
             "recurring_hint": "Uses weekdays selected in the Details step (e.1 schedule). First departure uses the date/time you enter.",
             "recurring_weekdays_preview_label": "Selected weekdays",
             "recurring_weekdays_empty": "No weekdays yet — open the Details step to select days on the schedule.",

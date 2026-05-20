@@ -121,8 +121,10 @@ export function buildConfirmReviewIssues(ctx) {
   else if (!ctx.isPlausibleEmail(f.requester_email)) add('general', t('dispatch_wizard.confirm.issue_requester_email'))
   if (ctx.coordinatorEmailFormatInvalid) add('general', t('dispatch_wizard.validate.coord_email'))
   if (!f.purpose?.trim()) add('purpose', t('dispatch_wizard.confirm.issue_purpose'))
-  if (!f.proposed_date || !f.date_needed) add('general', t('dispatch_wizard.confirm.issue_dates'))
-  if (ctx.step2DateOrderInvalid) add('general', t('dispatch_wizard.validate.date_order'))
+  if (!ctx.wantsRecurringTemplate) {
+    if (!f.proposed_date || !f.date_needed) add('general', t('dispatch_wizard.confirm.issue_dates'))
+    if (ctx.step2DateOrderInvalid) add('general', t('dispatch_wizard.validate.date_order'))
+  }
   if (f.is_urgent && !f.urgent_reason?.trim()) add('general', t('dispatch_wizard.validate.urgent_reason'))
 
   if (ctx.isCargo) {

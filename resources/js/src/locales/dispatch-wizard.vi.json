@@ -217,6 +217,7 @@
             "purpose_label": "Mục đích sử dụng",
             "purpose_ph": "Mô tả ngắn gọn mục đích sử dụng xe / chuyến…",
             "recurring_toggle": "Đề xuất định kỳ",
+            "recurring_schedule_heading": "Lịch lặp (tuần, giờ, kết thúc chuỗi)",
             "recurring_hint": "Chọn các thứ trong tuần ở bước «Chi tiết» (lịch). Phiếu đầu tiên dùng ngày giờ khởi hành bạn nhập.",
             "recurring_weekdays_preview_label": "Ngày trong tuần đã chọn",
             "recurring_weekdays_empty": "Chưa chọn thứ — vào bước Chi tiết để bật các thứ trong lịch.",

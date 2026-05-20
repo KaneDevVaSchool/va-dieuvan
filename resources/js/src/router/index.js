@@ -386,7 +386,8 @@ const router = createRouter({
                 {
                     path: "extracurricular/new",
                     name: "portalExtracurricularCreate",
-                    component: () => import("../views/portal/PortalCreateView.vue"),
+                    component: () =>
+                        import("../views/portal/PortalExtracurricularCreateView.vue"),
                     meta: {
                         portal: true,
                         portalExtracurricular: true,

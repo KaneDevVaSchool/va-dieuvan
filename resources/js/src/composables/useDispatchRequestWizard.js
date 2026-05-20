@@ -721,7 +721,61 @@ export function useDispatchRequestWizard(options = {}) {
 
   const formattedRequestedDateTime = computed(() => formatDatetimeLocalAmPm(requestedDateTime.value))
 
-  const computedDepartAt = computed(() => requestedDateTime.value?.trim() || '')
+  const isPortalExtracurricularRecurring = computed(
+    () => isPortal && route.meta.portalExtracurricular === true,
+  )
+
+  const wantsRecurringTemplate = computed(() => {
+    if (replaceDraftRequestId.value) return false
+    if (form.value.trip_type !== 'point_to_point') return false
+    if (form.value.point_purpose_kind !== 'extracurricular') return false
+    if (isPortalExtracurricularRecurring.value) return true
+    return !!form.value.recurring_enabled
+  })
+
+  function timePartFromDepartAt(raw) {
+    const s = String(raw ?? '').trim()
+    if (!s) return '00:00'
+    const m = s.match(/T(\d{2}:\d{2})/)
+    if (m) return m[1]
+    try {
+      const d = new Date(s)
+      if (!Number.isNaN(d.getTime())) {
+        return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
+      }
+    } catch {
+      /* ignore */
+    }
+    return '00:00'
+  }
+
+  const computedDepartAt = computed(() => {
+    if (wantsRecurringTemplate.value) {
+      const start = form.value.recurrence_start_date?.trim()
+      if (!start) return ''
+      for (const r of passengerRows.value) {
+        if (r.depart_at?.trim()) {
+          return `${start}T${timePartFromDepartAt(r.depart_at)}`
+        }
+      }
+      return `${start}T00:00`
+    }
+    return requestedDateTime.value?.trim() || ''
+  })
+
+  watch(
+    () => form.value.recurrence_start_date,
+    (start) => {
+      if (!wantsRecurringTemplate.value) return
+      const s = String(start ?? '').trim()
+      if (!s) return
+      for (const r of passengerRows.value) {
+        if (r.depart_at?.trim()) {
+          r.depart_at = `${s}T${timePartFromDepartAt(r.depart_at)}`
+        }
+      }
+    },
+  )
 
   function syncRowDepartTimesFromRequested(isoLocal) {
     const v = isoLocal != null ? String(isoLocal).trim() : ''
@@ -916,19 +970,38 @@ export function useDispatchRequestWizard(options = {}) {
     () => coordinatorEmailTouched.value && coordinatorEmailFormatInvalid.value,
   )
 
+  function recurringStep1Complete() {
+    const hasWd = Object.values(form.value.e1_weekdays || {}).some(Boolean)
+    if (!hasWd) return false
+    if (!String(form.value.recurrence_start_date || '').trim()) return false
+    if (!String(form.value.recurrence_return_time || '').trim()) return false
+    const mode = form.value.recurrence_end_mode || 'date'
+    if (mode === 'date' && !String(form.value.recurrence_end_date || '').trim()) return false
+    if (mode === 'weeks') {
+      const n = Number(form.value.recurrence_repeat_count)
+      if (!Number.isFinite(n) || n < 1) return false
+    }
+    return true
+  }
+
   const canGoNext = computed(() => {
     if (step.value === 0) return !!form.value.trip_type
     if (step.value === 1) {
-      return (
+      const base =
         !!form.value.requester_name?.trim() &&
         !!form.value.requester_email?.trim() &&
         !requesterEmailFormatInvalid.value &&
         !coordinatorEmailFormatInvalid.value &&
         !!form.value.purpose?.trim() &&
+        (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
+      if (wantsRecurringTemplate.value) {
+        return base && recurringStep1Complete()
+      }
+      return (
+        base &&
         !!form.value.proposed_date &&
         !!form.value.date_needed &&
-        !step2DateOrderInvalid.value &&
-        (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
+        !step2DateOrderInvalid.value
       )
     }
     if (step.value === 2) {
@@ -1008,6 +1081,7 @@ export function useDispatchRequestWizard(options = {}) {
       t,
       isCargo: isCargo.value,
       isPortal,
+      wantsRecurringTemplate: wantsRecurringTemplate.value,
       passengerRows: passengerRows.value,
       businessRows: businessRows.value,
       cargoRows: cargoRows.value,
@@ -1147,12 +1221,7 @@ export function useDispatchRequestWizard(options = {}) {
   function runPreSubmitValidation() {
     submitApiIssueItems.value = []
     const items = buildConfirmReviewIssues(confirmIssuesContext())
-    const wantsRecurring =
-      form.value.recurring_enabled &&
-      form.value.trip_type === 'point_to_point' &&
-      form.value.point_purpose_kind === 'extracurricular' &&
-      !replaceDraftRequestId.value
-    if (wantsRecurring) {
+    if (wantsRecurringTemplate.value) {
       const hasWd = Object.values(form.value.e1_weekdays || {}).some(Boolean)
       if (!hasWd) {
         items.push({ section: 'schedule', message: t('dispatch_wizard.validate.recurring_weekday') })
@@ -1237,14 +1306,8 @@ export function useDispatchRequestWizard(options = {}) {
         wizard_snapshot,
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
-      const wantsRecurring =
-        form.value.recurring_enabled &&
-        form.value.trip_type === 'point_to_point' &&
-        form.value.point_purpose_kind === 'extracurricular' &&
-        !replaceDraftRequestId.value
-
       let createdResult = null
-      if (wantsRecurring) {
+      if (wantsRecurringTemplate.value) {
         const endMode = form.value.recurrence_end_mode || 'date'
         const tmplPayload = {
           ...payload,

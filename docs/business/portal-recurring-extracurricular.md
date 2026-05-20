@@ -9,8 +9,11 @@ Tài liệu nghiệp vụ cho stakeholder. Phiên bản đồng bộ với tri�
 
 ## Luồng tạo
 
-1. Người đề xuất xác nhận → hệ thống tạo **mẫu** + **chuyến đầu** + **materialize** các chuyến còn lại trong chuỗi.
-2. Mỗi chuyến: trạng thái duyệt riêng (`pending` …), số HS kế hoạch trên `passenger_count`.
+1. Trên form module **không** nhập «Ngày đề xuất» / «Ngày giờ cần xe» — chỉ **lịch lặp** (ngày bắt đầu chuỗi, thứ trong tuần, giờ về, kết thúc theo ngày hoặc số tuần) và giờ đi ở bước Chi tiết.
+2. Người đề xuất xác nhận → hệ thống tạo **mẫu** + **chuyến đầu** + **materialize** các chuyến còn lại trong chuỗi.
+3. Mỗi chuyến: trạng thái duyệt riêng (`pending` …), số HS kế hoạch trên `passenger_count`.
+
+Tạo phiếu định kỳ CLB **chỉ** qua `/portal/extracurricular/new`, không gộp với form đề xuất chung `/portal/new`.
 
 ## Luồng số HS thực tế (hai bước)
 

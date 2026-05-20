@@ -173,8 +173,11 @@
             <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
           </div>
 
-          <!-- Người đề nghị + Thời gian: cạnh nhau desktop, xếp dọc mobile -->
-          <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
+          <!-- Người đề nghị (+ Thời gian chỉ phiếu lẻ trên portal chung) -->
+          <div
+            class="grid gap-5 lg:items-start lg:gap-6"
+            :class="isExtracurricularModule ? '' : 'lg:grid-cols-2'"
+          >
             <!-- Người đề nghị -->
             <div class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_requester') }}</h3>
@@ -276,8 +279,8 @@
               </label>
             </div>
 
-            <!-- Thời gian -->
-            <div class="dw-fieldset space-y-4">
+            <!-- Thời gian (module CLB định kỳ: dùng lịch lặp, không nhập ngày đề xuất) -->
+            <div v-if="!isExtracurricularModule" class="dw-fieldset space-y-4">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_time') }}</h3>
 
               <!-- Ngày đề xuất + Ngày giờ cần xe -->
@@ -402,6 +405,8 @@
               </label>
             </div>
             <RecurringConfigSection
+              v-if="isExtracurricularModule"
+              fixed-enabled
               :trip-type="form.trip_type"
               :point-purpose-kind="form.point_purpose_kind"
               :replace-draft-request-id="replaceDraftRequestId"
@@ -1326,6 +1331,7 @@ function applyExtracurricularModuleDefaults() {
   if (!isExtracurricularModule.value) return
   form.value.trip_type = 'point_to_point'
   form.value.point_purpose_kind = 'extracurricular'
+  form.value.recurring_enabled = true
   if (step.value === 0) goStep(1)
 }
 
