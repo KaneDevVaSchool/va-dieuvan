@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DispatchRequestTemplate;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,5 +54,17 @@ class PortalRecurringTemplateStoreTest extends TestCase
             $this->fail((string) json_encode($response->json(), JSON_UNESCAPED_UNICODE));
         }
         $response->assertCreated();
+
+        $templateId = (int) $response->json('data.dispatch_request_template_id');
+        $this->assertGreaterThan(0, $templateId);
+
+        $rename = $this->patchJson("/api/portal/dispatch-request-templates/{$templateId}/plan-label", [
+            'plan_label' => 'CLB Đổi tên',
+        ]);
+        $rename->assertOk()->assertJsonPath('data.plan_label', 'CLB Đổi tên');
+
+        $template = DispatchRequestTemplate::query()->with('dispatchPackage')->findOrFail($templateId);
+        $this->assertSame('CLB Đổi tên', $template->dispatchPackage?->label);
+        $this->assertSame('CLB Đổi tên', data_get($template->wizard_snapshot, 'form.plan_name'));
     }
 }

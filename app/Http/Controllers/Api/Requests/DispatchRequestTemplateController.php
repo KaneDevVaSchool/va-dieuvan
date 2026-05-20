@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\StorePortalDispatchRequestTemplateRequest;
+use App\Http\Requests\Api\Portal\UpdatePortalDispatchPlanLabelRequest;
 use App\Http\Requests\Api\Portal\UpdatePortalDispatchRequestTemplateRequest;
 use App\Http\Requests\Api\Requests\StoreDispatchRequestTemplateRequest;
 use App\Models\DispatchPackage;
@@ -235,6 +236,57 @@ class DispatchRequestTemplateController extends Controller
         DispatchRequestTemplate $dispatchRequestTemplate,
     ) {
         return $this->applyTemplateUpdate($request, $dispatchRequestTemplate);
+    }
+
+    public function updatePortalPlanLabel(
+        UpdatePortalDispatchPlanLabelRequest $request,
+        DispatchRequestTemplate $dispatchRequestTemplate,
+    ) {
+        $label = trim((string) $request->validated()['plan_label']);
+        $template = $dispatchRequestTemplate->load('dispatchPackage');
+        $user = $request->user();
+        $beforeLabel = $template->dispatchPackage?->label
+            ?? data_get($template->wizard_snapshot, 'form.plan_name');
+
+        DB::transaction(function () use ($template, $label) {
+            if ($template->dispatch_package_id !== null) {
+                DispatchPackage::query()
+                    ->whereKey((int) $template->dispatch_package_id)
+                    ->update(['label' => $label]);
+            }
+
+            $snap = $template->wizard_snapshot;
+            if (! is_array($snap)) {
+                $snap = [];
+            }
+            data_set($snap, 'form.plan_name', $label);
+            $template->update(['wizard_snapshot' => $snap]);
+
+            DispatchRequest::query()
+                ->where('dispatch_request_template_id', $template->id)
+                ->orderBy('id')
+                ->each(function (DispatchRequest $req) use ($label) {
+                    $rs = $req->wizard_snapshot;
+                    if (! is_array($rs)) {
+                        $rs = [];
+                    }
+                    data_set($rs, 'form.plan_name', $label);
+                    $req->update(['wizard_snapshot' => $rs]);
+                });
+        });
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'template.plan_label_updated',
+            auditable: $template,
+            before: ['label' => $beforeLabel],
+            after: ['label' => $label],
+        );
+
+        return $this->ok([
+            'dispatch_request_template_id' => $template->id,
+            'plan_label' => $label,
+        ]);
     }
 
     protected function applyTemplateUpdate(

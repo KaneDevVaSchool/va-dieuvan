@@ -990,7 +990,13 @@
             "action_complete_bm03": "Complete BM.03 & send to dispatch",
             "action_complete_bm03_hint": "Fill the PDF-style form, then submit",
             "action_complete_bm03_done": "Already sent to dispatch.",
-            "action_complete_bm03_unavailable": "Cannot complete this ticket in its current state."
+            "action_complete_bm03_unavailable": "Cannot complete this ticket in its current state.",
+            "plan_name_edit": "Rename group",
+            "plan_name_edit_label": "Plan / group name",
+            "plan_name_save": "Save",
+            "plan_name_save_busy": "Saving…",
+            "plan_name_cancel": "Cancel",
+            "plan_name_save_fail": "Could not rename the group. Please try again."
         },
         "filter_date_from": "From",
         "filter_date_to": "To"

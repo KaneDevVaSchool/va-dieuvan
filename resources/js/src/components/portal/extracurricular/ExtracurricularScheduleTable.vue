@@ -9,12 +9,60 @@
       <summary
         class="flex cursor-pointer list-none items-center justify-between gap-3 bg-indigo-50/70 px-4 py-3 text-sm font-semibold text-indigo-950 transition hover:bg-indigo-50 [&::-webkit-details-marker]:hidden"
       >
-        <span class="flex min-w-0 flex-1 items-center gap-2">
+        <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           <ChevronRightIcon
             class="h-4 w-4 shrink-0 text-indigo-600 transition group-open:rotate-90"
             aria-hidden="true"
           />
-          <span class="truncate">{{ group.label }}</span>
+          <template v-if="groupBy === 'plan' && editingTemplateId === group.templateId">
+            <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2" @click.stop>
+            <input
+              ref="planLabelInputRef"
+              v-model="planLabelDraft"
+              type="text"
+              maxlength="255"
+              class="min-w-0 flex-1 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-sm font-semibold text-indigo-950 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+              :aria-label="t('portal.extracurricular_list.plan_name_edit_label')"
+              @keydown.enter.prevent="savePlanLabel(group)"
+              @keydown.escape.prevent="cancelPlanLabelEdit"
+            />
+            <button
+              type="button"
+              class="shrink-0 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+              :disabled="planLabelSaving || !planLabelDraft.trim()"
+              @click="savePlanLabel(group)"
+            >
+              {{ planLabelSaving ? t('portal.extracurricular_list.plan_name_save_busy') : t('portal.extracurricular_list.plan_name_save') }}
+            </button>
+            <button
+              type="button"
+              class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-indigo-800 hover:bg-indigo-100/80"
+              :disabled="planLabelSaving"
+              @click="cancelPlanLabelEdit"
+            >
+              {{ t('portal.extracurricular_list.plan_name_cancel') }}
+            </button>
+            </span>
+          </template>
+          <template v-else>
+            <span class="truncate">{{ group.label }}</span>
+            <button
+              v-if="groupBy === 'plan' && group.templateId"
+              type="button"
+              class="shrink-0 rounded-md p-1 text-indigo-700 hover:bg-indigo-100/80"
+              :title="t('portal.extracurricular_list.plan_name_edit')"
+              :aria-label="t('portal.extracurricular_list.plan_name_edit')"
+              @click.stop="startPlanLabelEdit(group)"
+            >
+              <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
+            </button>
+          </template>
+          <p
+            v-if="planLabelError && editingTemplateId === group.templateId"
+            class="w-full basis-full text-xs font-normal text-red-700"
+          >
+            {{ planLabelError }}
+          </p>
         </span>
         <span class="shrink-0 text-xs font-medium text-indigo-800/90">
           {{ t('portal.extracurricular_list.group_summary', { count: group.items.length }) }}
@@ -142,10 +190,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronRightIcon } from '@heroicons/vue/24/outline'
+import { ChevronRightIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
+import { updatePortalDispatchPlanLabel } from '../../../api/requests'
 import StatusBadge from '../../ui/StatusBadge.vue'
 import StudentCountCell from '../../requests/extracurricular/StudentCountCell.vue'
 import StudentCountTrackingBadge from '../../requests/extracurricular/StudentCountTrackingBadge.vue'
@@ -159,6 +208,12 @@ const props = defineProps({
   groupBy: { type: String, default: 'day' },
   detailRouteName: { type: String, required: true },
 })
+
+const editingTemplateId = ref(null)
+const planLabelDraft = ref('')
+const planLabelSaving = ref(false)
+const planLabelError = ref('')
+const planLabelInputRef = ref(null)
 
 const emit = defineEmits(['refresh'])
 
@@ -189,7 +244,15 @@ const grouped = computed(() => {
   const map = new Map()
   for (const req of props.requests) {
     const key = groupKey(req)
-    if (!map.has(key)) map.set(key, { key, label: groupLabel(req, key), items: [] })
+    if (!map.has(key)) {
+      const tid = req?.dispatch_request_template_id
+      map.set(key, {
+        key,
+        label: groupLabel(req, key),
+        templateId: tid != null && tid !== '' ? Number(tid) : null,
+        items: [],
+      })
+    }
     map.get(key).items.push(req)
   }
   const arr = [...map.values()]
@@ -222,6 +285,40 @@ function completeBm03HintFor(req) {
 function lockHintFor(req) {
   const k = row.lockHintKey(req)
   return k ? t(`${i18nPrefix}.${k}`) : ''
+}
+
+function startPlanLabelEdit(group) {
+  if (!group?.templateId) return
+  planLabelError.value = ''
+  editingTemplateId.value = group.templateId
+  planLabelDraft.value = group.label === t('portal.recurring_plan.plan_name_unnamed') ? '' : String(group.label || '')
+  nextTick(() => planLabelInputRef.value?.focus())
+}
+
+function cancelPlanLabelEdit() {
+  editingTemplateId.value = null
+  planLabelDraft.value = ''
+  planLabelError.value = ''
+}
+
+async function savePlanLabel(group) {
+  const trimmed = planLabelDraft.value.trim()
+  if (!group?.templateId || !trimmed) {
+    planLabelError.value = t('portal.extracurricular_create.blocker_plan_name')
+    return
+  }
+  planLabelSaving.value = true
+  planLabelError.value = ''
+  try {
+    await updatePortalDispatchPlanLabel(group.templateId, trimmed)
+    cancelPlanLabelEdit()
+    emit('refresh')
+  } catch (e) {
+    planLabelError.value =
+      e?.response?.data?.message || e?.message || t('portal.extracurricular_list.plan_name_save_fail')
+  } finally {
+    planLabelSaving.value = false
+  }
 }
 
 function planNameFor(req) {

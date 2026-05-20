@@ -58,6 +58,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware(['idempotency', 'throttle:20,1']);
         Route::patch('/portal/dispatch-request-templates/{dispatchRequestTemplate}', [DispatchRequestTemplateController::class, 'updatePortal'])
             ->middleware('throttle:20,1');
+        Route::patch('/portal/dispatch-request-templates/{dispatchRequestTemplate}/plan-label', [DispatchRequestTemplateController::class, 'updatePortalPlanLabel'])
+            ->middleware('throttle:30,1');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/signed-paper', [PortalDispatchRequestController::class, 'uploadSignedPaper'])
             ->middleware('throttle:30,1');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/proposal-basis', [PortalDispatchRequestController::class, 'uploadProposalBasis'])

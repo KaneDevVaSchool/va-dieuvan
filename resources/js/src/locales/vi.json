@@ -1033,7 +1033,13 @@
             "action_complete_bm03": "Hoàn thành BM.03 & gửi điều vận",
             "action_complete_bm03_hint": "Điền phiếu như PDF, sau đó gửi chốt",
             "action_complete_bm03_done": "Phiếu đã gửi tới điều vận.",
-            "action_complete_bm03_unavailable": "Không thể hoàn thành phiếu ở trạng thái hiện tại."
+            "action_complete_bm03_unavailable": "Không thể hoàn thành phiếu ở trạng thái hiện tại.",
+            "plan_name_edit": "Đổi tên nhóm",
+            "plan_name_edit_label": "Tên phiếu / nhóm kế hoạch",
+            "plan_name_save": "Lưu",
+            "plan_name_save_busy": "Đang lưu…",
+            "plan_name_cancel": "Huỷ",
+            "plan_name_save_fail": "Không thể đổi tên nhóm. Vui lòng thử lại."
         },
         "filter_date_from": "Từ ngày",
         "filter_date_to": "Đến ngày",

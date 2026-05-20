@@ -259,6 +259,15 @@ export async function updatePortalDispatchRequestTemplate(templateId, payload) {
   return data.data
 }
 
+/** Đổi tên phiếu / nhóm kế hoạch (lịch CLB portal). */
+export async function updatePortalDispatchPlanLabel(templateId, planLabel) {
+  const { data } = await http.patch(
+    `/portal/dispatch-request-templates/${templateId}/plan-label`,
+    { plan_label: planLabel },
+  )
+  return data.data
+}
+
 /** Sửa phiếu instance định kỳ CLB (portal). */
 export async function patchPortalRecurringInstance(dispatchRequestId, payload) {
   const { data } = await http.patch(
