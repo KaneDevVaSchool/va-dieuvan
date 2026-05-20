@@ -17,46 +17,45 @@
       </div>
     </div>
 
-    <div class="hidden overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-md shadow-violet-500/5 md:block">
-      <table class="min-w-full text-left text-sm">
-        <thead
-          class="bg-gradient-to-r from-violet-50/90 via-indigo-50/50 to-white text-[11px] font-semibold uppercase tracking-wide text-violet-800"
-        >
-          <tr>
-            <th class="px-4 py-3">{{ t(`${i18nPrefix}.col_request`) }}</th>
-            <th class="min-w-[12rem] px-4 py-3">{{ t(`${i18nPrefix}.col_route`) }}</th>
-            <th class="whitespace-nowrap px-4 py-3">{{ t(`${i18nPrefix}.col_depart`) }}</th>
-            <th class="px-4 py-3">{{ t(`${i18nPrefix}.col_status`) }}</th>
-            <th class="px-4 py-3">{{ t(`${i18nPrefix}.col_tracking`) }}</th>
-            <th class="whitespace-nowrap px-4 py-3 text-center">{{ t(`${i18nPrefix}.col_plan`) }}</th>
-            <th class="min-w-[10rem] px-4 py-3">{{ t(`${i18nPrefix}.col_actual`) }}</th>
-            <th class="w-40 px-4 py-3 text-right">{{ t(`${i18nPrefix}.col_actions`) }}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-violet-100/80">
-          <tr v-for="req in requests" :key="req.id" class="transition hover:bg-violet-50/40">
-            <td class="whitespace-nowrap px-4 py-3 align-top">
+    <div class="xc-portal-group-card hidden md:block">
+      <div class="xc-portal-table-scroll">
+        <table class="xc-portal-table">
+          <thead>
+            <tr>
+              <th>{{ t(`${i18nPrefix}.col_request`) }}</th>
+              <th class="min-w-[12rem]">{{ t(`${i18nPrefix}.col_route`) }}</th>
+              <th>{{ t(`${i18nPrefix}.col_depart`) }}</th>
+              <th>{{ t(`${i18nPrefix}.col_status`) }}</th>
+              <th>{{ t(`${i18nPrefix}.col_tracking`) }}</th>
+              <th class="text-center">{{ t(`${i18nPrefix}.col_plan`) }}</th>
+              <th class="min-w-[10rem]">{{ t(`${i18nPrefix}.col_actual`) }}</th>
+              <th class="w-40 text-right">{{ t(`${i18nPrefix}.col_actions`) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          <tr v-for="req in requests" :key="req.id">
+            <td class="whitespace-nowrap">
               <RequestIdCell :req="req" />
             </td>
-            <td class="px-4 py-3 align-top">
-              <p class="font-medium text-slate-800">{{ routeLine(req) }}</p>
+            <td>
+              <p class="font-medium leading-snug text-slate-800">{{ routeLine(req) }}</p>
             </td>
-            <td class="whitespace-nowrap px-4 py-3 align-top text-xs text-slate-600">
+            <td class="whitespace-nowrap text-xs text-slate-600">
               {{ departFmt(req) }}
             </td>
-            <td class="px-4 py-3 align-top">
+            <td>
               <StatusBadge :status="req.status" size="sm" />
             </td>
-            <td class="px-4 py-3 align-top">
+            <td>
               <StudentCountTrackingBadge
                 :tracking-key="row.studentCountTrackingKey(req)"
                 :i18n-prefix="i18nPrefix"
               />
             </td>
-            <td class="px-4 py-3 align-top text-center tabular-nums text-slate-700">
+            <td class="text-center tabular-nums font-medium text-slate-700">
               {{ row.planStudentCount(req) ?? '—' }}
             </td>
-            <td class="px-4 py-3 align-top">
+            <td>
               <StudentCountCell
                 :req="req"
                 :draft="draftFor(req.id)"
@@ -77,7 +76,7 @@
                 @submit="submitRow(req)"
               />
             </td>
-            <td class="px-4 py-3 align-top text-right">
+            <td class="text-right">
               <ExtracurricularRowActions
                 :req="req"
                 :variant="variant"
@@ -96,17 +95,18 @@
               />
             </td>
           </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="space-y-3 md:hidden">
       <article
         v-for="req in requests"
         :key="'m-' + req.id"
-        class="overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-sm"
+        class="xc-portal-mobile-row overflow-hidden"
       >
-        <div class="border-b border-violet-100/80 bg-violet-50/50 px-4 py-3">
+        <div class="border-b border-violet-100/90 bg-gradient-to-r from-violet-50/80 to-white px-4 py-3">
           <div class="mb-2">
             <RequestIdCell :req="req" />
           </div>
@@ -343,3 +343,5 @@ defineExpose({
   },
 })
 </script>
+
+<style src="../portal/extracurricular/extracurricularPortalTable.css"></style>

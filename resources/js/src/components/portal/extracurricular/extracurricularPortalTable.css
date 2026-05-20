@@ -1,0 +1,94 @@
+/* Portal CLB / ngoại khóa — bảng danh sách phiếu (schedule + detail) */
+
+.xc-portal-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.xc-portal-table {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.xc-portal-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: linear-gradient(
+    90deg,
+    rgb(245 243 255 / 0.98) 0%,
+    rgb(238 242 255 / 0.92) 45%,
+    rgb(255 255 255 / 0.98) 100%
+  );
+  box-shadow: 0 1px 0 rgb(237 233 254 / 0.9);
+}
+
+.xc-portal-table thead th {
+  padding: 0.7rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(76 29 149);
+  white-space: nowrap;
+}
+
+.xc-portal-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.xc-portal-table tbody tr:nth-child(even) {
+  background-color: rgb(248 250 252 / 0.85);
+}
+
+.xc-portal-table tbody tr:hover {
+  background-color: rgb(245 243 255 / 0.65);
+}
+
+.xc-portal-table tbody td {
+  padding: 0.85rem 1rem;
+  vertical-align: top;
+  border-bottom: 1px solid rgb(241 245 249);
+}
+
+.xc-portal-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.xc-portal-group-card {
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgb(221 214 254 / 0.85);
+  background: rgb(255 255 255);
+  box-shadow:
+    0 1px 2px rgb(139 92 246 / 0.06),
+    0 4px 12px rgb(99 102 241 / 0.06);
+}
+
+.xc-portal-group-header {
+  background: linear-gradient(
+    90deg,
+    rgb(245 243 255 / 0.98) 0%,
+    rgb(238 242 255 / 0.75) 50%,
+    rgb(255 255 255 / 0.95) 100%
+  );
+  border-bottom: 1px solid rgb(237 233 254 / 0.9);
+}
+
+.xc-portal-mobile-row {
+  border-radius: 0.875rem;
+  border: 1px solid rgb(226 232 240);
+  background: linear-gradient(180deg, rgb(255 255 255) 0%, rgb(248 250 252 / 0.9) 100%);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.xc-portal-mobile-row:hover {
+  border-color: rgb(196 181 253 / 0.7);
+  box-shadow: 0 4px 12px rgb(139 92 246 / 0.08);
+}

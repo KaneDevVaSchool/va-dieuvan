@@ -407,18 +407,18 @@
           </div>
           <div
             v-if="isExtracurricularMode"
-            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-200/70 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/30 px-3 py-2.5 shadow-sm ring-1 ring-violet-100/50"
           >
-            <div class="flex flex-wrap gap-1 rounded-lg bg-slate-100 p-1">
+            <div class="flex flex-wrap gap-1 rounded-xl bg-white/80 p-1 shadow-inner ring-1 ring-slate-200/60">
               <button
                 v-for="mode in listViewModes"
                 :key="mode.id"
                 type="button"
-                class="rounded-md px-3 py-1.5 text-xs font-semibold transition"
+                class="rounded-lg px-3 py-2 text-xs font-semibold transition"
                 :class="
                   extracurricularListView === mode.id
-                    ? 'bg-white text-indigo-800 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-violet-600 text-white shadow-sm shadow-violet-500/25'
+                    : 'text-slate-600 hover:bg-violet-50 hover:text-violet-900'
                 "
                 @click="extracurricularListView = mode.id"
               >
@@ -427,12 +427,12 @@
             </div>
             <label
               v-if="extracurricularListView === 'schedule'"
-              class="flex items-center gap-2 text-sm text-slate-600"
+              class="flex items-center gap-2 text-sm text-slate-700"
             >
-              <span>{{ t('portal.recurring_plan.schedule_group_label') }}</span>
+              <span class="font-medium">{{ t('portal.recurring_plan.schedule_group_label') }}</span>
               <select
                 v-model="scheduleGroupBy"
-                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-900"
+                class="h-9 rounded-lg border border-violet-200/80 bg-white px-2.5 text-sm font-medium text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30"
               >
                 <option value="day">{{ t('portal.recurring_plan.group_by_day') }}</option>
                 <option value="plan">{{ t('portal.recurring_plan.group_by_plan') }}</option>

@@ -1,22 +1,22 @@
 <template>
-  <div class="space-y-3">
+  <div class="space-y-4">
     <section
       v-for="group in grouped"
       :key="group.key"
-      class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      class="xc-portal-group-card"
     >
       <div
-        class="flex items-center justify-between gap-3 bg-indigo-50/70 px-4 py-3 text-sm font-semibold text-indigo-950"
+        class="xc-portal-group-header flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-violet-950"
       >
         <button
           type="button"
-          class="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left transition hover:bg-indigo-50/80 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+          class="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left transition hover:bg-violet-50/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
           :aria-expanded="isGroupOpen(group.key)"
           :aria-label="t('portal.extracurricular_list.collapse_hint')"
           @click="toggleGroup(group.key)"
         >
           <ChevronRightIcon
-            class="h-4 w-4 shrink-0 text-indigo-600 transition"
+            class="h-4 w-4 shrink-0 text-violet-600 transition"
             :class="{ 'rotate-90': isGroupOpen(group.key) }"
             aria-hidden="true"
           />
@@ -86,42 +86,42 @@
         </button>
       </div>
 
-      <div v-show="isGroupOpen(group.key)" class="hidden border-t border-slate-100 md:block">
-        <table class="min-w-full text-left text-sm">
-          <thead class="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-            <tr>
-              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_request') }}</th>
-              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_depart') }}</th>
-              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_route') }}</th>
-              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_status') }}</th>
-              <th class="whitespace-nowrap px-4 py-2 text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
-              <th class="min-w-[9rem] px-4 py-2">{{ t('portal.extracurricular_table.col_actual') }}</th>
-              <th class="px-4 py-2 text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
+      <div v-show="isGroupOpen(group.key)" class="hidden border-t border-violet-100/80 md:block">
+        <div class="xc-portal-table-scroll">
+          <table class="xc-portal-table">
+            <thead>
+              <tr>
+                <th>{{ t('portal.extracurricular_table.col_request') }}</th>
+                <th>{{ t('portal.extracurricular_table.col_depart') }}</th>
+                <th class="min-w-[10rem]">{{ t('portal.extracurricular_table.col_route') }}</th>
+                <th>{{ t('portal.extracurricular_table.col_status') }}</th>
+                <th class="text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
+                <th class="min-w-[9rem]">{{ t('portal.extracurricular_table.col_actual') }}</th>
+                <th class="text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
             <tr
               v-for="req in group.items"
               :key="req.id"
-              class="transition hover:bg-slate-50/80"
             >
-              <td class="whitespace-nowrap px-4 py-3">
-                <span class="font-mono font-semibold text-slate-900">#{{ req.id }}</span>
+              <td class="whitespace-nowrap">
+                <span class="font-mono text-sm font-bold text-slate-900">#{{ req.id }}</span>
                 <StudentCountTrackingBadge
                   class="mt-1"
                   :tracking-key="row.studentCountTrackingKey(req)"
                   i18n-prefix="portal.extracurricular_table"
                 />
               </td>
-              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ departFmt(req) }}</td>
-              <td class="px-4 py-3 text-slate-800">{{ routeLine(req) }}</td>
-              <td class="px-4 py-3">
+              <td class="whitespace-nowrap text-slate-600">{{ departFmt(req) }}</td>
+              <td class="font-medium text-slate-800">{{ routeLine(req) }}</td>
+              <td>
                 <StatusBadge :status="req.status" size="sm" />
               </td>
-              <td class="px-4 py-3 text-center tabular-nums text-slate-700">
+              <td class="text-center tabular-nums font-medium text-slate-700">
                 {{ row.planStudentCount(req) ?? '—' }}
               </td>
-              <td class="px-4 py-3">
+              <td>
                 <StudentCountCell
                   :req="req"
                   :draft="draftFor(req.id)"
@@ -136,7 +136,7 @@
                   @save="saveCount(req)"
                 />
               </td>
-              <td class="px-4 py-3 text-right">
+              <td class="text-right">
                 <ExtracurricularRowActions
                   :req="req"
                   variant="portal"
@@ -149,15 +149,16 @@
                 />
               </td>
             </tr>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div v-show="isGroupOpen(group.key)" class="space-y-3 border-t border-slate-100 p-3 md:hidden">
+      <div v-show="isGroupOpen(group.key)" class="space-y-3 border-t border-violet-100/80 bg-slate-50/30 p-3 md:hidden">
         <article
           v-for="req in group.items"
           :key="'m-' + req.id"
-          class="rounded-xl border border-slate-200 bg-slate-50/50 p-3"
+          class="xc-portal-mobile-row p-3.5"
         >
           <div class="flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0">
@@ -484,3 +485,5 @@ function departFmt(req) {
   }
 }
 </script>
+
+<style src="./extracurricularPortalTable.css"></style>
