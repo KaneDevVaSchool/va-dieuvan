@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Requests;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Portal\StorePortalDispatchRequestTemplateRequest;
 use App\Http\Requests\Api\Requests\StoreDispatchRequestTemplateRequest;
 use App\Models\DispatchRequest;
 use App\Models\DispatchRequestTemplate;
@@ -23,6 +24,11 @@ class DispatchRequestTemplateController extends Controller
     use ApiResponses;
     use AuthorizesRequests;
     use PresentsDispatchRequest;
+
+    public function storePortal(StorePortalDispatchRequestTemplateRequest $request)
+    {
+        return $this->store($request);
+    }
 
     public function store(StoreDispatchRequestTemplateRequest $request)
     {

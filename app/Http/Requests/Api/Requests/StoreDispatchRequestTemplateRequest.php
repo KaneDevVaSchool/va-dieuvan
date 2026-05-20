@@ -2,12 +2,29 @@
 
 namespace App\Http\Requests\Api\Requests;
 
+use App\Models\User;
 use App\Support\Messages;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreDispatchRequestTemplateRequest extends CreateDispatchRequestRequest
 {
+    /**
+     * Người đề xuất trên SPA (vd. trưởng đơn vị) không bắt buộc permission request.create.
+     */
+    public function authorize(): bool
+    {
+        $user = $this->user();
+        if (! $user instanceof User) {
+            return false;
+        }
+        if ($user->isSuperAdmin() || $user->can('request.create')) {
+            return true;
+        }
+
+        return $user->canAccessDispatchWebApp();
+    }
+
     /**
      * @return array<string, mixed>
      */

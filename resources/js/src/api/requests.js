@@ -224,6 +224,15 @@ export async function createDispatchRequestTemplate(payload, opts = {}) {
   return data.data
 }
 
+/** Lịch lặp — portal (không cần dispatch.web / request.create). */
+export async function createPortalDispatchRequestTemplate(payload, opts = {}) {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID()
+  const { data } = await http.post('/portal/dispatch-request-templates', payload, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  })
+  return data.data
+}
+
 /**
  * @param {number} dispatchRequestId
  * @param {{ idempotencyKey?: string }} [opts]

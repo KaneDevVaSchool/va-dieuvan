@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Portal\PortalDispatchRequestController;
 use App\Http\Controllers\Api\Portal\PortalFormTemplateController;
 use App\Http\Controllers\Api\Portal\PortalNotificationController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
+use App\Http\Controllers\Api\Requests\DispatchRequestTemplateController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\UserSearchForDispatchFormController;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +54,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {
         Route::post('/portal/dispatch-requests', [PortalDispatchRequestController::class, 'store'])
             ->middleware('idempotency');
+        Route::post('/portal/dispatch-request-templates', [DispatchRequestTemplateController::class, 'storePortal'])
+            ->middleware(['idempotency', 'throttle:20,1']);
         Route::post('/portal/dispatch-requests/{dispatchRequest}/signed-paper', [PortalDispatchRequestController::class, 'uploadSignedPaper'])
             ->middleware('throttle:30,1');
 

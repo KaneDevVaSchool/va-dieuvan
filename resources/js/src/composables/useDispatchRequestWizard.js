@@ -13,6 +13,7 @@ import {
   createDispatchRequest,
   createDispatchRequestTemplate,
   createPortalDispatchRequest,
+  createPortalDispatchRequestTemplate,
   createPortalFormTemplate,
   deletePortalFormTemplate,
   getDispatchRequest,
@@ -1261,7 +1262,9 @@ export function useDispatchRequestWizard(options = {}) {
               ? Math.max(1, Math.round(Number(form.value.recurrence_repeat_count) || 0))
               : undefined,
         }
-        const pack = await createDispatchRequestTemplate(tmplPayload, { idempotencyKey })
+        const pack = isPortal
+          ? await createPortalDispatchRequestTemplate(tmplPayload, { idempotencyKey })
+          : await createDispatchRequestTemplate(tmplPayload, { idempotencyKey })
         createdResult = pack?.dispatch_request ?? null
       } else if (replaceDraftRequestId.value) {
         const rid = replaceDraftRequestId.value

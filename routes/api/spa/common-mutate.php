@@ -16,7 +16,7 @@ Route::post('/dispatch-requests', [DispatchRequestController::class, 'store'])
     ->name('api.dispatch-requests.store');
 
 Route::post('/dispatch-request-templates', [DispatchRequestTemplateController::class, 'store'])
-    ->middleware(['throttle:20,1', 'idempotency', 'permission:request.create'])
+    ->middleware(['throttle:20,1', 'idempotency'])
     ->name('api.dispatch-request-templates.store');
 
 Route::post('/dispatch-requests/{dispatchRequest}/clone', [DispatchRequestController::class, 'clone'])
