@@ -468,13 +468,12 @@ function isExtracurricularReq(r) {
   return false
 }
 
-const showExtracurricularInstanceEdit = computed(() => {
-  const r = req.value
-  if (!r?.dispatch_request_template_id || !isExtracurricularReq(r)) return false
-  if (!isCurrentUserRequester.value) return false
-  if (r.student_count_submitted_at) return false
-  return ['pending', 'price_filled'].includes(String(r?.status || ''))
+const showExtracurricularBm03 = computed(() => {
+  if (!req.value || !isExtracurricularModule.value) return false
+  return true
 })
+
+const showExtracurricularInstanceEdit = computed(() => showExtracurricularBm03.value)
 
 function scrollToBm03Form() {
   nextTick(() => {
