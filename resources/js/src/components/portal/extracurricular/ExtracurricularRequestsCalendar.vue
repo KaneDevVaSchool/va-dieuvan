@@ -1,50 +1,118 @@
 <template>
-  <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-    <div class="mb-4 flex items-center justify-between gap-2">
+  <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <button
         type="button"
-        class="rounded-lg border border-slate-200 px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        class="inline-flex h-9 min-w-[2.5rem] items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+        :aria-label="t('portal.recurring_plan.calendar_prev_month')"
         @click="shiftMonth(-1)"
       >
         ‹
       </button>
-      <h3 class="text-sm font-bold text-slate-900">{{ monthLabel }}</h3>
+      <h3 class="text-base font-bold capitalize text-slate-900">{{ monthLabel }}</h3>
       <button
         type="button"
-        class="rounded-lg border border-slate-200 px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        class="inline-flex h-9 min-w-[2.5rem] items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+        :aria-label="t('portal.recurring_plan.calendar_next_month')"
         @click="shiftMonth(1)"
       >
         ›
       </button>
     </div>
-    <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-slate-500">
-      <span v-for="wd in weekdayHeaders" :key="wd">{{ wd }}</span>
+
+    <div class="grid grid-cols-7 gap-1.5 sm:gap-2">
+      <div
+        v-for="wd in weekdayHeaders"
+        :key="wd"
+        class="py-1 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs"
+      >
+        {{ wd }}
+      </div>
     </div>
-    <div class="mt-1 grid grid-cols-7 gap-1">
+
+    <div class="mt-1.5 grid grid-cols-7 gap-1.5 sm:gap-2">
       <div
         v-for="cell in cells"
         :key="cell.key"
-        class="min-h-[4.5rem] rounded-lg border p-1 text-left"
-        :class="
-          cell.inMonth
-            ? cell.items.length
-              ? 'border-indigo-200 bg-indigo-50/40'
-              : 'border-slate-100 bg-slate-50/50'
-            : 'border-transparent bg-transparent opacity-40'
-        "
+        class="flex min-h-[5.5rem] flex-col rounded-xl border text-left transition sm:min-h-[7.5rem]"
+        :class="cellShellClass(cell)"
       >
-        <span class="text-xs font-semibold text-slate-700">{{ cell.dayNum }}</span>
-        <ul v-if="cell.items.length" class="mt-0.5 space-y-0.5">
-          <li v-for="req in cell.items.slice(0, 3)" :key="req.id">
+        <div
+          class="flex items-center justify-between gap-1 border-b px-1.5 py-1 sm:px-2"
+          :class="cell.inMonth ? 'border-indigo-100/80' : 'border-transparent'"
+        >
+          <span
+            class="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md text-xs font-bold tabular-nums sm:text-sm"
+            :class="
+              cell.isToday && cell.inMonth
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : cell.inMonth
+                  ? 'text-slate-800'
+                  : 'text-slate-400'
+            "
+          >
+            {{ cell.dayNum }}
+          </span>
+          <span
+            v-if="cell.inMonth && cell.items.length"
+            class="rounded-full bg-indigo-600/90 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-white sm:text-[10px]"
+          >
+            {{ cell.items.length }}
+          </span>
+        </div>
+
+        <div class="flex flex-1 flex-col gap-1 p-1 sm:p-1.5">
+          <template v-if="cell.inMonth && cell.items.length">
             <RouterLink
+              v-for="req in cell.items.slice(0, maxCardsPerDay)"
+              :key="req.id"
               :to="{ name: detailRouteName, params: { id: req.id } }"
-              class="block truncate rounded px-0.5 text-[10px] font-medium text-indigo-800 hover:underline"
+              class="group block rounded-lg border border-white/80 bg-white p-1.5 shadow-sm ring-1 ring-indigo-200/60 transition hover:border-indigo-300 hover:shadow-md hover:ring-indigo-300/80 sm:p-2"
             >
-              #{{ req.id }} {{ departTime(req) }}{{ hsChip(req) }}
+              <div class="flex items-start justify-between gap-1">
+                <span class="font-mono text-[11px] font-bold text-indigo-900 sm:text-xs">#{{ req.id }}</span>
+                <span
+                  class="shrink-0 rounded px-1 py-0.5 text-[10px] font-bold tabular-nums text-indigo-800 bg-indigo-50"
+                >
+                  {{ departTime(req) }}
+                </span>
+              </div>
+              <p class="mt-0.5 line-clamp-2 text-[10px] leading-snug text-slate-600 group-hover:text-slate-800 sm:text-[11px]">
+                {{ routeLabel(req) }}
+              </p>
+              <div class="mt-1 flex flex-wrap items-center gap-1">
+                <span class="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-semibold text-slate-700 sm:text-[10px]">
+                  <span class="text-slate-500">{{ t('portal.extracurricular_table.col_actual') }}</span>
+                  <span class="tabular-nums">{{ hsActual(req) }}</span>
+                </span>
+                <span
+                  v-if="hsPlan(req) != null"
+                  class="text-[9px] text-slate-500 sm:text-[10px]"
+                >
+                  / {{ t('portal.extracurricular_table.col_plan') }} {{ hsPlan(req) }}
+                </span>
+              </div>
+              <span
+                class="mt-1 inline-flex max-w-full truncate rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide ring-1 ring-inset sm:text-[9px]"
+                :class="trackingTone(req)"
+              >
+                {{ trackingLabel(req) }}
+              </span>
             </RouterLink>
-          </li>
-          <li v-if="cell.items.length > 3" class="text-[10px] text-slate-500">+{{ cell.items.length - 3 }}</li>
-        </ul>
+            <p
+              v-if="cell.items.length > maxCardsPerDay"
+              class="px-0.5 text-center text-[10px] font-semibold text-indigo-700"
+            >
+              {{ t('portal.recurring_plan.calendar_more', { n: cell.items.length - maxCardsPerDay }) }}
+            </p>
+          </template>
+          <p
+            v-else-if="cell.inMonth"
+            class="flex flex-1 items-center justify-center px-1 text-center text-[10px] text-slate-400"
+          >
+            —
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -54,15 +122,19 @@
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { extracurricularStudentCountTrackingKey } from '../../../composables/useExtracurricularStudentCountTracking'
 
 const props = defineProps({
   requests: { type: Array, default: () => [] },
   detailRouteName: { type: String, required: true },
+  maxCardsPerDay: { type: Number, default: 2 },
 })
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 
 const viewMonth = ref(startOfMonth(new Date()))
+
+const todayKey = computed(() => ymd(new Date()))
 
 function startOfMonth(d) {
   const x = new Date(d)
@@ -86,6 +158,9 @@ const byDay = computed(() => {
     const key = String(iso).slice(0, 10)
     if (!map.has(key)) map.set(key, [])
     map.get(key).push(req)
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => String(a.depart_at).localeCompare(String(b.depart_at)))
   }
   return map
 })
@@ -121,11 +196,20 @@ const cells = computed(() => {
       key,
       dayNum: d.getDate(),
       inMonth: d.getMonth() === m.getMonth(),
+      isToday: key === todayKey.value,
       items: byDay.value.get(key) || [],
     })
   }
   return out
 })
+
+function cellShellClass(cell) {
+  if (!cell.inMonth) return 'border-transparent bg-transparent opacity-35'
+  if (cell.items.length) {
+    return 'border-indigo-200/90 bg-gradient-to-b from-indigo-50/90 to-white shadow-sm'
+  }
+  return 'border-slate-100 bg-slate-50/60'
+}
 
 function shiftMonth(delta) {
   const n = new Date(viewMonth.value)
@@ -145,9 +229,45 @@ function departTime(req) {
   }
 }
 
-function hsChip(req) {
-  const n = req?.student_count_actual ?? req?.passenger_count
-  if (n == null || n === '') return ''
-  return ` · HS ${n}`
+function routeLabel(req) {
+  const o = String(req?.origin || '').trim()
+  const d = String(req?.destination || '').trim()
+  if (o && d) return `${o} → ${d}`
+  if (o || d) return o || d
+  return t('portal.extracurricular_table.no_route')
+}
+
+function hsActual(req) {
+  const n = req?.student_count_actual
+  if (n != null && n !== '') return String(n)
+  return '—'
+}
+
+function hsPlan(req) {
+  const n = req?.passenger_count
+  if (n != null && n !== '') return Number(n)
+  return null
+}
+
+function trackingKey(req) {
+  return extracurricularStudentCountTrackingKey(req)
+}
+
+function trackingLabel(req) {
+  const k = trackingKey(req)
+  return t(`portal.extracurricular_table.tracking_${k}`)
+}
+
+function trackingTone(req) {
+  switch (trackingKey(req)) {
+    case 'coordinated':
+      return 'bg-emerald-50 text-emerald-900 ring-emerald-200'
+    case 'submitted':
+      return 'bg-sky-50 text-sky-900 ring-sky-200'
+    case 'updated':
+      return 'bg-amber-50 text-amber-950 ring-amber-200'
+    default:
+      return 'bg-slate-100 text-slate-600 ring-slate-200'
+  }
 }
 </script>
