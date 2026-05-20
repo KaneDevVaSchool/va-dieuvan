@@ -412,13 +412,13 @@
               :replace-draft-request-id="replaceDraftRequestId"
               v-model:recurring-enabled="form.recurring_enabled"
               v-model:start-date="form.recurrence_start_date"
+              v-model:depart-time="form.recurrence_depart_time"
               v-model:return-time="form.recurrence_return_time"
               v-model:recurrence-end-date="form.recurrence_end_date"
               v-model:recurrence-end-mode="form.recurrence_end_mode"
               v-model:repeat-count="form.recurrence_repeat_count"
               :weekday-options="e1WeekdayOptions"
               :weekdays="form.e1_weekdays"
-              :depart-time-display="recurringDepartTimeDisplay"
               end-mode-radio-name="portal_recurrence_end_mode"
               @toggle-weekday="toggleE1Weekday"
               @go-schedule-step="goStep(2)"
@@ -1292,22 +1292,6 @@ const urgentExplainTooltip = computed(() =>
     hours: appliedUrgentThresholdHours.value ?? '—',
   }),
 )
-
-const recurringDepartTimeDisplay = computed(() => {
-  const raw = computedDepartAt.value?.trim()
-  if (!raw) return ''
-  const m = raw.match(/T(\d{2}:\d{2})/)
-  if (m) return m[1]
-  try {
-    const d = new Date(raw)
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
-    }
-  } catch {
-    /* ignore */
-  }
-  return ''
-})
 
 const stepperSteps = computed(() => steps.value.map((s) => ({ key: s.id, label: s.title })))
 

@@ -127,6 +127,7 @@ export function createInitialForm() {
     multi_day: false,
     recurring_enabled: false,
     recurrence_start_date: '',
+    recurrence_depart_time: '07:00',
     recurrence_return_time: '17:00',
     recurrence_end_date: '',
     recurrence_end_mode: 'date',

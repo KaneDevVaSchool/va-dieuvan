@@ -79,6 +79,7 @@
             "recurring_weekday": "Select at least one weekday for recurring schedules (Details step).",
             "recurrence_start_required": "Enter the recurring series start date.",
             "recurrence_return_time_required": "Enter the return time for recurring trips.",
+            "recurrence_depart_time_required": "Enter the departure time for recurring trips.",
             "recurrence_end_required": "Enter an end date or choose a week count.",
             "recurrence_repeat_count_required": "Enter the number of weeks (at least 1)."
         },

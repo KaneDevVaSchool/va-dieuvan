@@ -79,6 +79,7 @@
             "recurring_weekday": "Chọn ít nhất một thứ trong tuần cho lịch định kỳ (bước Chi tiết).",
             "recurrence_start_required": "Nhập ngày bắt đầu chuỗi định kỳ.",
             "recurrence_return_time_required": "Nhập giờ về cho chuyến định kỳ.",
+            "recurrence_depart_time_required": "Nhập giờ đi cho chuyến định kỳ.",
             "recurrence_end_required": "Nhập ngày kết thúc hoặc chọn số tuần lặp.",
             "recurrence_repeat_count_required": "Nhập số tuần lặp (ít nhất 1)."
         },

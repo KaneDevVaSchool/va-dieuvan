@@ -58,7 +58,7 @@
         <h4 id="recurring-times-heading" class="text-sm font-semibold text-slate-900">
           {{ t('dispatch_wizard.create.recurrence_times_legend') }}
         </h4>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label class="block min-w-0">
             <span class="dw-label-text">{{ t('dispatch_wizard.create.recurrence_start_label') }}</span>
             <input
@@ -71,16 +71,17 @@
               @input="$emit('update:startDate', $event.target.value)"
             />
           </label>
-          <div class="block min-w-0">
+          <label class="block min-w-0">
             <span class="dw-label-text">{{ t('dispatch_wizard.create.recurrence_depart_time_label') }}</span>
-            <div
-              class="dw-input mt-1 flex min-h-[2.75rem] w-full items-center bg-slate-50 px-3 text-sm tabular-nums"
-              :class="departTimeDisplay ? 'font-medium text-slate-900' : 'text-slate-400'"
-            >
-              {{ departTimeDisplay || t('dispatch_wizard.create.recurrence_depart_time_empty') }}
-            </div>
-          </div>
-          <label class="block min-w-0 sm:col-span-2 lg:col-span-1">
+            <input
+              :value="departTime"
+              type="time"
+              required
+              class="dw-input mt-1 min-h-[2.75rem] w-full"
+              @input="$emit('update:departTime', $event.target.value)"
+            />
+          </label>
+          <label class="block min-w-0">
             <span class="dw-label-text">{{ t('dispatch_wizard.create.recurrence_return_time_label') }}</span>
             <input
               :value="returnTime"
@@ -183,15 +184,14 @@ const props = defineProps({
   replaceDraftRequestId: { type: [Number, String], default: null },
   recurringEnabled: { type: Boolean, default: false },
   startDate: { type: String, default: '' },
+  departTime: { type: String, default: '' },
   returnTime: { type: String, default: '' },
   recurrenceEndDate: { type: String, default: '' },
   recurrenceEndMode: { type: String, default: 'date' },
   repeatCount: { type: [String, Number], default: '' },
   weekdayOptions: { type: Array, default: () => [] },
   weekdays: { type: Object, default: () => ({}) },
-  departTimeDisplay: { type: String, default: '' },
   endModeRadioName: { type: String, default: 'recurrence_end_mode' },
-  /** Portal CLB module: luôn định kỳ, không hiện checkbox. */
   fixedEnabled: { type: Boolean, default: false },
 })
 
@@ -200,6 +200,7 @@ const recurringPanelOpen = computed(() => props.fixedEnabled || props.recurringE
 defineEmits([
   'update:recurringEnabled',
   'update:startDate',
+  'update:departTime',
   'update:returnTime',
   'update:recurrenceEndDate',
   'update:recurrenceEndMode',
@@ -217,3 +218,5 @@ const endDateMin = computed(() => {
   return s || todayStr
 })
 </script>
+
+

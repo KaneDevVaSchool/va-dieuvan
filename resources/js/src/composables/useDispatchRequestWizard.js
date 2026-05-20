@@ -733,9 +733,18 @@ export function useDispatchRequestWizard(options = {}) {
     return !!form.value.recurring_enabled
   })
 
-  function timePartFromDepartAt(raw) {
+  function normalizeTimeHhMm(raw) {
     const s = String(raw ?? '').trim()
-    if (!s) return '00:00'
+    if (!s) return ''
+    const m = s.match(/^(\d{1,2}):(\d{2})/)
+    if (m) return `${m[1].padStart(2, '0')}:${m[2]}`
+    return ''
+  }
+
+  function timePartFromDepartAt(raw) {
+    const fromField = normalizeTimeHhMm(raw)
+    if (fromField) return fromField
+    const s = String(raw ?? '').trim()
     const m = s.match(/T(\d{2}:\d{2})/)
     if (m) return m[1]
     try {
@@ -749,8 +758,34 @@ export function useDispatchRequestWizard(options = {}) {
     return '00:00'
   }
 
+  function recurringDepartIso() {
+    const start = form.value.recurrence_start_date?.trim()
+    const dep = normalizeTimeHhMm(form.value.recurrence_depart_time)
+    if (!start || !dep) return ''
+    return `${start}T${dep}`
+  }
+
+  function recurringReturnIso() {
+    const start = form.value.recurrence_start_date?.trim()
+    const ret = normalizeTimeHhMm(form.value.recurrence_return_time)
+    if (!start || !ret) return ''
+    return `${start}T${ret}`
+  }
+
+  function syncRecurringTimesToPassengerRows() {
+    if (!wantsRecurringTemplate.value) return
+    const dep = recurringDepartIso()
+    const ret = recurringReturnIso()
+    for (const r of passengerRows.value) {
+      if (dep) r.depart_at = dep
+      if (ret) r.return_at = ret
+    }
+  }
+
   const computedDepartAt = computed(() => {
     if (wantsRecurringTemplate.value) {
+      const fromForm = recurringDepartIso()
+      if (fromForm) return fromForm
       const start = form.value.recurrence_start_date?.trim()
       if (!start) return ''
       for (const r of passengerRows.value) {
@@ -758,23 +793,20 @@ export function useDispatchRequestWizard(options = {}) {
           return `${start}T${timePartFromDepartAt(r.depart_at)}`
         }
       }
-      return `${start}T00:00`
+      return ''
     }
     return requestedDateTime.value?.trim() || ''
   })
 
   watch(
-    () => form.value.recurrence_start_date,
-    (start) => {
-      if (!wantsRecurringTemplate.value) return
-      const s = String(start ?? '').trim()
-      if (!s) return
-      for (const r of passengerRows.value) {
-        if (r.depart_at?.trim()) {
-          r.depart_at = `${s}T${timePartFromDepartAt(r.depart_at)}`
-        }
-      }
-    },
+    () => [
+      form.value.recurrence_start_date,
+      form.value.recurrence_depart_time,
+      form.value.recurrence_return_time,
+      wantsRecurringTemplate.value,
+    ],
+    () => syncRecurringTimesToPassengerRows(),
+    { flush: 'post' },
   )
 
   function syncRowDepartTimesFromRequested(isoLocal) {
@@ -974,7 +1006,8 @@ export function useDispatchRequestWizard(options = {}) {
     const hasWd = Object.values(form.value.e1_weekdays || {}).some(Boolean)
     if (!hasWd) return false
     if (!String(form.value.recurrence_start_date || '').trim()) return false
-    if (!String(form.value.recurrence_return_time || '').trim()) return false
+    if (!normalizeTimeHhMm(form.value.recurrence_depart_time)) return false
+    if (!normalizeTimeHhMm(form.value.recurrence_return_time)) return false
     const mode = form.value.recurrence_end_mode || 'date'
     if (mode === 'date' && !String(form.value.recurrence_end_date || '').trim()) return false
     if (mode === 'weeks') {
@@ -1229,7 +1262,10 @@ export function useDispatchRequestWizard(options = {}) {
       if (!String(form.value.recurrence_start_date || '').trim()) {
         items.push({ section: 'purpose', message: t('dispatch_wizard.validate.recurrence_start_required') })
       }
-      if (!String(form.value.recurrence_return_time || '').trim()) {
+      if (!normalizeTimeHhMm(form.value.recurrence_depart_time)) {
+        items.push({ section: 'purpose', message: t('dispatch_wizard.validate.recurrence_depart_time_required') })
+      }
+      if (!normalizeTimeHhMm(form.value.recurrence_return_time)) {
         items.push({ section: 'purpose', message: t('dispatch_wizard.validate.recurrence_return_time_required') })
       }
       const mode = form.value.recurrence_end_mode || 'date'
