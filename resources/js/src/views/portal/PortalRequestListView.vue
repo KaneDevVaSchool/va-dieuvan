@@ -465,6 +465,7 @@
             :group-by="scheduleGroupBy"
             :detail-route-name="portalRoutes.detail"
             @refresh="reloadFromStart"
+            @plan-label-saved="onPlanLabelSaved"
           />
           <ExtracurricularRequestsDataTable
             v-else-if="isExtracurricularMode"
@@ -993,6 +994,31 @@ async function loadPage(page = 1) {
 
 function reloadFromStart() {
   loadPage(1)
+}
+
+function templateIdFromRequest(req) {
+  const tid = req?.dispatch_request_template_id ?? req?.dispatch_request_template?.id
+  if (tid == null || tid === '') return null
+  const n = Number(tid)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+function onPlanLabelSaved({ templateId, label }) {
+  const tid = Number(templateId)
+  const trimmed = String(label || '').trim()
+  if (!Number.isFinite(tid) || tid <= 0 || !trimmed) return
+  for (const req of items.value) {
+    if (templateIdFromRequest(req) !== tid) continue
+    req.recurring_plan_label = trimmed
+    if (!req.dispatch_request_template) {
+      req.dispatch_request_template = { id: tid }
+    }
+    if (!req.dispatch_request_template.dispatch_package) {
+      req.dispatch_request_template.dispatch_package = { label: trimmed }
+    } else {
+      req.dispatch_request_template.dispatch_package.label = trimmed
+    }
+  }
 }
 
 function goPage(page) {

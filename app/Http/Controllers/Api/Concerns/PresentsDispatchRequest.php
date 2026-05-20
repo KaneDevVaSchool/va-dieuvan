@@ -19,8 +19,16 @@ trait PresentsDispatchRequest
         $arr['threshold_hours'] = DispatchSetting::urgentThresholdHoursForTripType((string) $dispatchRequest->trip_type);
         $arr['is_urgent_auto'] = $dispatchRequest->isUrgentAuto();
 
+        $arr['recurring_plan_label'] = null;
         if ($dispatchRequest->dispatch_request_template_id !== null) {
-            $pkg = $dispatchRequest->dispatchRequestTemplate?->dispatchPackage;
+            $template = $dispatchRequest->dispatchRequestTemplate;
+            $planRaw = $template?->dispatchPackage?->label
+                ?? data_get($template?->wizard_snapshot, 'form.plan_name');
+            if (is_string($planRaw) && trim($planRaw) !== '') {
+                $arr['recurring_plan_label'] = trim($planRaw);
+            }
+
+            $pkg = $template?->dispatchPackage;
             $arr['dispatch_package_sessions'] = null;
             $arr['dispatch_package_cost_alert'] = null;
             $arr['dispatch_package_budget_alert'] = null;

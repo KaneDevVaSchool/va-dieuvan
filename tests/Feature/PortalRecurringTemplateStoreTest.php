@@ -64,6 +64,7 @@ class PortalRecurringTemplateStoreTest extends TestCase
         $rename->assertOk()->assertJsonPath('data.plan_label', 'CLB Đổi tên');
 
         $template = DispatchRequestTemplate::query()->with('dispatchPackage')->findOrFail($templateId);
+        $this->assertNotNull($template->dispatch_package_id);
         $this->assertSame('CLB Đổi tên', $template->dispatchPackage?->label);
         $this->assertSame('CLB Đổi tên', data_get($template->wizard_snapshot, 'form.plan_name'));
     }

@@ -249,7 +249,17 @@ class DispatchRequestTemplateController extends Controller
             ?? data_get($template->wizard_snapshot, 'form.plan_name');
 
         DB::transaction(function () use ($template, $label) {
-            if ($template->dispatch_package_id !== null) {
+            if ($template->dispatch_package_id === null) {
+                $sessionCount = max(1, app(DispatchRecurringMaintenanceService::class)->countTargetOccurrences($template));
+                $pkg = DispatchPackage::create([
+                    'trip_type' => $template->trip_type,
+                    'label' => $label,
+                    'total_sessions' => $sessionCount,
+                    'sessions_used' => 0,
+                ]);
+                $template->update(['dispatch_package_id' => $pkg->id]);
+                $template->refresh();
+            } else {
                 DispatchPackage::query()
                     ->whereKey((int) $template->dispatch_package_id)
                     ->update(['label' => $label]);

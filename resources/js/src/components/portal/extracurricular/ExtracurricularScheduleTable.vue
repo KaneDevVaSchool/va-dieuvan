@@ -230,7 +230,7 @@ const planLabelSaving = ref(false)
 const planLabelError = ref('')
 const planLabelInputRef = ref(null)
 
-const emit = defineEmits(['refresh'])
+const emit = defineEmits(['refresh', 'plan-label-saved'])
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -394,9 +394,9 @@ async function savePlanLabel(group) {
   planLabelError.value = ''
   try {
     await updatePortalDispatchPlanLabel(tid, trimmed)
-    patchLocalPlanLabel(group, trimmed)
+    patchLocalPlanLabel(group, trimmed, tid)
     cancelPlanLabelEdit()
-    emit('refresh')
+    emit('plan-label-saved', { templateId: tid, label: trimmed })
   } catch (e) {
     planLabelError.value = formatApiError(e, t('portal.extracurricular_list.plan_name_save_fail'))
   } finally {
@@ -404,26 +404,33 @@ async function savePlanLabel(group) {
   }
 }
 
-function patchLocalPlanLabel(group, label) {
+function patchLocalPlanLabel(group, label, templateId) {
+  const tid = templateId ?? templateIdForGroup(group)
   for (const req of group?.items || []) {
-    const pkg = req?.dispatch_request_template?.dispatch_package
-    if (pkg && typeof pkg === 'object') {
-      pkg.label = label
+    req.recurring_plan_label = label
+    if (!req.dispatch_request_template) {
+      req.dispatch_request_template = { id: tid }
+    }
+    if (!req.dispatch_request_template.dispatch_package) {
+      req.dispatch_request_template.dispatch_package = { label }
+    } else {
+      req.dispatch_request_template.dispatch_package.label = label
     }
   }
 }
 
 function planNameFor(req) {
+  const fromApi = req?.recurring_plan_label
   const pkgLabel = req?.dispatch_request_template?.dispatch_package?.label
-  const snapName = req?.wizard_snapshot?.form?.plan_name
-  const s = String(pkgLabel || snapName || '').trim()
+  const tplSnap = req?.dispatch_request_template?.wizard_snapshot?.form?.plan_name
+  const s = String(fromApi || pkgLabel || tplSnap || '').trim()
   return s || t('portal.recurring_plan.plan_name_unnamed')
 }
 
 function groupKey(req) {
   if (props.groupBy === 'plan') {
-    const tid = req?.dispatch_request_template_id
-    return `${tid ?? 'single'}::${planNameFor(req)}`
+    const tid = templateIdFromReq(req)
+    return tid != null ? `tpl:${tid}` : `req:${req?.id ?? 'unknown'}`
   }
   if (props.groupBy === 'route') {
     return `${req.origin || ''}→${req.destination || ''}`
