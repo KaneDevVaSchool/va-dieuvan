@@ -80,7 +80,7 @@
       />
 
       <section
-        v-else-if="showRecurringExtras"
+        v-if="showRecurringExtras"
         class="mt-8 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >
         <CostLimitAlert
