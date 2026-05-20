@@ -172,7 +172,8 @@ Route::prefix('p2p-policy')->group(function () {
         Route::patch('/terms/{p2pPolicyTerm}', 'update')->middleware('permission:p2p_policy.manage');
         Route::put('/terms/{p2pPolicyTerm}/calendar', 'syncCalendar')->middleware('permission:p2p_policy.manage');
         Route::post('/terms/{p2pPolicyTerm}/activate', 'activate')
-            ->middleware(['permission:p2p_policy.activate', 'idempotency', 'throttle:10,1']);
+            ->name('api.p2p-policy.terms.activate')
+            ->middleware(['permission:p2p_policy.activate', 'idempotency', 'throttle:30,1']);
     });
 
     Route::controller(PolicyRouteController::class)->group(function () {

@@ -569,8 +569,9 @@ import {
   listPolicyRoutes,
 } from '../../api/p2pPolicy'
 import { formatApiError } from '../../api/http'
-import { showAppError, showAppSuccess } from '../../composables/appMessage'
+import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
+import { p2pTermActivateIdempotencyKey } from '../../util/idempotency'
 import {
   p2pStepTo,
   p2pStudentsForRoute,
@@ -604,6 +605,7 @@ const savingAssignId = ref(null)
 const activating = ref(false)
 const activateDialog = ref(null)
 const activateChecked = ref(false)
+const activateIdempotencyKey = ref('')
 
 const workflowTerm = computed(() => {
   const id = workflowTermId.value
@@ -823,8 +825,9 @@ async function saveAssign(routeId) {
 }
 
 function openActivateTerm() {
-  if (!canActivateTerm.value || !workflowTermId.value) return
+  if (!canActivateTerm.value || !workflowTermId.value || activating.value) return
   activateChecked.value = false
+  activateIdempotencyKey.value = p2pTermActivateIdempotencyKey(workflowTermId.value)
   activateDialog.value?.showModal()
 }
 
@@ -834,16 +837,17 @@ function closeActivateTerm() {
 
 async function confirmActivateTerm() {
   const termId = workflowTermId.value
-  if (!termId || !activateChecked.value) return
+  if (!termId || !activateChecked.value || activating.value) return
   activating.value = true
   try {
-    await activateP2pPolicyTerm(termId, `p2p-policy-activate-${termId}-${Date.now()}`)
+    const key = activateIdempotencyKey.value || p2pTermActivateIdempotencyKey(termId)
+    await activateP2pPolicyTerm(termId, key)
     showAppSuccess(t('p2p_policy_page.routes_activate_started'))
     closeActivateTerm()
     await loadTerms()
     await loadRoutes()
   } catch (e) {
-    showAppError(formatApiError(e))
+    showAppErrorFromApi(e, t('p2p_policy_page.activate_error_fallback'))
   } finally {
     activating.value = false
   }

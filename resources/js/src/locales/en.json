@@ -3644,6 +3644,7 @@
         "activate_modal_body": "You are activating internal shuttle operations for academic year {year}.\n\nThe system will auto-generate 2 trips per day (morning and afternoon) from {from} to {to} using current routes and roster.\nPublic holidays and skip dates will not generate trips.",
         "activate_confirm_checkbox": "I have verified the roster and vehicle/driver assignments.",
         "activate_confirm": "Activate",
+        "activate_error_fallback": "Could not activate the operating term. Please try again in a moment.",
         "generating_progress": "Generating trips… {created}/{total}",
         "students_title": "Shuttle policy students",
         "students_subtitle": "Shuttle policy students — ID, class, direction, and policy type.",

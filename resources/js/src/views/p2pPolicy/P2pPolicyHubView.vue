@@ -315,7 +315,9 @@ import {
   listP2pPolicyTerms,
 } from '../../api/p2pPolicy'
 import { p2pStepTo } from '../../composables/useP2pPolicyWorkflow'
+import { showAppErrorFromApi } from '../../composables/appMessage'
 import { formatIsoDate } from '../../util/datetime'
+import { p2pTermActivateIdempotencyKey } from '../../util/idempotency'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -330,6 +332,7 @@ const activating = ref(false)
 const generationRun = ref(null)
 const activateDialog = ref(null)
 const activateChecked = ref(false)
+const activateIdempotencyKey = ref('')
 let pollTimer = null
 
 const workflowTermId = computed(() => selectedTermId.value ?? null)
@@ -518,7 +521,9 @@ function onTermChange() {
 }
 
 function openActivate() {
+  if (!selectedTerm.value?.id) return
   activateChecked.value = false
+  activateIdempotencyKey.value = p2pTermActivateIdempotencyKey(selectedTerm.value.id)
   activateDialog.value?.showModal()
 }
 
@@ -527,18 +532,19 @@ function closeActivate() {
 }
 
 async function confirmActivate() {
-  if (!selectedTerm.value) return
+  if (!selectedTerm.value || activating.value) return
   activating.value = true
   try {
-    const res = await activateP2pPolicyTerm(
-      selectedTerm.value.id,
-      `p2p-policy-activate-${selectedTerm.value.id}-${Date.now()}`,
-    )
+    const key =
+      activateIdempotencyKey.value || p2pTermActivateIdempotencyKey(selectedTerm.value.id)
+    const res = await activateP2pPolicyTerm(selectedTerm.value.id, key)
     generationRun.value = res.generation_run
     selectedTerm.value = res.term
     selectedTermId.value = res.term?.id ?? null
     closeActivate()
     startPoll()
+  } catch (e) {
+    showAppErrorFromApi(e, t('p2p_policy_page.activate_error_fallback'))
   } finally {
     activating.value = false
   }

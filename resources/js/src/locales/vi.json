@@ -3730,6 +3730,7 @@
         "activate_modal_body": "Bạn đang kích hoạt vận hành trung chuyển nội bộ cho năm học {year}.\n\nHệ thống sẽ tự động sinh 2 chuyến/ngày (sáng và chiều) từ {from} đến {to} theo tuyến và roster hiện tại.\nNgày nghỉ lễ và ngày nghỉ chỉ định sẽ không sinh chuyến.",
         "activate_confirm_checkbox": "Tôi đã kiểm tra roster và phân công xe/tài xế.",
         "activate_confirm": "Kích hoạt",
+        "activate_error_fallback": "Không kích hoạt được kỳ vận hành. Vui lòng thử lại sau.",
         "generating_progress": "Đang sinh chuyến… {created}/{total}",
         "students_title": "Học sinh chính sách P2P",
         "students_subtitle": "Danh sách học sinh trên tuyến trung chuyển — mã, lớp, chiều đi và loại chính sách.",
