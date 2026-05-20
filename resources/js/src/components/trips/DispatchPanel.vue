@@ -280,6 +280,45 @@
                 </div>
             </CollapsiblePanelSection>
 
+            <div
+                v-if="scheduleAssignTabs && scheduleAssignTabs.length > 1"
+                class="space-y-2"
+            >
+                <p
+                    v-if="assignProgressLabel"
+                    class="text-[12px] font-medium text-slate-600 dark:text-slate-400"
+                >
+                    {{ assignProgressLabel }}
+                </p>
+                <div
+                    class="flex gap-1.5 overflow-x-auto pb-0.5"
+                    role="tablist"
+                    :aria-label="t('trip_detail.schedules.assign_tabs_aria')"
+                >
+                    <button
+                        v-for="tab in scheduleAssignTabs"
+                        :key="tab.key"
+                        type="button"
+                        role="tab"
+                        class="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-semibold transition"
+                        :class="
+                            activeScheduleKey === tab.key
+                                ? 'bg-[#8B1A1A] text-white shadow-sm'
+                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200'
+                        "
+                        :aria-selected="activeScheduleKey === tab.key"
+                        @click="$emit('update:activeScheduleKey', tab.key)"
+                    >
+                        {{ tab.label }}
+                        <span
+                            v-if="tab.assigned"
+                            class="ml-1 inline-block size-1.5 rounded-full bg-emerald-400"
+                            aria-hidden="true"
+                        />
+                    </button>
+                </div>
+            </div>
+
             <div v-if="tripId" class="-mx-0.5">
                 <ResourcePanel
                     ref="resourcePanelRef"
@@ -544,10 +583,16 @@ const props = withDefaults(
     supplementAssignments?:
         | { taxis: SupplementItem[]; vendors: SupplementItem[] }
         | null;
+    scheduleAssignTabs?: { key: string; label: string; assigned: boolean }[];
+    activeScheduleKey?: string;
+    assignProgressLabel?: string;
 }>(),
     {
         coordinationActionsLocked: false,
         supplementAssignments: null,
+        scheduleAssignTabs: () => [],
+        activeScheduleKey: "",
+        assignProgressLabel: "",
     },
 );
 
@@ -563,6 +608,7 @@ const emit = defineEmits<{
     "update:coordinationNotes": [value: string];
     assign: [];
     cancel: [];
+    "update:activeScheduleKey": [key: string];
 }>();
 
 const { t, locale } = useI18n();

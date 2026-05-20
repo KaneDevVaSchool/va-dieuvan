@@ -202,6 +202,11 @@ class TripController extends Controller
             $trip->dispatchRequest->makeVisible(['wizard_snapshot']);
         }
 
+        $trip->setAttribute(
+            'schedule_legs',
+            app(\App\Services\Dispatching\TripScheduleLegService::class)->resolveScheduleLegsForTrip($trip)
+        );
+
         return $this->ok($trip);
     }
 

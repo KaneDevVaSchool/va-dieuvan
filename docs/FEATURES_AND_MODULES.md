@@ -121,6 +121,8 @@ Quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
 
 **Permissions:** `trip.assign`, `trip.view_all`, …
 
+**Đa lịch trình (wizard):** Một chuyến có thể gắn nhiều dòng lịch trong `wizard_snapshot`; phân công lưu tại `trips.schedule_assignments` (xe/tài xế/NCC theo từng lịch). Tài xế thấy chuyến nếu được gán ở bất kỳ lịch nào.
+
 ---
 
 ### MODULE: TRIP OPERATIONS (TÀI XẾ)

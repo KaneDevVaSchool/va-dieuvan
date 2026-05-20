@@ -156,6 +156,13 @@
                             :embed-map-src="embedMapSrc"
                             :expand-map="expandTripMap"
                         />
+                        <TripSchedulesPanel
+                            v-if="scheduleCount > 0"
+                            :cards="scheduleCards"
+                            :schedule-legs="scheduleLegs"
+                            :selected-key="selectedScheduleKey"
+                            @update:selected-key="selectedScheduleKey = $event"
+                        />
                     </div>
 
                     <!-- Sidebar / coordination (5/12) -->
@@ -201,6 +208,10 @@
                             :show-assign-footer="showCoordinationAssignFooter"
                             :assign-ready="assignReady"
                             :assigning="assigning"
+                            :schedule-assign-tabs="scheduleAssignTabs"
+                            :active-schedule-key="activeAssignLegKey"
+                            :assign-progress-label="assignProgressLabel"
+                            @update:active-schedule-key="onActiveAssignLegChange"
                             @reschedule="doReschedule"
                             @vehicle-card-change="onVehicleCardChange"
                             @driver-card-change="onDriverCardChange"
@@ -809,7 +820,9 @@ import PassengerCheckIn from "../../components/trips/PassengerCheckIn.vue";
 import StickyTripHeader from "../../components/trips/StickyTripHeader.vue";
 import TripTimeline from "../../components/trips/TripTimeline.vue";
 import TripInfoCard from "../../components/trips/TripInfoCard.vue";
+import TripSchedulesPanel from "../../components/trips/TripSchedulesPanel.vue";
 import DispatchPanel from "../../components/trips/DispatchPanel.vue";
+import { useDispatchScheduleCards } from "../../composables/useDispatchScheduleCards";
 import {
     addTripEvent,
     assignTrip,
@@ -1350,6 +1363,129 @@ const snap = computed(
     () => trip.value?.dispatch_request?.wizard_snapshot ?? null,
 );
 
+const tripTypeForSnap = computed(
+    () => trip.value?.dispatch_request?.trip_type ?? "",
+);
+
+const { scheduleCards, scheduleCount } = useDispatchScheduleCards(
+    snap,
+    tripTypeForSnap,
+);
+
+const scheduleLegs = computed(() => trip.value?.schedule_legs ?? []);
+
+const selectedScheduleKey = ref("");
+const activeAssignLegKey = ref("");
+const legResourcesByKey = ref({});
+
+const multiScheduleMode = computed(() => scheduleCards.value.length > 1);
+
+const activeLegCard = computed(() => {
+    const key = activeAssignLegKey.value || scheduleCards.value[0]?.key;
+    return scheduleCards.value.find((c) => c.key === key) ?? scheduleCards.value[0] ?? null;
+});
+
+watch(
+    scheduleCards,
+    (cards) => {
+        if (!cards?.length) {
+            activeAssignLegKey.value = "";
+            return;
+        }
+        if (
+            !activeAssignLegKey.value ||
+            !cards.some((c) => c.key === activeAssignLegKey.value)
+        ) {
+            activeAssignLegKey.value = cards[0].key;
+        }
+    },
+    { immediate: true },
+);
+
+function legAssignmentFromTrip(key) {
+    const leg = scheduleLegs.value.find((l) => l.key === key);
+    return leg?.assignment ?? null;
+}
+
+function snapshotForLegKey(key) {
+    if (!trip.value?.id) return null;
+    const assign = legResourcesByKey.value[key] ?? null;
+    const fromTrip = legAssignmentFromTrip(key);
+    const vehicleId =
+        assign?.vehicle_id ??
+        fromTrip?.vehicle_id ??
+        (multiScheduleMode.value ? null : trip.value.vehicle_id);
+    const driverId =
+        assign?.driver_id ??
+        fromTrip?.driver_id ??
+        (multiScheduleMode.value ? null : trip.value.driver_id);
+    return {
+        tripId: trip.value.id,
+        scheduleKey: key,
+        vehicleId: vehicleId ?? null,
+        driverId: driverId ?? null,
+        transportProviderId:
+            assign?.transport_provider_id ??
+            fromTrip?.transport_provider_id ??
+            (multiScheduleMode.value
+                ? null
+                : trip.value.transport_provider_id) ??
+            null,
+        externalVehicleRef:
+            assign?.external_vehicle_ref ??
+            fromTrip?.external_vehicle_ref ??
+            trip.value.external_vehicle_ref ??
+            "",
+        externalDriverRef:
+            assign?.external_driver_ref ??
+            fromTrip?.external_driver_ref ??
+            trip.value.external_driver_ref ??
+            "",
+        lockVersion: trip.value.lock_version ?? 0,
+        supplementTransports:
+            assign?.supplementTransports ??
+            fromTrip?.supplement_transports ??
+            (multiScheduleMode.value
+                ? null
+                : trip.value.supplement_transports) ??
+            null,
+    };
+}
+
+function onActiveAssignLegChange(nextKey) {
+    const prev = activeAssignLegKey.value;
+    if (prev && dispatchResources.value) {
+        legResourcesByKey.value = {
+            ...legResourcesByKey.value,
+            [prev]: { ...dispatchResources.value },
+        };
+    }
+    activeAssignLegKey.value = nextKey;
+    dispatchResources.value = legResourcesByKey.value[nextKey] ?? null;
+}
+
+const scheduleAssignTabs = computed(() =>
+    scheduleCards.value.map((c) => {
+        const leg = scheduleLegs.value.find((l) => l.key === c.key);
+        const fromUi = legResourcesByKey.value[c.key];
+        const assigned =
+            leg?.assigned === true ||
+            (fromUi?.readyForSubmit === true && multiScheduleMode.value);
+        return {
+            key: c.key,
+            label: t("trip_detail.schedules.tab_short", { n: c.labelSeq }),
+            assigned,
+        };
+    }),
+);
+
+const assignProgressLabel = computed(() => {
+    if (!multiScheduleMode.value) return "";
+    const total = scheduleCards.value.length;
+    const done = scheduleAssignTabs.value.filter((t) => t.assigned).length;
+    return t("trip_detail.schedules.assign_progress", { done, total });
+});
+
 const drNotesRaw = computed(
     () => trip.value?.dispatch_request?.notes?.trim() ?? "",
 );
@@ -1406,9 +1542,15 @@ const estimatedCostVnd = computed(() => {
     return total > 0 ? total : null;
 });
 
+const mapLegCard = computed(() => {
+    const key = selectedScheduleKey.value || activeLegCard.value?.key;
+    return scheduleCards.value.find((c) => c.key === key) ?? activeLegCard.value;
+});
+
 const mapsHref = computed(() => {
-    const o = originLabel.value;
-    const d = destinationLabel.value;
+    const leg = mapLegCard.value;
+    const o = leg?.pickup?.trim() || originLabel.value;
+    const d = leg?.dropoff?.trim() || destinationLabel.value;
     if (!o || !d || o === "—" || d === "—") return "";
     const u = new URL("https://www.google.com/maps/dir/");
     u.searchParams.set("api", "1");
@@ -1418,6 +1560,12 @@ const mapsHref = computed(() => {
 });
 
 const embedMapSrc = computed(() => {
+    const leg = mapLegCard.value;
+    const oLeg = leg?.pickup?.trim();
+    const dLeg = leg?.dropoff?.trim();
+    if (oLeg && dLeg) {
+        return `https://maps.google.com/maps?q=${encodeURIComponent(`${oLeg} → ${dLeg}`)}&output=embed`;
+    }
     const o = trip.value?.dispatch_request?.origin?.trim();
     const d = trip.value?.dispatch_request?.destination?.trim();
     if (o && d) {
@@ -1776,6 +1924,11 @@ function tripIntervalsOverlap(aStart, aEnd, bStart, bEnd) {
 }
 
 function getActiveScheduleDateKey() {
+    const leg = activeLegCard.value;
+    if (leg?.depart_at) {
+        const d = new Date(leg.depart_at);
+        if (!Number.isNaN(d.getTime())) return toLocalDateKey(d);
+    }
     const raw = rescheduleDepartLocal.value?.trim();
     if (raw) {
         const d = new Date(raw);
@@ -1791,6 +1944,16 @@ const scheduleDateKeyForList = computed(() => {
 
 const scheduleWindowForConflicts = computed(() => {
     const tr = trip.value;
+    const leg = activeLegCard.value;
+    if (leg?.depart_at) {
+        const startMs = new Date(leg.depart_at).getTime();
+        const endMs = leg.arrive_by
+            ? new Date(leg.arrive_by).getTime()
+            : startMs + 2 * 60 * 60 * 1000;
+        if (Number.isFinite(startMs) && Number.isFinite(endMs)) {
+            return { start: startMs, end: endMs };
+        }
+    }
     if (!tr?.depart_at) return null;
     const origStart = new Date(tr.depart_at).getTime();
     const origEnd = tripPlannedEnd(tr).getTime();
@@ -1853,21 +2016,19 @@ const busyVehicleIdList = computed(() => [...busyVehicleIds.value]);
 const busyDriverIdList = computed(() => [...busyDriverIds.value]);
 
 const coordinationTripSnapshot = computed(() => {
-    if (!trip.value?.id) return null;
-    return {
-        tripId: trip.value.id,
-        vehicleId: trip.value.vehicle_id ?? null,
-        driverId: trip.value.driver_id ?? null,
-        transportProviderId: trip.value.transport_provider_id ?? null,
-        externalVehicleRef: trip.value.external_vehicle_ref ?? "",
-        externalDriverRef: trip.value.external_driver_ref ?? "",
-        lockVersion: trip.value.lock_version ?? 0,
-        supplementTransports: trip.value.supplement_transports ?? null,
-    };
+    const key =
+        activeAssignLegKey.value || scheduleCards.value[0]?.key || "";
+    return snapshotForLegKey(key);
 });
 
 function onDispatchResourcesUpdate(p) {
     dispatchResources.value = p;
+    if (multiScheduleMode.value && activeAssignLegKey.value) {
+        legResourcesByKey.value = {
+            ...legResourcesByKey.value,
+            [activeAssignLegKey.value]: p,
+        };
+    }
 }
 
 /** Bổ sung phương tiện (taxi/NCC) hiển thị trong khối phân công khi đã chọn tài xế — đồng bộ payload panel. */
@@ -1950,6 +2111,21 @@ const coordinationSeatTotals = computed(() => {
 
 const assignReady = computed(() => {
     if (!canAssign.value) return false;
+    if (multiScheduleMode.value) {
+        for (const card of scheduleCards.value) {
+            const p =
+                card.key === activeAssignLegKey.value
+                    ? dispatchResources.value
+                    : legResourcesByKey.value[card.key];
+            if (!p?.readyForSubmit) return false;
+            if (p.driver_id && busyDriverIds.value.has(Number(p.driver_id)))
+                return false;
+            if (p.vehicle_id && busyVehicleIds.value.has(Number(p.vehicle_id)))
+                return false;
+        }
+        if (sameRejectedDriverSelected.value) return false;
+        return true;
+    }
     const p = dispatchResources.value;
     if (!p?.readyForSubmit) return false;
     if (sameRejectedDriverSelected.value) return false;
@@ -2503,15 +2679,48 @@ async function onApproveTransfer() {
 
     assigning.value = true;
     try {
-        const payload = {
-            lock_version: assign.value.lock_version,
-            vehicle_id: p.vehicle_id,
-            driver_id: p.driver_id,
-            transport_provider_id: p.transport_provider_id,
-            external_vehicle_ref: p.external_vehicle_ref,
-            external_driver_ref: p.external_driver_ref,
-            supplement_transports: p.supplementTransports ?? null,
-        };
+        if (multiScheduleMode.value && activeAssignLegKey.value) {
+            legResourcesByKey.value = {
+                ...legResourcesByKey.value,
+                [activeAssignLegKey.value]: { ...p },
+            };
+        }
+
+        let payload;
+        if (multiScheduleMode.value) {
+            payload = {
+                lock_version: assign.value.lock_version,
+                schedule_assignments: scheduleCards.value.map((card) => {
+                    const legP =
+                        card.key === activeAssignLegKey.value
+                            ? p
+                            : legResourcesByKey.value[card.key];
+                    return {
+                        key: card.key,
+                        vehicle_id: legP?.vehicle_id ?? null,
+                        driver_id: legP?.driver_id ?? null,
+                        transport_provider_id:
+                            legP?.transport_provider_id ?? null,
+                        external_vehicle_ref:
+                            legP?.external_vehicle_ref ?? null,
+                        external_driver_ref:
+                            legP?.external_driver_ref ?? null,
+                        supplement_transports:
+                            legP?.supplementTransports ?? null,
+                    };
+                }),
+            };
+        } else {
+            payload = {
+                lock_version: assign.value.lock_version,
+                vehicle_id: p.vehicle_id,
+                driver_id: p.driver_id,
+                transport_provider_id: p.transport_provider_id,
+                external_vehicle_ref: p.external_vehicle_ref,
+                external_driver_ref: p.external_driver_ref,
+                supplement_transports: p.supplementTransports ?? null,
+            };
+        }
 
         await assignTrip(route.params.id, payload, {
             idempotencyKey: newIdempotencyKey(),

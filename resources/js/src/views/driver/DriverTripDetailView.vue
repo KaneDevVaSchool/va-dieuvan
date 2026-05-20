@@ -38,6 +38,7 @@
           :dest-main="destMain"
           :dest-sub="destSub"
           :map-url="mapUrl"
+          :legs="driverRouteLegs"
         />
 
         <DriverTripPaxSection
@@ -170,6 +171,7 @@ const {
   destMain,
   destSub,
   mapUrl,
+  driverRouteLegs,
   tripCosts,
   costsApprovedTotal,
   costsPendingTotal,

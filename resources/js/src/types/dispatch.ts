@@ -47,6 +47,34 @@ export interface SupplementTransports {
   vendors: SupplementItem[]
 }
 
+export interface TripScheduleAssignment {
+  key: string
+  variant: string
+  row_index: number
+  depart_at?: string | null
+  arrive_by?: string | null
+  vehicle_id?: number | null
+  driver_id?: number | null
+  transport_provider_id?: number | null
+  external_vehicle_ref?: string | null
+  external_driver_ref?: string | null
+  supplement_transports?: SupplementTransports | null
+}
+
+export interface TripScheduleLegResolved {
+  key: string
+  variant: string
+  row_index: number
+  label_seq: number
+  depart_at?: string | null
+  arrive_by?: string | null
+  pickup: string
+  dropoff: string
+  waypoint?: string
+  assigned?: boolean
+  assignment?: TripScheduleAssignment | null
+}
+
 export interface ResourceDispatchPayload {
   readyForSubmit: boolean
   validationCode: ResourceDispatchValidationCode

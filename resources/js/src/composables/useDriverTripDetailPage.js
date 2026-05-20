@@ -161,8 +161,28 @@ export function useDriverTripDetailPage() {
     return { main: t0.slice(0, i).trim(), sub: t0.slice(i + 1).trim() }
   }
 
-  const originLines = computed(() => splitAddress(dr.value?.origin))
-  const destLines = computed(() => splitAddress(dr.value?.destination))
+  const primaryDriverLeg = computed(() => {
+    const all = trip.value?.schedule_legs ?? []
+    if (!Array.isArray(all) || !all.length) return null
+    const did = myDriverId.value
+    if (did) {
+      const mine = all.filter((l) => Number(l.assignment?.driver_id) === did)
+      if (mine.length === 1) return mine[0]
+    }
+    if (all.length === 1) return all[0]
+    return null
+  })
+
+  const originLines = computed(() => {
+    const leg = primaryDriverLeg.value
+    if (leg?.pickup) return splitAddress(leg.pickup)
+    return splitAddress(dr.value?.origin)
+  })
+  const destLines = computed(() => {
+    const leg = primaryDriverLeg.value
+    if (leg?.dropoff) return splitAddress(leg.dropoff)
+    return splitAddress(dr.value?.destination)
+  })
   const originMain = computed(() => originLines.value.main)
   const originSub = computed(() => originLines.value.sub)
   const destMain = computed(() => destLines.value.main)
@@ -175,6 +195,48 @@ export function useDriverTripDetailPage() {
     if (a) return `https://maps.google.com/maps?q=${encodeURIComponent(a)}`
     if (b) return `https://maps.google.com/maps?q=${encodeURIComponent(b)}`
     return ''
+  })
+
+  function mapUrlForPair(a, b) {
+    const o = (a || '').trim()
+    const d = (b || '').trim()
+    if (o && d) {
+      return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(o)}&destination=${encodeURIComponent(d)}&travelmode=driving`
+    }
+    if (o) return `https://maps.google.com/maps?q=${encodeURIComponent(o)}`
+    if (d) return `https://maps.google.com/maps?q=${encodeURIComponent(d)}`
+    return ''
+  }
+
+  const myDriverId = computed(() => {
+    const fromTrip = trip.value?.driver?.id ?? trip.value?.driver_id
+    const n = Number(fromTrip)
+    return Number.isFinite(n) && n > 0 ? n : null
+  })
+
+  const driverRouteLegs = computed(() => {
+    const all = trip.value?.schedule_legs ?? []
+    if (!Array.isArray(all) || !all.length) return []
+    const did = myDriverId.value
+    let legs = all
+    if (did) {
+      const mine = all.filter((l) => Number(l.assignment?.driver_id) === did)
+      if (mine.length) legs = mine
+    }
+    if (legs.length <= 1) return []
+    return legs.map((leg, idx) => {
+      const o = splitAddress(leg.pickup || dr.value?.origin)
+      const d = splitAddress(leg.dropoff || dr.value?.destination)
+      return {
+        key: leg.key,
+        label: t('driver_trip_detail.schedule_leg', { n: leg.label_seq ?? idx + 1 }),
+        originMain: o.main,
+        originSub: o.sub,
+        destMain: d.main,
+        destSub: d.sub,
+        mapUrl: mapUrlForPair(leg.pickup, leg.dropoff),
+      }
+    })
   })
 
   const tripCosts = computed(() => {
@@ -682,6 +744,7 @@ export function useDriverTripDetailPage() {
     destMain,
     destSub,
     mapUrl,
+    driverRouteLegs,
     tripCosts,
     costsApprovedTotal,
     costsPendingTotal,

@@ -346,6 +346,7 @@
         "map_nav": "Open in Maps",
         "point_start": "Start",
         "point_end": "Arrival",
+        "schedule_leg": "Itinerary {n}",
         "planned": "Planned {t}",
         "trip_notes_title": "Trip notes",
         "warn_title": "{n}-minute warning",
@@ -2573,6 +2574,16 @@
             "distance_not_recorded": "No km recorded yet — update after completion or enter on trip record.",
             "cost_from_wizard": "Estimate from the request wizard / form.",
             "cost_no_estimate": "No pricing lines in snapshot — see actual costs below."
+        },
+        "schedules": {
+            "title": "Itineraries",
+            "count": "{n} itineraries",
+            "status_assigned": "Assigned",
+            "status_partial": "In progress",
+            "status_pending": "Unassigned",
+            "tab_short": "Leg {n}",
+            "assign_tabs_aria": "Select itinerary to assign",
+            "assign_progress": "Assigned {done}/{total} legs"
         },
         "route": {
             "section_title": "Route details",

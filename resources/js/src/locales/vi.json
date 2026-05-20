@@ -389,6 +389,7 @@
         "map_nav": "Điều hướng bản đồ",
         "point_start": "Điểm đi",
         "point_end": "Điểm đến",
+        "schedule_leg": "Lịch trình {n}",
         "planned": "Dự kiến {t}",
         "trip_notes_title": "Ghi chú chuyến đi",
         "warn_title": "Cảnh báo {n} phút",
@@ -2401,6 +2402,16 @@
             "distance_not_recorded": "Chưa có km ghi nhận — cập nhật sau khi hoàn thành hoặc nhập tay ở hồ sơ chuyến.",
             "cost_from_wizard": "Ước tính từ biểu mẫu / wizard khi tạo yêu cầu.",
             "cost_no_estimate": "Không có dòng giá trong snapshot — xem mục chi phí thực tế bên dưới."
+        },
+        "schedules": {
+            "title": "Các lịch trình",
+            "count": "{n} lịch",
+            "status_assigned": "Đã gán",
+            "status_partial": "Đang gán",
+            "status_pending": "Chưa gán",
+            "tab_short": "Lịch {n}",
+            "assign_tabs_aria": "Chọn lịch để phân công",
+            "assign_progress": "Đã gán {done}/{total} lịch"
         },
         "route": {
             "section_title": "Chi tiết tuyến đường",

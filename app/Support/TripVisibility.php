@@ -6,6 +6,7 @@ use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class TripVisibility
 {
@@ -26,6 +27,10 @@ class TripVisibility
         }
 
         if ($driverId && (int) $trip->driver_id === (int) $driverId) {
+            return true;
+        }
+
+        if ($driverId && self::tripHasDriverOnScheduleLegs($trip, (int) $driverId)) {
             return true;
         }
 
@@ -55,8 +60,39 @@ class TripVisibility
             $w->where('dispatcher_id', $user->id);
             if ($driverId) {
                 $w->orWhere('driver_id', $driverId);
+                $w->orWhere(fn (Builder $legQ) => self::applyScheduleLegDriverFilter($legQ, (int) $driverId));
             }
             $w->orWhereHas('dispatchRequest', fn (Builder $dr) => $dr->where('requester_id', $user->id));
+        });
+    }
+
+    public static function tripHasDriverOnScheduleLegs(Trip $trip, int $driverId): bool
+    {
+        foreach (is_array($trip->schedule_assignments) ? $trip->schedule_assignments : [] as $leg) {
+            if (is_array($leg) && (int) ($leg['driver_id'] ?? 0) === $driverId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function applyScheduleLegDriverFilter(Builder $q, int $driverId): void
+    {
+        $q->whereNotNull('schedule_assignments');
+        if (DB::getDriverName() === 'mysql') {
+            $q->whereRaw(
+                'JSON_SEARCH(schedule_assignments, \'one\', ?, NULL, \'$[*].driver_id\') IS NOT NULL',
+                [(string) $driverId]
+            );
+
+            return;
+        }
+
+        $needle = '"driver_id":'.$driverId;
+        $q->where(function (Builder $w) use ($needle, $driverId) {
+            $w->where('schedule_assignments', 'like', '%'.$needle.',%')
+                ->orWhere('schedule_assignments', 'like', '%'.$needle.'}%');
         });
     }
 }

@@ -28,6 +28,7 @@ class Trip extends Model
         'lock_version',
         'passenger_check_ins',
         'supplement_transports',
+        'schedule_assignments',
         'payment_status',
         'paid_at',
     ];
@@ -35,6 +36,7 @@ class Trip extends Model
     protected $casts = [
         'passenger_check_ins' => 'array',
         'supplement_transports' => 'array',
+        'schedule_assignments' => 'array',
         'depart_at' => 'datetime',
         'arrive_by' => 'datetime',
         'started_at' => 'datetime',

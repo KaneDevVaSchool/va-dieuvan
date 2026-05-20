@@ -441,7 +441,7 @@ watch(
   () => {
     const s = props.tripSnapshot
     if (!s?.tripId) return null
-    return `${s.tripId}:${s.lockVersion ?? 0}`
+    return `${s.tripId}:${s.lockVersion ?? 0}:${s.scheduleKey ?? ''}`
   },
   async (key, prevKey) => {
     if (key == null) return

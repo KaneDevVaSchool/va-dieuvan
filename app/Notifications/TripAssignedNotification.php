@@ -23,6 +23,7 @@ class TripAssignedNotification extends Notification implements ShouldQueue, Shou
         public string $destination,
         public string $departAt,
         public bool $isUrgent = false,
+        public ?string $scheduleKey = null,
     ) {
         $this->onQueue(
             $this->isUrgent
@@ -67,6 +68,7 @@ class TripAssignedNotification extends Notification implements ShouldQueue, Shou
             'event' => 'trip.assigned',
             'is_urgent' => $this->isUrgent,
             'url' => '/driver/trips/'.$this->tripId,
+            'schedule_key' => $this->scheduleKey,
         ];
     }
 
