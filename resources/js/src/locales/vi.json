@@ -653,7 +653,9 @@
         },
         "extracurricular_create": {
             "sec_schedule": "Lịch định kỳ",
-            "weekdays_required_hint": "Chọn ít nhất một thứ trước khi sang bước Chi tiết.",
+            "sec_route": "Tuyến đón / trả",
+            "route_lead": "Giờ chuyến theo lịch định kỳ phía trên.",
+            "weekdays_required_hint": "Chọn ít nhất một thứ trong tuần.",
             "next_route_step": "Bước tiếp: điểm đón / trả",
             "step_detail_lead": "Giờ chuyến theo lịch định kỳ ở bước trước. Nhập điểm đón, điểm trả và số học sinh.",
             "summary_schedule": "Bắt đầu {start} · {times} · {days} · kết thúc {end}",
@@ -667,7 +669,7 @@
             "blocker_end_date": "Chọn ngày kết thúc hoặc số tuần lặp",
             "blocker_repeat_weeks": "Nhập số tuần lặp (ít nhất 1)",
             "blocker_weekdays": "Chọn ít nhất một thứ trong tuần",
-            "blocker_route": "Nhập điểm đón và điểm trả ở bước Chi tiết",
+            "blocker_route": "Nhập điểm đón và điểm trả",
             "blocker_schedule": "Hoàn thiện thông tin chuyến (đón/trả) trước khi gửi"
         },
         "home_sidebar_title": "Tài khoản",

@@ -65,12 +65,30 @@ export function useDispatchRequestWizard(options = {}) {
   const auth = useAuthStore()
   const { t, locale } = useI18n()
 
-  const steps = computed(() => [
-    { id: 'type', title: t('dispatch_wizard.steps.type') },
-    { id: 'info', title: t('dispatch_wizard.steps.info') },
-    { id: 'detail', title: t('dispatch_wizard.steps.detail') },
-    { id: 'confirm', title: t('dispatch_wizard.steps.confirm') },
-  ])
+  const steps = computed(() => {
+    const all = [
+      { id: 'type', title: t('dispatch_wizard.steps.type') },
+      { id: 'info', title: t('dispatch_wizard.steps.info') },
+      { id: 'detail', title: t('dispatch_wizard.steps.detail') },
+      { id: 'confirm', title: t('dispatch_wizard.steps.confirm') },
+    ]
+    if (portalExtracurricularCreate) {
+      return all.filter((s) => s.id !== 'type' && s.id !== 'detail')
+    }
+    return all
+  })
+
+  const stepperCurrent = computed(() => {
+    if (!portalExtracurricularCreate) return step.value
+    if (step.value >= 3) return 1
+    return 0
+  })
+
+  const stepperMaxReached = computed(() => {
+    if (!portalExtracurricularCreate) return maxReachedStep.value
+    if (maxReachedStep.value >= 3) return 1
+    return 0
+  })
   const targetOptions = TARGET_OPTIONS
   const e1WeekdayOptions = computed(() =>
     E1_WEEKDAY_KEYS.map((k) => ({ k, label: t(`dispatch_wizard.weekday.${k}`) })),
@@ -1056,7 +1074,20 @@ export function useDispatchRequestWizard(options = {}) {
         !!form.value.purpose?.trim() &&
         (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
       if (wantsRecurringTemplate.value) {
-        return base && recurringStep1Complete()
+        const scheduleOk = base && recurringStep1Complete()
+        if (portalExtracurricularCreate) {
+          return (
+            scheduleOk &&
+            recurringStep2Complete() &&
+            !!computedDepartAt.value?.trim() &&
+            passengerRows.value.every(
+              (r) =>
+                !isPassengerRouteFilled(r) ||
+                Object.keys(scheduleRowErrors(r, 'passenger')).length === 0,
+            )
+          )
+        }
+        return scheduleOk
       }
       return (
         base &&
@@ -1090,7 +1121,26 @@ export function useDispatchRequestWizard(options = {}) {
   })
 
   function goStep(i) {
-    if (i <= maxReachedStep.value) step.value = i
+    let target = Number(i)
+    if (portalExtracurricularCreate && target === 2) target = 1
+    if (target <= maxReachedStep.value) step.value = target
+  }
+
+  function goStepFromStepper(stepperIndex) {
+    if (!portalExtracurricularCreate) {
+      goStep(stepperIndex)
+      return
+    }
+    enterStep(stepperIndex === 0 ? 1 : 3)
+  }
+
+  function prevStep() {
+    if (portalExtracurricularCreate) {
+      if (step.value === 3) step.value = 1
+      else if (step.value > 0) step.value--
+      return
+    }
+    if (step.value > 0) step.value--
   }
 
   /** Nhảy tới bước (vd. CLB bỏ qua chọn loại); cập nhật maxReachedStep để goStep(1) không bị chặn. */
@@ -1107,10 +1157,15 @@ export function useDispatchRequestWizard(options = {}) {
     form.value.point_purpose_kind = 'extracurricular'
     form.value.recurring_enabled = true
     if (step.value === 0) enterStep(1)
+    if (step.value === 2) step.value = 1
   }
 
   function nextStep() {
     if (!canGoNext.value) return
+    if (portalExtracurricularCreate && step.value === 1) {
+      step.value = 3
+      return
+    }
     if (step.value < 3) step.value++
   }
 
@@ -1271,8 +1326,6 @@ export function useDispatchRequestWizard(options = {}) {
         const n = Number(f.recurrence_repeat_count)
         if (!Number.isFinite(n) || n < 1) blockers.push(t('portal.extracurricular_create.blocker_repeat_weeks'))
       }
-    }
-    if (step.value === 2) {
       if (!recurringHasWeekday()) blockers.push(t('portal.extracurricular_create.blocker_weekdays'))
       if (!passengerRows.value.some(isPassengerRouteFilled)) {
         blockers.push(t('portal.extracurricular_create.blocker_route'))
@@ -2009,6 +2062,10 @@ export function useDispatchRequestWizard(options = {}) {
   watch(
     step,
     (s) => {
+      if (portalExtracurricularCreate && s === 2) {
+        step.value = 1
+        return
+      }
       if (s > maxReachedStep.value) maxReachedStep.value = s
       if (s !== 2) detailStepSchedulesValid.value = true
     },
@@ -2048,6 +2105,10 @@ export function useDispatchRequestWizard(options = {}) {
     steps,
     step,
     maxReachedStep,
+    stepperCurrent,
+    stepperMaxReached,
+    goStepFromStepper,
+    prevStep,
     loading,
     error,
     created,

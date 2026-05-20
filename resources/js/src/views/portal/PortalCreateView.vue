@@ -147,11 +147,11 @@
 
     <PortalStepper
       :steps="stepperSteps"
-      :current="step"
+      :current="stepperCurrent"
       :steps-nav-label="t('portal.steps_nav')"
       interactive
-      :max-reached-step="maxReachedStep"
-      @select="goStep"
+      :max-reached-step="stepperMaxReached"
+      @select="goStepFromStepper"
     />
 
     <div>
@@ -198,8 +198,43 @@
               :weekdays="form.e1_weekdays"
               end-mode-radio-name="portal_recurrence_end_mode"
               @toggle-weekday="toggleE1Weekday"
-              @go-schedule-step="enterStep(2)"
             />
+          </section>
+
+          <section v-if="isExtracurricularCreate" class="dw-fieldset space-y-4">
+            <h3 class="dw-section-title">{{ t('portal.extracurricular_create.sec_route') }}</h3>
+            <p class="text-sm text-slate-600">{{ t('portal.extracurricular_create.route_lead') }}</p>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <label class="block sm:col-span-2">
+                <span class="dw-label-text">{{ t('dispatch_wizard.s3.place') }} ({{ t('dispatch_wizard.s3.trip_out') }}) <span class="dw-req" aria-hidden="true">*</span></span>
+                <input
+                  v-model="passengerRows[0].pickup"
+                  type="text"
+                  class="dw-input mt-1"
+                  :placeholder="t('dispatch_wizard.s3.pickup_ph')"
+                />
+              </label>
+              <label class="block sm:col-span-2">
+                <span class="dw-label-text">{{ t('dispatch_wizard.s3.place') }} ({{ t('dispatch_wizard.s3.trip_back') }}) <span class="dw-req" aria-hidden="true">*</span></span>
+                <input
+                  v-model="passengerRows[0].dropoff"
+                  type="text"
+                  class="dw-input mt-1"
+                  :placeholder="t('dispatch_wizard.s3.dropoff_ph')"
+                />
+              </label>
+              <label class="block">
+                <span class="dw-label-text">{{ t('dispatch_wizard.s3.guests') }} <span class="dw-req" aria-hidden="true">*</span></span>
+                <input
+                  v-model="passengerRows[0].guests"
+                  type="number"
+                  min="1"
+                  inputmode="numeric"
+                  class="dw-input mt-1"
+                  :placeholder="t('dispatch_wizard.s3.guests_ph')"
+                />
+              </label>
+            </div>
           </section>
 
           <!-- Người đề nghị (+ Thời gian chỉ phiếu lẻ trên portal chung) -->
@@ -629,7 +664,7 @@
         </div>
 
         <!-- Step 3 — lazy chunk + chỉ mount khi step === 2 -->
-        <DispatchWizardStep3 v-if="step === 2" />
+        <DispatchWizardStep3 v-if="step === 2 && !isExtracurricularCreate" />
 
         <!-- Step 4 -->
         <ConfirmSummary v-if="step === 3" />
@@ -642,8 +677,8 @@
           <button
             type="button"
             class="rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
-            :disabled="step === 0"
-            @click="step--"
+            :disabled="step === 0 || (isExtracurricularCreate && step === 1)"
+            @click="prevStep"
           >
             {{ t('dispatch_wizard.create.back') }}
           </button>
@@ -1199,6 +1234,9 @@ const {
   steps,
   step,
   maxReachedStep,
+  stepperCurrent,
+  stepperMaxReached,
+  passengerRows,
   loading,
   error,
   created,
@@ -1260,7 +1298,9 @@ const {
   appliedUrgentThresholdHours,
   canGoNext,
   goStep,
+  goStepFromStepper,
   enterStep,
+  prevStep,
   nextStep,
   headerPrimaryLabel,
   headerPrimaryDisabled,

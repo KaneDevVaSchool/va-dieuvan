@@ -11,10 +11,10 @@ Tài liệu nghiệp vụ cho stakeholder. Phiên bản đồng bộ với tri�
 ## Luồng tạo (thứ tự trên UI)
 
 1. **Lịch định kỳ** — ngày bắt đầu, giờ đi/về, thứ trong tuần, kết thúc chuỗi (không có ngày đề xuất / ngày cần xe lẻ).
-2. **Người đề nghị** — thông tin liên hệ.
-3. **Mục đích & căn cứ** — mô tả và file (nếu có).
-4. **Chi tiết** — điểm đón/trả, số HS (giờ lấy từ lịch).
-5. **Xác nhận** — tóm tắt lịch + gửi mẫu định kỳ.
+2. **Tuyến** — điểm đón, điểm trả, số học sinh (giờ lấy từ lịch).
+3. **Người đề nghị** — thông tin liên hệ.
+4. **Mục đích & căn cứ** — mô tả và file (nếu có).
+5. **Xác nhận** — tóm tắt lịch + gửi mẫu định kỳ (không có bước «Chi tiết» riêng trên UI).
 
 Gợi ý khi nút bị khóa: danh sách thiếu sót hiển thị cạnh nút «Tiếp tục» / «Gửi».
 2. Người đề xuất xác nhận → hệ thống tạo **mẫu** + **chuyến đầu** + **materialize** các chuyến còn lại trong chuỗi.

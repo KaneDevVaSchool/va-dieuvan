@@ -610,7 +610,9 @@
         },
         "extracurricular_create": {
             "sec_schedule": "Recurring schedule",
-            "weekdays_required_hint": "Select at least one weekday before the Details step.",
+            "sec_route": "Pickup / drop-off",
+            "route_lead": "Trip times follow the recurring schedule above.",
+            "weekdays_required_hint": "Select at least one weekday.",
             "next_route_step": "Next: pickup / drop-off",
             "step_detail_lead": "Trip times come from the recurring schedule above. Enter pickup, drop-off, and passenger count.",
             "summary_schedule": "Starts {start} · {times} · {days} · ends {end}",
@@ -624,7 +626,7 @@
             "blocker_end_date": "Select end date or number of weeks",
             "blocker_repeat_weeks": "Enter number of weeks (at least 1)",
             "blocker_weekdays": "Select at least one weekday",
-            "blocker_route": "Enter pickup and drop-off on the Details step",
+            "blocker_route": "Enter pickup and drop-off",
             "blocker_schedule": "Complete trip route details before submitting"
         },
         "home_sidebar_title": "Account",

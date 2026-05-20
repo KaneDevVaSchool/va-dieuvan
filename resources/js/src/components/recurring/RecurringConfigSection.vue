@@ -75,16 +75,7 @@
             </p>
           </div>
           <button
-            v-if="fixedEnabled"
-            type="button"
-            class="inline-flex items-center gap-1 text-sm font-medium text-teal-800 hover:text-teal-950"
-            @click="$emit('goScheduleStep')"
-          >
-            {{ t('portal.extracurricular_create.next_route_step') }}
-            <span aria-hidden="true">→</span>
-          </button>
-          <button
-            v-else
+            v-if="!fixedEnabled"
             type="button"
             class="inline-flex items-center gap-1 text-sm font-medium text-teal-800 hover:text-teal-950"
             @click="$emit('goScheduleStep')"
