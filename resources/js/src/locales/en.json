@@ -76,6 +76,7 @@
         "costs": "Costs",
         "cargo": "Cargo",
         "routes": "D2D routes",
+        "p2p_policy": "P2P Policy",
         "resources": "Resource management",
         "resources_overview": "Resources",
         "payments": "Reconciliation & payments",

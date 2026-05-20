@@ -51,7 +51,13 @@ export const NAV_SECTIONS = [
         featureKey: 'module.operations',
       },
       { to: `${DISPATCH_WEB_BASE}/routes`, labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.d2d_routes' },
-      { to: `${DISPATCH_WEB_BASE}/p2p-policy`, labelKey: 'nav.p2p_policy', icon: 'routes', featureKey: 'module.p2p_policy' },
+      {
+        to: `${DISPATCH_WEB_BASE}/p2p-policy`,
+        labelKey: 'nav.p2p_policy',
+        icon: 'routes',
+        featureKey: 'module.operations',
+        navAccess: 'p2p_policy',
+      },
       {
         to: `${DISPATCH_WEB_BASE}/resources/list`,
         labelKey: 'nav.resources',
