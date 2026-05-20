@@ -54,7 +54,10 @@ class StoreDispatchRequestTemplateRequest extends CreateDispatchRequestRequest
             }
 
             $snap = $this->input('wizard_snapshot');
-            if (! is_array($snap) || (($snap['point_purpose_kind'] ?? null) !== 'extracurricular')) {
+            $purposeKind = is_array($snap)
+                ? (data_get($snap, 'form.point_purpose_kind') ?? data_get($snap, 'point_purpose_kind'))
+                : null;
+            if ($purposeKind !== 'extracurricular') {
                 $v->errors()->add('wizard_snapshot', Messages::REQUEST_RECURRING_TEMPLATE_EXTRACURRICULAR_ONLY);
             }
 
