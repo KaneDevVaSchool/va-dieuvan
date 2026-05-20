@@ -21,9 +21,41 @@
     <P2pPolicyWorkflowBar current-step="routes" :term-id="workflowTermId" />
 
     <form @submit.prevent="create">
-      <Card :hint="t('p2p_policy_page.tip_section_routes_create')">
-        <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_routes_create') }}</h2>
-        <div class="grid gap-5 sm:grid-cols-2">
+      <details
+        class="group overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03] transition-shadow duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/80 dark:ring-white/5"
+      >
+        <summary
+          class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40 [&::-webkit-details-marker]:hidden"
+          :aria-label="t('p2p_policy_page.routes_quick_create_toggle')"
+        >
+          <ChevronDownIcon
+            class="h-5 w-5 shrink-0 text-teal-700 transition-transform duration-200 group-open:rotate-180 dark:text-teal-400"
+            aria-hidden="true"
+          />
+          <div class="min-w-0 flex-1 text-left">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white sm:text-xl">
+              {{ t('p2p_policy_page.section_routes_create') }}
+            </h2>
+            <p class="mt-0.5 text-xs leading-snug text-slate-500 group-open:hidden dark:text-slate-400">
+              {{ t('p2p_policy_page.routes_quick_create_collapsed_hint') }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 rounded-md p-1.5 text-slate-400 outline-none ring-offset-2 transition hover:bg-slate-100 hover:text-teal-600 focus-visible:ring-2 focus-visible:ring-teal-500 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-teal-400"
+            :title="t('p2p_policy_page.tip_section_routes_create')"
+            :aria-label="t('p2p_policy_page.tip_section_routes_create')"
+            @click.prevent.stop
+          >
+            <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+          </button>
+        </summary>
+
+        <div class="border-t border-slate-200/90 px-4 pb-4 pt-4 dark:border-slate-700">
+          <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">
+            {{ t('p2p_policy_page.tip_section_routes_create') }}
+          </p>
+          <div class="grid gap-5 sm:grid-cols-2">
           <div class="sm:col-span-2">
             <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_p2p_term')" :hint="t('p2p_policy_page.tip_p2p_term')" required />
             <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -76,7 +108,8 @@
         <button type="submit" class="mt-5 rounded-xl bg-va-800 px-6 py-3 text-base font-semibold text-white hover:bg-va-900">
           {{ t('p2p_policy_page.add_route') }}
         </button>
-      </Card>
+        </div>
+      </details>
     </form>
 
     <section class="space-y-3" aria-labelledby="p2p-routes-list-heading">
@@ -477,7 +510,6 @@ import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import P2pPolicyFieldLabel from '../../components/p2pPolicy/P2pPolicyFieldLabel.vue'
 import P2pPolicyWorkflowBar from '../../components/p2pPolicy/P2pPolicyWorkflowBar.vue'
-import Card from '../../components/ui/Card.vue'
 import {
   P2P_ROUTES_DEFAULT_PER_PAGE,
   P2P_ROUTES_PER_PAGE_OPTIONS,
@@ -499,7 +531,7 @@ import {
   p2pWorkflowQuery,
   resolveP2pTermIdFromRoute,
 } from '../../composables/useP2pPolicyWorkflow'
-import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon, InformationCircleIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()

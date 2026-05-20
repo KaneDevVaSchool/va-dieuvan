@@ -3786,6 +3786,8 @@
         "routes_subtitle": "Create campus routes and assign vehicle and driver for each route in the shuttle term.",
         "section_routes_create": "Quick create route",
         "section_routes_list": "Route list",
+        "routes_quick_create_collapsed_hint": "Click to expand the new route form.",
+        "routes_quick_create_toggle": "Expand or collapse quick create route",
         "tip_section_routes_create": "Pick a draft shuttle term, origin/destination campus, and a recognizable route name.",
         "tip_section_routes_list": "Filter by shuttle term; assign primary vehicle and driver per route.",
         "field_p2p_term": "Shuttle term",

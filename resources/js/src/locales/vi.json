@@ -3872,6 +3872,8 @@
         "routes_subtitle": "Tạo tuyến theo campus và gán xe, tài xế cho từng tuyến trong kỳ P2P.",
         "section_routes_create": "Tạo tuyến nhanh",
         "section_routes_list": "Danh sách tuyến",
+        "routes_quick_create_collapsed_hint": "Bấm để mở form thêm tuyến mới.",
+        "routes_quick_create_toggle": "Mở hoặc thu gọn form tạo tuyến nhanh",
         "tip_section_routes_create": "Chọn kỳ P2P (trạng thái nháp), campus đi/đến và tên tuyến dễ nhận biết.",
         "tip_section_routes_list": "Lọc theo kỳ P2P; gán xe và tài xế chính cho từng tuyến.",
         "field_p2p_term": "Kỳ trung chuyển",
