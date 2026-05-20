@@ -1,37 +1,49 @@
 <template>
   <div class="space-y-3">
-    <details
+    <section
       v-for="group in grouped"
       :key="group.key"
-      class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-      :open="group.defaultOpen"
+      class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
     >
-      <summary
-        class="flex cursor-pointer list-none items-center justify-between gap-3 bg-indigo-50/70 px-4 py-3 text-sm font-semibold text-indigo-950 transition hover:bg-indigo-50 [&::-webkit-details-marker]:hidden"
+      <div
+        class="flex items-center justify-between gap-3 bg-indigo-50/70 px-4 py-3 text-sm font-semibold text-indigo-950"
       >
-        <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left transition hover:bg-indigo-50/80 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+          :aria-expanded="isGroupOpen(group.key)"
+          :aria-label="t('portal.extracurricular_list.collapse_hint')"
+          @click="toggleGroup(group.key)"
+        >
           <ChevronRightIcon
-            class="h-4 w-4 shrink-0 text-indigo-600 transition group-open:rotate-90"
+            class="h-4 w-4 shrink-0 text-indigo-600 transition"
+            :class="{ 'rotate-90': isGroupOpen(group.key) }"
             aria-hidden="true"
           />
-          <template v-if="props.groupBy === 'plan' && editingTemplateId === templateIdForGroup(group)">
-            <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2" @click.stop @mousedown.stop>
+          <span class="truncate">{{ group.label }}</span>
+        </button>
+
+        <div
+          v-if="props.groupBy === 'plan'"
+          class="flex min-w-0 max-w-[min(100%,28rem)] flex-1 flex-wrap items-center justify-end gap-2"
+          @click.stop
+        >
+          <template v-if="editingTemplateId === templateIdForGroup(group)">
             <input
-              ref="planLabelInputRef"
+              :ref="setPlanLabelInputRef"
               v-model="planLabelDraft"
               type="text"
               maxlength="255"
-              class="min-w-0 flex-1 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-sm font-semibold text-indigo-950 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+              class="min-w-[8rem] flex-1 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-sm font-semibold text-indigo-950 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               :aria-label="t('portal.extracurricular_list.plan_name_edit_label')"
               @keydown.enter.prevent="savePlanLabel(group)"
               @keydown.escape.prevent="cancelPlanLabelEdit"
-              @click.stop
             />
             <button
               type="button"
               class="shrink-0 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
               :disabled="planLabelSaving"
-              @click.stop.prevent="savePlanLabel(group)"
+              @click="savePlanLabel(group)"
             >
               {{ planLabelSaving ? t('portal.extracurricular_list.plan_name_save_busy') : t('portal.extracurricular_list.plan_name_save') }}
             </button>
@@ -39,41 +51,42 @@
               type="button"
               class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-indigo-800 hover:bg-indigo-100/80"
               :disabled="planLabelSaving"
-              @click.stop.prevent="cancelPlanLabelEdit"
+              @click="cancelPlanLabelEdit"
             >
               {{ t('portal.extracurricular_list.plan_name_cancel') }}
             </button>
-            </span>
           </template>
-          <template v-else>
-            <span class="truncate">{{ group.label }}</span>
-            <button
-              v-if="props.groupBy === 'plan' && templateIdForGroup(group)"
-              type="button"
-              class="shrink-0 rounded-md p-1 text-indigo-700 hover:bg-indigo-100/80"
-              :title="t('portal.extracurricular_list.plan_name_edit')"
-              :aria-label="t('portal.extracurricular_list.plan_name_edit')"
-              @click.stop.prevent="startPlanLabelEdit(group)"
-            >
-              <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
-            </button>
-          </template>
+          <button
+            v-else-if="templateIdForGroup(group)"
+            type="button"
+            class="shrink-0 rounded-md p-1.5 text-indigo-700 hover:bg-indigo-100/80"
+            :title="t('portal.extracurricular_list.plan_name_edit')"
+            :aria-label="t('portal.extracurricular_list.plan_name_edit')"
+            @click="startPlanLabelEdit(group)"
+          >
+            <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
+          </button>
           <p
             v-if="planLabelError && editingTemplateId === templateIdForGroup(group)"
-            class="w-full basis-full text-xs font-normal text-red-700"
+            class="w-full text-xs font-normal text-red-700"
           >
             {{ planLabelError }}
           </p>
-        </span>
-        <span class="shrink-0 text-xs font-medium text-indigo-800/90">
+        </div>
+
+        <button
+          type="button"
+          class="shrink-0 text-xs font-medium text-indigo-800/90 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500/30 rounded"
+          @click="toggleGroup(group.key)"
+        >
           {{ t('portal.extracurricular_list.group_summary', { count: group.items.length }) }}
           <span v-if="group.pendingHs > 0" class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">
             {{ group.pendingHs }} {{ t('portal.extracurricular_list.pending_hs_short') }}
           </span>
-        </span>
-      </summary>
+        </button>
+      </div>
 
-      <div class="hidden border-t border-slate-100 md:block">
+      <div v-show="isGroupOpen(group.key)" class="hidden border-t border-slate-100 md:block">
         <table class="min-w-full text-left text-sm">
           <thead class="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
             <tr>
@@ -140,7 +153,7 @@
         </table>
       </div>
 
-      <div class="space-y-3 border-t border-slate-100 p-3 md:hidden">
+      <div v-show="isGroupOpen(group.key)" class="space-y-3 border-t border-slate-100 p-3 md:hidden">
         <article
           v-for="req in group.items"
           :key="'m-' + req.id"
@@ -186,12 +199,12 @@
           </div>
         </article>
       </div>
-    </details>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronRightIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
@@ -269,6 +282,32 @@ const grouped = computed(() => {
   return arr
 })
 
+const openGroupKeys = ref(new Set())
+
+function isGroupOpen(key) {
+  return openGroupKeys.value.has(key)
+}
+
+function toggleGroup(key) {
+  const next = new Set(openGroupKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  openGroupKeys.value = next
+}
+
+watch(
+  grouped,
+  (arr) => {
+    const next = new Set(openGroupKeys.value)
+    for (const g of arr) {
+      if (g.defaultOpen) next.add(g.key)
+    }
+    if (!next.size && arr.length) next.add(arr[0].key)
+    openGroupKeys.value = next
+  },
+  { immediate: true },
+)
+
 function openDetail(req) {
   router.push({ name: props.detailRouteName, params: { id: String(req.id) } })
 }
@@ -309,13 +348,29 @@ function rawPlanLabelFromReq(req) {
 function startPlanLabelEdit(group) {
   const tid = templateIdForGroup(group)
   if (!tid) return
+  const next = new Set(openGroupKeys.value)
+  next.add(group.key)
+  openGroupKeys.value = next
   planLabelError.value = ''
   editingTemplateId.value = tid
   const raw =
     group?.items?.map((r) => rawPlanLabelFromReq(r)).find((s) => s) ||
     (group.label === t('portal.recurring_plan.plan_name_unnamed') ? '' : String(group.label || '').trim())
   planLabelDraft.value = raw
-  nextTick(() => planLabelInputRef.value?.focus())
+  focusPlanLabelInput()
+}
+
+function setPlanLabelInputRef(el) {
+  planLabelInputRef.value = el
+}
+
+function focusPlanLabelInput() {
+  nextTick(() => {
+    const el = planLabelInputRef.value
+    if (el && typeof el.focus === 'function') {
+      el.focus()
+    }
+  })
 }
 
 function cancelPlanLabelEdit() {
