@@ -31,10 +31,12 @@ class DispatchRecurringMaintenanceService
 
         $cursorEnd = $now->copy()->addDays($horizonDays)->endOfDay();
 
-        $untilDay = $cursorEnd->copy();
         $ruleEndDay = $template->effectiveRecurrenceEndDay($timezone);
-        if ($ruleEndDay !== null && $ruleEndDay->lt($untilDay)) {
+        // Chuỗi có ngày/kết thúc cố định (vd. lặp 4 tuần): sinh đủ tới hết chuỗi, không cắt bởi horizon 21 ngày.
+        if ($ruleEndDay !== null) {
             $untilDay = $ruleEndDay;
+        } else {
+            $untilDay = $cursorEnd->copy();
         }
 
         /** @phpstan-ignore-next-line */

@@ -13,6 +13,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
+use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
 use App\Support\Messages;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
@@ -159,6 +160,9 @@ class DispatchRequestTemplateController extends Controller
 
             return [$template, $dispatchRequest];
         });
+
+        $template->refresh();
+        app(DispatchRecurringMaintenanceService::class)->materializeForTemplate($template);
 
         if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
             $recipients = User::query()
