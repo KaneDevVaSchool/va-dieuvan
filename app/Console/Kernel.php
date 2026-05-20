@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('dispatch:materialize-recurring-requests')->hourly();
         $schedule->command('route:generate-daily-trips')->dailyAt('22:00');
         $schedule->command('policy:materialize-trips')->dailyAt('22:05');
+        $schedule->command('policy:send-depart-reminders')->everyFiveMinutes();
         $schedule->command('dispatch:remind-dept-approvals')->dailyAt('08:00');
     }
 

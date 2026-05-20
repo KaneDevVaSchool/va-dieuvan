@@ -301,7 +301,23 @@ class OperationalResourceController extends Controller
 
     public function updateDriver(UpdateDriverRequest $request, Driver $driver)
     {
-        $driver->fill($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('email', $data)) {
+            $email = $data['email'];
+            unset($data['email']);
+            if ($driver->user_id) {
+                $user = $driver->user()->first();
+                if ($user) {
+                    $user->email = $email;
+                    $user->save();
+                }
+            } else {
+                $driver->email = $email;
+            }
+        }
+
+        $driver->fill($data);
         $driver->save();
         $driver->load(['user:id,name,email,phone,employee_code,avatar_url']);
 
@@ -506,6 +522,7 @@ class OperationalResourceController extends Controller
             'id' => $d->id,
             'full_name' => $d->full_name,
             'phone' => $d->phone,
+            'email' => $d->user?->email ?? $d->email,
             'license_class' => $d->license_class,
             'license_expires_at' => $d->license_expires_at?->format('Y-m-d'),
             'employment_status' => $d->employment_status,

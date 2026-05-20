@@ -148,6 +148,7 @@ class P2pPolicyTripMaterializer
                 'driver_id' => $route->driver_id,
                 'dispatcher_id' => $activatorUserId,
                 'actor_id' => $activatorUserId,
+                'suppress_assignment_notifications' => true,
             ]);
 
             PolicyTripSlot::create([

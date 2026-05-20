@@ -111,7 +111,7 @@ class DispatchingService
                 ],
             );
 
-            if ($allAssigned) {
+            if ($allAssigned && empty($payload['suppress_assignment_notifications'])) {
                 $this->notifyAssignedDrivers($trip, $assignments, $defsByKey);
             }
 

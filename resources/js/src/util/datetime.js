@@ -52,6 +52,25 @@ export function formatIsoDate(iso, locale = 'vi') {
   })
 }
 
+/**
+ * Ngày giờ ISO từ API.
+ * @param {string | null | undefined} iso
+ * @param {'vi' | 'en'} [locale]
+ */
+export function formatIsoDateTime(iso, locale = 'vi') {
+  if (iso == null || iso === '') return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  const loc = locale === 'en' ? 'en-US' : 'vi-VN'
+  return d.toLocaleString(loc, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 /** @param {Date} d */
 export function toDatetimeLocalValue(d) {
   const pad = (n) => String(n).padStart(2, '0')

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\P2pPolicy\P2pPolicyTermController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyGenerationRunController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyRouteController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyStudentController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyTripSlotController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
 use App\Http\Controllers\Api\Operational\DriverWorkloadController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
@@ -89,6 +90,7 @@ Route::prefix('p2p-policy')->middleware('permission:p2p_policy.view')->group(fun
     Route::get('/routes', [PolicyRouteController::class, 'index']);
     Route::get('/routes/{policyRoute}', [PolicyRouteController::class, 'show']);
     Route::get('/students', [PolicyStudentController::class, 'index']);
+    Route::get('/trip-slots', [PolicyTripSlotController::class, 'index']);
     Route::get('/students/export', [PolicyStudentController::class, 'export'])->middleware('permission:p2p_policy.import_export');
     Route::get('/students/import-template', [PolicyStudentController::class, 'importTemplate'])->middleware('permission:p2p_policy.import_export');
     Route::get('/generation-runs', [PolicyGenerationRunController::class, 'index']);

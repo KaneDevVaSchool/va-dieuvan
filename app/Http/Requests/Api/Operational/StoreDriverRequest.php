@@ -14,7 +14,7 @@ class StoreDriverRequest extends ApiFormRequest
 
     protected function prepareForValidation(): void
     {
-        foreach (['phone', 'national_id', 'license_class', 'license_expires_at'] as $k) {
+        foreach (['phone', 'email', 'national_id', 'license_class', 'license_expires_at'] as $k) {
             if ($this->has($k) && $this->input($k) === '') {
                 $this->merge([$k => null]);
             }
@@ -26,6 +26,7 @@ class StoreDriverRequest extends ApiFormRequest
         return [
             'full_name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:64'],
+            'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('drivers', 'email')],
             'national_id' => ['nullable', 'string', 'max:32'],
             'license_class' => ['nullable', 'string', 'max:32'],
             'license_expires_at' => ['nullable', 'date'],

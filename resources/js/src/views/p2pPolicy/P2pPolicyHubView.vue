@@ -305,6 +305,7 @@ import {
   SparklesIcon,
   Squares2X2Icon,
   SunIcon,
+  TruckIcon,
   UsersIcon,
 } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
@@ -364,6 +365,15 @@ const cards = computed(() => [
     iconClass: 'text-emerald-600 dark:text-emerald-400',
     cardClass:
       'border-emerald-200/90 from-emerald-50/95 to-white ring-emerald-900/[0.06] hover:border-emerald-300 dark:border-emerald-800/55 dark:from-emerald-950/35 dark:to-slate-900/85 dark:ring-emerald-900/25 dark:hover:border-emerald-700',
+  },
+  {
+    to: p2pStepTo('p2pPolicyTrips', workflowTermId.value),
+    label: t('p2p_policy_page.nav_trips'),
+    hint: t('p2p_policy_page.nav_trips_hint'),
+    icon: markRaw(TruckIcon),
+    iconClass: 'text-amber-600 dark:text-amber-400',
+    cardClass:
+      'border-amber-200/90 from-amber-50/95 to-white ring-amber-900/[0.06] hover:border-amber-300 dark:border-amber-800/55 dark:from-amber-950/35 dark:to-slate-900/85 dark:ring-amber-900/25 dark:hover:border-amber-700',
   },
 ])
 

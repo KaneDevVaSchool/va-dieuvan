@@ -191,6 +191,17 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "p2p-policy/trips",
+        name: "p2pPolicyTrips",
+        component: () => import("../views/p2pPolicy/P2pPolicyTripsListView.vue"),
+        meta: {
+            title: "Danh sách chuyến P2P",
+            subtitle: "",
+            featureKey: "module.p2p_policy",
+            permission: "p2p_policy.view",
+        },
+    },
+    {
         path: "resources/dashboard",
         redirect: { name: "resources" },
     },

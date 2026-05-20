@@ -14,10 +14,12 @@ class PolicyTripSlot extends Model
         'leg',
         'dispatch_request_id',
         'trip_id',
+        'depart_reminder_sent_at',
     ];
 
     protected $casts = [
         'run_date' => 'date',
+        'depart_reminder_sent_at' => 'datetime',
     ];
 
     public function p2pPolicyTerm(): BelongsTo

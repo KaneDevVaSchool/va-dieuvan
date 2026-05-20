@@ -2268,6 +2268,17 @@
                   />
                 </div>
                 <div>
+                  <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-email">{{ t('resources.col_user_email') }}</label>
+                  <input
+                    id="ext-driver-email"
+                    v-model="externalDriverForm.email"
+                    type="email"
+                    autocomplete="email"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    :placeholder="t('driver_detail.ph_email')"
+                  />
+                </div>
+                <div>
                   <label class="block text-xs font-medium text-slate-600 dark:text-slate-400" for="ext-driver-nid">{{ t('driver_detail.national_id') }}</label>
                   <input
                     id="ext-driver-nid"
@@ -3261,6 +3272,7 @@ function emptyExternalDriverForm() {
   return {
     full_name: '',
     phone: '',
+    email: '',
     national_id: '',
     license_class: '',
     license_expires_at: '',
@@ -3813,7 +3825,7 @@ function enrichDriver(raw) {
   return {
     id: raw.id,
     name: raw.full_name,
-    email: raw.user?.email ?? '',
+    email: raw.email ?? raw.user?.email ?? '',
     employeeCode: raw.user?.employee_code ?? '',
     license: lic || '—',
     license_class: raw.license_class ?? '',
@@ -4747,6 +4759,7 @@ function buildExternalDriverPayload() {
   return {
     full_name: String(f.full_name || '').trim(),
     phone: trim(f.phone),
+    email: trim(f.email),
     national_id: trim(f.national_id),
     license_class: trim(f.license_class),
     license_expires_at: trim(f.license_expires_at),

@@ -62,7 +62,7 @@
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_user_email') }}</div>
-            <div class="mt-0.5 break-all">{{ driver.user?.email || '—' }}</div>
+            <div class="mt-0.5 break-all">{{ driverEmail || '—' }}</div>
           </div>
           <div>
             <div class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ t('resources.col_employee_code') }}</div>
@@ -104,6 +104,16 @@
               type="text"
               class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               :placeholder="t('driver_detail.ph_phone')"
+            />
+          </label>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
+            {{ t('resources.col_user_email') }}
+            <input
+              v-model="profileForm.email"
+              type="email"
+              autocomplete="email"
+              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              :placeholder="t('driver_detail.ph_email')"
             />
           </label>
           <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -516,6 +526,7 @@ const profileError = ref('')
 const profileForm = ref({
   full_name: '',
   phone: '',
+  email: '',
   national_id: '',
   license_class: '',
   license_expires_at: '',
@@ -569,11 +580,18 @@ const licenseLine = computed(() => {
   return parts.length ? parts.join(' — ') : '—'
 })
 
+const driverEmail = computed(() => {
+  const d = driver.value
+  if (!d || typeof d !== 'object') return ''
+  return d.email || d.user?.email || ''
+})
+
 function syncProfileForm() {
   const d = driver.value
   profileForm.value = {
     full_name: d.full_name || '',
     phone: d.phone || '',
+    email: driverEmail.value,
     national_id: d.national_id || '',
     license_class: d.license_class || '',
     license_expires_at: d.license_expires_at || '',
@@ -633,6 +651,7 @@ async function saveProfile() {
     driver.value = await updateDriver(id, {
       full_name: f.full_name.trim(),
       phone: f.phone?.trim() || null,
+      email: f.email?.trim() || null,
       national_id: f.national_id?.trim() || null,
       license_class: f.license_class?.trim() || null,
       license_expires_at: f.license_expires_at || null,

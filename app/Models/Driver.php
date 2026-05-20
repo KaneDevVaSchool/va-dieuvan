@@ -17,6 +17,7 @@ class Driver extends Model
         'user_id',
         'full_name',
         'phone',
+        'email',
         'national_id',
         'license_class',
         'license_expires_at',
