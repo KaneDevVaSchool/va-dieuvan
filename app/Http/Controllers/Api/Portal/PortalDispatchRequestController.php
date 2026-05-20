@@ -135,7 +135,7 @@ class PortalDispatchRequestController extends Controller
         $items = [];
         foreach ($paginator->items() as $dr) {
             /** @var DispatchRequest $dr */
-            $items[] = $this->presentDispatchRequest($dr);
+            $items[] = $this->presentDispatchRequest($dr, true);
         }
 
         return $this->ok([
@@ -163,7 +163,7 @@ class PortalDispatchRequestController extends Controller
             'attachments' => fn ($q) => $q->orderByDesc('id'),
         ]);
 
-        return $this->ok($this->presentDispatchRequest($dispatchRequest));
+        return $this->ok($this->presentDispatchRequest($dispatchRequest, true));
     }
 
     /** Tải chứng từ gắn phiếu — portal user chỉ được file thuộc phiếu của mình */
@@ -370,7 +370,7 @@ class PortalDispatchRequestController extends Controller
             );
         }
 
-        return $this->created($this->presentDispatchRequest($dispatchRequest));
+        return $this->created($this->presentDispatchRequest($dispatchRequest, true));
     }
 
     public function patchRecurringInstance(
@@ -428,7 +428,7 @@ class PortalDispatchRequestController extends Controller
             after: $dispatchRequest->fresh()->toArray(),
         );
 
-        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
+        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh(), true));
     }
 
     public function submitRecurringInstance(
@@ -477,7 +477,7 @@ class PortalDispatchRequestController extends Controller
         }
 
         return $this->ok([
-            'dispatch_request' => $this->presentDispatchRequest($fresh),
+            'dispatch_request' => $this->presentDispatchRequest($fresh, true),
         ]);
     }
 }

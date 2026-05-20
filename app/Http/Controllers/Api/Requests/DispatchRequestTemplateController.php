@@ -227,7 +227,7 @@ class DispatchRequestTemplateController extends Controller
 
         return $this->created([
             'dispatch_request_template_id' => $template->id,
-            'dispatch_request' => $this->presentDispatchRequest($dispatchRequest->fresh()),
+            'dispatch_request' => $this->presentDispatchRequest($dispatchRequest->fresh(), true),
         ]);
     }
 

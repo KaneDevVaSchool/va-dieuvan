@@ -11,9 +11,13 @@ trait PresentsDispatchRequest
     /**
      * @return array<string, mixed>
      */
-    protected function presentDispatchRequest(DispatchRequest $dispatchRequest): array
+    protected function presentDispatchRequest(DispatchRequest $dispatchRequest, bool $includeWizardSnapshot = false): array
     {
         $dispatchRequest->loadMissing('dispatchRequestTemplate.dispatchPackage');
+
+        if ($includeWizardSnapshot) {
+            $dispatchRequest->makeVisible(['wizard_snapshot']);
+        }
 
         $arr = $dispatchRequest->toArray();
         $arr['threshold_hours'] = DispatchSetting::urgentThresholdHoursForTripType((string) $dispatchRequest->trip_type);

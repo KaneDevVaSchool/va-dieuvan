@@ -70,6 +70,30 @@ class PortalRecurringInstanceTest extends TestCase
         $this->assertNotNull($dr->student_count_submitted_at);
     }
 
+    public function test_portal_patch_response_includes_wizard_snapshot_for_bm03(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $requester = User::factory()->create(['is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $dr = $this->recurringRequestFor($requester);
+
+        $this->actingAs($requester);
+
+        $this->patchJson("/api/portal/dispatch-requests/{$dr->id}/recurring-instance", [
+            'wizard_snapshot' => [
+                'form' => [
+                    'point_purpose_kind' => 'extracurricular',
+                    'purpose' => 'CLB bóng đá',
+                    'requester_name' => 'Nguyễn A',
+                ],
+            ],
+        ])->assertOk()
+            ->assertJsonPath('data.wizard_snapshot.form.purpose', 'CLB bóng đá')
+            ->assertJsonPath('data.wizard_snapshot.form.requester_name', 'Nguyễn A');
+    }
+
     public function test_portal_patch_rejected_within_24h_of_depart(): void
     {
         $this->seed(RbacSeeder::class);
