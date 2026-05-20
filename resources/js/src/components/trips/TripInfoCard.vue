@@ -33,8 +33,6 @@ const props = defineProps<{
     originLabel: string;
     destinationLabel: string;
     currentLabel: string;
-    embedMapSrc: string;
-    expandMap: () => void;
     /** Khi set, thay nhãn pill trạng thái (vd. «Đã từ chối» thay cho «Đã huỷ»). */
     statusLabelOverride?: string | null;
 }>();
@@ -268,6 +266,19 @@ const currentDotClass = computed(() => {
                 >
                     {{ estimatedDistanceLabel }}
                 </div>
+                <p
+                    v-if="
+                        trip.record?.distance_km != null &&
+                        trip.record.distance_km !== ''
+                    "
+                    class="mt-1 text-xs font-medium text-emerald-800 dark:text-emerald-300"
+                >
+                    {{
+                        t("trip_detail.route.recorded_km", {
+                            km: trip.record.distance_km,
+                        })
+                    }}
+                </p>
                 <div
                     class="mt-2 text-sm font-semibold tabular-nums text-slate-900"
                 >
@@ -339,58 +350,6 @@ const currentDotClass = computed(() => {
             </div>
         </div>
 
-        <!-- Map (trong tổng quan) -->
-        <div class="mt-6 border-t border-slate-100 pt-5 print:hidden">
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-                <h3
-                    class="text-xs font-bold uppercase tracking-wide text-slate-500"
-                >
-                    {{ t("trip_detail.route.map_title") }}
-                </h3>
-                <span
-                    v-if="
-                        trip.record?.distance_km != null &&
-                        trip.record.distance_km !== ''
-                    "
-                    class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                >
-                    {{
-                        t("trip_detail.route.recorded_km", {
-                            km: trip.record.distance_km,
-                        })
-                    }}
-                </span>
-            </div>
-            <div
-                class="relative mt-3 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800/50"
-            >
-                <div
-                    class="relative aspect-video w-full min-h-[200px] bg-slate-100 dark:bg-slate-800/80"
-                >
-                    <iframe
-                        v-if="embedMapSrc"
-                        :src="embedMapSrc"
-                        class="absolute inset-0 h-full w-full border-0"
-                        loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"
-                        :aria-label="t('trip_detail.route.map_title')"
-                    />
-                    <div
-                        v-else
-                        class="flex h-full min-h-[200px] items-center justify-center p-4 text-center text-sm text-slate-500"
-                    >
-                        {{ t("trip_detail.route.map_placeholder") }}
-                    </div>
-                </div>
-                <button
-                    type="button"
-                    class="absolute right-2 top-2 rounded-lg border border-slate-200/80 bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-100 dark:hover:bg-slate-900"
-                    @click="expandMap"
-                >
-                    {{ t("trip_detail.route.expand_map") }}
-                </button>
-            </div>
-        </div>
     </section>
 </template>
 

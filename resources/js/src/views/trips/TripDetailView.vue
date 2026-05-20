@@ -153,8 +153,6 @@
                             :origin-label="originLabel"
                             :destination-label="destinationLabel"
                             :current-label="currentLabel"
-                            :embed-map-src="embedMapSrc"
-                            :expand-map="expandTripMap"
                         />
                         <TripSchedulesPanel
                             v-if="scheduleCount > 0"
@@ -663,59 +661,6 @@
                 </div>
             </div>
 
-            <!-- Map modal -->
-            <Teleport to="body">
-                <div
-                    v-if="mapExpanded"
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
-                    role="dialog"
-                    aria-modal="true"
-                    @click.self="mapExpanded = false"
-                >
-                    <div
-                        class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
-                    >
-                        <div
-                            class="flex items-center justify-between border-b border-slate-100 px-4 py-3"
-                        >
-                            <span
-                                class="text-sm font-semibold text-slate-900"
-                                >{{
-                                    t("trip_detail.route.map_modal_title")
-                                }}</span
-                            >
-                            <button
-                                type="button"
-                                class="rounded-lg px-2 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100"
-                                @click="mapExpanded = false"
-                            >
-                                {{ t("trip_detail.route.close_map") }}
-                            </button>
-                        </div>
-                        <div class="relative min-h-[60vh] flex-1 bg-slate-100">
-                            <iframe
-                                v-if="embedMapSrc"
-                                :src="embedMapSrc"
-                                class="absolute inset-0 h-full w-full border-0"
-                                loading="lazy"
-                                :aria-label="t('trip_detail.route.map_title')"
-                            />
-                        </div>
-                        <div class="border-t border-slate-100 px-4 py-3">
-                            <a
-                                v-if="mapsHref"
-                                :href="mapsHref"
-                                target="_blank"
-                                rel="noopener"
-                                class="text-sm font-semibold text-sky-700 hover:underline"
-                            >
-                                {{ t("trip_detail.route.open_in_google_maps") }}
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </Teleport>
-
             <Teleport to="body">
                 <div
                     v-if="providerModalOpen"
@@ -1003,10 +948,6 @@ const TRIP_ASSIGN_CONFLICT_STATUSES = [
 ];
 const resourceHint = ref("");
 const attachInputRef = ref(null);
-const mapExpanded = ref(false);
-function expandTripMap() {
-    mapExpanded.value = true;
-}
 const coordinationNotes = ref("");
 const dispatchPanelRef = ref(null);
 const dispatchResources = ref(null);
@@ -1540,144 +1481,6 @@ const estimatedCostVnd = computed(() => {
 
     const total = extras + totalPass + totalBus + cargoCosts;
     return total > 0 ? total : null;
-});
-
-const mapLegCard = computed(() => {
-    const key = selectedScheduleKey.value || activeLegCard.value?.key;
-    return scheduleCards.value.find((c) => c.key === key) ?? activeLegCard.value;
-});
-
-const mapsHref = computed(() => {
-    const leg = mapLegCard.value;
-    const o = leg?.pickup?.trim() || originLabel.value;
-    const d = leg?.dropoff?.trim() || destinationLabel.value;
-    if (!o || !d || o === "—" || d === "—") return "";
-    const u = new URL("https://www.google.com/maps/dir/");
-    u.searchParams.set("api", "1");
-    u.searchParams.set("origin", o);
-    u.searchParams.set("destination", d);
-    return u.toString();
-});
-
-const embedMapSrc = computed(() => {
-    const leg = mapLegCard.value;
-    const oLeg = leg?.pickup?.trim();
-    const dLeg = leg?.dropoff?.trim();
-    if (oLeg && dLeg) {
-        return `https://maps.google.com/maps?q=${encodeURIComponent(`${oLeg} → ${dLeg}`)}&output=embed`;
-    }
-    const o = trip.value?.dispatch_request?.origin?.trim();
-    const d = trip.value?.dispatch_request?.destination?.trim();
-    if (o && d) {
-        return `https://maps.google.com/maps?q=${encodeURIComponent(`${o} → ${d}`)}&output=embed`;
-    }
-    const stops = routeStops.value;
-    if (stops.length >= 2) {
-        const first = stops[0].address;
-        const last = stops[stops.length - 1].address;
-        return `https://maps.google.com/maps?q=${encodeURIComponent(`${first} → ${last}`)}&output=embed`;
-    }
-    if (stops.length === 1) {
-        return `https://maps.google.com/maps?q=${encodeURIComponent(stops[0].address)}&output=embed`;
-    }
-    return "";
-});
-
-const routeStops = computed(() => {
-    const dr = trip.value?.dispatch_request;
-    const s = snap.value;
-    const out = [];
-
-    const pushAddr = (addr, kind, lines = []) => {
-        const tAddr = (addr ?? "").trim();
-        if (!tAddr) return;
-        const norm = lines.map((x) => String(x).trim()).filter(Boolean);
-        const last = out[out.length - 1];
-        if (last && last.address === tAddr) {
-            for (const ln of norm) {
-                if (!last.detailLines.includes(ln)) last.detailLines.push(ln);
-            }
-            if (kind === "pickup" || kind === "dropoff") last.kind = kind;
-            return;
-        }
-        out.push({ kind, address: tAddr, detailLines: [...norm] });
-    };
-
-    if (!dr) return out;
-
-    if (dr.trip_type === "cargo" && s?.cargoRows?.length) {
-        let i = 0;
-        for (const r of s.cargoRows) {
-            if (!isCargoRowFilled(r)) continue;
-            i += 1;
-            const label =
-                r.name?.trim() ||
-                t("trip_detail.passengers.cargo_item", { n: i });
-            const pickLines = [label];
-            if (r.pickup_contact?.trim())
-                pickLines.push(
-                    t("trip_detail.route.contact", {
-                        c: r.pickup_contact.trim(),
-                    }),
-                );
-            if (r.item_notes?.trim())
-                pickLines.push(r.item_notes.trim().slice(0, 100));
-            pushAddr(r.pickup_place || r.pickup_contact, "pickup", pickLines);
-            const dropLines = [label];
-            if (r.delivery_contact?.trim())
-                dropLines.push(
-                    t("trip_detail.route.contact", {
-                        c: r.delivery_contact.trim(),
-                    }),
-                );
-            if (r.transport_note?.trim())
-                dropLines.push(r.transport_note.trim().slice(0, 100));
-            pushAddr(
-                r.delivery_place || r.delivery_contact,
-                "dropoff",
-                dropLines,
-            );
-        }
-        if (!out.length) {
-            pushAddr(dr.origin, "pickup", []);
-            pushAddr(dr.destination, "dropoff", []);
-        }
-    } else {
-        let gidx = 0;
-        for (const r of s?.passengerRows ?? []) {
-            if (!isPassengerRowFilled(r)) continue;
-            gidx += 1;
-            const who =
-                r.person_in_charge?.trim() ||
-                t("trip_detail.passengers.guest", { n: gidx });
-            const base = [t("trip_detail.route.ctx_passenger", { name: who })];
-            if (r.notes?.trim()) base.push(r.notes.trim().slice(0, 120));
-            pushAddr(r.pickup, "pickup", base);
-            if (r.waypoint?.trim()) pushAddr(r.waypoint, "waypoint", [who]);
-            pushAddr(r.dropoff, "dropoff", base);
-        }
-        let bidx = 0;
-        for (const r of s?.businessRows ?? []) {
-            if (!isBusinessRowFilled(r)) continue;
-            bidx += 1;
-            const who = t("trip_detail.passengers.business_party", { n: bidx });
-            const base = [who];
-            if (r.notes?.trim()) base.push(r.notes.trim().slice(0, 120));
-            pushAddr(r.pickup, "pickup", base);
-            if (r.waypoint?.trim()) pushAddr(r.waypoint, "waypoint", [who]);
-            pushAddr(r.dropoff, "dropoff", base);
-        }
-        if (!out.length) {
-            pushAddr(dr.origin, "pickup", []);
-            pushAddr(dr.destination, "dropoff", []);
-        }
-    }
-
-    if (out.length >= 2) {
-        out[0].kind = "pickup";
-        out[out.length - 1].kind = "dropoff";
-    }
-    return out;
 });
 
 function inferRoleKind(tripType) {
