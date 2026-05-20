@@ -70,6 +70,16 @@ class PortalRecurringBm03GroupSyncService
 
             $sibling->update($rowUpdates);
             $this->copyProposalBasisIfPresent($source, $sibling, $source->requester_id);
+            $hasBasis = Attachment::query()
+                ->where('attachable_type', $sibling->getMorphClass())
+                ->where('attachable_id', $sibling->getKey())
+                ->where('kind', 'proposal_basis')
+                ->exists();
+            if (! $hasBasis && isset($form['basisFileName'])) {
+                unset($form['basisFileName']);
+                $snap['form'] = $form;
+                $sibling->update(['wizard_snapshot' => $snap]);
+            }
             $synced++;
         }
 

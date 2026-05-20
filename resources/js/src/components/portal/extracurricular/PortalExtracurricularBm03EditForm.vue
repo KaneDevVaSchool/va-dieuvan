@@ -270,6 +270,58 @@
             </label>
           </div>
           <div class="mt-4 grid gap-4 border-t border-slate-200 pt-4 sm:grid-cols-3">
+            <div class="relative sm:col-span-3">
+              <label class="block">
+                <span class="text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                  {{ t('portal.recurring_edit.bm03_fields.d2_coord_search') }}
+                </span>
+                <p class="mt-0.5 text-xs text-slate-500">{{ t('portal.recurring_edit.bm03_fields.d2_coord_search_hint') }}</p>
+                <input
+                  v-model="coordinatorSearchQ"
+                  type="search"
+                  autocomplete="off"
+                  role="combobox"
+                  :aria-expanded="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
+                  aria-controls="bm03-coordinator-search-list"
+                  :placeholder="t('dispatch_wizard.create.coord_search_ph')"
+                  class="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:opacity-60"
+                  :disabled="!canEditForm"
+                  @input="scheduleCoordinatorSearch"
+                  @focus="onCoordinatorSearchFocus"
+                  @blur="onCoordinatorSearchBlur"
+                />
+              </label>
+              <div
+                v-if="coordinatorSearchLoading"
+                class="pointer-events-none absolute right-3 top-[4.25rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-700"
+              />
+              <ul
+                v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
+                id="bm03-coordinator-search-list"
+                class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                role="listbox"
+              >
+                <li v-if="coordinatorSearchLoading" class="px-3 py-2.5 text-slate-500">
+                  {{ t('dispatch_wizard.create.searching') }}
+                </li>
+                <template v-else-if="coordinatorSearchResults.length">
+                  <li v-for="u in coordinatorSearchResults" :key="u.id">
+                    <button
+                      type="button"
+                      class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-slate-50"
+                      @mousedown.prevent="pickCoordinator(u)"
+                    >
+                      <span class="font-medium text-slate-900">{{ u.name }}</span>
+                      <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                    </button>
+                  </li>
+                </template>
+                <li v-else class="px-3 py-2.5 text-slate-500">{{ t('dispatch_wizard.create.no_staff') }}</li>
+              </ul>
+              <p v-if="coordinatorSearchError" class="mt-2 text-xs font-medium text-rose-600" role="alert">
+                {{ coordinatorSearchError }}
+              </p>
+            </div>
             <Bm03FormField
               v-model="draft.coordinatorName"
               field-id="bm03-d2-name"
@@ -292,7 +344,7 @@
               :disabled="!canEditForm"
             />
             <Bm03FormField
-              v-model="draft.coordinatorPhone"
+              :model-value="draft.coordinatorPhone"
               field-id="bm03-d2-phone"
               :label="t('portal.recurring_edit.bm03_fields.d2_coord_phone_label')"
               :placeholder="t('portal.recurring_edit.bm03_fields.d2_coord_phone_ph')"
@@ -301,6 +353,7 @@
               autocomplete="tel"
               inputmode="tel"
               :disabled="!canEditForm"
+              @update:model-value="(v) => (draft.coordinatorPhone = sanitizeVnPhoneDigits(v))"
             />
           </div>
         </div>
@@ -398,6 +451,7 @@ import { useExtracurricularRequestRow } from '../../../composables/useExtracurri
 import { TARGET_OPTIONS } from '../../../composables/dispatchWizardConstants'
 import { labelTripType } from '../../../util/labels'
 import { confirmAction } from '../../../composables/useConfirm'
+import { usePortalCoordinatorUserSearch, sanitizeVnPhoneDigits } from '../../../composables/usePortalCoordinatorUserSearch'
 import { saveAs } from 'file-saver'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -447,6 +501,19 @@ const draft = reactive({
   destination: '',
 })
 
+const {
+  coordinatorSearchQ,
+  coordinatorSearchResults,
+  coordinatorSearchLoading,
+  coordinatorDropdownOpen,
+  coordinatorSearchError,
+  scheduleCoordinatorSearch,
+  onCoordinatorSearchFocus,
+  onCoordinatorSearchBlur,
+  pickCoordinator,
+  syncCoordinatorSearchFromDraft,
+} = usePortalCoordinatorUserSearch(draft)
+
 const existingBasis = computed(() => {
   const list = props.req?.attachments ?? []
   return list.find((a) => a.kind === 'proposal_basis') || null
@@ -455,8 +522,7 @@ const existingBasis = computed(() => {
 const basisDisplayName = computed(() => {
   if (basisPendingFile.value) return basisPendingFile.value.name
   if (existingBasis.value?.original_name) return existingBasis.value.original_name
-  const snap = props.req?.wizard_snapshot?.form
-  return snap?.basisFileName || ''
+  return ''
 })
 
 const basisDisplaySize = computed(() => {
@@ -616,16 +682,8 @@ function validateClient() {
     fieldErrors.requesterPhone = t('portal.recurring_edit.bm03_err.required')
     ok = false
   }
-  if (!draft.requesterUnit.trim()) {
-    fieldErrors.requesterUnit = t('portal.recurring_edit.bm03_err.required')
-    ok = false
-  }
   if (!draft.purpose.trim()) {
     fieldErrors.purpose = t('portal.recurring_edit.bm03_err.required')
-    ok = false
-  }
-  if (!basisPendingFile.value && !existingBasis.value) {
-    fieldErrors.basis = t('portal.recurring_edit.bm03_err.basis_required')
     ok = false
   }
   if (!draft.dateNeeded) {
@@ -759,6 +817,7 @@ function syncFromReq(r) {
   draft.coordinatorPhone = form.coordinator_phone || ''
   draft.origin = r.origin || ''
   draft.destination = r.destination || ''
+  syncCoordinatorSearchFromDraft()
   basisPendingFile.value = null
   if (basisFileInput.value) basisFileInput.value.value = ''
   revokeBasisPreview()
@@ -812,6 +871,8 @@ function buildPayload() {
     snapForm.basisFileName = existingBasis.value.original_name
   } else if (basisPendingFile.value?.name) {
     snapForm.basisFileName = basisPendingFile.value.name
+  } else {
+    snapForm.basisFileName = ''
   }
   const payload = {
     origin: draft.origin.trim(),

@@ -78,7 +78,8 @@ export async function createPortalDispatchRequest(payload, opts = {}) {
 /** Tìm nhân sự (form portal — không cần dispatch.staff). @param {string} q */
 export async function searchUsersForPortalForm(q) {
   const { data } = await http.get('/portal/users/for-dispatch-form', { params: { q } })
-  return data.data
+  const rows = data?.data
+  return Array.isArray(rows) ? rows : []
 }
 
 /**
