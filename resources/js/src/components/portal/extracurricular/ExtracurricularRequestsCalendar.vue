@@ -40,7 +40,7 @@
               :to="{ name: detailRouteName, params: { id: req.id } }"
               class="block truncate rounded px-0.5 text-[10px] font-medium text-indigo-800 hover:underline"
             >
-              #{{ req.id }} {{ departTime(req) }}
+              #{{ req.id }} {{ departTime(req) }}{{ hsChip(req) }}
             </RouterLink>
           </li>
           <li v-if="cell.items.length > 3" class="text-[10px] text-slate-500">+{{ cell.items.length - 3 }}</li>
@@ -143,5 +143,11 @@ function departTime(req) {
   } catch {
     return ''
   }
+}
+
+function hsChip(req) {
+  const n = req?.student_count_actual ?? req?.passenger_count
+  if (n == null || n === '') return ''
+  return ` · HS ${n}`
 }
 </script>

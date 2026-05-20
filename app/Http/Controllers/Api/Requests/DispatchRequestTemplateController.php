@@ -32,18 +32,45 @@ class DispatchRequestTemplateController extends Controller
         return $this->store($request);
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    protected static function payloadIsExtracurricularRecurring(array $data): bool
+    {
+        if (($data['trip_type'] ?? '') !== 'point_to_point') {
+            return false;
+        }
+
+        $snap = $data['wizard_snapshot'] ?? null;
+        $purposeKind = is_array($snap)
+            ? (data_get($snap, 'form.point_purpose_kind') ?? data_get($snap, 'point_purpose_kind'))
+            : null;
+
+        if ($purposeKind !== 'extracurricular') {
+            return false;
+        }
+
+        return is_array($data['recurrence_rule'] ?? null)
+            && ! empty($data['recurrence_end_date'] ?? null);
+    }
+
     public function store(StoreDispatchRequestTemplateRequest $request)
     {
         $data = $request->validated();
 
         $departAt = Carbon::parse($data['depart_at']);
         $clientUrgent = (bool) ($data['is_urgent'] ?? false);
+        $isExtracurricularRecurring = self::payloadIsExtracurricularRecurring($data);
         [$finalUrgent, $urgentTrigger] = DispatchRequest::resolveUrgentTrigger(
             $data['trip_type'],
             $departAt,
             $clientUrgent,
         );
-        if (! $finalUrgent && $departAt->lt(now()->addHours(2))) {
+        if ($isExtracurricularRecurring) {
+            $finalUrgent = false;
+            $urgentTrigger = null;
+        }
+        if (! $isExtracurricularRecurring && ! $finalUrgent && $departAt->lt(now()->addHours(2))) {
             abort(422, Messages::REQUEST_MUST_BE_2H_AHEAD);
         }
 

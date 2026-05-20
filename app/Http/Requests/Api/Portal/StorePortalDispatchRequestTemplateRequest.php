@@ -15,9 +15,15 @@ class StorePortalDispatchRequestTemplateRequest extends StoreDispatchRequestTemp
     {
         $user = $this->user();
 
-        return $user instanceof User
-            && ! $user->canAccessDispatchWebApp()
-            && ! $user->canAccessDriverWebApp();
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        if (! $user->canAccessDispatchWebApp() && ! $user->canAccessDriverWebApp()) {
+            return true;
+        }
+
+        return $user->can('request.update_own') || $user->can('request.create');
     }
 
     /**

@@ -449,6 +449,7 @@
             :requests="items"
             :group-by="scheduleGroupBy"
             :detail-route-name="portalRoutes.detail"
+            @refresh="reloadFromStart"
           />
           <ExtracurricularRequestsDataTable
             v-else-if="isExtracurricularMode"

@@ -643,6 +643,7 @@
             "blockers_title": "Complete these items to create the plan",
             "ready_to_create": "All set — you can create the plan.",
             "complete_form_hint": "Fill in the schedule, weekdays, and pickup/drop-off to enable create.",
+            "blocker_depart_at_invalid": "Could not determine the first departure time — check schedule and depart time.",
             "preview_empty": "No trips yet — check start/end dates and weekdays (weekly mode).",
             "preview_more": "… and {n} more days",
             "blocker_no_occurrences": "No matching dates — adjust the range or weekdays",
@@ -671,7 +672,18 @@
             "depart_at": "Departure",
             "arrive_by": "Return / arrival",
             "dispatch_hint": "Vehicle and driver are assigned by dispatch after approval.",
-            "trip_status": "Trip status"
+            "trip_status": "Trip status",
+            "bm03_title": "Dispatch request form",
+            "bm03_sec_a": "Requester",
+            "bm03_sec_b": "Purpose",
+            "bm03_sec_c": "Schedule",
+            "bm03_sec_d": "Area / audience",
+            "bm03_sec_e": "Transport details",
+            "bm03_sec_g": "Student count & notes",
+            "bm03_time_note": "Note: allow at least 3 working days before the vehicle date (per BM.03).",
+            "bm03_trip_type": "Request type",
+            "save_draft": "Save draft",
+            "save_draft_busy": "Saving…"
         },
         "home_sidebar_title": "Account",
         "sidebar_hint": "View submitted requests",
@@ -895,6 +907,12 @@
             "clone_similar": "Clone similar request",
             "clone_similar_busy": "Creating…",
             "clone_similar_disabled_hint": "Only when the request is approved or rejected (creates a new draft from this one)."
+        },
+        "extracurricular_list": {
+            "complete_slip": "Complete slip",
+            "group_summary": "{count} tickets",
+            "pending_hs_short": "no count",
+            "collapse_hint": "Expand or collapse group"
         },
         "filter_date_from": "From",
         "filter_date_to": "To"

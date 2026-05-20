@@ -6,7 +6,7 @@ Tài liệu nghiệp vụ cho stakeholder. Phiên bản đồng bộ với tri�
 
 - **Yêu cầu mới (portal chung):** `/portal/new` — không tạo CLB định kỳ tại đây.
 - **Tạo kế hoạch định kỳ:** `/portal/extracurricular/new` — form tối giản (lịch + tuyến + ghi chú).
-- **Danh sách CLB:** `/portal/extracurricular/requests` — lịch, bảng lịch trình, hoặc bảng chi tiết (số HS inline).
+- **Danh sách CLB:** `/portal/extracurricular/requests` — lịch, **bảng lịch trình** (mặc định: nhóm thu gọn + số HS lưu nhanh), hoặc bảng chi tiết đầy đủ.
 
 ## Luồng tạo
 
@@ -32,13 +32,17 @@ Sau tạo → mẫu `dispatch_request_template` + materialize đủ phiếu `dis
 - Hủy (`cancelled`) phiếu pending thừa ngoài lịch mới — chỉ khi chưa chốt số HS và chưa có chuyến xe
 - Giữ nguyên phiếu đã `student_count_submitted_at` hoặc đã có trip
 
+## Danh sách — số HS nhanh
+
+Trên **bảng lịch trình** (và bảng chi tiết): cột **HS thực tế** — chỉ **Lưu** (`PATCH` số HS), không gửi chốt tại list. Mỗi dòng có **Hoàn tất phiếu** → mở chi tiết với form BM.03.
+
 ## Sửa từng phiếu (trước 24h)
 
 Trên chi tiết phiếu (`/portal/extracurricular/requests/:id`):
 
-- Form có cấu trúc: chuyến, thời gian, tuyến, số HS, ghi chú, gợi ý điều phối
+- Form **giống phiếu BM.03** (mục A–E read-only / G chỉnh sửa: thời gian, tuyến, số HS, ghi chú)
 - `PATCH /api/portal/dispatch-requests/{id}/recurring-instance`
-- `POST /api/portal/dispatch-requests/{id}/submit-recurring` — chốt gửi điều vận (cần đã lưu số HS thực tế)
+- `POST /api/portal/dispatch-requests/{id}/submit-recurring` — **Gửi điều vận** (chốt; cần đã lưu số HS thực tế)
 
 Điều kiện: còn ≥ 24h trước `depart_at`, chưa chốt, trạng thái pending / price_filled.
 

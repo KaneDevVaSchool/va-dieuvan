@@ -65,7 +65,7 @@
                 :error="errors[req.id]"
                 :can-edit="row.canEditStudentCount(req)"
                 :lock-hint="lockHintFor(req)"
-                :show-submit="variant === 'portal'"
+                :show-submit="variant !== 'portal'"
                 :can-submit="row.canSubmitStudentCount(req)"
                 :submit-disabled-hint="submitHintFor(req)"
                 :save-label-key="`${i18nPrefix}.update_count`"
@@ -73,7 +73,7 @@
                 :submit-label-key="`${i18nPrefix}.submit_dispatch`"
                 :submit-busy-label-key="`${i18nPrefix}.submit_dispatch_busy`"
                 @update:draft="setDraft(req.id, $event)"
-                @save="saveRow(req)"
+                @save="onSaveRow(req)"
                 @submit="submitRow(req)"
               />
             </td>
@@ -81,6 +81,8 @@
               <ExtracurricularRowActions
                 :req="req"
                 :variant="variant"
+                :detail-route-name="detailRouteName"
+                :show-complete-slip="variant === 'portal'"
                 :show-clone="row.canShowCloneSimilar(req)"
                 :can-clone="row.canCloneReset(req)"
                 :clone-busy="cloneBusyId === req.id"
@@ -137,7 +139,7 @@
             :error="errors[req.id]"
             :can-edit="row.canEditStudentCount(req)"
             :lock-hint="lockHintFor(req)"
-            :show-submit="variant === 'portal'"
+            :show-submit="variant !== 'portal'"
             :can-submit="row.canSubmitStudentCount(req)"
             :submit-disabled-hint="submitHintFor(req)"
             :save-label-key="`${i18nPrefix}.update_count`"
@@ -146,12 +148,14 @@
             :submit-busy-label-key="`${i18nPrefix}.submit_dispatch_busy`"
             mobile
             @update:draft="setDraft(req.id, $event)"
-            @save="saveRow(req)"
+            @save="onSaveRow(req)"
             @submit="submitRow(req)"
           />
           <ExtracurricularRowActions
             :req="req"
             :variant="variant"
+            :detail-route-name="detailRouteName"
+            :show-complete-slip="variant === 'portal'"
             :show-clone="row.canShowCloneSimilar(req)"
             :can-clone="row.canCloneReset(req)"
             :clone-busy="cloneBusyId === req.id"
@@ -169,7 +173,7 @@
 </template>
 
 <script setup>
-import { computed, defineComponent, h, reactive, ref, watch } from 'vue'
+import { computed, defineComponent, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { AcademicCapIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
@@ -178,13 +182,9 @@ import StudentCountCell from './extracurricular/StudentCountCell.vue'
 import StudentCountTrackingBadge from './extracurricular/StudentCountTrackingBadge.vue'
 import ExtracurricularRowActions from './extracurricular/ExtracurricularRowActions.vue'
 import { useExtracurricularRequestRow } from '../../composables/useExtracurricularRequestRow'
+import { useExtracurricularInlineStudentCount } from '../../composables/useExtracurricularInlineStudentCount'
 import { useAuthStore } from '../../store'
-import {
-  patchPassengerCount,
-  patchPortalRecurringInstance,
-  submitPortalRecurringInstance,
-  submitStudentCount,
-} from '../../api/requests'
+import { submitPortalRecurringInstance, submitStudentCount } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import { confirmAction } from '../../composables/useConfirm'
 
@@ -231,29 +231,24 @@ const i18nPrefix = computed(() =>
 
 const row = useExtracurricularRequestRow(auth, computed(() => auth.user))
 
-const drafts = reactive({})
-const errors = reactive({})
-const savingId = ref(null)
+const requestsRef = computed(() => props.requests)
+const {
+  errors,
+  savingId,
+  draftFor,
+  setDraft,
+  saveCount,
+} = useExtracurricularInlineStudentCount(requestsRef, row, {
+  variant: computed(() => props.variant),
+  i18nPrefix,
+  onSaved: () => emit('refresh'),
+})
+
 const submittingId = ref(null)
 const cloneBusyId = ref(null)
 
-watch(
-  () => props.requests,
-  (list) => {
-    for (const req of list || []) {
-      drafts[req.id] = row.actualStudentCount(req)
-    }
-  },
-  { immediate: true, deep: true },
-)
-
-function draftFor(id) {
-  return drafts[id] ?? 1
-}
-
-function setDraft(id, val) {
-  drafts[id] = val
-  delete errors[id]
+async function onSaveRow(req) {
+  await saveCount(req)
 }
 
 const localeTag = computed(() => (locale.value === 'vi' ? 'vi-VN' : 'en-US'))
@@ -316,30 +311,6 @@ async function submitRow(req) {
     errors[req.id] = formatApiError(e, t(`${i18nPrefix.value}.submit_fail`))
   } finally {
     submittingId.value = null
-  }
-}
-
-async function saveRow(req) {
-  if (!row.canEditStudentCount(req) || savingId.value) return
-  const id = req.id
-  const n = Math.round(Number(draftFor(id)))
-  if (!Number.isFinite(n) || n < 1 || n > 999) {
-    errors[id] = t(`${i18nPrefix.value}.invalid_count`)
-    return
-  }
-  savingId.value = id
-  delete errors[id]
-  try {
-    if (props.variant === 'portal') {
-      await patchPortalRecurringInstance(id, { student_count_actual: n })
-    } else {
-      await patchPassengerCount(id, n)
-    }
-    emit('refresh')
-  } catch (e) {
-    errors[id] = formatApiError(e, t(`${i18nPrefix.value}.save_fail`))
-  } finally {
-    savingId.value = null
   }
 }
 

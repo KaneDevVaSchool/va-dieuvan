@@ -1,52 +1,141 @@
 <template>
-  <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-    <table class="min-w-full text-left text-sm">
-      <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
-        <tr>
-          <th class="px-4 py-3">{{ t('portal.extracurricular_table.col_request') }}</th>
-          <th class="px-4 py-3">{{ t('portal.extracurricular_table.col_depart') }}</th>
-          <th class="px-4 py-3">{{ t('portal.extracurricular_table.col_route') }}</th>
-          <th class="px-4 py-3">{{ t('portal.extracurricular_table.col_status') }}</th>
-          <th class="px-4 py-3">{{ t('portal.extracurricular_table.col_tracking') }}</th>
-          <th class="px-4 py-3 text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="group in grouped" :key="group.key">
-          <tr class="bg-indigo-50/60">
-            <td colspan="6" class="px-4 py-2 text-xs font-bold uppercase tracking-wide text-indigo-900">
-              {{ group.label }}
-            </td>
-          </tr>
-          <tr
-            v-for="req in group.items"
-            :key="req.id"
-            class="border-t border-slate-100 transition hover:bg-slate-50/80"
+  <div class="space-y-3">
+    <details
+      v-for="group in grouped"
+      :key="group.key"
+      class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      :open="group.defaultOpen"
+    >
+      <summary
+        class="flex cursor-pointer list-none items-center justify-between gap-3 bg-indigo-50/70 px-4 py-3 text-sm font-semibold text-indigo-950 transition hover:bg-indigo-50 [&::-webkit-details-marker]:hidden"
+      >
+        <span class="flex min-w-0 flex-1 items-center gap-2">
+          <ChevronRightIcon
+            class="h-4 w-4 shrink-0 text-indigo-600 transition group-open:rotate-90"
+            aria-hidden="true"
+          />
+          <span class="truncate">{{ group.label }}</span>
+        </span>
+        <span class="shrink-0 text-xs font-medium text-indigo-800/90">
+          {{ t('portal.extracurricular_list.group_summary', { count: group.items.length }) }}
+          <span v-if="group.pendingHs > 0" class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">
+            {{ group.pendingHs }} {{ t('portal.extracurricular_list.pending_hs_short') }}
+          </span>
+        </span>
+      </summary>
+
+      <div class="hidden border-t border-slate-100 md:block">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+            <tr>
+              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_request') }}</th>
+              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_depart') }}</th>
+              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_route') }}</th>
+              <th class="px-4 py-2">{{ t('portal.extracurricular_table.col_status') }}</th>
+              <th class="whitespace-nowrap px-4 py-2 text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
+              <th class="min-w-[9rem] px-4 py-2">{{ t('portal.extracurricular_table.col_actual') }}</th>
+              <th class="px-4 py-2 text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr
+              v-for="req in group.items"
+              :key="req.id"
+              class="transition hover:bg-slate-50/80"
+            >
+              <td class="whitespace-nowrap px-4 py-3">
+                <span class="font-mono font-semibold text-slate-900">#{{ req.id }}</span>
+                <StudentCountTrackingBadge
+                  class="mt-1"
+                  :tracking-key="row.studentCountTrackingKey(req)"
+                  i18n-prefix="portal.extracurricular_table"
+                />
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ departFmt(req) }}</td>
+              <td class="px-4 py-3 text-slate-800">{{ routeLine(req) }}</td>
+              <td class="px-4 py-3">
+                <StatusBadge :status="req.status" size="sm" />
+              </td>
+              <td class="px-4 py-3 text-center tabular-nums text-slate-700">
+                {{ row.planStudentCount(req) ?? '—' }}
+              </td>
+              <td class="px-4 py-3">
+                <StudentCountCell
+                  :req="req"
+                  :draft="draftFor(req.id)"
+                  :saving="savingId === req.id"
+                  :error="errors[req.id]"
+                  :can-edit="row.canEditStudentCount(req)"
+                  :lock-hint="lockHintFor(req)"
+                  :show-submit="false"
+                  :save-label-key="'portal.extracurricular_table.update_count'"
+                  :save-busy-label-key="'portal.extracurricular_table.update_count_busy'"
+                  @update:draft="setDraft(req.id, $event)"
+                  @save="saveCount(req)"
+                />
+              </td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex flex-col items-end gap-1.5">
+                  <RouterLink
+                    :to="operateTo(req.id)"
+                    class="inline-flex min-h-[32px] items-center rounded-lg bg-violet-600 px-3 text-xs font-semibold text-white hover:bg-violet-500"
+                  >
+                    {{ t('portal.extracurricular_list.complete_slip') }}
+                  </RouterLink>
+                  <RouterLink
+                    :to="{ name: detailRouteName, params: { id: req.id } }"
+                    class="text-xs font-medium text-indigo-700 hover:underline"
+                  >
+                    {{ t('portal.extracurricular_table.open_detail') }}
+                  </RouterLink>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="space-y-3 border-t border-slate-100 p-3 md:hidden">
+        <article
+          v-for="req in group.items"
+          :key="'m-' + req.id"
+          class="rounded-xl border border-slate-200 bg-slate-50/50 p-3"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-mono text-sm font-bold text-slate-900">#{{ req.id }}</span>
+            <StatusBadge :status="req.status" size="sm" />
+          </div>
+          <p class="mt-1 text-sm text-slate-800">{{ routeLine(req) }}</p>
+          <p class="text-xs text-slate-500">{{ departFmt(req) }}</p>
+          <div class="mt-2 flex items-center justify-between text-xs">
+            <span class="text-slate-500">{{ t('portal.extracurricular_table.col_plan') }}</span>
+            <span class="font-semibold tabular-nums">{{ row.planStudentCount(req) ?? '—' }}</span>
+          </div>
+          <div class="mt-2">
+            <StudentCountCell
+              :req="req"
+              :draft="draftFor(req.id)"
+              :saving="savingId === req.id"
+              :error="errors[req.id]"
+              :can-edit="row.canEditStudentCount(req)"
+              :lock-hint="lockHintFor(req)"
+              :show-submit="false"
+              mobile
+              :save-label-key="'portal.extracurricular_table.update_count'"
+              :save-busy-label-key="'portal.extracurricular_table.update_count_busy'"
+              @update:draft="setDraft(req.id, $event)"
+              @save="saveCount(req)"
+            />
+          </div>
+          <RouterLink
+            :to="operateTo(req.id)"
+            class="mt-3 flex min-h-[40px] w-full items-center justify-center rounded-xl bg-violet-600 text-sm font-semibold text-white"
           >
-            <td class="whitespace-nowrap px-4 py-3 font-mono font-semibold text-slate-900">#{{ req.id }}</td>
-            <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ departFmt(req) }}</td>
-            <td class="px-4 py-3 text-slate-800">{{ routeLine(req) }}</td>
-            <td class="px-4 py-3">
-              <StatusBadge :status="req.status" size="sm" />
-            </td>
-            <td class="px-4 py-3">
-              <StudentCountTrackingBadge
-                :tracking-key="row.studentCountTrackingKey(req)"
-                i18n-prefix="portal.extracurricular_table"
-              />
-            </td>
-            <td class="px-4 py-3 text-right">
-              <RouterLink
-                :to="{ name: detailRouteName, params: { id: req.id } }"
-                class="text-sm font-semibold text-indigo-700 hover:underline"
-              >
-                {{ t('portal.extracurricular_table.open_detail') }}
-              </RouterLink>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+            {{ t('portal.extracurricular_list.complete_slip') }}
+          </RouterLink>
+        </article>
+      </div>
+    </details>
   </div>
 </template>
 
@@ -54,10 +143,13 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../../ui/StatusBadge.vue'
+import StudentCountCell from '../../requests/extracurricular/StudentCountCell.vue'
 import StudentCountTrackingBadge from '../../requests/extracurricular/StudentCountTrackingBadge.vue'
 import { useAuthStore } from '../../../store'
 import { useExtracurricularRequestRow } from '../../../composables/useExtracurricularRequestRow'
+import { useExtracurricularInlineStudentCount } from '../../../composables/useExtracurricularInlineStudentCount'
 
 const props = defineProps({
   requests: { type: Array, default: () => [] },
@@ -65,9 +157,29 @@ const props = defineProps({
   detailRouteName: { type: String, required: true },
 })
 
+const emit = defineEmits(['refresh'])
+
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 const row = useExtracurricularRequestRow(auth, computed(() => auth.user))
+
+const i18nPrefix = 'portal.extracurricular_table'
+const requestsRef = computed(() => props.requests)
+const { errors, savingId, draftFor, setDraft, saveCount } = useExtracurricularInlineStudentCount(
+  requestsRef,
+  row,
+  {
+    variant: 'portal',
+    i18nPrefix,
+    onSaved: () => emit('refresh'),
+  },
+)
+
+const todayKey = computed(() => {
+  const d = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+})
 
 const grouped = computed(() => {
   const map = new Map()
@@ -80,9 +192,27 @@ const grouped = computed(() => {
   arr.sort((a, b) => String(a.key).localeCompare(String(b.key)))
   for (const g of arr) {
     g.items.sort((a, b) => String(a.depart_at || '').localeCompare(String(b.depart_at || '')))
+    g.pendingHs = g.items.filter((r) => row.studentCountTrackingKey(r) === 'not_updated').length
+    g.defaultOpen = props.groupBy === 'day' && g.key === todayKey.value
+  }
+  if (arr.length && !arr.some((g) => g.defaultOpen)) {
+    arr[0].defaultOpen = true
   }
   return arr
 })
+
+function operateTo(id) {
+  return {
+    name: props.detailRouteName,
+    params: { id: String(id) },
+    query: { operate: '1' },
+  }
+}
+
+function lockHintFor(req) {
+  const k = row.lockHintKey(req)
+  return k ? t(`${i18nPrefix}.${k}`) : ''
+}
 
 function groupKey(req) {
   if (props.groupBy === 'route') {

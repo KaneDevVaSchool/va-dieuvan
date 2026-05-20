@@ -67,8 +67,9 @@
 
       <PortalStatusTimeline class="mt-8" :title="t('portal.timeline_heading')" :steps="timelineSteps" />
 
-      <PortalExtracurricularInstanceEditView
+      <PortalExtracurricularBm03EditForm
         v-if="showExtracurricularInstanceEdit"
+        ref="bm03FormRef"
         class="mt-8"
         :req="req"
         @saved="load"
@@ -238,7 +239,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ClipboardDocumentIcon, DocumentArrowDownIcon, XCircleIcon } from '@heroicons/vue/24/outline'
@@ -269,7 +270,7 @@ import PortalSignedDocUpload from '../../components/portal/PortalSignedDocUpload
 import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
-import PortalExtracurricularInstanceEditView from './PortalExtracurricularInstanceEditView.vue'
+import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
 
 const route = useRoute()
 const { routes: portalRoutes } = usePortalExtracurricularModule()
@@ -287,6 +288,7 @@ const passengerSubmitting = ref(false)
 const extracurricularRow = useExtracurricularRequestRow(auth, computed(() => auth.user))
 const passengerPatchErr = ref('')
 const resetCloneBusy = ref(false)
+const bm03FormRef = ref(null)
 
 const pdfBusy = ref(false)
 const pdfBlobUrl = ref('')
@@ -372,6 +374,9 @@ onMounted(async () => {
     const q = { ...route.query }
     delete q.created
     router.replace({ query: q })
+  }
+  if (String(route.query.operate) === '1' && showExtracurricularInstanceEdit.value) {
+    scrollToBm03Form()
   }
 })
 
@@ -463,6 +468,30 @@ const showExtracurricularInstanceEdit = computed(() => {
     isCurrentUserRequester.value &&
     ['pending', 'price_filled'].includes(String(r?.status || ''))
   )
+})
+
+function scrollToBm03Form() {
+  nextTick(() => {
+    const el = bm03FormRef.value?.rootEl
+    if (el?.scrollIntoView) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  })
+}
+
+watch(
+  () => route.query.operate,
+  (v) => {
+    if (String(v) === '1' && showExtracurricularInstanceEdit.value) {
+      scrollToBm03Form()
+    }
+  },
+)
+
+watch(showExtracurricularInstanceEdit, (on) => {
+  if (on && String(route.query.operate) === '1') {
+    scrollToBm03Form()
+  }
 })
 
 const showPassengerAdjustSection = computed(() => {

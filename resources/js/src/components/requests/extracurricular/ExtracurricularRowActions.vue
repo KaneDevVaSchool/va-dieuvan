@@ -21,6 +21,17 @@
       />
       {{ cloneBusy ? cloneBusyLabel : cloneLabel }}
     </button>
+    <RouterLink
+      v-if="showCompleteSlip && detailRouteName"
+      :to="{
+        name: detailRouteName,
+        params: { id: String(req.id) },
+        query: { operate: '1' },
+      }"
+      class="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-violet-300 bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-violet-500"
+    >
+      {{ t('portal.extracurricular_list.complete_slip') }}
+    </RouterLink>
     <button
       type="button"
       class="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/60 hover:text-indigo-800"
@@ -33,11 +44,14 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 import { DocumentDuplicateIcon } from '@heroicons/vue/24/outline'
 
 defineProps({
   req: { type: Object, required: true },
   variant: { type: String, default: 'portal' },
+  detailRouteName: { type: String, default: '' },
+  showCompleteSlip: { type: Boolean, default: false },
   showClone: { type: Boolean, default: true },
   canClone: { type: Boolean, default: false },
   cloneBusy: { type: Boolean, default: false },

@@ -191,11 +191,36 @@ export function usePortalRecurringPlanCreate() {
     }
   }
 
+  /** Chọn mốc khởi hành đầu tiên ≥ 2h (tránh 422); recurring CLB backend bỏ qua 2h nhưng vẫn cần depart_at hợp lệ. */
   function buildDepartAtIso() {
-    const day = firstOccurrenceDate.value || form.value.recurrence_start_date?.trim()
     const dep = normalizeTimeHhMm(form.value.recurrence_depart_time)
-    if (!day || !dep) return ''
-    return toIsoMaybe(`${day}T${dep}`)
+    if (!dep) return ''
+    const minMs = Date.now() + 2 * 3600 * 1000
+    const dates = occurrencePreview.value.dates || []
+    for (const day of dates) {
+      const iso = toIsoMaybe(`${day}T${dep}`)
+      if (iso && new Date(iso).getTime() >= minMs) return iso
+    }
+    const fallbackDay = dates[0] || form.value.recurrence_start_date?.trim()
+    if (!fallbackDay) return ''
+    return toIsoMaybe(`${fallbackDay}T${dep}`)
+  }
+
+  function buildArriveByIso(departIso) {
+    const ret = normalizeTimeHhMm(form.value.recurrence_return_time)
+    if (!departIso || !ret) return null
+    try {
+      const dep = new Date(departIso)
+      const [rh, rm] = ret.split(':').map(Number)
+      const arr = new Date(dep)
+      arr.setHours(rh, rm, 0, 0)
+      if (arr.getTime() < dep.getTime()) {
+        arr.setDate(arr.getDate() + 1)
+      }
+      return arr.toISOString()
+    } catch {
+      return null
+    }
   }
 
   function buildApiPayload() {
@@ -226,17 +251,19 @@ export function usePortalRecurringPlanCreate() {
       ],
     }
 
-    return {
+    const departAt = buildDepartAtIso()
+    const arriveBy = buildArriveByIso(departAt)
+    const returnTime = normalizeTimeHhMm(f.recurrence_return_time)
+
+    const payload = {
       trip_type: 'point_to_point',
       source_channel: 'portal',
       origin: f.pickup.trim(),
       destination: f.dropoff.trim(),
-      depart_at: buildDepartAtIso(),
-      arrive_by: null,
-      passenger_count: null,
+      depart_at: departAt,
       notes: f.notes?.trim() || null,
       start_date: f.recurrence_start_date?.trim() || undefined,
-      return_time: f.recurrence_return_time?.trim() || undefined,
+      return_time: returnTime || undefined,
       recurrence_rule: {
         freq: 'weekly',
         interval: 1,
@@ -245,6 +272,11 @@ export function usePortalRecurringPlanCreate() {
       recurrence_end_date: f.recurrence_end_date?.trim() || undefined,
       wizard_snapshot,
     }
+    if (arriveBy) {
+      payload.arrive_by = arriveBy
+    }
+
+    return payload
   }
 
   let submitInFlight = false
@@ -256,8 +288,12 @@ export function usePortalRecurringPlanCreate() {
     loading.value = true
     error.value = ''
     try {
-      const idempotencyKey = newIdempotencyKey()
       const payload = buildApiPayload()
+      if (!payload.depart_at) {
+        error.value = t('portal.recurring_plan.blocker_depart_at_invalid')
+        return
+      }
+      const idempotencyKey = newIdempotencyKey()
       const pack = await createPortalDispatchRequestTemplate(payload, { idempotencyKey })
       created.value = pack?.dispatch_request ?? null
       clearDraft()

@@ -686,6 +686,7 @@
             "blockers_title": "Cần hoàn thiện trước khi tạo",
             "ready_to_create": "Đã đủ thông tin — bạn có thể tạo kế hoạch.",
             "complete_form_hint": "Điền đủ lịch, thứ trong tuần và tuyến đón/trả để bật nút tạo.",
+            "blocker_depart_at_invalid": "Không xác định được giờ khởi hành chuyến đầu — kiểm tra lịch và giờ đi.",
             "preview_empty": "Chưa có chuyến — kiểm tra ngày bắt đầu, kết thúc và thứ (nếu lặp theo tuần).",
             "preview_more": "… và {n} ngày nữa",
             "blocker_no_occurrences": "Không có ngày nào khớp lịch — chỉnh khoảng ngày hoặc thứ trong tuần",
@@ -714,7 +715,18 @@
             "depart_at": "Giờ khởi hành",
             "arrive_by": "Giờ về / đến",
             "dispatch_hint": "Thông tin xe và tài xế do bộ phận điều vận gán sau khi duyệt.",
-            "trip_status": "Trạng thái chuyến xe"
+            "trip_status": "Trạng thái chuyến xe",
+            "bm03_title": "Đề Nghị Điều Vận",
+            "bm03_sec_a": "Người đề nghị",
+            "bm03_sec_b": "Mục đích sử dụng",
+            "bm03_sec_c": "Thời gian",
+            "bm03_sec_d": "Khu vực / Đối tượng",
+            "bm03_sec_e": "Nội dung đề nghị vận chuyển",
+            "bm03_sec_g": "Số học sinh & ghi chú",
+            "bm03_time_note": "Lưu ý: Tối thiểu 03 ngày làm việc trước ngày cấp xe (theo quy trình BM.03).",
+            "bm03_trip_type": "Loại yêu cầu",
+            "save_draft": "Lưu nháp",
+            "save_draft_busy": "Đang lưu…"
         },
         "home_sidebar_title": "Tài khoản",
         "sidebar_hint": "Xem các yêu cầu bạn đã gửi",
@@ -938,6 +950,12 @@
             "clone_similar": "Đặt lại phiếu tương tự",
             "clone_similar_busy": "Đang tạo…",
             "clone_similar_disabled_hint": "Chỉ dùng khi phiếu đã duyệt hoặc bị từ chối (tạo phiếu mới từ mẫu cũ)."
+        },
+        "extracurricular_list": {
+            "complete_slip": "Hoàn tất phiếu",
+            "group_summary": "{count} phiếu",
+            "pending_hs_short": "chưa HS",
+            "collapse_hint": "Mở hoặc thu gọn nhóm"
         },
         "filter_date_from": "Từ ngày",
         "filter_date_to": "Đến ngày",

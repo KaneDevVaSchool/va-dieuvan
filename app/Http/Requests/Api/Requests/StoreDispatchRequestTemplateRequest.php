@@ -68,6 +68,26 @@ class StoreDispatchRequestTemplateRequest extends CreateDispatchRequestRequest
                     $v->errors()->add('recurrence_rule.byweekday', __('validation.required', ['attribute' => 'recurrence_rule.byweekday']));
                 }
             }
+
+            if ($this->isExtracurricularRecurringPayload()) {
+                $v->errors()->forget('urgent_reason');
+            }
         });
+    }
+
+    protected function isExtracurricularRecurringPayload(): bool
+    {
+        if ($this->input('trip_type') !== 'point_to_point') {
+            return false;
+        }
+
+        $snap = $this->input('wizard_snapshot');
+        $purposeKind = is_array($snap)
+            ? (data_get($snap, 'form.point_purpose_kind') ?? data_get($snap, 'point_purpose_kind'))
+            : null;
+
+        return $purposeKind === 'extracurricular'
+            && is_array($this->input('recurrence_rule'))
+            && $this->filled('recurrence_end_date');
     }
 }
