@@ -25,7 +25,7 @@ export function useP2pPolicyStudentFilters() {
     is_active: '',
     policy_type: '',
     weekday_iso: '',
-    per_page: 25,
+    per_page: 100,
   })
 
   const visibility = reactive(loadVisibility())

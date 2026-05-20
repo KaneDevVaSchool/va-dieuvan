@@ -86,12 +86,48 @@ class PolicyStudentController extends Controller
 
     public function update(UpdatePolicyStudentRequest $request, PolicyStudent $policyStudent)
     {
+        $data = $request->validated();
+
+        if (array_key_exists('student_id', $data) || array_key_exists('student_code', $data)) {
+            $studentId = $data['student_id'] ?? null;
+
+            if ($studentId === null && ! empty($data['student_code'])) {
+                $student = Student::query()->where('student_code', $data['student_code'])->first();
+                if ($student === null) {
+                    if (! config('dispatch.p2p_policy_auto_create_students', true)) {
+                        abort(422, 'Mã học sinh chưa tồn tại trong hệ thống.');
+                    }
+                    $student = Student::create([
+                        'student_code' => $data['student_code'],
+                        'full_name' => $data['student_name'] ?? $policyStudent->student_name,
+                        'grade' => $data['class_name'] ?? $policyStudent->class_name,
+                        'is_active' => true,
+                    ]);
+                }
+                $studentId = $student->id;
+            } elseif ($studentId !== null) {
+                $student = Student::query()->findOrFail($studentId);
+            } else {
+                $student = null;
+            }
+
+            if ($student !== null) {
+                $data['student_id'] = $student->id;
+                if (! array_key_exists('student_code', $data)) {
+                    $data['student_code'] = $student->student_code;
+                }
+                if (! array_key_exists('student_name', $data)) {
+                    $data['student_name'] = $student->full_name;
+                }
+            }
+        }
+
         $before = $policyStudent->toArray();
-        $policyStudent->update($request->validated());
+        $policyStudent->update($data);
 
         app(AuditLogger::class)->log($request->user()->id, 'p2p_policy.student.update', $policyStudent, $before, $policyStudent->toArray());
 
-        return $this->ok($policyStudent);
+        return $this->ok($policyStudent->load(['policyRoute.originCampus', 'policyRoute.destCampus']));
     }
 
     public function destroy(ListPolicyStudentsRequest $request, PolicyStudent $policyStudent)

@@ -69,6 +69,11 @@ export async function listPolicyStudents(params = {}) {
   return data.data
 }
 
+export async function updatePolicyStudent(id, payload) {
+  const { data } = await http.patch(`/p2p-policy/students/${id}`, payload)
+  return data.data
+}
+
 export async function listCampuses(params = {}) {
   const { data } = await http.get('/campuses', { params })
   return data.data

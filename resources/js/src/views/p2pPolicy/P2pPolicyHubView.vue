@@ -17,7 +17,7 @@
           </p>
         </div>
         <RouterLink
-          :to="{ name: 'p2pPolicyTerm' }"
+          :to="p2pStepTo('p2pPolicyTerm', workflowTermId)"
           class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900 dark:bg-teal-700 dark:hover:bg-teal-600"
         >
           <PlusCircleIcon class="h-5 w-5" aria-hidden="true" />
@@ -39,21 +39,22 @@
         {{ t('p2p_policy_page.hub_workflow_title') }}
       </h2>
       <ol class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <li
-          v-for="(step, idx) in workflowSteps"
-          :key="step.key"
-          class="flex gap-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/60"
-        >
-          <span
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
-            :class="step.stepClass"
+        <li v-for="(step, idx) in workflowSteps" :key="step.key">
+          <RouterLink
+            :to="step.to"
+            class="flex h-full gap-3 rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm transition hover:border-teal-300 hover:shadow-md dark:border-slate-700/80 dark:bg-slate-900/60 dark:hover:border-teal-800"
           >
-            {{ idx + 1 }}
-          </span>
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ step.title }}</p>
-            <p class="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{{ step.desc }}</p>
-          </div>
+            <span
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
+              :class="step.stepClass"
+            >
+              {{ idx + 1 }}
+            </span>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ step.title }}</p>
+              <p class="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{{ step.desc }}</p>
+            </div>
+          </RouterLink>
         </li>
       </ol>
     </section>
@@ -313,6 +314,7 @@ import {
   getPolicyGenerationRun,
   listP2pPolicyTerms,
 } from '../../api/p2pPolicy'
+import { p2pStepTo } from '../../composables/useP2pPolicyWorkflow'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -329,9 +331,11 @@ const activateDialog = ref(null)
 const activateChecked = ref(false)
 let pollTimer = null
 
+const workflowTermId = computed(() => selectedTermId.value ?? null)
+
 const cards = computed(() => [
   {
-    to: { name: 'p2pPolicyTerm' },
+    to: p2pStepTo('p2pPolicyTerm', workflowTermId.value),
     label: t('p2p_policy_page.nav_term'),
     hint: t('p2p_policy_page.nav_term_hint'),
     icon: markRaw(CalendarDaysIcon),
@@ -340,7 +344,7 @@ const cards = computed(() => [
       'border-violet-200/90 from-violet-50/95 to-white ring-violet-900/[0.06] hover:border-violet-300 dark:border-violet-800/55 dark:from-violet-950/35 dark:to-slate-900/85 dark:ring-violet-900/25 dark:hover:border-violet-700',
   },
   {
-    to: { name: 'p2pPolicyRoutes' },
+    to: p2pStepTo('p2pPolicyRoutes', workflowTermId.value),
     label: t('p2p_policy_page.nav_routes'),
     hint: t('p2p_policy_page.nav_routes_hint'),
     icon: markRaw(MapIcon),
@@ -349,7 +353,7 @@ const cards = computed(() => [
       'border-sky-200/90 from-sky-50/95 to-white ring-sky-900/[0.06] hover:border-sky-300 dark:border-sky-800/55 dark:from-sky-950/35 dark:to-slate-900/85 dark:ring-sky-900/25 dark:hover:border-sky-700',
   },
   {
-    to: { name: 'p2pPolicyStudents' },
+    to: p2pStepTo('p2pPolicyStudents', workflowTermId.value),
     label: t('p2p_policy_page.nav_students'),
     hint: t('p2p_policy_page.nav_students_hint'),
     icon: markRaw(UsersIcon),
@@ -359,32 +363,39 @@ const cards = computed(() => [
   },
 ])
 
-const workflowSteps = computed(() => [
-  {
-    key: 'term',
-    title: t('p2p_policy_page.hub_workflow_step1_title'),
-    desc: t('p2p_policy_page.hub_workflow_step1_desc'),
-    stepClass: 'bg-violet-600 shadow-violet-900/20 shadow-sm',
-  },
-  {
-    key: 'routes',
-    title: t('p2p_policy_page.hub_workflow_step2_title'),
-    desc: t('p2p_policy_page.hub_workflow_step2_desc'),
-    stepClass: 'bg-sky-600 shadow-sky-900/20 shadow-sm',
-  },
-  {
-    key: 'students',
-    title: t('p2p_policy_page.hub_workflow_step3_title'),
-    desc: t('p2p_policy_page.hub_workflow_step3_desc'),
-    stepClass: 'bg-emerald-600 shadow-emerald-900/20 shadow-sm',
-  },
-  {
-    key: 'activate',
-    title: t('p2p_policy_page.hub_workflow_step4_title'),
-    desc: t('p2p_policy_page.hub_workflow_step4_desc'),
-    stepClass: 'bg-teal-600 shadow-teal-900/20 shadow-sm',
-  },
-])
+const workflowSteps = computed(() => {
+  const tid = workflowTermId.value
+  return [
+    {
+      key: 'term',
+      to: p2pStepTo('p2pPolicyTerm', tid),
+      title: t('p2p_policy_page.hub_workflow_step1_title'),
+      desc: t('p2p_policy_page.hub_workflow_step1_desc'),
+      stepClass: 'bg-violet-600 shadow-violet-900/20 shadow-sm',
+    },
+    {
+      key: 'routes',
+      to: p2pStepTo('p2pPolicyRoutes', tid),
+      title: t('p2p_policy_page.hub_workflow_step2_title'),
+      desc: t('p2p_policy_page.hub_workflow_step2_desc'),
+      stepClass: 'bg-sky-600 shadow-sky-900/20 shadow-sm',
+    },
+    {
+      key: 'students',
+      to: p2pStepTo('p2pPolicyStudents', tid),
+      title: t('p2p_policy_page.hub_workflow_step3_title'),
+      desc: t('p2p_policy_page.hub_workflow_step3_desc'),
+      stepClass: 'bg-emerald-600 shadow-emerald-900/20 shadow-sm',
+    },
+    {
+      key: 'activate',
+      to: p2pStepTo('p2pPolicyHub', tid),
+      title: t('p2p_policy_page.hub_workflow_step4_title'),
+      desc: t('p2p_policy_page.hub_workflow_step4_desc'),
+      stepClass: 'bg-teal-600 shadow-teal-900/20 shadow-sm',
+    },
+  ]
+})
 
 const progressPct = computed(() => {
   const run = generationRun.value

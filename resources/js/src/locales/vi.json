@@ -3733,6 +3733,15 @@
         "direction_two_way": "Hai chiều",
         "students_group_count": "{count} học sinh",
         "students_ungrouped": "Chưa gán nhóm tuyến",
+        "students_expand_all": "Mở tất cả nhóm",
+        "students_collapse_all": "Thu gọn tất cả",
+        "students_edit": "Sửa",
+        "students_edit_title": "Cập nhật học sinh chính sách",
+        "students_edit_hint": "Đổi nhóm tuyến, mã/tên học sinh hoặc loại chính sách — thay đổi được lưu ngay trên roster.",
+        "students_edit_saved": "Đã cập nhật học sinh.",
+        "field_effective_from": "Hiệu lực từ",
+        "field_effective_to": "Hiệu lực đến",
+        "col_actions": "Thao tác",
         "export": "Xuất Excel",
         "import": "Import Excel",
         "import_need_term": "Chọn kỳ P2P (filter) trước khi import.",
@@ -3880,6 +3889,16 @@
         "routes_col_students": "HS",
         "routes_loading": "Đang tải…",
         "tip_assign_vehicle": "Xe chính phục vụ tuyến này.",
-        "tip_assign_driver": "Tài xế chính phục vụ tuyến này."
+        "tip_assign_driver": "Tài xế chính phục vụ tuyến này.",
+        "workflow_bar_aria": "Quy trình P2P Policy",
+        "workflow_prev": "Bước trước",
+        "workflow_next": "Bước tiếp",
+        "workflow_next_routes": "Tiếp: Tuyến & phân công",
+        "workflow_next_students": "Tiếp: Roster học sinh",
+        "workflow_next_activate": "Tiếp: Kích hoạt",
+        "workflow_need_term": "Lưu hoặc chọn kỳ P2P trước",
+        "routes_assign_roster": "Gán roster",
+        "students_focus_route": "Đang gán học sinh cho nhóm tuyến: {route}.",
+        "students_back_routes": "Quay lại danh sách tuyến"
     }
 }

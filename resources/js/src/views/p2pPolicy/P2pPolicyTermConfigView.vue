@@ -18,6 +18,8 @@
       </div>
     </header>
 
+    <P2pPolicyWorkflowBar :current-step="'term'" :term-id="termId" />
+
     <div class="grid w-full gap-6 xl:grid-cols-12">
       <form
         class="xl:col-span-7 space-y-6"
@@ -100,7 +102,14 @@
             {{ termId ? t('p2p_policy_page.save') : t('p2p_policy_page.create_term') }}
           </button>
           <RouterLink
-            :to="{ name: 'p2pPolicyHub' }"
+            v-if="termId"
+            :to="p2pStepTo('p2pPolicyRoutes', termId)"
+            class="rounded-xl border border-teal-200 bg-teal-50 px-6 py-3 text-base font-semibold text-teal-900 transition hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
+          >
+            {{ t('p2p_policy_page.workflow_next_routes') }}
+          </RouterLink>
+          <RouterLink
+            :to="p2pStepTo('p2pPolicyHub', termId)"
             class="rounded-xl border border-slate-200 bg-white px-6 py-3 text-base font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {{ t('p2p_policy_page.back_to_hub') }}
@@ -308,6 +317,8 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { InformationCircleIcon } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
+import P2pPolicyWorkflowBar from '../../components/p2pPolicy/P2pPolicyWorkflowBar.vue'
+import { p2pStepTo, p2pWorkflowQuery, resolveP2pTermIdFromRoute } from '../../composables/useP2pPolicyWorkflow'
 import {
   createAcademicTerm,
   createP2pPolicyTerm,
@@ -357,7 +368,7 @@ const route = useRoute()
 const router = useRouter()
 
 const academicTerms = ref([])
-const termId = computed(() => (route.query.id ? Number(route.query.id) : null))
+const termId = computed(() => resolveP2pTermIdFromRoute(route))
 const saving = ref(false)
 const includeWeekend = ref(false)
 const excludeFixedHolidays = ref(true)
@@ -442,7 +453,7 @@ async function save() {
       await updateP2pPolicyTerm(termId.value, payload)
     } else {
       const created = await createP2pPolicyTerm(payload)
-      await router.replace({ query: { id: created.id } })
+      await router.replace({ query: p2pWorkflowQuery(created.id, { id: String(created.id) }) })
     }
     await load()
   } finally {

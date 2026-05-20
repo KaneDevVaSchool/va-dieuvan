@@ -14,6 +14,10 @@ class UpdatePolicyStudentRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
+            'policy_route_id' => ['sometimes', 'integer', 'exists:policy_routes,id'],
+            'student_id' => ['nullable', 'integer', 'exists:students,id'],
+            'student_code' => ['sometimes', 'string', 'max:20'],
+            'student_name' => ['sometimes', 'string', 'max:200'],
             'class_name' => ['nullable', 'string', 'max:20'],
             'direction' => ['nullable', 'in:one_way,two_way'],
             'policy_type' => ['sometimes', 'string', 'max:100'],

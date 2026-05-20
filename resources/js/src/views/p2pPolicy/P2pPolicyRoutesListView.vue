@@ -3,7 +3,7 @@
     <header class="flex flex-col gap-4 border-b border-slate-200/80 pb-5 dark:border-slate-700/80">
       <div class="min-w-0 space-y-2">
         <RouterLink
-          :to="{ name: 'p2pPolicyHub' }"
+          :to="p2pStepTo('p2pPolicyHub', workflowTermId)"
           class="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-medium text-teal-800 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950/40"
         >
           <ArrowLeftIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -17,6 +17,8 @@
         </p>
       </div>
     </header>
+
+    <P2pPolicyWorkflowBar current-step="routes" :term-id="workflowTermId" />
 
     <form @submit.prevent="create">
       <Card :hint="t('p2p_policy_page.tip_section_routes_create')">
@@ -274,8 +276,21 @@
                     <span class="sm:hidden"> · {{ r.policy_students_count ?? 0 }} HS</span>
                   </p>
                 </td>
-                <td class="hidden px-3 py-2.5 tabular-nums text-slate-600 sm:table-cell">
-                  {{ r.policy_students_count ?? 0 }}
+                <td class="hidden px-3 py-2.5 sm:table-cell">
+                  <div class="flex flex-col items-start gap-1">
+                    <span
+                      class="tabular-nums"
+                      :class="(r.policy_students_count ?? 0) === 0 ? 'font-semibold text-amber-700 dark:text-amber-300' : 'text-slate-600'"
+                    >
+                      {{ r.policy_students_count ?? 0 }}
+                    </span>
+                    <RouterLink
+                      :to="p2pStudentsForRoute(workflowTermId, r.id)"
+                      class="text-xs font-medium text-teal-700 hover:underline dark:text-teal-300"
+                    >
+                      {{ t('p2p_policy_page.routes_assign_roster') }}
+                    </RouterLink>
+                  </div>
                 </td>
                 <td class="px-3 py-2.5">
                   <div class="flex flex-wrap items-center gap-2">
@@ -302,13 +317,21 @@
                   </div>
                 </td>
                 <td class="px-3 py-2.5 text-right">
-                  <button
-                    type="button"
-                    class="rounded-lg bg-va-800 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-va-900"
-                    @click="saveAssign(r.id)"
-                  >
-                    {{ t('p2p_policy_page.save') }}
-                  </button>
+                  <div class="flex flex-col items-end gap-1.5">
+                    <button
+                      type="button"
+                      class="rounded-lg bg-va-800 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-va-900"
+                      @click="saveAssign(r.id)"
+                    >
+                      {{ t('p2p_policy_page.save') }}
+                    </button>
+                    <RouterLink
+                      :to="p2pStudentsForRoute(workflowTermId, r.id)"
+                      class="text-xs font-medium text-teal-700 hover:underline sm:hidden dark:text-teal-300"
+                    >
+                      {{ t('p2p_policy_page.routes_assign_roster') }}
+                    </RouterLink>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!loading && !routes.length">
@@ -447,12 +470,13 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { http } from '../../api/http'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import P2pPolicyFieldLabel from '../../components/p2pPolicy/P2pPolicyFieldLabel.vue'
+import P2pPolicyWorkflowBar from '../../components/p2pPolicy/P2pPolicyWorkflowBar.vue'
 import Card from '../../components/ui/Card.vue'
 import {
   P2P_ROUTES_DEFAULT_PER_PAGE,
@@ -469,10 +493,25 @@ import {
   listP2pPolicyTerms,
   listPolicyRoutes,
 } from '../../api/p2pPolicy'
+import {
+  p2pStepTo,
+  p2pStudentsForRoute,
+  p2pWorkflowQuery,
+  resolveP2pTermIdFromRoute,
+} from '../../composables/useP2pPolicyWorkflow'
+import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 
+const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const { filters, visibility, filterControlDefs, activeFilterCount, apiParams, clearFilters, resetPage } =
   useP2pPolicyRoutesFilters()
+
+const workflowTermId = computed(() => {
+  const fromFilter = filters.p2p_policy_term_id
+  if (fromFilter !== '' && fromFilter != null) return Number(fromFilter)
+  return resolveP2pTermIdFromRoute(route)
+})
 
 const routes = ref([])
 const meta = ref({ total: 0, current_page: 1, per_page: P2P_ROUTES_DEFAULT_PER_PAGE, last_page: 1 })
@@ -622,10 +661,14 @@ async function loadTerms() {
 
 async function load() {
   await Promise.all([loadTerms(), loadCampuses()])
-  if (terms.value[0] && !createForm.p2p_policy_term_id) {
+  const qTerm = resolveP2pTermIdFromRoute(route)
+  if (qTerm) {
+    createForm.p2p_policy_term_id = qTerm
+    filters.p2p_policy_term_id = qTerm
+  } else if (terms.value[0] && !createForm.p2p_policy_term_id) {
     createForm.p2p_policy_term_id = terms.value[0].id
   }
-  if (terms.value[0] && !filters.p2p_policy_term_id) {
+  if (!filters.p2p_policy_term_id && terms.value[0]) {
     filters.p2p_policy_term_id = terms.value[0].id
   }
   if (campuses.value[0] && !createForm.origin_campus_id) {
@@ -720,6 +763,7 @@ async function submitTerm() {
     await loadTerms()
     createForm.p2p_policy_term_id = created.id
     filters.p2p_policy_term_id = created.id
+    router.replace({ query: p2pWorkflowQuery(created.id) })
     resetPage()
     await loadRoutes()
     closeTermModal()
@@ -731,6 +775,18 @@ async function submitTerm() {
 }
 
 watch(apiParams, loadRoutes, { deep: true })
+
+watch(
+  () => filters.p2p_policy_term_id,
+  (id) => {
+    if (id !== '' && id != null) {
+      createForm.p2p_policy_term_id = id
+    }
+    router.replace({
+      query: p2pWorkflowQuery(id || resolveP2pTermIdFromRoute(route)),
+    })
+  },
+)
 
 onMounted(load)
 </script>

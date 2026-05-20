@@ -3,7 +3,7 @@
     <header class="flex flex-col gap-4 border-b border-slate-200/80 pb-5 dark:border-slate-700/80 sm:flex-row sm:items-start sm:justify-between">
       <div class="min-w-0 space-y-2">
         <RouterLink
-          :to="{ name: 'p2pPolicyHub' }"
+          :to="p2pStepTo('p2pPolicyHub', workflowTermId)"
           class="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-medium text-teal-800 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950/40"
         >
           <ArrowLeftIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -17,6 +17,21 @@
         </p>
       </div>
     </header>
+
+    <P2pPolicyWorkflowBar current-step="students" :term-id="workflowTermId" />
+
+    <p
+      v-if="focusedRouteLabel"
+      class="rounded-xl border border-teal-200/80 bg-teal-50/80 px-4 py-3 text-sm text-teal-950 dark:border-teal-900/50 dark:bg-teal-950/25 dark:text-teal-100"
+    >
+      {{ t('p2p_policy_page.students_focus_route', { route: focusedRouteLabel }) }}
+      <RouterLink
+        :to="p2pStepTo('p2pPolicyRoutes', workflowTermId)"
+        class="ml-2 font-semibold text-teal-800 underline dark:text-teal-200"
+      >
+        {{ t('p2p_policy_page.students_back_routes') }}
+      </RouterLink>
+    </p>
 
     <Card v-if="canImportExport" :hint="t('p2p_policy_page.tip_section_import_export')">
       <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_import_export') }}</h2>
@@ -175,14 +190,39 @@
     </div>
 
     <div v-else class="space-y-4">
+      <div v-if="studentGroups.length" class="flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+          @click="expandAllGroups"
+        >
+          {{ t('p2p_policy_page.students_expand_all') }}
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+          @click="collapseAllGroups"
+        >
+          {{ t('p2p_policy_page.students_collapse_all') }}
+        </button>
+      </div>
+
       <div
         v-for="group in studentGroups"
         :key="group.key"
         class="overflow-hidden rounded-2xl border border-slate-200/90 shadow-sm dark:border-slate-700/80"
       >
-        <div
-          class="flex flex-wrap items-center gap-3 border-b border-teal-200/60 bg-gradient-to-r from-teal-50 via-white to-sky-50/80 px-4 py-3 dark:border-teal-900/40 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/20"
+        <button
+          type="button"
+          class="flex w-full flex-wrap items-center gap-3 border-b border-teal-200/60 bg-gradient-to-r from-teal-50 via-white to-sky-50/80 px-4 py-3 text-left transition hover:from-teal-100/80 dark:border-teal-900/40 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/20 dark:hover:from-teal-950/50"
+          :aria-expanded="isGroupOpen(group.key)"
+          @click="toggleGroup(group.key)"
         >
+          <ChevronDownIcon
+            class="h-5 w-5 shrink-0 text-teal-700 transition-transform dark:text-teal-300"
+            :class="isGroupOpen(group.key) ? 'rotate-0' : '-rotate-90'"
+            aria-hidden="true"
+          />
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm">
             <UserGroupIcon class="h-5 w-5" aria-hidden="true" />
           </span>
@@ -193,8 +233,8 @@
           <span class="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-teal-900 ring-1 ring-teal-200 dark:bg-slate-900/80 dark:text-teal-100 dark:ring-teal-800">
             {{ t('p2p_policy_page.students_group_count', { count: group.rows.length }) }}
           </span>
-        </div>
-        <div class="overflow-x-auto">
+        </button>
+        <div v-show="isGroupOpen(group.key)" class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead class="bg-slate-50/90 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/60">
               <tr>
@@ -204,6 +244,7 @@
                 <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_direction') }}</th>
                 <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_policy') }}</th>
                 <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_active') }}</th>
+                <th v-if="canManage" class="w-[5rem] px-4 py-2.5 text-right">{{ t('p2p_policy_page.col_actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -242,6 +283,15 @@
                     {{ row.is_active ? t('p2p_policy_page.active_yes') : t('p2p_policy_page.active_no') }}
                   </span>
                 </td>
+                <td v-if="canManage" class="px-4 py-2.5 text-right">
+                  <button
+                    type="button"
+                    class="rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-900 hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
+                    @click.stop="openEdit(row)"
+                  >
+                    {{ t('p2p_policy_page.students_edit') }}
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -263,18 +313,32 @@
       :p2p-policy-term-id="filters.p2p_policy_term_id"
       @committed="reload"
     />
+
+    <P2pPolicyStudentEditDialog
+      ref="editDialog"
+      :routes="routes"
+      @saved="onStudentSaved"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import P2pPolicyStudentEditDialog from '../../components/p2pPolicy/P2pPolicyStudentEditDialog.vue'
 import P2pPolicyStudentImportDialog from '../../components/p2pPolicy/P2pPolicyStudentImportDialog.vue'
+import P2pPolicyWorkflowBar from '../../components/p2pPolicy/P2pPolicyWorkflowBar.vue'
 import Card from '../../components/ui/Card.vue'
 import { useP2pPolicyStudentFilters } from '../../composables/useP2pPolicyStudentFilters'
-import { showAppError } from '../../composables/appMessage'
+import {
+  p2pStepTo,
+  p2pWorkflowQuery,
+  resolveP2pTermIdFromRoute,
+} from '../../composables/useP2pPolicyWorkflow'
+import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { formatApiError } from '../../api/http'
 import { useAuthStore } from '../../store'
 import {
@@ -296,10 +360,27 @@ import {
 } from '../../api/p2pPolicy'
 
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const { filters, visibility, apiParams, activeFilterCount, clearFilters, filterDefs } = useP2pPolicyStudentFilters()
 
+const workflowTermId = computed(() => {
+  const fromFilter = filters.p2p_policy_term_id
+  if (fromFilter !== '' && fromFilter != null) return Number(fromFilter)
+  return resolveP2pTermIdFromRoute(route)
+})
+
+const focusedRouteLabel = computed(() => {
+  if (!filters.policy_route_id) return ''
+  const r = routes.value.find((x) => String(x.id) === String(filters.policy_route_id))
+  return r?.name ?? ''
+})
+
 const canImportExport = computed(() => auth.hasPermission('p2p_policy.import_export'))
+const canManage = computed(() => auth.hasPermission('p2p_policy.manage'))
+
+const openGroups = reactive({})
 
 const items = ref([])
 const meta = ref({ total: 0 })
@@ -310,6 +391,7 @@ const campuses = ref([])
 const academicTerms = ref([])
 const p2pTerms = ref([])
 const importDialog = ref(null)
+const editDialog = ref(null)
 
 const weekdays = [
   { v: 1, l: 'T2' },
@@ -346,6 +428,47 @@ const studentGroups = computed(() => {
   }
   return [...map.values()].sort((a, b) => a.routeName.localeCompare(b.routeName, 'vi'))
 })
+
+function isGroupOpen(key) {
+  return openGroups[key] !== false
+}
+
+function toggleGroup(key) {
+  openGroups[key] = !isGroupOpen(key)
+}
+
+function expandAllGroups() {
+  for (const g of studentGroups.value) {
+    openGroups[g.key] = true
+  }
+}
+
+function collapseAllGroups() {
+  for (const g of studentGroups.value) {
+    openGroups[g.key] = false
+  }
+}
+
+watch(
+  studentGroups,
+  (groups) => {
+    for (const g of groups) {
+      if (!(g.key in openGroups)) {
+        openGroups[g.key] = true
+      }
+    }
+  },
+  { immediate: true },
+)
+
+function openEdit(row) {
+  editDialog.value?.open(row)
+}
+
+async function onStudentSaved() {
+  showAppSuccess(t('p2p_policy_page.students_edit_saved'))
+  await reload()
+}
 
 function p2pTermLabel(pt) {
   const year = pt.academic_term?.academic_year ?? pt.academic_year ?? ''
@@ -418,22 +541,64 @@ function openImport() {
   importDialog.value?.open()
 }
 
+function syncWorkflowQuery() {
+  const extra = {}
+  if (filters.policy_route_id) {
+    extra.policy_route_id = String(filters.policy_route_id)
+  }
+  router.replace({
+    query: p2pWorkflowQuery(filters.p2p_policy_term_id || resolveP2pTermIdFromRoute(route), extra),
+  })
+}
+
+async function loadRouteOptions() {
+  const params = { per_page: 100 }
+  if (filters.p2p_policy_term_id) {
+    params.p2p_policy_term_id = filters.p2p_policy_term_id
+  }
+  const r = await listPolicyRoutes(params)
+  routes.value = r.items ?? []
+}
+
 onMounted(async () => {
-  const [r, c, at, pt] = await Promise.all([
-    listPolicyRoutes({ per_page: 100 }),
+  const [c, at, pt] = await Promise.all([
     listCampuses({ per_page: 100 }),
     listAcademicTerms({ per_page: 100 }),
     listP2pPolicyTerms({ per_page: 50 }),
   ])
-  routes.value = r.items ?? []
   campuses.value = c.items ?? []
   academicTerms.value = at.items ?? []
   p2pTerms.value = pt.items ?? []
-  if (p2pTerms.value[0] && !filters.p2p_policy_term_id) {
+
+  const qTerm = resolveP2pTermIdFromRoute(route)
+  if (qTerm) {
+    filters.p2p_policy_term_id = qTerm
+  } else if (p2pTerms.value[0] && !filters.p2p_policy_term_id) {
     filters.p2p_policy_term_id = p2pTerms.value[0].id
   }
+  if (route.query.policy_route_id) {
+    filters.policy_route_id = Number(route.query.policy_route_id)
+  }
+
+  await loadRouteOptions()
+  syncWorkflowQuery()
   await reload()
 })
+
+watch(
+  () => filters.p2p_policy_term_id,
+  async () => {
+    await loadRouteOptions()
+    syncWorkflowQuery()
+  },
+)
+
+watch(
+  () => filters.policy_route_id,
+  () => {
+    syncWorkflowQuery()
+  },
+)
 
 watch(apiParams, reload, { deep: true })
 </script>
