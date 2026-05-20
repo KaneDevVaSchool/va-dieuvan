@@ -188,6 +188,7 @@ export function useDispatchRequestWizard(options = {}) {
     })
     requesterEmailTouched.value = false
     coordinatorEmailTouched.value = false
+    applyPortalExtracurricularCreateDefaults()
   }
 
   const step = ref(0)
@@ -1080,10 +1081,37 @@ export function useDispatchRequestWizard(options = {}) {
     if (i <= maxReachedStep.value) step.value = i
   }
 
+  /** Nhảy tới bước (vd. CLB bỏ qua chọn loại); cập nhật maxReachedStep để goStep(1) không bị chặn. */
+  function enterStep(i) {
+    const target = Math.max(0, Math.min(3, Number(i)))
+    if (target > maxReachedStep.value) maxReachedStep.value = target
+    step.value = target
+  }
+
+  /** Giữ phiếu CLB đúng loại sau khi hydrate nháp / template (tránh canGoNext bắt ngày đề xuất). */
+  function applyPortalExtracurricularCreateDefaults() {
+    if (!portalExtracurricularCreate) return
+    form.value.trip_type = 'point_to_point'
+    form.value.point_purpose_kind = 'extracurricular'
+    form.value.recurring_enabled = true
+    if (step.value === 0) enterStep(1)
+  }
+
   function nextStep() {
     if (!canGoNext.value) return
     if (step.value < 3) step.value++
   }
+
+  watchEffect(() => {
+    if (
+      portalExtracurricularCreate &&
+      step.value === 0 &&
+      form.value.trip_type === 'point_to_point' &&
+      form.value.point_purpose_kind === 'extracurricular'
+    ) {
+      enterStep(1)
+    }
+  })
 
   function addPassengerRow() {
     passengerRows.value.push(emptyPassengerRow())
@@ -1906,6 +1934,7 @@ export function useDispatchRequestWizard(options = {}) {
     } else {
       loadDraftFromStorage()
     }
+    applyPortalExtracurricularCreateDefaults()
     if (auth.user) {
       if (!form.value.requester_name?.trim() && auth.user.name) form.value.requester_name = auth.user.name
       if (!form.value.requester_email?.trim() && auth.user.email) form.value.requester_email = auth.user.email
@@ -2072,6 +2101,7 @@ export function useDispatchRequestWizard(options = {}) {
     formatDraftTime,
     canGoNext,
     goStep,
+    enterStep,
     nextStep,
     addPassengerRow,
     removePassengerRow,

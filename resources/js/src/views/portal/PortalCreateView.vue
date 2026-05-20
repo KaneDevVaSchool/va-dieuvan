@@ -198,7 +198,7 @@
               :weekdays="form.e1_weekdays"
               end-mode-radio-name="portal_recurrence_end_mode"
               @toggle-weekday="toggleE1Weekday"
-              @go-schedule-step="goStep(2)"
+              @go-schedule-step="enterStep(2)"
             />
           </section>
 
@@ -1260,6 +1260,7 @@ const {
   appliedUrgentThresholdHours,
   canGoNext,
   goStep,
+  enterStep,
   nextStep,
   headerPrimaryLabel,
   headerPrimaryDisabled,
@@ -1341,7 +1342,7 @@ function applyExtracurricularCreateDefaults() {
   form.value.trip_type = 'point_to_point'
   form.value.point_purpose_kind = 'extracurricular'
   form.value.recurring_enabled = true
-  if (step.value === 0) goStep(1)
+  if (step.value === 0) enterStep(1)
 }
 
 function applyGeneralPortalCreateDefaults() {
@@ -1360,7 +1361,7 @@ function applyShortcutTripType() {
   const raw = String(route.query.type ?? '').trim().toLowerCase()
   if (!TRIP_TYPES.includes(raw)) return
   form.value.trip_type = raw
-  goStep(1)
+  enterStep(1)
 }
 
 function handlePortalCancel() {
