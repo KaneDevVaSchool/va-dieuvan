@@ -84,7 +84,7 @@
                 v-model="draft.departAtLocal"
                 type="datetime-local"
                 class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                :disabled="locked"
+                :disabled="!canEditForm"
               />
             </label>
             <label class="block">
@@ -93,7 +93,7 @@
                 v-model="draft.arriveByLocal"
                 type="datetime-local"
                 class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                :disabled="locked"
+                :disabled="!canEditForm"
               />
             </label>
           </div>
@@ -150,7 +150,7 @@
               v-model="draft.origin"
               type="text"
               class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              :disabled="locked"
+              :disabled="!canEditForm"
             />
           </label>
           <label class="block">
@@ -159,7 +159,7 @@
               v-model="draft.destination"
               type="text"
               class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              :disabled="locked"
+              :disabled="!canEditForm"
             />
           </label>
         </div>
@@ -192,7 +192,7 @@
                 min="1"
                 max="999"
                 class="mt-1 w-full rounded-md border border-violet-300 bg-white px-3 py-2 text-lg font-bold tabular-nums text-slate-900"
-                :disabled="locked"
+                :disabled="!canEditForm"
               />
             </label>
           </div>
@@ -202,7 +202,7 @@
               v-model="draft.notes"
               rows="4"
               class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              :disabled="locked"
+              :disabled="!canEditForm"
             />
           </label>
         </div>
@@ -211,13 +211,25 @@
 
     <p v-if="formError" class="px-4 pb-2 text-sm text-rose-600 sm:px-6">{{ formError }}</p>
 
+    <p
+      v-if="!canEditForm"
+      class="border-t border-slate-100 bg-slate-50 px-4 py-4 text-sm text-slate-700 sm:px-6"
+    >
+      {{
+        req.student_count_submitted_at
+          ? t('portal.recurring_edit.bm03_submitted_readonly')
+          : t('portal.recurring_edit.bm03_view_only')
+      }}
+    </p>
+
     <div
+      v-else-if="canEditForm"
       class="sticky bottom-0 flex flex-wrap gap-3 border-t border-slate-100 bg-white/95 px-4 py-4 backdrop-blur sm:px-6"
     >
       <button
         type="button"
         class="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50"
-        :disabled="locked || saving"
+        :disabled="saving"
         @click="save"
       >
         {{ saving ? t('portal.recurring_edit.save_draft_busy') : t('portal.recurring_edit.save_draft') }}
@@ -225,7 +237,7 @@
       <button
         type="button"
         class="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-50"
-        :disabled="locked || saving || submitting || !canSubmit"
+        :disabled="saving || submitting || !canSubmit"
         @click="submitToDispatch"
       >
         {{
@@ -281,6 +293,7 @@ const draft = reactive({
 })
 
 const locked = computed(() => row.passengerDepartLocked(props.req))
+const canEditForm = computed(() => row.canEditStudentCount(props.req))
 const canSubmit = computed(() => row.canSubmitStudentCount(props.req))
 
 function toLocalInput(iso) {
@@ -342,7 +355,7 @@ function buildPayload() {
 }
 
 async function save() {
-  if (locked.value || saving.value) return
+  if (!canEditForm.value || saving.value) return
   saving.value = true
   formError.value = ''
   try {
@@ -356,7 +369,7 @@ async function save() {
 }
 
 async function submitToDispatch() {
-  if (!canSubmit.value || locked.value || submitting.value) return
+  if (!canEditForm.value || !canSubmit.value || submitting.value) return
   const n = Math.round(Number(draft.studentCount) || 0)
   const ok = await confirmAction({
     title: t('portal.extracurricular_table.submit_confirm_title'),

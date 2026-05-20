@@ -66,7 +66,7 @@
       </div>
 
       <PortalExtracurricularBm03EditForm
-        v-if="showExtracurricularInstanceEdit"
+        v-if="showExtracurricularBm03"
         ref="bm03FormRef"
         class="mt-6"
         :req="req"
@@ -74,7 +74,6 @@
       />
 
       <PortalStatusTimeline
-        v-if="!showExtracurricularInstanceEdit"
         class="mt-8"
         :title="t('portal.timeline_heading')"
         :steps="timelineSteps"
@@ -220,7 +219,7 @@
         </div>
       </div>
 
-      <div v-if="!showExtracurricularInstanceEdit" class="mt-8 w-full space-y-6">
+      <div v-if="!showExtracurricularBm03" class="mt-8 w-full space-y-6">
         <PortalSignedDocUpload
           v-if="showSignedSection"
           :attachments="signedPaperAttachments"
@@ -502,7 +501,7 @@ watch(showExtracurricularInstanceEdit, (on) => {
 })
 
 const showPassengerAdjustSection = computed(() => {
-  if (showExtracurricularInstanceEdit.value) return false
+  if (showExtracurricularBm03.value) return false
   if (!req.value?.dispatch_request_template_id) return false
   return (
     isCurrentUserRequester.value &&

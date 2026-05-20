@@ -685,7 +685,9 @@
             "bm03_time_note": "Note: allow at least 3 working days before the vehicle date (per BM.03).",
             "bm03_trip_type": "Request type",
             "save_draft": "Save draft",
-            "save_draft_busy": "Saving…"
+            "save_draft_busy": "Saving…",
+            "bm03_submitted_readonly": "This ticket was sent to dispatch. The form below is read-only.",
+            "bm03_view_only": "Read-only on the portal in the current state."
         },
         "home_sidebar_title": "Account",
         "sidebar_hint": "View submitted requests",

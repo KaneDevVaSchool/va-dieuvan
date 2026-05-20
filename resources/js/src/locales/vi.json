@@ -728,7 +728,9 @@
             "bm03_time_note": "Lưu ý: Tối thiểu 03 ngày làm việc trước ngày cấp xe (theo quy trình BM.03).",
             "bm03_trip_type": "Loại yêu cầu",
             "save_draft": "Lưu nháp",
-            "save_draft_busy": "Đang lưu…"
+            "save_draft_busy": "Đang lưu…",
+            "bm03_submitted_readonly": "Phiếu đã gửi tới điều vận. Nội dung bên dưới chỉ để xem.",
+            "bm03_view_only": "Phiếu chỉ xem trên cổng người dùng (không chỉnh sửa được ở trạng thái hiện tại)."
         },
         "home_sidebar_title": "Tài khoản",
         "sidebar_hint": "Xem các yêu cầu bạn đã gửi",
