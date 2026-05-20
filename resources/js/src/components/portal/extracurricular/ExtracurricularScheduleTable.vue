@@ -14,8 +14,8 @@
             class="h-4 w-4 shrink-0 text-indigo-600 transition group-open:rotate-90"
             aria-hidden="true"
           />
-          <template v-if="groupBy === 'plan' && editingTemplateId === group.templateId">
-            <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2" @click.stop>
+          <template v-if="props.groupBy === 'plan' && editingTemplateId === templateIdForGroup(group)">
+            <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2" @click.stop @mousedown.stop>
             <input
               ref="planLabelInputRef"
               v-model="planLabelDraft"
@@ -25,12 +25,13 @@
               :aria-label="t('portal.extracurricular_list.plan_name_edit_label')"
               @keydown.enter.prevent="savePlanLabel(group)"
               @keydown.escape.prevent="cancelPlanLabelEdit"
+              @click.stop
             />
             <button
               type="button"
               class="shrink-0 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
-              :disabled="planLabelSaving || !planLabelDraft.trim()"
-              @click="savePlanLabel(group)"
+              :disabled="planLabelSaving"
+              @click.stop.prevent="savePlanLabel(group)"
             >
               {{ planLabelSaving ? t('portal.extracurricular_list.plan_name_save_busy') : t('portal.extracurricular_list.plan_name_save') }}
             </button>
@@ -38,7 +39,7 @@
               type="button"
               class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-indigo-800 hover:bg-indigo-100/80"
               :disabled="planLabelSaving"
-              @click="cancelPlanLabelEdit"
+              @click.stop.prevent="cancelPlanLabelEdit"
             >
               {{ t('portal.extracurricular_list.plan_name_cancel') }}
             </button>
@@ -47,18 +48,18 @@
           <template v-else>
             <span class="truncate">{{ group.label }}</span>
             <button
-              v-if="groupBy === 'plan' && group.templateId"
+              v-if="props.groupBy === 'plan' && templateIdForGroup(group)"
               type="button"
               class="shrink-0 rounded-md p-1 text-indigo-700 hover:bg-indigo-100/80"
               :title="t('portal.extracurricular_list.plan_name_edit')"
               :aria-label="t('portal.extracurricular_list.plan_name_edit')"
-              @click.stop="startPlanLabelEdit(group)"
+              @click.stop.prevent="startPlanLabelEdit(group)"
             >
               <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
             </button>
           </template>
           <p
-            v-if="planLabelError && editingTemplateId === group.templateId"
+            v-if="planLabelError && editingTemplateId === templateIdForGroup(group)"
             class="w-full basis-full text-xs font-normal text-red-700"
           >
             {{ planLabelError }}
@@ -195,6 +196,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronRightIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
 import { updatePortalDispatchPlanLabel } from '../../../api/requests'
+import { formatApiError } from '../../../api/http'
 import StatusBadge from '../../ui/StatusBadge.vue'
 import StudentCountCell from '../../requests/extracurricular/StudentCountCell.vue'
 import StudentCountTrackingBadge from '../../requests/extracurricular/StudentCountTrackingBadge.vue'
@@ -245,11 +247,10 @@ const grouped = computed(() => {
   for (const req of props.requests) {
     const key = groupKey(req)
     if (!map.has(key)) {
-      const tid = req?.dispatch_request_template_id
       map.set(key, {
         key,
         label: groupLabel(req, key),
-        templateId: tid != null && tid !== '' ? Number(tid) : null,
+        templateId: templateIdFromReq(req),
         items: [],
       })
     }
@@ -287,11 +288,33 @@ function lockHintFor(req) {
   return k ? t(`${i18nPrefix}.${k}`) : ''
 }
 
+function templateIdFromReq(req) {
+  const tid = req?.dispatch_request_template_id ?? req?.dispatch_request_template?.id
+  if (tid == null || tid === '') return null
+  const n = Number(tid)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+function templateIdForGroup(group) {
+  if (group?.templateId) return group.templateId
+  const req = group?.items?.[0]
+  return req ? templateIdFromReq(req) : null
+}
+
+function rawPlanLabelFromReq(req) {
+  const pkgLabel = req?.dispatch_request_template?.dispatch_package?.label
+  return String(pkgLabel || '').trim()
+}
+
 function startPlanLabelEdit(group) {
-  if (!group?.templateId) return
+  const tid = templateIdForGroup(group)
+  if (!tid) return
   planLabelError.value = ''
-  editingTemplateId.value = group.templateId
-  planLabelDraft.value = group.label === t('portal.recurring_plan.plan_name_unnamed') ? '' : String(group.label || '')
+  editingTemplateId.value = tid
+  const raw =
+    group?.items?.map((r) => rawPlanLabelFromReq(r)).find((s) => s) ||
+    (group.label === t('portal.recurring_plan.plan_name_unnamed') ? '' : String(group.label || '').trim())
+  planLabelDraft.value = raw
   nextTick(() => planLabelInputRef.value?.focus())
 }
 
@@ -302,22 +325,36 @@ function cancelPlanLabelEdit() {
 }
 
 async function savePlanLabel(group) {
+  const tid = templateIdForGroup(group)
   const trimmed = planLabelDraft.value.trim()
-  if (!group?.templateId || !trimmed) {
+  if (!tid) {
+    planLabelError.value = t('portal.extracurricular_list.plan_name_save_fail')
+    return
+  }
+  if (!trimmed) {
     planLabelError.value = t('portal.extracurricular_create.blocker_plan_name')
     return
   }
   planLabelSaving.value = true
   planLabelError.value = ''
   try {
-    await updatePortalDispatchPlanLabel(group.templateId, trimmed)
+    await updatePortalDispatchPlanLabel(tid, trimmed)
+    patchLocalPlanLabel(group, trimmed)
     cancelPlanLabelEdit()
     emit('refresh')
   } catch (e) {
-    planLabelError.value =
-      e?.response?.data?.message || e?.message || t('portal.extracurricular_list.plan_name_save_fail')
+    planLabelError.value = formatApiError(e, t('portal.extracurricular_list.plan_name_save_fail'))
   } finally {
     planLabelSaving.value = false
+  }
+}
+
+function patchLocalPlanLabel(group, label) {
+  for (const req of group?.items || []) {
+    const pkg = req?.dispatch_request_template?.dispatch_package
+    if (pkg && typeof pkg === 'object') {
+      pkg.label = label
+    }
   }
 }
 
