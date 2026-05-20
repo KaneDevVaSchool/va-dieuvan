@@ -689,6 +689,16 @@
         </button>
       </div>
       <div v-else>
+        <ExtracurricularRequestsDataTable
+          v-if="filters.extracurricular_only"
+          ref="extracurricularTableRef"
+          class="border-t border-violet-100/80 p-4"
+          :requests="items"
+          variant="staff"
+          @refresh="reload"
+          @clone="onExtracurricularClone"
+        />
+        <template v-else>
         <div class="hidden overflow-x-auto md:block">
         <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead class="bg-slate-50/80">
@@ -923,6 +933,7 @@
             </RouterLink>
           </li>
         </ul>
+        </template>
       </div>
 
       <div
@@ -1101,8 +1112,10 @@ import {
   bulkForceDeleteRequests,
   bulkRestoreRequests,
   bulkSoftDeleteRequests,
+  cloneDispatchRequest,
   listRequests,
 } from '../../api/requests'
+import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
 import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import {
@@ -1118,6 +1131,8 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+
+const extracurricularTableRef = ref(null)
 
 const loading = ref(false)
 const items = ref([])
@@ -1909,6 +1924,19 @@ function toggleExtracurricularOnly() {
   const hadPage = !!route.query.page
   syncRoutePageAfterReset()
   if (!hadPage) reload()
+}
+
+async function onExtracurricularClone(req) {
+  if (!req?.id) return
+  extracurricularTableRef.value?.setCloneBusy?.(req.id, true)
+  try {
+    const dr = await cloneDispatchRequest(req.id)
+    await router.push({ name: 'dispatchRequestNew', query: { replace: String(dr.id) } })
+  } catch (e) {
+    showAppErrorFromApi(e, t('request_detail.reset_clone_fail'))
+  } finally {
+    extracurricularTableRef.value?.setCloneBusy?.(req.id, false)
+  }
 }
 
 function resetFilters() {

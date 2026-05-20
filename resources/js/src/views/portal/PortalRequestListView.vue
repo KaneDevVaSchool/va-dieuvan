@@ -387,7 +387,15 @@
               </select>
             </label>
           </div>
-          <PortalRequestsTable :requests="items" />
+          <ExtracurricularRequestsDataTable
+            v-if="isExtracurricularMode"
+            ref="extracurricularTableRef"
+            :requests="items"
+            variant="portal"
+            @refresh="reloadFromStart"
+            @clone="onCloneFromList"
+          />
+          <PortalRequestsTable v-else :requests="items" />
           <nav
             v-if="pagination && (pagination.last_page ?? 1) > 1"
             class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between"
@@ -457,16 +465,17 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { listPortalRequests } from '../../api/requests'
+import { cloneDispatchRequest, listPortalRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import PortalEmptyState from '../../components/portal/PortalEmptyState.vue'
 import PortalRequestSkeleton from '../../components/portal/PortalRequestSkeleton.vue'
 import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue'
+import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
 
 const PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const PER_PAGE_KEY = 'portal-list-per-page'
@@ -483,6 +492,11 @@ function readStoredPerPage() {
 }
 
 const { t } = useI18n()
+const router = useRouter()
+
+const isExtracurricularMode = computed(() => filterExtracurricular.value === 'extracurricular')
+
+const extracurricularTableRef = ref(null)
 
 // ── List state ───────────────────────────────────────────────
 const loading = ref(true)
@@ -888,6 +902,19 @@ function goPage(page) {
   const last = pagination.value?.last_page ?? 1
   const p = Math.max(1, Math.min(page, last))
   loadPage(p)
+}
+
+async function onCloneFromList(req) {
+  if (!req?.id) return
+  extracurricularTableRef.value?.setCloneBusy?.(req.id, true)
+  try {
+    const dr = await cloneDispatchRequest(req.id)
+    await router.push({ name: 'portalCreate', query: { replace: String(dr.id) } })
+  } catch (e) {
+    fetchError.value = formatApiError(e, t('request_detail.reset_clone_fail'))
+  } finally {
+    extracurricularTableRef.value?.setCloneBusy?.(req.id, false)
+  }
 }
 
 function onPerPageChange() {
