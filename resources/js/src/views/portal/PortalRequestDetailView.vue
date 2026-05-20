@@ -65,18 +65,25 @@
         </div>
       </div>
 
+      <PortalStatusTimeline
+        class="mt-6"
+        :title="t('portal.timeline_heading')"
+        :steps="timelineSteps"
+      />
+
+      <PortalExtracurricularStudentNotesStrip
+        v-if="showExtracurricularBm03"
+        class="mt-6"
+        :req="req"
+        @saved="load"
+      />
+
       <PortalExtracurricularBm03EditForm
         v-if="showExtracurricularBm03"
         ref="bm03FormRef"
         class="mt-6"
         :req="req"
         @saved="load"
-      />
-
-      <PortalStatusTimeline
-        class="mt-8"
-        :title="t('portal.timeline_heading')"
-        :steps="timelineSteps"
       />
 
       <section
@@ -275,6 +282,7 @@ import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
+import PortalExtracurricularStudentNotesStrip from '../../components/portal/extracurricular/PortalExtracurricularStudentNotesStrip.vue'
 
 const route = useRoute()
 const { routes: portalRoutes, isExtracurricularModule } = usePortalExtracurricularModule()

@@ -7,6 +7,7 @@ import { formatApiError } from '../api/http'
 import { newIdempotencyKey } from '../util/idempotency'
 import { LEGACY_DRAFT_KEY, E1_WEEKDAY_KEYS, todayISODate } from './dispatchWizardConstants'
 import { buildIsoWeekdaysFromE1, computeRecurringOccurrenceDates } from '../util/recurringOccurrences'
+import { formatVndWhileTyping } from '../util/money'
 
 const DRAFT_VERSION = 'portal-recurring-plan-v2'
 
@@ -39,6 +40,7 @@ export function createPortalRecurringPlanForm() {
     e1_weekdays: createEmptyWeekdays(),
     pickup: '',
     dropoff: '',
+    estimated_vehicle_cost: '',
     notes: '',
   }
 }
@@ -170,6 +172,10 @@ export function usePortalRecurringPlanCreate() {
     if (w && typeof w[k] === 'boolean') w[k] = !w[k]
   }
 
+  function onEstimatedVehicleCostInput(e) {
+    form.value.estimated_vehicle_cost = formatVndWhileTyping(e.target.value)
+  }
+
   function setWeekdayPreset(preset) {
     const w = form.value.e1_weekdays
     if (!w) return
@@ -240,6 +246,7 @@ export function usePortalRecurringPlanCreate() {
         requester_email: u.email || '',
         requester_phone: u.phone || '',
         requester_unit: u.department?.name || '',
+        estimated_vehicle_cost: f.estimated_vehicle_cost?.trim() || '',
       },
       passengerRows: [
         {
@@ -428,6 +435,7 @@ export function usePortalRecurringPlanCreate() {
     headerPrimaryDisabled,
     toggleWeekday,
     setWeekdayPreset,
+    onEstimatedVehicleCostInput,
     primaryAction,
     submitPlan,
     saveDraft,

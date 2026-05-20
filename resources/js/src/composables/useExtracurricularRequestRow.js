@@ -114,6 +114,7 @@ export function useExtracurricularRequestRow(auth, userRef) {
 
   return {
     hoursUntilDepartIso,
+    isRequester,
     isRecurringInstance,
     planStudentCount,
     actualStudentCount,

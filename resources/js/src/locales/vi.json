@@ -654,6 +654,14 @@
         "extracurricular_create": {
             "sec_schedule": "Lịch định kỳ",
             "sec_route": "Tuyến đón / trả",
+            "route_tabs_aria": "Tuyến và chi phí kế hoạch",
+            "tab_route_points": "Điểm đón / trả",
+            "tab_plan_cost_notes": "Chi phí & ghi chú",
+            "plan_cost_lead": "Ước tính chi phí xe cho cả kế hoạch (tuỳ chọn). Điều vận có thể điều chỉnh khi duyệt từng chuyến.",
+            "estimated_vehicle_cost_label": "Chi phí xe dự kiến",
+            "estimated_vehicle_cost_hint": "Chỉ nhập số dương; hệ thống tự định dạng VNĐ (vd. 1.500.000).",
+            "plan_notes_hint": "Ghi chú áp dụng cho kế hoạch và các phiếu chuyến được tạo.",
+            "plan_notes_ph": "VD: loại xe mong muốn, lưu ý tuyến, liên hệ phối hợp…",
             "route_lead": "Giờ chuyến theo lịch định kỳ phía trên.",
             "weekdays_required_hint": "Chọn ít nhất một thứ trong tuần.",
             "next_route_step": "Bước tiếp: điểm đón / trả",
@@ -730,7 +738,8 @@
             "save_draft": "Lưu nháp",
             "save_draft_busy": "Đang lưu…",
             "bm03_submitted_readonly": "Phiếu đã gửi tới điều vận. Nội dung bên dưới chỉ để xem.",
-            "bm03_view_only": "Phiếu chỉ xem trên cổng người dùng (không chỉnh sửa được ở trạng thái hiện tại)."
+            "bm03_view_only": "Phiếu chỉ xem trên cổng người dùng (không chỉnh sửa được ở trạng thái hiện tại).",
+            "student_strip_lead": "Nhập số học sinh thực tế và ghi chú trước khi lưu phiếu BM.03 và gửi điều vận."
         },
         "home_sidebar_title": "Tài khoản",
         "sidebar_hint": "Xem các yêu cầu bạn đã gửi",

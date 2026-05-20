@@ -611,6 +611,14 @@
         "extracurricular_create": {
             "sec_schedule": "Recurring schedule",
             "sec_route": "Pickup / drop-off",
+            "route_tabs_aria": "Route and plan cost",
+            "tab_route_points": "Pickup / drop-off",
+            "tab_plan_cost_notes": "Cost & notes",
+            "plan_cost_lead": "Optional estimated vehicle cost for the whole plan. Dispatch may adjust when approving each trip.",
+            "estimated_vehicle_cost_label": "Estimated vehicle cost",
+            "estimated_vehicle_cost_hint": "Positive numbers only; amounts are formatted as VND (e.g. 1,500,000).",
+            "plan_notes_hint": "Notes apply to the plan and generated trip tickets.",
+            "plan_notes_ph": "e.g. preferred vehicle type, route notes, contact person…",
             "route_lead": "Trip times follow the recurring schedule above.",
             "weekdays_required_hint": "Select at least one weekday.",
             "next_route_step": "Next: pickup / drop-off",
@@ -687,7 +695,8 @@
             "save_draft": "Save draft",
             "save_draft_busy": "Saving…",
             "bm03_submitted_readonly": "This ticket was sent to dispatch. The form below is read-only.",
-            "bm03_view_only": "Read-only on the portal in the current state."
+            "bm03_view_only": "Read-only on the portal in the current state.",
+            "student_strip_lead": "Enter actual student count and notes before saving the BM.03 form and sending to dispatch."
         },
         "home_sidebar_title": "Account",
         "sidebar_hint": "View submitted requests",
