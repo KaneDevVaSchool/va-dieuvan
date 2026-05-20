@@ -610,6 +610,10 @@
         },
         "extracurricular_create": {
             "sec_schedule": "Recurring schedule",
+            "plan_name_label": "Plan / group name",
+            "plan_name_hint": "Groups trips from the same plan on the schedule view (e.g. Mon–Fri football club).",
+            "plan_name_ph": "e.g. Robotics club — grade 6A",
+            "blocker_plan_name": "Enter a plan / group name",
             "sec_route": "Pickup / drop-off",
             "route_tabs_aria": "Route and plan cost",
             "tab_route_points": "Pickup / drop-off",
@@ -668,6 +672,8 @@
             "list_view_detail": "Detail table",
             "group_by_day": "By day",
             "group_by_route": "By route",
+            "group_by_plan": "By plan name",
+            "plan_name_unnamed": "Unnamed plan",
             "group_by_status": "By status",
             "schedule_group_label": "Group by",
             "created_list_hint": "Plan created. Trip tickets are not sent to dispatch yet — use Actions on each row to complete BM.03 and submit."
@@ -703,7 +709,7 @@
             "bm03_fields": {
                 "a1_name": "a.1 Full name",
                 "a1_name_ph": "Requester full name",
-                "a1_name_hint": "Prefilled from your account — adjust if needed for BM.03.",
+                "a1_name_hint": "Filled from the requester on this ticket; edit if needed for BM.03.",
                 "a2_email": "a.2 VA staff email",
                 "a2_email_ph": "e.g. VA staff email",
                 "a3_phone_ph": "e.g. 0901234567",

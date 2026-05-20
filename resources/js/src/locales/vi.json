@@ -653,6 +653,10 @@
         },
         "extracurricular_create": {
             "sec_schedule": "Lịch định kỳ",
+            "plan_name_label": "Tên phiếu / nhóm kế hoạch",
+            "plan_name_hint": "Dùng để gom các chuyến cùng kế hoạch trên bảng lịch (vd. CLB bóng đá T2–T6).",
+            "plan_name_ph": "VD: CLB Robotics — lớp 6A",
+            "blocker_plan_name": "Nhập tên phiếu / nhóm kế hoạch",
             "sec_route": "Tuyến đón / trả",
             "route_tabs_aria": "Tuyến và chi phí kế hoạch",
             "tab_route_points": "Điểm đón / trả",
@@ -711,6 +715,8 @@
             "list_view_detail": "Chi tiết",
             "group_by_day": "Theo ngày",
             "group_by_route": "Theo tuyến",
+            "group_by_plan": "Theo tên phiếu",
+            "plan_name_unnamed": "Kế hoạch chưa đặt tên",
             "group_by_status": "Theo trạng thái",
             "schedule_group_label": "Nhóm theo",
             "created_list_hint": "Kế hoạch đã tạo. Các phiếu chuyến chưa gửi điều vận — mở menu Thao tác trên từng dòng để hoàn thành BM.03 và gửi chốt."
@@ -746,7 +752,7 @@
             "bm03_fields": {
                 "a1_name": "a.1 Họ và tên",
                 "a1_name_ph": "Họ tên người đề nghị (đủ chữ hoa đầu)",
-                "a1_name_hint": "Thông tin lấy từ tài khoản — có thể chỉnh nếu cần khớp BM.03.",
+                "a1_name_hint": "Tự điền từ hồ sơ người đề xuất (phiếu); chỉnh nếu cần khớp BM.03.",
                 "a2_email": "a.2 Email VA của nhân viên",
                 "a2_email_ph": "Ví dụ: email nhân viên VA",
                 "a3_phone_ph": "Ví dụ: 0901234567",

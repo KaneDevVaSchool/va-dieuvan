@@ -712,12 +712,45 @@ function fromLocalInput(local) {
   }
 }
 
+/** Ưu tiên snapshot đã lưu; ô trống lấy từ người đề xuất (API) hoặc tài khoản đang đăng nhập. */
+function pickRequesterField(...candidates) {
+  for (const v of candidates) {
+    const s = String(v ?? '').trim()
+    if (s) return s
+  }
+  return ''
+}
+
+function requesterProfileFromReq(r) {
+  const snap = r?.wizard_snapshot?.form ?? {}
+  const apiUser = r?.requester
+  const isOwnRequester =
+    auth.user?.id != null &&
+    r?.requester_id != null &&
+    Number(auth.user.id) === Number(r.requester_id)
+  const fallbackUser = isOwnRequester ? auth.user : null
+  const profile = apiUser || fallbackUser
+  const deptName =
+    profile?.department?.name ??
+    apiUser?.department?.name ??
+    fallbackUser?.department?.name ??
+    ''
+
+  return {
+    name: pickRequesterField(snap.requester_name, profile?.name),
+    email: pickRequesterField(snap.requester_email, profile?.email),
+    phone: pickRequesterField(snap.requester_phone, profile?.phone),
+    unit: pickRequesterField(snap.requester_unit, deptName),
+  }
+}
+
 function syncFromReq(r) {
   const form = r?.wizard_snapshot?.form ?? {}
-  draft.requesterName = form.requester_name || r?.requester?.name || ''
-  draft.requesterEmail = form.requester_email || r?.requester?.email || ''
-  draft.requesterPhone = form.requester_phone || r?.requester?.phone || ''
-  draft.requesterUnit = form.requester_unit || ''
+  const reqA = requesterProfileFromReq(r)
+  draft.requesterName = reqA.name
+  draft.requesterEmail = reqA.email
+  draft.requesterPhone = reqA.phone
+  draft.requesterUnit = reqA.unit
   draft.purpose = form.purpose || ''
   draft.proposedDate = toDateInput(form.proposed_date)
   draft.dateNeeded = toDateInput(form.date_needed || r.depart_at)

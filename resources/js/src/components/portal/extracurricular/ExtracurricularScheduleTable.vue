@@ -224,7 +224,18 @@ function lockHintFor(req) {
   return k ? t(`${i18nPrefix}.${k}`) : ''
 }
 
+function planNameFor(req) {
+  const pkgLabel = req?.dispatch_request_template?.dispatch_package?.label
+  const snapName = req?.wizard_snapshot?.form?.plan_name
+  const s = String(pkgLabel || snapName || '').trim()
+  return s || t('portal.recurring_plan.plan_name_unnamed')
+}
+
 function groupKey(req) {
+  if (props.groupBy === 'plan') {
+    const tid = req?.dispatch_request_template_id
+    return `${tid ?? 'single'}::${planNameFor(req)}`
+  }
   if (props.groupBy === 'route') {
     return `${req.origin || ''}→${req.destination || ''}`
   }
@@ -235,6 +246,9 @@ function groupKey(req) {
 }
 
 function groupLabel(req, key) {
+  if (props.groupBy === 'plan') {
+    return planNameFor(req)
+  }
   if (props.groupBy === 'route') {
     return routeLine(req) || key
   }

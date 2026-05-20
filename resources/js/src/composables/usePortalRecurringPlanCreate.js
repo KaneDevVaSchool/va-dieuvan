@@ -38,6 +38,7 @@ export function createPortalRecurringPlanForm() {
     recurrence_depart_time: '07:00',
     recurrence_return_time: '17:00',
     e1_weekdays: createEmptyWeekdays(),
+    plan_name: '',
     pickup: '',
     dropoff: '',
     estimated_vehicle_cost: '',
@@ -113,6 +114,7 @@ export function usePortalRecurringPlanCreate() {
 
   const formComplete = computed(() => {
     const f = form.value
+    if (!String(f.plan_name || '').trim()) return false
     if (!scheduleComplete()) return false
     if (!f.pickup?.trim() || !f.dropoff?.trim()) return false
     return true
@@ -158,6 +160,9 @@ export function usePortalRecurringPlanCreate() {
     }
     if (occurrencePreview.value.count < 1) {
       blockers.push(t('portal.recurring_plan.blocker_no_occurrences'))
+    }
+    if (!String(f.plan_name || '').trim()) {
+      blockers.push(t('portal.extracurricular_create.blocker_plan_name'))
     }
     if (!f.pickup?.trim() || !f.dropoff?.trim()) {
       blockers.push(t('portal.extracurricular_create.blocker_route'))
@@ -232,11 +237,13 @@ export function usePortalRecurringPlanCreate() {
   function buildApiPayload() {
     const f = form.value
     const u = auth.user || {}
+    const planName = f.plan_name.trim()
     const wizard_snapshot = {
       form: {
         trip_type: 'point_to_point',
         point_purpose_kind: 'extracurricular',
         source_channel: 'portal',
+        plan_name: planName,
         recurrence_start_date: f.recurrence_start_date,
         recurrence_end_date: f.recurrence_end_date,
         recurrence_depart_time: f.recurrence_depart_time,
@@ -265,6 +272,7 @@ export function usePortalRecurringPlanCreate() {
     const payload = {
       trip_type: 'point_to_point',
       source_channel: 'portal',
+      plan_label: planName,
       origin: f.pickup.trim(),
       destination: f.dropoff.trim(),
       depart_at: departAt,

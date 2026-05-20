@@ -155,6 +155,8 @@ class PortalDispatchRequestController extends Controller
         }
 
         $dispatchRequest->load([
+            'requester:id,name,email,phone,department_id',
+            'requester.department:id,name',
             'trip',
             'dispatchRequestTemplate.dispatchPackage',
             'attachments' => fn ($q) => $q->orderByDesc('id'),

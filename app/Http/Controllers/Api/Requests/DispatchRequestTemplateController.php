@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\StorePortalDispatchRequestTemplateRequest;
 use App\Http\Requests\Api\Portal\UpdatePortalDispatchRequestTemplateRequest;
 use App\Http\Requests\Api\Requests\StoreDispatchRequestTemplateRequest;
+use App\Models\DispatchPackage;
 use App\Models\DispatchRequest;
 use App\Models\DispatchRequestTemplate;
 use App\Models\Role;
@@ -190,6 +191,20 @@ class DispatchRequestTemplateController extends Controller
         });
 
         $template->refresh();
+
+        $planLabel = trim((string) ($data['plan_label'] ?? data_get($data, 'wizard_snapshot.form.plan_name', '')));
+        if ($planLabel !== '' && self::payloadIsExtracurricularRecurring($data)) {
+            $sessionCount = max(1, app(DispatchRecurringMaintenanceService::class)->countTargetOccurrences($template));
+            $pkg = DispatchPackage::create([
+                'trip_type' => $template->trip_type,
+                'label' => $planLabel,
+                'total_sessions' => $sessionCount,
+                'sessions_used' => 0,
+            ]);
+            $template->update(['dispatch_package_id' => $pkg->id]);
+            $template->refresh();
+        }
+
         app(DispatchRecurringMaintenanceService::class)->materializeForTemplate($template);
 
         if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {

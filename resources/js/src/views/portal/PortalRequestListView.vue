@@ -435,6 +435,7 @@
                 class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-900"
               >
                 <option value="day">{{ t('portal.recurring_plan.group_by_day') }}</option>
+                <option value="plan">{{ t('portal.recurring_plan.group_by_plan') }}</option>
                 <option value="route">{{ t('portal.recurring_plan.group_by_route') }}</option>
                 <option value="status">{{ t('portal.recurring_plan.group_by_status') }}</option>
               </select>
@@ -584,7 +585,7 @@ const isExtracurricularMode = computed(
 
 const extracurricularTableRef = ref(null)
 const extracurricularListView = ref('schedule')
-const scheduleGroupBy = ref('day')
+const scheduleGroupBy = ref('plan')
 
 const listViewModes = computed(() => [
   { id: 'calendar', label: t('portal.recurring_plan.list_view_calendar') },

@@ -37,10 +37,12 @@ class PortalRecurringTemplateStoreTest extends TestCase
                 'byweekday' => [1, 2, 3, 4, 5],
             ],
             'recurrence_end_date' => '2026-05-26',
+            'plan_label' => 'CLB Test T5',
             'wizard_snapshot' => [
                 'form' => [
                     'point_purpose_kind' => 'extracurricular',
                     'trip_type' => 'point_to_point',
+                    'plan_name' => 'CLB Test T5',
                 ],
                 'passengerRows' => [['pickup' => 'Đón A', 'dropoff' => 'Trả B']],
             ],

@@ -180,6 +180,14 @@ class DispatchRecurringMaintenanceService
         return ['materialized' => $materialized, 'cancelled' => $cancelled];
     }
 
+    /** Số mốc khởi hành theo lịch template (toàn bộ chuỗi, không cắt horizon). */
+    public function countTargetOccurrences(DispatchRequestTemplate $template): int
+    {
+        $timezone = config('app.timezone') ?: 'UTC';
+
+        return count($this->targetDepartAtKeys($template, $timezone));
+    }
+
     /**
      * @return array<string, true> keys Y-m-d H:i
      */

@@ -59,7 +59,23 @@
       <div class="space-y-8">
         <div>
           <h3 class="dw-section-title">{{ t('portal.extracurricular_create.sec_schedule') }}</h3>
+          <label class="mt-4 block max-w-xl">
+            <span class="dw-label-text">
+              {{ t('portal.extracurricular_create.plan_name_label') }}
+              <span class="dw-req" aria-hidden="true">*</span>
+            </span>
+            <p class="mt-0.5 text-xs text-slate-500">{{ t('portal.extracurricular_create.plan_name_hint') }}</p>
+            <input
+              v-model="form.plan_name"
+              type="text"
+              class="dw-input mt-2"
+              maxlength="255"
+              autocomplete="off"
+              :placeholder="t('portal.extracurricular_create.plan_name_ph')"
+            />
+          </label>
           <RecurringSchedulePanel
+            class="mt-6"
             v-model:form="form"
             :weekday-options="e1WeekdayOptions"
             :preview-dates="occurrencePreview.dates"

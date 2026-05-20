@@ -37,6 +37,7 @@ class StorePortalDispatchRequestTemplateRequest extends StoreDispatchRequestTemp
         $rules['repeat_count'] = ['nullable', 'prohibited'];
         $rules['recurrence_rule.freq'] = ['required', 'string', Rule::in(['weekly'])];
         $rules['recurrence_rule.byweekday'] = ['required', 'array', 'min:1'];
+        $rules['plan_label'] = ['required', 'string', 'min:1', 'max:255'];
 
         return $rules;
     }
