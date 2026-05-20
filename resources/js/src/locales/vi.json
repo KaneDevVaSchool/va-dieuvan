@@ -702,6 +702,12 @@
         "stat_loaded_hint": "Đếm trên các yêu cầu đã tải (tải thêm để cập nhật).",
         "pick_type_to_continue": "Chọn một loại chuyến để có thể tiếp tục.",
         "pdf_btn_label": "Tải PDF BM.03",
+        "pdf_preview_title": "Phiếu đề nghị điều vận (BM.03)",
+        "pdf_preview_lead": "Phiếu đã có đơn giá và thông tin duyệt. Kiểm tra nội dung, in ký và tải bản scan ở cột bên phải.",
+        "pdf_preview_iframe_title": "Phiếu BM.03",
+        "pdf_preview_open_tab": "Mở tab mới",
+        "pdf_preview_retry": "Thử tải lại",
+        "pdf_preview_failed": "Không hiển thị được bản xem trước PDF.",
         "auto_refresh_indicator": "Đang cập nhật trạng thái…",
         "status_hint_title": "Bước tiếp theo",
         "next_step_hint": {

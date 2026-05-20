@@ -6,7 +6,7 @@
     @dragleave.prevent="onDragLeave"
     @drop.prevent="onDrop"
   >
-    <div :class="compact ? 'flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4' : ''">
+    <div :class="compact ? 'flex flex-col gap-2' : ''">
       <div class="min-w-0 flex-1">
         <div :class="compact ? 'text-xs font-semibold text-slate-800' : 'text-sm font-semibold text-slate-800'">
           {{ label }}
@@ -34,6 +34,12 @@
     <div v-if="previewUrl" class="mt-3">
       <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Xem trước</div>
       <img v-if="isImage" :src="previewUrl" alt="preview" class="mt-1.5 max-h-36 rounded-lg border border-slate-200 object-contain sm:max-h-40" />
+      <iframe
+        v-else-if="isPdf"
+        :src="previewUrl"
+        class="mt-1.5 h-52 w-full rounded-lg border border-slate-200"
+        title="Xem trước PDF"
+      />
       <div v-else class="mt-1.5 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs text-slate-600">
         Không phải ảnh — không xem trước.
       </div>
@@ -121,6 +127,11 @@ const isImage = computed(() => {
   return f && f.type.startsWith('image/')
 })
 
+const isPdf = computed(() => {
+  const f = file.value
+  return !!f && f.type === 'application/pdf'
+})
+
 function revoke() {
   if (previewUrl.value && previewUrl.value.startsWith('blob:')) {
     URL.revokeObjectURL(previewUrl.value)
@@ -129,7 +140,8 @@ function revoke() {
 
 watch(file, (f) => {
   revoke()
-  previewUrl.value = f && f.type.startsWith('image/') ? URL.createObjectURL(f) : ''
+  const previewable = f && (f.type.startsWith('image/') || f.type === 'application/pdf')
+  previewUrl.value = previewable ? URL.createObjectURL(f) : ''
 })
 
 function setFileFromList(list) {

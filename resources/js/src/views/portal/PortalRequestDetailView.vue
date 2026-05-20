@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:pb-24">
+  <div class="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:pb-24">
     <PortalSuccessCard
       v-if="welcomeOpen"
       class="mb-6"
@@ -85,28 +85,102 @@
         </div>
       </div>
 
-      <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div class="space-y-8">
-          <PortalStatusTimeline :title="t('portal.timeline_heading')" :steps="timelineSteps" />
+      <PortalStatusTimeline class="mt-8" :title="t('portal.timeline_heading')" :steps="timelineSteps" />
 
-          <div v-if="req.status === 'rejected' && req.rejection_reason" class="rounded-2xl border-2 border-rose-300 bg-rose-50 px-5 py-4 shadow-sm">
-            <div class="flex items-start gap-3">
-              <XCircleIcon class="h-8 w-8 shrink-0 text-rose-600" aria-hidden="true" />
-              <div class="min-w-0 flex-1">
-                <p class="font-semibold text-rose-950">{{ t('portal.rejected_title') }}</p>
-                <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-rose-900/95">{{ req.rejection_reason }}</p>
-                <button
-                  type="button"
-                  class="mt-4 inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-xs font-semibold text-rose-900 shadow-sm hover:bg-rose-50"
-                  @click="copyRejectionReason"
-                >
-                  <ClipboardDocumentIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {{ copyRejectionFeedback ? t('portal.copied') : t('portal.copy_rejection') }}
-                </button>
-              </div>
+      <section
+        v-if="req.status === 'approved'"
+        class="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      >
+        <div class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/80 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="flex min-w-0 items-start gap-3">
+            <PdfFileIcon class="mt-0.5 shrink-0" size-class="h-10 w-8" />
+            <div class="min-w-0">
+              <h2 class="text-sm font-bold text-slate-900 sm:text-base">{{ t('portal.pdf_preview_title') }}</h2>
+              <p class="mt-1 text-xs leading-relaxed text-slate-600 sm:text-sm">{{ t('portal.pdf_preview_lead') }}</p>
             </div>
           </div>
+          <div class="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+            <button
+              type="button"
+              class="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="!pdfBlobUrl"
+              @click="openPdfInNewTab"
+            >
+              <ArrowTopRightOnSquareIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ t('portal.pdf_preview_open_tab') }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-900 shadow-sm transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="pdfBusy || !pdfBlobUrl"
+              @click="downloadPdf"
+            >
+              <DocumentArrowDownIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ t('portal.pdf_btn_label') }}
+            </button>
+          </div>
+        </div>
 
+        <div class="relative bg-slate-100 p-3 sm:p-4">
+          <div
+            v-if="pdfPreviewLoading"
+            class="flex min-h-[min(75vh,640px)] flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-16 text-sm text-slate-600"
+          >
+            <span
+              class="h-9 w-9 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-700"
+              aria-hidden="true"
+            />
+            {{ t('portal.pdf_export_loading') }}
+          </div>
+          <div
+            v-else-if="pdfPreviewError"
+            class="flex min-h-[min(40vh,320px)] flex-col items-center justify-center gap-3 rounded-xl border border-rose-200 bg-rose-50/80 px-4 py-10 text-center"
+          >
+            <p class="max-w-md text-sm text-rose-800">{{ pdfPreviewError }}</p>
+            <button
+              type="button"
+              class="rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-semibold text-rose-900 shadow-sm hover:bg-rose-50"
+              @click="retryPdfPreview"
+            >
+              {{ t('portal.pdf_preview_retry') }}
+            </button>
+          </div>
+          <div
+            v-else-if="pdfBlobUrl"
+            class="overflow-hidden rounded-xl border border-slate-300/90 bg-white shadow-inner ring-1 ring-slate-900/5"
+          >
+            <iframe
+              :src="pdfIframeSrc"
+              class="block h-[min(75vh,900px)] w-full border-0 bg-white"
+              :title="t('portal.pdf_preview_iframe_title')"
+            />
+          </div>
+        </div>
+      </section>
+
+      <div
+        v-if="req.status === 'rejected' && req.rejection_reason"
+        class="mt-8 rounded-2xl border-2 border-rose-300 bg-rose-50 px-5 py-4 shadow-sm"
+      >
+        <div class="flex items-start gap-3">
+          <XCircleIcon class="h-8 w-8 shrink-0 text-rose-600" aria-hidden="true" />
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-rose-950">{{ t('portal.rejected_title') }}</p>
+            <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-rose-900/95">{{ req.rejection_reason }}</p>
+            <button
+              type="button"
+              class="mt-4 inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-xs font-semibold text-rose-900 shadow-sm hover:bg-rose-50"
+              @click="copyRejectionReason"
+            >
+              <ClipboardDocumentIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+              {{ copyRejectionFeedback ? t('portal.copied') : t('portal.copy_rejection') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div class="min-w-0 space-y-8">
           <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm text-sm">
             <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('portal.detail_facts') }}</h2>
             <dl class="mt-4 grid gap-3 sm:grid-cols-2">
@@ -130,7 +204,7 @@
           </section>
         </div>
 
-        <aside class="space-y-8 lg:border-l lg:border-slate-200/75 lg:pl-8 xl:space-y-8">
+        <aside class="min-w-0 space-y-8 lg:border-l lg:border-slate-200/75 lg:pl-8 xl:space-y-8">
           <div class="sticky top-[5.75rem] space-y-6">
             <PortalSignedDocUpload
               v-if="showSignedSection"
@@ -160,7 +234,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeftIcon, ClipboardDocumentIcon, DocumentArrowDownIcon, XCircleIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ClipboardDocumentIcon, DocumentArrowDownIcon, XCircleIcon } from '@heroicons/vue/24/outline'
 import { saveAs } from 'file-saver'
 import {
   downloadPortalAttachmentBlob,
@@ -176,6 +250,7 @@ import PortalSuccessCard from '../../components/portal/PortalSuccessCard.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import PortalSignedDocUpload from '../../components/portal/PortalSignedDocUpload.vue'
 import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
+import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -186,6 +261,9 @@ const detailError = ref('')
 const req = ref(null)
 
 const pdfBusy = ref(false)
+const pdfBlobUrl = ref('')
+const pdfPreviewLoading = ref(false)
+const pdfPreviewError = ref('')
 const signedUploadErr = ref('')
 const uploadKeySeed = ref(0)
 const welcomeOpen = ref(false)
@@ -202,13 +280,30 @@ const pdfPrimaryLabel = computed(() => {
   return t('portal.pdf_btn_label')
 })
 
+function revokePdfPreviewUrl() {
+  if (pdfBlobUrl.value && pdfBlobUrl.value.startsWith('blob:')) {
+    URL.revokeObjectURL(pdfBlobUrl.value)
+  }
+  pdfBlobUrl.value = ''
+  pdfPreviewLoading.value = false
+  pdfPreviewError.value = ''
+}
+
 watch(
   () => route.params.id,
   () => {
     if (route.name === 'portalRequestDetail') {
       welcomeOpen.value = false
+      revokePdfPreviewUrl()
       load()
     }
+  },
+)
+
+watch(
+  () => req.value?.status,
+  (s) => {
+    if (s === 'approved') loadPdfPreview()
   },
 )
 
@@ -257,6 +352,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (copyRejectionTimer) clearTimeout(copyRejectionTimer)
+  revokePdfPreviewUrl()
 })
 
 const routeSummary = computed(() => {
@@ -299,6 +395,12 @@ const signedPaperAttachments = computed(() =>
 
 const showSignedSection = computed(() => req.value?.status === 'approved')
 
+const pdfIframeSrc = computed(() => {
+  const url = pdfBlobUrl.value
+  if (!url) return ''
+  return `${url}#view=FitH`
+})
+
 const servicePriceFmt = computed(() => {
   const p = req.value?.service_price
   if (p == null || p === '') return null
@@ -318,6 +420,34 @@ async function copyRejectionReason() {
   } catch {
     window.alert(t('portal.copy_failed'))
   }
+}
+
+async function loadPdfPreview() {
+  if (!req.value?.id || req.value.status !== 'approved') return
+  if (pdfBlobUrl.value || pdfPreviewLoading.value) return
+  pdfPreviewLoading.value = true
+  pdfPreviewError.value = ''
+  try {
+    const blob = await exportPortalDispatchRequestPdf(Number(req.value.id))
+    if (!blob || blob.size === 0) {
+      throw new Error(t('portal.pdf_preview_failed'))
+    }
+    pdfBlobUrl.value = URL.createObjectURL(blob)
+  } catch (e) {
+    pdfPreviewError.value = formatApiError(e, t('portal.pdf_preview_failed'))
+  } finally {
+    pdfPreviewLoading.value = false
+  }
+}
+
+async function retryPdfPreview() {
+  revokePdfPreviewUrl()
+  await loadPdfPreview()
+}
+
+function openPdfInNewTab() {
+  if (!pdfBlobUrl.value) return
+  window.open(pdfIframeSrc.value || pdfBlobUrl.value, '_blank', 'noopener,noreferrer')
 }
 
 async function downloadPdf() {

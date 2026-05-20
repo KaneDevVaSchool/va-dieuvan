@@ -659,6 +659,12 @@
         "stat_loaded_hint": "Counts reflect loaded requests only (load more to refresh).",
         "pick_type_to_continue": "Choose a trip type to continue.",
         "pdf_btn_label": "Download BM.03 PDF",
+        "pdf_preview_title": "Dispatch request form (BM.03)",
+        "pdf_preview_lead": "The form includes pricing and approval details. Review it, print and sign, then upload a scan in the sidebar.",
+        "pdf_preview_iframe_title": "BM.03 form",
+        "pdf_preview_open_tab": "Open in new tab",
+        "pdf_preview_retry": "Try again",
+        "pdf_preview_failed": "Could not load the PDF preview.",
         "auto_refresh_indicator": "Refreshing status…",
         "status_hint_title": "What happens next",
         "next_step_hint": {

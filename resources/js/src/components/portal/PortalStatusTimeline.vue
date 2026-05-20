@@ -30,11 +30,11 @@
       </li>
     </ol>
 
-    <!-- Desktop: horizontal scroll -->
-    <div class="-mx-2 mt-6 hidden px-2 pb-2 md:block md:overflow-x-auto">
-      <div class="flex min-w-min items-start">
+    <!-- Desktop: horizontal -->
+    <div class="mt-6 hidden md:block">
+      <div class="flex w-full items-start justify-between gap-1">
         <template v-for="(step, idx) in steps" :key="`${step.key}-d`">
-          <div class="flex min-w-[5rem] max-w-[7rem] flex-1 flex-col items-center px-1 text-center lg:min-w-[6rem] lg:max-w-none xl:flex-none xl:flex-1">
+          <div class="flex min-w-0 flex-1 flex-col items-center px-0.5 text-center">
             <div
               class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors"
               :class="circleClass(step.state)"
@@ -54,7 +54,7 @@
           </div>
           <div
             v-if="idx < steps.length - 1"
-            class="mx-1 mt-[1.375rem] h-0.5 min-w-[1rem] flex-1 max-w-[2.5rem] shrink self-start xl:max-w-none xl:flex-1"
+            class="mx-0.5 mt-[1.375rem] h-0.5 min-w-[0.5rem] flex-1 shrink self-start"
             :class="step.state === 'done' ? 'bg-teal-500' : 'bg-slate-200'"
             aria-hidden="true"
           />
