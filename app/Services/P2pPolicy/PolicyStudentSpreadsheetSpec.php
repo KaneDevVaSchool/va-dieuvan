@@ -6,6 +6,24 @@ class PolicyStudentSpreadsheetSpec
 {
     public const HEADER_KEY_ROUTE_NAME = 'route_name';
 
+    public const COLUMN_COUNT = 12;
+
+    /** @var list<float> */
+    public const COLUMN_WIDTHS = [
+        26,  // route_name
+        14,  // student_code
+        24,  // student_name
+        12,  // class_name
+        20,  // direction
+        16,  // policy_type
+        18,  // contract_number
+        16,  // sbs_contract
+        16,  // effective_from
+        16,  // effective_to
+        11,  // is_active
+        36,  // policy_note
+    ];
+
     /** @var list<string> */
     public const KEYS = [
         'route_name',

@@ -10,6 +10,7 @@ use App\Models\PolicyRoute;
 use App\Models\PolicyStudent;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\P2pPolicy\PolicyStudentSpreadsheetFormatter;
 use App\Services\P2pPolicy\PolicyStudentSpreadsheetSpec;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,6 +79,40 @@ class P2pPolicyImportTest extends TestCase
         $writer->close();
 
         return new UploadedFile($path, 'roster.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+    }
+
+    /**
+     * @param  list<list<string>>  $dataRows
+     */
+    private function makeStyledTemplateSpreadsheet(array $dataRows): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'p2p-xlsx-').'.xlsx';
+        $writer = PolicyStudentSpreadsheetFormatter::createWriter();
+        $writer->openToFile($path);
+        PolicyStudentSpreadsheetFormatter::beginDataSheet($writer, withBanner: true);
+        foreach ($dataRows as $i => $row) {
+            PolicyStudentSpreadsheetFormatter::dataRow($writer, $row, $i);
+        }
+        $writer->close();
+
+        return new UploadedFile($path, 'template.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+    }
+
+    public function test_preview_accepts_styled_import_template(): void
+    {
+        $fx = $this->seedImportFixture();
+        $this->actingAs($fx['user']);
+
+        $file = $this->makeStyledTemplateSpreadsheet([
+            ['Tuyen A', 'HS100', 'Nguyen Test', '6A', 'two_way', 'default', '', '', '2025-08-01', '', '1', ''],
+        ]);
+
+        $res = $this->postJson('/api/p2p-policy/students/import/preview', [
+            'file' => $file,
+            'p2p_policy_term_id' => $fx['term']->id,
+        ]);
+        $res->assertOk();
+        $this->assertSame(1, $res->json('data.summary.create'));
     }
 
     public function test_import_requires_permission(): void
