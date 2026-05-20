@@ -109,7 +109,7 @@ export function useP2pPolicyStudentFilters() {
     filterDefs: [
       { id: 'p2p_policy_term_id', labelKey: 'p2p_policy_page.filter_p2p_term' },
       { id: 'academic_term_id', labelKey: 'p2p_policy_page.filter_term' },
-      { id: 'policy_route_id', labelKey: 'p2p_policy_page.filter_route' },
+      { id: 'policy_route_id', labelKey: 'p2p_policy_page.filter_assigned_group' },
       { id: 'campus_id', labelKey: 'p2p_policy_page.filter_campus' },
       { id: 'class_name', labelKey: 'p2p_policy_page.filter_class' },
       { id: 'is_active', labelKey: 'p2p_policy_page.filter_active' },

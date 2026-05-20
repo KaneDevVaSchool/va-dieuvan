@@ -81,8 +81,19 @@
                 <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" />
               </summary>
               <div class="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[220px] rounded-xl border bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                <select
+                  v-if="fd.id === 'policy_type'"
+                  v-model="filters.policy_type"
+                  class="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  @change="reload"
+                >
+                  <option value="">{{ t('p2p_policy_page.filter_any') }}</option>
+                  <option v-for="opt in policyTypeOptions" :key="opt.value" :value="opt.value">
+                    {{ t(opt.labelKey) }}
+                  </option>
+                </select>
                 <input
-                  v-if="fd.id === 'class_name' || fd.id === 'policy_type'"
+                  v-else-if="fd.id === 'class_name'"
                   v-model="filters[fd.id]"
                   type="search"
                   class="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800"
@@ -159,33 +170,92 @@
       </AppFilterBar>
     </div>
 
-    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-      <table class="min-w-full text-sm">
-        <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500 dark:bg-slate-800/80">
-          <tr>
-            <th class="px-3 py-2">{{ t('p2p_policy_page.col_code') }}</th>
-            <th class="px-3 py-2">{{ t('p2p_policy_page.col_name') }}</th>
-            <th class="px-3 py-2">{{ t('p2p_policy_page.col_class') }}</th>
-            <th class="px-3 py-2">{{ t('p2p_policy_page.col_route') }}</th>
-            <th class="px-3 py-2">{{ t('p2p_policy_page.col_policy') }}</th>
-            <th class="px-3 py-2">{{ t('p2p_policy_page.col_active') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in items" :key="row.id" class="border-t border-slate-100 dark:border-slate-800">
-            <td class="px-3 py-2 font-mono text-xs">{{ row.student_code }}</td>
-            <td class="px-3 py-2">{{ row.student_name }}</td>
-            <td class="px-3 py-2">{{ row.class_name }}</td>
-            <td class="px-3 py-2">{{ row.policy_route?.name }}</td>
-            <td class="px-3 py-2">{{ row.policy_type }}</td>
-            <td class="px-3 py-2">{{ row.is_active ? '✓' : '—' }}</td>
-          </tr>
-          <tr v-if="!loading && items.length === 0">
-            <td colspan="6" class="px-3 py-8 text-center text-slate-500">{{ t('p2p_policy_page.empty') }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-if="loading" class="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/50">
+      {{ t('common.processing') }}
     </div>
+
+    <div v-else class="space-y-4">
+      <div
+        v-for="group in studentGroups"
+        :key="group.key"
+        class="overflow-hidden rounded-2xl border border-slate-200/90 shadow-sm dark:border-slate-700/80"
+      >
+        <div
+          class="flex flex-wrap items-center gap-3 border-b border-teal-200/60 bg-gradient-to-r from-teal-50 via-white to-sky-50/80 px-4 py-3 dark:border-teal-900/40 dark:from-teal-950/30 dark:via-slate-900 dark:to-sky-950/20"
+        >
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm">
+            <UserGroupIcon class="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-base font-bold text-slate-900 dark:text-white">{{ group.routeName }}</p>
+            <p v-if="group.campusLine" class="text-xs text-slate-600 dark:text-slate-400">{{ group.campusLine }}</p>
+          </div>
+          <span class="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-teal-900 ring-1 ring-teal-200 dark:bg-slate-900/80 dark:text-teal-100 dark:ring-teal-800">
+            {{ t('p2p_policy_page.students_group_count', { count: group.rows.length }) }}
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-50/90 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/60">
+              <tr>
+                <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_code') }}</th>
+                <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_name') }}</th>
+                <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_class') }}</th>
+                <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_direction') }}</th>
+                <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_policy') }}</th>
+                <th class="px-4 py-2.5">{{ t('p2p_policy_page.col_active') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(row, idx) in group.rows"
+                :key="row.id"
+                class="border-t border-slate-100 transition hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                :class="idx % 2 === 1 ? 'bg-slate-50/40 dark:bg-slate-900/20' : ''"
+              >
+                <td class="px-4 py-2.5 font-mono text-xs font-medium text-slate-800 dark:text-slate-200">{{ row.student_code }}</td>
+                <td class="px-4 py-2.5 font-medium text-slate-900 dark:text-white">{{ row.student_name }}</td>
+                <td class="px-4 py-2.5 text-slate-700 dark:text-slate-300">{{ row.class_name || '—' }}</td>
+                <td class="px-4 py-2.5">
+                  <span
+                    class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+                    :class="directionBadgeClass(row.direction)"
+                  >
+                    {{ directionLabel(t, row.direction) }}
+                  </span>
+                </td>
+                <td class="px-4 py-2.5">
+                  <span
+                    class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset"
+                    :class="policyTypeBadgeClass(row.policy_type)"
+                  >
+                    {{ policyTypeLabel(t, row.policy_type) }}
+                  </span>
+                </td>
+                <td class="px-4 py-2.5">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+                    :class="row.is_active
+                      ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100'
+                      : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'"
+                  >
+                    {{ row.is_active ? t('p2p_policy_page.active_yes') : t('p2p_policy_page.active_no') }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div
+        v-if="!studentGroups.length"
+        class="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-slate-500 dark:border-slate-600"
+      >
+        {{ t('p2p_policy_page.empty') }}
+      </div>
+    </div>
+
     <p v-if="meta.total" class="text-xs text-slate-500">{{ meta.total }} {{ t('p2p_policy_page.rows') }}</p>
 
     <P2pPolicyStudentImportDialog
@@ -198,7 +268,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import P2pPolicyStudentImportDialog from '../../components/p2pPolicy/P2pPolicyStudentImportDialog.vue'
@@ -207,6 +277,14 @@ import { useP2pPolicyStudentFilters } from '../../composables/useP2pPolicyStuden
 import { showAppError } from '../../composables/appMessage'
 import { formatApiError } from '../../api/http'
 import { useAuthStore } from '../../store'
+import {
+  directionBadgeClass,
+  directionLabel,
+  P2P_POLICY_TYPE_VALUES,
+  policyTypeBadgeClass,
+  policyTypeLabel,
+  p2pTermStatusLabel,
+} from '../../utils/p2pPolicyStudentLabels'
 import {
   downloadPolicyStudentsExport,
   downloadPolicyStudentsImportTemplate,
@@ -243,9 +321,35 @@ const weekdays = [
   { v: 7, l: 'CN' },
 ]
 
+const policyTypeOptions = P2P_POLICY_TYPE_VALUES.map((value) => ({
+  value,
+  labelKey: `p2p_policy_page.policy_type_${value}`,
+}))
+
+const studentGroups = computed(() => {
+  const map = new Map()
+  for (const row of items.value) {
+    const route = row.policy_route
+    const key = route?.id ?? 'none'
+    if (!map.has(key)) {
+      const origin = route?.origin_campus?.name
+      const dest = route?.dest_campus?.name
+      const campusLine = origin && dest ? `${origin} → ${dest}` : ''
+      map.set(key, {
+        key,
+        routeName: route?.name ?? t('p2p_policy_page.students_ungrouped'),
+        campusLine,
+        rows: [],
+      })
+    }
+    map.get(key).rows.push(row)
+  }
+  return [...map.values()].sort((a, b) => a.routeName.localeCompare(b.routeName, 'vi'))
+})
+
 function p2pTermLabel(pt) {
   const year = pt.academic_term?.academic_year ?? pt.academic_year ?? ''
-  const status = pt.status ?? ''
+  const status = p2pTermStatusLabel(t, pt.status ?? '')
   return year ? `${year} — ${status}` : `#${pt.id} — ${status}`
 }
 
@@ -270,6 +374,9 @@ function filterLabel(id) {
     return filters.is_active === 'true' || filters.is_active === true
       ? t('p2p_policy_page.active_yes')
       : t('p2p_policy_page.active_no')
+  }
+  if (id === 'policy_type' && filters.policy_type) {
+    return policyTypeLabel(t, filters.policy_type)
   }
   return filters[id] || t('p2p_policy_page.filter_any')
 }

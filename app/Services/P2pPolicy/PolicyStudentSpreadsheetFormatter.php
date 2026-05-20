@@ -106,12 +106,13 @@ final class PolicyStudentSpreadsheetFormatter
         $writer->addRow(Row::fromValuesWithStyles(['Trường', 'Giá trị'], self::styleGuideHeader()));
 
         $refs = [
-            ['direction', 'one_way — một chiều (thường chỉ chuyến sáng)'],
-            ['direction', 'two_way — hai chiều sáng & chiều (mặc định)'],
-            ['policy_type', 'default — mặc định (hoặc giá trị nội bộ khác nếu có)'],
-            ['is_active', '1 — đang active'],
-            ['is_active', '0 — ngừng'],
-            ['effective_from / effective_to', 'Định dạng YYYY-MM-DD'],
+            ['direction', 'one_way → một chiều (thường chỉ chuyến sáng)'],
+            ['direction', 'two_way → hai chiều sáng & chiều (mặc định)'],
+            ['policy_type', 'internal → chính sách nội bộ'],
+            ['policy_type', 'default → mặc định'],
+            ['is_active', '1 → đang hoạt động'],
+            ['is_active', '0 → tạm ngừng'],
+            ['Ngày hiệu lực', 'Định dạng YYYY-MM-DD'],
         ];
         foreach ($refs as $i => [$field, $value]) {
             $writer->addRow(Row::fromValuesWithStyles(
