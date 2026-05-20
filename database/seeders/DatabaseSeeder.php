@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             FeatureToggleSeeder::class,
             ReferencePricingSeeder::class,
             DemoFlowSeeder::class,
+            P2pPolicyDemoSeeder::class,
             VehicleExcelSeeder::class,
         ]);
 
