@@ -71,13 +71,6 @@
         :steps="timelineSteps"
       />
 
-      <PortalExtracurricularStudentNotesStrip
-        v-if="showExtracurricularBm03"
-        class="mt-6"
-        :req="req"
-        @saved="load"
-      />
-
       <PortalExtracurricularBm03EditForm
         v-if="showExtracurricularBm03"
         ref="bm03FormRef"
@@ -282,7 +275,6 @@ import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
-import PortalExtracurricularStudentNotesStrip from '../../components/portal/extracurricular/PortalExtracurricularStudentNotesStrip.vue'
 
 const route = useRoute()
 const { routes: portalRoutes, isExtracurricularModule } = usePortalExtracurricularModule()

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\CreatePortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\IndexPortalDispatchRequestsRequest;
 use App\Http\Requests\Api\Portal\PatchPortalRecurringDispatchInstanceRequest;
+use App\Http\Requests\Api\Portal\PortalUploadProposalBasisRequest;
 use App\Http\Requests\Api\Portal\PortalUploadSignedPaperRequest;
 use App\Http\Requests\Api\Portal\ShowPortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\SubmitPortalRecurringDispatchInstanceRequest;
@@ -221,6 +222,71 @@ class PortalDispatchRequestController extends Controller
             metadata: [
                 'attachable_type' => 'dispatch_request',
                 'attachable_id' => $dispatchRequest->getKey(),
+                'source' => 'portal',
+            ],
+        );
+
+        return $this->created([
+            ...$attachment->toArray(),
+            'url' => Storage::url($path),
+        ]);
+    }
+
+    /**
+     * Căn cứ đề xuất (BM.03 b.2) — người đề xuất, phiếu CLB định kỳ chưa chốt.
+     */
+    public function uploadProposalBasis(
+        PortalUploadProposalBasisRequest $request,
+        DispatchRequest $dispatchRequest,
+    ): \Illuminate\Http\JsonResponse {
+        $user = $request->user();
+        $disk = 'public';
+        /** @var UploadedFile $file */
+        $file = $request->file('file');
+
+        Attachment::query()
+            ->where('attachable_type', $dispatchRequest->getMorphClass())
+            ->where('attachable_id', $dispatchRequest->getKey())
+            ->where('kind', 'proposal_basis')
+            ->delete();
+
+        $path = Storage::putFileAs(
+            "attachments/dispatch_requests/{$dispatchRequest->getKey()}",
+            $file,
+            $file->hashName(),
+            ['disk' => $disk],
+        );
+
+        $attachment = Attachment::create([
+            'uploaded_by' => $user?->id,
+            'attachable_type' => $dispatchRequest->getMorphClass(),
+            'attachable_id' => $dispatchRequest->getKey(),
+            'kind' => 'proposal_basis',
+            'disk' => $disk,
+            'path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'size_bytes' => $file->getSize(),
+            'mime_type' => $file->getClientMimeType(),
+            'file_binary' => Attachment::bytesFromUpload($file),
+        ]);
+
+        $snap = is_array($dispatchRequest->wizard_snapshot) ? $dispatchRequest->wizard_snapshot : [];
+        $form = is_array($snap['form'] ?? null) ? $snap['form'] : [];
+        $form['basisFileName'] = $file->getClientOriginalName();
+        $form['basis_ref'] = '';
+        $snap['form'] = $form;
+        $dispatchRequest->forceFill(['wizard_snapshot' => $snap])->saveQuietly();
+
+        app(AuditLogger::class)->log(
+            actorId: $user?->id,
+            event: 'attachment.upload',
+            auditable: $attachment,
+            before: null,
+            after: $attachment->toArray(),
+            metadata: [
+                'attachable_type' => 'dispatch_request',
+                'attachable_id' => $dispatchRequest->getKey(),
+                'kind' => 'proposal_basis',
                 'source' => 'portal',
             ],
         );

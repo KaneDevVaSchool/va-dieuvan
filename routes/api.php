@@ -60,6 +60,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             ->middleware('throttle:20,1');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/signed-paper', [PortalDispatchRequestController::class, 'uploadSignedPaper'])
             ->middleware('throttle:30,1');
+        Route::post('/portal/dispatch-requests/{dispatchRequest}/proposal-basis', [PortalDispatchRequestController::class, 'uploadProposalBasis'])
+            ->middleware('throttle:30,1');
         Route::patch('/portal/dispatch-requests/{dispatchRequest}/recurring-instance', [PortalDispatchRequestController::class, 'patchRecurringInstance'])
             ->middleware('throttle:60,1');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/submit-recurring', [PortalDispatchRequestController::class, 'submitRecurringInstance'])

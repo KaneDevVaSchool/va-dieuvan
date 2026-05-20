@@ -125,6 +125,23 @@ export async function uploadPortalSignedPaper(dispatchRequestId, file, onProgres
 
 /**
  * @param {number} dispatchRequestId
+ * @param {File} file
+ * @param {(pct: number) => void} [onProgress]
+ */
+export async function uploadPortalProposalBasis(dispatchRequestId, file, onProgress) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const { data } = await http.post(`/portal/dispatch-requests/${dispatchRequestId}/proposal-basis`, fd, {
+    onUploadProgress: (e) => {
+      if (!onProgress || !e.total) return
+      onProgress(e.loaded / e.total)
+    },
+  })
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
  * @param {number} attachmentId
  * @returns {Promise<Blob>}
  */
