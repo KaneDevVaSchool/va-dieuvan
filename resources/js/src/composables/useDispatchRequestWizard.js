@@ -38,6 +38,7 @@ import {
   emptyBusinessRow,
   emptyCargoRow,
   isPassengerRowFilled,
+  isPassengerRouteFilled,
   isBusinessRowFilled,
   isCargoRowFilled,
   draftListStorageKey,
@@ -1007,8 +1008,6 @@ export function useDispatchRequestWizard(options = {}) {
   )
 
   function recurringStep1Complete() {
-    const hasWd = Object.values(form.value.e1_weekdays || {}).some(Boolean)
-    if (!hasWd) return false
     if (!String(form.value.recurrence_start_date || '').trim()) return false
     if (!normalizeTimeHhMm(form.value.recurrence_depart_time)) return false
     if (!normalizeTimeHhMm(form.value.recurrence_return_time)) return false
@@ -1019,6 +1018,23 @@ export function useDispatchRequestWizard(options = {}) {
       if (!Number.isFinite(n) || n < 1) return false
     }
     return true
+  }
+
+  function recurringHasWeekday() {
+    return Object.values(form.value.e1_weekdays || {}).some(Boolean)
+  }
+
+  function recurringStep2Complete() {
+    if (!recurringHasWeekday()) return false
+    return passengerRows.value.some(isPassengerRouteFilled)
+  }
+
+  function scheduleRowErrors(row, variant) {
+    const opts =
+      wantsRecurringTemplate.value && variant === 'passenger'
+        ? { timesFromRecurringTemplate: true }
+        : undefined
+    return dispatchScheduleRowErrors(row, variant, opts)
   }
 
   const canGoNext = computed(() => {
@@ -1044,6 +1060,9 @@ export function useDispatchRequestWizard(options = {}) {
     if (step.value === 2) {
       if (!detailStepSchedulesValid.value) return false
       if (!computedDepartAt.value?.trim()) return false
+      if (wantsRecurringTemplate.value) {
+        return recurringStep2Complete()
+      }
       if (isCargo.value) {
         return cargoRows.value.some((r) => r.name?.trim())
       }
@@ -1095,9 +1114,16 @@ export function useDispatchRequestWizard(options = {}) {
   /** Bước 3 đã ẩn khi vào confirm; cần tính lại để nút Submit & validate API không báo sót chuyến về. */
   function schedulesPassDispatchErrorsSnapshot() {
     const checkAll = (rows, variant, isFilled) =>
-      rows.every((r) => !isFilled(r) || Object.keys(dispatchScheduleRowErrors(r, variant)).length === 0)
+      rows.every((r) => !isFilled(r) || Object.keys(scheduleRowErrors(r, variant)).length === 0)
 
     const tt = form.value.trip_type
+    if (wantsRecurringTemplate.value && tt === 'point_to_point') {
+      if (!passengerRows.value.some(isPassengerRouteFilled)) return false
+      return passengerRows.value.every(
+        (r) =>
+          !isPassengerRouteFilled(r) || Object.keys(scheduleRowErrors(r, 'passenger')).length === 0,
+      )
+    }
     if (tt === 'cargo') return checkAll(cargoRows.value, 'cargo', isCargoRowFilled)
     if (tt === 'point_to_point') return checkAll(passengerRows.value, 'passenger', isPassengerRowFilled)
     if (tt === 'business') return checkAll(businessRows.value, 'business', isBusinessRowFilled)
@@ -1176,6 +1202,46 @@ export function useDispatchRequestWizard(options = {}) {
     if (loading.value) return true
     if (step.value < 3) return !canGoNext.value
     return !canSubmitApi.value || !schedulesPassForSubmit.value
+  })
+
+  const portalClbStepBlockers = computed(() => {
+    if (!portalExtracurricularCreate || !wantsRecurringTemplate.value || loading.value) return []
+    const blockers = []
+    const f = form.value
+    if (step.value === 1) {
+      if (!f.requester_name?.trim()) blockers.push(t('portal.extracurricular_create.blocker_requester_name'))
+      if (!f.requester_email?.trim() || requesterEmailFormatInvalid.value) {
+        blockers.push(t('portal.extracurricular_create.blocker_requester_email'))
+      }
+      if (!f.purpose?.trim()) blockers.push(t('portal.extracurricular_create.blocker_purpose'))
+      if (!String(f.recurrence_start_date || '').trim()) {
+        blockers.push(t('portal.extracurricular_create.blocker_start_date'))
+      }
+      if (!normalizeTimeHhMm(f.recurrence_depart_time)) {
+        blockers.push(t('portal.extracurricular_create.blocker_depart_time'))
+      }
+      if (!normalizeTimeHhMm(f.recurrence_return_time)) {
+        blockers.push(t('portal.extracurricular_create.blocker_return_time'))
+      }
+      const mode = f.recurrence_end_mode || 'date'
+      if (mode === 'date' && !String(f.recurrence_end_date || '').trim()) {
+        blockers.push(t('portal.extracurricular_create.blocker_end_date'))
+      }
+      if (mode === 'weeks') {
+        const n = Number(f.recurrence_repeat_count)
+        if (!Number.isFinite(n) || n < 1) blockers.push(t('portal.extracurricular_create.blocker_repeat_weeks'))
+      }
+    }
+    if (step.value === 2) {
+      if (!recurringHasWeekday()) blockers.push(t('portal.extracurricular_create.blocker_weekdays'))
+      if (!passengerRows.value.some(isPassengerRouteFilled)) {
+        blockers.push(t('portal.extracurricular_create.blocker_route'))
+      }
+    }
+    if (step.value === 3 && headerPrimaryDisabled.value) {
+      if (!schedulesPassForSubmit.value) blockers.push(t('portal.extracurricular_create.blocker_schedule'))
+    }
+    return blockers
   })
 
   function computeApiOriginDestination() {
@@ -2020,6 +2086,9 @@ export function useDispatchRequestWizard(options = {}) {
     confirmSubmitAttempted,
     headerPrimaryLabel,
     headerPrimaryDisabled,
+    portalClbStepBlockers,
+    wantsRecurringTemplate,
+    portalExtracurricularCreate,
     primaryAction,
     saveDraft,
     openClearDraftModal,

@@ -252,6 +252,8 @@ const {
   saveDraft,
   step,
   formattedRequestedDateTime,
+  wantsRecurringTemplate,
+  e1WeekdayOptions,
 } = w
 
 const showStickyBar = computed(() => step.value === 3 && !created.value)
@@ -269,6 +271,31 @@ const tripTypeLabel = computed(() => {
 })
 
 const usageDatesDisplay = computed(() => {
+  if (wantsRecurringTemplate.value) {
+    const start = formatIsoDate(form.value.recurrence_start_date)
+    const dep = String(form.value.recurrence_depart_time || '').trim().slice(0, 5)
+    const ret = String(form.value.recurrence_return_time || '').trim().slice(0, 5)
+    const times = dep && ret ? `${dep} – ${ret}` : dep || ret || '—'
+    const days = (e1WeekdayOptions.value || [])
+      .filter((wd) => form.value.e1_weekdays?.[wd.k])
+      .map((wd) => wd.label)
+      .join(', ')
+    const endMode = form.value.recurrence_end_mode || 'date'
+    let end = '—'
+    if (endMode === 'date') {
+      end = formatIsoDate(form.value.recurrence_end_date)
+    } else if (form.value.recurrence_repeat_count) {
+      end = t('portal.extracurricular_create.summary_end_weeks', {
+        n: form.value.recurrence_repeat_count,
+      })
+    }
+    return t('portal.extracurricular_create.summary_schedule', {
+      start,
+      times,
+      days: days || '—',
+      end,
+    })
+  }
   const a = formatIsoDate(form.value.proposed_date)
   const b =
     formattedRequestedDateTime.value?.trim() || formatIsoDate(form.value.date_needed)

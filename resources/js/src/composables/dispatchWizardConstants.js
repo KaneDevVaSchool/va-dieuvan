@@ -163,6 +163,11 @@ export function createInitialForm() {
   }
 }
 
+/** Điểm đón + trả (CLB định kỳ bước Chi tiết). */
+export function isPassengerRouteFilled(r) {
+  return !!(r.pickup?.trim() && r.dropoff?.trim())
+}
+
 export function isPassengerRowFilled(r) {
   if (r.pickup?.trim() || r.dropoff?.trim() || r.depart_at || r.return_at) return true
   if (r.person_in_charge?.trim() || r.notes?.trim()) return true

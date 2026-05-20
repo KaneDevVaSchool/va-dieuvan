@@ -8,9 +8,15 @@ Tài liệu nghiệp vụ cho stakeholder. Phiên bản đồng bộ với tri�
 - **Tạo CLB định kỳ:** `/portal/extracurricular/new` — lịch lặp (tuần, thứ, giờ đi/về, kết thúc), tuyến P2P ngoại khóa, số HS kế hoạch.
 - **Danh sách CLB:** `/portal/extracurricular/requests` — từng chuyến (instance) sinh từ mẫu định kỳ.
 
-## Luồng tạo
+## Luồng tạo (thứ tự trên UI)
 
-1. Trên form module **không** nhập «Ngày đề xuất» / «Ngày giờ cần xe» — chỉ **lịch lặp** (ngày bắt đầu chuỗi, **giờ đi**, **giờ về**, thứ trong tuần, kết thúc theo ngày hoặc số tuần); giờ đồng bộ sang bước Chi tiết (điểm đón/trả).
+1. **Lịch định kỳ** — ngày bắt đầu, giờ đi/về, thứ trong tuần, kết thúc chuỗi (không có ngày đề xuất / ngày cần xe lẻ).
+2. **Người đề nghị** — thông tin liên hệ.
+3. **Mục đích & căn cứ** — mô tả và file (nếu có).
+4. **Chi tiết** — điểm đón/trả, số HS (giờ lấy từ lịch).
+5. **Xác nhận** — tóm tắt lịch + gửi mẫu định kỳ.
+
+Gợi ý khi nút bị khóa: danh sách thiếu sót hiển thị cạnh nút «Tiếp tục» / «Gửi».
 2. Người đề xuất xác nhận → hệ thống tạo **mẫu** + **chuyến đầu** + **materialize** các chuyến còn lại trong chuỗi.
 3. Mỗi chuyến: trạng thái duyệt riêng (`pending` …), số HS kế hoạch trên `passenger_count`.
 

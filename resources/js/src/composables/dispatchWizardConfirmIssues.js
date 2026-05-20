@@ -2,6 +2,7 @@ import { extractApiValidationMessages } from '../api/http'
 import { dispatchScheduleRowErrors } from './dispatchScheduleRowErrors'
 import {
   isPassengerRowFilled,
+  isPassengerRouteFilled,
   isBusinessRowFilled,
   isCargoRowFilled,
 } from './dispatchWizardConstants'
@@ -33,16 +34,23 @@ export function groupConfirmIssues(issues, sectionTitles) {
   }))
 }
 
-function pushConfirmRowIssues(issues, rows, variant, sectionKey, t) {
+function pushConfirmRowIssues(issues, rows, variant, sectionKey, t, options = {}) {
+  const wantsRecurring = !!options.wantsRecurringTemplate
   rows.forEach((row, idx) => {
     const filled =
       variant === 'cargo'
         ? isCargoRowFilled(row)
         : variant === 'business'
           ? isBusinessRowFilled(row)
-          : isPassengerRowFilled(row)
+          : wantsRecurring
+            ? isPassengerRouteFilled(row)
+            : isPassengerRowFilled(row)
     if (!filled) return
-    const err = dispatchScheduleRowErrors(row, variant)
+    const err = dispatchScheduleRowErrors(
+      row,
+      variant,
+      wantsRecurring && variant === 'passenger' ? { timesFromRecurringTemplate: true } : undefined,
+    )
     const n = idx + 1
     const sectionLabel = t(sectionKey)
     if (err.time_required) {
@@ -131,8 +139,18 @@ export function buildConfirmReviewIssues(ctx) {
     if (!ctx.cargoRows.some((r) => r.name?.trim())) add('schedule', t('dispatch_wizard.validate.cargo_row'))
     pushConfirmRowIssues(issues, ctx.cargoRows, 'cargo', 'dispatch_wizard.confirm.sec_cargo', t)
   } else if (f.trip_type === 'point_to_point') {
-    if (!ctx.passengerRows.some(isPassengerRowFilled)) add('schedule', t('dispatch_wizard.validate.p2p_row'))
-    pushConfirmRowIssues(issues, ctx.passengerRows, 'passenger', 'dispatch_wizard.confirm.sec_e1', t)
+    const rowOpts = { wantsRecurringTemplate: ctx.wantsRecurringTemplate }
+    if (ctx.wantsRecurringTemplate) {
+      if (!ctx.passengerRows.some(isPassengerRouteFilled)) {
+        add('schedule', t('dispatch_wizard.validate.p2p_route_required'))
+      }
+      if (!Object.values(f.e1_weekdays || {}).some(Boolean)) {
+        add('schedule', t('dispatch_wizard.validate.recurring_weekday'))
+      }
+    } else if (!ctx.passengerRows.some(isPassengerRowFilled)) {
+      add('schedule', t('dispatch_wizard.validate.p2p_row'))
+    }
+    pushConfirmRowIssues(issues, ctx.passengerRows, 'passenger', 'dispatch_wizard.confirm.sec_e1', t, rowOpts)
   } else if (f.trip_type === 'business') {
     if (!ctx.businessRows.some(isBusinessRowFilled)) add('schedule', t('dispatch_wizard.validate.detail_row'))
     pushConfirmRowIssues(issues, ctx.businessRows, 'business', 'dispatch_wizard.confirm.sec_e2', t)

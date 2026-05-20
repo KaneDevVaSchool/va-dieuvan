@@ -1,9 +1,13 @@
 <template>
   <div
     v-if="tripType === 'point_to_point' && pointPurposeKind === 'extracurricular' && !replaceDraftRequestId"
-    class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm sm:p-5"
+    :class="
+      fixedEnabled
+        ? 'text-sm text-slate-800'
+        : 'mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800 shadow-sm sm:p-5'
+    "
   >
-    <p v-if="fixedEnabled" class="text-sm font-semibold text-slate-900">
+    <p v-if="fixedEnabled" class="sr-only">
       {{ t('dispatch_wizard.create.recurring_schedule_heading') }}
     </p>
     <label
@@ -19,46 +23,12 @@
       <span class="text-sm font-semibold text-slate-900">{{ t('dispatch_wizard.create.recurring_toggle') }}</span>
     </label>
 
-    <div v-if="recurringPanelOpen" :class="fixedEnabled ? 'mt-4 space-y-5' : 'mt-5 space-y-5'">
-      <section aria-labelledby="recurring-weekdays-heading">
-        <div class="flex flex-wrap items-end justify-between gap-2">
-          <h4 id="recurring-weekdays-heading" class="text-sm font-semibold text-slate-900">
-            {{ t('dispatch_wizard.create.recurring_weekdays_preview_label') }}
-          </h4>
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 text-sm font-medium text-teal-800 hover:text-teal-950"
-            @click="$emit('goScheduleStep')"
-          >
-            {{ t('dispatch_wizard.create.recurring_edit_schedule') }}
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
-        <div
-          class="dw-weekday-strip mt-3"
-          role="group"
-          :aria-labelledby="'recurring-weekdays-heading'"
-        >
-          <button
-            v-for="wd in weekdayOptions"
-            :key="wd.k"
-            type="button"
-            class="dw-weekday-chip"
-            :class="{ 'dw-weekday-chip--on': weekdays?.[wd.k] }"
-            role="checkbox"
-            :aria-checked="!!weekdays?.[wd.k]"
-            @click="$emit('toggleWeekday', wd.k)"
-          >
-            {{ wd.label }}
-          </button>
-        </div>
-      </section>
-
+    <div v-if="recurringPanelOpen" :class="fixedEnabled ? 'mt-0 space-y-5' : 'mt-5 space-y-5'">
       <section aria-labelledby="recurring-times-heading">
         <h4 id="recurring-times-heading" class="text-sm font-semibold text-slate-900">
           {{ t('dispatch_wizard.create.recurrence_times_legend') }}
         </h4>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label class="block min-w-0">
             <span class="dw-label-text">{{ t('dispatch_wizard.create.recurrence_start_label') }}</span>
             <input
@@ -91,6 +61,55 @@
               @input="$emit('update:returnTime', $event.target.value)"
             />
           </label>
+        </div>
+      </section>
+
+      <section aria-labelledby="recurring-weekdays-heading">
+        <div class="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h4 id="recurring-weekdays-heading" class="text-sm font-semibold text-slate-900">
+              {{ t('dispatch_wizard.create.recurring_weekdays_preview_label') }}
+            </h4>
+            <p v-if="fixedEnabled" class="mt-1 text-xs text-slate-600">
+              {{ t('portal.extracurricular_create.weekdays_required_hint') }}
+            </p>
+          </div>
+          <button
+            v-if="fixedEnabled"
+            type="button"
+            class="inline-flex items-center gap-1 text-sm font-medium text-teal-800 hover:text-teal-950"
+            @click="$emit('goScheduleStep')"
+          >
+            {{ t('portal.extracurricular_create.next_route_step') }}
+            <span aria-hidden="true">→</span>
+          </button>
+          <button
+            v-else
+            type="button"
+            class="inline-flex items-center gap-1 text-sm font-medium text-teal-800 hover:text-teal-950"
+            @click="$emit('goScheduleStep')"
+          >
+            {{ t('dispatch_wizard.create.recurring_edit_schedule') }}
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+        <div
+          class="dw-weekday-strip mt-3"
+          role="group"
+          :aria-labelledby="'recurring-weekdays-heading'"
+        >
+          <button
+            v-for="wd in weekdayOptions"
+            :key="wd.k"
+            type="button"
+            class="dw-weekday-chip"
+            :class="{ 'dw-weekday-chip--on': weekdays?.[wd.k] }"
+            role="checkbox"
+            :aria-checked="!!weekdays?.[wd.k]"
+            @click="$emit('toggleWeekday', wd.k)"
+          >
+            {{ wd.label }}
+          </button>
         </div>
       </section>
 
@@ -218,5 +237,3 @@ const endDateMin = computed(() => {
   return s || todayStr
 })
 </script>
-
-

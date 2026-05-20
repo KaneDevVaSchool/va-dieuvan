@@ -13,6 +13,9 @@
           <h3 id="dw-e1-heading" class="dw-sec-intro__title">
             {{ t('dispatch_wizard.s3.e1_title') }}
           </h3>
+          <p v-if="showRecurringClbDetail" class="mt-2 max-w-prose text-sm leading-relaxed text-slate-600">
+            {{ t('portal.extracurricular_create.step_detail_lead') }}
+          </p>
         </header>
         <DispatchStepDetails
           :model-value="passengerRows"
@@ -22,7 +25,7 @@
       </section>
 
       <section
-        v-if="showPassengerTripExtras && !isBusinessTrip"
+        v-if="showPassengerTripExtras && !isBusinessTrip && !showRecurringClbDetail"
         class="dw-step3-section dw-e-panel dw-e-panel--e11"
         aria-labelledby="dw-e11-heading"
       >
@@ -343,6 +346,8 @@ const isP2PExtracurricular = computed(
 )
 
 const showPassengerTripExtras = computed(() => !isPointToPointTrip.value || isP2PExtracurricular.value)
+
+const showRecurringClbDetail = computed(() => !!unref(w.wantsRecurringTemplate))
 
 const combinedScheduleValid = computed(() => {
   if (isCargo.value) return scheduleCargoValid.value

@@ -72,6 +72,7 @@
             "urgent_reason": "Ghi lý do khi chọn Gấp.",
             "cargo_row": "Thêm ít nhất một dòng hàng hóa (tên hàng).",
             "p2p_row": "Thêm ít nhất một dòng chi tiết (e.1).",
+            "p2p_route_required": "Nhập điểm đón và điểm trả cho chuyến ngoại khóa.",
             "detail_row": "Thêm ít nhất một dòng chi tiết.",
             "depart_time": "Chọn đầy đủ ngày giờ cần sử dụng xe ở bước «Người đề nghị & thời gian».",
             "attach_fail": "Đã tạo yêu cầu nhưng không tải được file căn cứ. Bạn có thể thử lại từ chi tiết yêu cầu (nếu được phép).",

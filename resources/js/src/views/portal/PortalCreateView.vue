@@ -135,6 +135,13 @@
           </button>
         </div>
         <p v-if="draftSaveError" class="text-xs font-medium text-rose-600 sm:text-right">{{ draftSaveError }}</p>
+        <ul
+          v-if="isExtracurricularCreate && portalClbStepBlockers.length && headerPrimaryDisabled"
+          class="mt-2 max-w-md list-inside list-disc text-right text-xs font-medium text-amber-800 sm:ml-auto"
+          role="status"
+        >
+          <li v-for="(msg, i) in portalClbStepBlockers" :key="i">{{ msg }}</li>
+        </ul>
       </div>
     </header>
 
@@ -172,6 +179,28 @@
           <div>
             <h2 class="text-lg font-semibold text-slate-900">{{ t('dispatch_wizard.create.step2_title') }}</h2>
           </div>
+
+          <section v-if="isExtracurricularCreate" class="dw-fieldset">
+            <h3 class="dw-section-title">{{ t('portal.extracurricular_create.sec_schedule') }}</h3>
+            <RecurringConfigSection
+              fixed-enabled
+              :trip-type="form.trip_type"
+              :point-purpose-kind="form.point_purpose_kind"
+              :replace-draft-request-id="replaceDraftRequestId"
+              v-model:recurring-enabled="form.recurring_enabled"
+              v-model:start-date="form.recurrence_start_date"
+              v-model:depart-time="form.recurrence_depart_time"
+              v-model:return-time="form.recurrence_return_time"
+              v-model:recurrence-end-date="form.recurrence_end_date"
+              v-model:recurrence-end-mode="form.recurrence_end_mode"
+              v-model:repeat-count="form.recurrence_repeat_count"
+              :weekday-options="e1WeekdayOptions"
+              :weekdays="form.e1_weekdays"
+              end-mode-radio-name="portal_recurrence_end_mode"
+              @toggle-weekday="toggleE1Weekday"
+              @go-schedule-step="goStep(2)"
+            />
+          </section>
 
           <!-- Người đề nghị (+ Thời gian chỉ phiếu lẻ trên portal chung) -->
           <div
@@ -404,25 +433,6 @@
                 <span>{{ t('dispatch_wizard.create.purpose_extra') }}</span>
               </label>
             </div>
-            <RecurringConfigSection
-              v-if="isExtracurricularCreate"
-              fixed-enabled
-              :trip-type="form.trip_type"
-              :point-purpose-kind="form.point_purpose_kind"
-              :replace-draft-request-id="replaceDraftRequestId"
-              v-model:recurring-enabled="form.recurring_enabled"
-              v-model:start-date="form.recurrence_start_date"
-              v-model:depart-time="form.recurrence_depart_time"
-              v-model:return-time="form.recurrence_return_time"
-              v-model:recurrence-end-date="form.recurrence_end_date"
-              v-model:recurrence-end-mode="form.recurrence_end_mode"
-              v-model:repeat-count="form.recurrence_repeat_count"
-              :weekday-options="e1WeekdayOptions"
-              :weekdays="form.e1_weekdays"
-              end-mode-radio-name="portal_recurrence_end_mode"
-              @toggle-weekday="toggleE1Weekday"
-              @go-schedule-step="goStep(2)"
-            />
             <label class="block">
               <span class="dw-label-text">{{ t('dispatch_wizard.create.purpose_label') }} <span class="dw-req" aria-hidden="true">*</span></span>
               <textarea
@@ -1253,6 +1263,7 @@ const {
   nextStep,
   headerPrimaryLabel,
   headerPrimaryDisabled,
+  portalClbStepBlockers,
   primaryAction,
   saveDraft,
   openClearDraftModal,

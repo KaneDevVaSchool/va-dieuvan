@@ -72,6 +72,7 @@
             "urgent_reason": "Enter a reason when Priority is on.",
             "cargo_row": "Add at least one cargo row (item name).",
             "p2p_row": "Add at least one detail row (e.1).",
+            "p2p_route_required": "Enter pickup and drop-off for the extracurricular trip.",
             "detail_row": "Add at least one detail row.",
             "depart_time": "Choose the full date and time for “Vehicle needed on” in the Requester & schedule step.",
             "attach_fail": "Request created but basis file upload failed. You may retry from the request detail (if allowed).",

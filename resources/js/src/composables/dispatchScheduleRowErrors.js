@@ -6,8 +6,10 @@ function guestsNum(row) {
 /**
  * @param {Record<string, unknown>} row
  * @param {'passenger' | 'business' | 'cargo'} variant
+ * @param {{ timesFromRecurringTemplate?: boolean }} [options]
  */
-export function dispatchScheduleRowErrors(row, variant) {
+export function dispatchScheduleRowErrors(row, variant, options = {}) {
+  const timesFromRecurringTemplate = !!options.timesFromRecurringTemplate
   const e = {}
   let departKey = 'depart_at'
   let retKey = 'return_at'
@@ -23,7 +25,7 @@ export function dispatchScheduleRowErrors(row, variant) {
       ? !!(row.delivery_place && String(row.delivery_place).trim())
       : !!(row.dropoff && String(row.dropoff).trim())
 
-  if (!hasDepart && !hasReturn) {
+  if (!timesFromRecurringTemplate && !hasDepart && !hasReturn) {
     e.time_required = true
   }
 
@@ -32,15 +34,27 @@ export function dispatchScheduleRowErrors(row, variant) {
       e.pickup_place = true
     }
   } else if (hasDepart && !(row.pickup && String(row.pickup).trim())) {
-    e.outbound_place = true
+    const routeStarted =
+      variant !== 'cargo' &&
+      timesFromRecurringTemplate &&
+      !!(row.dropoff && String(row.dropoff).trim())
+    if (!timesFromRecurringTemplate || routeStarted) {
+      e.outbound_place = true
+    }
   }
 
-  if (hasDepart && !hasReturn) {
+  if (!timesFromRecurringTemplate && hasDepart && !hasReturn) {
     e.return_time_required = true
   }
 
   if (hasReturn && !hasReturnPlace) {
-    e.return_place = true
+    const routeStarted =
+      variant !== 'cargo' &&
+      timesFromRecurringTemplate &&
+      !!(row.pickup && String(row.pickup).trim())
+    if (!timesFromRecurringTemplate || routeStarted) {
+      e.return_place = true
+    }
   }
 
   if (hasDepart && hasReturn && String(row[retKey]) <= String(row[departKey])) {
