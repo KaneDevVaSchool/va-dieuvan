@@ -21,4 +21,12 @@ trait ApiResponses
             'data' => $data,
         ], 201);
     }
+
+    protected function accepted(mixed $data = null, ?string $message = null): JsonResponse
+    {
+        return response()->json([
+            'message' => $message,
+            'data' => $data,
+        ], 202);
+    }
 }

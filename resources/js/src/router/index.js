@@ -151,6 +151,46 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "p2p-policy",
+        name: "p2pPolicyHub",
+        component: () => import("../views/p2pPolicy/P2pPolicyHubView.vue"),
+        meta: {
+            title: "P2P Policy",
+            subtitle: "Chính sách trung chuyển",
+            featureKey: "module.p2p_policy",
+        },
+    },
+    {
+        path: "p2p-policy/term",
+        name: "p2pPolicyTerm",
+        component: () => import("../views/p2pPolicy/P2pPolicyTermConfigView.vue"),
+        meta: {
+            title: "Cấu hình kỳ P2P",
+            subtitle: "",
+            featureKey: "module.p2p_policy",
+        },
+    },
+    {
+        path: "p2p-policy/routes",
+        name: "p2pPolicyRoutes",
+        component: () => import("../views/p2pPolicy/P2pPolicyRoutesListView.vue"),
+        meta: {
+            title: "Tuyến P2P Policy",
+            subtitle: "",
+            featureKey: "module.p2p_policy",
+        },
+    },
+    {
+        path: "p2p-policy/students",
+        name: "p2pPolicyStudents",
+        component: () => import("../views/p2pPolicy/P2pPolicyStudentsListView.vue"),
+        meta: {
+            title: "Học sinh chính sách",
+            subtitle: "",
+            featureKey: "module.p2p_policy",
+        },
+    },
+    {
         path: "resources/dashboard",
         redirect: { name: "resources" },
     },

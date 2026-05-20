@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('dispatch_requests', function (Blueprint $table) {
-            $table->enum('source_channel', ['portal', 'zalo', 'paper'])->default('portal')->after('approved_by');
+            $table->string('source_channel', 32)->default('portal')->after('approved_by');
             $table->boolean('is_urgent')->default(false)->after('source_channel');
 
             // paper proposal flow: nhận phiếu giấy / ký số (tương lai)
