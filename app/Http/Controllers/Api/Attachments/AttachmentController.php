@@ -321,10 +321,6 @@ class AttachmentController extends Controller
             return $aliases[$type]::query()->find($id);
         }
 
-        if (class_exists($type)) {
-            return $type::query()->find($id);
-        }
-
         return null;
     }
 

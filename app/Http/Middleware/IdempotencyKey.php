@@ -87,7 +87,7 @@ class IdempotencyKey
 
         try {
             return Cache::lock($lockKey, 30)->block(15, $callback);
-        } catch (\Throwable) {
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException) {
             return $callback();
         }
     }

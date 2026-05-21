@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -40,7 +41,9 @@ return new class extends Migration
                             GENERATED ALWAYS AS (COALESCE(arrive_by, DATE_ADD(depart_at, INTERVAL 2 HOUR))) STORED
                         ');
                     } catch (\Throwable $e) {
-                        // ignore
+                        Log::warning('Migration: could not convert planned_end_at to generated column — skipping.', [
+                            'error' => $e->getMessage(),
+                        ]);
                     }
                 }
             }
