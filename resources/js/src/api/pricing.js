@@ -5,6 +5,12 @@ export async function getReferencePricing() {
   return data.data
 }
 
+/** @param {{ trip_type: string, origin?: string, destination?: string, passenger_count?: number }} params */
+export async function getPricingSuggestions(params) {
+  const { data } = await http.get('/reference-pricing/suggest', { params })
+  return data.data
+}
+
 /**
  * @param {'passenger_fare_rate'|'cargo_fare_rate'|'pricing_note'} type
  * @param {number} id

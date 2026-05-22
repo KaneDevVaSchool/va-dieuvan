@@ -1,5 +1,31 @@
 <template>
-  <div class="space-y-3">
+  <div id="request-docs-panel" class="space-y-3">
+    <ul
+      v-if="docsChecklist.length"
+      class="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2"
+      :aria-label="t('request_detail.docs_checklist_aria')"
+    >
+      <li v-for="item in docsChecklist" :key="item.key">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition"
+          :class="
+            item.done
+              ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-200/80'
+              : item.disabled
+                ? 'cursor-not-allowed bg-slate-50 text-slate-400 ring-1 ring-slate-100'
+                : 'bg-amber-50 text-amber-950 ring-1 ring-amber-200/80 hover:bg-amber-100/80'
+          "
+          :disabled="item.disabled"
+          @click="scrollToSection(item.scrollTarget)"
+        >
+          <CheckIcon v-if="item.done" class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span v-else class="h-3.5 w-3.5 shrink-0 rounded-full border border-current opacity-60" aria-hidden="true" />
+          {{ item.label }}
+        </button>
+      </li>
+    </ul>
+
     <nav
       class="flex gap-1 rounded-lg border border-slate-200 bg-slate-50/80 p-1"
       :aria-label="t('request_detail.docs_progress_aria')"
@@ -30,6 +56,7 @@
 
     <div
       v-if="showDocsUploadRow"
+      id="request-docs-upload-row"
       class="grid gap-2 sm:grid-cols-2"
     >
       <FileUpload
@@ -39,7 +66,7 @@
         drag-drop
         compact
         :upload-fn="uploadPaperScanFn"
-        @uploaded="$emit('uploaded-paper-scan')"
+        @uploaded="(a) => $emit('uploaded-paper-scan', a)"
       />
       <FileUpload
         v-if="canUploadGeneral && uploadGeneralFn"
@@ -53,7 +80,7 @@
     </div>
 
     <!-- Đính kèm -->
-    <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <section id="request-docs-general" class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       <header
         class="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2"
         :title="t('request_detail.docs_section_lead')"
@@ -71,7 +98,8 @@
           <li
             v-for="a in generalAttachments"
             :key="a.id"
-            class="flex min-w-0 items-center gap-2 bg-white px-2 py-1.5"
+            class="flex min-w-0 items-center gap-2 bg-white px-2 py-1.5 transition-colors"
+            :class="highlightAttachmentId === a.id ? 'bg-teal-50/90 ring-1 ring-inset ring-teal-300/60' : ''"
           >
             <DocumentIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             <div class="min-w-0 flex-1 overflow-hidden">
@@ -104,7 +132,7 @@
             drag-drop
             compact
             :upload-fn="uploadGeneralFn"
-            @uploaded="$emit('uploaded-general')"
+            @uploaded="(a) => $emit('uploaded-general', a)"
           />
         </div>
       </div>
@@ -113,6 +141,7 @@
     <!-- Phiếu đã ký -->
     <section
       v-if="showSignedSection"
+      id="request-docs-signed"
       class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
     >
       <header
@@ -162,6 +191,7 @@
     <!-- Phiếu giấy & OCR -->
     <section
       v-if="showPaperSection"
+      id="request-docs-paper"
       class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
     >
       <header
@@ -294,7 +324,7 @@
             drag-drop
             compact
             :upload-fn="uploadPaperScanFn"
-            @uploaded="$emit('uploaded-paper-scan')"
+            @uploaded="(a) => $emit('uploaded-paper-scan', a)"
           />
         </div>
 
@@ -326,6 +356,8 @@ const props = defineProps({
   req: { type: Object, default: null },
   requestId: { type: [Number, String], required: true },
   docsProgressSteps: { type: Array, default: () => [] },
+  docsChecklist: { type: Array, default: () => [] },
+  highlightAttachmentId: { type: [Number, null], default: null },
   generalAttachments: { type: Array, default: () => [] },
   signedPaperAttachments: { type: Array, default: () => [] },
   paperScans: { type: Array, default: () => [] },
@@ -382,5 +414,11 @@ const showDocsUploadRow = computed(() => {
 
 function fileTitle(a) {
   return a.original_name || t('request_detail.file_fallback_name', { id: a.id })
+}
+
+function scrollToSection(id) {
+  if (!id) return
+  const el = document.getElementById(id)
+  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 </script>

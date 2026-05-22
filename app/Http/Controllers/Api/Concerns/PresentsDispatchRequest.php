@@ -21,6 +21,15 @@ trait PresentsDispatchRequest
         }
 
         $arr = $dispatchRequest->toArray();
+        $arr['price_filled_by_user'] = null;
+        if ($dispatchRequest->relationLoaded('priceFiller') && $dispatchRequest->priceFiller !== null) {
+            $u = $dispatchRequest->priceFiller;
+            $arr['price_filled_by_user'] = [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+            ];
+        }
         $arr['threshold_hours'] = DispatchSetting::urgentThresholdHoursForTripType((string) $dispatchRequest->trip_type);
         $arr['is_urgent_auto'] = $dispatchRequest->isUrgentAuto();
 

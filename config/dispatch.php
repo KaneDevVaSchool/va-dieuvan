@@ -47,4 +47,10 @@ return [
 
     /** Sau bao nhiêu giờ kể từ lần cập nhật phiếu approved mà bắt đầu nhắc tải scan (cron dispatch:remind-signed-paper-upload). */
     'signed_paper_reminder_after_hours' => max(1, (int) env('DISPATCH_SIGNED_PAPER_REMIND_AFTER_HOURS', 24)),
+
+    /** Gợi ý bảng giá trên chi tiết phiếu / wizard (GET /reference-pricing/suggest). */
+    'pricing_suggest_enabled' => filter_var(env('DISPATCH_PRICING_SUGGEST_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+
+    /** OCR paper_scan qua queue (false = xử lý đồng bộ như trước). */
+    'ocr_use_queue' => filter_var(env('DISPATCH_OCR_USE_QUEUE', false), FILTER_VALIDATE_BOOLEAN),
 ];

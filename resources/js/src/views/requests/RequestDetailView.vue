@@ -232,6 +232,28 @@
             </section>
 
             <section
+              v-if="workflowTodoItems.length"
+              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
+            >
+              <header class="border-b border-slate-100 bg-slate-50/90 px-3 py-2">
+                <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                  {{ t('request_detail.aside_todos_heading') }}
+                </h2>
+              </header>
+              <ul class="space-y-1 p-2">
+                <li v-for="item in workflowTodoItems.slice(0, 4)" :key="item.key">
+                  <button
+                    type="button"
+                    class="w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold text-teal-900 hover:bg-teal-50"
+                    @click="onWorkflowNavigate({ tab: item.tab, focus: item.focus })"
+                  >
+                    {{ item.label }}
+                  </button>
+                </li>
+              </ul>
+            </section>
+
+            <section
               v-if="showResetCloneBtn"
               class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
             >
@@ -274,7 +296,13 @@
             >
               {{ t('request_detail.tab_form') }}
               <span
-                v-if="approvalTabNeedsFocus"
+                v-if="formTabActionCount > 0"
+                class="ml-1.5 inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-teal-600 px-1 py-px text-[10px] font-bold text-white"
+              >
+                {{ formTabActionCount }}
+              </span>
+              <span
+                v-else-if="approvalTabNeedsFocus"
                 class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-teal-500"
                 aria-hidden="true"
               />
@@ -293,7 +321,13 @@
             >
               {{ t('request_detail.tab_docs') }}
               <span
-                v-if="docsTabNeedsFocus"
+                v-if="docsTabActionCount > 0"
+                class="ml-1.5 inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-amber-500 px-1 py-px text-[10px] font-bold text-white"
+              >
+                {{ docsTabActionCount }}
+              </span>
+              <span
+                v-else-if="docsTabNeedsFocus"
                 class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-amber-500"
                 aria-hidden="true"
               />
@@ -301,6 +335,12 @@
           </nav>
 
           <div class="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+            <RequestWorkflowBar
+              v-if="workflowTodoItems.length"
+              class="mb-4"
+              :todos="workflowTodoItems"
+              @navigate="onWorkflowNavigate"
+            />
             <div v-show="activeTab === 'route'" class="space-y-4">
               <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.section_progress') }}</p>
@@ -420,46 +460,17 @@
                 </div>
               </div>
 
-              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                  <div class="flex items-center gap-2 text-teal-600">
-                    <CalculatorIcon class="h-5 w-5 shrink-0" />
-                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">{{ t('request_detail.cost_estimate_heading') }}</h2>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    class="shrink-0 !border-teal-200 !text-teal-900 hover:!bg-teal-50"
-                    @click="pricingModalOpen = true"
-                  >
-                    {{ t('request_detail.reference_pricing_link') }}
-                  </Button>
-                </div>
-                <dl class="mt-4 space-y-2 text-xs sm:text-sm">
-                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">{{ t('request_detail.lbl_est_distance') }}</dt>
-                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.distanceLabel ?? '—' }}</dd>
-                  </div>
-                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">{{ t('request_detail.lbl_suggested_vehicle_type') }}</dt>
-                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.vehicleHint ?? '—' }}</dd>
-                  </div>
-                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">{{ t('request_detail.lbl_ref_unit_price_estimate') }}</dt>
-                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.refUnitLabel ?? '—' }}</dd>
-                  </div>
-                  <div class="flex justify-between gap-3 border-b border-slate-50 pb-2">
-                    <dt class="text-slate-500">{{ t('request_detail.lbl_toll_estimate') }}</dt>
-                    <dd class="text-right font-medium text-slate-900">{{ costEstimate?.tollLabel ?? '—' }}</dd>
-                  </div>
-                </dl>
-                <div class="mt-4 rounded-xl bg-teal-50/90 px-3 py-3 ring-1 ring-teal-600/10 sm:px-4 sm:py-4">
-                  <p class="text-[11px] font-medium text-teal-900/90">{{ t('request_detail.total_per_declaration') }}</p>
-                  <p class="mt-0.5 text-lg font-bold tabular-nums text-teal-600 sm:text-xl">
-                    {{ costEstimate ? formatVndCurrency(costEstimate.total) : '—' }}
-                  </p>
-                </div>
-              </div>
+              <RequestCostEstimateCard
+                v-if="costEstimate"
+                :estimate="costEstimate"
+                :suggestions="pricingSuggestions"
+                :can-apply-pricing="canApplyPricingHints"
+                :applying-pricing="applyingPricingHints"
+                :format-date-time="fmtStepDetail"
+                @open-pricing="pricingModalOpen = true"
+                @go-form="setActiveTab('form')"
+                @apply-suggestion="onApplyPricingSuggestion"
+              />
 
               <section
                 v-if="showApprovalDecisionPanel"
@@ -546,6 +557,10 @@
             <div v-show="activeTab === 'form'" class="space-y-5">
               <DeptApprovalSection
                 v-if="showDeptDecisionSection"
+                id="request-focus-dept-decision"
+                class="scroll-mt-24 ring-offset-2 transition-shadow"
+                :class="focusHighlight === 'dept-decision' ? 'ring-2 ring-amber-400/80' : ''"
+                :declared-total-label="costEstimate?.declaredTotalLabel ?? null"
                 :service-price-display="req.service_price != null ? formatVndCurrency(req.service_price) : null"
                 :acting="deptActing"
                 :inline-message="deptMsg"
@@ -585,6 +600,8 @@
                 :req="req"
                 :request-id="route.params.id"
                 :docs-progress-steps="docsProgressSteps"
+                :docs-checklist="docsChecklist"
+                :highlight-attachment-id="docsHighlightAttachmentId"
                 :general-attachments="generalAttachments"
                 :signed-paper-attachments="signedPaperAttachments"
                 :paper-scans="paperScans"
@@ -604,7 +621,7 @@
                 @delete="removeAttachment"
                 @ocr="runOcr"
                 @uploaded-general="onDocUploaded"
-                @uploaded-paper-scan="load"
+                @uploaded-paper-scan="onPaperScanUploaded"
               >
                 <template v-if="canManagePaper" #paper-forms>
                   <div v-if="req.paper_status === 'pending'" class="rounded-md border border-slate-100 bg-slate-50/60 p-2.5">
@@ -705,7 +722,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -740,10 +757,14 @@ import FileUpload from '../../components/ui/FileUpload.vue'
 import RequestBm03FormTab from '../../components/requests/RequestBm03FormTab.vue'
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
+import RequestCostEstimateCard from '../../components/requests/RequestCostEstimateCard.vue'
+import RequestWorkflowBar from '../../components/requests/RequestWorkflowBar.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
 import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import { useDispatchRequestDocs } from '../../composables/useDispatchRequestDocs'
+import { useRequestCostEstimate } from '../../composables/useRequestCostEstimate'
+import { useRequestWorkflowSteps } from '../../composables/useRequestWorkflowSteps'
 import ReferencePricingReadOnlyBody from '../../components/pricing/ReferencePricingReadOnlyBody.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
 import { getDispatchFormSettings } from '../../api/dispatchSettings'
@@ -751,6 +772,7 @@ import {
   decideDispatchRequest,
   deptDecideDispatchRequest,
   exportDispatchRequestPdf,
+  applyDispatchRequestPricingHints,
   fillPriceDispatchRequest,
   getDispatchRequest,
   markPaperReceived,
@@ -758,7 +780,7 @@ import {
   cloneDispatchRequest,
   patchPassengerCount,
 } from '../../api/requests'
-import { getReferencePricing } from '../../api/pricing'
+import { getPricingSuggestions, getReferencePricing } from '../../api/pricing'
 import { formatApiError } from '../../api/http'
 import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -974,8 +996,45 @@ const {
   paperScans,
   generalAttachments,
   docsTabNeedsFocus,
+  docsChecklist,
   docsProgressSteps,
 } = useDispatchRequestDocs(reqForDocs)
+
+const { costEstimate } = useRequestCostEstimate(reqForDocs)
+
+const docsNeedsPaperScan = computed(
+  () =>
+    req.value?.status === 'approved' &&
+    paperScans.value.length === 0 &&
+    canUploadAttachment.value,
+)
+
+const workflowCtx = computed(() => ({
+  showFillPriceSection: showFillPriceSection.value,
+  showDeptDecisionSection: showDeptDecisionSection.value,
+  showPassengerAdjustSection: showPassengerAdjustSection.value,
+  docsTabNeedsFocus: docsTabNeedsFocus.value,
+  docsNeedsPaperScan: docsNeedsPaperScan.value,
+}))
+
+const { formTabActionCount, docsTabActionCount, todoItems: workflowTodoItems } = useRequestWorkflowSteps(
+  reqForDocs,
+  workflowCtx,
+)
+
+const canApplyPricingHints = computed(() => auth.hasPermission('request.fill_price'))
+const pricingSuggestions = ref([])
+const applyingPricingHints = ref(false)
+const docsHighlightAttachmentId = ref(null)
+const focusHighlight = ref(null)
+
+const FOCUS_TARGETS = {
+  'fill-price': 'request-focus-fill-price',
+  'dept-decision': 'request-focus-dept-decision',
+  docs: 'request-docs-panel',
+  'docs-upload': 'request-docs-upload-row',
+  'passenger-adjust': 'request-focus-passenger',
+}
 
 function tabFromRouteQuery() {
   const q = route.query.tab
@@ -1123,53 +1182,82 @@ const passengerOrCargoLine = computed(() => {
   return '—'
 })
 
-const costEstimate = computed(() => {
+async function loadPricingSuggestions() {
   const r = req.value
-  const snap = r?.wizard_snapshot
-  if (!snap?.form) return null
-
-  const f = snap.form
-  const cargoExtra = parseMoneyVnd
-  let extras = 0
-  if (f.need_porters) extras += cargoExtra(f.porter_cost)
-  if (f.interprovincial) extras += cargoExtra(f.interprovincial_cost)
-  if (f.e1_use_3plus_days) extras += cargoExtra(f.e1_extra_cost)
-  if (f.e2_door_pickup) extras += cargoExtra(f.e2_door_cost)
-  if (f.e2_driver_self) extras += cargoExtra(f.e2_driver_self_cost)
-  if (f.e2_after_21h) extras += cargoExtra(f.e2_after_21h_cost)
-
-  const rowTotal = (row) => cargoExtra(row.unit_price) + cargoExtra(row.extra_fee)
-  const totalPass = (snap.passengerRows ?? []).reduce((s, row) => s + rowTotal(row), 0)
-  const totalBus = (snap.businessRows ?? []).reduce((s, row) => s + rowTotal(row), 0)
-  const cargoCosts = (snap.cargoRows ?? []).reduce((s, row) => s + cargoExtra(row.cost), 0)
-
-  const total = extras + totalPass + totalBus + cargoCosts
-
-  const passU = snap.passengerRows?.[0]?.unit_price
-  const busU = snap.businessRows?.[0]?.unit_price
-  const refRaw = passU || busU
-  const refUnitLabel =
-    refRaw != null && String(refRaw).trim() !== '' ? formatVndCurrency(cargoExtra(refRaw)) : null
-
-  const toll = f.interprovincial ? cargoExtra(f.interprovincial_cost) : 0
-  const tollLabel = f.interprovincial && toll > 0 ? formatVndCurrency(toll) : null
-
-  const wRaw = (snap.cargoRows ?? []).map((c) => c.weight).find((x) => String(x ?? '').trim())
-  let vehicleHint = null
-  if (wRaw) {
-    const n = parseFloat(String(wRaw).replace(',', '.'))
-    if (Number.isFinite(n)) vehicleHint = t('request_detail.vehicle_load_estimate_tons', { n })
-    else vehicleHint = String(wRaw)
+  if (!r) {
+    pricingSuggestions.value = []
+    return
   }
-
-  return {
-    distanceLabel: null,
-    vehicleHint,
-    refUnitLabel,
-    tollLabel,
-    total,
+  try {
+    const data = await getPricingSuggestions({
+      trip_type: r.trip_type,
+      origin: r.origin ?? '',
+      destination: r.destination ?? '',
+      passenger_count: r.passenger_count ?? undefined,
+    })
+    pricingSuggestions.value = data?.enabled ? data.suggestions ?? [] : []
+  } catch {
+    pricingSuggestions.value = []
   }
-})
+}
+
+async function onApplyPricingSuggestion(suggestion) {
+  if (!suggestion || !req.value) return
+  applyingPricingHints.value = true
+  try {
+    const updated = await applyDispatchRequestPricingHints(Number(route.params.id), {
+      estimated_distance_km: suggestion.distance_km ?? undefined,
+      reference_unit_price: suggestion.reference_unit_price ?? undefined,
+      pricing_source: suggestion.source,
+      pricing_row_id: suggestion.id,
+      vehicle_hint: suggestion.vehicle_hint ?? undefined,
+    })
+    req.value = updated
+    showAppSuccess(t('request_detail.pricing_apply_success'), '')
+    await loadPricingSuggestions()
+  } catch (e) {
+    showAppError(formatApiError(e, 'Không áp dụng được gợi ý.'))
+  } finally {
+    applyingPricingHints.value = false
+  }
+}
+
+function onWorkflowNavigate({ tab, focus }) {
+  if (tab) setActiveTab(tab)
+  if (focus) {
+    router.replace({ query: { ...route.query, tab: tab || activeTab.value, focus } })
+    scrollToFocus(focus)
+  }
+}
+
+async function scrollToFocus(focus) {
+  focusHighlight.value = focus
+  await nextTick()
+  const id = FOCUS_TARGETS[focus]
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  window.setTimeout(() => {
+    if (focusHighlight.value === focus) focusHighlight.value = null
+  }, 3000)
+}
+
+watch(
+  () => route.query.focus,
+  (focus) => {
+    if (typeof focus === 'string' && FOCUS_TARGETS[focus]) {
+      const tabQ = tabFromRouteQuery()
+      if (tabQ) activeTab.value = tabQ
+      scrollToFocus(focus)
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => [req.value?.id, req.value?.origin, req.value?.destination, req.value?.trip_type],
+  () => {
+    loadPricingSuggestions()
+  },
+)
 
 function requestDetailLocaleTag() {
   return locale.value === 'en' ? 'en-GB' : 'vi-VN'
@@ -1493,6 +1581,11 @@ async function runOcr(attachmentId) {
   ocrBusy.value = attachmentId
   try {
     const updated = await runAttachmentOcr(attachmentId)
+    if (updated?.ocr_status === 'queued') {
+      showAppSuccess(t('request_detail.ocr_queued_toast'), '')
+      await load()
+      return
+    }
     const list = req.value?.attachments
     if (Array.isArray(list)) {
       const idx = list.findIndex((x) => x.id === attachmentId)
@@ -1533,9 +1626,24 @@ function uploadRequestDocument(file, onProgress) {
   })
 }
 
-function onDocUploaded() {
+function highlightUploadedAttachment(payload) {
+  const id = payload?.id ?? payload?.attachment?.id
+  if (!id) return
+  docsHighlightAttachmentId.value = id
+  window.setTimeout(() => {
+    docsHighlightAttachmentId.value = null
+  }, 2500)
+}
+
+async function onDocUploaded(payload) {
   attachErr.value = ''
-  load()
+  await load()
+  highlightUploadedAttachment(payload)
+}
+
+async function onPaperScanUploaded(payload) {
+  await load()
+  highlightUploadedAttachment(payload)
 }
 
 async function downloadFile(a) {

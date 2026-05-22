@@ -10,7 +10,14 @@
         <h2 class="text-base font-semibold tracking-tight text-slate-900">{{ t('request_detail.dept_decision_title') }}</h2>
         <p v-if="servicePriceDisplay != null" class="mt-2 text-sm text-slate-700">
           {{ t('request_detail.service_price_label') }}:
-          {{ servicePriceDisplay }}
+          <span class="font-semibold text-violet-900">{{ servicePriceDisplay }}</span>
+        </p>
+        <p
+          v-if="declaredTotalLabel && servicePriceDisplay"
+          class="mt-1 text-xs text-slate-600"
+        >
+          {{ t('request_detail.dept_declared_total_line') }}:
+          <span class="font-medium">{{ declaredTotalLabel }}</span>
         </p>
         <div class="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
           <Button
@@ -43,6 +50,7 @@ import Button from '../ui/Button.vue'
 defineProps({
   /** Định dạng hiển thị (VNĐ) hoặc null nếu chưa có */
   servicePriceDisplay: { type: String, default: null },
+  declaredTotalLabel: { type: String, default: null },
   acting: { type: Boolean, default: false },
   inlineMessage: { type: String, default: '' },
   rejectModalOpen: { type: Boolean, default: false },

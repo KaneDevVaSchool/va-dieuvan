@@ -38,6 +38,9 @@ Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)
     Route::patch('/{dispatchRequest}/fill-price', 'fillPrice')
         ->middleware('throttle:20,1')
         ->name('api.dispatch-requests.fill-price');
+    Route::patch('/{dispatchRequest}/pricing-hints', 'applyPricingHints')
+        ->middleware(['permission:request.fill_price', 'throttle:20,1'])
+        ->name('api.dispatch-requests.apply-pricing-hints');
     Route::post('/{dispatchRequest}/paper-revert', 'revertPaperReceived')->middleware('throttle:20,1');
     Route::post('/{dispatchRequest}/decision', 'approve')
         ->middleware(['throttle:120,1', 'idempotency'])

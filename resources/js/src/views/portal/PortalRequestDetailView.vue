@@ -225,6 +225,7 @@
           :req="req"
           :request-id="req.id"
           :docs-progress-steps="docsProgressSteps"
+          :docs-checklist="docsChecklist"
           :general-attachments="generalAttachments"
           :signed-paper-attachments="signedPaperAttachments"
           :paper-scans="paperScans"
@@ -610,6 +611,7 @@ const {
   paperScans,
   generalAttachments,
   docsProgressSteps,
+  docsChecklist,
 } = useDispatchRequestDocs(reqForDocs)
 
 const showSignedSection = computed(() => req.value?.status === 'approved')

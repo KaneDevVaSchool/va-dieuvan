@@ -88,6 +88,8 @@ Quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
 
 **Flow:** draft/pending → approved/rejected → sinh/trips liên quan (logic service/controller).
 
+**Lộ trình nâng cấp UI chi tiết phiếu (workflow, dự toán, tài liệu):** [REQUEST_DETAIL_UPGRADE_PLAN.md](./REQUEST_DETAIL_UPGRADE_PLAN.md).
+
 **API:** `DispatchRequestController`, `RequestController` (list index / bulk soft-delete restore).
 
 **DB:** `dispatch_requests`.

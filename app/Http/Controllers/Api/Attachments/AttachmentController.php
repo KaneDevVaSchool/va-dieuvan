@@ -15,6 +15,7 @@ use App\Models\Trip;
 use App\Models\TripCost;
 use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
+use App\Jobs\ProcessAttachmentOcrJob;
 use App\Services\Ocr\PaperOcrStubService;
 use App\Support\FinancialDataLock;
 use Illuminate\Database\Eloquent\Model;
@@ -390,6 +391,23 @@ class AttachmentController extends Controller
             abort(422, 'Chỉ hỗ trợ OCR cho file loại paper_scan.');
         }
 
+        if (config('dispatch.ocr_use_queue', false)) {
+            ProcessAttachmentOcrJob::dispatch($attachment->id);
+
+            app(AuditLogger::class)->log(
+                actorId: $request->user()?->id,
+                event: 'attachment.ocr_queued',
+                auditable: $attachment,
+                before: null,
+                after: $attachment->fresh()->toArray(),
+            );
+
+            $payload = $attachment->fresh()->toArray();
+            $payload['ocr_status'] = 'queued';
+
+            return $this->ok($payload);
+        }
+
         $ocr->process($attachment->fresh());
 
         app(AuditLogger::class)->log(
@@ -400,7 +418,7 @@ class AttachmentController extends Controller
             after: $attachment->fresh()->toArray(),
         );
 
-        return $this->ok($attachment->fresh());
+        return $this->ok(array_merge($attachment->fresh()->toArray(), ['ocr_status' => 'completed']));
     }
 
     private function asciiFilenameForContentDisposition(string $name): string

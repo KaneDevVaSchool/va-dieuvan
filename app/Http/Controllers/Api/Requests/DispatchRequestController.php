@@ -14,6 +14,8 @@ use App\Http\Requests\Api\Requests\FillPriceDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
+use App\Http\Requests\Api\Requests\ApplyDispatchRequestPricingHintsRequest;
+use App\Http\Requests\Api\Requests\ApplyDispatchRequestPricingHintsRequest;
 use App\Http\Requests\Api\Requests\UpdateDispatchRequestWizardRequest;
 use App\Http\Requests\Api\Requests\UpdateRecurringDispatchRequestPassengerCountRequest;
 use App\Models\DispatchRequest;
@@ -639,6 +641,41 @@ class DispatchRequestController extends Controller
         return $this->ok([
             'dispatch_request' => $this->presentDispatchRequest($fresh),
         ]);
+    }
+
+    public function applyPricingHints(ApplyDispatchRequestPricingHintsRequest $request, DispatchRequest $dispatchRequest)
+    {
+        $this->authorize('view', $dispatchRequest);
+
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $data = $request->validated();
+        $snap = is_array($dispatchRequest->wizard_snapshot) ? $dispatchRequest->wizard_snapshot : [];
+        $form = is_array($snap['form'] ?? null) ? $snap['form'] : [];
+
+        if (array_key_exists('estimated_distance_km', $data) && $data['estimated_distance_km'] !== null) {
+            $form['estimated_distance_km'] = $data['estimated_distance_km'];
+        }
+        if (array_key_exists('reference_unit_price', $data) && $data['reference_unit_price'] !== null) {
+            $form['reference_unit_price'] = $data['reference_unit_price'];
+        }
+        if (! empty($data['pricing_source'])) {
+            $form['pricing_source'] = $data['pricing_source'];
+        }
+        if (! empty($data['pricing_row_id'])) {
+            $form['pricing_row_id'] = (int) $data['pricing_row_id'];
+        }
+        if (! empty($data['vehicle_hint'])) {
+            $form['pricing_vehicle_hint'] = $data['vehicle_hint'];
+        }
+
+        $snap['form'] = $form;
+        $dispatchRequest->update(['wizard_snapshot' => $snap]);
+        $dispatchRequest->loadMissing('priceFiller:id,name,email');
+
+        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
     }
 
     public function patchWizard(UpdateDispatchRequestWizardRequest $request, DispatchRequest $dispatchRequest)

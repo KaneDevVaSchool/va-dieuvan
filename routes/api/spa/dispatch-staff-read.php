@@ -56,6 +56,7 @@ Route::controller(ReportController::class)->group(function () {
 });
 
 Route::get('/reference-pricing', [ReferencePricingController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/reference-pricing/suggest', [ReferencePricingController::class, 'suggest'])->middleware('throttle:60,1');
 Route::get('/reference-pricing/revisions', [ReferencePricingController::class, 'revisions'])
     ->middleware(['permission:reference_pricing.manage', 'throttle:60,1']);
 

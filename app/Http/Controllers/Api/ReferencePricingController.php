@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ReferencePricing\ListReferencePricingRevisionsRequest;
+use App\Http\Requests\Api\ReferencePricing\SuggestReferencePricingRequest;
+use App\Services\ReferencePricing\PricingSuggestionService;
 use App\Http\Requests\Api\ReferencePricing\UpdateCargoFareRateRequest;
 use App\Http\Requests\Api\ReferencePricing\UpdatePassengerFareRateRequest;
 use App\Http\Requests\Api\ReferencePricing\UpdatePricingNoteRequest;
@@ -29,6 +31,18 @@ class ReferencePricingController extends Controller
             'cargo_fares' => CargoFareRate::query()->orderBy('sort_order')->get(),
             'notes' => PricingNote::query()->orderBy('category')->orderBy('sort_order')->get(),
         ]);
+    }
+
+    public function suggest(SuggestReferencePricingRequest $request, PricingSuggestionService $service): JsonResponse
+    {
+        $data = $request->validated();
+
+        return $this->ok($service->suggest(
+            (string) $data['trip_type'],
+            $data['origin'] ?? null,
+            $data['destination'] ?? null,
+            isset($data['passenger_count']) ? (int) $data['passenger_count'] : null,
+        ));
     }
 
     /**

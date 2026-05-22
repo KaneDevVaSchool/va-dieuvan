@@ -205,7 +205,8 @@
               </div>
               <div
                 v-if="showFillPriceSection"
-                class="border-t border-slate-200 bg-slate-50 px-3 py-4 sm:px-4"
+                id="request-focus-fill-price"
+                class="scroll-mt-24 border-t border-slate-200 bg-slate-50 px-3 py-4 sm:px-4"
               >
                 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
                   <div class="flex min-w-[10rem] max-w-md flex-1 flex-col gap-1">
@@ -447,7 +448,8 @@
 
             <div
               v-if="showFillPriceSection && !isCargo"
-              class="border-t border-slate-200 bg-slate-50 px-3 py-4 sm:px-4"
+              id="request-focus-fill-price"
+              class="scroll-mt-24 border-t border-slate-200 bg-slate-50 px-3 py-4 sm:px-4"
             >
               <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
                 <div class="flex min-w-[10rem] max-w-md flex-1 flex-col gap-1">

@@ -29,7 +29,7 @@
           class="mt-0.5 text-[11px] leading-snug text-slate-400 sm:mt-1 sm:text-xs"
           :class="compact ? 'line-clamp-2 sm:line-clamp-1' : ''"
         >
-          Kéo thả vào khung hoặc chọn tệp · tối đa 10&nbsp;MB
+          {{ t('file_upload.drag_hint') }}
         </p>
       </div>
 
@@ -38,7 +38,7 @@
           class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-center text-xs font-semibold text-slate-700 shadow-sm transition hover:border-teal-400 hover:bg-teal-50/50 hover:text-teal-900"
           :class="compact ? '' : 'sm:px-4 sm:py-2 sm:text-sm'"
         >
-          Chọn file
+          {{ t('file_upload.choose_file') }}
           <input type="file" class="hidden" :accept="accept" @change="onPick" />
         </label>
         <span
@@ -55,7 +55,7 @@
             class="!bg-teal-600 !text-white hover:!bg-teal-700 disabled:!bg-slate-300 !px-3 !py-1.5 !text-xs"
             @click="doUpload"
           >
-            Tải lên
+            {{ t('file_upload.upload') }}
           </Button>
           <button
             v-if="file"
@@ -63,14 +63,14 @@
             class="text-xs font-medium text-slate-500 hover:text-slate-800"
             @click="clear"
           >
-            Bỏ chọn
+            {{ t('file_upload.clear') }}
           </button>
         </template>
       </div>
     </div>
 
     <div v-if="previewUrl" class="mt-3">
-      <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Xem trước</div>
+      <div class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ t('file_upload.preview') }}</div>
       <img v-if="isImage" :src="previewUrl" alt="preview" class="mt-1.5 max-h-36 rounded-lg border border-slate-200 object-contain sm:max-h-40" />
       <iframe
         v-else-if="isPdf"
@@ -97,7 +97,7 @@
         class="!bg-teal-600 !text-white hover:!bg-teal-700 disabled:!bg-slate-300"
         @click="doUpload"
       >
-        Tải lên
+        {{ t('file_upload.upload') }}
       </Button>
       <button
         v-if="file"
@@ -105,7 +105,7 @@
         class="text-xs font-medium text-slate-500 hover:text-slate-800"
         @click="clear"
       >
-        Bỏ chọn
+        {{ t('file_upload.clear') }}
       </button>
     </div>
 
@@ -121,7 +121,10 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Button from './Button.vue'
+
+const { t } = useI18n()
 
 const props = defineProps({
   label: { type: String, default: 'Upload file' },

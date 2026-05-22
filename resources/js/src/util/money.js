@@ -9,6 +9,12 @@ export function parseMoneyVnd(v) {
 }
 
 /** Chỉ giữ chữ số rồi format nhóm nghìn kiểu vi-VN (vd. 1000000 → 1.000.000). */
+/** Hiển thị số tiền VNĐ (không parse). */
+export function formatVndCurrency(n, suffix = 'đ') {
+  const num = new Intl.NumberFormat('vi-VN').format(Number(n))
+  return suffix ? `${num} ${suffix}` : num
+}
+
 export function formatVndWhileTyping(raw) {
   const digits = String(raw ?? '').replace(/\D/g, '')
   if (!digits) return ''

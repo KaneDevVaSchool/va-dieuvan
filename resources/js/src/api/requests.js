@@ -354,6 +354,12 @@ export async function decideDispatchRequest(dispatchRequestId, payload, { idempo
  *   dept_head_user_id?: number|null,
  * }} payload
  */
+/** @param {number} dispatchRequestId @param {Record<string, unknown>} payload */
+export async function applyDispatchRequestPricingHints(dispatchRequestId, payload) {
+  const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/pricing-hints`, payload)
+  return data.data
+}
+
 export async function fillPriceDispatchRequest(dispatchRequestId, payload) {
   const { data } = await http.patch(`/dispatch-requests/${dispatchRequestId}/fill-price`, payload)
   return data.data

@@ -28,6 +28,37 @@ export function useDispatchRequestDocs(reqRef) {
     return signedPaperAttachments.value.length === 0
   })
 
+  const docsChecklist = computed(() => {
+    const r = reqRef.value
+    const hasGeneral = generalAttachments.value.length > 0
+    const hasSigned = signedPaperAttachments.value.length > 0
+    const hasScan = paperScans.value.length > 0
+    const approved = r?.status === 'approved'
+
+    return [
+      {
+        key: 'attachments',
+        label: t('request_detail.docs_check_attachments'),
+        done: hasGeneral,
+        scrollTarget: 'request-docs-general',
+      },
+      {
+        key: 'signed',
+        label: t('request_detail.docs_check_signed'),
+        done: hasSigned,
+        disabled: !approved,
+        scrollTarget: 'request-docs-signed',
+      },
+      {
+        key: 'scan',
+        label: t('request_detail.docs_check_scan'),
+        done: hasScan || r?.paper_status === 'received',
+        disabled: !approved,
+        scrollTarget: 'request-docs-paper',
+      },
+    ]
+  })
+
   const docsProgressSteps = computed(() => {
     const r = reqRef.value
     const hasGeneral = generalAttachments.value.length > 0
@@ -96,6 +127,7 @@ export function useDispatchRequestDocs(reqRef) {
     paperScans,
     generalAttachments,
     docsTabNeedsFocus,
+    docsChecklist,
     docsProgressSteps,
     fmtFileSize,
     attachmentKindLabel,
