@@ -28,6 +28,30 @@
       </div>
     </nav>
 
+    <div
+      v-if="showDocsUploadRow"
+      class="grid gap-2 sm:grid-cols-2"
+    >
+      <FileUpload
+        v-if="canUploadPaperScan && uploadPaperScanFn"
+        :key="`paper-${requestId}-${paperScans.length}`"
+        :label="t('request_detail.attach_paper_scan_label')"
+        drag-drop
+        compact
+        :upload-fn="uploadPaperScanFn"
+        @uploaded="$emit('uploaded-paper-scan')"
+      />
+      <FileUpload
+        v-if="canUploadGeneral && uploadGeneralFn"
+        :key="`doc-${requestId}-${generalAttachments.length}`"
+        :label="t('request_detail.add_attachment_label')"
+        drag-drop
+        compact
+        :upload-fn="uploadGeneralFn"
+        @uploaded="$emit('uploaded-general')"
+      />
+    </div>
+
     <!-- Đính kèm -->
     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       <header
@@ -70,7 +94,10 @@
         </ul>
         <p v-else class="py-3 text-center text-[11px] text-slate-500">{{ t('request_detail.docs_empty_attachments') }}</p>
         <div v-if="attachErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1 text-[11px] text-rose-800">{{ attachErr }}</div>
-        <div v-if="canUploadGeneral" class="mt-2 border-t border-slate-100 pt-2">
+        <div
+          v-if="canUploadGeneral && uploadGeneralFn && !showDocsUploadRow"
+          class="mt-2 border-t border-slate-100 pt-2"
+        >
           <FileUpload
             :key="`doc-${requestId}-${generalAttachments.length}`"
             :label="t('request_detail.add_attachment_label')"
@@ -257,7 +284,10 @@
 
         <div v-if="ocrErr" class="rounded-md bg-rose-50 px-2 py-1 text-[11px] text-rose-800">{{ ocrErr }}</div>
 
-        <div v-if="canUploadPaperScan && uploadPaperScanFn" class="rounded-md border border-dashed border-violet-200/50 p-2">
+        <div
+          v-if="canUploadPaperScan && uploadPaperScanFn && !showDocsUploadRow"
+          class="rounded-md border border-dashed border-violet-200/50 p-2"
+        >
           <FileUpload
             :key="`paper-${requestId}-${paperScans.length}`"
             :label="t('request_detail.attach_paper_scan_label')"
@@ -342,6 +372,13 @@ const showPaperSection = computed(
     props.req?.paper_status === 'pending' ||
     props.req?.paper_status === 'received',
 )
+
+/** Hai ô tải (phiếu/scan + tài liệu) xếp ngang khi cùng hiển thị. */
+const showDocsUploadRow = computed(() => {
+  const paper = props.canUploadPaperScan && props.uploadPaperScanFn
+  const general = props.canUploadGeneral && props.uploadGeneralFn
+  return paper && general
+})
 
 function fileTitle(a) {
   return a.original_name || t('request_detail.file_fallback_name', { id: a.id })

@@ -6,18 +6,34 @@
     @dragleave.prevent="onDragLeave"
     @drop.prevent="onDrop"
   >
-    <div :class="compact ? 'flex flex-col gap-2' : ''">
+    <div
+      :class="
+        compact
+          ? 'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3'
+          : 'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4'
+      "
+    >
       <div class="min-w-0 flex-1">
         <div :class="compact ? 'text-xs font-semibold text-slate-800' : 'text-sm font-semibold text-slate-800'">
           {{ label }}
         </div>
-        <p v-if="hint" class="mt-1 text-[11px] leading-snug text-slate-500 sm:text-xs">{{ hint }}</p>
-        <p v-else-if="dragDrop" class="mt-1 text-[11px] leading-snug text-slate-400 sm:text-xs">
+        <p
+          v-if="hint"
+          class="mt-0.5 text-[11px] leading-snug text-slate-500 sm:mt-1 sm:text-xs"
+          :class="compact ? 'line-clamp-2 sm:line-clamp-1' : ''"
+        >
+          {{ hint }}
+        </p>
+        <p
+          v-else-if="dragDrop"
+          class="mt-0.5 text-[11px] leading-snug text-slate-400 sm:mt-1 sm:text-xs"
+          :class="compact ? 'line-clamp-2 sm:line-clamp-1' : ''"
+        >
           Kéo thả vào khung hoặc chọn tệp · tối đa 10&nbsp;MB
         </p>
       </div>
 
-      <div class="flex flex-col gap-2 sm:shrink-0 sm:flex-row sm:items-center sm:gap-2">
+      <div class="flex shrink-0 flex-wrap items-center gap-2">
         <label
           class="inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-200/90 bg-white px-3 py-1.5 text-center text-xs font-semibold text-slate-700 shadow-sm transition hover:border-teal-400 hover:bg-teal-50/50 hover:text-teal-900"
           :class="compact ? '' : 'sm:px-4 sm:py-2 sm:text-sm'"
@@ -25,9 +41,31 @@
           Chọn file
           <input type="file" class="hidden" :accept="accept" @change="onPick" />
         </label>
-        <span v-if="fileName" class="max-w-full truncate text-[11px] text-slate-600 sm:max-w-[12rem] sm:text-xs" :title="fileName">
+        <span
+          v-if="fileName"
+          class="max-w-[8rem] truncate text-[11px] text-slate-600 sm:max-w-[10rem] sm:text-xs"
+          :title="fileName"
+        >
           {{ fileName }}
         </span>
+        <template v-if="compact">
+          <Button
+            :disabled="!file"
+            :loading="uploading"
+            class="!bg-teal-600 !text-white hover:!bg-teal-700 disabled:!bg-slate-300 !px-3 !py-1.5 !text-xs"
+            @click="doUpload"
+          >
+            Tải lên
+          </Button>
+          <button
+            v-if="file"
+            type="button"
+            class="text-xs font-medium text-slate-500 hover:text-slate-800"
+            @click="clear"
+          >
+            Bỏ chọn
+          </button>
+        </template>
       </div>
     </div>
 
@@ -52,12 +90,11 @@
       <div class="mt-1 text-[11px] tabular-nums text-slate-500">{{ Math.round(progress * 100) }}%</div>
     </div>
 
-    <div class="mt-3 flex flex-wrap items-center gap-2">
+    <div v-if="!compact" class="mt-3 flex flex-wrap items-center gap-2">
       <Button
         :disabled="!file"
         :loading="uploading"
         class="!bg-teal-600 !text-white hover:!bg-teal-700 disabled:!bg-slate-300"
-        :class="compact ? '!px-3 !py-1.5 !text-xs' : ''"
         @click="doUpload"
       >
         Tải lên
