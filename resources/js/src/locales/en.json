@@ -2681,6 +2681,7 @@
         "lbl_total_cost_declared": "Total cost (declared)",
         "lbl_dispatcher_unit_price": "Unit price (dispatch)",
         "lbl_attachment_count": "Attachments",
+        "docs_actions_aria": "File actions",
         "docs_section_heading": "Attachments",
         "docs_section_lead": "Supporting files and proposal documents linked to this request.",
         "docs_empty_attachments": "No attachments yet.",

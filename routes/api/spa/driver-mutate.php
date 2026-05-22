@@ -35,5 +35,5 @@ Route::prefix('attachments')->controller(AttachmentController::class)->group(fun
     Route::delete('/{attachment}', 'destroy')
         ->whereNumber('attachment')
         ->middleware('throttle:30,1');
-    Route::post('/{attachment}/ocr', 'runOcr')->middleware('throttle:15,1');
+    Route::post('/{attachment}/ocr', 'runOcr')->middleware('throttle:attachment-ocr');
 });

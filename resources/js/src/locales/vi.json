@@ -2509,6 +2509,7 @@
         "lbl_total_cost_declared": "Tổng chi phí (khai báo)",
         "lbl_dispatcher_unit_price": "Đơn giá (Điều vận)",
         "lbl_attachment_count": "Số tệp đính kèm",
+        "docs_actions_aria": "Thao tác tệp",
         "docs_section_heading": "Tài liệu đính kèm",
         "docs_section_lead": "File minh chứng, đề xuất và tài liệu bổ sung gắn với phiếu.",
         "docs_empty_attachments": "Chưa có tài liệu đính kèm.",

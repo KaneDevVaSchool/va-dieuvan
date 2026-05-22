@@ -578,12 +578,10 @@
     />
 
     <section
-      v-if="showResetCloneBtn || showPassengerAdjustSection"
+      v-if="showPassengerAdjustSection"
       class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
     >
-      <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="$emit('resetClone')" />
       <StudentCountField
-        v-if="showPassengerAdjustSection"
         v-model:passenger-count="passengerDraftModel"
         :student-count-plan="req?.passenger_count != null ? Number(req.passenger_count) : null"
         :locked="passengerDepartLocked"
@@ -591,7 +589,6 @@
         :depart-at-formatted="departAtFormatted"
         :saving="passengerSaving"
         :error="passengerPatchErr"
-        :class="showResetCloneBtn ? 'mt-4 border-t border-slate-100 pt-4' : ''"
         @save="$emit('savePassenger')"
       />
     </section>
@@ -621,7 +618,6 @@ import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 import SignedPaperUpload from './SignedPaperUpload.vue'
 import CostLimitAlert from './CostLimitAlert.vue'
-import ResetCloneSection from './ResetCloneSection.vue'
 import StudentCountField from '../recurring/StudentCountField.vue'
 import BmRoField from './RequestBm03RoField.vue'
 import BmRoTd from './RequestBm03RoTd.vue'
@@ -652,10 +648,8 @@ const props = defineProps({
   departAtFormatted: { type: String, default: '' },
   showFillPriceSection: { type: Boolean, default: false },
   showSignedPaperSection: { type: Boolean, default: false },
-  showResetCloneBtn: { type: Boolean, default: false },
   showPassengerAdjustSection: { type: Boolean, default: false },
   approvalTabNeedsFocus: { type: Boolean, default: false },
-  resetCloneBusy: { type: Boolean, default: false },
 })
 
 const passengerDraftModel = defineModel('passengerDraft', {
@@ -669,7 +663,6 @@ const emit = defineEmits([
   'downloadSigned',
   'signedUploaded',
   'savePassenger',
-  'resetClone',
 ])
 
 const deptHeadOptions = ref([])
