@@ -546,232 +546,382 @@
                 @reset-clone="onResetCloneRequest"
               />
             </div>
-            <div v-show="activeTab === 'docs'" class="space-y-4">
-              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div class="flex items-start gap-3 border-b border-slate-100 pb-3">
-                  <div
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-600/10"
-                  >
-                    <PaperClipIcon class="h-4 w-4" aria-hidden="true" />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">{{ t('request_detail.docs_section_heading') }}</h2>
-                  </div>
-                </div>
-
-                <ul v-if="generalAttachments.length" class="mt-3 space-y-1.5">
-                  <li
-                    v-for="a in generalAttachments"
-                    :key="a.id"
-                    class="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50/40 px-2.5 py-2 text-xs shadow-sm transition hover:border-teal-200/70 hover:bg-white sm:text-sm"
-                  >
-                    <span class="flex min-w-0 flex-1 items-center gap-2">
-                      <DocumentIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-                      <span class="truncate font-medium text-slate-800" :title="a.original_name || t('request_detail.file_fallback_name', { id: a.id })">
-                        {{ a.original_name || t('request_detail.file_fallback_name', { id: a.id }) }}
-                      </span>
-                    </span>
-                    <div class="flex shrink-0 items-center gap-0.5">
-                      <button
-                        type="button"
-                        class="rounded-md px-2 py-1 text-[10px] font-semibold text-teal-700 transition hover:bg-teal-100/80 hover:text-teal-900"
-                        @click="downloadFile(a)"
-                      >
-                        {{ t('request_detail.download_action') }}
-                      </button>
-                      <button
-                        v-if="canDeleteAttachment"
-                        type="button"
-                        class="rounded-md px-2 py-1 text-[10px] font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
-                        :disabled="deletingId === a.id"
-                        @click="removeAttachment(a)"
-                      >
-                        {{ deletingId === a.id ? '…' : t('request_detail.delete_action') }}
-                      </button>
+            <div v-show="activeTab === 'docs'" class="space-y-5">
+              <!-- Tài liệu đính kèm -->
+              <section class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]">
+                <header class="border-b border-slate-100 bg-gradient-to-r from-teal-50/90 via-white to-white px-4 py-3.5 sm:px-5">
+                  <div class="flex items-start gap-3">
+                    <div
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600/10 text-teal-700 ring-1 ring-teal-600/15"
+                    >
+                      <PaperClipIcon class="h-5 w-5" aria-hidden="true" />
                     </div>
-                  </li>
-                </ul>
-
-                <div v-if="attachErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">
-                  {{ attachErr }}
-                </div>
-
-                <div class="mt-3">
-                  <FileUpload
-                    v-if="canUploadAttachment"
-                    :key="`doc-${route.params.id}-${generalAttachments.length}`"
-                    :label="t('request_detail.add_attachment_label')"
-                    drag-drop
-                    compact
-                    :upload-fn="uploadRequestDocument"
-                    @uploaded="onDocUploaded"
-                  />
+                    <div class="min-w-0 flex-1">
+                      <h2 class="text-sm font-semibold text-slate-900 sm:text-base">
+                        {{ t('request_detail.docs_section_heading') }}
+                      </h2>
+                      <p class="mt-0.5 text-xs leading-relaxed text-slate-600">
+                        {{ t('request_detail.docs_section_lead') }}
+                      </p>
+                    </div>
+                    <span
+                      class="shrink-0 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold tabular-nums text-slate-700 ring-1 ring-slate-200"
+                    >
+                      {{ generalAttachments.length }}
+                    </span>
+                  </div>
+                </header>
+                <div class="p-4 sm:p-5">
+                  <ul v-if="generalAttachments.length" class="space-y-2">
+                    <li
+                      v-for="a in generalAttachments"
+                      :key="a.id"
+                      class="group flex items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/50 px-3 py-2.5 transition hover:border-teal-200/70 hover:bg-white hover:shadow-sm"
+                    >
+                      <div
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200/80 group-hover:text-teal-600"
+                      >
+                        <DocumentIcon class="h-4 w-4" aria-hidden="true" />
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p
+                          class="truncate text-sm font-medium text-slate-900"
+                          :title="a.original_name || t('request_detail.file_fallback_name', { id: a.id })"
+                        >
+                          {{ a.original_name || t('request_detail.file_fallback_name', { id: a.id }) }}
+                        </p>
+                        <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
+                          <span>{{ fmtFileSize(a.size_bytes) }}</span>
+                          <span v-if="a.kind" class="rounded-md bg-slate-200/60 px-1.5 py-px font-medium text-slate-600">
+                            {{ attachmentKindLabel(a.kind) }}
+                          </span>
+                        </p>
+                      </div>
+                      <div class="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-teal-700 transition hover:border-teal-200 hover:bg-teal-50"
+                          :title="t('request_detail.download_action')"
+                          @click="downloadFile(a)"
+                        >
+                          <ArrowDownTrayIcon class="h-4 w-4" aria-hidden="true" />
+                        </button>
+                        <button
+                          v-if="canDeleteAttachment"
+                          type="button"
+                          class="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200/80 bg-white text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"
+                          :disabled="deletingId === a.id"
+                          :title="t('request_detail.delete_action')"
+                          @click="removeAttachment(a)"
+                        >
+                          <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </li>
+                  </ul>
                   <p
                     v-else
-                    class="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2.5 text-center text-xs text-slate-500"
+                    class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 py-6 text-center text-xs text-slate-500 sm:text-sm"
                   >
-                    {{ t('request_detail.no_attachment_download_perm') }}
+                    {{ t('request_detail.docs_empty_attachments') }}
                   </p>
-                </div>
-              </div>
 
-              <div
-                v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending' || req.paper_status === 'received'"
-                class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-              >
-                <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                  <div class="flex items-start gap-2">
-                    <div
-                      class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200"
+                  <div v-if="attachErr" class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800 ring-1 ring-rose-200/80">
+                    {{ attachErr }}
+                  </div>
+
+                  <div class="mt-4 border-t border-slate-100 pt-4">
+                    <FileUpload
+                      v-if="canUploadAttachment"
+                      :key="`doc-${route.params.id}-${generalAttachments.length}`"
+                      :label="t('request_detail.add_attachment_label')"
+                      drag-drop
+                      compact
+                      :upload-fn="uploadRequestDocument"
+                      @uploaded="onDocUploaded"
+                    />
+                    <p
+                      v-else
+                      class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-center text-xs text-slate-500"
                     >
-                      <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
+                      {{ t('request_detail.no_attachment_download_perm') }}
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Phiếu đã ký (người đề xuất) -->
+              <section
+                v-if="signedPaperAttachments.length || req.status === 'approved'"
+                class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
+              >
+                <header class="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-4 py-3.5 sm:px-5">
+                  <div class="flex items-start gap-3">
+                    <div
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800/5 text-slate-700 ring-1 ring-slate-300/50"
+                    >
+                      <ClipboardDocumentIcon class="h-5 w-5" aria-hidden="true" />
                     </div>
-                    <div class="min-w-0">
-                      <h2 class="text-sm font-semibold text-slate-900">{{ t('request_detail.paper_ocr_heading') }}</h2>
+                    <div class="min-w-0 flex-1">
+                      <h2 class="text-sm font-semibold text-slate-900 sm:text-base">
+                        {{ t('request_detail.docs_signed_paper_heading') }}
+                      </h2>
+                      <p class="mt-0.5 text-xs leading-relaxed text-slate-600">
+                        {{ t('request_detail.docs_signed_paper_lead') }}
+                      </p>
                     </div>
                   </div>
-                  <span
-                    v-if="req.paper_status === 'received'"
-                    class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-teal-800 ring-1 ring-teal-600/20"
-                  >
-                    {{ t('request_detail.paper_received_badge') }}
-                  </span>
-                  <span
-                    v-else-if="req.paper_status === 'pending'"
-                    class="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-900 ring-1 ring-amber-600/20"
-                  >
-                    {{ t('request_detail.paper_pending_badge') }}
-                  </span>
-                </div>
-
-                <ul v-if="paperScans.length" class="mt-3 space-y-2 text-xs sm:text-sm">
-                  <li
-                    v-for="a in paperScans"
-                    :key="a.id"
-                    class="rounded-lg border border-slate-100 bg-slate-50/50 p-2.5 shadow-sm sm:p-3"
-                  >
-                    <div class="flex flex-wrap items-center gap-2">
+                </header>
+                <div class="p-4 sm:p-5">
+                  <ul v-if="signedPaperAttachments.length" class="space-y-2">
+                    <li
+                      v-for="a in signedPaperAttachments"
+                      :key="a.id"
+                      class="flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50/30 px-3 py-2.5"
+                    >
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-medium text-slate-900">
+                          {{ a.original_name || t('request_detail.file_fallback_name', { id: a.id }) }}
+                        </p>
+                        <p class="mt-0.5 text-[11px] text-slate-600">{{ fmtFileSize(a.size_bytes) }}</p>
+                      </div>
                       <button
                         type="button"
-                        class="max-w-full truncate text-left text-[11px] font-semibold text-teal-700 hover:underline sm:text-xs"
-                        :title="a.original_name || t('request_detail.download_file_fallback')"
+                        class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-teal-700"
                         @click="downloadFile(a)"
                       >
-                        {{ a.original_name || t('request_detail.download_file_fallback') }}
+                        <ArrowDownTrayIcon class="h-4 w-4" aria-hidden="true" />
+                        {{ t('request_detail.download_action') }}
                       </button>
-                      <span
-                        v-if="a.mime_type"
-                        class="rounded bg-white px-1 py-0.5 text-[9px] text-slate-500 ring-1 ring-slate-200"
-                      >
-                        {{ a.mime_type }}
-                      </span>
-                      <Button
-                        variant="secondary"
-                        type="button"
-                        class="!border-slate-200 !px-2 !py-1 !text-[10px] !font-semibold"
-                        :loading="ocrBusy === a.id"
-                        @click="runOcr(a.id)"
-                      >
-                        {{ a.ocr_processed_at ? t('request_detail.ocr_rerun') : t('request_detail.ocr_run') }}
-                      </Button>
-                      <button
-                        v-if="canDeleteAttachment"
-                        type="button"
-                        class="ml-auto text-[10px] font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50 sm:text-[11px]"
-                        :disabled="deletingId === a.id"
-                        @click="removeAttachment(a)"
-                      >
-                        {{ deletingId === a.id ? '…' : t('request_detail.delete_scan_action') }}
-                      </button>
-                    </div>
-                    <p v-if="a.ocr_processed_at" class="mt-1 text-[10px] text-slate-500">
-                      {{ t('request_detail.ocr_result_prefix') }} {{ fmt(a.ocr_processed_at) }}
-                    </p>
-                    <pre
-                      v-if="a.ocr_text"
-                      class="mt-2 max-h-36 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-100 bg-white p-2 text-[10px] leading-relaxed text-slate-800 sm:text-[11px]"
-                    >{{ a.ocr_text }}</pre>
-                  </li>
-                </ul>
-
-                <div v-if="ocrErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1.5 text-xs text-rose-700">
-                  {{ ocrErr }}
-                </div>
-
-                <div v-if="canUploadAttachment" class="mt-3">
-                  <FileUpload
-                    :key="`paper-${route.params.id}-${paperScans.length}`"
-                    :label="t('request_detail.attach_paper_scan_label')"
-                    drag-drop
-                    compact
-                    :upload-fn="uploadPaperScan"
-                    @uploaded="load"
-                  />
-                </div>
-
-                <div
-                  v-if="req.paper_status === 'received' && !canManagePaper"
-                  class="mt-3 border-t border-slate-100 pt-3 text-[10px] text-slate-600 sm:text-[11px]"
-                >
-                  <p v-if="req.paper_reference">
-                    <span class="font-medium text-slate-500">{{ t('request_detail.paper_ref_label_short') }}</span>
-                    {{ req.paper_reference }}
-                  </p>
-                  <p v-if="req.paper_received_at" class="mt-1">
-                    <span class="font-medium text-slate-500">{{ t('request_detail.paper_received_at_short') }}</span>
-                    {{ fmt(req.paper_received_at) }}
+                    </li>
+                  </ul>
+                  <p
+                    v-else
+                    class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 px-4 py-4 text-center text-xs leading-relaxed text-amber-950/90 sm:text-sm"
+                  >
+                    {{ t('request_detail.docs_signed_paper_empty') }}
                   </p>
                 </div>
+              </section>
 
-                <div v-if="req.paper_status === 'pending' && canManagePaper" class="mt-3 border-t border-slate-100 pt-3">
-                  <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
-                    {{ t('request_detail.paper_confirm_received_title') }}
-                  </h3>
-                  <form class="mt-2 grid gap-2" @submit.prevent="doMarkPaper">
-                    <Input
-                      v-model="paperForm.paper_reference"
-                      :label="t('request_detail.paper_ref_input_label')"
-                      :placeholder="t('request_detail.paper_ref_placeholder')"
-                    />
-                    <Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" />
-                    <div class="flex flex-wrap items-center gap-2 pt-0.5">
-                      <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                        {{ t('request_detail.paper_mark_received_btn') }}
-                      </Button>
-                      <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
-                    </div>
-                  </form>
-                </div>
-
-                <div v-else-if="req.paper_status === 'received' && canManagePaper" class="mt-3 border-t border-slate-100 pt-3">
-                  <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:text-xs">
-                    {{ t('request_detail.paper_update_section_title') }}
-                  </h3>
-                  <form class="mt-2 grid gap-2" @submit.prevent="doMarkPaper">
-                    <Input
-                      v-model="paperForm.paper_reference"
-                      :label="t('request_detail.paper_ref_input_label')"
-                      :placeholder="t('request_detail.paper_ref_placeholder')"
-                    />
-                    <Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" />
-                    <div class="flex flex-wrap items-center gap-2 pt-0.5">
-                      <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
-                        {{ t('request_detail.paper_save_changes_btn') }}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        type="button"
-                        class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
-                        :disabled="paperActing || paperRevertActing"
-                        @click="doRevertPaper"
+              <!-- Phiếu giấy & OCR -->
+              <section
+                v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending' || req.paper_status === 'received'"
+                class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
+              >
+                <header class="border-b border-slate-100 bg-gradient-to-r from-violet-50/50 via-white to-white px-4 py-3.5 sm:px-5">
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                      <div
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600/10 text-violet-800 ring-1 ring-violet-500/15"
                       >
-                        {{ t('request_detail.paper_revert_btn') }}
-                      </Button>
-                      <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                        <DocumentTextIcon class="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div class="min-w-0">
+                        <h2 class="text-sm font-semibold text-slate-900 sm:text-base">
+                          {{ t('request_detail.paper_ocr_heading') }}
+                        </h2>
+                        <p class="mt-0.5 max-w-prose text-xs leading-relaxed text-slate-600">
+                          {{ t('request_detail.paper_ocr_lead') }}
+                        </p>
+                      </div>
                     </div>
-                  </form>
+                    <span
+                      v-if="req.paper_status === 'received'"
+                      class="shrink-0 rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-teal-800 ring-1 ring-teal-600/25"
+                    >
+                      {{ t('request_detail.paper_received_badge') }}
+                    </span>
+                    <span
+                      v-else-if="req.paper_status === 'pending'"
+                      class="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-900 ring-1 ring-amber-500/25"
+                    >
+                      {{ t('request_detail.paper_pending_badge') }}
+                    </span>
+                  </div>
+                </header>
+
+                <div class="space-y-4 p-4 sm:p-5">
+                  <div
+                    v-if="req.paper_status === 'received' && (req.paper_reference || req.paper_received_at)"
+                    class="grid gap-3 rounded-xl bg-slate-50/80 p-3 ring-1 ring-slate-200/70 sm:grid-cols-2"
+                  >
+                    <div v-if="req.paper_reference">
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        {{ t('request_detail.paper_ref_label_short') }}
+                      </p>
+                      <p class="mt-1 text-sm font-semibold text-slate-900">{{ req.paper_reference }}</p>
+                    </div>
+                    <div v-if="req.paper_received_at">
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        {{ t('request_detail.paper_received_at_short') }}
+                      </p>
+                      <p class="mt-1 text-sm font-semibold text-slate-900">{{ fmt(req.paper_received_at) }}</p>
+                    </div>
+                  </div>
+
+                  <ul v-if="paperScans.length" class="space-y-3">
+                    <li
+                      v-for="a in paperScans"
+                      :key="a.id"
+                      class="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.02]"
+                    >
+                      <div
+                        class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/40 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4"
+                      >
+                        <div class="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            class="max-w-full truncate text-left text-sm font-semibold text-teal-800 hover:underline"
+                            :title="a.original_name || t('request_detail.download_file_fallback')"
+                            @click="downloadFile(a)"
+                          >
+                            {{ a.original_name || t('request_detail.download_file_fallback') }}
+                          </button>
+                          <p class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                            <span>{{ fmtFileSize(a.size_bytes) }}</span>
+                            <span
+                              v-if="a.mime_type"
+                              class="rounded-md bg-white px-1.5 py-px font-medium text-slate-600 ring-1 ring-slate-200/80"
+                            >
+                              {{ a.mime_type }}
+                            </span>
+                            <span
+                              v-if="a.ocr_processed_at"
+                              class="inline-flex items-center gap-1 rounded-md bg-teal-50 px-1.5 py-px font-medium text-teal-800"
+                            >
+                              <SparklesIcon class="h-3 w-3" aria-hidden="true" />
+                              {{ t('request_detail.ocr_result_prefix') }} {{ fmt(a.ocr_processed_at) }}
+                            </span>
+                          </p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                          <Button
+                            variant="secondary"
+                            type="button"
+                            class="!inline-flex !items-center !gap-1.5 !border-violet-200 !text-violet-900 hover:!bg-violet-50"
+                            :loading="ocrBusy === a.id"
+                            @click="runOcr(a.id)"
+                          >
+                            <SparklesIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                            {{ a.ocr_processed_at ? t('request_detail.ocr_rerun') : t('request_detail.ocr_run') }}
+                          </Button>
+                          <button
+                            v-if="canDeleteAttachment"
+                            type="button"
+                            class="inline-flex h-9 items-center gap-1 rounded-lg border border-rose-200/80 px-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                            :disabled="deletingId === a.id"
+                            @click="removeAttachment(a)"
+                          >
+                            <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                            {{ deletingId === a.id ? '…' : t('request_detail.delete_scan_action') }}
+                          </button>
+                        </div>
+                      </div>
+                      <div v-if="a.ocr_text" class="px-3 py-3 sm:px-4">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                          {{ t('request_detail.ocr_text_label') }}
+                        </p>
+                        <pre
+                          class="mt-2 max-h-44 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-200/80 bg-slate-50/80 p-3 font-mono text-[11px] leading-relaxed text-slate-800 sm:text-xs"
+                        >{{ a.ocr_text }}</pre>
+                      </div>
+                    </li>
+                  </ul>
+                  <p
+                    v-else-if="canUploadAttachment"
+                    class="rounded-xl border border-dashed border-slate-200 bg-slate-50/30 px-4 py-5 text-center text-xs text-slate-500"
+                  >
+                    {{ t('request_detail.docs_empty_paper_scan') }}
+                  </p>
+
+                  <div v-if="ocrErr" class="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-800 ring-1 ring-rose-200/80">
+                    {{ ocrErr }}
+                  </div>
+
+                  <div v-if="canUploadAttachment" class="rounded-xl border border-dashed border-violet-200/60 bg-violet-50/20 p-3">
+                    <FileUpload
+                      :key="`paper-${route.params.id}-${paperScans.length}`"
+                      :label="t('request_detail.attach_paper_scan_label')"
+                      drag-drop
+                      compact
+                      :upload-fn="uploadPaperScan"
+                      @uploaded="load"
+                    />
+                  </div>
+
+                  <div
+                    v-if="req.paper_status === 'pending' && canManagePaper"
+                    class="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4"
+                  >
+                    <h3 class="text-xs font-bold uppercase tracking-wide text-slate-600">
+                      {{ t('request_detail.paper_confirm_received_title') }}
+                    </h3>
+                    <form class="mt-3 grid gap-3 sm:grid-cols-2" @submit.prevent="doMarkPaper">
+                      <div class="sm:col-span-2">
+                        <Input
+                          v-model="paperForm.paper_reference"
+                          :label="t('request_detail.paper_ref_input_label')"
+                          :placeholder="t('request_detail.paper_ref_placeholder')"
+                        />
+                      </div>
+                      <div class="sm:col-span-2">
+                        <Input
+                          v-model="paperForm.paper_received_at"
+                          :label="t('request_detail.paper_received_at_input_label')"
+                          type="datetime-local"
+                        />
+                      </div>
+                      <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
+                        <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
+                          {{ t('request_detail.paper_mark_received_btn') }}
+                        </Button>
+                        <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div
+                    v-else-if="req.paper_status === 'received' && canManagePaper"
+                    class="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4"
+                  >
+                    <h3 class="text-xs font-bold uppercase tracking-wide text-slate-600">
+                      {{ t('request_detail.paper_update_section_title') }}
+                    </h3>
+                    <form class="mt-3 grid gap-3 sm:grid-cols-2" @submit.prevent="doMarkPaper">
+                      <div class="sm:col-span-2">
+                        <Input
+                          v-model="paperForm.paper_reference"
+                          :label="t('request_detail.paper_ref_input_label')"
+                          :placeholder="t('request_detail.paper_ref_placeholder')"
+                        />
+                      </div>
+                      <div class="sm:col-span-2">
+                        <Input
+                          v-model="paperForm.paper_received_at"
+                          :label="t('request_detail.paper_received_at_input_label')"
+                          type="datetime-local"
+                        />
+                      </div>
+                      <div class="flex flex-wrap items-center gap-2 sm:col-span-2">
+                        <Button :loading="paperActing" type="submit" class="!bg-teal-600 hover:!bg-teal-700">
+                          {{ t('request_detail.paper_save_changes_btn') }}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          type="button"
+                          class="!border-amber-200 !text-amber-900 hover:!bg-amber-50"
+                          :disabled="paperActing || paperRevertActing"
+                          @click="doRevertPaper"
+                        >
+                          {{ t('request_detail.paper_revert_btn') }}
+                        </Button>
+                        <span v-if="paperMsg" class="text-xs text-slate-600">{{ paperMsg }}</span>
+                      </div>
+                    </form>
+                  </div>
                 </div>
-              </div>
+              </section>
             </div>
           </div>
         </div>
@@ -855,6 +1005,9 @@ import {
   CurrencyDollarIcon,
   DocumentTextIcon,
   DocumentIcon,
+  ArrowDownTrayIcon,
+  TrashIcon,
+  SparklesIcon,
   FlagIcon,
   HandThumbUpIcon,
   InformationCircleIcon,
@@ -1127,8 +1280,23 @@ const paperScans = computed(() => {
 
 const generalAttachments = computed(() => {
   const list = req.value?.attachments ?? []
-  return list.filter((a) => a.kind !== 'paper_scan')
+  return list.filter((a) => a.kind !== 'paper_scan' && a.kind !== 'signed_paper')
 })
+
+function fmtFileSize(bytes) {
+  const n = Number(bytes)
+  if (!Number.isFinite(n) || n < 0) return '—'
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function attachmentKindLabel(kind) {
+  const k = kind || 'file'
+  const key = `request_detail.attachment_kind_${k}`
+  const translated = t(key)
+  return translated !== key ? translated : k
+}
 
 const requesterSubtitle = computed(() => {
   const u = req.value?.wizard_snapshot?.form?.requester_unit
