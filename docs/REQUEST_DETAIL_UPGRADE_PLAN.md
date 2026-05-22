@@ -254,7 +254,13 @@ Cập nhật bảng khi hoàn thành từng phase:
 | P1.1 Pricing suggest | Done | 2026-05-22 | 2026-05-22 | API + apply pricing-hints |
 | P1.2 Fill/dept | Done | 2026-05-22 | 2026-05-22 | price_filled_by_user, dept banner |
 | P1.3 OCR | Done | 2026-05-22 | 2026-05-22 | Optional queue via DISPATCH_OCR_USE_QUEUE |
-| P2.x Backlog | Backlog | | | |
+| P2.2 Ops alerts (list) | Done | 2026-05-22 | 2026-05-22 | `stats.ops` + RequestOpsAlertsBar |
+| P2.3 Audit timeline | Done | 2026-05-22 | 2026-05-22 | GET audit-logs + RequestAuditTimeline |
+| P2.4 Clone lineage | Done | 2026-05-22 | 2026-05-22 | `cloned_from_summary` banner |
+| P2.5 Lazy BM.03 tab | Done | 2026-05-22 | 2026-05-22 | defineAsyncComponent |
+| P2.1 Maps link (external) | Partial | 2026-05-22 | | Google Maps dir URL; no Distance Matrix API |
+| P2.x Dashboard widget | Backlog | | | |
+| P2.4 Diff wizard snapshot | Backlog | | | Beyond lineage banner |
 
 ---
 

@@ -40,6 +40,8 @@
       </div>
     </div>
 
+    <RequestOpsAlertsBar v-if="stats.ops" :ops="stats.ops" class="mb-1" />
+
     <!-- KPI: 4 thẻ gọn + thẻ xu hướng rộng -->
     <div
       class="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-[minmax(0,9rem)_minmax(0,9rem)_minmax(0,9rem)_minmax(0,9rem)_minmax(14rem,1fr)]"
@@ -1146,6 +1148,7 @@ import {
   listRequests,
 } from '../../api/requests'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
+import RequestOpsAlertsBar from '../../components/requests/RequestOpsAlertsBar.vue'
 import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import {
@@ -1176,6 +1179,7 @@ const stats = ref({
   month_trend_pct: null,
   volume_trend: [],
   trashed_total: 0,
+  ops: {},
 })
 
 const activeTab = ref('all')

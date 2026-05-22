@@ -315,6 +315,22 @@ class RequestController extends Controller
 
         $trashedTotal = (int) (clone $this->scopedDispatchRequestsQuery($user))->onlyTrashed()->count();
 
+        $pendingFillPrice = (int) (clone $base)
+            ->where('status', 'pending')
+            ->where('trip_type', '!=', 'door_to_door')
+            ->count();
+
+        $approvedMissingSigned = (int) (clone $base)
+            ->where('status', 'approved')
+            ->whereDoesntHave('attachments', fn (Builder $a) => $a->where('kind', 'signed_paper'))
+            ->count();
+
+        $approvedMissingScan = (int) (clone $base)
+            ->where('status', 'approved')
+            ->where('paper_status', 'pending')
+            ->whereDoesntHave('attachments', fn (Builder $a) => $a->where('kind', 'paper_scan'))
+            ->count();
+
         return [
             'total' => $total,
             'by_status' => $statusCounts,
@@ -324,6 +340,11 @@ class RequestController extends Controller
             'month_trend_pct' => $trendPct,
             'volume_trend' => $volumeTrend,
             'trashed_total' => $trashedTotal,
+            'ops' => [
+                'pending_fill_price' => $pendingFillPrice,
+                'approved_missing_signed' => $approvedMissingSigned,
+                'approved_missing_paper_scan' => $approvedMissingScan,
+            ],
         ];
     }
 

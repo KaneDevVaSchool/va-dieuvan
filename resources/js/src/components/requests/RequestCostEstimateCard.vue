@@ -25,6 +25,15 @@
           {{ t('request_detail.reference_pricing_link') }}
         </Button>
         <Button
+          v-if="mapsUrl"
+          type="button"
+          variant="secondary"
+          class="shrink-0 !border-slate-200 !text-slate-800"
+          @click="openMaps"
+        >
+          {{ t('request_detail.open_maps_route') }}
+        </Button>
+        <Button
           type="button"
           variant="secondary"
           class="shrink-0 !text-slate-700"
@@ -140,7 +149,12 @@ const props = defineProps({
   canApplyPricing: { type: Boolean, default: false },
   applyingPricing: { type: Boolean, default: false },
   formatDateTime: { type: Function, required: true },
+  mapsUrl: { type: String, default: '' },
 })
+
+function openMaps() {
+  if (props.mapsUrl) window.open(props.mapsUrl, '_blank', 'noopener,noreferrer')
+}
 
 defineEmits(['open-pricing', 'go-form', 'apply-suggestion'])
 

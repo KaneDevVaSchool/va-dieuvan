@@ -63,6 +63,11 @@ export async function getDispatchRequest(id) {
   return data.data
 }
 
+export async function getDispatchRequestAuditLogs(id) {
+  const { data } = await http.get(`/dispatch-requests/${id}/audit-logs`)
+  return data.data.items ?? []
+}
+
 /**
  * @param {Record<string, unknown>} payload
  * @param {{ idempotencyKey?: string }} [opts]

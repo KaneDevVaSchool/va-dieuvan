@@ -15,9 +15,9 @@ use App\Http\Requests\Api\Requests\MarkDispatchRequestPaperReceivedRequest;
 use App\Http\Requests\Api\Requests\RevertDispatchRequestPaperRequest;
 use App\Http\Requests\Api\Requests\ShowDispatchRequestRequest;
 use App\Http\Requests\Api\Requests\ApplyDispatchRequestPricingHintsRequest;
-use App\Http\Requests\Api\Requests\ApplyDispatchRequestPricingHintsRequest;
 use App\Http\Requests\Api\Requests\UpdateDispatchRequestWizardRequest;
 use App\Http\Requests\Api\Requests\UpdateRecurringDispatchRequestPassengerCountRequest;
+use App\Models\AuditLog;
 use App\Models\DispatchRequest;
 use App\Models\Role;
 use App\Models\Trip;
@@ -54,12 +54,32 @@ class DispatchRequestController extends Controller
             'priceFiller:id,name,email,employee_code',
             'trip',
             'dispatchRequestTemplate.dispatchPackage',
+            'clonedFrom:id,status,origin,destination,created_at',
             'attachments' => fn ($q) => $q->orderByDesc('id'),
         ]);
 
         $dispatchRequest->makeVisible(['wizard_snapshot']);
 
         return $this->ok($this->presentDispatchRequest($dispatchRequest));
+    }
+
+    public function auditLogs(ShowDispatchRequestRequest $request, DispatchRequest $dispatchRequest)
+    {
+        $this->authorize('view', $dispatchRequest);
+
+        if ($dispatchRequest->trashed()) {
+            abort(404);
+        }
+
+        $items = AuditLog::query()
+            ->where('auditable_type', $dispatchRequest->getMorphClass())
+            ->where('auditable_id', $dispatchRequest->id)
+            ->with(['actor:id,name,email'])
+            ->orderByDesc('id')
+            ->limit(80)
+            ->get();
+
+        return $this->ok(['items' => $items]);
     }
 
     public function store(CreateDispatchRequestRequest $request)

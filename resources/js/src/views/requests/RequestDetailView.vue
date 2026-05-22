@@ -341,6 +341,12 @@
               :todos="workflowTodoItems"
               @navigate="onWorkflowNavigate"
             />
+            <RequestCloneLineageBanner
+              v-if="req?.cloned_from_summary"
+              :summary="req.cloned_from_summary"
+              :context="isDeptRequestDetailRoute ? 'dept' : 'staff'"
+            />
+
             <div v-show="activeTab === 'route'" class="space-y-4">
               <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.section_progress') }}</p>
@@ -467,9 +473,17 @@
                 :can-apply-pricing="canApplyPricingHints"
                 :applying-pricing="applyingPricingHints"
                 :format-date-time="fmtStepDetail"
+                :maps-url="routeMapsUrl"
                 @open-pricing="pricingModalOpen = true"
                 @go-form="setActiveTab('form')"
                 @apply-suggestion="onApplyPricingSuggestion"
+              />
+
+              <RequestAuditTimeline
+                :items="auditLogs"
+                :loading="auditLogsLoading"
+                :error="auditLogsErr"
+                :format-date-time="fmtStepDetail"
               />
 
               <section
@@ -722,7 +736,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -754,7 +768,11 @@ import Button from '../../components/ui/Button.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
-import RequestBm03FormTab from '../../components/requests/RequestBm03FormTab.vue'
+const RequestBm03FormTab = defineAsyncComponent(() =>
+  import('../../components/requests/RequestBm03FormTab.vue'),
+)
+import RequestCloneLineageBanner from '../../components/requests/RequestCloneLineageBanner.vue'
+import RequestAuditTimeline from '../../components/requests/RequestAuditTimeline.vue'
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
 import RequestCostEstimateCard from '../../components/requests/RequestCostEstimateCard.vue'
@@ -775,6 +793,7 @@ import {
   applyDispatchRequestPricingHints,
   fillPriceDispatchRequest,
   getDispatchRequest,
+  getDispatchRequestAuditLogs,
   markPaperReceived,
   revertPaperReceived,
   cloneDispatchRequest,
@@ -1023,6 +1042,22 @@ const { formTabActionCount, docsTabActionCount, todoItems: workflowTodoItems } =
 )
 
 const canApplyPricingHints = computed(() => auth.hasPermission('request.fill_price'))
+const auditLogs = ref([])
+const auditLogsLoading = ref(false)
+const auditLogsErr = ref('')
+
+const routeMapsUrl = computed(() => {
+  const r = req.value
+  if (!r?.origin?.trim() && !r?.destination?.trim()) return ''
+  const params = new URLSearchParams({
+    api: '1',
+    origin: (r.origin || '').trim(),
+    destination: (r.destination || '').trim(),
+    travelmode: 'driving',
+  })
+  return `https://www.google.com/maps/dir/?${params.toString()}`
+})
+
 const pricingSuggestions = ref([])
 const applyingPricingHints = ref(false)
 const docsHighlightAttachmentId = ref(null)
@@ -1550,6 +1585,21 @@ async function savePassengerDraft() {
   }
 }
 
+async function loadAuditLogs() {
+  const id = route.params.id
+  if (!id) return
+  auditLogsLoading.value = true
+  auditLogsErr.value = ''
+  try {
+    auditLogs.value = await getDispatchRequestAuditLogs(id)
+  } catch (e) {
+    auditLogs.value = []
+    auditLogsErr.value = formatApiError(e, t('request_detail.audit_timeline_load_fail'))
+  } finally {
+    auditLogsLoading.value = false
+  }
+}
+
 async function load() {
   loading.value = true
   try {
@@ -1568,6 +1618,7 @@ async function load() {
     passengerPatchErr.value = ''
     const tabQ = tabFromRouteQuery()
     if (tabQ) activeTab.value = tabQ
+    void loadAuditLogs()
   } finally {
     loading.value = false
   }

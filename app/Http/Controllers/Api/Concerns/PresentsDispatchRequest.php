@@ -30,6 +30,19 @@ trait PresentsDispatchRequest
                 'email' => $u->email,
             ];
         }
+
+        $arr['cloned_from_summary'] = null;
+        if ($dispatchRequest->cloned_from_id && $dispatchRequest->relationLoaded('clonedFrom') && $dispatchRequest->clonedFrom) {
+            $src = $dispatchRequest->clonedFrom;
+            $arr['cloned_from_summary'] = [
+                'id' => $src->id,
+                'status' => $src->status,
+                'origin' => $src->origin,
+                'destination' => $src->destination,
+                'created_at' => $src->created_at?->toIso8601String(),
+            ];
+        }
+
         $arr['threshold_hours'] = DispatchSetting::urgentThresholdHoursForTripType((string) $dispatchRequest->trip_type);
         $arr['is_urgent_auto'] = $dispatchRequest->isUrgentAuto();
 
