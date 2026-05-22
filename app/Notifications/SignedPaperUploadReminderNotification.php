@@ -52,7 +52,7 @@ class SignedPaperUploadReminderNotification extends Notification implements Shou
             'body' => $summaryLine,
             'dispatch_request_id' => $dispatchRequest->id,
             'event' => 'dispatch_request.signed_paper_upload_reminder',
-            'url' => '/portal/requests/'.$dispatchRequest->id,
+            'url' => '/portal/requests/'.$dispatchRequest->id.'?tab=docs',
         ];
     }
 
@@ -76,7 +76,7 @@ class SignedPaperUploadReminderNotification extends Notification implements Shou
         return array_merge(
             [
                 'requesterName' => $requesterDisplayName,
-                'detailUrl' => DispatchRequestMailPresenter::detailUrlForRequest($dr, 'portal/requests'),
+                'detailUrl' => DispatchRequestMailPresenter::detailUrlForRequest($dr, 'portal/requests').'?tab=docs',
                 'helpdesk' => DispatchRequestMailPresenter::helpdesk(),
                 'privacyScopeFooter' => 'Bạn nhận email vì đây là phiếu đề xuất của bạn và hệ thống chưa ghi nhận bản scan phiếu đã ký.',
                 'showProgress' => true,

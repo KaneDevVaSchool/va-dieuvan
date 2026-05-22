@@ -144,75 +144,99 @@
 
       <div class="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
         <aside
-          class="w-full shrink-0 overflow-y-auto border-b border-slate-200 bg-slate-50/90 lg:w-72 lg:max-h-none lg:border-b-0 lg:border-r xl:w-80"
-          :class="'max-h-[min(40vh,22rem)] lg:max-h-full'"
+          class="w-full shrink-0 overflow-y-auto border-b border-slate-200/90 bg-gradient-to-b from-slate-50 to-slate-100/80 lg:sticky lg:top-0 lg:z-[1] lg:w-72 lg:max-h-[calc(100dvh-8rem)] lg:self-start lg:border-b-0 lg:border-r xl:w-80"
+          :class="'max-h-[min(40vh,22rem)] lg:max-h-[calc(100dvh-8rem)]'"
         >
-          <div class="space-y-4 p-4">
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.aside_requester') }}</p>
-              <div class="mt-3 flex items-center gap-2.5">
-                <img
-                  v-if="req.requester?.avatar_url"
-                  :src="req.requester.avatar_url"
-                  alt=""
-                  class="h-10 w-10 rounded-full object-cover ring-2 ring-slate-100"
-                />
-                <div
-                  v-else
-                  class="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 ring-2 ring-teal-50"
-                >
-                  {{ requesterInitials }}
-                </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold text-slate-900">{{ req.requester?.name ?? '—' }}</p>
-                  <p class="text-xs text-slate-600">{{ requesterSubtitle }}</p>
-                </div>
-              </div>
-              <ul class="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-700">
-                <li v-if="req.requester?.email" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_email') }}</span>
-                  <span class="min-w-0 break-all text-slate-800">{{ req.requester.email }}</span>
-                </li>
-                <li v-if="req.requester?.phone" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_phone') }}</span>
-                  <span class="text-slate-800">{{ req.requester.phone }}</span>
-                </li>
-                <li v-if="req.requester?.employee_code" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_employee_code') }}</span>
-                  <span class="text-slate-800">{{ req.requester.employee_code }}</span>
-                </li>
-                <li v-if="req.wizard_snapshot?.form?.requester_unit" class="flex gap-2">
-                  <span class="shrink-0 font-medium text-slate-500">{{ t('request_detail.lbl_requester_unit') }}</span>
-                  <span class="text-slate-800">{{ req.wizard_snapshot.form.requester_unit }}</span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.aside_vehicle_request') }}</p>
-              <div
-                class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700"
+          <div class="space-y-3 p-3 sm:p-4">
+            <section
+              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
+            >
+              <header
+                class="flex items-center gap-2 border-b border-slate-100 bg-gradient-to-r from-teal-50/90 via-white to-white px-3 py-2"
               >
-                <TruckIcon class="h-3.5 w-3.5 text-teal-600" aria-hidden="true" />
-                {{ labelTripType(req.trip_type) }}
+                <UserCircleIcon class="h-4 w-4 shrink-0 text-teal-700" aria-hidden="true" />
+                <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                  {{ t('request_detail.aside_requester') }}
+                </h2>
+              </header>
+              <div class="p-3">
+                <div class="flex items-center gap-3">
+                  <img
+                    v-if="req.requester?.avatar_url"
+                    :src="req.requester.avatar_url"
+                    alt=""
+                    class="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-white shadow-sm"
+                  />
+                  <div
+                    v-else
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-teal-50 text-xs font-bold text-teal-900 ring-2 ring-teal-100/80"
+                  >
+                    {{ requesterInitials }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold leading-snug text-slate-900">
+                      {{ req.requester?.name ?? '—' }}
+                    </p>
+                    <p
+                      v-if="requesterAsideSubtitle"
+                      class="mt-0.5 truncate text-xs text-slate-600"
+                    >
+                      {{ requesterAsideSubtitle }}
+                    </p>
+                  </div>
+                </div>
+                <dl
+                  v-if="requesterAsideFields.length"
+                  class="mt-3 grid gap-2 border-t border-slate-100 pt-3"
+                >
+                  <div
+                    v-for="row in requesterAsideFields"
+                    :key="row.key"
+                    class="grid grid-cols-[4.5rem_1fr] items-start gap-x-2 gap-y-0.5 text-xs sm:grid-cols-[5rem_1fr]"
+                  >
+                    <dt class="font-medium text-slate-500">{{ row.label }}</dt>
+                    <dd class="min-w-0 break-words text-slate-800">{{ row.value }}</dd>
+                  </div>
+                </dl>
               </div>
-              <dl class="mt-3 space-y-2 border-t border-slate-100 pt-3 text-xs">
-                <div>
-                  <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('request_detail.lbl_passenger_load') }}</dt>
-                  <dd class="mt-1 flex items-center gap-1.5 text-slate-900">
-                    <CubeIcon class="h-4 w-4 shrink-0 text-teal-600" />
+            </section>
+
+            <section
+              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
+            >
+              <header
+                class="flex items-center gap-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-3 py-2"
+              >
+                <TruckIcon class="h-4 w-4 shrink-0 text-teal-700" aria-hidden="true" />
+                <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                  {{ t('request_detail.aside_vehicle_request') }}
+                </h2>
+              </header>
+              <div class="space-y-3 p-3">
+                <div
+                  class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-teal-100 bg-teal-50/80 px-2.5 py-1 text-[11px] font-semibold text-teal-900"
+                >
+                  <TruckIcon class="h-3.5 w-3.5 shrink-0 text-teal-600" aria-hidden="true" />
+                  <span class="truncate">{{ labelTripType(req.trip_type) }}</span>
+                </div>
+                <dl class="rounded-md border border-slate-100 bg-slate-50/60 px-2.5 py-2 text-xs">
+                  <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    {{ t('request_detail.lbl_passenger_load') }}
+                  </dt>
+                  <dd class="mt-1 flex items-center gap-1.5 font-medium text-slate-900">
+                    <CubeIcon class="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
                     <span>{{ passengerOrCargoLine }}</span>
                   </dd>
-                </div>
-              </dl>
-            </div>
+                </dl>
+              </div>
+            </section>
 
-            <div
+            <section
               v-if="showResetCloneBtn"
-              class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
             >
-              <ResetCloneSection :busy="resetCloneBusy" @clone="onResetCloneRequest" />
-            </div>
+              <ResetCloneSection compact :busy="resetCloneBusy" @clone="onResetCloneRequest" />
+            </section>
           </div>
         </aside>
 
@@ -232,7 +256,7 @@
                   ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
                   : 'text-slate-600 hover:bg-slate-50'
               "
-              @click="activeTab = 'route'"
+              @click="setActiveTab('route')"
             >
               {{ t('request_detail.tab_route') }}
             </button>
@@ -246,7 +270,7 @@
                   ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
                   : 'text-slate-600 hover:bg-slate-50'
               "
-              @click="activeTab = 'form'"
+              @click="setActiveTab('form')"
             >
               {{ t('request_detail.tab_form') }}
               <span
@@ -265,9 +289,14 @@
                   ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
                   : 'text-slate-600 hover:bg-slate-50'
               "
-              @click="activeTab = 'docs'"
+              @click="setActiveTab('docs')"
             >
               {{ t('request_detail.tab_docs') }}
+              <span
+                v-if="docsTabNeedsFocus"
+                class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-amber-500"
+                aria-hidden="true"
+              />
             </button>
           </nav>
 
@@ -550,351 +579,69 @@
                 @save-passenger="savePassengerDraft"
               />
             </div>
-            <div v-show="activeTab === 'docs'" class="space-y-3">
-              <!-- Tài liệu đính kèm -->
-              <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                <header
-                  class="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2"
-                  :title="t('request_detail.docs_section_lead')"
-                >
-                  <PaperClipIcon class="h-4 w-4 shrink-0 text-teal-700" aria-hidden="true" />
-                  <h2 class="min-w-0 flex-1 truncate text-xs font-bold uppercase tracking-wide text-slate-800">
-                    {{ t('request_detail.docs_section_heading') }}
-                  </h2>
-                  <span
-                    class="shrink-0 rounded bg-white px-1.5 py-px text-[10px] font-bold tabular-nums text-slate-600 ring-1 ring-slate-200"
-                  >
-                    {{ generalAttachments.length }}
-                  </span>
-                </header>
-                <div class="px-3 py-2">
-                  <ul v-if="generalAttachments.length" class="divide-y divide-slate-100 rounded-md border border-slate-100">
-                    <li
-                      v-for="a in generalAttachments"
-                      :key="a.id"
-                      class="group flex min-w-0 items-center gap-2 bg-white px-2 py-1.5"
-                    >
-                      <DocumentIcon
-                        class="h-4 w-4 shrink-0 text-slate-400 group-hover:text-teal-600"
-                        aria-hidden="true"
-                      />
-                      <div class="min-w-0 flex-1 overflow-hidden">
-                        <p
-                          class="truncate text-xs font-medium text-slate-900"
-                          :title="a.original_name || t('request_detail.file_fallback_name', { id: a.id })"
-                        >
-                          {{ a.original_name || t('request_detail.file_fallback_name', { id: a.id }) }}
-                        </p>
-                        <p class="truncate text-[10px] text-slate-500">
-                          {{ fmtFileSize(a.size_bytes) }}
-                          <span v-if="a.kind" class="text-slate-400"> · {{ attachmentKindLabel(a.kind) }}</span>
-                        </p>
-                      </div>
-                      <div class="flex shrink-0 flex-nowrap items-center gap-0.5" role="group" :aria-label="t('request_detail.docs_actions_aria')">
-                        <button
-                          type="button"
-                          class="flex h-7 w-7 items-center justify-center rounded-md text-teal-700 hover:bg-teal-50"
-                          :title="t('request_detail.download_action')"
-                          @click="downloadFile(a)"
-                        >
-                          <ArrowDownTrayIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                        <button
-                          v-if="canDeleteAttachment"
-                          type="button"
-                          class="flex h-7 w-7 items-center justify-center rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                          :disabled="deletingId === a.id"
-                          :title="t('request_detail.delete_action')"
-                          @click="removeAttachment(a)"
-                        >
-                          <TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </li>
-                  </ul>
-                  <p v-else class="py-3 text-center text-[11px] text-slate-500">
-                    {{ t('request_detail.docs_empty_attachments') }}
-                  </p>
-
-                  <div v-if="attachErr" class="mt-2 rounded-md bg-rose-50 px-2 py-1 text-[11px] text-rose-800">
-                    {{ attachErr }}
-                  </div>
-
-                  <div class="mt-2 border-t border-slate-100 pt-2">
-                    <FileUpload
-                      v-if="canUploadAttachment"
-                      :key="`doc-${route.params.id}-${generalAttachments.length}`"
-                      :label="t('request_detail.add_attachment_label')"
-                      drag-drop
-                      compact
-                      :upload-fn="uploadRequestDocument"
-                      @uploaded="onDocUploaded"
-                    />
-                    <p v-else class="py-2 text-center text-[11px] text-slate-500">
-                      {{ t('request_detail.no_attachment_download_perm') }}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Phiếu đã ký -->
-              <section
-                v-if="signedPaperAttachments.length || req.status === 'approved'"
-                class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            <div v-show="activeTab === 'docs'">
+              <RequestDocsPanel
+                v-if="req"
+                :req="req"
+                :request-id="route.params.id"
+                :docs-progress-steps="docsProgressSteps"
+                :general-attachments="generalAttachments"
+                :signed-paper-attachments="signedPaperAttachments"
+                :paper-scans="paperScans"
+                :attach-err="attachErr"
+                :ocr-err="ocrErr"
+                :ocr-busy="ocrBusy"
+                :deleting-id="deletingId"
+                :can-upload-general="canUploadAttachment"
+                :can-upload-paper-scan="canUploadAttachment"
+                :can-delete-attachment="canDeleteAttachment"
+                :can-run-ocr="canUploadAttachment"
+                :upload-general-fn="uploadRequestDocument"
+                :upload-paper-scan-fn="uploadPaperScan"
+                :format-date-time="fmt"
+                @preview="openAttachmentPreview"
+                @download="downloadFile"
+                @delete="removeAttachment"
+                @ocr="runOcr"
+                @uploaded-general="onDocUploaded"
+                @uploaded-paper-scan="load"
               >
-                <header
-                  class="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2"
-                  :title="t('request_detail.docs_signed_paper_lead')"
-                >
-                  <ClipboardDocumentIcon class="h-4 w-4 shrink-0 text-slate-600" aria-hidden="true" />
-                  <h2 class="min-w-0 flex-1 truncate text-xs font-bold uppercase tracking-wide text-slate-800">
-                    {{ t('request_detail.docs_signed_paper_heading') }}
-                  </h2>
-                </header>
-                <div class="px-3 py-2">
-                  <ul v-if="signedPaperAttachments.length" class="divide-y divide-slate-100 rounded-md border border-teal-100/80">
-                    <li
-                      v-for="a in signedPaperAttachments"
-                      :key="a.id"
-                      class="flex min-w-0 items-center gap-2 bg-teal-50/25 px-2 py-1.5"
-                    >
-                      <div class="min-w-0 flex-1 overflow-hidden">
-                        <p class="truncate text-xs font-medium text-slate-900">
-                          {{ a.original_name || t('request_detail.file_fallback_name', { id: a.id }) }}
-                        </p>
-                        <p class="truncate text-[10px] text-slate-600">{{ fmtFileSize(a.size_bytes) }}</p>
-                      </div>
-                      <button
-                        type="button"
-                        class="flex h-7 shrink-0 items-center gap-1 rounded-md bg-teal-600 px-2 text-[10px] font-semibold text-white hover:bg-teal-700"
-                        :title="t('request_detail.download_action')"
-                        @click="downloadFile(a)"
-                      >
-                        <ArrowDownTrayIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                        <span class="hidden sm:inline">{{ t('request_detail.download_action') }}</span>
-                      </button>
-                    </li>
-                  </ul>
-                  <p v-else class="rounded-md border border-dashed border-amber-200/70 bg-amber-50/30 py-2.5 text-center text-[11px] text-amber-950/90">
-                    {{ t('request_detail.docs_signed_paper_empty') }}
-                  </p>
-                </div>
-              </section>
-
-              <!-- Phiếu giấy & OCR -->
-              <section
-                v-if="paperScans.length || canUploadAttachment || req.paper_status === 'pending' || req.paper_status === 'received'"
-                class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-              >
-                <header
-                  class="flex min-w-0 items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2"
-                  :title="t('request_detail.paper_ocr_lead')"
-                >
-                  <DocumentTextIcon class="h-4 w-4 shrink-0 text-violet-700" aria-hidden="true" />
-                  <h2 class="min-w-0 flex-1 truncate text-xs font-bold uppercase tracking-wide text-slate-800">
-                    {{ t('request_detail.paper_ocr_heading') }}
-                  </h2>
-                  <span
-                    v-if="req.paper_status === 'received'"
-                    class="shrink-0 rounded-full bg-teal-100 px-1.5 py-px text-[9px] font-bold uppercase text-teal-900"
-                  >
-                    {{ t('request_detail.paper_received_badge') }}
-                  </span>
-                  <span
-                    v-else-if="req.paper_status === 'pending'"
-                    class="shrink-0 rounded-full bg-amber-100 px-1.5 py-px text-[9px] font-bold uppercase text-amber-950"
-                  >
-                    {{ t('request_detail.paper_pending_badge') }}
-                  </span>
-                </header>
-
-                <div class="space-y-2 px-3 py-2">
-                  <dl
-                    v-if="req.paper_status === 'received' && (req.paper_reference || req.paper_received_at)"
-                    class="flex flex-wrap gap-x-4 gap-y-1 rounded-md bg-slate-50 px-2 py-1.5 text-[11px]"
-                  >
-                    <div v-if="req.paper_reference" class="min-w-0">
-                      <dt class="inline font-semibold text-slate-500">{{ t('request_detail.paper_ref_label_short') }}</dt>
-                      <dd class="inline text-slate-900">{{ req.paper_reference }}</dd>
-                    </div>
-                    <div v-if="req.paper_received_at" class="min-w-0">
-                      <dt class="inline font-semibold text-slate-500">{{ t('request_detail.paper_received_at_short') }}</dt>
-                      <dd class="inline text-slate-900">{{ fmt(req.paper_received_at) }}</dd>
-                    </div>
-                  </dl>
-
-                  <ul v-if="paperScans.length" class="divide-y divide-slate-100 rounded-md border border-slate-100">
-                    <li v-for="a in paperScans" :key="a.id" class="bg-white">
-                      <div class="flex min-w-0 items-center gap-2 px-2 py-1.5">
-                        <DocumentTextIcon class="h-4 w-4 shrink-0 text-violet-600/80" aria-hidden="true" />
-                        <div class="min-w-0 flex-1 overflow-hidden">
-                          <button
-                            type="button"
-                            class="block w-full truncate text-left text-xs font-medium text-teal-800 hover:underline"
-                            :title="a.original_name || t('request_detail.download_file_fallback')"
-                            @click="downloadFile(a)"
-                          >
-                            {{ a.original_name || t('request_detail.download_file_fallback') }}
-                          </button>
-                          <p class="truncate text-[10px] text-slate-500">
-                            {{ fmtFileSize(a.size_bytes) }}
-                            <template v-if="a.mime_type">
-                              <span class="text-slate-400"> · </span>{{ a.mime_type }}
-                            </template>
-                            <template v-if="a.ocr_processed_at">
-                              <span class="text-slate-400"> · </span>
-                              <span class="text-teal-700">{{ t('request_detail.ocr_result_prefix') }} {{ fmt(a.ocr_processed_at) }}</span>
-                            </template>
-                          </p>
-                        </div>
-                        <div class="flex shrink-0 flex-nowrap items-center gap-0.5" role="group" :aria-label="t('request_detail.docs_actions_aria')">
-                          <button
-                            type="button"
-                            class="flex h-7 w-7 items-center justify-center rounded-md text-teal-700 hover:bg-teal-50"
-                            :title="t('request_detail.download_action')"
-                            @click="downloadFile(a)"
-                          >
-                            <ArrowDownTrayIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            class="relative flex h-7 w-7 items-center justify-center rounded-md text-violet-800 hover:bg-violet-50 disabled:opacity-50"
-                            :disabled="ocrBusy !== null && ocrBusy !== a.id"
-                            :title="a.ocr_processed_at ? t('request_detail.ocr_rerun') : t('request_detail.ocr_run')"
-                            @click="runOcr(a.id)"
-                          >
-                            <span
-                              v-if="ocrBusy === a.id"
-                              class="absolute inset-0 m-auto h-3.5 w-3.5 animate-spin rounded-full border-2 border-violet-300 border-t-violet-700"
-                              aria-hidden="true"
-                            />
-                            <SparklesIcon v-else class="h-3.5 w-3.5" aria-hidden="true" />
-                          </button>
-                          <button
-                            v-if="canDeleteAttachment"
-                            type="button"
-                            class="flex h-7 w-7 items-center justify-center rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                            :disabled="deletingId === a.id"
-                            :title="t('request_detail.delete_scan_action')"
-                            @click="removeAttachment(a)"
-                          >
-                            <TrashIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </div>
-                      <div v-if="a.ocr_text" class="border-t border-slate-50 px-2 pb-2 pt-0">
-                        <p class="text-[9px] font-bold uppercase tracking-wide text-slate-400">
-                          {{ t('request_detail.ocr_text_label') }}
-                        </p>
-                        <pre
-                          class="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded border border-slate-100 bg-slate-50/90 p-2 font-mono text-[10px] leading-snug text-slate-800"
-                        >{{ a.ocr_text }}</pre>
-                      </div>
-                    </li>
-                  </ul>
-                  <p v-else-if="canUploadAttachment" class="py-2 text-center text-[11px] text-slate-500">
-                    {{ t('request_detail.docs_empty_paper_scan') }}
-                  </p>
-
-                  <div v-if="ocrErr" class="rounded-md bg-rose-50 px-2 py-1 text-[11px] text-rose-800">
-                    {{ ocrErr }}
-                  </div>
-
-                  <div v-if="canUploadAttachment" class="rounded-md border border-dashed border-violet-200/50 p-2">
-                    <FileUpload
-                      :key="`paper-${route.params.id}-${paperScans.length}`"
-                      :label="t('request_detail.attach_paper_scan_label')"
-                      drag-drop
-                      compact
-                      :upload-fn="uploadPaperScan"
-                      @uploaded="load"
-                    />
-                  </div>
-
-                  <div
-                    v-if="req.paper_status === 'pending' && canManagePaper"
-                    class="rounded-md border border-slate-100 bg-slate-50/60 p-2.5"
-                  >
-                    <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
-                      {{ t('request_detail.paper_confirm_received_title') }}
-                    </h3>
+                <template v-if="canManagePaper" #paper-forms>
+                  <div v-if="req.paper_status === 'pending'" class="rounded-md border border-slate-100 bg-slate-50/60 p-2.5">
+                    <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">{{ t('request_detail.paper_confirm_received_title') }}</h3>
                     <form class="mt-2 grid gap-2 sm:grid-cols-2" @submit.prevent="doMarkPaper">
-                      <div class="sm:col-span-2">
-                        <Input
-                          v-model="paperForm.paper_reference"
-                          :label="t('request_detail.paper_ref_input_label')"
-                          :placeholder="t('request_detail.paper_ref_placeholder')"
-                        />
-                      </div>
-                      <div class="sm:col-span-2">
-                        <Input
-                          v-model="paperForm.paper_received_at"
-                          :label="t('request_detail.paper_received_at_input_label')"
-                          type="datetime-local"
-                        />
-                      </div>
+                      <div class="sm:col-span-2"><Input v-model="paperForm.paper_reference" :label="t('request_detail.paper_ref_input_label')" :placeholder="t('request_detail.paper_ref_placeholder')" /></div>
+                      <div class="sm:col-span-2"><Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" /></div>
                       <div class="flex flex-nowrap items-center gap-2 sm:col-span-2">
-                        <Button
-                          :loading="paperActing"
-                          type="submit"
-                          class="!h-8 !px-3 !py-1 !text-xs !bg-teal-600 hover:!bg-teal-700"
-                        >
-                          {{ t('request_detail.paper_mark_received_btn') }}
-                        </Button>
+                        <Button :loading="paperActing" type="submit" class="!h-8 !px-3 !py-1 !text-xs !bg-teal-600 hover:!bg-teal-700">{{ t('request_detail.paper_mark_received_btn') }}</Button>
                         <span v-if="paperMsg" class="min-w-0 truncate text-[11px] text-slate-600">{{ paperMsg }}</span>
                       </div>
                     </form>
                   </div>
-
-                  <div
-                    v-else-if="req.paper_status === 'received' && canManagePaper"
-                    class="rounded-md border border-slate-100 bg-slate-50/60 p-2.5"
-                  >
-                    <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
-                      {{ t('request_detail.paper_update_section_title') }}
-                    </h3>
+                  <div v-else-if="req.paper_status === 'received'" class="rounded-md border border-slate-100 bg-slate-50/60 p-2.5">
+                    <h3 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">{{ t('request_detail.paper_update_section_title') }}</h3>
                     <form class="mt-2 grid gap-2 sm:grid-cols-2" @submit.prevent="doMarkPaper">
-                      <div class="sm:col-span-2">
-                        <Input
-                          v-model="paperForm.paper_reference"
-                          :label="t('request_detail.paper_ref_input_label')"
-                          :placeholder="t('request_detail.paper_ref_placeholder')"
-                        />
-                      </div>
-                      <div class="sm:col-span-2">
-                        <Input
-                          v-model="paperForm.paper_received_at"
-                          :label="t('request_detail.paper_received_at_input_label')"
-                          type="datetime-local"
-                        />
-                      </div>
+                      <div class="sm:col-span-2"><Input v-model="paperForm.paper_reference" :label="t('request_detail.paper_ref_input_label')" :placeholder="t('request_detail.paper_ref_placeholder')" /></div>
+                      <div class="sm:col-span-2"><Input v-model="paperForm.paper_received_at" :label="t('request_detail.paper_received_at_input_label')" type="datetime-local" /></div>
                       <div class="flex flex-nowrap items-center gap-2 overflow-x-auto sm:col-span-2">
-                        <Button
-                          :loading="paperActing"
-                          type="submit"
-                          class="!h-8 !shrink-0 !px-3 !py-1 !text-xs !bg-teal-600 hover:!bg-teal-700"
-                        >
-                          {{ t('request_detail.paper_save_changes_btn') }}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          type="button"
-                          class="!h-8 !shrink-0 !px-3 !py-1 !text-xs !border-amber-200 !text-amber-900 hover:!bg-amber-50"
-                          :disabled="paperActing || paperRevertActing"
-                          @click="doRevertPaper"
-                        >
-                          {{ t('request_detail.paper_revert_btn') }}
-                        </Button>
+                        <Button :loading="paperActing" type="submit" class="!h-8 !shrink-0 !px-3 !py-1 !text-xs !bg-teal-600 hover:!bg-teal-700">{{ t('request_detail.paper_save_changes_btn') }}</Button>
+                        <Button variant="secondary" type="button" class="!h-8 !shrink-0 !px-3 !py-1 !text-xs !border-amber-200 !text-amber-900 hover:!bg-amber-50" :disabled="paperActing || paperRevertActing" @click="doRevertPaper">{{ t('request_detail.paper_revert_btn') }}</Button>
                         <span v-if="paperMsg" class="min-w-0 flex-1 truncate text-[11px] text-slate-600">{{ paperMsg }}</span>
                       </div>
                     </form>
                   </div>
-                </div>
-              </section>
+                </template>
+              </RequestDocsPanel>
             </div>
           </div>
         </div>
       </div>
+
+      <AttachmentPreviewModal
+        :open="previewOpen"
+        :attachment="previewAttachment"
+        @close="closeAttachmentPreview"
+      />
 
       <RejectReasonModal
         :open="deptRejectOpen"
@@ -982,6 +729,7 @@ import {
   InformationCircleIcon,
   PaperClipIcon,
   TruckIcon,
+  UserCircleIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { CheckIcon } from '@heroicons/vue/24/solid'
@@ -991,8 +739,11 @@ import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 import RequestBm03FormTab from '../../components/requests/RequestBm03FormTab.vue'
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
+import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
+import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
 import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
+import { useDispatchRequestDocs } from '../../composables/useDispatchRequestDocs'
 import ReferencePricingReadOnlyBody from '../../components/pricing/ReferencePricingReadOnlyBody.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
 import { getDispatchFormSettings } from '../../api/dispatchSettings'
@@ -1211,7 +962,58 @@ const showResetCloneBtn = computed(() => {
   return ['approved', 'rejected'].includes(String(req.value?.status || ''))
 })
 
+const DOC_TABS = ['route', 'form', 'docs']
+
 const activeTab = ref('route')
+const previewOpen = ref(false)
+const previewAttachment = ref(null)
+
+const reqForDocs = computed(() => req.value)
+const {
+  signedPaperAttachments,
+  paperScans,
+  generalAttachments,
+  docsTabNeedsFocus,
+  docsProgressSteps,
+} = useDispatchRequestDocs(reqForDocs)
+
+function tabFromRouteQuery() {
+  const q = route.query.tab
+  return typeof q === 'string' && DOC_TABS.includes(q) ? q : null
+}
+
+function setActiveTab(tab) {
+  activeTab.value = tab
+  const nextQuery = { ...route.query, tab }
+  if (route.query.tab !== tab) {
+    router.replace({ query: nextQuery })
+  }
+}
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (typeof tab === 'string' && DOC_TABS.includes(tab) && activeTab.value !== tab) {
+      activeTab.value = tab
+    }
+  },
+)
+
+watch(docsTabNeedsFocus, (need, was) => {
+  if (need && was !== true && req.value && tabFromRouteQuery() !== 'docs') {
+    setActiveTab('docs')
+  }
+})
+
+function openAttachmentPreview(a) {
+  previewAttachment.value = a
+  previewOpen.value = true
+}
+
+function closeAttachmentPreview() {
+  previewOpen.value = false
+  previewAttachment.value = null
+}
 
 /** Tab Biểu mẫu BM.03 — badge khi có hành động / cảnh báo cần xem (empty state trong tab). */
 const approvalTabNeedsFocus = computed(() => {
@@ -1238,42 +1040,46 @@ watch(
 
 const showRecurringBadge = computed(() => !!req.value?.dispatch_request_template_id)
 
-const signedPaperAttachments = computed(() => {
-  const list = req.value?.attachments ?? []
-  return list.filter((a) => a.kind === 'signed_paper')
-})
-
-const paperScans = computed(() => {
-  const list = req.value?.attachments ?? []
-  return list.filter((a) => a.kind === 'paper_scan')
-})
-
-const generalAttachments = computed(() => {
-  const list = req.value?.attachments ?? []
-  return list.filter((a) => a.kind !== 'paper_scan' && a.kind !== 'signed_paper')
-})
-
-function fmtFileSize(bytes) {
-  const n = Number(bytes)
-  if (!Number.isFinite(n) || n < 0) return '—'
-  if (n < 1024) return `${n} B`
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function attachmentKindLabel(kind) {
-  const k = kind || 'file'
-  const key = `request_detail.attachment_kind_${k}`
-  const translated = t(key)
-  return translated !== key ? translated : k
-}
-
 const requesterSubtitle = computed(() => {
   const u = req.value?.wizard_snapshot?.form?.requester_unit
   if (u?.trim()) return u.trim()
   const code = req.value?.requester?.employee_code
   if (code) return t('request_detail.requester_employee_line', { code })
   return req.value?.requester?.email ?? '—'
+})
+
+/** Dòng phụ dưới tên trong sidebar — không lặp email (email nằm trong bảng chi tiết). */
+const requesterAsideSubtitle = computed(() => {
+  const u = req.value?.wizard_snapshot?.form?.requester_unit
+  if (u?.trim()) return u.trim()
+  const code = req.value?.requester?.employee_code
+  if (code) return t('request_detail.requester_employee_line', { code })
+  return ''
+})
+
+const requesterAsideFields = computed(() => {
+  const r = req.value
+  if (!r) return []
+  const unitInHero = !!r.wizard_snapshot?.form?.requester_unit?.trim()
+  const codeInHero = !unitInHero && !!r.requester?.employee_code?.trim()
+  const rows = []
+  const email = r.requester?.email?.trim()
+  if (email) {
+    rows.push({ key: 'email', label: t('request_detail.lbl_email'), value: email })
+  }
+  const phone = r.requester?.phone?.trim()
+  if (phone) {
+    rows.push({ key: 'phone', label: t('request_detail.lbl_phone'), value: phone })
+  }
+  const code = r.requester?.employee_code?.trim()
+  if (code && !codeInHero) {
+    rows.push({ key: 'code', label: t('request_detail.lbl_employee_code'), value: code })
+  }
+  const unit = r.wizard_snapshot?.form?.requester_unit?.trim()
+  if (unit && !unitInHero) {
+    rows.push({ key: 'unit', label: t('request_detail.lbl_requester_unit'), value: unit })
+  }
+  return rows
 })
 
 const requesterInitials = computed(() => {
@@ -1672,6 +1478,8 @@ async function load() {
     const actual = dr.student_count_actual ?? dr.passenger_count
     passengerDraft.value = Math.max(1, Math.min(999, Math.round(Number(actual) || 1)))
     passengerPatchErr.value = ''
+    const tabQ = tabFromRouteQuery()
+    if (tabQ) activeTab.value = tabQ
   } finally {
     loading.value = false
   }
@@ -1684,10 +1492,22 @@ async function runOcr(attachmentId) {
   ocrErr.value = ''
   ocrBusy.value = attachmentId
   try {
-    await runAttachmentOcr(attachmentId)
-    await load()
+    const updated = await runAttachmentOcr(attachmentId)
+    const list = req.value?.attachments
+    if (Array.isArray(list)) {
+      const idx = list.findIndex((x) => x.id === attachmentId)
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], ...updated }
+      } else {
+        list.unshift(updated)
+      }
+    } else {
+      await load()
+    }
+    showAppSuccess(t('request_detail.ocr_success_toast'), t('request_detail.toast_attachment_removed_title'))
   } catch (e) {
     ocrErr.value = formatApiError(e, t('request_detail.ocr_failed_fallback'))
+    showAppError(ocrErr.value)
   } finally {
     ocrBusy.value = null
   }
