@@ -45,6 +45,7 @@ Thư mục `app/Jobs/` **không chứa job class** trong repo hiện tại — h
 | `DeptHeadApprovalRequestedNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** |
 | `DeptHeadDecisionNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** (người đề xuất) |
 | `DeptApprovalReminderNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; cron `dispatch:remind-dept-approvals` |
+| `SignedPaperUploadReminderNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; gửi ngay khi Trưởng BP duyệt (thiếu `signed_paper`) + cron `dispatch:remind-signed-paper-upload` (tối đa 1 lần/ngày) |
 | `TripAssignedNotification` | default hoặc urgent | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** (tài xế) |
 
 Queue name lấy từ `config/dispatch.php`:
@@ -89,6 +90,7 @@ Queue name lấy từ `config/dispatch.php`:
 $schedule->command('cargo:sla-check')->everyFiveMinutes();
 $schedule->command('dispatch:materialize-recurring-requests')->hourly();
 $schedule->command('dispatch:remind-dept-approvals')->dailyAt('08:00');
+$schedule->command('dispatch:remind-signed-paper-upload')->dailyAt('08:15');
 ```
 
 **Yêu cầu vận hành:** crontab gọi `php artisan schedule:run` **mỗi phút**.

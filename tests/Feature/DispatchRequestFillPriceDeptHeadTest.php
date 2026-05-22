@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\DeptApprovalReminderNotification;
 use App\Notifications\DeptHeadApprovalRequestedNotification;
 use App\Notifications\DeptHeadDecisionNotification;
+use App\Notifications\SignedPaperUploadReminderNotification;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Notifications\TripAssignedNotification;
 use Database\Seeders\RbacSeeder;
@@ -329,6 +330,10 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
 
         Notification::assertSentTo($requester, DeptHeadDecisionNotification::class, function (DeptHeadDecisionNotification $n) use ($dr): bool {
             return $n->dispatchRequestId === $dr->id && $n->decision === 'approve';
+        });
+
+        Notification::assertSentTo($requester, SignedPaperUploadReminderNotification::class, function (SignedPaperUploadReminderNotification $n) use ($dr): bool {
+            return $n->dispatchRequestId === $dr->id;
         });
 
         $fresh = DispatchRequest::query()->findOrFail($dr->id);

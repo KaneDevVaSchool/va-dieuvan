@@ -8,9 +8,6 @@ use App\Models\DispatchRequestTemplate;
 
 class RecurringPackageBudgetService
 {
-    /** @var array<int, array<string, mixed>|null> */
-    private static array $summarizeCache = [];
-
     public static function parseVndAmount(mixed $raw): ?float
     {
         if ($raw === null || $raw === '') {
@@ -33,17 +30,12 @@ class RecurringPackageBudgetService
     public function summarize(DispatchPackage $package): ?array
     {
         $id = (int) $package->id;
-        if (array_key_exists($id, self::$summarizeCache)) {
-            return self::$summarizeCache[$id];
-        }
 
         $budget = $package->monthly_budget !== null ? (float) $package->monthly_budget : 0.0;
         if ($budget <= 0) {
             $budget = $this->inferBudgetFromTemplates($package) ?? 0.0;
         }
         if ($budget <= 0) {
-            self::$summarizeCache[$id] = null;
-
             return null;
         }
 
@@ -73,7 +65,7 @@ class RecurringPackageBudgetService
 
         $label = (string) ($package->label !== null && $package->label !== '' ? $package->label : $package->trip_type);
 
-        $out = [
+        return [
             'dispatch_package_id' => $id,
             'package_label' => $label,
             'budget' => round($budget, 2),
@@ -82,10 +74,6 @@ class RecurringPackageBudgetService
             'used_percent' => round($usedPct, 1),
             'severity' => $severity,
         ];
-
-        self::$summarizeCache[$id] = $out;
-
-        return $out;
     }
 
     private function inferBudgetFromTemplates(DispatchPackage $package): ?float

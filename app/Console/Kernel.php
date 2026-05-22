@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('policy:materialize-trips')->dailyAt('22:05');
         $schedule->command('policy:send-depart-reminders')->everyFiveMinutes();
         $schedule->command('dispatch:remind-dept-approvals')->dailyAt('08:00');
+        $schedule->command('dispatch:remind-signed-paper-upload')->dailyAt('08:15');
     }
 
     /**

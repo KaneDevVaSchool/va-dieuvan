@@ -44,4 +44,7 @@ return [
 
     /** Sau bao nhiêu giờ kể từ fill giá mà gửi nhắc Trưởng BP (cron dispatch:remind-dept-approvals). */
     'dept_approval_reminder_after_hours' => max(1, (int) env('DISPATCH_DEPT_APPROVAL_REMIND_AFTER_HOURS', 24)),
+
+    /** Sau bao nhiêu giờ kể từ lần cập nhật phiếu approved mà bắt đầu nhắc tải scan (cron dispatch:remind-signed-paper-upload). */
+    'signed_paper_reminder_after_hours' => max(1, (int) env('DISPATCH_SIGNED_PAPER_REMIND_AFTER_HOURS', 24)),
 ];

@@ -133,6 +133,7 @@ Output Vite: `public/build/` (gitignored).
 | `DISPATCH_NOTIFICATIONS_QUEUE_DEFAULT`, `DISPATCH_NOTIFICATIONS_QUEUE_URGENT`                     | Tên queue thông báo                                                   |
 | `DISPATCH_MAIL_HELPDESK`                                                                          | Chuỗi hiển thị / mailto ở footer email chờ duyệt Trưởng đơn vị          |
 | `DISPATCH_DEPT_APPROVAL_REMIND_AFTER_HOURS`                                                       | Số giờ sau fill giá trước khi cron nhắc Trưởng BP (`dispatch:remind-dept-approvals`) |
+| `DISPATCH_SIGNED_PAPER_REMIND_AFTER_HOURS`                                                        | Số giờ sau khi phiếu `approved` trước khi nhắc tải scan (`dispatch:remind-signed-paper-upload`) |
 | `DISPATCH_DEBUG_NOTIFICATION_LOG`                                                                 | Log chi tiết luồng notify                                             |
 | `DISPATCH_PASSENGER_URGENT_HOURS`, `DISPATCH_CARGO_URGENT_HOURS`                                  | Ngưỡng “urgent” fallback                                              |
 | `AWS_*`                                                                                           | S3 nếu dùng                                                           |

@@ -22,6 +22,7 @@ use App\Models\Trip;
 use App\Models\User;
 use App\Notifications\DeptHeadApprovalRequestedNotification;
 use App\Notifications\DeptHeadDecisionNotification;
+use App\Notifications\SignedPaperUploadReminderNotification;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Notifications\RecurringStudentCountSubmittedNotification;
 use App\Http\Requests\Api\Requests\SubmitRecurringDispatchRequestStudentCountRequest;
@@ -778,6 +779,18 @@ class DispatchRequestController extends Controller
                 $requester,
                 new DeptHeadDecisionNotification($dispatchRequestId, $decision),
             );
+
+            if ($decision === 'approve') {
+                $hasSignedPaper = $dispatchRequest->attachments()
+                    ->where('kind', 'signed_paper')
+                    ->exists();
+                if (! $hasSignedPaper) {
+                    Notification::send(
+                        $requester,
+                        new SignedPaperUploadReminderNotification($dispatchRequestId),
+                    );
+                }
+            }
         });
     }
 }
