@@ -706,6 +706,7 @@ import {
 import { dispatchRequestEffectivePassengerCount } from '../../util/dispatchRequestPassengers'
 import { tripStatusAdminPillClass } from '../../constants/tripStatus'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useAuthStore } from '../../store'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
 
