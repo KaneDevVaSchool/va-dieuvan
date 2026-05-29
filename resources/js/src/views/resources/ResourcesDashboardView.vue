@@ -901,72 +901,21 @@
                                                 {{ nowLabel }}
                                             </span>
                                         </div>
-                                        <button
+                                        <DispatchTimelineTripCard
                                             v-for="bar in row.bars"
                                             :key="bar.trip.id"
-                                            type="button"
-                                            class="absolute top-2 z-[5] flex min-h-[2.75rem] items-start gap-1 overflow-hidden rounded-lg border px-2 py-1.5 text-left shadow-md transition hover:brightness-[0.98] hover:shadow-lg dark:hover:brightness-110"
-                                            :class="[
-                                                bar.toneClass,
-                                                isPanelTrip(bar.trip)
-                                                    ? 'ring-2 ring-teal-500 ring-offset-2 dark:ring-offset-slate-900'
-                                                    : '',
-                                                canAssignTrip
-                                                    ? 'cursor-grab active:cursor-grabbing touch-none'
-                                                    : '',
-                                            ]"
-                                            :style="tripBarStyle(bar)"
-                                            :title="tripBarTooltip(bar.trip)"
+                                            :trip="bar.trip"
+                                            :conflict="bar.conflict"
+                                            :selected="isPanelTrip(bar.trip)"
+                                            :draggable="canAssignTrip"
+                                            :position-style="tripBarStyle(bar)"
                                             @pointerdown="
                                                 onTripBarPointerDown(
                                                     $event,
                                                     bar.trip,
                                                 )
                                             "
-                                        >
-                                            <span
-                                                class="min-w-0 flex-1 select-none"
-                                            >
-                                                <span
-                                                    class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0"
-                                                >
-                                                    <span
-                                                        class="font-semibold tabular-nums"
-                                                        >#{{
-                                                            bar.trip.id
-                                                        }}</span
-                                                    >
-                                                    <span
-                                                        class="text-[9px] font-normal opacity-85"
-                                                        >{{
-                                                            tripBarTimeRange(
-                                                                bar.trip,
-                                                            )
-                                                        }}</span
-                                                    >
-                                                </span>
-                                                <span
-                                                    class="mt-0.5 block truncate text-[9px] font-normal leading-snug opacity-90"
-                                                    >{{
-                                                        tripTitle(bar.trip)
-                                                    }}</span
-                                                >
-                                                <span
-                                                    class="mt-0.5 block truncate text-[8px] font-normal leading-snug opacity-80"
-                                                    >{{
-                                                        tripBarMetaLine(
-                                                            bar.trip,
-                                                        )
-                                                    }}</span
-                                                >
-                                            </span>
-                                            <span
-                                                v-if="bar.conflict"
-                                                class="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-sm"
-                                            >
-                                                !
-                                            </span>
-                                        </button>
+                                        />
                                     </div>
                                 </div>
                                 <p
@@ -2012,6 +1961,8 @@ import {
     VEHICLE_ICON_COMPONENTS,
     vehicleIconKind,
 } from "../../util/vehicleIcon";
+import DispatchTimelineTripCard from "../../components/resources/DispatchTimelineTripCard.vue";
+import { tripEndAt } from "../../composables/useDispatchTimelineTripCard";
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -2498,33 +2449,9 @@ function fmtTime(v) {
     });
 }
 
-function tripBarTimeRange(trip) {
-    const end = tripEndAt(trip);
-    return `${fmtTime(trip.depart_at)}–${fmtTime(end)}`;
-}
-
-function tripBarMetaLine(trip) {
-    const type = tripTypeLine(trip);
-    const st = labelTripStatus(trip.status);
-    const parts = [type !== "—" ? type : null, st].filter(Boolean);
-    return parts.join(" · ") || "—";
-}
-
-function tripBarTooltip(trip) {
-    return `${tripTitle(trip)} · ${tripBarTimeRange(trip)} · ${tripBarMetaLine(trip)}`;
-}
-
 function hourValue(d) {
     const x = new Date(d);
     return x.getHours() + x.getMinutes() / 60 + x.getSeconds() / 3600;
-}
-
-function tripEndAt(trip) {
-    const r = dr(trip);
-    const end = r?.arrive_by ?? trip.arrive_by;
-    if (end) return new Date(end);
-    const s = new Date(trip.depart_at);
-    return new Date(s.getTime() + 60 * 60 * 1000);
 }
 
 /** Tỉ lệ tối thiểu trên lưới giờ — đủ rộng để hiển thị mã + khung giờ + tuyến + meta */
@@ -2538,16 +2465,6 @@ function pctRange(trip) {
     const right = ((Math.min(GRID_END, end) - GRID_START) / span) * 100;
     const width = Math.max(right - left, MIN_TIMELINE_BAR_PCT);
     return { left, width: Math.min(width, 100 - left) };
-}
-
-function barTone(trip, conflict) {
-    if (conflict) return "border-rose-400 bg-rose-100 text-rose-900";
-    if (trip.status === "in_progress")
-        return "border-sky-400 bg-sky-100 text-sky-900";
-    if (["assigned", "driver_confirmed"].includes(trip.status)) {
-        return "border-emerald-400 bg-emerald-100 text-emerald-900";
-    }
-    return "border-slate-300 bg-slate-200 text-slate-800";
 }
 
 function computeConflicts(tripList) {
@@ -2817,7 +2734,6 @@ const timelineRows = computed(() => {
                 left,
                 width,
                 conflict,
-                toneClass: barTone(trip, conflict),
             };
         });
     }
