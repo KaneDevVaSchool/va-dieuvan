@@ -184,6 +184,7 @@
     <!-- Filters: horizontal bar (same pattern as Requests) -->
     <div
       v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash') && !(activeTab === 'suppliers' && suppliersViewMode === 'trash')"
+      ref="resourcesFilterBarRef"
       class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
     >
       <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
@@ -263,7 +264,6 @@
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
             >
-              <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_status') }}</span>
               <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
                 filters.status ? resourceFilterStatusLabel : t('resources.filter_all')
               }}</span>
@@ -297,7 +297,6 @@
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
               >
-                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_type') }}</span>
                 <span class="min-w-0 max-w-[10rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
                   filters.type ? resourceFilterTypeLabel : t('resources.filter_all')
                 }}</span>
@@ -329,7 +328,6 @@
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
               >
-                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_driver_default') }}</span>
                 <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
                   filters.driver_default ? resourceFilterDriverDefaultLabel : t('resources.filter_all')
                 }}</span>
@@ -364,7 +362,6 @@
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
               >
-                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_driver_license') }}</span>
                 <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
                   filters.driver_license ? resourceFilterDocStateLabel(filters.driver_license) : t('resources.filter_all')
                 }}</span>
@@ -396,7 +393,6 @@
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
               >
-                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_driver_availability') }}</span>
                 <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
                   filters.driver_availability ? resourceFilterDriverAvailabilityLabel : t('resources.filter_all')
                 }}</span>
@@ -429,7 +425,6 @@
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
             >
-              <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ t('resources.filter_contract') }}</span>
               <span class="min-w-0 max-w-[9rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
                 filters.contract ? resourceFilterContractLabel : t('resources.filter_all')
               }}</span>
@@ -496,7 +491,6 @@
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
           >
-            <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ spec.label }}</span>
             <span class="min-w-0 max-w-[8rem] truncate text-sm font-medium text-slate-900 dark:text-slate-100">{{
               filters[spec.key] ? resourceFilterDocStateLabel(filters[spec.key]) : t('resources.filter_all')
             }}</span>
@@ -3095,6 +3089,7 @@ import {
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import {
   bulkDeleteDrivers,
   bulkDeleteTransportProviders,
@@ -3348,6 +3343,8 @@ const bulkForceKind = ref('')
 const bulkForcePendingIds = ref([])
 const bulkForceSubmitting = ref(false)
 const resourceFilterMenuRef = ref(null)
+const resourcesFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(resourcesFilterBarRef)
 const resourceFiltersExtraOpen = ref(false)
 
 const resourceStatusFilterOptions = computed(() => [
@@ -3399,7 +3396,7 @@ const resourceVehicleDocFiltersExtra = computed(() => [
 ])
 
 function closeParentDetails(ev) {
-  const el = ev?.target
+  const el = ev?.currentTarget ?? ev?.target
   if (!el || typeof el.closest !== 'function') return
   const d = el.closest('details')
   if (d) d.open = false

@@ -16,23 +16,18 @@
 
         body {
             font-size: 7.5pt;
-            color: #000;
+            color: #1a1a1a;
             margin: 0;
-            line-height: 1.4;
+            line-height: 1.45;
             background: #fff;
-            text-transform: uppercase;
-            font-weight: normal;
         }
 
-        strong,
-        b {
-            font-weight: normal;
-        }
+        strong, b { font-weight: bold; }
 
+        /* ── Document Header ── */
         .doc-header-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 0;
         }
 
         .doc-header-table td {
@@ -42,334 +37,337 @@
         }
 
         .doc-title-main {
-            font-size: 9pt;
+            font-size: 13pt;
             font-weight: bold;
             text-align: center;
-            letter-spacing: normal;
             text-transform: uppercase;
-            color: #000;
+            letter-spacing: 1.5pt;
+            color: #1a1a1a;
         }
 
         .doc-title-sub {
-            font-size: 7.5pt;
+            font-size: 8pt;
             text-align: center;
-            color: #000;
-            font-style: normal;
+            color: #555;
             margin-top: 3px;
-            letter-spacing: normal;
-            font-weight: normal;
+            font-style: italic;
         }
 
         .doc-meta-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7.5pt;
-            border: 0.5pt solid #000;
+            font-size: 6.5pt;
+            border: 1px solid #bbb;
         }
 
+        .doc-meta-table tr:first-child td { border-top: none; }
+        .doc-meta-table tr:last-child  td { border-bottom: none; }
+
         .doc-meta-table td {
-            padding: 2.5px 6px;
-            border: 0.5pt solid #000;
+            padding: 2.5px 5px;
+            border-bottom: 0.5pt solid #ddd;
         }
 
         .doc-meta-label {
-            color: #000;
-            width: 90px;
-            font-weight: bold;
+            color: #888;
+            width: 78px;
         }
 
         .doc-meta-value {
-            font-weight: normal;
+            font-weight: bold;
             text-align: right;
-            color: #000;
+            color: #1a1a1a;
         }
 
         .doc-meta-id {
-            color: #000;
-            font-size: 7.5pt;
-            font-weight: normal;
+            color: #1755a0;
+            font-weight: bold;
         }
 
         .doc-header-divider {
             border: none;
-            border-bottom: 1pt solid #000;
-            margin: 8px 0 10px 0;
+            border-bottom: 2pt solid #1a1a1a;
+            margin: 10px 0 8px;
         }
 
+        /* ── Section Chrome ── */
         .sec-header {
             width: 100%;
             display: table;
-            background: #fff;
-            border: 0.5pt solid #000;
+            background: #f0f0f0;
+            border: 1px solid #bbb;
             border-bottom: none;
-            padding: 5pt 9pt 4pt 9pt;
-            margin-top: 9pt;
-            margin-bottom: 0;
+            padding: 4pt 9pt;
+            margin-top: 7pt;
         }
 
         .sec-badge {
             display: inline-block;
-            background: #000;
+            background: #1a1a1a;
             color: #fff;
-            font-size: 7.5pt;
+            font-size: 6.5pt;
             font-weight: bold;
-            padding: 1.5pt 6pt;
-            border-radius: 0;
-            letter-spacing: normal;
-            margin-right: 6pt;
+            padding: 1pt 6pt;
+            border-radius: 2pt;
+            letter-spacing: 0.5pt;
+            margin-right: 7pt;
             text-transform: uppercase;
         }
 
         .sec-title {
             font-size: 7.5pt;
             font-weight: bold;
-            color: #000;
-            letter-spacing: normal;
+            color: #1a1a1a;
+            letter-spacing: 0.4pt;
             text-transform: uppercase;
         }
 
         .sec-subtitle {
-            font-size: 7.5pt;
-            color: #000;
-            font-style: normal;
-            font-weight: bold;
-            margin-left: 4pt;
+            font-size: 6.5pt;
+            color: #666;
+            font-style: italic;
+            margin-left: 5pt;
+            text-transform: none;
+            font-weight: normal;
         }
 
         .sec-body {
-            border: 0.5pt solid #000;
+            border: 1px solid #bbb;
             border-top: none;
         }
 
-        .sec-body--flush {
-            padding: 0;
-        }
+        .sec-body--flush { padding: 0; }
 
+        /* ── Field Table ── */
         table.field-table {
             width: 100%;
             border-collapse: collapse;
         }
 
         table.field-table td {
-            border: 0.5pt solid #000;
-            padding: 5pt 8pt;
+            border: 0.5pt solid #ddd;
+            padding: 7pt 9pt 8pt;
             vertical-align: top;
         }
 
-        .fl-hint-inline {
-            font-weight: normal;
-            color: #000;
-        }
+        table.field-table tr:first-child td { border-top: none; }
 
         .fl {
-            font-size: 7.5pt;
-            color: #000;
-            font-weight: bold;
+            font-size: 6pt;
+            color: #888;
+            font-weight: normal;
             text-transform: uppercase;
-            letter-spacing: normal;
-            margin-bottom: 2.5pt;
+            letter-spacing: 0.3pt;
+            margin-bottom: 4pt;
+        }
+
+        .fl-hint-inline {
+            font-style: italic;
+            color: #aaa;
+            font-weight: normal;
+            text-transform: none;
+            letter-spacing: 0;
         }
 
         .fv {
             font-size: 7.5pt;
-            color: #000;
-            min-height: 10pt;
-            font-weight: normal;
+            color: #1a1a1a;
+            min-height: 14pt;
         }
 
-        .fv-empty {
-            color: #000;
-            font-style: normal;
-            font-weight: normal;
-        }
+        .fv-empty { color: #bbb; }
 
+        /* ── Hint Bar ── */
         .hint-bar {
-            background: #f5f5f5;
-            border: 0.5pt solid #000;
-            border-top: none;
+            background: #fafafa;
+            border-top: 0.5pt solid #e0e0e0;
+            border-bottom: 0.5pt solid #e0e0e0;
             padding: 4pt 9pt;
-            font-size: 7.5pt;
-            color: #000;
-            font-style: normal;
-            font-weight: normal;
+            font-size: 6.5pt;
+            color: #888;
+            font-style: italic;
         }
 
-        table.cb-table {
-            width: 100%;
-            border-collapse: collapse;
+        /* ── Target Chips (only checked items shown) ── */
+        .target-wrap {
+            padding: 7pt 9pt 6pt;
+            border-bottom: 0.5pt solid #ddd;
         }
 
-        table.cb-table td {
-            width: 25%;
-            padding: 3pt 8pt;
-            border: 0.5pt solid #000;
-            font-size: 7.5pt;
-            color: #000;
-            vertical-align: middle;
-            font-weight: normal;
+        .target-chip {
+            display: inline-block;
+            background: #f0f6ff;
+            border: 0.5pt solid #9ab8e0;
+            color: #1a4a7a;
+            font-size: 7pt;
+            font-weight: bold;
+            padding: 2pt 8pt;
+            border-radius: 10pt;
+            margin-right: 5pt;
+            margin-bottom: 3pt;
         }
 
+        /* ── Checkbox symbol ── */
         .cb-sym {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 7.5pt;
+            font-size: 8pt;
             margin-right: 3pt;
-            color: #000;
         }
 
+        /* ── Data Tables ── */
         table.data {
             width: 100%;
             border-collapse: collapse;
-            font-size: 7.5pt;
-            border: 0.5pt solid #000;
+            font-size: 6.5pt;
         }
 
         table.data th {
-            padding: 4.5pt 5pt;
+            padding: 4pt 4pt;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 6pt;
             font-weight: bold;
-            letter-spacing: normal;
-            border: 0.5pt solid #000;
-            background: #fff;
-            color: #000;
+            border: 0.5pt solid #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.2pt;
         }
 
-        table.data th.col-go,
-        table.data th.col-back,
-        table.data th.col-info {
-            background: #fff;
-            color: #000;
-        }
+        table.data th.col-info { background: #f0f0f0; color: #333; }
+        table.data th.col-go   { background: #deeaf6; color: #1a4a7a; }
+        table.data th.col-back { background: #dff0e0; color: #1a4d2a; }
 
         table.data td {
-            padding: 4.5pt 5pt;
-            text-align: center;
-            border: 0.5pt solid #000;
-            color: #000;
+            padding: 5pt 4pt;
+            border: 0.5pt solid #ddd;
+            color: #1a1a1a;
             vertical-align: top;
             background: #fff;
-            font-weight: normal;
+            font-size: 7pt;
         }
 
-        table.data td.tl {
-            text-align: left;
-        }
+        table.data tbody tr:nth-child(even) td { background: #fafafa; }
 
-        table.data td.tr {
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        table.data td.tc {
-            text-align: center;
-        }
+        table.data td.tl { text-align: left; }
+        table.data td.tr { text-align: right; white-space: nowrap; }
+        table.data td.tc { text-align: center; }
 
         table.data tr.row-total td {
-            background: #fff;
+            background: #f0f0f0;
             font-weight: bold;
-            border: 0.5pt solid #000;
-            border-top: 1pt solid #000;
-            color: #000;
+            border: 0.5pt solid #aaa;
+            border-top: 1.5pt solid #777;
+            color: #1a1a1a;
         }
 
+        table.data th .th-sub {
+            font-size: 6pt;
+            font-weight: normal;
+            text-transform: none;
+            display: block;
+            margin-top: 1pt;
+            letter-spacing: 0;
+        }
+
+        /* ── Signature Table ── */
         table.sig-table {
             width: 100%;
             border-collapse: collapse;
         }
 
         table.sig-table td {
-            width: 33.3%;
-            border: 0.5pt solid #000;
+            border: 0.5pt solid #aaa;
             text-align: center;
             vertical-align: bottom;
             padding: 4pt 6pt;
         }
 
         .sig-col-header {
-            background: #fff;
-            font-size: 7.5pt;
+            background: #f0f0f0;
+            font-size: 7pt;
             font-weight: bold;
-            color: #000;
+            color: #333;
             padding: 5pt 6pt;
             vertical-align: middle;
-            height: 18pt;
-            letter-spacing: normal;
-            border: 0.5pt solid #000;
+            height: 22pt;
+            letter-spacing: 0.3pt;
             text-transform: uppercase;
         }
 
         .sig-col-body {
-            height: 54pt;
+            height: 90pt;
             vertical-align: bottom;
             background: #fff;
+            padding-bottom: 8pt;
         }
 
         .sig-name {
-            font-size: 7.5pt;
-            font-weight: normal;
-            color: #000;
+            font-size: 7pt;
+            font-weight: bold;
+            color: #1a1a1a;
         }
 
         .sig-role {
-            font-size: 7.5pt;
-            color: #000;
-            font-style: normal;
-            font-weight: normal;
+            font-size: 6pt;
+            color: #888;
+            font-style: italic;
         }
 
+        /* ── Section G ── */
         .g-row {
-            padding: 6pt 9pt;
+            padding: 9pt 10pt;
             display: block;
         }
 
         .g-label {
-            font-size: 7.5pt;
+            font-size: 7pt;
             font-weight: bold;
-            color: #000;
+            color: #1a1a1a;
         }
 
         .g-dots {
-            border-bottom: 0.7pt dotted #000;
+            border-bottom: 0.7pt dotted #aaa;
             display: inline-block;
-            min-width: 200pt;
+            min-width: 190pt;
             margin-left: 5pt;
             vertical-align: bottom;
         }
 
-        .page-footer {
-            text-align: center;
-            font-size: 7pt;
-            color: #000;
-            margin-top: 10pt;
-            padding-top: 5pt;
-            border-top: 0.5pt solid #000;
-            letter-spacing: normal;
-            font-weight: normal;
-        }
-
-        .muted-note {
-            font-size: 7.5pt;
-            color: #000;
-            font-style: normal;
-            font-weight: normal;
-        }
-
-        .chip-urgent,
+        /* ── Chips ── */
         .chip-type {
             display: inline-block;
             background: #fff;
-            border: 0.5pt solid #000;
-            color: #000;
-            font-size: 7.5pt;
-            font-weight: normal;
-            padding: 1pt 5pt;
-            border-radius: 0;
+            border: 0.5pt solid #888;
+            color: #333;
+            font-size: 6.5pt;
+            padding: 1pt 6pt;
+            border-radius: 2pt;
             vertical-align: middle;
         }
 
-        table.data th .th-sub {
+        /* ── Misc ── */
+        .muted-note {
             font-size: 6.5pt;
-            font-weight: normal;
+            color: #999;
+            font-style: italic;
+        }
+
+        .d1-lbl {
+            padding: 4pt 9pt 3pt;
+            font-size: 6pt;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+            border-bottom: 0.5pt solid #ddd;
+        }
+
+        /* ── Page Footer ── */
+        .page-footer {
+            text-align: center;
+            font-size: 6pt;
+            color: #aaa;
+            margin-top: 10pt;
+            padding-top: 5pt;
+            border-top: 0.5pt solid #ddd;
+            letter-spacing: 0.3pt;
         }
     </style>
 </head>
@@ -380,54 +378,48 @@
 
         $cb = static function (bool $checked): string {
             return $checked
-                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:7.5pt;color:#000000;">&#x2611;</span>'
-                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:7.5pt;color:#a3a3a3;">&#x2610;</span>';
+                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:8pt;color:#1a1a1a;">&#x2611;</span>'
+                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:8pt;color:#ccc;">&#x2610;</span>';
         };
 
-        $nTargets = count($targetGrid);
-        $nRowsTargets = (int) ceil($nTargets / 4);
+        $checkedTargets = array_filter($targetGrid, fn($t) => $t['checked']);
     @endphp
 
     {{-- ────────── DOCUMENT HEADER ────────── --}}
     <table class="doc-header-table">
         <tr>
-            {{-- Logo --}}
-            <td style="width:17%; vertical-align:middle; padding-right:10px;">
-                @if($logoDataUri)
-                    <img src="{{ $logoDataUri }}"
-                        style="height:80px;width:auto;max-width:100%;display:block;object-fit:contain;" alt="VAS" />
-                @endif
-            </td>
+            {{-- Spacer (no logo) --}}
+            <td style="width:13%;"></td>
 
             {{-- Title --}}
-            <td style="width:66%; vertical-align:middle;">
+            <td style="width:65%; vertical-align:middle;">
                 <div class="doc-title-main">Đề Nghị Điều Vận</div>
                 <div class="doc-title-sub">
                     @if($isCargo) (Điều chuyển Hàng hóa)
                     @elseif($isP2P) (Vận chuyển Điểm — Điểm)
-                    @elseif($isBusiness)(Công tác)
+                    @elseif($isBusiness) (Công tác)
                     @else (Đưa đón tận nơi)
                     @endif
                 </div>
             </td>
 
             {{-- Meta --}}
-            <td style="width:17%; vertical-align:top;">
+            <td style="width:22%; vertical-align:top;">
                 <table class="doc-meta-table">
                     <tr>
-                        <td class="doc-meta-label">Ký hiệu:</td>
+                        <td class="doc-meta-label">Ký hiệu</td>
                         <td class="doc-meta-value">BM.03/MH.QT.04</td>
                     </tr>
                     <tr>
-                        <td class="doc-meta-label">Ngày ban hành:</td>
+                        <td class="doc-meta-label">Ngày ban hành</td>
                         <td class="doc-meta-value">29/08/2025</td>
                     </tr>
                     <tr>
-                        <td class="doc-meta-label">Lần ban hành:</td>
+                        <td class="doc-meta-label">Lần ban hành</td>
                         <td class="doc-meta-value">01</td>
                     </tr>
                     <tr>
-                        <td class="doc-meta-label">Mã yêu cầu:</td>
+                        <td class="doc-meta-label">Mã yêu cầu</td>
                         <td class="doc-meta-value doc-meta-id">#{{ $dispatchRequest->id }}</td>
                     </tr>
                 </table>
@@ -483,9 +475,7 @@
             <tr>
                 <td colspan="2">
                     <div class="fl">b.2 &nbsp;Căn cứ đề xuất
-                        <span class="fl-hint-inline">
-                            — Tờ trình số …/ ngày &amp; nội dung
-                        </span>
+                        <span class="fl-hint-inline">— Tờ trình số …/ ngày &amp; nội dung</span>
                     </div>
                     <div class="fv {{ !$basisLine ? 'fv-empty' : '' }}">{{ $basisLine ?: '—' }}</div>
                 </td>
@@ -519,17 +509,17 @@
 
         <table class="field-table" style="border-top:none;">
             <tr>
-                <td style="width:60%; vertical-align:middle; padding:5pt 8pt;">
+                <td style="width:60%; vertical-align:middle; border-top:none; padding:6pt 9pt;">
                     <span class="cb-sym">{!! $cb($isUrgent) !!}</span>
-                    <span style="font-weight:bold; font-size:7.5pt; color:#000;">Gấp</span>
+                    <strong style="font-size:7.5pt; color:#1a1a1a;">Gấp</strong>
                     @if($isUrgent)
-                        &nbsp;<span style="font-size:7.5pt; color:#000;">Lý do: {{ $urgentReason }}</span>
+                        &nbsp;<span style="font-size:7pt; color:#c0392b;">Lý do: {{ $urgentReason }}</span>
                     @else
-                        &nbsp;<span style="font-size:7.5pt; color:#000; font-style:normal;">Lý do: —</span>
+                        &nbsp;<span style="font-size:7pt; color:#bbb;">Lý do: —</span>
                     @endif
                 </td>
-                <td style="width:40%; text-align:right; vertical-align:middle; padding:5pt 8pt;">
-                    <span style="font-size:7.5pt; font-weight:bold; color:#000;">Loại yêu cầu:</span>
+                <td style="width:40%; text-align:right; vertical-align:middle; border-top:none; padding:6pt 9pt;">
+                    <span style="font-size:6.5pt; color:#888;">Loại yêu cầu:</span>
                     &nbsp;<span class="chip-type">{{ $tripType }}</span>
                 </td>
             </tr>
@@ -542,28 +532,16 @@
         <span class="sec-title">Khu vực / Đối tượng được phân bổ</span>
     </div>
     <div class="sec-body">
-        <div style="padding:3.5pt 8pt 2.5pt; font-size:7.5pt; font-weight:bold;
-                color:#000; border-bottom:0.5pt solid #000;
-                text-transform: uppercase; letter-spacing:normal;">
-            d.1 &nbsp;Đối tượng sử dụng
+        <div class="d1-lbl">d.1 &nbsp;Đối tượng sử dụng</div>
+        <div class="target-wrap">
+            @forelse($checkedTargets as $tg)
+                <span class="target-chip">&#x2714;&nbsp;{{ $tg['label'] }}</span>
+            @empty
+                <span style="font-size:7pt; color:#bbb;">—</span>
+            @endforelse
         </div>
-        <table class="cb-table">
-            @for($r = 0; $r < $nRowsTargets; $r++)
-                <tr>
-                    @for($c = 0; $c < 4; $c++)
-                        @php $i = $r * 4 + $c; @endphp
-                        <td>
-                            @if($i < count($targetGrid))
-                                @php $tg = $targetGrid[$i]; @endphp
-                                <span class="cb-sym">{!! $cb($tg['checked']) !!}</span>{{ $tg['label'] }}
-                            @endif
-                        </td>
-                    @endfor
-                </tr>
-            @endfor
-        </table>
 
-        <table class="field-table" style="border-top:0.5pt solid #000;">
+        <table class="field-table" style="border-top:0.5pt solid #ddd;">
             <tr>
                 <td style="width:35%;">
                     <div class="fl">d.2 &nbsp;Nhân sự phụ trách — Họ tên</div>
@@ -582,9 +560,7 @@
     </div>
 
     {{-- ────────── E · NỘI DUNG VẬN CHUYỂN ────────── --}}
-    <br />
-    <br />
-    <div class="sec-header">
+    <div class="sec-header" style="margin-top:9pt;">
         <span class="sec-badge">E</span>
         <span class="sec-title">Nội dung đề nghị vận chuyển</span>
         @if(!$isCargo && !$isBusiness)
@@ -609,11 +585,13 @@
                         <th colspan="5" class="col-info tc">Thông tin hàng hóa</th>
                         <th colspan="3" class="col-go tc">Điểm tập kết</th>
                         <th colspan="3" class="col-back tc">Điểm giao</th>
-                        <th rowspan="2" class="col-info tc" style="width:8%; font-style:normal;">
-                            Loại hình<br /><span class="th-sub">(NV điều phối)</span>
+                        <th rowspan="2" class="col-info tc" style="width:8%;">
+                            Loại hình
+                            <span class="th-sub">(NV điều phối)</span>
                         </th>
                         <th rowspan="2" class="col-info tc" style="width:10%;">
-                            Chi phí<br /><span class="th-sub">(Gồm VAT)</span>
+                            Chi phí
+                            <span class="th-sub">(Gồm VAT)</span>
                         </th>
                     </tr>
                     <tr>
@@ -658,7 +636,7 @@
                 </tbody>
             </table>
 
-            <table class="field-table" style="border-top:0.5pt solid #000;">
+            <table class="field-table" style="border-top:0.5pt solid #ddd;">
                 <tr>
                     <td style="width:72%;">
                         <div class="fl">e.1.1 &nbsp;Các ghi chú khác</div>
@@ -773,7 +751,7 @@
         <span class="sec-badge">F</span>
         <span class="sec-title">Phần xác nhận của các bên liên quan</span>
     </div>
-    <table class="sig-table" style="border:0.5pt solid #000;">
+    <table class="sig-table" style="border:0.5pt solid #aaa;">
         <tr>
             <td class="sig-col-header">Trưởng phòng Mua hàng</td>
             <td class="sig-col-header">Người đề xuất</td>
@@ -790,11 +768,11 @@
         <tr>
             <td class="sig-col-header">Giám đốc Vận hành</td>
             <td class="sig-col-header">&nbsp;</td>
-            <td class="sig-col-header">Tổng Giám đốc</td>
+            <td class="sig-col-header">Phó Tổng Giám đốc</td>
         </tr>
         <tr>
             <td class="sig-col-body">
-                <span class="sig-name">Bùi Quang Minh</span>
+                <span class="sig-name">Vũ Quốc Vương</span>
             </td>
             <td class="sig-col-body"></td>
             <td class="sig-col-body"></td>
@@ -807,7 +785,7 @@
         <span class="sec-title">Phần xác nhận của phòng Mua Hàng</span>
     </div>
     <div class="sec-body g-row">
-        <div style="margin-bottom:6pt;">
+        <div style="margin-bottom:9pt;">
             <span class="g-label">g.1 &nbsp;Mã vận đơn (PO):</span>
             <span class="g-dots">{{ $poCode }}</span>
         </div>

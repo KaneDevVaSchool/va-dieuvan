@@ -194,7 +194,7 @@
             </div>
 
             <div
-              class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
+              class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
             >
               <button
                 type="button"
@@ -329,6 +329,7 @@ import { ChevronDownIcon, FunnelIcon, XMarkIcon } from '@heroicons/vue/24/outlin
 import Card from '../../components/ui/Card.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import Button from '../../components/ui/Button.vue'
 import { listAuditLogs } from '../../api/audit'
 import { AUDIT_EVENT_PRESETS } from '../../config/systemSeedOptions'
@@ -354,6 +355,7 @@ const items = ref([])
 const meta = ref({})
 const auditEventPresets = AUDIT_EVENT_PRESETS
 const funnelDetailsRef = ref(null)
+useDetailsAutoClose(funnelDetailsRef)
 const filterControlVisible = reactive(defaultFilterControlVisibility())
 const actorDraft = ref('')
 const inPageSearchInput = ref('')

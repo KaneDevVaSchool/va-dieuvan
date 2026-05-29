@@ -249,6 +249,7 @@ import Modal from '../../components/ui/Modal.vue'
 import Button from '../../components/ui/Button.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import { labelTripType } from '../../util/labels'
 
 const FILTER_VISIBILITY_KEY = 'va.dept.dashboard.filter_vis_v1'
@@ -272,6 +273,7 @@ const loadError = ref('')
 const filterTripType = ref('')
 const filterQ = ref('')
 const funnelDetailsRef = ref(null)
+useDetailsAutoClose(funnelDetailsRef)
 
 function defaultFilterControlVisibility() {
   return {

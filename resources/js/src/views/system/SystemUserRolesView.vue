@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { FunnelIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import BulkActionBar from '../../components/user-roles/BulkActionBar.vue'
 import UserTable from '../../components/user-roles/UserTable.vue'
 import Card from '../../components/ui/Card.vue'
@@ -51,6 +52,7 @@ const {
 const sf = store.filters
 
 const funnelDetailsRef = ref<HTMLDetailsElement | null>(null)
+useDetailsAutoClose(funnelDetailsRef)
 const filterControlVisible = reactive(defaultFilterControlVisibility())
 
 const filterControlDefs = computed(() => [
@@ -400,7 +402,7 @@ function assignmentFunnelLabel(v: AssignmentFilter): string {
               </div>
 
               <div
-                class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
+                class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
               >
                 <button
                   type="button"

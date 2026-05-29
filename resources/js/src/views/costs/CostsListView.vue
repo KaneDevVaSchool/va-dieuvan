@@ -21,28 +21,24 @@
         >
           <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_total') }}</p>
           <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-white">{{ meta.total ?? 0 }}</p>
-          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_total_hint') }}</p>
         </div>
         <div
           class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
         >
           <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_submitted') }}</p>
           <p class="mt-1 text-2xl font-semibold tabular-nums text-amber-800 dark:text-amber-300">{{ countOnPage('submitted') }}</p>
-          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_page_hint') }}</p>
         </div>
         <div
           class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
         >
           <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_confirmed') }}</p>
           <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-800 dark:text-emerald-300">{{ countOnPage('confirmed') }}</p>
-          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_page_hint') }}</p>
         </div>
         <div
           class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
         >
           <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_rejected') }}</p>
           <p class="mt-1 text-2xl font-semibold tabular-nums text-rose-800 dark:text-rose-300">{{ countOnPage('rejected') }}</p>
-          <p class="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{{ t('costs_page.kpi_page_hint') }}</p>
         </div>
       </div>
     </section>
@@ -84,6 +80,10 @@
                 <li v-if="filters.type" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_cost_type') }}</span>
                   <span class="font-medium">{{ typeLabel(filters.type) }}</span>
+                </li>
+                <li v-if="filters.trip_type" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip_type') }}</span>
+                  <span class="font-medium">{{ tripTypeLabel(filters.trip_type) }}</span>
                 </li>
                 <li v-if="filters.trip_id" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip') }}</span>
@@ -188,6 +188,32 @@
                       : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
                   "
                   @click="applyFilterPatch($event, { type: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
+
+          <AppFilterDropdown
+            v-if="filterControlVisible.trip_type"
+            root-class="shrink-0"
+            :label="t('costs_page.filter_trip_type')"
+            :summary-text="filters.trip_type ? tripTypeLabel(filters.trip_type) : t('costs_page.trip_type_all')"
+            summary-text-class="max-w-[10rem]"
+            panel-class="min-w-[220px] py-1"
+          >
+            <ul class="space-y-0.5 px-1 py-1">
+              <li v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.trip_type === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { trip_type: opt.value })"
                 >
                   {{ opt.label }}
                 </button>
@@ -310,7 +336,7 @@
         </div>
 
         <div
-          class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
+          class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
         >
           <button
             type="button"
@@ -363,6 +389,7 @@
               <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_legal_entity') }}</th>
               <th class="costs-th min-w-[6rem]">{{ t('costs_page.col_notes') }}</th>
               <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
+              <th class="costs-th min-w-[7rem] whitespace-nowrap">{{ t('costs_page.col_trip_type') }}</th>
               <th v-if="canReconcileCosts" class="costs-th min-w-[9rem] whitespace-nowrap">{{ t('costs_page.col_actions') }}</th>
             </tr>
           </thead>
@@ -420,6 +447,14 @@
                   >#{{ c.trip_id }}</RouterLink
                 >
                 <span v-else>—</span>
+              </td>
+              <td class="costs-td">
+                <span
+                  v-if="tripTypeFromCost(c)"
+                  class="costs-pill"
+                  :class="tripTypePillClass(tripTypeFromCost(c))"
+                >{{ tripTypeLabel(tripTypeFromCost(c)) }}</span>
+                <span v-else class="text-slate-400">—</span>
               </td>
               <td v-if="canReconcileCosts" class="costs-td">
                 <div class="flex flex-wrap gap-1">
@@ -514,7 +549,6 @@
           <div class="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <div>
               <h2 id="costs-add-title" class="text-base font-semibold text-slate-900">{{ t('costs_page.modal_add_title') }}</h2>
-              <p class="mt-0.5 text-xs text-slate-500">{{ t('costs_page.modal_add_subtitle') }}</p>
             </div>
             <button
               type="button"
@@ -561,9 +595,6 @@
                 <p v-else-if="!tripsForModalLoading && !tripOptionsRaw.length" class="mt-1 text-[11px] text-slate-500">
                   {{ t('costs_page.modal_trip_empty_scope') }}
                 </p>
-                <p v-else-if="!tripsForModalLoading && tripOptionsRaw.length" class="mt-1 text-[11px] text-slate-500">
-                  {{ t('costs_page.modal_trip_scope_hint') }}
-                </p>
               </div>
               <div>
                 <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
@@ -597,7 +628,6 @@
                   :placeholder="t('costs_page.modal_amount_ph')"
                   @input="onCostAmountInput"
                 />
-                <p class="mt-1 text-[11px] text-slate-500">{{ t('costs_page.modal_amount_hint') }}</p>
               </div>
               <div>
                 <label class="mb-1 block text-xs font-medium text-slate-700">{{ t('costs_page.modal_desc_label') }}</label>
@@ -833,6 +863,7 @@ import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import { listTripCosts, submitTripCost, decideTripCost, deleteTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -852,7 +883,7 @@ const LEGAL_ENTITY_PLACEHOLDER = '—'
 const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
 const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
 const COSTS_FILTER_CONTROL_VISIBILITY_KEY = 'va.costs.filter_control_visibility_v1'
-const FILTER_CONTROL_IDS = ['status', 'type', 'date', 'trip', 'search', 'per_page']
+const FILTER_CONTROL_IDS = ['status', 'type', 'trip_type', 'date', 'trip', 'search', 'per_page']
 
 function defaultFilterControlVisibility() {
   return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, true]))
@@ -866,6 +897,30 @@ function typeLabel(slug) {
   if (te(key)) return t(key)
   const hit = extraCostTypes.value.find((x) => x.slug === slug)
   return hit?.label ?? slug
+}
+
+const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
+
+function tripTypeLabel(slug) {
+  if (!slug) return '—'
+  const key = `app.trip_type_${slug}`
+  if (te(key)) return t(key)
+  return slug
+}
+
+function tripTypeFromCost(c) {
+  return c?.trip?.dispatch_request?.trip_type ?? c?.trip?.dispatchRequest?.trip_type ?? null
+}
+
+const TRIP_TYPE_PILL_CLASSES = {
+  point_to_point: 'bg-sky-100/80 text-sky-800',
+  cargo: 'bg-amber-100/80 text-amber-800',
+  business: 'bg-violet-100/80 text-violet-800',
+  door_to_door: 'bg-teal-100/80 text-teal-800',
+}
+
+function tripTypePillClass(slug) {
+  return TRIP_TYPE_PILL_CLASSES[slug] ?? ''
 }
 
 const modalCostTypeOptions = computed(() => {
@@ -883,12 +938,14 @@ const items = ref([])
 const meta = ref({})
 const searchQ = ref('')
 const funnelDetailsRef = ref(null)
+useDetailsAutoClose(funnelDetailsRef)
 
 const filterControlVisible = reactive(defaultFilterControlVisibility())
 
 const filterControlDefs = computed(() => [
   { id: 'status', label: t('filter_bar.status') },
   { id: 'type', label: t('costs_page.filter_cost_type') },
+  { id: 'trip_type', label: t('costs_page.filter_trip_type') },
   { id: 'date', label: t('costs_page.filter_recorded_date') },
   { id: 'trip', label: t('costs_page.filter_trip') },
   { id: 'search', label: t('costs_page.filter_search_page') },
@@ -916,6 +973,7 @@ const deletingCostId = ref(null)
 const filters = reactive({
   status: '',
   type: '',
+  trip_type: '',
   trip_id: '',
   from: '',
   to: '',
@@ -1069,10 +1127,16 @@ const typeFilterOptions = computed(() => {
   return rows
 })
 
+const tripTypeFilterOptions = computed(() => [
+  { value: '', label: t('costs_page.trip_type_all') },
+  ...TRIP_TYPE_SLUGS.map((value) => ({ value, label: tripTypeLabel(value) })),
+])
+
 const activeFilterCount = computed(() => {
   let n = 0
   if (filters.status) n++
   if (filters.type) n++
+  if (filters.trip_type) n++
   if (filters.trip_id) n++
   if (filters.from || filters.to) n++
   if (filters.per_page !== DEFAULT_PER_PAGE) n++
@@ -1240,10 +1304,12 @@ function formatDateDMY(iso) {
 
 function formatTripPickerLabel(tripRow) {
   const dr = tripRow.dispatch_request ?? tripRow.dispatchRequest
-  const o = (dr?.origin ?? '—').trim().slice(0, 48)
-  const d = (dr?.destination ?? '—').trim().slice(0, 48)
+  const o = (dr?.origin ?? '—').trim().slice(0, 40)
+  const d = (dr?.destination ?? '—').trim().slice(0, 40)
   const dep = formatDateDMY(tripRow.depart_at)
-  return `#${tripRow.id} · ${o} → ${d} · ${dep}`
+  const typSlug = dr?.trip_type ?? null
+  const typStr = typSlug ? ` [${tripTypeLabel(typSlug)}]` : ''
+  return `#${tripRow.id}${typStr} · ${o} → ${d} · ${dep}`
 }
 
 async function loadTripPickerOptions() {
@@ -1366,6 +1432,7 @@ function onPerPageChange() {
 function resetFilters() {
   filters.status = ''
   filters.type = ''
+  filters.trip_type = ''
   filters.trip_id = ''
   filters.from = ''
   filters.to = ''

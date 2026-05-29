@@ -5,9 +5,6 @@
         <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
           {{ t('cargo_page.hero_title') }}
         </h1>
-        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-          {{ t('cargo_page.hero_subtitle') }}
-        </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <RouterLink
@@ -50,7 +47,7 @@
 
     <div class="relative z-40">
       <AppFilterBar>
-        <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <div ref="cargoFilterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
           <details ref="funnelDetailsRef" class="group relative">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -103,9 +100,6 @@
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                     {{ t('trips_page.filter_show_controls_title') }}
                   </p>
-                  <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                    {{ t('trips_page.filter_show_controls_hint') }}
-                  </p>
                   <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
                     <li v-for="fd in dimensionFilters" :key="'vis-' + fd.id" class="flex items-start gap-2">
                       <input
@@ -141,9 +135,6 @@
               <summary
                 class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
               >
-                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                  {{ t('dashboard_analytics.filter_period_label') }}
-                </span>
                 <span class="max-w-[10rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                   {{ currentPresetLabel }}
                 </span>
@@ -162,7 +153,7 @@
                           ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
                           : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
                       ]"
-                      @click="applyPreset(p.id)"
+                      @click="onApplyPreset(p.id, $event)"
                     >
                       {{ p.label }}
                     </button>
@@ -176,9 +167,6 @@
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
               >
                 <CalendarDaysIcon class="h-4 w-4 shrink-0 text-violet-500 dark:text-violet-400" aria-hidden="true" />
-                <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                  {{ t('dashboard_analytics.filter_dates_label') }}
-                </span>
                 <span class="flex min-w-0 max-w-[11rem] items-center gap-1.5 sm:max-w-[14rem]">
                   <span class="min-w-0 truncate text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                     {{ rangeDisplayFormatted }}
@@ -204,9 +192,6 @@
                       <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                         {{ t('dashboard_analytics.date_range_title') }}
                       </p>
-                      <p class="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-400">
-                        {{ t('dashboard_analytics.date_range_hint') }}
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -217,7 +202,7 @@
                       :key="chip.kind"
                       type="button"
                       class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
-                      @click="applyQuickDateRange(chip.kind)"
+                      @click="onApplyQuickDateRange(chip.kind, $event)"
                     >
                       {{ chip.label }}
                     </button>
@@ -284,7 +269,6 @@
                 <summary
                   class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
                 >
-                  <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ fd.label }}</span>
                   <span class="max-w-[9rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">
                     {{ fd.summary }}
                   </span>
@@ -316,7 +300,7 @@
                             ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
                             : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
                         ]"
-                        @click="fd.pick(opt.value)"
+                        @click="onDimensionPick(fd, opt.value, $event)"
                       >
                         {{ opt.label }}
                       </button>
@@ -331,8 +315,7 @@
     </div>
 
 
-    <div class="grid gap-5 lg:grid-cols-3">
-      <div class="min-w-0 space-y-5 lg:col-span-2">
+    <div class="space-y-5">
         <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
           <div class="flex flex-col gap-2 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -455,50 +438,8 @@
 
         <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
           <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.chart_fleet_title') }}</h3>
-          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.chart_fleet_sub') }}</p>
           <DashboardEChart class="mt-2" height="220px" :option="fleetChartOption" :aria-label="t('cargo_page.chart_fleet_title')" />
         </div>
-      </div>
-
-      <aside class="min-w-0 space-y-4 lg:col-span-1">
-        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.sidebar_track_title') }}</h3>
-          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ t('cargo_page.sidebar_track_sub') }}</p>
-          <div
-            class="mt-3 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200"
-          >
-            {{ t('cargo_page.sidebar_track_badge', { n: fmtInt(kpi.inTransit) }) }}
-          </div>
-          <div class="mt-4 flex flex-col gap-2 text-xs">
-            <RouterLink
-              to="/trips"
-              class="inline-flex items-center gap-1 font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400"
-            >
-              {{ t('cargo_page.sidebar_track_link') }}
-              <ChevronDownIcon class="h-3 w-3 -rotate-90" aria-hidden="true" />
-            </RouterLink>
-            <RouterLink
-              :to="{ path: '/requests', query: { trip_type: 'cargo' } }"
-              class="inline-flex items-center gap-1 font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400"
-            >
-              {{ t('cargo_page.link_cargo_requests') }}
-              <ChevronDownIcon class="h-3 w-3 -rotate-90" aria-hidden="true" />
-            </RouterLink>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('cargo_page.sidebar_alerts_title') }}</h3>
-          <ul class="mt-3 space-y-3">
-            <li v-for="(a, i) in sidebarAlerts" :key="i" class="flex gap-2 text-sm">
-              <ExclamationTriangleIcon v-if="a.kind === 'risk'" class="h-5 w-5 shrink-0 text-rose-500" aria-hidden="true" />
-              <ClockIcon v-else class="h-5 w-5 shrink-0 text-amber-500" aria-hidden="true" />
-              <p class="min-w-0 text-slate-700 dark:text-slate-300">{{ a.text }}</p>
-            </li>
-            <li v-if="!sidebarAlerts.length" class="text-sm text-slate-500 dark:text-slate-400">{{ t('cargo_page.sidebar_alerts_empty') }}</li>
-          </ul>
-        </div>
-      </aside>
     </div>
   </div>
 </template>
@@ -524,7 +465,7 @@ import Button from '../../components/ui/Button.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import { listCargoShipments } from '../../api/cargo'
-import { useNotificationStore } from '../../store/notificationCenter'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { labelCargoStatus } from '../../util/labels'
 
 const { t, locale } = useI18n()
@@ -536,6 +477,8 @@ const items = ref([])
 const meta = ref({})
 const filters = reactive({ status: '', from: '', to: '', q: '', page: 1, per_page: 20 })
 const funnelDetailsRef = ref(null)
+const cargoFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(cargoFilterBarRef)
 
 const searchInput = ref('')
 const searchDebounce = ref(null)
@@ -652,6 +595,28 @@ function syncRangeForPreset(id) {
     rangeFrom.value = ymd(startOfQuarter(now))
     rangeTo.value = end
   }
+}
+
+function closeParentDetails(ev) {
+  const el = ev?.currentTarget
+  if (!el || typeof el.closest !== 'function') return
+  const d = el.closest('details')
+  if (d) d.open = false
+}
+
+function onApplyPreset(id, ev) {
+  applyPreset(id)
+  closeParentDetails(ev)
+}
+
+function onApplyQuickDateRange(kind, ev) {
+  applyQuickDateRange(kind)
+  closeParentDetails(ev)
+}
+
+function onDimensionPick(fd, value, ev) {
+  fd.pick(value)
+  closeParentDetails(ev)
 }
 
 function applyPreset(id) {
@@ -941,25 +906,6 @@ function cargoStatusPillClass(st) {
 function dispatchRequestId(s) {
   return s.dispatch_request_id ?? s.dispatch_request?.id ?? null
 }
-
-const sidebarAlerts = computed(() => {
-  const alerts = []
-  const now = Date.now()
-  for (const s of items.value.slice(0, 12)) {
-    if (!s.sla_due_at || s.status === 'delivered') continue
-    const due = new Date(s.sla_due_at).getTime()
-    if (due < now) {
-      alerts.push({
-        kind: 'risk',
-        text: t('cargo_page.alert_sla', { code: s.tracking_code || '#' + s.id }),
-      })
-    }
-  }
-  if (kpi.value.pending > 5) {
-    alerts.push({ kind: 'queue', text: t('cargo_page.alert_backlog', { n: kpi.value.pending }) })
-  }
-  return alerts.slice(0, 4)
-})
 
 function onFilterChange() {
   if (!rangeValid.value) return

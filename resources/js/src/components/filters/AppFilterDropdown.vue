@@ -1,10 +1,9 @@
 <template>
-  <details class="group relative min-w-0" :class="rootClass">
+  <details ref="detailsEl" class="group relative min-w-0" :class="rootClass">
     <summary
       class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
       :class="[fullWidthSummary ? 'max-w-full' : '', summaryClass]"
     >
-      <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ label }}</span>
       <span
         class="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100"
         :class="summaryTextClass"
@@ -23,10 +22,13 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 
 defineProps({
-  label: { type: String, required: true },
+  /** Kept for backward compatibility; not rendered on the chip. */
+  label: { type: String, default: '' },
   summaryText: { type: String, required: true },
   /** Tailwind classes for the dropdown panel (width, padding, overflow, …) */
   panelClass: { type: String, default: 'min-w-[220px] py-1' },
@@ -38,4 +40,14 @@ defineProps({
   rootClass: { type: String, default: '' },
   summaryClass: { type: String, default: '' },
 })
+
+const detailsEl = ref(null)
+useDetailsAutoClose(detailsEl)
+
+function close() {
+  const el = detailsEl.value
+  if (el && 'open' in el) el.open = false
+}
+
+defineExpose({ close })
 </script>

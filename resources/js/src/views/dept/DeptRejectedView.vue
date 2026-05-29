@@ -174,7 +174,7 @@
 
           <div
             v-if="activeFilterCount > 0"
-            class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 dark:border-violet-900/40"
+            class="ml-auto flex shrink-0 items-center gap-1 pl-2"
           >
             <button
               type="button"
@@ -229,6 +229,7 @@ import { formatApiError } from '../../api/http'
 import DeptRequestCard from '../../components/dept/DeptRequestCard.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import { labelTripType } from '../../util/labels'
 
 const FILTER_VISIBILITY_KEY = 'va.dept.rejected.filter_vis_v1'
@@ -245,6 +246,7 @@ const error = ref('')
 const page = ref(1)
 const lastPage = ref(1)
 const funnelDetailsRef = ref(null)
+useDetailsAutoClose(funnelDetailsRef)
 
 const filters = reactive({
   trip_type: '',

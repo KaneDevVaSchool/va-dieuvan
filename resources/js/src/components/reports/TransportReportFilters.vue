@@ -8,7 +8,7 @@
         {{ t('reports_page.filters_hint') }}
       </p>
     </div>
-    <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+    <div ref="transportReportFilterBarRef" class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
       <details class="group relative">
         <summary
           class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -87,9 +87,6 @@
           <summary
             class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
           >
-            <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-              {{ t('dashboard_analytics.filter_period_label') }}
-            </span>
             <span class="max-w-[10rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
               {{ currentPresetLabel }}
             </span>
@@ -108,7 +105,7 @@
                       ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
                       : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
                   ]"
-                  @click="applyPreset(p.id)"
+                  @click="onApplyPreset(p.id, $event)"
                 >
                   {{ p?.label ?? '—' }}
                 </button>
@@ -121,9 +118,6 @@
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
           >
             <CalendarDaysIcon class="h-4 w-4 shrink-0 text-violet-500 dark:text-violet-400" aria-hidden="true" />
-            <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-              {{ t('dashboard_analytics.filter_dates_label') }}
-            </span>
             <span class="flex min-w-0 max-w-[11rem] items-center gap-1.5 sm:max-w-[14rem]">
               <span class="min-w-0 truncate text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                 {{ rangeDisplayFormatted }}
@@ -160,7 +154,7 @@
                   :key="chip.kind"
                   type="button"
                   class="rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:border-teal-300 hover:bg-teal-50/80 hover:text-teal-900 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-100"
-                  @click="applyQuickDateRange(chip.kind)"
+                  @click="onApplyQuickDateRange(chip.kind, $event)"
                 >
                   {{ chip?.label ?? '—' }}
                 </button>
@@ -230,7 +224,6 @@
             <summary
               class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
             >
-              <span class="whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{{ fd?.label ?? '—' }}</span>
               <span class="max-w-[9rem] min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100 sm:max-w-[10rem]">
                 {{ fd.summary }}
               </span>
@@ -252,7 +245,7 @@
                         ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
                         : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800',
                     ]"
-                    @click="fd.pick(opt?.value)"
+                    @click="onDimensionPick(fd, opt?.value, $event)"
                   >
                     {{ opt?.label ?? '—' }}
                   </button>
@@ -267,12 +260,24 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { CalendarDaysIcon, ChevronDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import AppFilterBar from '../filters/AppFilterBar.vue'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { useTransportReportSummary } from '../../composables/useTransportReportSummary'
 
 const { t } = useI18n()
+const transportReportFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(transportReportFilterBarRef)
+
+function closeParentDetails(ev) {
+  const el = ev?.currentTarget
+  if (!el || typeof el.closest !== 'function') return
+  const d = el.closest('details')
+  if (d) d.open = false
+}
+
 const {
   activeFilterCount,
   activeFilterLines,
@@ -296,6 +301,21 @@ const {
   resetFilters,
   visibleDimensionFilters,
 } = useTransportReportSummary()
+
+function onApplyPreset(id, ev) {
+  applyPreset(id)
+  closeParentDetails(ev)
+}
+
+function onApplyQuickDateRange(kind, ev) {
+  applyQuickDateRange(kind)
+  closeParentDetails(ev)
+}
+
+function onDimensionPick(fd, value, ev) {
+  fd.pick(value)
+  closeParentDetails(ev)
+}
 </script>
 
 <style scoped>

@@ -13,21 +13,21 @@
         </div>
         <nav
           class="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-500"
-          aria-label="Process"
+          :aria-label="t('dispatcher_board.process_aria')"
         >
           <span
-            v-for="(step, i) in processSteps"
-            :key="step"
+            v-for="(stepId, i) in processStepIds"
+            :key="stepId"
             class="inline-flex items-center gap-1.5"
           >
             <span
               :class="
-                step === 'Assign'
+                stepId === 'assign'
                   ? 'rounded border border-teal-300 bg-teal-50 px-2 py-0.5 font-medium text-teal-800'
                   : ''
               "
-            >{{ step }}</span>
-            <span v-if="i < processSteps.length - 1" class="text-slate-400">›</span>
+            >{{ t(`dispatcher_board.process_${stepId}`) }}</span>
+            <span v-if="i < processStepIds.length - 1" class="text-slate-400">›</span>
           </span>
         </nav>
       </header>
@@ -52,9 +52,6 @@
                   {{ t('dispatcher_board.queue_title') }}
                   <span class="font-normal text-slate-500">({{ queueTrips.length }})</span>
                 </h2>
-                <p v-if="pendingRequestsCount" class="mt-0.5 text-xs text-slate-500">
-                  {{ t('dispatcher_board.pending_requests_hint', { n: pendingRequestsCount }) }}
-                </p>
               </div>
               <RouterLink
                 class="shrink-0 text-xs font-medium text-teal-700 hover:text-teal-800"
@@ -298,7 +295,6 @@
               <button
                 type="button"
                 class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:border-teal-200 hover:bg-teal-50/50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                :title="t('dispatcher_board.bulk_assign_hint')"
                 @click="goBulkAssign"
               >
                 <Square2StackIcon class="h-4 w-4 text-slate-600" aria-hidden="true" />
@@ -323,12 +319,6 @@
                   {{ item.label }}
                 </span>
               </div>
-              <p class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
-                {{ t('dispatcher_board.stripe_hint') }}
-              </p>
-              <p class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
-                {{ t('dispatcher_board.ui_upgrade_hint') }}
-              </p>
             </div>
           </div>
 
@@ -451,7 +441,6 @@ import {
   UserGroupIcon,
 } from '@heroicons/vue/24/outline'
 import { listTrips } from '../../api/trips'
-import { listRequests } from '../../api/requests'
 import { labelTripStatus, labelTripType } from '../../util/labels'
 import { shortViDayLabel, toLocalDateKey } from '../../util/dates'
 import { useUiStore } from '../../store/ui'
@@ -463,16 +452,13 @@ const { sidebarCollapsed } = storeToRefs(useUiStore())
 
 const GRID_START = 6
 const GRID_END = 22
-const PROCESS = ['Request', 'Review', 'Approve', 'Assign', 'Execute', 'Complete']
-
-const processSteps = PROCESS
+const processStepIds = ['request', 'review', 'approve', 'assign', 'execute', 'complete']
 const hourSlots = []
 for (let h = GRID_START; h < GRID_END; h++) hourSlots.push(h)
 
 const loading = ref(false)
 const loadError = ref('')
 const trips = ref([])
-const pendingRequestsCount = ref(0)
 const selectedDate = ref(new Date())
 const queueFilter = ref('all')
 const queueSearch = ref('')
@@ -840,12 +826,8 @@ async function load() {
   loadError.value = ''
   try {
     const k = dayKey.value
-    const [tr, req] = await Promise.all([
-      listTrips({ from: k, to: k, per_page: 100, page: 1 }),
-      listRequests({ status: 'pending', per_page: 1, page: 1 }),
-    ])
+    const tr = await listTrips({ from: k, to: k, per_page: 100, page: 1 })
     trips.value = tr.items ?? []
-    pendingRequestsCount.value = req.meta?.total ?? 0
   } catch (e) {
     loadError.value = e?.response?.data?.message ?? t('dispatcher_board.load_error')
     trips.value = []

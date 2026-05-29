@@ -128,7 +128,7 @@
 
       <div class="relative z-40">
         <AppFilterBar>
-          <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+          <div ref="p2pRoutesFilterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
             <details class="group relative">
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
@@ -216,7 +216,7 @@
                       type="button"
                       class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
                       :class="!filters.p2p_policy_term_id ? activeOptClass : inactiveOptClass"
-                      @click="setTermFilter('')"
+                      @click="setTermFilter('', $event)"
                     >
                       {{ t('p2p_policy_page.filter_any') }}
                     </button>
@@ -226,7 +226,7 @@
                       type="button"
                       class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
                       :class="String(filters.p2p_policy_term_id) === String(term.id) ? activeOptClass : inactiveOptClass"
-                      @click="setTermFilter(term.id)"
+                      @click="setTermFilter(term.id, $event)"
                     >
                       {{ p2pTermLabel(term) }}
                     </button>
@@ -246,7 +246,7 @@
                       type="button"
                       class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
                       :class="filters.is_active === opt.value ? activeOptClass : inactiveOptClass"
-                      @click="setActiveFilter(opt.value)"
+                      @click="setActiveFilter(opt.value, $event)"
                     >
                       {{ opt.label }}
                     </button>
@@ -269,7 +269,7 @@
             </div>
 
             <div
-              class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:pl-3 dark:border-violet-900/40"
+              class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:pl-3"
             >
               <button
                 type="button"
@@ -550,6 +550,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { http } from '../../api/http'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import P2pPolicyFieldLabel from '../../components/p2pPolicy/P2pPolicyFieldLabel.vue'
 import P2pPolicyWorkflowBar from '../../components/p2pPolicy/P2pPolicyWorkflowBar.vue'
 import {
@@ -586,6 +587,9 @@ const { t } = useI18n()
 const auth = useAuthStore()
 const { filters, visibility, filterControlDefs, activeFilterCount, apiParams, clearFilters, resetPage } =
   useP2pPolicyRoutesFilters()
+
+const p2pRoutesFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(p2pRoutesFilterBarRef)
 
 const workflowTermId = computed(() => {
   const fromFilter = filters.p2p_policy_term_id
@@ -739,14 +743,23 @@ async function loadRoutes() {
   }
 }
 
-function setTermFilter(id) {
-  filters.p2p_policy_term_id = id === '' ? '' : id
-  resetPage()
+function closeParentDetails(ev) {
+  const el = ev?.currentTarget
+  if (!el || typeof el.closest !== 'function') return
+  const d = el.closest('details')
+  if (d) d.open = false
 }
 
-function setActiveFilter(value) {
+function setTermFilter(id, ev) {
+  filters.p2p_policy_term_id = id === '' ? '' : id
+  resetPage()
+  if (ev) closeParentDetails(ev)
+}
+
+function setActiveFilter(value, ev) {
   filters.is_active = value
   resetPage()
+  if (ev) closeParentDetails(ev)
 }
 
 function onPerPageChange() {

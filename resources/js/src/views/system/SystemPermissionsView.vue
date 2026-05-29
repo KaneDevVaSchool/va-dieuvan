@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { FunnelIcon, ChevronDownIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
@@ -40,6 +41,7 @@ const permissionIdsByRoleId = ref(new Map())
 const roleFacetsReady = ref(false)
 
 const funnelDetailsRef = ref(null)
+useDetailsAutoClose(funnelDetailsRef)
 const filterControlVisible = reactive(defaultFilterControlVisibility())
 const createModalOpen = ref(false)
 
@@ -476,7 +478,7 @@ onMounted(() => {
             </div>
 
             <div
-              class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
+              class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
             >
               <button
                 type="button"

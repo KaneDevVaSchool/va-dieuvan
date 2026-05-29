@@ -1,5 +1,13 @@
 <template>
   <div class="space-y-4">
+    <p class="text-right text-xs text-slate-500">
+      {{
+        t('portal.extracurricular_list.schedule_summary', {
+          groups: grouped.length,
+          total: requests.length,
+        })
+      }}
+    </p>
     <section
       v-for="group in grouped"
       :key="group.key"

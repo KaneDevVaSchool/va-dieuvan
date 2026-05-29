@@ -10,15 +10,15 @@ Khi xây dựng thanh lọc dạng “card gradient + phễu tóm tắt + chip `
 
 ## Bố cục tổng thể
 
-1. **Vỏ ngoài** — một `div` `relative z-10`: `rounded-2xl`, `border` viền violet nhạt (`border-violet-200/70`, dark `dark:border-violet-800/50`), `bg-gradient-to-r` từ `slate-50` qua `violet-50/50` tới `indigo-50/30`, `shadow-md shadow-violet-500/5`, `ring-1 ring-violet-200/40`, `backdrop-blur-sm`, padding `px-2 py-2` / `sm:px-3 sm:py-2.5`. Luôn có bản **dark** tương ứng (`dark:from-slate-950`, v.v.).
+1. **Vỏ ngoài** — một `div` `relative z-10`: `rounded-2xl`, `border` viền violet nhạt (`border-violet-200/70`, dark `dark:border-violet-800/50`), `bg-gradient-to-r` từ `slate-50` qua `violet-50/50` tới `indigo-50/30`, `shadow-md shadow-violet-500/5`, `ring-1 ring-violet-200/40`, `backdrop-blur-sm`, padding `px-2 py-2` / `sm:px-3 sm:py-2.5`. Luôn có bản **dark** tương ứng (`dark:from-slate-950`, v.v.). Hoặc bọc bằng [`AppFilterBar.vue`](resources/js/src/components/filters/AppFilterBar.vue).
 
 2. **Hàng trong** — `flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2`.
 
 3. **Thứ tự từ trái sang phải**
-   - Panel **phễu** (`<details>` đầu tiên): tóm tắt bộ lọc đang áp dụng + checkbox “hiển thị trên thanh” + nút xóa hết.
+   - Panel **phễu** (`<details>` đầu tiên hoặc `AppFilterFunnelMenu`): tóm tắt bộ lọc đang áp dụng + checkbox “hiển thị trên thanh” + nút xóa hết.
    - **Gạch dọc** phân cách: `hidden h-6 w-px ... sm:block`.
-   - **Vùng chip lọc** — `flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3`: mỗi bộ lọc là một `<details class="group relative min-w-0 shrink-0">` (thêm `max-w-full` nếu cần).
-   - **Cụm hành động** — `ml-auto flex shrink-0 ... border-l border-violet-200/70 pl-2`: nút xóa bộ lọc (icon) + CTA chính (vd. `bg-va-800`).
+   - **Vùng chip lọc** — `flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3`: mỗi bộ lọc là `AppFilterDropdown` hoặc `<details class="group relative min-w-0 shrink-0">` (thêm `max-w-full` nếu cần).
+   - **Cụm hành động** — `ml-auto flex shrink-0 ... pl-2` (không dùng `border-l`): nút xóa bộ lọc (icon) + CTA chính (vd. `bg-va-800`).
 
 ## Panel phễu (details đầu)
 
@@ -30,14 +30,15 @@ Khi xây dựng thanh lọc dạng “card gradient + phễu tóm tắt + chip `
 - **ID checkbox**: `{module}-filter-vis-{key}` (vd. `costs-filter-vis-status`) và `for` trùng `id`.
 - **Nút** “Xóa tất cả bộ lọc”: full width, `rounded-xl border`, `mt-3`.
 
-## Mỗi chip lọc (`<details>`)
+## Mỗi chip lọc (`AppFilterDropdown` hoặc `<details>`)
 
-- **`<summary>`**: cùng họ border/glass với chip nhỏ hơn (`rounded-lg`, `px-2 py-1.5`); ba phần: **nhãn** (`whitespace-nowrap text-sm text-slate-600`), **giá trị hiện tại** (`truncate text-sm font-medium text-slate-900 max-w-[10rem]` hoặc tương đương), **chevron** `h-4 w-4 shrink-0 text-slate-400`.
+- **Ưu tiên** [`AppFilterDropdown.vue`](resources/js/src/components/filters/AppFilterDropdown.vue): prop `summaryText` hiển thị trên chip; prop `label` **không render** (giữ tùy chọn cho tương thích).
+- **`<summary>`**: cùng họ border/glass (`rounded-lg`, `px-2 py-1.5`); chỉ **giá trị hiện tại** (`truncate text-sm font-medium text-slate-900 max-w-[10rem]` hoặc tương đương) + **chevron** `h-4 w-4 shrink-0 text-slate-400` — **không** hiển thị nhãn field (Trạng thái, Kỳ báo cáo, …) trên thanh; nhãn vẫn có trong panel phễu / checkbox visibility.
 - **Panel**: `absolute left-0 top-[calc(100%+6px)] z-50`, `rounded-xl border border-slate-200/90`, `shadow-lg ring-1 ring-slate-900/5`, `min-w-[220px]` hoặc `w-[min(100vw-1.5rem,320px)]` tùy nội dung; dark: `dark:border-slate-700 dark:bg-slate-900`.
 
 ### Loại điều khiển trong panel
 
-- **Chọn một trong danh sách**: `ul` với `button type="button"` full width; mục **đang chọn** — `bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100`; mục khác — `hover:bg-slate-50 dark:hover:bg-slate-800`.
+- **Chọn một trong danh sách**: `ul` với `button type="button"` full width; mục **đang chọn** — `bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100`; mục khác — `hover:bg-slate-50 dark:hover:bg-slate-800`. Sau khi chọn, **đóng** chip (`closeParentDetails(ev)` hoặc `$event.currentTarget.closest('details').open = false`).
 - **Khoảng ngày**: hai `input type="date"`, `flex flex-col gap-2 sm:flex-row sm:items-center`, kẹp “—” chỉ hiện từ `sm`.
 - **Chuyến / tìm trong danh sách lớn**: `input type="search"` + `ul max-h-[min(50vh,280px)] overflow-y-auto` + dòng trợ giúp `text-[11px]` khi không có dữ liệu.
 
@@ -51,9 +52,13 @@ Khi xây dựng thanh lọc dạng “card gradient + phễu tóm tắt + chip `
 - Nút xóa nhanh trên thanh: `title` + `aria-label` “Xóa bộ lọc”; có thể overlay badge X nhỏ trên icon phễu khi đang có lọc.
 - Mọi `select` / ô tìm quan trọng cần `aria-label` hoặc nhãn liên kết rõ.
 
-## Logic đi kèm (gợi ý)
+## Logic đi kèm
 
 - Tách **trạng thái lọc thực tế** (query/API) khỏi **visibility** (checkbox “hiển thị trên thanh”): ẩn chip không xóa điều kiện; tóm tắt trong phễu vẫn đầy đủ.
 - Đặt prefix state/composable theo module (`useCostsFilters`, v.v.) để ID và query params không trùng.
+- **Tự đóng dropdown**: dùng [`useDetailsAutoClose.js`](resources/js/src/composables/useDetailsAutoClose.js):
+  - `useDetailsAutoClose(ref)` — một `<details>` (phễu inline, `AppFilterDropdown` / `AppFilterFunnelMenu` bên trong).
+  - `useDetailsAutoCloseWithin(containerRef)` — mọi `<details>` trong vùng thanh lọc (Trips, Cargo, Resources, báo cáo).
+- Click ra ngoài panel → collapse; chọn xong từ danh sách → gọi `closeParentDetails(ev)` trong handler.
 
-Khi thêm màn mới, **copy cấu trúc DOM và lớp Tailwind theo đúng các nhóm trên** rồi chỉ thay nhãn tiếng Việt, key filter và options — không phát minh layout khác trừ khi có lý do UX rõ ràng.
+Khi thêm màn mới, **copy cấu trúc DOM và lớp Tailwind theo đúng các nhóm trên** rồi chỉ thay key filter và options — không phát minh layout khác trừ khi có lý do UX rõ ràng.

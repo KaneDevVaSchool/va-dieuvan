@@ -25,12 +25,14 @@
 <script setup>
 import { ref } from 'vue'
 import { ChevronDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 
 defineProps({
   badgeCount: { type: Number, default: 0 },
 })
 
 const root = ref(null)
+useDetailsAutoClose(root)
 
 function close() {
   const el = root.value

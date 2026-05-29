@@ -122,7 +122,7 @@
             </div>
 
             <div
-              class="ml-auto flex shrink-0 items-center gap-1 border-l border-violet-200/70 pl-2 sm:gap-2 sm:pl-3 dark:border-violet-900/40"
+              class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
             >
               <button
                 type="button"
@@ -391,6 +391,7 @@ import { ChevronDownIcon, EllipsisVerticalIcon, FunnelIcon, MagnifyingGlassIcon,
 import Card from '../../components/ui/Card.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
@@ -436,6 +437,7 @@ const searchInput = ref('')
 const filterQ = ref('')
 const filterStatus = ref('all')
 const funnelDetailsRef = ref(null)
+useDetailsAutoClose(funnelDetailsRef)
 const filterControlVisible = reactive(defaultFilterControlVisibility())
 
 const form = reactive({ key: '', name: '', module: '', is_enabled: true })

@@ -350,7 +350,7 @@
             <!-- Action area: clear button -->
             <div
               v-if="activeFilterCount > 0"
-              class="ml-auto flex shrink-0 items-center border-l border-violet-200/70 pl-2"
+              class="ml-auto flex shrink-0 items-center pl-2"
             >
               <button
                 type="button"
@@ -442,7 +442,7 @@
             </label>
           </div>
           <div class="flex flex-wrap items-center justify-end gap-2">
-            <label class="flex items-center gap-2">
+            <label v-if="!isScheduleGroupedView" class="flex items-center gap-2">
               <span class="text-sm text-slate-600">{{ t('portal.filter_per_page') }}</span>
               <select
                 v-model.number="perPage"
@@ -478,7 +478,7 @@
           />
           <PortalRequestsTable v-else :requests="items" />
           <nav
-            v-if="pagination && (pagination.last_page ?? 1) > 1"
+            v-if="!isScheduleGroupedView && pagination && (pagination.last_page ?? 1) > 1"
             class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between"
             :aria-label="t('portal.filter_per_page')"
           >
@@ -527,7 +527,7 @@
             </div>
           </nav>
           <p
-            v-else-if="pagination && (pagination.total ?? 0) > 0"
+            v-else-if="!isScheduleGroupedView && pagination && (pagination.total ?? 0) > 0"
             class="text-center text-sm text-slate-500"
           >
             {{
@@ -583,6 +583,12 @@ const { isExtracurricularModule, routes: portalRoutes } = usePortalExtracurricul
 const isExtracurricularMode = computed(
   () => isExtracurricularModule.value || filterExtracurricular.value === 'extracurricular',
 )
+
+const isScheduleGroupedView = computed(
+  () => isExtracurricularMode.value && extracurricularListView.value === 'schedule',
+)
+
+const SCHEDULE_FETCH_PER_PAGE = 500
 
 const extracurricularTableRef = ref(null)
 const extracurricularListView = ref('schedule')
@@ -959,7 +965,7 @@ function resetFilters() {
 // ── API ──────────────────────────────────────────────────────
 function listParams(page) {
   return {
-    per_page: perPage.value,
+    per_page: isScheduleGroupedView.value ? SCHEDULE_FETCH_PER_PAGE : perPage.value,
     page,
     sort: sort.value,
     filter: filterStatus.value === 'all' ? undefined : filterStatus.value,
@@ -1066,6 +1072,12 @@ watch(
   },
   { immediate: true },
 )
+
+watch(extracurricularListView, () => {
+  if (isExtracurricularMode.value) {
+    reloadFromStart()
+  }
+})
 
 onMounted(() => {
   if (isExtracurricularModule.value) {

@@ -555,6 +555,7 @@ const quickLinks = computed(() => [
   },
   {
     to: staffPath('/trips'),
+    title: t('dashboard_analytics.quick_trips'),
     hint: t('dashboard_analytics.quick_trips_tooltip'),
     icon: markRaw(TruckIcon),
     cardClass:
@@ -574,6 +575,7 @@ const quickLinks = computed(() => [
   },
   {
     to: staffPath('/requests'),
+    title: t('dashboard_analytics.quick_requests'),
     hint: t('dashboard_analytics.quick_requests_tooltip'),
     icon: markRaw(ClipboardDocumentListIcon),
     cardClass:
@@ -603,6 +605,7 @@ const quickLinks = computed(() => [
   },
   {
     to: staffPath('/costs'),
+    title: t('dashboard_analytics.quick_costs'),
     hint: t('dashboard_analytics.quick_costs_tooltip'),
     icon: markRaw(BanknotesIcon),
     cardClass:
