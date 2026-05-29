@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="group/card absolute top-2 z-[5] flex min-h-[2.75rem] items-center gap-1 overflow-visible rounded-lg border px-2 py-1.5 pl-2.5 text-left shadow-md transition hover:brightness-[0.98] hover:shadow-lg dark:hover:brightness-110"
+    class="group/card absolute top-2 z-[5] flex min-h-[2.75rem] items-center gap-1 overflow-visible rounded-lg border px-2 py-1.5 pl-2.5 text-left shadow-md transition hover:z-20 hover:brightness-[0.98] hover:shadow-lg dark:hover:brightness-110"
     :class="[
       visual.cardClass,
       selected
@@ -43,7 +43,7 @@
     </span>
 
     <div
-      class="pointer-events-none absolute left-0 top-full z-[60] mt-1.5 hidden w-max max-w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-slate-200/90 bg-white p-2.5 text-left text-xs font-normal normal-case text-slate-700 shadow-xl ring-1 ring-slate-900/5 group-hover/card:block dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-950/40"
+      class="pointer-events-none absolute bottom-full left-0 z-[60] mb-1.5 hidden w-max max-w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-slate-200/90 bg-white p-2.5 text-left text-xs font-normal normal-case text-slate-700 shadow-xl ring-1 ring-slate-900/5 group-hover/card:block dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-950/40"
       role="tooltip"
     >
       <span

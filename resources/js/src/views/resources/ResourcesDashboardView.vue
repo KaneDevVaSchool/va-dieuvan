@@ -765,7 +765,7 @@
                 <!-- Center: timeline — xl cố định 990px; khi thu gọn sidebar app thì flex-1 để rộng thêm -->
                 <section
                     :class="[
-                        'w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80',
+                        'w-full shrink-0 overflow-x-hidden overflow-y-visible rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80',
                         ui.sidebarCollapsed
                             ? 'xl:flex-1 xl:min-w-[990px] xl:max-w-none'
                             : 'xl:min-w-[990px] xl:w-[990px] xl:max-w-[990px]',
@@ -853,7 +853,7 @@
                                 <div
                                     v-for="(row, rowIdx) in timelineRows"
                                     :key="row.key"
-                                    class="flex border-b border-slate-100/90 last:border-b-0 dark:border-slate-700/60"
+                                    class="relative z-0 flex border-b border-slate-100/90 last:border-b-0 has-[data-timeline-track:hover]:z-40 dark:border-slate-700/60"
                                 >
                                     <div
                                         class="flex w-[160px] shrink-0 flex-col justify-center border-r border-slate-200/90 bg-white/60 py-2.5 pr-2.5 text-xs dark:border-slate-700/80 dark:bg-slate-900/30"
@@ -875,7 +875,7 @@
                                     </div>
                                     <div
                                         data-timeline-track
-                                        class="relative min-h-[64px] min-w-0 flex-1 bg-slate-50/60 dark:bg-slate-950/20"
+                                        class="relative min-h-[64px] min-w-0 flex-1 overflow-visible bg-slate-50/60 dark:bg-slate-950/20"
                                     >
                                         <div
                                             class="pointer-events-none absolute inset-0 grid"
