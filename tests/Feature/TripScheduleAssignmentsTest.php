@@ -44,6 +44,35 @@ class TripScheduleAssignmentsTest extends TestCase
         $this->assertSame('business:1', $legs[1]['key']);
     }
 
+    public function test_business_trip_ignores_passenger_mirror_rows_in_snapshot(): void
+    {
+        $service = app(TripScheduleLegService::class);
+        $snap = [
+            'passengerRows' => [
+                [
+                    'depart_at' => '2026-06-01T08:00:00+07:00',
+                    'pickup' => '',
+                    'dropoff' => '',
+                    'person_in_charge' => 'Nguyễn Văn A',
+                    'guests' => '1',
+                ],
+            ],
+            'businessRows' => [
+                [
+                    'depart_at' => '2026-06-01T08:00:00+07:00',
+                    'pickup' => '806 Âu Cơ',
+                    'return_at' => '2026-06-01T17:00:00+07:00',
+                    'dropoff' => 'Cơ sở Vũng Tàu',
+                    'guests' => '2',
+                ],
+            ],
+        ];
+
+        $legs = $service->buildLegDefinitionsFromSnapshot($snap, 'business');
+        $this->assertCount(1, $legs);
+        $this->assertSame('business:0', $legs[0]['key']);
+    }
+
     public function test_driver_visibility_via_schedule_assignments_json(): void
     {
         $this->seed(RbacSeeder::class);

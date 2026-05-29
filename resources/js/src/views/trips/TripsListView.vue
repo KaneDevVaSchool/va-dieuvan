@@ -546,10 +546,6 @@
                 <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.col_dispatcher') }}</span>
                 {{ trip.dispatcher.name }}
               </li>
-              <li>
-                <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.payment_label') }}</span>
-                {{ paymentLabel(trip.payment_status) }}
-              </li>
               <li v-if="trip.started_at">
                 <span class="font-semibold text-slate-600 dark:text-slate-400">{{ t('trips_page.started_at_label') }}</span>
                 {{ fmtDateTimeFull(trip.started_at) }}

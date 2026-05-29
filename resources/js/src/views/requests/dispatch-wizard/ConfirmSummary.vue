@@ -382,6 +382,7 @@ const scheduleCards = computed(() => {
   }
 
   passengerRows.value.forEach((row, idx) => {
+    if (form.value.trip_type === 'business') return
     if (!isPassengerRowFilled(row)) return
     seq += 1
     cards.push(passengerCard(row, seq, `p-${row.id ?? idx}`))

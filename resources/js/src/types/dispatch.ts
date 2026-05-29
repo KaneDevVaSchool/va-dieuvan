@@ -18,6 +18,8 @@ export interface ResourceItem {
   externalDriverRef?: string | null
   /** Ghi chú tự do (SĐT, biển số, tên…) — chủ yếu dùng cho NCC bổ sung. */
   contactNotes?: string | null
+  /** Giá dịch vụ taxi (VND hoặc đơn vị nội bộ) — ghi nhận khi bổ sung taxi. */
+  servicePrice?: number | null
 }
 
 export interface SelectedResources {
@@ -39,6 +41,7 @@ export interface SupplementItem {
   externalVehicleRef?: string | null
   externalDriverRef?: string | null
   contactNotes?: string | null
+  servicePrice?: number | null
 }
 
 /** Cấu trúc JSON lưu trong trips.supplement_transports */

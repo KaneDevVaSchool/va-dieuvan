@@ -23,6 +23,7 @@ class AssignTripRequest extends ApiFormRequest
             'supplement_transports.taxis.*.externalVehicleRef' => ['nullable', 'string', 'max:255'],
             'supplement_transports.taxis.*.externalDriverRef' => ['nullable', 'string', 'max:255'],
             'supplement_transports.taxis.*.contactNotes' => ['nullable', 'string', 'max:500'],
+            'supplement_transports.taxis.*.servicePrice' => ['nullable', 'numeric', 'min:0'],
             'supplement_transports.vendors' => ['nullable', 'array'],
             'supplement_transports.vendors.*.id' => ['required', 'string'],
             'supplement_transports.vendors.*.label' => ['required', 'string', 'max:255'],

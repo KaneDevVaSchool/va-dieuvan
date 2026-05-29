@@ -106,7 +106,7 @@
         </div>
 
         <div v-else class="flex flex-wrap items-center gap-2" :class="indentBody ? 'ml-[38px]' : ''">
-          <div class="min-w-0 flex-1">
+          <div class="min-w-0 flex-1 basis-[8rem]">
             <input
               v-model="nameDraft"
               type="text"
@@ -115,6 +115,29 @@
               :disabled="disabled"
               :aria-busy="disabled"
               @keydown.enter.prevent="onAdd"
+            />
+          </div>
+          <div class="w-[5.5rem] shrink-0 sm:w-28 sm:flex-1 sm:max-w-[9.5rem]">
+            <input
+              v-model="plateDraft"
+              type="text"
+              class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal uppercase tracking-wide text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+              :placeholder="t('trip_detail.coordination.supplement_taxi_plate_ph')"
+              :disabled="disabled"
+              :aria-label="t('trip_detail.coordination.supplement_taxi_plate_aria')"
+            />
+          </div>
+          <div class="w-[5.25rem] shrink-0">
+            <input
+              v-model="priceDraft"
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="decimal"
+              class="w-full rounded-xl bg-slate-100/90 px-1.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
+              :placeholder="t('trip_detail.coordination.supplement_taxi_price_ph')"
+              :disabled="disabled"
+              :aria-label="t('trip_detail.coordination.supplement_taxi_price_aria')"
             />
           </div>
           <div class="w-16 shrink-0">
@@ -164,6 +187,30 @@
               >
                 ×
               </button>
+            </div>
+            <div
+              v-if="kind === 'taxi'"
+              class="grid gap-2 sm:grid-cols-2"
+            >
+              <input
+                :value="item.externalVehicleRef ?? ''"
+                type="text"
+                class="w-full rounded-xl bg-white/70 px-2.5 py-1.5 text-[13px] font-normal uppercase tracking-wide text-slate-800 shadow-inner shadow-slate-900/10 outline-none placeholder:normal-case placeholder:tracking-normal focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
+                :placeholder="t('trip_detail.coordination.supplement_taxi_plate_ph')"
+                :disabled="disabled"
+                @input="onExternalVehicleInput(idx, $event)"
+              />
+              <input
+                :value="servicePriceDisplay(item)"
+                type="number"
+                min="0"
+                step="1000"
+                inputmode="decimal"
+                class="w-full rounded-xl bg-white/70 px-2.5 py-1.5 text-[13px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/10 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
+                :placeholder="t('trip_detail.coordination.supplement_taxi_price_ph')"
+                :disabled="disabled"
+                @input="onServicePriceInput(idx, $event)"
+              />
             </div>
             <div
               v-if="kind === 'vendor'"
@@ -263,6 +310,8 @@ const { t } = useI18n()
 
 const expanded = ref(false)
 const nameDraft = ref('')
+const plateDraft = ref('')
+const priceDraft = ref('')
 const seatDraft = ref(String(props.defaultSeat))
 const vendorFilter = ref('')
 const selectedVendorId = ref('')
@@ -354,22 +403,67 @@ function onContactNotesInput(idx: number, e: Event) {
   patchItem(idx, 'contactNotes', el.value)
 }
 
+function onServicePriceInput(idx: number, e: Event) {
+  const el = e.target as HTMLInputElement
+  const raw = el.value.trim()
+  if (!raw) {
+    patchItem(idx, 'servicePrice', null)
+    return
+  }
+  const n = Number(raw)
+  if (!Number.isFinite(n) || n < 0) return
+  patchItem(idx, 'servicePrice', n)
+}
+
+function servicePriceDisplay(item: ResourceItem) {
+  const n = Number(item.servicePrice)
+  if (!Number.isFinite(n) || n < 0) return ''
+  return String(n)
+}
+
 function patchItem(
   idx: number,
-  key: 'externalVehicleRef' | 'externalDriverRef' | 'contactNotes',
-  value: string,
+  key: 'externalVehicleRef' | 'externalDriverRef' | 'contactNotes' | 'servicePrice',
+  value: string | number | null,
 ) {
   if (props.disabled) return
-  const next = props.modelValue.map((it, i) =>
-    i === idx ? { ...it, [key]: value } : it,
-  )
+  const next = props.modelValue.map((it, i) => {
+    if (i !== idx) return it
+    const copy: ResourceItem = { ...it }
+    if (key === 'servicePrice') {
+      if (value == null || value === '') delete copy.servicePrice
+      else copy.servicePrice = Number(value)
+    } else if (value == null || value === '') {
+      delete copy[key]
+    } else {
+      copy[key] = String(value)
+    }
+    return copy
+  })
   emit('update:modelValue', next)
+}
+
+function taxiExtrasFromDrafts(): Pick<ResourceItem, 'externalVehicleRef' | 'servicePrice'> {
+  const plate = plateDraft.value.trim()
+  const price = parseServicePrice()
+  const out: Pick<ResourceItem, 'externalVehicleRef' | 'servicePrice'> = {}
+  if (plate) out.externalVehicleRef = plate.slice(0, 255)
+  if (price != null) out.servicePrice = price
+  return out
 }
 
 function parseSeats(): number | null {
   const n = Number(String(seatDraft.value).trim())
   if (!Number.isFinite(n) || n < 1) return null
   return Math.floor(n)
+}
+
+function parseServicePrice(): number | null {
+  const raw = String(priceDraft.value).trim()
+  if (!raw) return null
+  const n = Number(raw)
+  if (!Number.isFinite(n) || n < 0) return null
+  return n
 }
 
 function tryResolveOption(name: string): ResourceItem | null {
@@ -437,9 +531,12 @@ function onAdd() {
     const enriched: ResourceItem = {
       ...resolved,
       supplementSeats: seats,
+      ...taxiExtrasFromDrafts(),
     }
     emit('update:modelValue', [...props.modelValue, enriched])
     nameDraft.value = ''
+    plateDraft.value = ''
+    priceDraft.value = ''
     seatDraft.value = String(props.defaultSeat)
     return
   }
@@ -451,9 +548,12 @@ function onAdd() {
     available: true,
     isCustom: true,
     supplementSeats: seats,
+    ...taxiExtrasFromDrafts(),
   }
   emit('update:modelValue', [...props.modelValue, item])
   nameDraft.value = ''
+  plateDraft.value = ''
+  priceDraft.value = ''
   seatDraft.value = String(props.defaultSeat)
 }
 

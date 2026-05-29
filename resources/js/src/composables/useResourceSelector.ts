@@ -74,6 +74,9 @@ function toSupplementItem(it: ResourceItem): SupplementItem {
     ...(it.externalVehicleRef ? { externalVehicleRef: String(it.externalVehicleRef) } : {}),
     ...(it.externalDriverRef ? { externalDriverRef: String(it.externalDriverRef) } : {}),
     ...(contactNotes ? { contactNotes } : {}),
+    ...(it.servicePrice != null && Number.isFinite(Number(it.servicePrice))
+      ? { servicePrice: Number(it.servicePrice) }
+      : {}),
   }
 }
 
@@ -403,6 +406,7 @@ export function useResourceSelector(
           externalVehicleRef: item.externalVehicleRef ?? null,
           externalDriverRef: item.externalDriverRef ?? null,
           contactNotes: item.contactNotes ?? null,
+          servicePrice: item.servicePrice ?? null,
         }
       })
 

@@ -79,36 +79,38 @@ export function useDispatchScheduleCards(snapshot, tripType) {
       return cards
     }
 
-    for (const [idx, row] of (s.passengerRows ?? []).entries()) {
-      if (!isPassengerRowFilled(row)) continue
-      seq += 1
-      const key = `passenger:${idx}`
-      cards.push({
-        key,
-        variant: 'passenger',
-        rowIndex: idx,
-        labelSeq: seq,
-        heading: t('dispatch_wizard.confirm.trip_heading', { n: seq }),
-        depart_at: row.depart_at || null,
-        arrive_by: row.return_at || null,
-        pickup: (row.pickup ?? '').trim(),
-        dropoff: (row.dropoff ?? '').trim(),
-        waypoint: (row.waypoint ?? '').trim(),
-        lines: [
-          {
-            label: t('dispatch_wizard.confirm.lbl_out'),
-            value: `${formatShortDt(row.depart_at)} — ${row.pickup?.trim() || '—'}`,
-          },
-          {
-            label: t('dispatch_wizard.confirm.lbl_back'),
-            value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
-          },
-          {
-            label: t('dispatch_wizard.confirm.guests_line'),
-            value: String(row.guests ?? '').trim() || '—',
-          },
-        ],
-      })
+    if (tt !== 'business') {
+      for (const [idx, row] of (s.passengerRows ?? []).entries()) {
+        if (!isPassengerRowFilled(row)) continue
+        seq += 1
+        const key = `passenger:${idx}`
+        cards.push({
+          key,
+          variant: 'passenger',
+          rowIndex: idx,
+          labelSeq: seq,
+          heading: t('dispatch_wizard.confirm.trip_heading', { n: seq }),
+          depart_at: row.depart_at || null,
+          arrive_by: row.return_at || null,
+          pickup: (row.pickup ?? '').trim(),
+          dropoff: (row.dropoff ?? '').trim(),
+          waypoint: (row.waypoint ?? '').trim(),
+          lines: [
+            {
+              label: t('dispatch_wizard.confirm.lbl_out'),
+              value: `${formatShortDt(row.depart_at)} — ${row.pickup?.trim() || '—'}`,
+            },
+            {
+              label: t('dispatch_wizard.confirm.lbl_back'),
+              value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
+            },
+            {
+              label: t('dispatch_wizard.confirm.guests_line'),
+              value: String(row.guests ?? '').trim() || '—',
+            },
+          ],
+        })
+      }
     }
 
     if (tt !== 'point_to_point') {

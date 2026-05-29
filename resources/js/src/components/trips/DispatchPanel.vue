@@ -666,6 +666,17 @@ function formatSupplementLine(it: SupplementItem): string {
             n: Math.floor(n),
         })}`;
     }
+    const plate = String(it.externalVehicleRef ?? "").trim();
+    if (plate) {
+        base = base ? `${base} · ${plate}` : plate;
+    }
+    const priceRaw = Number(it.servicePrice);
+    if (Number.isFinite(priceRaw) && priceRaw >= 0) {
+        const priceSeg = t("trip_detail.coordination.supplement_taxi_price_summary", {
+            n: priceRaw,
+        });
+        base = base ? `${base} · ${priceSeg}` : priceSeg;
+    }
     const cn = String(it.contactNotes ?? "").trim();
     if (cn) {
         const short = cn.length > 80 ? `${cn.slice(0, 77)}…` : cn;

@@ -32,12 +32,14 @@ class TripScheduleLegService
             return $legs;
         }
 
-        foreach (array_values($snapshot['passengerRows'] ?? []) as $idx => $row) {
-            if (! is_array($row) || ! $this->isPassengerRowFilled($row)) {
-                continue;
+        if ($tripType !== 'business') {
+            foreach (array_values($snapshot['passengerRows'] ?? []) as $idx => $row) {
+                if (! is_array($row) || ! $this->isPassengerRowFilled($row)) {
+                    continue;
+                }
+                $seq++;
+                $legs[] = $this->legFromPassengerRow($row, $idx, $seq);
             }
-            $seq++;
-            $legs[] = $this->legFromPassengerRow($row, $idx, $seq);
         }
 
         if ($tripType !== 'point_to_point') {
