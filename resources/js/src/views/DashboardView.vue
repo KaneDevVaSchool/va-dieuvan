@@ -10,9 +10,6 @@
           <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
             {{ t('dashboard_analytics.title') }}
           </h1>
-          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-            {{ t('dashboard_analytics.subtitle') }}
-          </p>
         </div>
         <RouterLink
           class="shrink-0 text-sm font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-300"
@@ -24,12 +21,8 @@
 
       <!-- Truy cập nhanh: mũi tên hai bên, ẩn thanh cuộn -->
       <div>
-        <h2
-          class="inline-flex items-center gap-1.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-          :title="t('dashboard_analytics.quick_section_tooltip')"
-        >
+        <h2 class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {{ t('dashboard_analytics.quick_title') }}
-          <InformationCircleIcon class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
         </h2>
         <div class="relative -mx-0.5 mt-2 flex items-stretch gap-1 sm:-mx-1 sm:gap-2">
           <button
@@ -51,7 +44,6 @@
                 v-for="item in quickLinks"
                 :key="item.to"
                 :to="item.to"
-                :title="item.hint"
                 :class="[
                   'flex w-[6.5rem] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border bg-gradient-to-b px-2.5 py-3.5 text-center shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md sm:w-32 md:w-36',
                   item.cardClass,
@@ -87,11 +79,9 @@
     <section class="space-y-3" aria-labelledby="dash-section-kpis">
       <h2
         id="dash-section-kpis"
-        class="inline-flex items-center gap-1.5 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-        :title="t('dashboard_analytics.section_kpis_tooltip')"
+        class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
       >
         {{ t('dashboard_analytics.section_kpis') }}
-        <InformationCircleIcon class="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
       </h2>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Card
@@ -174,17 +164,14 @@
     <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-slate-50/40 to-teal-50/25 p-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/20 dark:ring-white/[0.04] md:p-4">
       <h2
         id="dash-section-compliance"
-        class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 dark:text-white"
-        :title="t('dashboard_analytics.section_compliance_tooltip')"
+        class="text-sm font-semibold text-slate-900 dark:text-white"
       >
         {{ t('dashboard_analytics.section_compliance') }}
-        <InformationCircleIcon class="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden="true" />
       </h2>
       <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <div
           v-for="box in complianceBoxes"
           :key="box.key"
-          :title="box.tooltip"
           class="rounded-lg border border-slate-100/90 bg-white/90 px-3 py-2.5 shadow-sm ring-1 ring-slate-900/[0.02] dark:border-slate-700 dark:bg-slate-950/50 dark:ring-white/[0.04]"
           :class="box.cardTone"
         >
@@ -474,7 +461,6 @@ import {
   ClockIcon,
   CubeIcon,
   DocumentMagnifyingGlassIcon,
-  InformationCircleIcon,
   PlusCircleIcon,
   Square2StackIcon,
   TableCellsIcon,

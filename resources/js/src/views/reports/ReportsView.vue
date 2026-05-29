@@ -23,9 +23,6 @@
         <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl md:text-2xl">
           {{ t('reports_page.hero_title') }}
         </h1>
-        <p class="mt-0.5 text-xs text-slate-600 sm:text-sm">
-          {{ t('reports_page.hero_subtitle') }}
-        </p>
       </div>
       <div class="flex flex-col items-stretch gap-2 sm:items-end">
         <div class="flex flex-wrap items-center gap-2">
@@ -42,9 +39,6 @@
             {{ t('reports_page.export_pdf') }}
           </Button>
         </div>
-        <p class="max-w-md text-xs text-slate-500">
-          {{ t('reports_page.export_excel_hint') }}
-        </p>
       </div>
     </div>
 
@@ -68,9 +62,6 @@
             <template v-if="completionRate != null">{{ completionRate }}%</template>
             <template v-else>—</template>
           </div>
-          <p class="mt-1 text-xs text-slate-500 print:hidden">
-            {{ t('reports_page.kpi_on_time_hint') }}
-          </p>
         </div>
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div class="text-xs font-medium text-slate-600">
@@ -79,9 +70,6 @@
           <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
             {{ summary?.cargo_sla_breaches ?? 0 }}
           </div>
-          <p class="mt-1 text-xs text-slate-500 print:hidden">
-            {{ t('reports_page.kpi_sla_breaches_hint') }}
-          </p>
         </div>
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div class="text-xs font-medium text-slate-600">
@@ -90,9 +78,6 @@
           <div class="mt-1 text-xl font-bold tabular-nums text-slate-900">
             {{ avgCostPerTripDisplay }}
           </div>
-          <p class="mt-1 text-xs text-slate-500 print:hidden">
-            {{ t('reports_page.kpi_avg_cost_hint') }}
-          </p>
         </div>
         <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div class="text-xs font-medium text-slate-600">
@@ -101,9 +86,6 @@
           <div class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
             {{ totalTrips }}
           </div>
-          <p class="mt-1 text-xs text-slate-500 print:hidden">
-            {{ t('reports_page.kpi_trips_hint') }}
-          </p>
         </div>
       </div>
     </section>
@@ -187,7 +169,6 @@
       </h2>
       <DashboardChartSection
         :title="t('reports_page.chart_hour_line')"
-        :hint="`${t('reports_page.chart_hint_hour')} ${t('reports_page.chart_hour_hint')}`"
         persist-key="line-hour"
         :expand-label="t('reports_page.chart_expand')"
         :collapse-label="t('reports_page.chart_collapse')"

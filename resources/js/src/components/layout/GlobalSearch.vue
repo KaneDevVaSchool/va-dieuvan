@@ -8,7 +8,6 @@
       'h-9 px-2 md:px-3',
     ]"
     :aria-label="t('app.search_label')"
-    :title="t('app.search_hint')"
     @click="openSearch"
   >
     <MagnifyingGlassIcon class="h-4 w-4 shrink-0" aria-hidden="true" />

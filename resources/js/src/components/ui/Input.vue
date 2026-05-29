@@ -14,7 +14,6 @@
       :class="inputClass"
       @input="$emit('update:modelValue', $event.target.value)"
     />
-    <div v-if="hint" class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ hint }}</div>
     <div v-if="error" class="mt-1 text-xs text-rose-600">{{ error }}</div>
   </label>
 </template>

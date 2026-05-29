@@ -12,9 +12,6 @@
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white md:text-3xl">
           {{ t('p2p_policy_page.routes_title') }}
         </h1>
-        <p class="max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-          {{ t('p2p_policy_page.routes_subtitle') }}
-        </p>
       </div>
     </header>
 
@@ -36,9 +33,6 @@
             <h2 class="text-lg font-bold text-slate-900 dark:text-white sm:text-xl">
               {{ t('p2p_policy_page.section_routes_create') }}
             </h2>
-            <p class="mt-0.5 text-xs leading-snug text-slate-500 group-open:hidden dark:text-slate-400">
-              {{ t('p2p_policy_page.routes_quick_create_collapsed_hint') }}
-            </p>
           </div>
           <button
             type="button"
@@ -171,9 +165,6 @@
                   <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                       {{ t('trips_page.filter_show_controls_title') }}
-                    </p>
-                    <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                      {{ t('trips_page.filter_show_controls_hint') }}
                     </p>
                     <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
                       <li v-for="fd in filterControlDefs" :key="'routes-vis-' + fd.id" class="flex items-start gap-2">
@@ -444,7 +435,6 @@
     <dialog ref="campusDialog" class="w-[min(100%,28rem)] rounded-2xl border p-0 shadow-xl dark:border-slate-700 dark:bg-slate-900">
       <form class="p-5 space-y-4" @submit.prevent="submitCampus">
         <h3 class="text-lg font-bold">{{ t('p2p_policy_page.add_campus_modal_title') }}</h3>
-        <p class="text-sm text-slate-500">{{ t('p2p_policy_page.add_campus_modal_hint') }}</p>
         <div>
           <P2pPolicyFieldLabel :label="t('p2p_policy_page.campus_field_code')" required />
           <input v-model="campusForm.code" required class="p2p-term-input mt-2 w-full" :placeholder="t('p2p_policy_page.campus_placeholder_code')" />
@@ -466,7 +456,6 @@
     <dialog ref="termDialog" class="w-[min(100vw-2rem,32rem)] max-w-lg rounded-2xl border p-0 shadow-2xl backdrop:bg-slate-900/40 dark:border-slate-700 dark:bg-slate-900">
       <form class="max-h-[min(90vh,640px)] overflow-y-auto p-6" @submit.prevent="submitTerm">
         <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.add_p2p_term_modal_title') }}</h3>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.add_p2p_term_modal_hint') }}</p>
         <div class="mt-5 space-y-4">
           <div>
             <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_academic_term')" :hint="t('p2p_policy_page.tip_academic_term')" required />

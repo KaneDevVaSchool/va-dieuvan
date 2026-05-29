@@ -4,9 +4,6 @@
       <p class="text-sm font-semibold text-slate-800">
         {{ t('reports_page.filters_heading') }}
       </p>
-      <p class="mt-0.5 text-xs text-slate-600">
-        {{ t('reports_page.filters_hint') }}
-      </p>
     </div>
     <div ref="transportReportFilterBarRef" class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
       <details class="group relative">
@@ -50,9 +47,6 @@
             <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
               <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                 {{ t('dashboard_analytics.filter_optional_title') }}
-              </p>
-              <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                {{ t('dashboard_analytics.filter_optional_hint') }}
               </p>
               <ul class="mt-2 max-h-[min(50vh,240px)] space-y-2 overflow-y-auto pr-0.5">
                 <li v-for="fd in dimensionFilters" :key="fd.id" class="flex items-start gap-2">
@@ -140,9 +134,6 @@
                 <div>
                   <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                     {{ t('dashboard_analytics.date_range_title') }}
-                  </p>
-                  <p class="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-400">
-                    {{ t('dashboard_analytics.date_range_hint') }}
                   </p>
                 </div>
               </div>

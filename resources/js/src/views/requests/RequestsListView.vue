@@ -13,7 +13,6 @@
             {{ t('requests_page.workspace_badge') }}
           </span>
         </div>
-        <p class="mt-1 text-sm text-slate-500">{{ t('requests_page.subtitle') }}</p>
       </div>
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div class="relative min-w-[220px] flex-1 sm:max-w-xs">
@@ -144,9 +143,6 @@
           <div class="min-w-0">
             <p class="text-[11px] font-bold uppercase tracking-wide text-teal-900/85 dark:text-teal-200/90">
               {{ t('requests_page.kpi_volume') }}
-            </p>
-            <p class="mt-0.5 text-[10px] font-medium text-teal-700/70 dark:text-teal-300/80">
-              {{ t('requests_page.kpi_volume_hint') }}
             </p>
           </div>
           <div
@@ -678,9 +674,6 @@
             class="absolute right-0 top-[calc(100%+6px)] z-40 min-w-[240px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5"
             @click.stop
           >
-            <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-              {{ t('requests_page.table_columns_hint') }}
-            </p>
             <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700">
               <li v-for="opt in requestColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
                 <input
@@ -707,9 +700,6 @@
       <div v-else-if="!items.length" class="border-t border-slate-100 px-4 py-10 text-center">
         <p class="text-sm text-slate-500">
           {{ isTrashTab ? t('requests_page.empty_trash') : t('requests_page.empty') }}
-        </p>
-        <p v-if="emptyStateShowReset" class="mt-2 text-xs text-slate-400">
-          {{ t('requests_page.empty_reset_hint') }}
         </p>
         <button
           v-if="emptyStateShowReset"

@@ -270,9 +270,6 @@ function assignmentFunnelLabel(v: AssignmentFilter): string {
                       <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                         {{ t('trips_page.filter_show_controls_title') }}
                       </p>
-                      <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                        {{ t('trips_page.filter_show_controls_hint') }}
-                      </p>
                       <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
                         <li v-for="fd in filterControlDefs" :key="'uroles-vis-' + fd.id" class="flex items-start gap-2">
                           <input

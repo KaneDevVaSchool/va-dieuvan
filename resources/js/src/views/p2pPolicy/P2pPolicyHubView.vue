@@ -12,9 +12,6 @@
           <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white md:text-3xl">
             {{ t('p2p_policy_page.hub_title') }}
           </h1>
-          <p class="max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            {{ t('p2p_policy_page.hub_subtitle') }}
-          </p>
         </div>
         <RouterLink
           :to="p2pStepTo('p2pPolicyTerm', workflowTermId)"
@@ -89,7 +86,6 @@
             />
           </div>
           <p class="mt-4 text-base font-semibold text-slate-900 dark:text-white">{{ card.label }}</p>
-          <p class="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ card.hint }}</p>
         </RouterLink>
       </div>
     </section>
@@ -189,7 +185,6 @@
             </span>
             <div>
               <h2 class="text-lg font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.readiness_title') }}</h2>
-              <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.readiness_hint') }}</p>
             </div>
           </div>
           <span

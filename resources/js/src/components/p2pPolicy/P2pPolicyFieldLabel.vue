@@ -1,5 +1,4 @@
 <script setup>
-import { InformationCircleIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 
 defineProps({
@@ -27,16 +26,6 @@ const { t } = useI18n()
       :aria-label="t('p2p_policy_page.tip_required_star')"
     >
       *
-    </span>
-    <span
-      v-if="hint"
-      class="inline-flex cursor-help align-middle text-slate-400 hover:text-teal-600 dark:hover:text-teal-400"
-      :title="hint"
-      tabindex="0"
-      role="img"
-      :aria-label="hint"
-    >
-      <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
     </span>
   </div>
 </template>

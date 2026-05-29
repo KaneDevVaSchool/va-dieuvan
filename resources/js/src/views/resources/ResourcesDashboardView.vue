@@ -8,9 +8,6 @@
                 <h1 class="text-lg font-semibold tracking-tight md:text-xl">
                     {{ t("resources_dashboard.title") }}
                 </h1>
-                <p class="mt-0.5 text-sm text-slate-600">
-                    {{ t("resources_dashboard.subtitle") }}
-                </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <div
@@ -195,11 +192,6 @@
                                 t("resources_dashboard.kpi_gaps_unit")
                             }}</span>
                         </div>
-                        <p
-                            class="mt-0.5 line-clamp-2 text-[10px] leading-snug text-slate-500"
-                        >
-                            {{ t("resources_dashboard.kpi_gaps_hint") }}
-                        </p>
                     </template>
                 </div>
             </div>
@@ -217,9 +209,6 @@
                             <div class="text-[11px] font-medium text-slate-600">
                                 {{ t("resources_dashboard.kpi_forecast") }}
                             </div>
-                            <p class="text-[10px] text-slate-400">
-                                {{ t("resources_dashboard.kpi_forecast_hint") }}
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -810,12 +799,6 @@
                                     {{ t("dispatcher_board.legend_conflict") }}
                                 </span>
                             </div>
-                            <p
-                                v-if="canAssignTrip"
-                                class="max-w-md text-[11px] leading-snug text-slate-500 dark:text-slate-400"
-                            >
-                                {{ t("resources_dashboard.timeline_drag_hint") }}
-                            </p>
                         </div>
                     </div>
                     <div
@@ -946,33 +929,6 @@
                                 >
                                     {{ t("resources_dashboard.panel_title") }}
                                 </h2>
-                                <button
-                                    type="button"
-                                    class="inline-flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-teal-700 hover:bg-teal-50"
-                                    :aria-expanded="panelHeaderHelpOpen"
-                                    :aria-label="
-                                        t(
-                                            'resources_dashboard.panel_header_hint_toggle',
-                                        )
-                                    "
-                                    @click="
-                                        panelHeaderHelpOpen =
-                                            !panelHeaderHelpOpen
-                                    "
-                                >
-                                    {{
-                                        t("resources_dashboard.action_details")
-                                    }}
-                                    <ChevronDownIcon
-                                        class="h-3.5 w-3.5 transition"
-                                        :class="
-                                            panelHeaderHelpOpen
-                                                ? 'rotate-180'
-                                                : ''
-                                        "
-                                        aria-hidden="true"
-                                    />
-                                </button>
                             </div>
                             <button
                                 type="button"
@@ -985,12 +941,6 @@
                                 <XMarkIcon class="h-5 w-5" />
                             </button>
                         </div>
-                        <p
-                            v-show="panelHeaderHelpOpen"
-                            class="border-t border-slate-100/80 px-3 py-2 text-[11px] leading-snug text-slate-500"
-                        >
-                            {{ t("resources_dashboard.panel_subtitle_v2") }}
-                        </p>
                     </div>
 
                     <!-- Trip -->
@@ -1339,15 +1289,6 @@
                                                     )
                                                 }}</span
                                             >
-                                        </p>
-                                        <p
-                                            class="mt-1 text-[10px] leading-snug text-slate-500"
-                                        >
-                                            {{
-                                                t(
-                                                    "resources_dashboard.panel_suggested_ncc_hint",
-                                                )
-                                            }}
                                         </p>
                                     </div>
                                     <button
@@ -1888,15 +1829,6 @@
                                         </dd>
                                     </div>
                                 </dl>
-                                <p
-                                    class="mt-3 border-t border-slate-100 pt-3 text-[11px] leading-snug text-slate-500"
-                                >
-                                    {{
-                                        t(
-                                            "resources_dashboard.supplier_sla_hint",
-                                        )
-                                    }}
-                                </p>
                             </div>
 
                             <div class="flex flex-wrap gap-2">
@@ -2082,7 +2014,6 @@ function setSupplierFilter(v) {
 
 const syncingFromRoute = ref(false);
 /** Mô tả dài dưới tiêu đề panel — chỉ hiện khi bấm "Chi tiết" */
-const panelHeaderHelpOpen = ref(false);
 /** Nội dung chi tiết (tuân thủ, cảnh báo, …) — tài xế và có thể dùng cho các panel khác */
 const panelDetailOpen = ref(false);
 const sidebarNavIndex = ref(-1);
@@ -2232,7 +2163,6 @@ function setPanelSupplier(p) {
 function clearPanel() {
     panel.value = null;
     sidebarNavIndex.value = -1;
-    panelHeaderHelpOpen.value = false;
     panelDetailOpen.value = false;
 }
 
@@ -2322,7 +2252,6 @@ async function applyPanelFromQuery() {
 }
 
 watch(panel, (p) => {
-    panelHeaderHelpOpen.value = false;
     panelDetailOpen.value = false;
     if (syncingFromRoute.value) return;
     const want = panelToQuery(p);

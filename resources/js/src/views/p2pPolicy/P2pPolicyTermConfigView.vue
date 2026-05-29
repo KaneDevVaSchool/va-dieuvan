@@ -12,9 +12,6 @@
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white md:text-3xl">
           {{ t('p2p_policy_page.term_title') }}
         </h1>
-        <p class="max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-          {{ t('p2p_policy_page.term_subtitle') }}
-        </p>
       </div>
     </header>
 
@@ -51,7 +48,6 @@
             </div>
 
             <div>
-              <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.field_operating_dates_hint') }}</p>
               <div class="mt-2 grid gap-5 sm:grid-cols-2">
                 <div>
                   <FieldLabel :label="t('p2p_policy_page.field_operating_from')" />
@@ -67,8 +63,7 @@
         </Card>
 
         <Card>
-          <h2 class="mb-1 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_schedule') }}</h2>
-          <p class="mb-4 text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.section_schedule_hint') }}</p>
+          <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_schedule') }}</h2>
           <div class="grid gap-5 lg:grid-cols-2">
             <div>
               <FieldLabel :label="t('p2p_policy_page.field_morning')" />
@@ -92,7 +87,6 @@
             <input v-model="includeWeekend" type="checkbox" class="mt-1 h-5 w-5 rounded border-slate-300" />
             <span class="flex-1">
               <span class="font-medium text-slate-800 dark:text-slate-200">{{ t('p2p_policy_page.include_weekend') }}</span>
-              <span class="mt-0.5 block text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.include_weekend_hint') }}</span>
             </span>
           </label>
         </Card>
@@ -274,9 +268,6 @@
         <h2 class="text-xl font-bold text-slate-900 dark:text-white">
           {{ t('p2p_policy_page.add_academic_term_modal_title') }}
         </h2>
-        <p class="mt-2 text-base text-slate-600 dark:text-slate-400">
-          {{ t('p2p_policy_page.add_academic_term_modal_hint') }}
-        </p>
         <div class="mt-5 space-y-4">
           <div>
             <FieldLabel :label="t('p2p_policy_page.at_field_year')" />

@@ -24,9 +24,6 @@
             {{ badge }}
           </span>
         </div>
-        <p v-if="hint" class="mt-0.5 text-xs leading-snug text-slate-500 dark:text-slate-400">
-          {{ hint }}
-        </p>
       </div>
     </div>
     <Transition

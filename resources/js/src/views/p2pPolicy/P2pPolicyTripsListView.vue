@@ -12,9 +12,6 @@
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white md:text-3xl">
           {{ t('p2p_policy_page.trips_title') }}
         </h1>
-        <p class="max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-          {{ t('p2p_policy_page.trips_subtitle') }}
-        </p>
       </div>
     </header>
 

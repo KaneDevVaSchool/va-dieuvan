@@ -14,7 +14,6 @@
               {{ t('resources.workspace_badge') }}
             </span>
           </div>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('resources.page_subtitle') }}</p>
         </div>
         <div class="relative w-full min-w-0 flex-1 sm:max-w-xs lg:max-w-sm">
           <MagnifyingGlassIcon
@@ -706,7 +705,6 @@
                   class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
                   @click.stop
                 >
-                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
                   <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
                     <li v-for="opt in vehicleColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
                       <input
@@ -947,7 +945,6 @@
                   class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
                   @click.stop
                 >
-                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
                   <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
                     <li v-for="opt in driverColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
                       <input
@@ -1161,7 +1158,6 @@
                   class="absolute right-0 top-[calc(100%+6px)] z-[100] min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
                   @click.stop
                 >
-                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.table_columns_hint') }}</p>
                   <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
                     <li v-for="opt in supplierColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
                       <input
@@ -1861,7 +1857,6 @@
               <h2 id="vehicle-modal-title" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                 {{ vehicleForm.id ? t('resources.vehicle_form_title_edit') : t('resources.vehicle_form_title_add') }}
               </h2>
-              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_modal_subtitle') }}</p>
             </div>
             <button
               type="button"
@@ -2407,9 +2402,6 @@
               <h2 id="provider-modal-title" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
                 {{ providerForm.id ? t('resources.provider_form_title_edit') : t('resources.provider_form_title_add') }}
               </h2>
-              <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                {{ t('resources.provider_form_subtitle') }}
-              </p>
             </div>
             <button
               type="button"

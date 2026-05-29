@@ -6,25 +6,12 @@
           <h1 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
             {{ t('dispatch_settings.title') }}
           </h1>
-          <p class="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-            {{ t('dispatch_settings.lead') }}
-          </p>
         </div>
         <p
           v-if="lastUpdatedLabel"
           class="shrink-0 rounded-lg bg-slate-100/90 px-2.5 py-1 text-[11px] font-medium tabular-nums text-slate-600 dark:bg-slate-800/80 dark:text-slate-400"
         >
           {{ lastUpdatedLabel }}
-        </p>
-      </div>
-
-      <div
-        class="rounded-xl bg-gradient-to-br from-violet-50/70 via-slate-50/50 to-teal-50/40 px-4 py-3.5 text-sm leading-relaxed text-slate-700 shadow-sm ring-1 ring-violet-100/80 dark:from-violet-950/35 dark:via-slate-900/60 dark:to-teal-950/20 dark:text-slate-300 dark:ring-violet-900/40 sm:px-5"
-        role="note"
-      >
-        <p class="m-0 flex gap-2">
-          <InformationCircleIcon class="mt-0.5 h-5 w-5 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden="true" />
-          <span>{{ t('dispatch_settings.page_hint') }}</span>
         </p>
       </div>
     </header>
@@ -230,7 +217,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  InformationCircleIcon,
   CheckCircleIcon,
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentListIcon,

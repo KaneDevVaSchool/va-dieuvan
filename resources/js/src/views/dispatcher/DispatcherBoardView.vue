@@ -7,9 +7,6 @@
           <h1 class="text-lg font-semibold tracking-tight md:text-xl">
             {{ t('dispatcher_board.title') }}
           </h1>
-          <p class="mt-0.5 text-sm text-slate-600">
-            {{ t('dispatcher_board.subtitle') }}
-          </p>
         </div>
         <nav
           class="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-500"

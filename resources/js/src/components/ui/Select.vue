@@ -12,7 +12,6 @@
       <option v-if="placeholder" value="">{{ placeholder }}</option>
       <slot />
     </select>
-    <div v-if="hint" class="mt-1 text-xs text-slate-500">{{ hint }}</div>
     <div v-if="error" class="mt-1 text-xs text-rose-600">{{ error }}</div>
   </label>
 </template>

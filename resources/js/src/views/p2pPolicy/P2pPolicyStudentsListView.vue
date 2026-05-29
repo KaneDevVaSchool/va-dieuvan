@@ -12,9 +12,6 @@
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white md:text-3xl">
           {{ t('p2p_policy_page.students_title') }}
         </h1>
-        <p class="max-w-3xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-          {{ t('p2p_policy_page.students_subtitle') }}
-        </p>
       </div>
     </header>
 
@@ -35,10 +32,6 @@
 
     <Card v-if="canImportExport" :hint="t('p2p_policy_page.tip_section_import_export')">
       <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_import_export') }}</h2>
-      <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">
-        {{ t('p2p_policy_page.import_term_hint') }}
-        <strong class="text-slate-900 dark:text-white">{{ selectedP2pTermLabel }}</strong>
-      </p>
       <div class="flex flex-wrap gap-2">
         <button
           type="button"

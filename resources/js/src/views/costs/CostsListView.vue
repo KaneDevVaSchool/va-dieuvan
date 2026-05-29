@@ -5,9 +5,6 @@
         <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
           {{ t('costs_page.hero_title') }}
         </h1>
-        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-          {{ t('costs_page.hero_subtitle') }}
-        </p>
       </div>
     </div>
 
@@ -108,9 +105,6 @@
               <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                   {{ t('trips_page.filter_show_controls_title') }}
-                </p>
-                <p class="mt-0.5 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                  {{ t('trips_page.filter_show_controls_hint') }}
                 </p>
                 <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
                   <li v-for="fd in filterControlDefs" :key="'costs-vis-' + fd.id" class="flex items-start gap-2">
@@ -691,9 +685,6 @@
               <h2 id="costs-reject-title" class="text-base font-semibold text-rose-950 dark:text-rose-100">
                 {{ t('costs_page.reject_modal_title') }}
               </h2>
-              <p class="mt-0.5 text-xs leading-relaxed text-rose-800/80 dark:text-rose-200/80">
-                {{ t('costs_page.reject_modal_subtitle') }}
-              </p>
               <p
                 class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
               >
@@ -773,9 +764,6 @@
               <h2 id="costs-delete-title" class="text-sm font-semibold text-rose-950 dark:text-rose-100">
                 {{ t('costs_page.delete_modal_title') }}
               </h2>
-              <p class="mt-0.5 text-xs leading-relaxed text-rose-800/80 dark:text-rose-200/80">
-                {{ t('costs_page.delete_modal_subtitle') }}
-              </p>
               <p
                 class="mt-2 rounded-lg border border-rose-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-100"
               >
@@ -830,7 +818,6 @@
         >
           <div class="border-b border-slate-100 px-4 py-3">
             <h2 id="costs-quick-type-title" class="text-sm font-semibold text-slate-900">{{ t('costs_page.quick_type_title') }}</h2>
-            <p class="mt-0.5 text-xs text-slate-500">{{ t('costs_page.quick_type_subtitle') }}</p>
           </div>
           <div class="space-y-3 p-4">
             <label class="block text-xs font-medium text-slate-700">{{ t('costs_page.quick_type_name') }}</label>
