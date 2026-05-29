@@ -50,12 +50,19 @@ export function useExtracurricularInlineStudentCount(requestsRef, row, options) 
     delete errors[id]
     try {
       if (variant() === 'portal') {
-        await patchPortalRecurringInstance(id, { student_count_actual: n })
+        const updated = await patchPortalRecurringInstance(id, { student_count_actual: n })
+        if (updated && typeof updated === 'object') {
+          Object.assign(req, updated)
+        } else {
+          req.student_count_actual = n
+        }
       } else {
-        await patchPassengerCount(id, n)
-      }
-      if (req.student_count_actual !== undefined) {
-        req.student_count_actual = n
+        const updated = await patchPassengerCount(id, n)
+        if (updated && typeof updated === 'object') {
+          Object.assign(req, updated)
+        } else {
+          req.student_count_actual = n
+        }
       }
       showAppSuccess(
         t(`${p}.save_success`, { count: n, id }),

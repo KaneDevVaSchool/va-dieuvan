@@ -91,7 +91,7 @@
           @click="toggleGroup(group.key)"
         >
           {{ t('portal.extracurricular_list.group_summary', { count: group.items.length }) }}
-          <span v-if="group.pendingHs > 0" class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">
+          <span v-if="group.pendingHs > 0" class="ml-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
             {{ group.pendingHs }} {{ t('portal.extracurricular_list.pending_hs_short') }}
           </span>
         </button>
@@ -135,15 +135,15 @@
                 <th>{{ t('portal.extracurricular_table.col_depart') }}</th>
                 <th class="min-w-[10rem]">{{ t('portal.extracurricular_table.col_route') }}</th>
                 <th>{{ t('portal.extracurricular_table.col_status') }}</th>
-                <th class="text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
+                <th class="xc-portal-tabular text-center">{{ t('portal.extracurricular_table.col_plan') }}</th>
                 <th
                   v-if="groupHasFilledTripCost(group)"
                   class="whitespace-nowrap text-right"
                 >
                   {{ t('portal.extracurricular_table.col_trip_cost') }}
                 </th>
-                <th class="min-w-[9rem]">{{ t('portal.extracurricular_table.col_actual') }}</th>
-                <th class="text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
+                <th class="min-w-[11rem]">{{ t('portal.extracurricular_table.col_actual') }}</th>
+                <th class="xc-portal-col-actions text-right">{{ t('portal.extracurricular_table.col_actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -159,12 +159,12 @@
                   i18n-prefix="portal.extracurricular_table"
                 />
               </td>
-              <td class="whitespace-nowrap text-slate-600">{{ departFmt(req) }}</td>
+              <td class="xc-portal-tabular whitespace-nowrap text-slate-600">{{ departFmt(req) }}</td>
               <td class="font-medium text-slate-800">{{ routeLine(req) }}</td>
               <td>
                 <StatusBadge :status="req.status" size="sm" />
               </td>
-              <td class="text-center tabular-nums font-medium text-slate-700">
+              <td class="xc-portal-tabular text-center font-medium text-slate-700">
                 {{ row.planStudentCount(req) ?? '—' }}
               </td>
               <td
@@ -193,7 +193,7 @@
                   @save="saveCount(req)"
                 />
               </td>
-              <td class="text-right">
+              <td class="xc-portal-col-actions text-right">
                 <ExtracurricularRowActions
                   :req="req"
                   variant="portal"

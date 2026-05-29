@@ -367,7 +367,11 @@
         </AppFilterBar>
       </div>
 
-      <PortalRequestSkeleton v-if="loading" class="mt-8" :aria-label="t('portal.loading_requests')" />
+      <PortalRequestSkeleton
+        v-if="loading && !silentListRefresh"
+        class="mt-8"
+        :aria-label="t('portal.loading_requests')"
+      />
 
       <div v-else-if="fetchError" class="mt-8 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
         {{ fetchError }}
@@ -464,7 +468,7 @@
             :requests="items"
             :group-by="scheduleGroupBy"
             :detail-route-name="portalRoutes.detail"
-            @refresh="reloadFromStart"
+            @refresh="reloadSilent"
             @plan-label-saved="onPlanLabelSaved"
           />
           <ExtracurricularRequestsDataTable
@@ -596,6 +600,7 @@ const listViewModes = computed(() => [
 
 // ── List state ───────────────────────────────────────────────
 const loading = ref(true)
+const silentListRefresh = ref(false)
 const fetchError = ref('')
 const items = ref([])
 const pagination = ref(null)
@@ -976,24 +981,35 @@ function listParams(page) {
   }
 }
 
-async function loadPage(page = 1) {
-  loading.value = true
-  fetchError.value = ''
+async function loadPage(page = 1, silent = false) {
+  if (silent) {
+    silentListRefresh.value = true
+  } else {
+    loading.value = true
+    fetchError.value = ''
+  }
   try {
     const data = await listPortalRequests(listParams(page))
     items.value = data.items ?? []
     pagination.value = data.meta ?? null
   } catch (e) {
-    fetchError.value = formatApiError(e, t('portal.load_requests_fail'))
-    items.value = []
-    pagination.value = null
+    if (!silent) {
+      fetchError.value = formatApiError(e, t('portal.load_requests_fail'))
+      items.value = []
+      pagination.value = null
+    }
   } finally {
-    loading.value = false
+    silentListRefresh.value = false
+    if (!silent) loading.value = false
   }
 }
 
 function reloadFromStart() {
   loadPage(1)
+}
+
+function reloadSilent() {
+  loadPage(1, true)
 }
 
 function templateIdFromRequest(req) {
