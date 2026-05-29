@@ -14,8 +14,15 @@ class SyncUserRolesRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'role_ids' => ['required', 'array'],
+            'role_ids' => ['required', 'array', 'size:1'],
             'role_ids.*' => ['integer', 'exists:roles,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'role_ids.size' => 'Mỗi người dùng chỉ được gán đúng 1 vai trò.',
         ];
     }
 }

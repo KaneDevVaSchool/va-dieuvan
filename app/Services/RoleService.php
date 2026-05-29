@@ -15,7 +15,7 @@ class RoleService
         $default = config('role_categories.default_label', 'Other');
 
         return Role::query()
-            ->withCount('permissions')
+            ->withCount(['permissions', 'users'])
             ->orderBy('name')
             ->get()
             ->each(static function (Role $role) use ($labels, $default) {
@@ -32,9 +32,10 @@ class RoleService
     {
         return DB::transaction(function () use ($data) {
             $role = Role::create([
-                'name' => $data['name'],
-                'guard_name' => $data['guard_name'] ?? 'web',
+                'name'         => $data['name'],
+                'guard_name'   => $data['guard_name'] ?? 'web',
                 'display_name' => $data['display_name'] ?? null,
+                'description'  => $data['description'] ?? null,
             ]);
 
             if (! empty($data['permission_ids']) && is_array($data['permission_ids'])) {
@@ -49,8 +50,9 @@ class RoleService
     {
         return DB::transaction(function () use ($role, $data) {
             $role->fill([
-                'name' => $data['name'] ?? $role->name,
+                'name'         => $data['name'] ?? $role->name,
                 'display_name' => array_key_exists('display_name', $data) ? $data['display_name'] : $role->display_name,
+                'description'  => array_key_exists('description', $data) ? $data['description'] : $role->description,
             ]);
             $role->save();
 

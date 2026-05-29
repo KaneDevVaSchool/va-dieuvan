@@ -5,10 +5,36 @@ namespace App\Services\Admin;
 use App\DTOs\Admin\BulkUpdateUserRoleDTO;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Auditing\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 final class UserRoleService
 {
+    /**
+     * Assign exactly one primary role to a user, replacing any existing roles.
+     * Enforces the single-role-per-user constraint at the service layer.
+     */
+    public function syncPrimaryRole(User $user, Role $role, ?int $actorId = null): void
+    {
+        DB::transaction(function () use ($user, $role, $actorId) {
+            $previousRoles = $user->roles->pluck('name')->all();
+
+            $user->syncRoles([$role]);
+            $user->update([
+                'primary_role_name' => $role->name,
+                'primary_role_id'   => $role->id,
+            ]);
+
+            app(AuditLogger::class)->log(
+                actorId: $actorId ?? auth()->id(),
+                event: 'user.role_assigned',
+                auditable: $user,
+                before: ['roles' => $previousRoles],
+                after: ['role' => $role->name],
+            );
+        });
+    }
+
     public function bulkUpdateRoles(BulkUpdateUserRoleDTO $dto): void
     {
         DB::transaction(function () use ($dto) {
@@ -38,9 +64,21 @@ final class UserRoleService
 
             foreach ($users as $user) {
                 if ($dto->action === 'assign') {
-                    $user->assignRole(...$roleList);
+                    // Enforce single-role: replace all existing roles with the assigned one.
+                    // If multiple roles are provided, only the last is kept (bulk UI prevents this).
+                    $user->syncRoles($roleList);
+                    if (count($roleList) === 1) {
+                        $user->update([
+                            'primary_role_name' => $roleList[0]->name,
+                            'primary_role_id'   => $roleList[0]->id,
+                        ]);
+                    }
                 } else {
                     $user->removeRole(...$roleList);
+                    // Clear primary if it was the removed role
+                    if (in_array($user->primary_role_name, $uniqueRoleNames, true)) {
+                        $user->update(['primary_role_name' => null, 'primary_role_id' => null]);
+                    }
                 }
             }
         });
