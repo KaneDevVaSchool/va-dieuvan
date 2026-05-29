@@ -62,6 +62,7 @@ class P2pPolicyTripDepartReminderNotification extends Notification implements Sh
             'url' => $this->driverAppLink ? '/driver/trips/'.$this->tripId : '/trips/'.$this->tripId,
             'leg_label' => $this->legLabel,
             'route_line' => $route,
+            'audience' => 'driver',
         ];
     }
 

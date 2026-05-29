@@ -54,6 +54,7 @@ class DeptApprovalReminderNotification extends Notification implements ShouldQue
             'dispatch_request_id' => $dispatchRequest->id,
             'event' => 'dispatch_request.dept_approval_reminder',
             'url' => '/dept/requests/'.$dispatchRequest->id,
+            'audience' => 'department_head',
         ];
     }
 

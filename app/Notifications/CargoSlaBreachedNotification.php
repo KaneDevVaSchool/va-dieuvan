@@ -37,6 +37,7 @@ class CargoSlaBreachedNotification extends Notification implements ShouldQueue
             'status' => $this->shipment->status,
             'sla_due_at' => $slaDue,
             'url' => '/cargo/'.$this->shipment->id,
+            'audience' => 'dispatcher',
         ];
     }
 }

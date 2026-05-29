@@ -53,7 +53,12 @@
         "trip_type_business": "Công tác",
         "trip_type_cargo": "Hàng hóa",
         "trip_type_unspecified": "Khác",
-        "view_all": "Xem tất cả"
+        "view_all": "Xem tất cả",
+        "tab_all": "Tất cả",
+        "tab_dispatcher": "Điều vận",
+        "tab_driver": "Tài xế",
+        "tab_dept_head": "Phòng ban",
+        "tab_admin": "Hệ thống"
     },
     "nav": {
         "section_ops": "Điều vận",

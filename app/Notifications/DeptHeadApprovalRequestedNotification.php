@@ -54,6 +54,7 @@ class DeptHeadApprovalRequestedNotification extends Notification implements Shou
             'dispatch_request_id' => $dispatchRequest->id,
             'event' => 'dispatch_request.dept_approval_requested',
             'url' => '/dept/requests/'.$dispatchRequest->id,
+            'audience' => 'department_head',
         ];
     }
 

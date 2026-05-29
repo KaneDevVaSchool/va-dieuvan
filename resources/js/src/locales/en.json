@@ -53,7 +53,12 @@
         "trip_type_business": "Business",
         "trip_type_cargo": "Cargo",
         "trip_type_unspecified": "Other",
-        "view_all": "View all"
+        "view_all": "View all",
+        "tab_all": "All",
+        "tab_dispatcher": "Dispatch",
+        "tab_driver": "Drivers",
+        "tab_dept_head": "Departments",
+        "tab_admin": "System"
     },
     "nav": {
         "section_ops": "Dispatch",

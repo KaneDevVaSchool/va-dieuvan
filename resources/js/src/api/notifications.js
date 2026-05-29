@@ -17,7 +17,12 @@ export async function markAllPortalNotificationsRead() {
 }
 
 export async function fetchNotificationInbox(params = {}) {
-  const { data } = await http.get('/notifications/inbox', { params })
+  const { per_page = 20, audience, ...rest } = params
+  const query = { per_page, ...rest }
+  if (audience) {
+    query.audience = audience
+  }
+  const { data } = await http.get('/notifications/inbox', { params: query })
   return data.data
 }
 

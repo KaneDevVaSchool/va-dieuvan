@@ -63,6 +63,7 @@ class NewDispatchRequestNotification extends Notification implements ShouldQueue
             'event' => 'dispatch_request.created',
             'is_urgent' => $this->isUrgent,
             'url' => '/requests/'.$this->dispatchRequestId,
+            'audience' => 'dispatcher',
         ];
     }
 

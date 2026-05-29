@@ -53,6 +53,7 @@ class SignedPaperUploadReminderNotification extends Notification implements Shou
             'dispatch_request_id' => $dispatchRequest->id,
             'event' => 'dispatch_request.signed_paper_upload_reminder',
             'url' => '/portal/requests/'.$dispatchRequest->id.'?tab=docs',
+            'audience' => 'dispatcher',
         ];
     }
 

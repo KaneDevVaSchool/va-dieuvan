@@ -46,6 +46,7 @@ class DispatchPackageSessionsLowBalanceNotification extends Notification impleme
             'total_sessions' => $this->totalSessions,
             'event' => 'dispatch_package.low_sessions_remaining',
             'url' => '/requests',
+            'audience' => 'admin',
         ];
     }
 }

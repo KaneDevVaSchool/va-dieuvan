@@ -52,6 +52,30 @@
         </div>
 
         <div
+          v-if="showAudienceTabs"
+          class="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-100 px-3 py-2 dark:border-slate-800"
+          role="tablist"
+          :aria-label="t('notify.title')"
+        >
+          <button
+            v-for="tab in audienceTabs"
+            :key="tab.key"
+            type="button"
+            role="tab"
+            :aria-selected="notifStore.activeTab === tab.key"
+            class="shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold transition"
+            :class="
+              notifStore.activeTab === tab.key
+                ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-200'
+                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+            "
+            @click="notifStore.setTab(tab.key)"
+          >
+            {{ t(tab.labelKey) }}
+          </button>
+        </div>
+
+        <div
           v-if="isDriverApp"
           class="border-b border-slate-100 px-4 py-4 dark:border-slate-800"
         >
@@ -263,6 +287,21 @@ const { isVertical } = useSidebarLayout()
 const panelJustifyClass = computed(() =>
   isVertical.value ? 'md:justify-start' : 'sm:justify-end',
 )
+
+const audienceTabs = [
+  { key: 'all', labelKey: 'notify.tab_all' },
+  { key: 'dispatcher', labelKey: 'notify.tab_dispatcher' },
+  { key: 'driver', labelKey: 'notify.tab_driver' },
+  { key: 'department_head', labelKey: 'notify.tab_dept_head' },
+  { key: 'admin', labelKey: 'notify.tab_admin' },
+]
+
+const showAudienceTabs = computed(() => {
+  const u = auth.user
+  if (!u || isDriverApp.value) return false
+  if (u.is_superadmin) return true
+  return (auth.roleNames ?? []).some((name) => name === 'admin')
+})
 
 const notificationPermission = ref('default')
 const pushLoading = ref(false)

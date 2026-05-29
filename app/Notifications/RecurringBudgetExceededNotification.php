@@ -53,6 +53,7 @@ class RecurringBudgetExceededNotification extends Notification implements Should
             'monthly_budget_formatted' => $budgetFmt,
             'event' => 'dispatch_package.monthly_budget_exceeded',
             'url' => '/requests',
+            'audience' => 'admin',
         ];
     }
 }

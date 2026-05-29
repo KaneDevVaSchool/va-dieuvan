@@ -131,6 +131,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
   const panelOpen = ref(false)
   const items = ref([])
   const loading = ref(false)
+  const activeTab = ref('all')
   const lastUnread = ref(0)
   const navBadges = ref({})
   let badgePrimed = false
@@ -176,15 +177,25 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     panelOpen.value = false
   }
 
-  async function loadInbox() {
+  async function loadInbox(tab = activeTab.value) {
     loading.value = true
     try {
-      const res = await fetchNotificationInbox({ per_page: 30 })
+      const audience = tab && tab !== 'all' ? tab : undefined
+      const res = await fetchNotificationInbox({ per_page: 30, audience })
       items.value = res?.items ?? []
     } catch {
       items.value = []
     } finally {
       loading.value = false
+    }
+  }
+
+  function setTab(tab, options = {}) {
+    const reload = options.reload !== false
+    const next = tab && typeof tab === 'string' ? tab : 'all'
+    activeTab.value = next
+    if (reload) {
+      void loadInbox(next)
     }
   }
 
@@ -418,6 +429,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     panelOpen,
     items,
     loading,
+    activeTab,
     lastUnread,
     navBadges,
     soundEnabled,
@@ -428,6 +440,7 @@ export const useNotificationStore = defineStore('notificationCenter', () => {
     openPanel,
     closePanel,
     loadInbox,
+    setTab,
     onReadOne,
     onReadAll,
     refreshBadges,

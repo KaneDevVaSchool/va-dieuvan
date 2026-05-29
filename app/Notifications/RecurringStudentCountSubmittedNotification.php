@@ -60,6 +60,7 @@ class RecurringStudentCountSubmittedNotification extends Notification implements
             'event' => 'dispatch_request.student_count_submitted',
             'student_count_actual' => $this->studentCountActual,
             'url' => '/requests/'.$this->dispatchRequestId,
+            'audience' => 'dispatcher',
         ];
     }
 }

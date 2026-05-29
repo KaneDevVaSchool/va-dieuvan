@@ -65,6 +65,7 @@ class DeptHeadDecisionNotification extends Notification implements ShouldQueue, 
                 ? 'dispatch_request.dept_rejected'
                 : 'dispatch_request.dept_approved',
             'url' => '/requests/'.$dispatchRequest->id,
+            'audience' => 'department_head',
         ];
     }
 
