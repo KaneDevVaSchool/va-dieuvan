@@ -219,43 +219,12 @@
         </div>
       </div>
 
-      <section id="portal-docs" v-if="!showExtracurricularBm03 && showPortalDocs" class="mt-8 scroll-mt-6">
-        <h2 class="mb-3 text-sm font-bold text-slate-900">{{ t('request_detail.tab_docs') }}</h2>
-        <RequestDocsPanel
-          :req="req"
-          :request-id="req.id"
-          :docs-progress-steps="docsProgressSteps"
-          :docs-checklist="docsChecklist"
-          :general-attachments="generalAttachments"
-          :signed-paper-attachments="signedPaperAttachments"
-          :paper-scans="paperScans"
-          :signed-upload-err="signedUploadErr"
-          :can-upload-signed="showSignedSection"
-          :upload-signed-fn="uploadSignedPaper"
-          :signed-upload-key="`portal-signed-${req.id}-${uploadKeySeed}`"
-          :format-date-time="fmtPortalDate"
-          @preview="openAttachmentPreview"
-          @download="downloadAttachment"
-          @uploaded-signed="onSignedUploaded"
-        />
-        <template v-if="!showSignedSection">
-          <PortalStatusHint class="mt-4" :req="req" />
-          <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ t('portal.signed_gate_hint') }}</p>
-        </template>
-      </section>
-
       <div v-if="!showExtracurricularBm03" class="mt-6">
         <p class="text-sm font-medium text-slate-500 sm:text-base">
           {{ t('portal.detail_help_footer') }}
         </p>
       </div>
 
-      <AttachmentPreviewModal
-        :open="previewOpen"
-        :attachment="previewAttachment"
-        :download-path="portalAttachmentDownloadPath"
-        @close="closeAttachmentPreview"
-      />
     </template>
   </div>
 </template>
@@ -268,12 +237,10 @@ import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ClipboardDocumentIcon, Docume
 import { saveAs } from 'file-saver'
 import {
   cloneDispatchRequest,
-  downloadPortalAttachmentBlob,
   exportPortalDispatchRequestPdf,
   getPortalDispatchRequest,
   patchPassengerCount,
   submitStudentCount,
-  uploadPortalSignedPaper,
 } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import { useAuthStore } from '../../store'
@@ -288,10 +255,6 @@ import { usePortalDetailPoll } from '../../composables/usePortalDetailPoll.js'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import PortalSuccessCard from '../../components/portal/PortalSuccessCard.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
-import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
-import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
-import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
-import { useDispatchRequestDocs } from '../../composables/useDispatchRequestDocs'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
@@ -318,8 +281,6 @@ const pdfBusy = ref(false)
 const pdfBlobUrl = ref('')
 const pdfPreviewLoading = ref(false)
 const pdfPreviewError = ref('')
-const signedUploadErr = ref('')
-const uploadKeySeed = ref(0)
 const welcomeOpen = ref(false)
 const pollingRefreshing = ref(false)
 const copyRejectionFeedback = ref(false)
@@ -401,10 +362,6 @@ onMounted(async () => {
   }
   if (String(route.query.operate) === '1' && showExtracurricularInstanceEdit.value) {
     scrollToBm03Form()
-  }
-  if (route.query.tab === 'docs') {
-    await nextTick()
-    document.getElementById('portal-docs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 })
 
@@ -605,50 +562,6 @@ const tripTypeLabel = computed(() => {
 
 const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
 
-const reqForDocs = computed(() => req.value)
-const {
-  signedPaperAttachments,
-  paperScans,
-  generalAttachments,
-  docsProgressSteps,
-  docsChecklist,
-} = useDispatchRequestDocs(reqForDocs)
-
-const showSignedSection = computed(() => req.value?.status === 'approved')
-
-const showPortalDocs = computed(() => {
-  const r = req.value
-  if (!r) return false
-  return r.status === 'approved' || (r.attachments?.length ?? 0) > 0
-})
-
-const previewOpen = ref(false)
-const previewAttachment = ref(null)
-
-function fmtPortalDate(iso) {
-  if (!iso) return '—'
-  try {
-    return new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
-  } catch {
-    return String(iso)
-  }
-}
-
-function portalAttachmentDownloadPath(attachmentId) {
-  const rid = req.value?.id
-  return `/portal/dispatch-requests/${rid}/attachments/${attachmentId}/download`
-}
-
-function openAttachmentPreview(a) {
-  previewAttachment.value = a
-  previewOpen.value = true
-}
-
-function closeAttachmentPreview() {
-  previewOpen.value = false
-  previewAttachment.value = null
-}
-
 const pdfIframeSrc = computed(() => {
   const url = pdfBlobUrl.value
   if (!url) return ''
@@ -711,23 +624,4 @@ async function downloadPdf() {
   }
 }
 
-function uploadSignedPaper(file, onProgress) {
-  return uploadPortalSignedPaper(Number(route.params.id), file, onProgress)
-}
-
-async function downloadAttachment(att) {
-  signedUploadErr.value = ''
-  try {
-    const blob = await downloadPortalAttachmentBlob(Number(route.params.id), att.id)
-    saveAs(blob, att.original_name || `attachment-${att.id}`)
-  } catch (e) {
-    signedUploadErr.value = formatApiError(e, t('portal.signed_download_fail'))
-  }
-}
-
-async function onSignedUploaded() {
-  signedUploadErr.value = ''
-  uploadKeySeed.value += 1
-  await load()
-}
 </script>

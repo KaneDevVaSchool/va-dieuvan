@@ -480,6 +480,7 @@
               />
 
               <RequestAuditTimeline
+                v-if="!isDeptRequestDetailRoute"
                 :items="auditLogs"
                 :loading="auditLogsLoading"
                 :error="auditLogsErr"
@@ -1618,7 +1619,9 @@ async function load() {
     passengerPatchErr.value = ''
     const tabQ = tabFromRouteQuery()
     if (tabQ) activeTab.value = tabQ
-    void loadAuditLogs()
+    if (!isDeptRequestDetailRoute.value) {
+      void loadAuditLogs()
+    }
   } finally {
     loading.value = false
   }
