@@ -25,11 +25,11 @@
         class="xl:col-span-7 space-y-6"
         @submit.prevent="save"
       >
-        <Card :hint="t('p2p_policy_page.tip_section_basic')">
+        <Card>
           <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_basic') }}</h2>
           <div class="space-y-5">
             <div>
-              <FieldLabel :label="t('p2p_policy_page.field_academic_term')" :hint="t('p2p_policy_page.tip_academic_term')" />
+              <FieldLabel :label="t('p2p_policy_page.field_academic_term')" />
               <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
                 <select
                   v-model="form.academic_term_id"
@@ -50,24 +50,28 @@
               </div>
             </div>
 
-            <div class="grid gap-5 sm:grid-cols-2">
-              <div>
-                <FieldLabel :label="t('p2p_policy_page.field_operating_from')" :hint="t('p2p_policy_page.tip_operating_dates')" />
-                <input v-model="form.operating_from" type="date" required class="p2p-term-input mt-2 w-full" />
-              </div>
-              <div>
-                <FieldLabel :label="t('p2p_policy_page.field_operating_to')" :hint="t('p2p_policy_page.tip_operating_dates')" />
-                <input v-model="form.operating_to" type="date" required class="p2p-term-input mt-2 w-full" />
+            <div>
+              <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.field_operating_dates_hint') }}</p>
+              <div class="mt-2 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <FieldLabel :label="t('p2p_policy_page.field_operating_from')" />
+                  <input v-model="form.operating_from" type="date" required class="p2p-term-input mt-2 w-full" />
+                </div>
+                <div>
+                  <FieldLabel :label="t('p2p_policy_page.field_operating_to')" />
+                  <input v-model="form.operating_to" type="date" required class="p2p-term-input mt-2 w-full" />
+                </div>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card :hint="t('p2p_policy_page.tip_section_schedule')">
-          <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_schedule') }}</h2>
+        <Card>
+          <h2 class="mb-1 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_schedule') }}</h2>
+          <p class="mb-4 text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.section_schedule_hint') }}</p>
           <div class="grid gap-5 lg:grid-cols-2">
             <div>
-              <FieldLabel :label="t('p2p_policy_page.field_morning')" :hint="t('p2p_policy_page.tip_morning')" />
+              <FieldLabel :label="t('p2p_policy_page.field_morning')" />
               <div class="mt-2 flex gap-3">
                 <input v-model="form.default_morning_start" type="time" class="p2p-term-input w-full" />
                 <span class="self-center text-slate-400">—</span>
@@ -75,7 +79,7 @@
               </div>
             </div>
             <div>
-              <FieldLabel :label="t('p2p_policy_page.field_afternoon')" :hint="t('p2p_policy_page.tip_afternoon')" />
+              <FieldLabel :label="t('p2p_policy_page.field_afternoon')" />
               <div class="mt-2 flex gap-3">
                 <input v-model="form.default_afternoon_start" type="time" class="p2p-term-input w-full" />
                 <span class="self-center text-slate-400">—</span>
@@ -87,8 +91,8 @@
           <label class="mt-5 flex cursor-pointer items-start gap-3 text-base">
             <input v-model="includeWeekend" type="checkbox" class="mt-1 h-5 w-5 rounded border-slate-300" />
             <span class="flex-1">
-              {{ t('p2p_policy_page.include_weekend') }}
-              <FieldHintInline class="ml-1 align-middle" :hint="t('p2p_policy_page.tip_weekend')" />
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ t('p2p_policy_page.include_weekend') }}</span>
+              <span class="mt-0.5 block text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.include_weekend_hint') }}</span>
             </span>
           </label>
         </Card>
@@ -115,16 +119,16 @@
             {{ t('p2p_policy_page.back_to_hub') }}
           </RouterLink>
         </div>
+        <p v-if="saveSuccess" class="text-sm font-medium text-teal-700 dark:text-teal-400" role="status">
+          {{ t('p2p_policy_page.save_success') }}
+        </p>
+        <p v-if="saveError" class="text-sm font-medium text-rose-600 dark:text-rose-400" role="alert">
+          {{ saveError }}
+        </p>
       </form>
 
       <section v-if="termId" class="xl:col-span-5 space-y-5">
-        <div
-          class="rounded-xl border border-sky-200/80 bg-sky-50/90 px-4 py-3 text-sm leading-relaxed text-sky-950 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-100"
-        >
-          {{ t('p2p_policy_page.exclusion_banner') }}
-        </div>
-
-        <Card :hint="t('p2p_policy_page.tip_fixed_holidays')">
+        <Card>
           <h2 class="mb-1 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
             <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950/50">
               <CalendarDaysIcon class="h-5 w-5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
@@ -161,7 +165,7 @@
           </p>
         </Card>
 
-        <Card :hint="t('p2p_policy_page.tip_holidays')">
+        <Card>
           <h2 class="mb-1 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
             <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/50">
               <StarIcon class="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
@@ -200,7 +204,7 @@
           <p v-else class="mt-4 text-base text-slate-500">{{ t('p2p_policy_page.holidays_empty') }}</p>
         </Card>
 
-        <Card :hint="t('p2p_policy_page.tip_skip_dates')">
+        <Card>
           <h2 class="mb-1 flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
             <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950/50">
               <NoSymbolIcon class="h-5 w-5 text-violet-600 dark:text-violet-400" aria-hidden="true" />
@@ -241,11 +245,18 @@
 
         <button
           type="button"
-          class="w-full rounded-xl bg-slate-800 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-slate-900 sm:w-auto"
+          class="w-full rounded-xl bg-slate-800 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-slate-900 disabled:opacity-50 sm:w-auto"
+          :disabled="savingCalendar"
           @click="saveCalendar"
         >
           {{ t('p2p_policy_page.save_calendar') }}
         </button>
+        <p v-if="calendarSuccess" class="text-sm font-medium text-teal-700 dark:text-teal-400" role="status">
+          {{ t('p2p_policy_page.calendar_success') }}
+        </p>
+        <p v-if="calendarError" class="text-sm font-medium text-rose-600 dark:text-rose-400" role="alert">
+          {{ calendarError }}
+        </p>
       </section>
 
       <section v-else class="xl:col-span-5">
@@ -268,12 +279,12 @@
         </p>
         <div class="mt-5 space-y-4">
           <div>
-            <FieldLabel :label="t('p2p_policy_page.at_field_year')" :hint="t('p2p_policy_page.at_tip_year')" />
+            <FieldLabel :label="t('p2p_policy_page.at_field_year')" />
             <input v-model="academicForm.academic_year" required placeholder="2025-2026" class="p2p-term-input mt-2 w-full" />
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
-              <FieldLabel :label="t('p2p_policy_page.at_field_code')" :hint="t('p2p_policy_page.at_tip_code')" />
+              <FieldLabel :label="t('p2p_policy_page.at_field_code')" />
               <input v-model="academicForm.term_code" required placeholder="HK1" class="p2p-term-input mt-2 w-full" />
             </div>
             <div>
@@ -315,7 +326,6 @@ import { ArrowLeftIcon, CalendarDaysIcon, NoSymbolIcon, StarIcon } from '@heroic
 import { computed, defineComponent, h, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { InformationCircleIcon } from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
 import P2pPolicyWorkflowBar from '../../components/p2pPolicy/P2pPolicyWorkflowBar.vue'
 import { p2pStepTo, p2pWorkflowQuery, resolveP2pTermIdFromRoute } from '../../composables/useP2pPolicyWorkflow'
@@ -329,37 +339,14 @@ import {
   updateP2pPolicyTerm,
 } from '../../api/p2pPolicy'
 
-const FieldHintInline = defineComponent({
-  name: 'FieldHintInline',
-  props: { hint: { type: String, required: true } },
-  setup(props) {
-    return () =>
-      h(
-        'span',
-        {
-          class: 'inline-flex cursor-help align-middle text-slate-400 hover:text-teal-600 dark:hover:text-teal-400',
-          title: props.hint,
-          tabindex: 0,
-          role: 'img',
-          'aria-label': props.hint,
-        },
-        [h(InformationCircleIcon, { class: 'h-5 w-5', 'aria-hidden': 'true' })],
-      )
-  },
-})
-
 const FieldLabel = defineComponent({
   name: 'FieldLabel',
   props: {
     label: { type: String, required: true },
-    hint: { type: String, default: '' },
   },
   setup(props) {
     return () =>
-      h('div', { class: 'flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-slate-200' }, [
-        h('span', props.label),
-        props.hint ? h(FieldHintInline, { hint: props.hint }) : null,
-      ])
+      h('div', { class: 'text-base font-semibold text-slate-800 dark:text-slate-200' }, [h('span', props.label)])
   },
 })
 
@@ -370,6 +357,11 @@ const router = useRouter()
 const academicTerms = ref([])
 const termId = computed(() => resolveP2pTermIdFromRoute(route))
 const saving = ref(false)
+const saveError = ref('')
+const saveSuccess = ref(false)
+const savingCalendar = ref(false)
+const calendarError = ref('')
+const calendarSuccess = ref(false)
 const includeWeekend = ref(false)
 const excludeFixedHolidays = ref(true)
 
@@ -446,8 +438,39 @@ async function load() {
 
 async function save() {
   saving.value = true
+  saveError.value = ''
+  saveSuccess.value = false
   form.weekdays_mask = includeWeekend.value ? 127 : 31
-  const payload = { ...form, exclude_fixed_holidays: excludeFixedHolidays.value }
+
+  if (form.operating_from && form.operating_to && form.operating_to < form.operating_from) {
+    saveError.value = t('p2p_policy_page.date_range_error')
+    saving.value = false
+    return
+  }
+  if (
+    form.default_morning_start &&
+    form.default_morning_end &&
+    form.default_morning_end <= form.default_morning_start
+  ) {
+    saveError.value = t('p2p_policy_page.time_range_morning_error')
+    saving.value = false
+    return
+  }
+  if (
+    form.default_afternoon_start &&
+    form.default_afternoon_end &&
+    form.default_afternoon_end <= form.default_afternoon_start
+  ) {
+    saveError.value = t('p2p_policy_page.time_range_afternoon_error')
+    saving.value = false
+    return
+  }
+
+  const { academic_term_id: _academicId, ...updateFields } = form
+  const payload = termId.value
+    ? { ...updateFields, exclude_fixed_holidays: excludeFixedHolidays.value }
+    : { ...form, exclude_fixed_holidays: excludeFixedHolidays.value }
+
   try {
     if (termId.value) {
       await updateP2pPolicyTerm(termId.value, payload)
@@ -455,7 +478,15 @@ async function save() {
       const created = await createP2pPolicyTerm(payload)
       await router.replace({ query: p2pWorkflowQuery(created.id, { id: String(created.id) }) })
     }
+    saveSuccess.value = true
     await load()
+  } catch (e) {
+    const status = e?.response?.status
+    if (status === 409) {
+      saveError.value = t('p2p_policy_page.save_error_not_draft')
+    } else {
+      saveError.value = e?.response?.data?.message ?? t('p2p_policy_page.save_error')
+    }
   } finally {
     saving.value = false
   }
@@ -505,11 +536,26 @@ function removeSkipDate(index) {
 
 async function saveCalendar() {
   if (!termId.value) return
-  await syncP2pPolicyTermCalendar(termId.value, {
-    holidays: holidays.value,
-    skip_dates: skipDates.value,
-  })
-  await load()
+  savingCalendar.value = true
+  calendarError.value = ''
+  calendarSuccess.value = false
+  try {
+    await syncP2pPolicyTermCalendar(termId.value, {
+      holidays: holidays.value,
+      skip_dates: skipDates.value,
+    })
+    calendarSuccess.value = true
+    await load()
+  } catch (e) {
+    const status = e?.response?.status
+    if (status === 409) {
+      calendarError.value = t('p2p_policy_page.save_error_not_draft')
+    } else {
+      calendarError.value = e?.response?.data?.message ?? t('p2p_policy_page.calendar_error')
+    }
+  } finally {
+    savingCalendar.value = false
+  }
 }
 
 function openAcademicModal() {

@@ -239,12 +239,18 @@ async function refreshAllQuiet() {
   await Promise.all([loadSummary(true), loadRecent(true)])
 }
 
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') refreshAllQuiet()
+}
+
 onMounted(async () => {
   await Promise.all([loadSummary(false), loadRecent(false)])
-  pollTimer = window.setInterval(refreshAllQuiet, 60_000)
+  pollTimer = window.setInterval(refreshAllQuiet, 30_000)
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 
 onBeforeUnmount(() => {
   if (pollTimer) window.clearInterval(pollTimer)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>
