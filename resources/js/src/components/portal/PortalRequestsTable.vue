@@ -13,14 +13,42 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
-          <tr v-for="req in requests" :key="req.id" class="group/row transition hover:bg-indigo-50/40">
-            <td class="whitespace-nowrap px-4 py-3 font-mono text-sm font-semibold text-slate-900">#{{ req.id }}</td>
+          <tr
+            v-for="req in requests"
+            :key="req.id"
+            class="group/row transition hover:bg-indigo-50/40"
+            :class="isPendingApproval(req) ? 'bg-amber-50/40' : ''"
+          >
+            <td class="whitespace-nowrap px-4 py-3">
+              <div class="group/id relative inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-slate-900">
+                <BoltIcon
+                  v-if="req.is_urgent"
+                  class="h-4 w-4 shrink-0 text-amber-500"
+                  :title="t('portal.badge_urgent')"
+                  aria-hidden="true"
+                />
+                <span>#{{ req.id }}</span>
+                <div
+                  class="pointer-events-none absolute left-0 top-full z-20 mt-1 hidden w-64 rounded-xl border border-slate-200 bg-white p-3 text-left text-xs font-normal normal-case text-slate-600 shadow-lg group-hover/id:block group-focus-within/id:block"
+                  role="tooltip"
+                >
+                  <p class="font-medium text-slate-800">{{ routeLine(req) }}</p>
+                  <p class="mt-1">
+                    <StatusBadge :status="req.status" size="sm" />
+                  </p>
+                </div>
+              </div>
+            </td>
             <td class="px-4 py-3">
               <p class="font-medium text-slate-800">{{ routeLine(req) }}</p>
               <p v-if="tripTypeLabel(req)" class="mt-0.5 text-xs text-slate-500">{{ tripTypeLabel(req) }}</p>
             </td>
-            <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-600">
-              {{ timeCell(req) }}
+            <td class="px-4 py-3">
+              <p v-if="departFmt(req)" class="whitespace-nowrap text-xs font-medium text-slate-700">{{ departFmt(req) }}</p>
+              <p v-else class="text-xs text-slate-400">—</p>
+              <p v-if="req.arrive_by" class="mt-0.5 whitespace-nowrap text-[11px] text-slate-400">
+                {{ arriveFmt(req) }}
+              </p>
             </td>
             <td class="px-4 py-3">
               <StatusBadge :status="req.status" size="sm" />
@@ -28,7 +56,7 @@
             <td class="px-4 py-3 text-right">
               <RouterLink
                 :to="{ name: 'portalRequestDetail', params: { id: String(req.id) } }"
-                class="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl text-slate-400 transition group-hover/row:bg-indigo-50 group-hover/row:text-indigo-500 hover:text-indigo-600"
+                class="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl text-slate-400 transition group-hover/row:bg-indigo-50 group-hover/row:text-indigo-500 hover:text-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                 :aria-label="t('portal.open_request', { id: req.id })"
               >
                 <ChevronRightIcon class="h-5 w-5" />
@@ -45,16 +73,33 @@
         v-for="req in requests"
         :key="req.id"
         :to="{ name: 'portalRequestDetail', params: { id: String(req.id) } }"
-        class="group/card flex gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-200/80 hover:bg-indigo-50/30"
+        class="group/card flex gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-200/80 hover:bg-indigo-50/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        :class="isPendingApproval(req) ? 'border-amber-200/80 bg-amber-50/30' : ''"
       >
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2">
-            <span class="font-mono text-sm font-semibold text-slate-900">#{{ req.id }}</span>
+            <span class="inline-flex items-center gap-1 font-mono text-sm font-semibold text-slate-900">
+              <BoltIcon
+                v-if="req.is_urgent"
+                class="h-4 w-4 shrink-0 text-amber-500"
+                aria-hidden="true"
+              />
+              #{{ req.id }}
+            </span>
+            <span
+              v-if="tripTypeLabel(req)"
+              class="inline-flex max-w-[10rem] truncate rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
+            >
+              {{ tripTypeLabel(req) }}
+            </span>
             <StatusBadge :status="req.status" size="sm" />
           </div>
           <p class="mt-2 text-sm font-medium text-slate-800">{{ routeLine(req) }}</p>
-          <p v-if="tripTypeLabel(req)" class="mt-1 text-xs text-slate-500">{{ tripTypeLabel(req) }}</p>
-          <p class="mt-2 text-xs text-slate-600">{{ timeCell(req) }}</p>
+          <div class="mt-2">
+            <p v-if="departFmt(req)" class="text-xs font-medium text-slate-700">{{ departFmt(req) }}</p>
+            <p v-else class="text-xs text-slate-400">—</p>
+            <p v-if="req.arrive_by" class="mt-0.5 text-[11px] text-slate-400">{{ arriveFmt(req) }}</p>
+          </div>
         </div>
         <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400 transition group-hover/card:text-indigo-500" aria-hidden="true" />
       </RouterLink>
@@ -66,8 +111,9 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
-import { ChevronRightIcon } from '@heroicons/vue/24/outline'
+import { BoltIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
+import { formatPortalDepartLine, formatPortalTimeHm } from '../../util/portalDatetime.js'
 
 defineProps({
   requests: { type: Array, required: true },
@@ -75,7 +121,7 @@ defineProps({
 
 const { t, locale } = useI18n()
 
-const localeTag = computed(() => (locale.value === 'vi' ? 'vi-VN' : 'en-US'))
+const localeKey = computed(() => (locale.value === 'en' ? 'en' : 'vi'))
 
 function routeLine(req) {
   const o = (req.origin || '').trim()
@@ -90,41 +136,18 @@ function tripTypeLabel(req) {
   return t(`dispatch_wizard.trip_short.${tt}`)
 }
 
+function isPendingApproval(req) {
+  const s = req?.status
+  return s === 'pending' || s === 'price_filled'
+}
+
 function departFmt(req) {
-  const raw = req.depart_at
-  if (!raw) return ''
-  try {
-    const d = new Date(raw)
-    const opts = {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    }
-    if (d.getFullYear() !== new Date().getFullYear()) {
-      opts.year = 'numeric'
-    }
-    return d.toLocaleString(localeTag.value, opts)
-  } catch {
-    return ''
-  }
+  return formatPortalDepartLine(req.depart_at, localeKey.value)
 }
 
 function arriveFmt(req) {
-  const raw = req.arrive_by
-  if (!raw) return ''
-  try {
-    const dArrive = new Date(raw)
-    return dArrive.toLocaleString(localeTag.value, { hour: '2-digit', minute: '2-digit' })
-  } catch {
-    return ''
-  }
-}
-
-function timeCell(req) {
-  const dep = departFmt(req)
-  const arr = arriveFmt(req)
-  if (dep && arr) return `${dep} — ${arr}`
-  return dep || arr || '—'
+  const hm = formatPortalTimeHm(req.arrive_by)
+  if (!hm) return ''
+  return t('portal.time_arrive_by', { time: hm })
 }
 </script>

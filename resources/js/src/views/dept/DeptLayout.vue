@@ -28,28 +28,7 @@
           class="flex w-full min-w-0 items-center gap-2"
           :class="compactNav ? 'flex-col md:flex-col' : 'flex-row justify-between'"
         >
-          <RouterLink
-            :to="{ name: 'deptDashboard' }"
-            class="flex min-w-0 flex-1 items-center gap-2 rounded-lg outline-none ring-white/30 transition hover:bg-white/10 focus-visible:ring-2"
-            :class="compactNav ? 'justify-center p-1 md:justify-center' : 'gap-3 p-0.5'"
-            @click="closeMobileDrawer"
-          >
-            <img
-              :src="logoUrl"
-              alt=""
-              width="36"
-              height="36"
-              class="shrink-0 rounded-full object-contain p-0.5 ring-2 ring-white/30"
-              :class="compactNav ? 'h-8 w-8' : 'h-9 w-9 md:h-10 md:w-10'"
-              decoding="async"
-            />
-            <div v-if="!compactNav" class="min-w-0 flex-1">
-              <p class="truncate text-[10px] font-semibold uppercase tracking-wide text-white/70">
-                {{ t('app.title') }}
-              </p>
-              <p class="truncate text-xs font-bold leading-tight md:text-sm">{{ t('portal.nav_title') }}</p>
-            </div>
-          </RouterLink>
+
 
           <div class="flex shrink-0 items-center gap-1">
             <button

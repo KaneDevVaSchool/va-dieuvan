@@ -13,8 +13,8 @@
           </div>
           <div class="h-4 max-w-full rounded-md bg-slate-200 sm:max-w-md" />
           <div class="flex flex-wrap gap-2">
+            <div class="h-3 w-28 rounded bg-slate-100" />
             <div class="h-3 w-20 rounded bg-slate-100" />
-            <div class="h-3 w-32 rounded bg-slate-100" />
           </div>
         </div>
         <div class="mt-1 h-5 w-5 shrink-0 rounded bg-slate-200" />

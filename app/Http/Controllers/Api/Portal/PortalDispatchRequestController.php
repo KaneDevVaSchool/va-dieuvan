@@ -60,11 +60,23 @@ class PortalDispatchRequestController extends Controller
 
         $rejected = (clone $base)->where('status', 'rejected')->count();
 
+        $startPrevMonth = now()->subMonth()->startOfMonth();
+        $endPrevMonth = now()->subMonth()->endOfMonth();
+        $completedPrevMonth = (clone $base)->where('status', 'approved')
+            ->whereHas('trip', function ($tq) use ($startPrevMonth, $endPrevMonth) {
+                $tq->where('status', 'completed')
+                    ->whereNotNull('completed_at')
+                    ->whereBetween('completed_at', [$startPrevMonth, $endPrevMonth]);
+            })->count();
+
         return $this->ok([
             'processing' => $processing,
             'pending' => $pendingApproval,
             'completed_this_month' => $completedThisMonth,
             'rejected' => $rejected,
+            'trends' => [
+                'completed_this_month' => $completedThisMonth - $completedPrevMonth,
+            ],
         ]);
     }
 
