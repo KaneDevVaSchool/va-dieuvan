@@ -85,7 +85,7 @@ class PortalDispatchRequestController extends Controller
         $data = $request->validated();
         $user = $request->user();
 
-        $perPage = isset($data['per_page']) ? max(1, min(50, (int) $data['per_page'])) : 10;
+        $perPage = isset($data['per_page']) ? max(1, min(500, (int) $data['per_page'])) : 10;
 
         $sort = isset($data['sort']) ? (string) $data['sort'] : 'depart_desc';
 

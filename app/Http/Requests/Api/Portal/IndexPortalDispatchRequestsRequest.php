@@ -39,7 +39,7 @@ class IndexPortalDispatchRequestsRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:500'],
             'page' => ['sometimes', 'integer', 'min:1'],
             'q' => ['sometimes', 'string', 'max:120'],
             'sort' => ['sometimes', 'string', 'in:depart_desc,depart_asc,created_desc,created_asc'],
