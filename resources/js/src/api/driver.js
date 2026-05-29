@@ -24,6 +24,12 @@ export async function listDriverTrips(params = {}) {
   return data.data
 }
 
+/** Học sinh trên tuyến gắn chuyến D2D (khi có RouteRun). */
+export async function listDriverTripPolicyStudents(tripId) {
+  const { data } = await http.get(`/driver/trips/${tripId}/policy-students`)
+  return data.data?.students ?? []
+}
+
 /**
  * Các trang 2…lastPage (per_page cố định), gom song song theo batch.
  * @param {Record<string, unknown>} restParams date_from, date_to, status, …

@@ -4,7 +4,7 @@
       <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
         <h2 class="flex min-w-0 items-center gap-2 text-base font-semibold text-driver-ink sm:text-lg">
           <UserGroupIcon class="h-5 w-5 shrink-0 text-driver-muted/80" aria-hidden="true" />
-          {{ t('driver_trip_detail.students_title', { n: displayedPaxList.length }) }}
+          {{ t('driver_trip_detail.students_title', { n: paxSectionTotal }) }}
         </h2>
         <div class="flex shrink-0 gap-2">
           <button
@@ -28,7 +28,7 @@
         </div>
       </div>
 
-      <ul class="divide-y divide-white/10">
+      <ul class="max-h-[min(52vh,28rem)] divide-y divide-white/10 overflow-y-auto overscroll-y-contain">
         <li
           v-for="p in displayedPaxList"
           :key="p._origIndex"
@@ -140,7 +140,7 @@
         {{
           paxKind === 'cargo'
             ? t('driver_trip_detail.cargo_list_title', { n: paxList.length })
-            : t('driver_trip_detail.students_title', { n: paxList.length })
+            : t('driver_trip_detail.students_title', { n: paxSectionTotal })
         }}
       </h2>
     </div>
@@ -182,6 +182,7 @@ defineProps({
   paxKind: { type: String, required: true },
   paxList: { type: Array, default: () => [] },
   displayedPaxList: { type: Array, default: () => [] },
+  paxSectionTotal: { type: Number, default: 0 },
   studentFilterStatus: { type: String, default: 'all' },
   expandedStudentIdx: {
     default: null,

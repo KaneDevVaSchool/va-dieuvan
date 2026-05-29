@@ -15,6 +15,9 @@ import {
   isSameVnCalendarDayAsNow,
   parseTripInstant,
 } from '../util/tripDatetime'
+import { dispatchRequestEffectivePassengerCount } from '../util/dispatchRequestPassengers'
+import { buildDriverTripPaxList, mapPolicyStudentsToDriverPax } from '../util/buildDriverTripPaxList'
+import { listDriverTripPolicyStudents } from '../api/driver'
 
 const PASSENGER_PICKUP_EVENT = 'passenger_pickup'
 
@@ -29,6 +32,7 @@ export function useDriverTripDetailPage() {
   const { start: startTripDetailVisiblePoll } = useDriverVisiblePoll(() => refresh(), { intervalMs: 55_000 })
 
   const trip = ref(null)
+  const policyStudents = ref([])
   const loading = ref(true)
   const loadError = ref('')
   const moreOpen = ref(false)
@@ -424,7 +428,14 @@ export function useDriverTripDetailPage() {
   })
 
   function rowState(i) {
-    return pickupStateByIndex.value.get(i) ?? null
+    const fromEvent = pickupStateByIndex.value.get(i)
+    if (fromEvent) return fromEvent
+    const row = paxList.value[i]
+    if (row?.policyCheckInKey && trip.value?.passenger_check_ins) {
+      const entry = trip.value.passenger_check_ins[row.policyCheckInKey]
+      if (entry?.checked_in_at || row.policyCheckedInAt) return 'picked_up'
+    }
+    return null
   }
 
   const paxKind = computed(() => {
@@ -444,82 +455,21 @@ export function useDriverTripDetailPage() {
   }
 
   const paxList = computed(() => {
-    const ttr = dr.value
-    if (!ttr) return []
-    const s = snap.value
-    const out = []
-    const tt = ttr.trip_type
+    const fromPolicy = mapPolicyStudentsToDriverPax(policyStudents.value, t)
+    if (fromPolicy.length) return fromPolicy
 
-    if (tt === 'cargo' && s?.cargoRows?.length) {
-      let i = 0
-      for (const r of s.cargoRows) {
-        if (!isCargoRowFilled(r)) continue
-        out.push({
-          name: r.name?.trim() || t('driver_trip_detail.cargo_item', { n: ++i }),
-          subtitle: [r.pickup_at, r.pickup_place].filter(Boolean).join(' · ') || '—',
-          phone: (r.pickup_contact || r.delivery_contact || '').replace(/\D/g, '') || null,
-          address: null,
-          time: null,
-        })
-      }
-      return out
-    }
-
-    if (tt === 'business' && s?.businessRows?.length) {
-      let i = 0
-      for (const r of s.businessRows) {
-        if (!isBusinessRowFilled(r)) continue
-        out.push({
-          name: t('driver_trip_detail.biz_party', { n: ++i }),
-          subtitle: r.notes?.trim() || r.pickup || '—',
-          phone: null,
-          address: null,
-          time: null,
-        })
-      }
-      if (out.length) return out
-    }
-
-    let idx = 0
-    for (const r of s?.passengerRows ?? []) {
-      if (!isPassengerRowFilled(r)) continue
-      idx += 1
-      const name = r.person_in_charge?.trim() || t('driver_trip_detail.guest_n', { n: idx })
-      const classGuess = classFromNotes(r.notes)
-      const rawTime = r.depart_at || ttr.depart_at
-      const sub = classGuess || (r.notes || '').trim() || '—'
-      out.push({
-        name,
-        subtitle: sub,
-        phone: (r.phone || '').replace(/\D/g, '') || null,
-        address: (r.pickup || '').trim() || null,
-        time: rawTime ? formatTripTimeHm24(rawTime, { locale: locale.value }) : null,
-      })
-    }
-
-    for (const r of s?.businessRows ?? []) {
-      if (tt === 'business') break
-      if (!isBusinessRowFilled(r)) continue
-      idx += 1
-      out.push({
-        name: t('driver_trip_detail.biz_party', { n: idx }),
-        subtitle: r.notes?.trim() || '—',
-        phone: null,
-        address: null,
-        time: null,
-      })
-    }
-
-    if (!out.length && (ttr.passenger_count ?? 0) > 0) {
-      out.push({
-        name: t('driver_trip_detail.unlisted', { n: ttr.passenger_count }),
-        subtitle: '—',
-        phone: ttr.requester?.phone || null,
-        address: null,
-        time: null,
-      })
-    }
-    return out
+    return buildDriverTripPaxList({
+      dr: dr.value,
+      trip: trip.value,
+      snap: snap.value,
+      t,
+      locale: locale.value,
+      formatTripTimeHm24,
+      isPassengerRowFilled,
+      isBusinessRowFilled,
+      isCargoRowFilled,
+      classFromNotes,
+    })
   })
 
   const indexedPaxList = computed(() => paxList.value.map((p, i) => ({ ...p, _origIndex: i })))
@@ -567,7 +517,16 @@ export function useDriverTripDetailPage() {
     return n.slice(0, 2).toUpperCase()
   }
 
-  const statsStudentCount = computed(() => paxList.value.length || 0)
+  const effectivePassengerCount = computed(() => dispatchRequestEffectivePassengerCount(dr.value))
+
+  /** Số khách hiển thị (thống kê, tiêu đề, thanh đón) — ưu tiên số trên yêu cầu khi danh sách chi tiết chưa đủ. */
+  const paxDisplayTotal = computed(() => {
+    const listed = paxList.value.length
+    const eff = effectivePassengerCount.value
+    return Math.max(listed, eff) || 0
+  })
+
+  const statsStudentCount = computed(() => paxDisplayTotal.value)
 
   const statsDistance = computed(() => {
     const rec = trip.value?.record
@@ -646,6 +605,19 @@ export function useDriverTripDetailPage() {
     }
   }
 
+  async function loadPolicyStudents() {
+    const id = tripId.value
+    if (id == null || dr.value?.trip_type !== 'door_to_door') {
+      policyStudents.value = []
+      return
+    }
+    try {
+      policyStudents.value = await listDriverTripPolicyStudents(id)
+    } catch {
+      policyStudents.value = []
+    }
+  }
+
   async function load() {
     const id = tripId.value
     if (id == null) {
@@ -655,11 +627,14 @@ export function useDriverTripDetailPage() {
     }
     loading.value = true
     loadError.value = ''
+    policyStudents.value = []
     try {
       trip.value = await getTrip(id)
+      await loadPolicyStudents()
     } catch {
       loadError.value = t('driver_home.load_error')
       trip.value = null
+      policyStudents.value = []
     } finally {
       loading.value = false
     }
@@ -670,6 +645,7 @@ export function useDriverTripDetailPage() {
     if (id == null) return
     try {
       trip.value = await getTrip(id)
+      await loadPolicyStudents()
     } catch {
       /* keep stale data */
     }
@@ -759,6 +735,7 @@ export function useDriverTripDetailPage() {
     paxList,
     displayedPaxList,
     statsStudentCount,
+    paxDisplayTotal,
     statsDistance,
     statsDuration,
     showPickupBar,

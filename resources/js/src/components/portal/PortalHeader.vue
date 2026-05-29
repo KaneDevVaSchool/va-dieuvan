@@ -153,8 +153,8 @@
             </div>
             <div class="mx-3 mt-3 border-t border-slate-100" />
 
-            <!-- Preferences: language + theme -->
-            <div class="px-3 py-2.5 space-y-2.5">
+            <!-- Preferences: language -->
+            <div class="px-3 py-2.5">
               <!-- Language -->
               <div>
                 <p class="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
@@ -181,9 +181,6 @@
                   </button>
                 </div>
               </div>
-
-              <!-- Theme -->
-              <ThemeSwitcher />
             </div>
 
             <div class="mx-3 border-t border-slate-100" />
@@ -221,7 +218,6 @@ import {
   PlusCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
-import ThemeSwitcher from '../layout/ThemeSwitcher.vue'
 import { useAuthStore } from '../../store'
 import { useAuthLogout } from '../../composables/useAuthLogout'
 import { fetchPortalNotifications } from '../../api/notifications'

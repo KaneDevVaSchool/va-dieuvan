@@ -45,6 +45,7 @@
           :pax-kind="paxKind"
           :pax-list="paxList"
           :displayed-pax-list="displayedPaxList"
+          :pax-section-total="paxDisplayTotal"
           :student-filter-status="studentFilterStatus"
           :expanded-student-idx="expandedStudentIdx"
           :is-paused="isPaused"
@@ -95,7 +96,7 @@
       :trip-status="trip?.status"
       :show-pickup-bar="showPickupBar"
       :picked-count="pickedCount"
-      :pax-total="paxList.length"
+      :pax-total="paxDisplayTotal"
       :is-paused="isPaused"
       :can-start="canStart"
       :can-end-trip="canEndTrip"
@@ -185,6 +186,7 @@ const {
   paxKind,
   paxList,
   displayedPaxList,
+  paxDisplayTotal,
   statsStudentCount,
   statsDistance,
   statsDuration,
