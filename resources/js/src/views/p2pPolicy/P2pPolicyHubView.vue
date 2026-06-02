@@ -313,7 +313,7 @@ import {
 } from '../../api/p2pPolicy'
 import { p2pStepTo } from '../../composables/useP2pPolicyWorkflow'
 import { showAppErrorFromApi } from '../../composables/appMessage'
-import { formatIsoDate } from '../../util/datetime'
+import { formatP2pOperatingDate, p2pPolicyDateLocale } from '../../util/p2pPolicyTermDisplay'
 import { p2pTermActivateIdempotencyKey } from '../../util/idempotency'
 
 const { t, locale } = useI18n()
@@ -425,8 +425,7 @@ const activateSummary = computed(() => {
 })
 
 function formatOperatingDate(val) {
-  const loc = locale.value === 'en' ? 'en' : 'vi'
-  return formatIsoDate(val, loc)
+  return formatP2pOperatingDate(val, p2pPolicyDateLocale(locale)) || '—'
 }
 
 function readinessIssueText(issue) {

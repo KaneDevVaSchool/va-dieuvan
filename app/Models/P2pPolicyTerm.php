@@ -10,6 +10,7 @@ class P2pPolicyTerm extends Model
 {
     protected $fillable = [
         'academic_term_id',
+        'name',
         'operating_from',
         'operating_to',
         'default_morning_start',

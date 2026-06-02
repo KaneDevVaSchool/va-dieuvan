@@ -68,6 +68,7 @@ export function formatIsoDateTime(iso, locale = 'vi') {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: locale === 'en',
   })
 }
 

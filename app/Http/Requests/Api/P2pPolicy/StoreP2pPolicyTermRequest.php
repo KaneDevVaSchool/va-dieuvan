@@ -14,6 +14,7 @@ class StoreP2pPolicyTermRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
+            'name' => ['required', 'string', 'max:200'],
             'academic_term_id' => ['required', 'integer', 'exists:academic_terms,id'],
             'operating_from' => ['required', 'date'],
             'operating_to' => ['required', 'date', 'after_or_equal:operating_from'],

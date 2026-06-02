@@ -26,6 +26,15 @@
           <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.section_basic') }}</h2>
           <div class="space-y-5">
             <div>
+              <FieldLabel :label="t('p2p_policy_page.field_p2p_term_name')" />
+              <input
+                v-model="form.name"
+                required
+                class="p2p-term-input mt-2 w-full"
+                :placeholder="t('p2p_policy_page.placeholder_p2p_term_name')"
+              />
+            </div>
+            <div>
               <FieldLabel :label="t('p2p_policy_page.field_academic_term')" />
               <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
                 <select
@@ -150,7 +159,7 @@
               :key="h.holiday_date"
               class="flex items-center gap-2 rounded-md bg-white/80 px-2.5 py-1.5 dark:bg-slate-900/50"
             >
-              <span class="font-medium text-slate-800 dark:text-slate-200">{{ formatHolidayDate(h.holiday_date) }}</span>
+              <span class="font-medium text-slate-800 dark:text-slate-200">{{ formatHolidayDateDisplay(h.holiday_date) }}</span>
               <span class="text-slate-500 dark:text-slate-400">— {{ h.label }}</span>
             </li>
           </ul>
@@ -189,7 +198,7 @@
               :key="i"
               class="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/60"
             >
-              <span>{{ formatHolidayDate(h.holiday_date) }} — {{ h.label || '—' }}</span>
+              <span>{{ formatHolidayDateDisplay(h.holiday_date) }} · {{ h.label || '—' }}</span>
               <button type="button" class="text-sm text-rose-600 hover:underline" @click="removeHoliday(i)">
                 {{ t('p2p_policy_page.remove') }}
               </button>
@@ -228,7 +237,7 @@
               :key="i"
               class="flex items-center justify-between gap-2 rounded-lg bg-violet-50/80 px-3 py-2 dark:bg-violet-950/25"
             >
-              <span>{{ formatHolidayDate(s.skip_date) }} — {{ s.reason || '—' }}</span>
+              <span>{{ formatHolidayDateDisplay(s.skip_date) }} · {{ s.reason || '—' }}</span>
               <button type="button" class="text-sm text-rose-600 hover:underline" @click="removeSkipDate(i)">
                 {{ t('p2p_policy_page.remove') }}
               </button>
@@ -329,6 +338,7 @@ import {
   syncP2pPolicyTermCalendar,
   updateP2pPolicyTerm,
 } from '../../api/p2pPolicy'
+import { formatIsoDate } from '../../util/datetime'
 
 const FieldLabel = defineComponent({
   name: 'FieldLabel',
@@ -341,7 +351,7 @@ const FieldLabel = defineComponent({
   },
 })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -357,6 +367,7 @@ const includeWeekend = ref(false)
 const excludeFixedHolidays = ref(true)
 
 const form = reactive({
+  name: '',
   academic_term_id: '',
   operating_from: '',
   operating_to: '',
@@ -390,10 +401,16 @@ const academicForm = reactive({
   is_active: true,
 })
 
-function formatHolidayDate(d) {
-  if (!d) return '—'
+function normalizeIsoDateOnly(d) {
+  if (!d) return ''
   const s = String(d)
   return s.length >= 10 ? s.slice(0, 10) : s
+}
+
+function formatHolidayDateDisplay(d) {
+  if (!d) return '—'
+  const loc = locale.value === 'en' ? 'en' : 'vi'
+  return formatIsoDate(d, loc)
 }
 
 async function loadAcademicTerms() {
@@ -404,6 +421,7 @@ async function load() {
   await loadAcademicTerms()
   if (termId.value) {
     const term = await getP2pPolicyTerm(termId.value)
+    form.name = term.name ?? ''
     form.academic_term_id = term.academic_term_id
     form.operating_from = term.operating_from?.slice(0, 10) ?? ''
     form.operating_to = term.operating_to?.slice(0, 10) ?? ''
@@ -414,11 +432,11 @@ async function load() {
     includeWeekend.value = (term.weekdays_mask & 96) !== 0
     excludeFixedHolidays.value = term.exclude_fixed_holidays !== false
     holidays.value = (term.holidays ?? []).map((h) => ({
-      holiday_date: formatHolidayDate(h.holiday_date),
+      holiday_date: normalizeIsoDateOnly(h.holiday_date),
       label: h.label ?? '',
     }))
     skipDates.value = (term.skip_dates ?? term.skipDates ?? []).map((s) => ({
-      skip_date: formatHolidayDate(s.skip_date),
+      skip_date: normalizeIsoDateOnly(s.skip_date),
       reason: s.reason ?? '',
     }))
     await refreshFixedHolidayPreview()

@@ -421,8 +421,9 @@ import {
   listPolicyRoutes,
   listPolicyStudents,
 } from '../../api/p2pPolicy'
+import { formatP2pTermLabel, p2pPolicyDateLocale } from '../../util/p2pPolicyTermDisplay'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
@@ -581,9 +582,7 @@ async function onStudentSaved() {
 }
 
 function p2pTermLabel(pt) {
-  const year = pt.academic_term?.academic_year ?? pt.academic_year ?? ''
-  const status = p2pTermStatusLabel(t, pt.status ?? '')
-  return year ? `${year} — ${status}` : `#${pt.id} — ${status}`
+  return formatP2pTermLabel(pt, p2pPolicyDateLocale(locale))
 }
 
 const selectedP2pTermLabel = computed(() => {

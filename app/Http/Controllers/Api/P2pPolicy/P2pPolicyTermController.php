@@ -79,6 +79,7 @@ class P2pPolicyTermController extends Controller
     {
         $data = $request->validated();
         $term = P2pPolicyTerm::create([
+            'name' => $data['name'],
             'academic_term_id' => $data['academic_term_id'],
             'operating_from' => $data['operating_from'],
             'operating_to' => $data['operating_to'],

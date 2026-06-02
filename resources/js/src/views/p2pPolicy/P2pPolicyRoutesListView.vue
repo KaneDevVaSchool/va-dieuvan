@@ -447,6 +447,15 @@
         <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.add_p2p_term_modal_title') }}</h3>
         <div class="mt-5 space-y-4">
           <div>
+            <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_p2p_term_name')" :hint="t('p2p_policy_page.tip_p2p_term_name')" required />
+            <input
+              v-model="termForm.name"
+              required
+              class="p2p-term-input mt-2 w-full"
+              :placeholder="t('p2p_policy_page.placeholder_p2p_term_name')"
+            />
+          </div>
+          <div>
             <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_academic_term')" :hint="t('p2p_policy_page.tip_academic_term')" required />
             <select v-model="termForm.academic_term_id" required class="p2p-term-input mt-2 w-full">
               <option disabled value="">{{ t('p2p_policy_page.placeholder_select_academic_term') }}</option>
@@ -558,10 +567,15 @@ import {
   resolveP2pTermIdFromRoute,
 } from '../../composables/useP2pPolicyWorkflow'
 import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon, PlusIcon } from '@heroicons/vue/24/outline'
+import {
+  formatP2pOperatingDate,
+  formatP2pTermLabel,
+  p2pPolicyDateLocale,
+} from '../../util/p2pPolicyTermDisplay'
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const { filters, visibility, filterControlDefs, activeFilterCount, apiParams, clearFilters, resetPage } =
   useP2pPolicyRoutesFilters()
@@ -605,10 +619,11 @@ const activateSummary = computed(() => {
   const term = workflowTerm.value
   if (!term) return ''
   const year = term.academic_term?.academic_year ?? '—'
+  const loc = p2pPolicyDateLocale(locale)
   return t('p2p_policy_page.activate_modal_body', {
     year,
-    from: term.operating_from ?? '—',
-    to: term.operating_to ?? '—',
+    from: formatP2pOperatingDate(term.operating_from, loc) || '—',
+    to: formatP2pOperatingDate(term.operating_to, loc) || '—',
   })
 })
 
@@ -679,6 +694,7 @@ const termError = ref('')
 const termIncludeWeekend = ref(false)
 const academicTerms = ref([])
 const termForm = reactive({
+  name: '',
   academic_term_id: '',
   operating_from: '',
   operating_to: '',
@@ -690,17 +706,8 @@ const termForm = reactive({
   exclude_fixed_holidays: true,
 })
 
-function formatShortDate(iso) {
-  const [y, m, d] = (iso ?? '').split('-')
-  return d && m && y ? `${d}/${m}/${y}` : iso
-}
-
 function p2pTermLabel(term) {
-  const year = term.academic_term?.academic_year ?? ''
-  const from = term.operating_from ? formatShortDate(term.operating_from) : ''
-  const to = term.operating_to ? formatShortDate(term.operating_to) : ''
-  const dates = from && to ? ` · ${from} – ${to}` : ''
-  return year ? `${year}${dates}` : `#${term.id}${dates}`
+  return formatP2pTermLabel(term, p2pPolicyDateLocale(locale))
 }
 
 function openCreateRouteModal() {
@@ -900,6 +907,7 @@ async function loadAcademicTerms() {
 function resetTermForm() {
   termError.value = ''
   termIncludeWeekend.value = false
+  termForm.name = ''
   termForm.academic_term_id = academicTerms.value[0]?.id ?? ''
   termForm.operating_from = ''
   termForm.operating_to = ''

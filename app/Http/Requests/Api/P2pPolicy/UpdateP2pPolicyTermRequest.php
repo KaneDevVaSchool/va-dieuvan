@@ -14,6 +14,7 @@ class UpdateP2pPolicyTermRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
+            'name' => ['sometimes', 'string', 'max:200'],
             'operating_from' => ['sometimes', 'date'],
             'operating_to' => ['sometimes', 'date'],
             'default_morning_start' => ['nullable', 'date_format:H:i'],

@@ -144,7 +144,7 @@
               :class="idx % 2 === 1 ? 'bg-slate-50/40 dark:bg-slate-900/20' : ''"
             >
               <td class="whitespace-nowrap px-3 py-2.5 text-slate-800 dark:text-slate-200">
-                {{ formatIsoDate(row.run_date, locale) }}
+                {{ formatIsoDate(row.run_date, p2pPolicyDateLocale(locale)) }}
               </td>
               <td class="px-3 py-2.5">
                 <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200">
@@ -158,7 +158,7 @@
                 </div>
               </td>
               <td class="whitespace-nowrap px-3 py-2.5 text-slate-700 dark:text-slate-300">
-                {{ formatIsoDateTime(row.depart_at, locale) }}
+                {{ formatIsoDateTime(row.depart_at, p2pPolicyDateLocale(locale)) }}
               </td>
               <td class="px-3 py-2.5 text-slate-700 dark:text-slate-300">{{ row.driver?.full_name || '—' }}</td>
               <td class="px-3 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">
@@ -272,8 +272,8 @@ import {
   useP2pPolicyTripSlotFilters,
 } from '../../composables/useP2pPolicyTripSlotFilters'
 import { p2pStepTo, p2pWorkflowQuery, resolveP2pTermIdFromRoute } from '../../composables/useP2pPolicyWorkflow'
-import { p2pTermStatusLabel } from '../../utils/p2pPolicyStudentLabels'
 import { formatIsoDate, formatIsoDateTime } from '../../util/datetime'
+import { formatP2pTermLabel, p2pPolicyDateLocale } from '../../util/p2pPolicyTermDisplay'
 import { labelTripStatus } from '../../util/labels'
 import { tripStatusAdminPillClass } from '../../constants/tripStatus'
 
@@ -326,9 +326,7 @@ const pageNumbers = computed(() => {
 })
 
 function p2pTermLabel(pt) {
-  const year = pt.academic_term?.academic_year ?? pt.academic_year ?? ''
-  const status = p2pTermStatusLabel(t, pt.status ?? '')
-  return year ? `${year} — ${status}` : `#${pt.id} — ${status}`
+  return formatP2pTermLabel(pt, p2pPolicyDateLocale(locale))
 }
 
 function legLabel(leg) {
