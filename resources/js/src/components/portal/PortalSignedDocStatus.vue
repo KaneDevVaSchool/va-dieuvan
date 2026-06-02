@@ -1,5 +1,5 @@
 <template>
-  <div v-if="current" class="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+  <div v-if="current" class="space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
     <div class="flex flex-wrap items-center gap-2">
       <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('portal.signed_status_heading') }}</span>
       <span v-if="workflowLabel" class="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-800">

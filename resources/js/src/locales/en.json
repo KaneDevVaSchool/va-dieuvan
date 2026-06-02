@@ -804,6 +804,11 @@
         "pdf_export_loading": "Exporting…",
         "pdf_download_fail": "Could not download PDF.",
         "timeline_heading": "Progress",
+        "detail_tablist_aria": "Request detail sections",
+        "detail_tab_form": "Form BM.03",
+        "detail_tab_manage": "Adjustments",
+        "detail_tab_pdf": "Proposal PDF",
+        "detail_tab_docs": "Signed file",
         "timeline": {
             "created": "Created",
             "pending": "Pending",

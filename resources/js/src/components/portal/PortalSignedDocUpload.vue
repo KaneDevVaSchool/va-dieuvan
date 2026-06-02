@@ -1,10 +1,7 @@
 <template>
-  <section
-    class="w-full overflow-hidden rounded-2xl border border-emerald-200/90 bg-white p-6 shadow-sm ring-1 ring-emerald-600/10 sm:p-8"
-  >
-    <h2 class="text-lg font-bold text-slate-900 sm:text-xl">{{ t('portal.signed_upload_title') }}</h2>
-    <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base">{{ t('portal.signed_upload_lead') }}</p>
-    <ul v-if="attachments.length" class="mt-5 space-y-2">
+  <section class="w-full overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <h2 class="text-sm font-bold text-slate-900">{{ t('portal.signed_upload_title') }}</h2>
+    <ul v-if="attachments.length" class="mt-3 space-y-2">
       <li
         v-for="a in attachments"
         :key="a.id"
@@ -20,11 +17,11 @@
         </button>
       </li>
     </ul>
-    <div class="mt-5">
+    <div class="mt-3">
       <FileUpload
         :key="uploadComponentKey"
+        compact
         :label="t('portal.signed_add')"
-        :hint="t('portal.signed_hints')"
         drag-drop
         :upload-fn="uploadFn"
         @uploaded="$emit('uploaded')"

@@ -1,9 +1,8 @@
 <template>
-  <section v-if="pdfBlobUrl || signedBlobUrl" class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-    <div class="border-b border-slate-100 bg-slate-50/80 px-4 py-3 sm:px-5">
+  <section v-if="pdfBlobUrl || signedBlobUrl" class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-100 bg-slate-50/80 px-4 py-2.5 sm:px-5">
       <h3 class="text-sm font-bold text-slate-900">{{ t('portal.signed_compare_title') }}</h3>
-      <p class="mt-0.5 text-xs text-slate-600">{{ t('portal.signed_compare_lead') }}</p>
-      <div class="mt-3 flex gap-2 sm:hidden">
+      <div class="mt-2 flex gap-2 sm:hidden">
         <button
           type="button"
           class="flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold"

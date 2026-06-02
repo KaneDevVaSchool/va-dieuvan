@@ -847,6 +847,11 @@
         "pdf_export_loading": "Đang xuất…",
         "pdf_download_fail": "Không tải được PDF.",
         "timeline_heading": "Tiến trình xử lý",
+        "detail_tablist_aria": "Nội dung chi tiết yêu cầu",
+        "detail_tab_form": "Phiếu BM.03",
+        "detail_tab_manage": "Điều chỉnh",
+        "detail_tab_pdf": "PDF đề nghị",
+        "detail_tab_docs": "Bản đã ký",
         "timeline": {
             "created": "Tạo phiếu",
             "pending": "Chờ duyệt",
