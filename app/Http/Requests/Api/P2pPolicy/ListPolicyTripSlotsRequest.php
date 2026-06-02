@@ -23,6 +23,8 @@ class ListPolicyTripSlotsRequest extends ApiFormRequest
             'run_date_to' => ['nullable', 'date'],
             'leg' => ['nullable', 'string', 'in:'.P2pPolicy::LEG_MORNING.','.P2pPolicy::LEG_AFTERNOON],
             'trip_status' => ['nullable', 'string', 'max:32'],
+            'has_trip' => ['nullable', 'string', 'in:yes,no'],
+            'reminder_status' => ['nullable', 'string', 'in:sent,pending'],
             'q' => ['nullable', 'string', 'max:120'],
         ];
     }

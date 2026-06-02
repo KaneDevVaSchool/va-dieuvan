@@ -51,6 +51,23 @@ class PolicyTripSlotIndexQuery
             $q->whereHas('trip', fn (Builder $t) => $t->where('status', $status));
         }
 
+        if ($request->filled('has_trip')) {
+            if ((string) $request->query('has_trip') === 'yes') {
+                $q->whereNotNull('trip_id');
+            } elseif ((string) $request->query('has_trip') === 'no') {
+                $q->whereNull('trip_id');
+            }
+        }
+
+        if ($request->filled('reminder_status')) {
+            $reminder = (string) $request->query('reminder_status');
+            if ($reminder === 'sent') {
+                $q->whereNotNull('trip_id')->whereNotNull('depart_reminder_sent_at');
+            } elseif ($reminder === 'pending') {
+                $q->whereNotNull('trip_id')->whereNull('depart_reminder_sent_at');
+            }
+        }
+
         if ($request->filled('q')) {
             $like = '%'.addcslashes(trim((string) $request->query('q')), '%_\\').'%';
             $q->whereHas('policyRoute', function (Builder $r) use ($like) {
