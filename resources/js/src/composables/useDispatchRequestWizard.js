@@ -950,8 +950,8 @@ export function useDispatchRequestWizard(options = {}) {
 
   const passengerGuestTotal = computed(
     () =>
-      passengerRows.value.reduce((s, r) => s + parseGuests(r.guests), 0) +
-      businessRows.value.reduce((s, r) => s + parseGuests(r.guests), 0),
+      passengerRows.value.filter(isPassengerRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0) +
+      businessRows.value.filter(isBusinessRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0),
   )
 
   const cargoTotal = computed(() =>
