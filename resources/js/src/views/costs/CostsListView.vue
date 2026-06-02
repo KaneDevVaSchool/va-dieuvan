@@ -14,7 +14,7 @@
       </h2>
       <div class="relative z-40">
     <AppFilterBar>
-      <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+      <div ref="costsFilterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
         <details ref="funnelDetailsRef" class="group relative">
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -68,6 +68,10 @@
                   <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_provider') }}</span>
                   <span class="max-w-[12rem] truncate text-right font-medium">{{ providerFilterSummary }}</span>
                 </li>
+                <li v-if="filters.fleet_mode" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_fleet') }}</span>
+                  <span class="max-w-[12rem] truncate text-right font-medium">{{ fleetModeFilterSummary }}</span>
+                </li>
                 <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}</span>
                   <span class="font-medium">{{ filters.per_page }}</span>
@@ -99,27 +103,6 @@
                   </li>
                 </ul>
               </div>
-              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                  {{ t('costs_page.column_visibility_title') }}
-                </p>
-                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                  <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2">
-                    <input
-                      :id="'costs-col-vis-' + cd.id"
-                      v-model="colVisible[cd.id]"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                    />
-                    <label
-                      :for="'costs-col-vis-' + cd.id"
-                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                    >
-                      {{ cd.label }}
-                    </label>
-                  </li>
-                </ul>
-              </div>
               <button
                 type="button"
                 class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -131,12 +114,47 @@
           </div>
         </details>
 
+        <details ref="columnPickerRef" class="group relative shrink-0">
+          <summary
+            class="flex cursor-pointer list-none items-center rounded-xl border border-white/90 bg-white/95 p-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+            :title="t('costs_page.column_visibility_title')"
+            :aria-label="t('costs_page.column_visibility_title')"
+          >
+            <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute left-0 top-[calc(100%+8px)] z-[110] min-w-[240px] rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
+            @click.stop
+          >
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+              {{ t('costs_page.column_visibility_title') }}
+            </p>
+            <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto pr-0.5">
+              <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2">
+                <input
+                  :id="'costs-col-vis-' + cd.id"
+                  v-model="colVisible[cd.id]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                />
+                <label
+                  :for="'costs-col-vis-' + cd.id"
+                  class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                >
+                  {{ cd.label }}
+                </label>
+              </li>
+            </ul>
+          </div>
+        </details>
+
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
           <AppFilterDropdown
             v-if="filterControlVisible.status"
             root-class="shrink-0"
+            show-chip-label
             :label="t('filter_bar.status')"
             :summary-text="filters.status ? statusLabel(filters.status) : t('filter_bar.all')"
             summary-text-class="max-w-[10rem]"
@@ -163,6 +181,7 @@
           <AppFilterDropdown
             v-if="filterControlVisible.type"
             root-class="shrink-0"
+            show-chip-label
             :label="t('costs_page.filter_cost_type')"
             :summary-text="filters.type ? typeLabel(filters.type) : t('filter_bar.all')"
             summary-text-class="max-w-[10rem]"
@@ -189,6 +208,7 @@
           <AppFilterDropdown
             v-if="filterControlVisible.trip_type"
             root-class="shrink-0"
+            show-chip-label
             :label="t('costs_page.filter_trip_type')"
             :summary-text="filters.trip_type ? labelTripType(filters.trip_type) : t('costs_page.trip_type_all')"
             summary-text-class="max-w-[10rem]"
@@ -215,6 +235,7 @@
           <AppFilterDropdown
             v-if="filterControlVisible.date"
             root-class="shrink-0"
+            show-chip-label
             :label="t('costs_page.filter_recorded_date')"
             :summary-text="filterDateSummary"
             full-width-summary
@@ -240,6 +261,7 @@
           <AppFilterDropdown
             v-if="filterControlVisible.trip"
             root-class="shrink-0"
+            show-chip-label
             :label="t('costs_page.filter_trip')"
             :summary-text="tripFilterSummaryShort"
             :summary-title="tripFilterSummaryFull"
@@ -301,6 +323,7 @@
           <AppFilterDropdown
             v-if="filterControlVisible.amount_range"
             root-class="shrink-0"
+            show-chip-label
             :label="t('costs_page.filter_amount_range')"
             :summary-text="amountRangeSummary"
             summary-text-class="max-w-[10rem]"
@@ -337,6 +360,7 @@
           <AppFilterDropdown
             v-if="filterControlVisible.provider"
             root-class="shrink-0"
+            show-chip-label
             :label="t('costs_page.filter_provider')"
             :summary-text="providerFilterSummary"
             summary-text-class="max-w-[10rem]"
@@ -360,18 +384,50 @@
             </ul>
           </AppFilterDropdown>
 
-          <input
+          <AppFilterDropdown
+            v-if="filterControlVisible.fleet_mode"
+            root-class="shrink-0"
+            show-chip-label
+            :label="t('dashboard_analytics.filter_fleet')"
+            :summary-text="fleetModeFilterSummary"
+            summary-text-class="max-w-[10rem]"
+            panel-class="min-w-[220px] py-1"
+          >
+            <ul class="space-y-0.5 px-1 py-1">
+              <li v-for="opt in fleetModeFilterOptions" :key="opt.value === '' ? '_all_fleet' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.fleet_mode === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyFilterPatch($event, { fleet_mode: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
+
+          <label
             v-if="filterControlVisible.search"
-            v-model="searchQ"
-            type="search"
-            :aria-label="t('costs_page.filter_search_page')"
-            :placeholder="t('costs_page.filter_search_page') + '…'"
-            :title="t('costs_page.filter_search_page')"
-            class="costs-input h-9 w-[9.5rem] shrink-0 text-sm sm:w-44"
-          />
+            class="inline-flex shrink-0 items-center gap-1.5"
+          >
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_search_page') }}:</span>
+            <input
+              v-model="searchQ"
+              type="search"
+              :aria-label="t('costs_page.filter_search_page')"
+              :placeholder="t('costs_page.filter_search_page') + '…'"
+              :title="t('costs_page.filter_search_page')"
+              class="costs-input h-9 w-[9.5rem] text-sm sm:w-44"
+            />
+          </label>
 
           <label v-if="filterControlVisible.per_page" class="inline-flex shrink-0 items-center gap-1.5">
-            <span class="sr-only">{{ t('filter_bar.per_page') }}</span>
+            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}:</span>
             <select
               v-model.number="filters.per_page"
               class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
@@ -432,6 +488,7 @@
               <th v-if="colVisible.category" class="costs-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
               <th v-if="colVisible.submitter" class="costs-th min-w-[8rem]">{{ t('costs_page.col_submitter') }}</th>
               <th v-if="colVisible.description" class="costs-th min-w-[14rem]">{{ t('costs_page.col_description') }}</th>
+              <th v-if="colVisible.fleet_source" class="costs-th min-w-[8rem] whitespace-nowrap">{{ t('costs_page.col_fleet_source') }}</th>
               <th v-if="colVisible.provider" class="costs-th min-w-[8rem]">{{ t('costs_page.col_provider') }}</th>
               <th v-if="colVisible.advance" class="costs-th costs-th--money min-w-[7rem] text-right">{{ t('costs_page.col_advance') }}</th>
               <th v-if="colVisible.unit_price" class="costs-th costs-th--money min-w-[6.5rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
@@ -470,7 +527,10 @@
               <td v-if="colVisible.description" class="costs-td max-w-[20rem] text-slate-800">
                 <span class="line-clamp-2" :title="c.description || ''">{{ c.description || '—' }}</span>
               </td>
-              <td v-if="colVisible.provider" class="costs-td text-slate-700">{{ c.trip?.transport_provider?.name ?? '—' }}</td>
+              <td v-if="colVisible.fleet_source" class="costs-td whitespace-nowrap text-slate-700">
+                <span class="costs-pill">{{ fleetModeLabel(tripFleetModeFromCost(c)) }}</span>
+              </td>
+              <td v-if="colVisible.provider" class="costs-td text-slate-700">{{ costProviderName(c) || '—' }}</td>
               <td v-if="colVisible.advance" class="costs-td costs-td--money text-right text-slate-400">—</td>
               <td v-if="colVisible.unit_price" class="costs-td costs-td--money text-right text-slate-400">—</td>
               <td v-if="colVisible.extra_fee" class="costs-td costs-td--money text-right text-slate-400">—</td>
@@ -909,10 +969,10 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, ViewColumnsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
+import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { listTripCosts, submitTripCost, decideTripCost, deleteTripCost } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -933,12 +993,13 @@ const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
 const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
 const COSTS_FILTER_CONTROL_VISIBILITY_KEY = 'va.costs.filter_control_visibility_v1'
 const COSTS_COL_VISIBILITY_KEY = 'va.costs.col_visibility_v1'
-const FILTER_CONTROL_IDS = ['status', 'type', 'trip_type', 'date', 'trip', 'search', 'per_page', 'amount_range', 'provider']
+const FILTER_CONTROL_IDS = ['status', 'type', 'trip_type', 'date', 'trip', 'search', 'per_page', 'amount_range', 'provider', 'fleet_mode']
 const COL_IDS = [
   'unit',
   'category',
   'submitter',
   'description',
+  'fleet_source',
   'provider',
   'advance',
   'unit_price',
@@ -1007,7 +1068,32 @@ function rowAmountMatchesFilter(amount) {
 }
 
 function costProviderName(c) {
-  return String(c?.trip?.transport_provider?.name ?? '').trim()
+  return String(c?.trip?.transport_provider?.name ?? c?.trip?.transportProvider?.name ?? '').trim()
+}
+
+function tripFleetModeFromCost(c) {
+  const trip = c?.trip
+  if (!trip) return 'unspecified'
+  const providerId = trip.transport_provider_id ?? trip.transportProvider?.id ?? null
+  const vehicleId = trip.vehicle_id ?? trip.vehicle?.id ?? null
+  const providerType = trip.transport_provider?.type ?? trip.transportProvider?.type ?? null
+  if (providerId) {
+    if (providerType === 'taxi') return 'taxi'
+    return 'vendor_hire'
+  }
+  if (vehicleId) return 'internal'
+  return 'unspecified'
+}
+
+function fleetModeLabel(mode) {
+  const map = {
+    internal: 'dashboard_analytics.fleet_internal',
+    vendor_hire: 'dashboard_analytics.fleet_vendor_hire',
+    taxi: 'dashboard_analytics.fleet_taxi',
+    unspecified: 'dashboard_analytics.fleet_unspecified',
+  }
+  const key = map[mode]
+  return key && te(key) ? t(key) : mode || '—'
 }
 
 function providerFilterMatchesRecordedCost(c) {
@@ -1043,7 +1129,11 @@ const items = ref([])
 const meta = ref({})
 const searchQ = ref('')
 const funnelDetailsRef = ref(null)
+const columnPickerRef = ref(null)
+const costsFilterBarRef = ref(null)
 useDetailsAutoClose(funnelDetailsRef)
+useDetailsAutoClose(columnPickerRef)
+useDetailsAutoCloseWithin(costsFilterBarRef)
 
 const filterControlVisible = reactive(defaultFilterControlVisibility())
 const colVisible = reactive(defaultColVisibility())
@@ -1054,6 +1144,7 @@ function tableColLabel(colId) {
     category: 'col_category',
     submitter: 'col_submitter',
     description: 'col_description',
+    fleet_source: 'col_fleet_source',
     provider: 'col_provider',
     advance: 'col_advance',
     unit_price: 'col_unit_price',
@@ -1080,6 +1171,7 @@ const filterControlDefs = computed(() => [
   { id: 'trip', label: t('costs_page.filter_trip') },
   { id: 'amount_range', label: t('costs_page.filter_amount_range') },
   { id: 'provider', label: t('costs_page.filter_provider') },
+  { id: 'fleet_mode', label: t('dashboard_analytics.filter_fleet') },
   { id: 'search', label: t('costs_page.filter_search_page') },
   { id: 'per_page', label: t('filter_bar.per_page') },
 ])
@@ -1110,6 +1202,7 @@ const filters = reactive({
   from: '',
   to: '',
   provider: '',
+  fleet_mode: '',
   amount_min: '',
   amount_max: '',
   page: 1,
@@ -1283,6 +1376,19 @@ const tripTypeFilterOptions = computed(() => [
   ...TRIP_TYPE_SLUGS.map((value) => ({ value, label: labelTripType(value) })),
 ])
 
+const fleetModeFilterOptions = computed(() => [
+  { value: '', label: t('filter_bar.all') },
+  { value: 'internal', label: fleetModeLabel('internal') },
+  { value: 'vendor_hire', label: fleetModeLabel('vendor_hire') },
+  { value: 'taxi', label: fleetModeLabel('taxi') },
+  { value: 'unspecified', label: fleetModeLabel('unspecified') },
+])
+
+const fleetModeFilterSummary = computed(() => {
+  if (!filters.fleet_mode) return t('filter_bar.all')
+  return fleetModeLabel(filters.fleet_mode)
+})
+
 const activeFilterCount = computed(() => {
   let n = 0
   if (filters.status) n++
@@ -1291,6 +1397,7 @@ const activeFilterCount = computed(() => {
   if (filters.trip_id) n++
   if (filters.from || filters.to) n++
   if (filters.provider) n++
+  if (filters.fleet_mode) n++
   if (filters.amount_min || filters.amount_max) n++
   if (filters.per_page !== DEFAULT_PER_PAGE) n++
   if (searchQ.value.trim()) n++
@@ -1398,7 +1505,8 @@ const displayedItems = computed(() => {
     const ty = String(c.type ?? '').toLowerCase()
     const trip = String(c.trip_id ?? '')
     const prov = costProviderName(c).toLowerCase()
-    return d.includes(q) || creator.includes(q) || submitter.includes(q) || ty.includes(q) || trip.includes(q) || prov.includes(q)
+    const fleet = fleetModeLabel(tripFleetModeFromCost(c)).toLowerCase()
+    return d.includes(q) || creator.includes(q) || submitter.includes(q) || ty.includes(q) || trip.includes(q) || prov.includes(q) || fleet.includes(q)
   })
 })
 
@@ -1638,6 +1746,7 @@ function resetFilters() {
   filters.from = ''
   filters.to = ''
   filters.provider = ''
+  filters.fleet_mode = ''
   filters.amount_min = ''
   filters.amount_max = ''
   filters.page = 1

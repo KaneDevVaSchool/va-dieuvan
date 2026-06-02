@@ -1953,6 +1953,7 @@
         "filter_provider": "Provider",
         "filter_provider_all": "All providers",
         "filter_provider_none": "No provider",
+        "col_fleet_source": "Trip sourcing",
         "column_visibility_title": "Visible columns",
         "amount_range_summary": "{min} → {max}",
         "e2_modal_title": "E.2 estimate — Trip #{trip}",

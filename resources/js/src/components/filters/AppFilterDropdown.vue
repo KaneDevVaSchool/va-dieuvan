@@ -5,6 +5,10 @@
       :class="[fullWidthSummary ? 'max-w-full' : '', summaryClass]"
     >
       <span
+        v-if="showChipLabel && label"
+        class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400"
+      >{{ label }}:</span>
+      <span
         class="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-slate-100"
         :class="summaryTextClass"
         :title="summaryTitle || undefined"
@@ -27,8 +31,9 @@ import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
 
 defineProps({
-  /** Kept for backward compatibility; not rendered on the chip. */
   label: { type: String, default: '' },
+  /** When true, shows `label` before the summary value on the chip. */
+  showChipLabel: { type: Boolean, default: false },
   summaryText: { type: String, required: true },
   /** Tailwind classes for the dropdown panel (width, padding, overflow, …) */
   panelClass: { type: String, default: 'min-w-[220px] py-1' },

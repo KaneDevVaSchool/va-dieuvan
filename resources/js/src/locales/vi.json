@@ -3643,6 +3643,7 @@
         "filter_provider": "Nhà cung cấp",
         "filter_provider_all": "Tất cả NCC",
         "filter_provider_none": "Không có NCC",
+        "col_fleet_source": "Nguồn lực chuyến",
         "column_visibility_title": "Cột hiển thị",
         "amount_range_summary": "{min} → {max}",
         "e2_modal_title": "Ước tính E.2 — Chuyến #{trip}",

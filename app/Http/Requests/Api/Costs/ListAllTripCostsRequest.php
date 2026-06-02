@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Costs;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use Illuminate\Validation\Rule;
 
 class ListAllTripCostsRequest extends ApiFormRequest
 {
@@ -20,6 +21,7 @@ class ListAllTripCostsRequest extends ApiFormRequest
             'trip_type' => ['nullable', 'string', 'max:64'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
+            'fleet_mode' => ['nullable', Rule::in(['internal', 'vendor_hire', 'taxi', 'unspecified'])],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
         ];

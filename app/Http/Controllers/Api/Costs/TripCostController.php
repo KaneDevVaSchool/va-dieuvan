@@ -37,10 +37,11 @@ class TripCostController extends Controller
 
         $q = TripCost::query()
             ->with([
-                'trip:id,status,depart_at,dispatcher_id,driver_id,transport_provider_id,dispatch_request_id',
+                'trip:id,status,depart_at,dispatcher_id,driver_id,transport_provider_id,vehicle_id,dispatch_request_id',
                 'trip.dispatchRequest:id,trip_type,origin,destination,requester_id',
                 'trip.dispatchRequest.requester:id,name',
-                'trip.transportProvider:id,name',
+                'trip.transportProvider:id,name,type',
+                'trip.vehicle:id,license_plate',
                 'creator:id,name,email',
                 'confirmer:id,name,email',
             ])
@@ -69,6 +70,23 @@ class TripCostController extends Controller
         );
         $q->when(isset($data['from']), fn (Builder $b) => $b->where('created_at', '>=', Carbon::parse($data['from'])->startOfDay()));
         $q->when(isset($data['to']), fn (Builder $b) => $b->where('created_at', '<=', Carbon::parse($data['to'])->endOfDay()));
+        $q->when(! empty($data['fleet_mode']), function (Builder $b) use ($data) {
+            $b->whereHas('trip', function (Builder $trip) use ($data) {
+                match ($data['fleet_mode']) {
+                    'internal' => $trip->whereNull('transport_provider_id')->whereNotNull('vehicle_id'),
+                    'vendor_hire' => $trip->whereNotNull('transport_provider_id')
+                        ->whereHas('transportProvider', function (Builder $p) {
+                            $p->where(function (Builder $inner) {
+                                $inner->whereNull('type')->orWhere('type', '!=', 'taxi');
+                            });
+                        }),
+                    'taxi' => $trip->whereNotNull('transport_provider_id')
+                        ->whereHas('transportProvider', fn (Builder $p) => $p->where('type', 'taxi')),
+                    'unspecified' => $trip->whereNull('transport_provider_id')->whereNull('vehicle_id'),
+                    default => null,
+                };
+            });
+        });
 
         $perPage = (int) ($data['per_page'] ?? 20);
         $results = $q->paginate($perPage);
