@@ -1,5 +1,6 @@
 <template>
   <button
+    ref="cardEl"
     type="button"
     class="group/card absolute top-2 z-[5] flex min-h-[2.75rem] items-center gap-1 overflow-visible rounded-lg border px-2 py-1.5 pl-2 text-left shadow-md"
     :class="[
@@ -9,7 +10,12 @@
       draggable ? 'cursor-grab active:cursor-grabbing touch-none' : '',
     ]"
     :style="positionStyle"
+    :aria-describedby="tooltipOpen ? tooltipId : undefined"
     @pointerdown="(e) => emit('pointerdown', e)"
+    @mouseenter="showTooltip"
+    @mouseleave="hideTooltip"
+    @focus="showTooltip"
+    @blur="hideTooltip"
   >
     <span
       class="pointer-events-none absolute bottom-0 left-0 top-0 w-1 rounded-l-lg shadow-[2px_0_8px_-2px_rgba(0,0,0,0.12)] dark:shadow-[2px_0_8px_-2px_rgba(0,0,0,0.4)]"
@@ -46,10 +52,14 @@
     >
       !
     </span>
+  </button>
 
+  <Teleport to="body">
     <div
-      class="pointer-events-none absolute z-[60] hidden w-max max-w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-slate-200/90 bg-white p-3 text-left text-xs font-normal normal-case text-slate-700 shadow-xl ring-1 ring-slate-900/5 group-hover/card:block dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-950/40"
-      :class="tooltipPlacementClass"
+      v-if="tooltipOpen"
+      :id="tooltipId"
+      class="pointer-events-none fixed z-[9999] w-max max-w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-slate-200/90 bg-white p-3 text-left text-xs font-normal normal-case text-slate-700 shadow-xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-950/40"
+      :style="tooltipStyle"
       role="tooltip"
     >
       <div class="flex flex-wrap items-center gap-2">
@@ -97,11 +107,11 @@
         </div>
       </dl>
     </div>
-  </button>
+  </Teleport>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDispatchTimelineTripCard } from '../../composables/useDispatchTimelineTripCard'
 
@@ -116,6 +126,8 @@ const props = defineProps({
 const emit = defineEmits(['pointerdown'])
 
 const { t } = useI18n()
+const uid = useId()
+const tooltipId = computed(() => `timeline-trip-tip-${props.trip.id}-${uid}`)
 
 const {
   visual,
@@ -132,21 +144,63 @@ const {
   cardSelectedClass,
 } = useDispatchTimelineTripCard(() => props.trip)
 
-/** Tooltip above card by default; below when bar starts near top of track (low %). */
-const tooltipPlacementClass = computed(() => {
-  const left = props.positionStyle?.left
-  const pct =
-    typeof left === 'string'
-      ? parseFloat(left)
-      : typeof left === 'number'
-        ? left
-        : 50
-  const nearStart = !Number.isNaN(pct) && pct < 12
-  if (nearStart) {
-    return 'left-1/2 top-full mt-1.5 -translate-x-1/2'
+const cardEl = ref(null)
+const tooltipOpen = ref(false)
+const tooltipStyle = ref({ top: '0px', left: '0px', transform: '' })
+
+const TOOLTIP_GAP = 8
+const VIEWPORT_PAD = 8
+
+function updateTooltipPosition() {
+  const el = cardEl.value
+  if (!el || typeof window === 'undefined') return
+
+  const rect = el.getBoundingClientRect()
+  const maxW = Math.min(288, window.innerWidth - VIEWPORT_PAD * 2)
+  let left = rect.left + rect.width / 2 - maxW / 2
+  left = Math.max(
+    VIEWPORT_PAD,
+    Math.min(left, window.innerWidth - maxW - VIEWPORT_PAD),
+  )
+
+  const spaceAbove = rect.top
+  const spaceBelow = window.innerHeight - rect.bottom
+  const placeBelow = spaceAbove < 140 && spaceBelow >= spaceAbove
+
+  if (placeBelow) {
+    tooltipStyle.value = {
+      top: `${rect.bottom + TOOLTIP_GAP}px`,
+      left: `${left}px`,
+      maxWidth: `${maxW}px`,
+      transform: 'none',
+    }
+  } else {
+    tooltipStyle.value = {
+      top: `${rect.top - TOOLTIP_GAP}px`,
+      left: `${left}px`,
+      maxWidth: `${maxW}px`,
+      transform: 'translateY(-100%)',
+    }
   }
-  const nearEnd = !Number.isNaN(pct) && pct > 72
-  const horizontal = nearEnd ? 'right-0 left-auto' : 'left-1/2 -translate-x-1/2'
-  return `${horizontal} bottom-full mb-1.5`
+}
+
+function showTooltip() {
+  tooltipOpen.value = true
+  nextTick(() => {
+    updateTooltipPosition()
+    window.addEventListener('scroll', updateTooltipPosition, true)
+    window.addEventListener('resize', updateTooltipPosition)
+  })
+}
+
+function hideTooltip() {
+  tooltipOpen.value = false
+  window.removeEventListener('scroll', updateTooltipPosition, true)
+  window.removeEventListener('resize', updateTooltipPosition)
+}
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateTooltipPosition, true)
+  window.removeEventListener('resize', updateTooltipPosition)
 })
 </script>

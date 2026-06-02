@@ -754,7 +754,7 @@
                 <!-- Center: timeline — xl cố định 990px; khi thu gọn sidebar app thì flex-1 để rộng thêm -->
                 <section
                     :class="[
-                        'w-full shrink-0 overflow-x-hidden overflow-y-visible rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80',
+                        'w-full shrink-0 overflow-visible rounded-2xl border border-slate-200/90 bg-white shadow-md shadow-slate-500/[0.07] ring-1 ring-slate-100/90 min-w-[min(100%,520px)] dark:border-slate-700/80 dark:bg-slate-900/40 dark:shadow-none dark:ring-slate-800/80',
                         ui.sidebarCollapsed
                             ? 'xl:flex-1 xl:min-w-[990px] xl:max-w-none'
                             : 'xl:min-w-[990px] xl:w-[990px] xl:max-w-[990px]',
@@ -802,10 +802,10 @@
                         </div>
                     </div>
                     <div
-                        class="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                        class="overflow-x-auto overflow-y-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                     >
                         <div
-                            class="w-full min-w-[990px] bg-gradient-to-b from-slate-50/40 to-white p-3 dark:from-slate-950/50 dark:to-slate-900/30"
+                            class="w-full min-w-[990px] bg-gradient-to-b from-slate-50/40 to-white p-3 pb-6 pt-4 dark:from-slate-950/50 dark:to-slate-900/30"
                         >
                             <div
                                 class="mb-1.5 flex text-[10px] font-medium text-slate-500 dark:text-slate-400"
