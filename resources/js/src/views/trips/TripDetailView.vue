@@ -148,11 +148,9 @@
                             :trip-type-label="tripTypeLabel"
                             :sla-banner="slaBanner"
                             :step-pickup="stepPickup"
-                            :step-current="stepCurrent"
                             :step-dropoff="stepDropoff"
                             :origin-label="displayOriginLabel"
                             :destination-label="displayDestinationLabel"
-                            :current-label="currentLabel"
                         />
                         <TripSchedulesPanel
                             v-if="scheduleCount > 0"
@@ -874,9 +872,7 @@ const {
     scheduleMismatchNotes,
     originLabel,
     destinationLabel,
-    currentLabel,
     stepPickup: stepPickupBase,
-    stepCurrent: stepCurrentBase,
     stepDropoff: stepDropoffBase,
 } = useTripDetail(trip, workflowStatusForDisplay);
 
@@ -940,9 +936,6 @@ function mapStepLabelWhenDriverRejected(step) {
 
 const stepPickup = computed(() =>
     mapStepLabelWhenDriverRejected(stepPickupBase.value),
-);
-const stepCurrent = computed(() =>
-    mapStepLabelWhenDriverRejected(stepCurrentBase.value),
 );
 const stepDropoff = computed(() =>
     mapStepLabelWhenDriverRejected(stepDropoffBase.value),

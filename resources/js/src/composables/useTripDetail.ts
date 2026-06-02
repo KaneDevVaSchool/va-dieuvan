@@ -110,11 +110,6 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
 
   const originLabel = computed(() => trip.value?.dispatch_request?.origin ?? '—')
   const destinationLabel = computed(() => trip.value?.dispatch_request?.destination ?? '—')
-  const currentLabel = computed(() => {
-    if (statusForWorkflow.value === 'in_progress') return t('trip_detail.current_location.en_route')
-    return '—'
-  })
-
   const statusForWorkflow = computed(() => workflowStatus?.value ?? trip.value?.status)
 
   const stepPickup = computed(() => {
@@ -123,14 +118,6 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
     if (s === 'in_progress') return { state: 'done' as const, label: t('trip_detail.step.completed') }
     if (s === 'cancelled') return { state: 'blocked' as const, label: t('trip_detail.step.cancelled') }
     return { state: 'active' as const, label: t('trip_detail.step.pending') }
-  })
-
-  const stepCurrent = computed(() => {
-    const s = statusForWorkflow.value
-    if (s === 'in_progress') return { state: 'active' as const, label: t('trip_detail.step.en_route') }
-    if (s === 'completed') return { state: 'done' as const, label: t('trip_detail.step.arrived') }
-    if (s === 'cancelled') return { state: 'blocked' as const, label: t('trip_detail.step.cancelled') }
-    return { state: 'pending' as const, label: t('trip_detail.step.waiting') }
   })
 
   const stepDropoff = computed(() => {
@@ -154,9 +141,7 @@ export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string
     scheduleMismatchNotes,
     originLabel,
     destinationLabel,
-    currentLabel,
     stepPickup,
-    stepCurrent,
     stepDropoff,
   }
 }

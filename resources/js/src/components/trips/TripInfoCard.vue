@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import {
     CalendarDaysIcon,
@@ -28,11 +27,9 @@ const props = defineProps<{
     tripTypeLabel: string;
     slaBanner: SlaBanner;
     stepPickup: Step;
-    stepCurrent: Step;
     stepDropoff: Step;
     originLabel: string;
     destinationLabel: string;
-    currentLabel: string;
     /** Khi set, thay nhãn pill trạng thái (vd. «Đã từ chối» thay cho «Đã huỷ»). */
     statusLabelOverride?: string | null;
 }>();
@@ -71,12 +68,6 @@ function dotClass(state: string) {
     return `${base} bg-slate-300`;
 }
 
-const currentDotClass = computed(() => {
-    const base = dotClass(props.stepCurrent.state);
-    if (props.stepCurrent.state === "active")
-        return `${base} location-dot-pulse`;
-    return base;
-});
 </script>
 
 <template>
@@ -287,9 +278,9 @@ const currentDotClass = computed(() => {
             </div>
         </div>
 
-        <!-- Điểm đón / vị trí / điểm trả -->
+        <!-- Điểm đón / điểm trả -->
         <div class="mt-6 border-t border-slate-100 pt-5">
-            <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4 md:grid-cols-2">
                 <div class="flex items-start gap-3">
                     <div :class="dotClass(stepPickup.state)" />
                     <div class="min-w-0">
@@ -305,25 +296,6 @@ const currentDotClass = computed(() => {
                             }}</span>
                             <span v-if="trip.depart_at">
                                 · {{ fmtTime(trip.depart_at) }}</span
-                            >
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div :class="currentDotClass" />
-                    <div class="min-w-0">
-                        <div class="text-xs font-medium text-slate-500">
-                            {{ t("trip_detail.trip_status.current") }}
-                        </div>
-                        <div class="mt-1 text-sm font-semibold text-slate-900">
-                            {{ currentLabel }}
-                        </div>
-                        <div class="mt-1 text-xs text-slate-500">
-                            <span class="font-medium">{{
-                                stepCurrent.label
-                            }}</span>
-                            <span v-if="trip.started_at">
-                                · {{ fmtTime(trip.started_at) }}</span
                             >
                         </div>
                     </div>
@@ -352,20 +324,3 @@ const currentDotClass = computed(() => {
 
     </section>
 </template>
-
-<style scoped>
-@keyframes location-pulse {
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.5;
-        transform: scale(1.4);
-    }
-}
-.location-dot-pulse {
-    animation: location-pulse 2s ease-in-out infinite;
-}
-</style>
