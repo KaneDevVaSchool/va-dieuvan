@@ -30,6 +30,7 @@ Seed chính: [database/seeders/RbacSeeder.php](../database/seeders/RbacSeeder.ph
 | superadmin | Super Admin |
 | admin | Admin |
 | dispatcher | Dispatcher |
+| department_head | Trưởng đơn vị |
 | driver | Tài xế |
 | accountant | Kế toán |
 | internal_user | User nội bộ |
@@ -44,6 +45,8 @@ Seed chính: [database/seeders/RbacSeeder.php](../database/seeders/RbacSeeder.ph
 | request.update_own | Sửa yêu cầu của mình |
 | request.cancel_own | Hủy yêu cầu của mình |
 | request.approve | Duyệt/từ chối yêu cầu |
+| request.fill_price | Điền giá / chọn Trưởng BP duyệt |
+| request.approve_dept | Trưởng BP duyệt phiếu (dept-decision) |
 | request.paper.manage | Quản lý phiếu giấy |
 | trip.assign | Phân công chuyến |
 | trip.view_all | Xem mọi chuyến |
@@ -73,6 +76,10 @@ Seed chính: [database/seeders/RbacSeeder.php](../database/seeders/RbacSeeder.ph
 | system.user_roles.manage | Gán role user |
 | system.feature_toggles.manage | CRUD feature toggle |
 | dispatch.settings.manage | Cấu hình dispatch |
+| p2p_policy.view | Xem chính sách P2P (campus, kỳ, tuyến, HS…) |
+| p2p_policy.manage | CRUD chính sách P2P |
+| p2p_policy.activate | Kích hoạt kỳ P2P |
+| p2p_policy.import_export | Import/export danh sách học sinh P2P |
 
 Mô tả tiếng Việt plain-text có thể được hydrate từ `App\Support\PermissionPlainVi` + file JSON (xem `RbacSeeder`).
 
@@ -84,8 +91,9 @@ Mô tả tiếng Việt plain-text có thể được hydrate từ `App\Support\
 |------|------------------------|
 | internal_user | request.* own, trip.view_own |
 | driver | trip ops + cost view + attachment.upload |
-| dispatcher | Gần full nghiệp vụ điều vận + resource + cargo + route + student + reference pricing |
-| accountant | trip/payment/report + provider + attachment |
+| department_head | request.approve_dept, trip.view_own, attachment.upload |
+| dispatcher | Gần full nghiệp vụ điều vận + resource + cargo + route + student + reference pricing + fill_price + p2p_policy.* |
+| accountant | trip/payment/report + provider + attachment + p2p_policy.view |
 | admin | **Toàn bộ** danh sách |
 | superadmin | **Toàn bộ** danh sách |
 
@@ -102,7 +110,7 @@ Chi tiết đầy đủ: mảng `$map` trong `RbacSeeder`.
 | `permission` | `EnsureHasPermission` | Spatie `hasPermissionTo` |
 | `role` | `EnsureHasRole` | Spatie `hasRole` |
 | `dispatch.web` | `EnsureDispatchWebAccess` | Vào được SPA điều vận/driver |
-| `dispatch.staff` | `EnsureDispatchStaffAccess` | Staff (không pure-driver-only account) |
+| `dispatch.staff` | `EnsureDispatchStaffAccess` | Staff: superadmin, admin, dispatcher, department_head (không pure-driver-only account) |
 | `driver.spa` | `EnsureDriverWebAccess` | Route chỉ cho app tài xế |
 | `feature` | `EnsureFeatureEnabled` | Feature toggle |
 

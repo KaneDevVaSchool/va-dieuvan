@@ -20,7 +20,7 @@ va-dieuvan/
 ├── config/                 # Cấu hình Laravel + dispatch/push/permission
 ├── database/
 │   ├── factories/
-│   ├── migrations/         # ~57 migration định nghĩa schema
+│   ├── migrations/         # ~80 migration định nghĩa schema
 │   └── seeders/
 ├── docs/                   # Tài liệu dự án (bộ file .md)
 ├── public/                 # Web root, asset build
@@ -53,7 +53,7 @@ va-dieuvan/
 | -------------- | ------------------------------- | ---------------------------------------------------------- |
 | Auth web OAuth | `Auth/GoogleAuthController.php` | Redirect Google                                            |
 | API Auth       | `Api/Auth/AuthController.php`   | Login/logout Sanctum                                       |
-| SPA domain     | `Api/**`                        | REST JSON — ~35 file trong `Api/` (trips, cargo, admin, …) |
+| SPA domain     | `Api/**`                        | REST JSON — ~48 file trong `Api/` (trips, cargo, portal, p2p, admin, …) |
 | Trait response | `Api/Concerns/ApiResponses.php` | Chuẩn hoá JSON                                             |
 
 
@@ -65,7 +65,7 @@ va-dieuvan/
 | Alias            | Class                       | Ý nghĩa                                  |
 | ---------------- | --------------------------- | ---------------------------------------- |
 | `dispatch.web`   | `EnsureDispatchWebAccess`   | Cho phép vào SPA điều vận / driver shell |
-| `dispatch.staff` | `EnsureDispatchStaffAccess` | superadmin, admin, dispatcher            |
+| `dispatch.staff` | `EnsureDispatchStaffAccess` | superadmin, admin, dispatcher, department_head |
 | `driver.spa`     | `EnsureDriverWebAccess`     | Luồng chỉ tài xế                         |
 | `permission`     | `EnsureHasPermission`       | Spatie permission                        |
 | `role`           | `EnsureHasRole`             | Spatie role                              |
@@ -73,13 +73,13 @@ va-dieuvan/
 | `feature`        | `EnsureFeatureEnabled`      | Feature toggle                           |
 
 
-### `app/Services` (~13 file)
+### `app/Services` (~37 file PHP)
 
-Ví dụ: `Dispatching/DispatchingService.php`, `Auditing/AuditLogger.php`, `WebPushSender.php`, `Costs/CostCalculationService.php`, `Admin/UserRoleService.php`, `Operational/DriverWorkloadService.php`, `Ocr/PaperOcrStubService.php`, …
+Ví dụ: `Dispatching/DispatchingService.php`, `P2pPolicy/`, `RecurringDispatch/`, `Auditing/AuditLogger.php`, `WebPushSender.php`, `Costs/CostCalculationService.php`, `Admin/UserRoleService.php`, `Operational/DriverWorkloadService.php`, `Ocr/PaperOcrStubService.php`, …
 
 ### `app/Models`
 
-33 model domain + User — mapping Eloquent tới bảng migrations.
+46 model domain + User — mapping Eloquent tới bảng migrations.
 
 ### `app/Notifications`
 
@@ -91,7 +91,13 @@ Ví dụ: `Dispatching/DispatchingService.php`, `Auditing/AuditLogger.php`, `Web
 
 ### `app/Jobs`
 
-**Trống** — không có job class tùy chỉnh trong repo (workload chủ yếu qua queued Notifications).
+3 job class tùy chỉnh:
+
+- `ProcessAttachmentOcrJob` — OCR attachment nền
+- `PolicyStudentImportJob` — import học sinh P2P
+- `PolicyGenerateTripsBatchJob` — batch sinh chuyến từ policy
+
+Ngoài ra workload nền qua **Notification implements ShouldQueue** — xem [QUEUE_EVENT_CRON.md](./QUEUE_EVENT_CRON.md).
 
 ### Policies / Requests
 
@@ -115,13 +121,13 @@ resources/js/
     ├── App.vue
     ├── router/index.js    # Staff base path + driver routes + guards
     ├── i18n.js + locales/
-    ├── api/               # ~18 module gọi REST (axios)
+    ├── api/               # 20 module gọi REST (axios)
     ├── store/             # Pinia chính: auth, ui, driverDashboard, notificationCenter
     ├── stores/            # Pinia TS: userRoleAssignmentStore.ts
     ├── services/          # TS service layer (vd userRoleService)
     ├── composables/       # Logic tái sử dụng (.js / .ts)
-    ├── components/        # UI layout/nav/ui/dispatch/driver/trips/...
-    ├── views/             # Pages/screens
+    ├── components/        # UI layout/nav/ui/dispatch/driver/trips/portal/...
+    ├── views/             # Pages/screens (staff, driver, portal)
     ├── core/              # http, monitoring, offline/outbox
     ├── config/            # dispatchWebBase, nav, shortcuts
     ├── util/
@@ -140,13 +146,13 @@ resources/js/
 | File                                       | Nội dung                                                          |
 | ------------------------------------------ | ----------------------------------------------------------------- |
 | `routes/web.php`                           | `/auth/google`, `/login`, `/sw.js`, fallback SPA                  |
-| `routes/api.php`                           | `/api/login`, telemetry, nhóm `auth:sanctum` require các file spa |
+| `routes/api.php`                           | `/api/login`, telemetry, `/api/user`, **`/api/portal/*`**, nhóm `dispatch.web` require spa |
 | `routes/api/spa/common-read.php`           | Đọc chung                                                         |
-| `routes/api/spa/common-mutate.php`         | Ghi profile                                                       |
+| `routes/api/spa/common-mutate.php`         | Ghi profile + dispatch-request (staff/internal)                   |
 | `routes/api/spa/driver-read.php`           | Đọc driver                                                        |
 | `routes/api/spa/driver-mutate.php`         | Ghi trip ops costs attachments                                    |
-| `routes/api/spa/dispatch-staff-read.php`   | Admin/dispatcher đọc                                              |
-| `routes/api/spa/dispatch-staff-mutate.php` | Admin/dispatcher ghi                                              |
+| `routes/api/spa/dispatch-staff-read.php`   | Staff đọc (admin, dispatcher, department_head)                    |
+| `routes/api/spa/dispatch-staff-mutate.php` | Staff ghi + P2P policy                                            |
 
 
 Prefix API thực tế: Laravel chuẩn — các route trong `routes/api.php` được mount với prefix `/api` (trừ khi đổi `RouteServiceProvider`).

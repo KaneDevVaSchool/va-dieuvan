@@ -14,10 +14,12 @@ Chi tiết đầy đủ: `docs/PROJECT_OVERVIEW.md`, `docs/FEATURES_AND_MODULES.
 - **Vehicle / Driver / NCC:** xe nội bộ, tài xế, nhà cung cấp / taxi (`transport_providers`).
 - **Cargo:** luồng hàng với SLA (`sla_due_at`).
 - **Route D2D:** tuyến cửa–cửa, phiên bản tuyến, học sinh, lịch chạy.
+- **P2P Policy:** chính sách đón trả (campus, học kỳ, tuyến policy, import HS Excel).
+- **Portal:** shell SPA riêng cho user nội bộ tạo yêu cầu (`/portal/*`, `/api/portal/*`).
 
 ## Roles (Spatie, guard `web`)
 
-`superadmin`, `admin`, `dispatcher`, `driver`, `accountant`, `internal_user` — mapping quyền: `docs/PERMISSION_AND_ROLE.md`, seed `database/seeders/RbacSeeder.php`.
+`superadmin`, `admin`, `dispatcher`, `department_head`, `driver`, `accountant`, `internal_user` — mapping quyền: `docs/PERMISSION_AND_ROLE.md`, seed `database/seeders/RbacSeeder.php`.
 
 ## Trạng thái chính
 

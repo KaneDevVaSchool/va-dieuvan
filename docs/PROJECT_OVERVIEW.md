@@ -59,7 +59,8 @@
 | **Dispatcher**          | Role `dispatcher`                 | Duyệt yêu cầu, gán xe/tài xế, quản lý tài nguyên vận hành         |
 | **Tài xế**              | Role `driver`                     | App tài xế (shell riêng), chuyến của tôi, chi phí, O-POD/chứng từ |
 | **Kế toán**             | Role `accountant`                 | Chi phí, đối soát, thanh toán, báo cáo (theo quyền seed)          |
-| **User nội bộ**         | Role `internal_user`              | Tạo/sửa/hủy **yêu cầu của mình**, xem chuyến liên quan            |
+| **Trưởng đơn vị**        | Role `department_head`            | Duyệt phiếu điều xe được chọn (`dept-decision`), xem chuyến liên quan |
+| **User nội bộ**         | Role `internal_user`              | Tạo/sửa/hủy **yêu cầu của mình**, xem chuyến liên quan; shell **Portal** (`/portal/*`) |
 
 
 Chi tiết mapping quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
@@ -142,6 +143,7 @@ sequenceDiagram
 | RBAC         | spatie/laravel-permission                  | ^6.25                                    |
 | PDF          | barryvdh/laravel-dompdf                    | Phiếu điều xe                            |
 | Push         | minishlink/web-push                        | VAPID                                    |
+| Excel        | openspout/openspout                        | Import/export học sinh P2P               |
 | Frontend     | Vue 3, Vite 5, Pinia, Vue Router, vue-i18n | [package.json](../package.json)          |
 | CSS          | Tailwind CSS                               | Utility-first                            |
 | PWA          | vite-plugin-pwa                            | injectManifest `resources/js/src/sw.js`  |
@@ -166,12 +168,14 @@ Chi tiết: [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md).
 | Module (business)      | Gợi ý file / entry                                                          |
 | ---------------------- | --------------------------------------------------------------------------- |
 | Auth & session API     | `AuthController`, `routes/api.php`                                          |
+| Portal (user nội bộ)   | `Portal\PortalDispatchRequestController`, `routes/api.php` (`/api/portal/*`) |
 | Hồ sơ user             | `UserProfileController`                                                     |
 | Yêu cầu điều xe        | `DispatchRequestController`, `RequestController`                            |
 | Chuyến & timeline      | `TripController`, `TripOpsController`                                       |
 | Chi phí                | `TripCostController`, `CostCalculationService` (khung)                      |
 | Hàng hóa               | `CargoController`, command `cargo:sla-check`                                |
 | Tuyến D2D              | `D2D\RouteController`                                                       |
+| Chính sách P2P         | `P2pPolicy\*Controller`, `Services/P2pPolicy/`                              |
 | Tài nguyên (xe/TX/NCC) | `OperationalResourceController`                                             |
 | Compliance             | `DriverComplianceDocumentController`, `VehicleComplianceDocumentController` |
 | Báo cáo                | `ReportController`                                                          |
@@ -194,6 +198,8 @@ Chi tiết: [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md).
 
 
 Hướng dẫn cài đặt: [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md).
+
+Portal UX/API chi tiết: [PORTAL_NEW_STRUCTURE.md](./PORTAL_NEW_STRUCTURE.md).
 
 ---
 

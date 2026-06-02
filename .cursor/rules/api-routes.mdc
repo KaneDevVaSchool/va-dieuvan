@@ -12,19 +12,20 @@ Catalog đầy đủ: `docs/API_OVERVIEW.md`. Entry: `routes/api.php`.
 ## Cấu trúc
 
 - **Public API:** `POST /api/login`, `POST /api/telemetry/frontend` (trong `routes/api.php`).
-- **Nhóm authenticated:** `middleware(['auth:sanctum'])` → `middleware(['dispatch.web'])` → require các file:
+- **Portal API:** `/api/portal/*` + `GET /api/user` — chỉ `auth:sanctum` (trong `routes/api.php`, **ngoại lệ** không qua `dispatch.web`).
+- **Nhóm authenticated SPA:** `middleware(['auth:sanctum'])` → `middleware(['dispatch.web'])` → require các file:
   - `routes/api/spa/common-read.php` — đọc chung (staff + driver).
-  - `routes/api/spa/common-mutate.php` — ghi nhẹ (profile).
+  - `routes/api/spa/common-mutate.php` — ghi profile + dispatch-request (staff/internal).
   - `routes/api/spa/driver-read.php` — + `driver.spa`.
   - `routes/api/spa/driver-mutate.php` — + `LogApiActivity` (trip ops, costs driver, attachments…).
   - `routes/api/spa/dispatch-staff-read.php` — + `dispatch.staff`.
   - `routes/api/spa/dispatch-staff-mutate.php` — + `dispatch.staff` + `LogApiActivity`.
 
-**Không** đăng ký hàng loạt endpoint SPA mới trực tiếp trong `routes/api.php`; thêm vào đúng file `spa/` theo read/mutate và staff/driver/common.
+**Không** đăng ký hàng loạt endpoint SPA staff/driver mới trực tiếp trong `routes/api.php`; thêm vào đúng file `spa/` theo read/mutate và staff/driver/common. **Ngoại lệ:** nhóm Portal (`/api/portal/*`) giữ trong `routes/api.php`.
 
 ## Middleware stack (thứ tự ý niệm)
 
-`auth:sanctum` → `dispatch.web` → (`dispatch.staff` | `driver.spa` | không) → (`LogApiActivity` trên mutate) → `throttle` → `idempotency` (một số POST).
+`auth:sanctum` → (`dispatch.web` | không — Portal) → (`dispatch.staff` | `driver.spa` | không) → (`LogApiActivity` trên mutate) → `throttle` → `idempotency` (một số POST).
 
 ## Throttle (tham chiếu)
 
