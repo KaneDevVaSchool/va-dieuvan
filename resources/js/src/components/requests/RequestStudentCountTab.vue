@@ -1,65 +1,65 @@
 <template>
-  <div id="request-focus-passenger" class="scroll-mt-24 space-y-5">
+  <div id="request-focus-passenger" class="scroll-mt-24">
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div class="border-b border-slate-200 bg-slate-50/80 px-4 py-4 sm:px-5">
-        <h2 class="text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">
+      <div class="border-b border-slate-200 bg-slate-50/80 px-4 py-3.5 sm:px-5">
+        <h2 class="text-sm font-bold text-slate-900 sm:text-base">
           {{ t('request_detail.bm03_student_count_header') }}
         </h2>
-        <p class="mt-1 text-xs text-slate-600">{{ t('request_detail.passenger_section_lead') }}</p>
+        <p class="mt-0.5 text-xs leading-relaxed text-slate-600">
+          {{ t('request_detail.passenger_section_lead') }}
+        </p>
       </div>
-      <div class="flex flex-col gap-5 p-4 sm:flex-row sm:items-start sm:p-5">
-        <div
-          class="mx-auto grid w-full max-w-[15rem] shrink-0 gap-px overflow-hidden rounded border border-teal-300/80 bg-teal-50/30 text-[11px] sm:mx-0"
-        >
-          <div
-            class="col-span-2 border-b border-teal-200 bg-teal-50 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-teal-900"
-          >
-            {{ t('request_detail.bm03_student_count_header') }}
-          </div>
-          <div class="grid grid-cols-2 bg-white">
-            <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
-              {{ t('request_detail.bm03_student_count_plan_short') }}
-            </span>
-            <span class="border-b border-slate-300 px-2 py-1 text-right tabular-nums text-slate-900">
-              {{ studentCountPlanDisplay ?? '—' }}
-            </span>
-          </div>
-          <div class="grid grid-cols-2 bg-white">
-            <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
-              {{ t('request_detail.bm03_student_count_actual_short') }}
-            </span>
-            <span
-              class="border-b border-slate-300 px-2 py-1 text-right tabular-nums font-semibold"
-              :class="studentCountActualHighlight ? 'text-teal-800' : 'text-slate-900'"
-            >
-              {{ studentCountActualDisplay ?? '—' }}
-            </span>
-          </div>
-          <div class="grid grid-cols-2 bg-white">
-            <span class="border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
-              {{ t('request_detail.bm03_student_count_status') }}
-            </span>
-            <span class="flex justify-end px-1 py-0.5">
-              <StudentCountTrackingBadge
-                :tracking-key="studentCountTrackingKey"
-                i18n-prefix="requests_page.extracurricular_table"
-              />
-            </span>
-          </div>
-        </div>
 
-        <div v-if="showPassengerAdjustSection" class="min-w-0 flex-1">
-          <StudentCountField
-            v-model:passenger-count="passengerDraftModel"
-            :student-count-plan="req?.passenger_count != null ? Number(req.passenger_count) : null"
-            :locked="passengerDepartLocked"
-            :is-dispatcher-override="passengerDispatcherOverride"
-            :depart-at-formatted="departAtFormatted"
-            :saving="passengerSaving"
-            :error="passengerPatchErr"
-            @save="$emit('savePassenger')"
-          />
+      <dl
+        class="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+      >
+        <div class="px-4 py-3.5 sm:px-5">
+          <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {{ t('request_detail.bm03_student_count_plan_short') }}
+          </dt>
+          <dd class="mt-1 text-2xl font-semibold tabular-nums leading-none text-slate-900">
+            {{ studentCountPlanDisplay ?? '—' }}
+          </dd>
         </div>
+        <div class="px-4 py-3.5 sm:px-5">
+          <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {{ t('request_detail.bm03_student_count_actual_short') }}
+          </dt>
+          <dd
+            class="mt-1 text-2xl font-semibold tabular-nums leading-none"
+            :class="studentCountActualHighlight ? 'text-teal-700' : 'text-slate-900'"
+          >
+            {{ studentCountActualDisplay ?? '—' }}
+          </dd>
+        </div>
+        <div class="flex flex-col justify-center px-4 py-3.5 sm:px-5">
+          <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {{ t('request_detail.bm03_student_count_status') }}
+          </dt>
+          <dd class="mt-1.5">
+            <StudentCountTrackingBadge
+              :tracking-key="studentCountTrackingKey"
+              i18n-prefix="requests_page.extracurricular_table"
+            />
+          </dd>
+        </div>
+      </dl>
+
+      <div
+        v-if="showPassengerAdjustSection"
+        class="border-t border-slate-200 bg-slate-50/40 px-4 py-4 sm:px-5"
+      >
+        <StudentCountField
+          v-model:passenger-count="passengerDraftModel"
+          embedded
+          :student-count-plan="req?.passenger_count != null ? Number(req.passenger_count) : null"
+          :locked="passengerDepartLocked"
+          :is-dispatcher-override="passengerDispatcherOverride"
+          :depart-at-formatted="departAtFormatted"
+          :saving="passengerSaving"
+          :error="passengerPatchErr"
+          @save="$emit('savePassenger')"
+        />
       </div>
     </section>
   </div>
