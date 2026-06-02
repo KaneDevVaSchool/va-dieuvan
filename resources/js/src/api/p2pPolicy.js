@@ -30,6 +30,11 @@ export async function updateP2pPolicyTerm(id, payload) {
   return data.data
 }
 
+export async function deleteP2pPolicyTerm(id) {
+  const { data } = await http.delete(`/p2p-policy/terms/${id}`)
+  return data.data
+}
+
 export async function syncP2pPolicyTermCalendar(id, payload) {
   const { data } = await http.put(`/p2p-policy/terms/${id}/calendar`, payload)
   return data.data

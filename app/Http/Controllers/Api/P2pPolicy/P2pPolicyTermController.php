@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\P2pPolicy;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\P2pPolicy\ActivateP2pPolicyTermRequest;
+use App\Http\Requests\Api\P2pPolicy\DestroyP2pPolicyTermRequest;
 use App\Http\Requests\Api\P2pPolicy\ListP2pPolicyTermsRequest;
 use App\Http\Requests\Api\P2pPolicy\StoreP2pPolicyTermRequest;
 use App\Http\Requests\Api\P2pPolicy\SyncP2pPolicyTermCalendarRequest;
@@ -154,6 +155,26 @@ class P2pPolicyTermController extends Controller
         });
 
         return $this->ok($p2pPolicyTerm->fresh()->load(['holidays', 'skipDates']));
+    }
+
+    public function destroy(DestroyP2pPolicyTermRequest $request, P2pPolicyTerm $p2pPolicyTerm)
+    {
+        if ($p2pPolicyTerm->status !== 'draft') {
+            abort(409, 'Chỉ xóa được kỳ trung chuyển ở trạng thái nháp.');
+        }
+
+        $before = $p2pPolicyTerm->toArray();
+        $p2pPolicyTerm->delete();
+
+        app(AuditLogger::class)->log(
+            $request->user()->id,
+            'p2p_policy.term.delete',
+            $p2pPolicyTerm,
+            $before,
+            null,
+        );
+
+        return $this->ok(['deleted' => true]);
     }
 
     public function activate(ActivateP2pPolicyTermRequest $request, P2pPolicyTerm $p2pPolicyTerm, P2pPolicyActivationService $activation)

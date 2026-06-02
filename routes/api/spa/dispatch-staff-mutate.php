@@ -183,6 +183,7 @@ Route::prefix('p2p-policy')->group(function () {
     Route::controller(P2pPolicyTermController::class)->group(function () {
         Route::post('/terms', 'store')->middleware('permission:p2p_policy.manage');
         Route::patch('/terms/{p2pPolicyTerm}', 'update')->middleware('permission:p2p_policy.manage');
+        Route::delete('/terms/{p2pPolicyTerm}', 'destroy')->middleware('permission:p2p_policy.manage');
         Route::put('/terms/{p2pPolicyTerm}/calendar', 'syncCalendar')->middleware('permission:p2p_policy.manage');
         Route::post('/terms/{p2pPolicyTerm}/activate', 'activate')
             ->name('api.p2p-policy.terms.activate')

@@ -91,6 +91,122 @@
       </div>
     </section>
 
+    <section aria-labelledby="p2p-terms-mgmt-heading" class="space-y-3">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2
+            id="p2p-terms-mgmt-heading"
+            class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+          >
+            <CalendarDaysIcon class="h-4 w-4 text-violet-500 dark:text-violet-400" aria-hidden="true" />
+            {{ t('p2p_policy_page.terms_mgmt_title') }}
+          </h2>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.terms_mgmt_hint') }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="inline-flex items-center gap-2 text-sm">
+            <span class="text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.terms_filter_status') }}</span>
+            <select
+              v-model="termStatusFilter"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+              @change="load"
+            >
+              <option value="">{{ t('p2p_policy_page.terms_filter_all') }}</option>
+              <option value="draft">{{ t('p2p_policy_page.status_draft') }}</option>
+              <option value="generating">{{ t('p2p_policy_page.status_generating') }}</option>
+              <option value="active">{{ t('p2p_policy_page.status_active') }}</option>
+              <option value="closed">{{ t('p2p_policy_page.status_closed') }}</option>
+            </select>
+          </label>
+          <RouterLink
+            :to="{ name: 'p2pPolicyTerm' }"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-900 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
+          >
+            <PlusCircleIcon class="h-4 w-4" aria-hidden="true" />
+            {{ t('p2p_policy_page.create_term') }}
+          </RouterLink>
+        </div>
+      </div>
+
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.04] dark:border-slate-700 dark:bg-slate-900/80">
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80">
+              <tr>
+                <th class="px-3 py-2.5">{{ t('p2p_policy_page.terms_col_name') }}</th>
+                <th class="hidden px-3 py-2.5 md:table-cell">{{ t('p2p_policy_page.field_academic_term') }}</th>
+                <th class="hidden px-3 py-2.5 sm:table-cell">{{ t('p2p_policy_page.terms_col_dates') }}</th>
+                <th class="px-3 py-2.5">{{ t('p2p_policy_page.filter_active') }}</th>
+                <th class="min-w-[10rem] px-3 py-2.5 text-right">{{ t('p2p_policy_page.col_actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="term in terms"
+                :key="term.id"
+                class="border-t border-slate-100 transition-colors dark:border-slate-800"
+                :class="selectedTermId === term.id ? 'bg-teal-50/60 dark:bg-teal-950/20' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'"
+              >
+                <td class="px-3 py-2.5">
+                  <p class="font-medium text-slate-900 dark:text-white">{{ termRowTitle(term) }}</p>
+                  <p class="mt-0.5 text-xs text-slate-500 sm:hidden">{{ termRowDateRange(term) }}</p>
+                </td>
+                <td class="hidden px-3 py-2.5 md:table-cell text-slate-700 dark:text-slate-300">
+                  <span v-if="term.academic_term">
+                    {{ term.academic_term.academic_year }} · {{ term.academic_term.name }}
+                  </span>
+                  <span v-else>—</span>
+                </td>
+                <td class="hidden px-3 py-2.5 sm:table-cell text-slate-600 dark:text-slate-400">{{ termRowDateRange(term) }}</td>
+                <td class="px-3 py-2.5">
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold"
+                    :class="statusBadgeClass(term.status)"
+                  >
+                    <span class="h-1.5 w-1.5 rounded-full bg-current opacity-80" aria-hidden="true" />
+                    {{ termStatusLabel(term.status) }}
+                  </span>
+                </td>
+                <td class="px-3 py-2.5 text-right">
+                  <div class="flex flex-wrap justify-end gap-1.5">
+                    <button
+                      type="button"
+                      class="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800"
+                      @click="selectTermRow(term)"
+                    >
+                      {{ t('p2p_policy_page.terms_action_select') }}
+                    </button>
+                    <RouterLink
+                      :to="p2pStepTo('p2pPolicyTerm', term.id)"
+                      class="rounded-lg border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-900 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-100"
+                    >
+                      {{ t('p2p_policy_page.terms_action_config') }}
+                    </RouterLink>
+                    <button
+                      v-if="canManageTerms && term.status === 'draft'"
+                      type="button"
+                      class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-800 hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+                      :disabled="deletingTermId === term.id"
+                      @click="onDeleteTerm(term)"
+                    >
+                      {{ deletingTermId === term.id ? t('common.processing') : t('p2p_policy_page.terms_action_delete') }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="!loadingTerms && !terms.length">
+                <td colspan="5" class="px-3 py-10 text-center text-slate-500">{{ t('p2p_policy_page.terms_empty') }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="loadingTerms" class="flex items-center justify-center gap-2 border-t border-slate-100 py-8 text-sm text-slate-500 dark:border-slate-800">
+            <span class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700" aria-hidden="true" />
+            {{ t('common.loading') }}
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div v-if="!selectedTerm && !loadingTerms" class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-8 text-center dark:border-slate-600 dark:bg-slate-900/40">
       <CalendarDaysIcon class="mx-auto h-12 w-12 text-slate-400 dark:text-slate-500" aria-hidden="true" />
       <h2 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white">{{ t('p2p_policy_page.hub_no_term_title') }}</h2>
@@ -104,7 +220,7 @@
       </RouterLink>
     </div>
 
-    <div v-else-if="selectedTerm" class="grid gap-6 xl:grid-cols-12">
+    <div v-else-if="selectedTerm" id="p2p-term-detail-panel" class="grid gap-6 xl:grid-cols-12">
       <Card class="xl:col-span-5 !p-5" :title="t('p2p_policy_page.hub_term_panel_title')" :hint="t('p2p_policy_page.hub_term_panel_hint')">
         <div v-if="terms.length > 1" class="mb-4">
           <label class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -307,23 +423,35 @@ import {
 import Card from '../../components/ui/Card.vue'
 import {
   activateP2pPolicyTerm,
+  deleteP2pPolicyTerm,
   getP2pPolicyTermReadiness,
   getPolicyGenerationRun,
   listP2pPolicyTerms,
 } from '../../api/p2pPolicy'
 import { p2pStepTo } from '../../composables/useP2pPolicyWorkflow'
-import { showAppErrorFromApi } from '../../composables/appMessage'
-import { formatP2pOperatingDate, p2pPolicyDateLocale } from '../../util/p2pPolicyTermDisplay'
+import { confirmAction } from '../../composables/useConfirm'
+import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { formatApiError } from '../../api/http'
+import { useAuthStore } from '../../store'
+import {
+  formatP2pDateRange,
+  formatP2pOperatingDate,
+  formatP2pTermLabel,
+  p2pPolicyDateLocale,
+} from '../../util/p2pPolicyTermDisplay'
 import { p2pTermActivateIdempotencyKey } from '../../util/idempotency'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 const terms = ref([])
 const selectedTerm = ref(null)
 const selectedTermId = ref(null)
 const loadingTerms = ref(true)
+const termStatusFilter = ref('')
+const deletingTermId = ref(null)
 const readiness = ref(null)
 const activating = ref(false)
 const generationRun = ref(null)
@@ -333,6 +461,8 @@ const activateIdempotencyKey = ref('')
 let pollTimer = null
 
 const workflowTermId = computed(() => selectedTermId.value ?? null)
+
+const canManageTerms = computed(() => auth.hasPermission('p2p_policy.manage'))
 
 const cards = computed(() => [
   {
@@ -479,9 +609,52 @@ function formatTimeRange(start, end) {
 }
 
 function termOptionLabel(term) {
-  const ay = term.academic_term?.academic_year ?? `#${term.id}`
-  const name = term.academic_term?.name ?? ''
-  return `${ay}${name ? ` · ${name}` : ''} (${termStatusLabel(term.status)})`
+  return `${formatP2pTermLabel(term, p2pPolicyDateLocale(locale))} (${termStatusLabel(term.status)})`
+}
+
+function termRowTitle(term) {
+  const name = (term.name ?? '').trim()
+  if (name) return name
+  return formatP2pTermLabel(term, p2pPolicyDateLocale(locale))
+}
+
+function termRowDateRange(term) {
+  const range = formatP2pDateRange(term.operating_from, term.operating_to, p2pPolicyDateLocale(locale))
+  return range || '—'
+}
+
+function selectTermRow(term) {
+  selectedTermId.value = term.id
+  onTermChange()
+  document.getElementById('p2p-term-detail-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+async function onDeleteTerm(term) {
+  if (!term?.id || term.status !== 'draft') return
+  const label = termRowTitle(term)
+  const ok = await confirmAction({
+    title: t('p2p_policy_page.terms_action_delete'),
+    message: t('p2p_policy_page.terms_delete_confirm', { name: label }),
+    confirmLabel: t('p2p_policy_page.terms_action_delete'),
+    danger: true,
+  })
+  if (!ok) return
+  deletingTermId.value = term.id
+  try {
+    await deleteP2pPolicyTerm(term.id)
+    showAppSuccess(t('p2p_policy_page.terms_delete_success'))
+    if (selectedTermId.value === term.id) {
+      selectedTermId.value = null
+      selectedTerm.value = null
+      readiness.value = null
+      generationRun.value = null
+    }
+    await load()
+  } catch (e) {
+    showAppError(formatApiError(e))
+  } finally {
+    deletingTermId.value = null
+  }
 }
 
 async function loadReadinessForTerm(term) {
@@ -501,11 +674,15 @@ async function loadReadinessForTerm(term) {
 async function load() {
   loadingTerms.value = true
   try {
-    const res = await listP2pPolicyTerms({ per_page: 20 })
+    const params = { per_page: 50 }
+    if (termStatusFilter.value) params.status = termStatusFilter.value
+    const res = await listP2pPolicyTerms(params)
     terms.value = res.items ?? []
     const qId = route.query.term_id ? Number(route.query.term_id) : null
+    const prevId = selectedTermId.value
     selectedTerm.value =
       terms.value.find((x) => x.id === qId) ??
+      (prevId ? terms.value.find((x) => x.id === prevId) : null) ??
       terms.value.find((x) => x.status === 'draft') ??
       terms.value[0] ??
       null
