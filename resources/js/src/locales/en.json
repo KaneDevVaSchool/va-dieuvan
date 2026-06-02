@@ -1883,7 +1883,6 @@
     },
     "costs_page": {
         "hero_title": "Trip costs",
-        "hero_subtitle": "Track and record operating costs — filter by status, type, trip, and dates. Defaults to pending approval queue.",
         "section_kpis": "Page metrics",
         "section_list": "Cost records",
         "kpi_total": "Total rows",
@@ -1910,7 +1909,8 @@
         "table_title": "Cost list",
         "col_no": "No.",
         "col_unit": "Unit",
-        "col_category": "Category",
+        "col_category": "Trip category",
+        "col_trip_type": "Cost type",
         "col_submitter": "Submitter",
         "col_description": "Description",
         "col_provider": "Provider",

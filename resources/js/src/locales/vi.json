@@ -3540,7 +3540,6 @@
     },
     "costs_page": {
         "hero_title": "Chi phí chuyến",
-        "hero_subtitle": "Theo dõi và ghi nhận chi phí vận hành — lọc theo trạng thái, loại, chuyến và ngày. Mặc định hiển thị hàng chờ chờ duyệt.",
         "section_kpis": "Chỉ số trang",
         "section_list": "Danh sách chi phí",
         "kpi_total": "Tổng bản ghi",
@@ -3581,7 +3580,7 @@
         "col_legal_entity": "Pháp nhân TT",
         "col_notes": "Ghi chú",
         "col_trip": "Trip",
-        "col_trip_type": "Loại chuyến",
+        "col_trip_type": "Loại chi phí",
         "col_actions": "Thao tác",
         "action_approve": "Duyệt",
         "action_reject": "Từ chối",

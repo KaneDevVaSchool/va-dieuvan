@@ -399,7 +399,12 @@
                 <span class="costs-pill">{{ unitLabel }}</span>
               </td>
               <td class="costs-td">
-                <span class="costs-pill costs-pill--type">{{ typeLabel(c.type) }}</span>
+                <span
+                  v-if="tripTypeFromCost(c)"
+                  class="costs-pill"
+                  :class="tripTypePillClass(tripTypeFromCost(c))"
+                >{{ tripTypeLabel(tripTypeFromCost(c)) }}</span>
+                <span v-else class="text-slate-400">—</span>
               </td>
               <td class="costs-td text-slate-800">{{ c.creator?.name || '—' }}</td>
               <td class="costs-td max-w-[20rem] text-slate-800">
@@ -443,12 +448,7 @@
                 <span v-else>—</span>
               </td>
               <td class="costs-td">
-                <span
-                  v-if="tripTypeFromCost(c)"
-                  class="costs-pill"
-                  :class="tripTypePillClass(tripTypeFromCost(c))"
-                >{{ tripTypeLabel(tripTypeFromCost(c)) }}</span>
-                <span v-else class="text-slate-400">—</span>
+                <span class="costs-pill costs-pill--type">{{ typeLabel(c.type) }}</span>
               </td>
               <td v-if="canReconcileCosts" class="costs-td">
                 <div class="flex flex-wrap gap-1">
