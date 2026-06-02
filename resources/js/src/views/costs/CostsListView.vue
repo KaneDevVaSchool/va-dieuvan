@@ -80,7 +80,7 @@
                 </li>
                 <li v-if="filters.trip_type" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip_type') }}</span>
-                  <span class="font-medium">{{ tripTypeLabel(filters.trip_type) }}</span>
+                  <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
                 </li>
                 <li v-if="filters.trip_id" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_trip') }}</span>
@@ -193,7 +193,7 @@
             v-if="filterControlVisible.trip_type"
             root-class="shrink-0"
             :label="t('costs_page.filter_trip_type')"
-            :summary-text="filters.trip_type ? tripTypeLabel(filters.trip_type) : t('costs_page.trip_type_all')"
+            :summary-text="filters.trip_type ? labelTripType(filters.trip_type) : t('costs_page.trip_type_all')"
             summary-text-class="max-w-[10rem]"
             panel-class="min-w-[220px] py-1"
           >
@@ -359,85 +359,16 @@
       </div>
     </section>
 
-    <section
-      v-if="showBusinessPersonnelSection"
-      class="space-y-3"
-      aria-labelledby="costs-section-business-personnel"
-    >
-      <div class="px-0.5">
-        <h2 id="costs-section-business-personnel" class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          {{ t('costs_page.section_business_personnel') }}
-        </h2>
-        <p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+    <!-- Bảng -->
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05] dark:border-slate-700 dark:bg-slate-950/30">
+      <div class="border-b border-slate-200 bg-slate-100 px-4 py-3 sm:px-5 dark:border-slate-700 dark:bg-slate-900/50">
+        <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ t('costs_page.table_title') }}</h2>
+        <p
+          v-if="showBusinessPersonnelSection"
+          class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-600 dark:text-slate-400"
+        >
           {{ t('costs_page.section_business_personnel_hint') }}
         </p>
-      </div>
-      <div class="overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-sm ring-1 ring-violet-900/[0.04] dark:border-violet-900/40 dark:bg-slate-950/30">
-        <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-          <table class="costs-sheet min-w-[960px] w-full border-collapse text-left text-xs sm:text-sm">
-            <thead>
-              <tr class="bg-violet-50/90 text-[10px] font-semibold uppercase tracking-wide text-violet-900 sm:text-[11px] dark:bg-violet-950/40 dark:text-violet-100">
-                <th class="costs-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
-                <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
-                <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_submitter') }}</th>
-                <th class="costs-th min-w-[10rem]">{{ t('costs_page.col_personnel') }}</th>
-                <th class="costs-th min-w-[12rem]">{{ t('costs_page.col_route') }}</th>
-                <th class="costs-th costs-th--money min-w-[6.5rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
-                <th class="costs-th costs-th--money min-w-[6rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
-                <th class="costs-th costs-th--money min-w-[7rem] text-right">{{ t('costs_page.col_payment') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(line, idx) in businessPersonnelLines"
-                :key="`${line.trip_id}-${line.line_no}-${idx}`"
-                :class="idx % 2 === 0 ? 'bg-white dark:bg-slate-950/20' : 'bg-violet-50/30 dark:bg-violet-950/15'"
-              >
-                <td class="costs-td text-center text-slate-500">{{ idx + 1 }}</td>
-                <td class="costs-td">
-                  <RouterLink
-                    :to="{ name: 'tripDetail', params: { id: line.trip_id } }"
-                    class="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
-                  >
-                    #{{ line.trip_id }}
-                  </RouterLink>
-                </td>
-                <td class="costs-td text-slate-800">{{ line.requester_name || '—' }}</td>
-                <td class="costs-td font-medium text-slate-900 dark:text-slate-100">
-                  {{ line.personnel_label || '—' }}
-                </td>
-                <td class="costs-td text-slate-700">
-                  <span class="line-clamp-2" :title="businessRouteLabel(line)">{{ businessRouteLabel(line) }}</span>
-                </td>
-                <td class="costs-td costs-td--money text-right tabular-nums text-slate-800">
-                  {{ line.unit_price > 0 ? formatVnd(line.unit_price) : '—' }}
-                </td>
-                <td class="costs-td costs-td--money text-right tabular-nums text-slate-800">
-                  {{ line.extra_fee > 0 ? formatVnd(line.extra_fee) : '—' }}
-                </td>
-                <td class="costs-td costs-td--money text-right font-semibold tabular-nums text-slate-900">
-                  {{ line.amount_total > 0 ? formatVnd(line.amount_total) : '—' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p
-            v-if="!businessPersonnelLoading && businessPersonnelLines.length === 0"
-            class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400"
-          >
-            {{ t('costs_page.business_personnel_empty') }}
-          </p>
-          <p v-if="businessPersonnelLoading" class="px-4 py-6 text-center text-sm text-slate-500">
-            {{ t('costs_page.business_personnel_loading') }}
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Bảng -->
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05]">
-      <div class="border-b border-slate-200 bg-slate-100 px-4 py-3 sm:px-5">
-        <h2 class="text-sm font-semibold text-slate-800">{{ t('costs_page.table_title') }}</h2>
       </div>
       <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         <table class="costs-sheet min-w-[1100px] w-full border-collapse text-left text-xs sm:text-sm">
@@ -463,12 +394,62 @@
           </thead>
           <tbody>
             <tr
+              v-for="(line, idx) in filteredBusinessPersonnelLines"
+              :key="`bp-${line.trip_id}-${line.line_no}-${idx}`"
+              class="bg-violet-50/35 transition-colors hover:bg-violet-50/60 dark:bg-violet-950/25 dark:hover:bg-violet-950/40"
+            >
+              <td class="costs-td text-center text-slate-500">{{ idx + 1 }}</td>
+              <td class="costs-td">
+                <span class="costs-pill">{{ unitLabel }}</span>
+              </td>
+              <td class="costs-td">
+                <span class="costs-pill" :class="tripTypePillClass('business')">{{ labelTripType('business') }}</span>
+              </td>
+              <td class="costs-td text-slate-800">{{ line.requester_name || '—' }}</td>
+              <td class="costs-td max-w-[20rem] text-slate-800">
+                <div class="font-medium text-slate-900 dark:text-slate-100">{{ line.personnel_label || '—' }}</div>
+                <div class="mt-0.5 line-clamp-2 text-[11px] text-slate-500 dark:text-slate-400" :title="businessRouteLabel(line)">
+                  {{ businessRouteLabel(line) }}
+                </div>
+              </td>
+              <td class="costs-td text-slate-400">—</td>
+              <td class="costs-td costs-td--money text-right text-slate-400">—</td>
+              <td class="costs-td costs-td--money text-right font-semibold tabular-nums text-slate-900">
+                {{ line.amount_total > 0 ? formatVnd(line.amount_total) : '—' }}
+              </td>
+              <td class="costs-td text-slate-400">—</td>
+              <td class="costs-td text-slate-400">—</td>
+              <td class="costs-td text-slate-400">—</td>
+              <td class="costs-td text-slate-400">—</td>
+              <td class="costs-td max-w-[12rem] text-xs text-slate-600 dark:text-slate-400">
+                <span v-if="line.unit_price > 0 || line.extra_fee > 0">{{
+                  t('costs_page.note_estimate_breakdown', {
+                    unit: line.unit_price > 0 ? formatVnd(line.unit_price) : '—',
+                    extra: line.extra_fee > 0 ? formatVnd(line.extra_fee) : '—',
+                  })
+                }}</span>
+                <span v-else class="text-slate-400">—</span>
+              </td>
+              <td class="costs-td">
+                <RouterLink
+                  :to="{ name: 'tripDetail', params: { id: line.trip_id } }"
+                  class="font-medium text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900 dark:text-sky-400"
+                >
+                  #{{ line.trip_id }}
+                </RouterLink>
+              </td>
+              <td class="costs-td">
+                <span class="costs-pill costs-pill--type costs-pill--estimate">{{ t('costs_page.cost_type_estimate_e2') }}</span>
+              </td>
+              <td v-if="canReconcileCosts" class="costs-td text-slate-400">—</td>
+            </tr>
+            <tr
               v-for="(c, idx) in displayedItems"
               :key="c.id"
-              :class="idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'"
-              class="transition-colors hover:bg-sky-50/50"
+              :class="(filteredBusinessPersonnelLines.length + idx) % 2 === 0 ? 'bg-white dark:bg-slate-950/20' : 'bg-slate-50/60 dark:bg-slate-900/30'"
+              class="transition-colors hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
             >
-              <td class="costs-td text-center text-slate-500">{{ rowIndex(idx) }}</td>
+              <td class="costs-td text-center text-slate-500">{{ costRowIndex(idx) }}</td>
               <td class="costs-td">
                 <span class="costs-pill">{{ unitLabel }}</span>
               </td>
@@ -477,7 +458,7 @@
                   v-if="tripTypeFromCost(c)"
                   class="costs-pill"
                   :class="tripTypePillClass(tripTypeFromCost(c))"
-                >{{ tripTypeLabel(tripTypeFromCost(c)) }}</span>
+                >{{ labelTripType(tripTypeFromCost(c)) }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
               <td class="costs-td text-slate-800">{{ costSubmitterLabel(c) }}</td>
@@ -557,10 +538,10 @@
             </tr>
           </tbody>
         </table>
-        <div v-if="!loading && !displayedItems.length" class="px-4 py-12 text-center text-sm text-slate-500">
+        <div v-if="!tableBusy && !hasTableRows" class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
           {{ t('costs_page.empty_table') }}
         </div>
-        <div v-if="loading" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
+        <div v-if="tableBusy && !hasTableRows" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
           <span
             class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700"
             aria-hidden="true"
@@ -934,7 +915,7 @@ import {
 } from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
-import { formatVnd, formatVndDigitsInput } from '../../util/labels'
+import { formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 
@@ -967,13 +948,6 @@ function typeLabel(slug) {
 }
 
 const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
-
-function tripTypeLabel(slug) {
-  if (!slug) return '—'
-  const key = `app.trip_type_${slug}`
-  if (te(key)) return t(key)
-  return slug
-}
 
 function tripTypeFromCost(c) {
   return c?.trip?.dispatch_request?.trip_type ?? c?.trip?.dispatchRequest?.trip_type ?? null
@@ -1223,7 +1197,7 @@ const typeFilterOptions = computed(() => {
 
 const tripTypeFilterOptions = computed(() => [
   { value: '', label: t('costs_page.trip_type_all') },
-  ...TRIP_TYPE_SLUGS.map((value) => ({ value, label: tripTypeLabel(value) })),
+  ...TRIP_TYPE_SLUGS.map((value) => ({ value, label: labelTripType(value) })),
 ])
 
 const activeFilterCount = computed(() => {
@@ -1298,16 +1272,43 @@ const displayedItems = computed(() => {
   return items.value.filter((c) => {
     const d = String(c.description ?? '').toLowerCase()
     const creator = String(c.creator?.name ?? '').toLowerCase()
+    const submitter = String(costSubmitterLabel(c) ?? '').toLowerCase()
     const ty = String(c.type ?? '').toLowerCase()
     const trip = String(c.trip_id ?? '')
-    return d.includes(q) || creator.includes(q) || ty.includes(q) || trip.includes(q)
+    return d.includes(q) || creator.includes(q) || submitter.includes(q) || ty.includes(q) || trip.includes(q)
   })
 })
+
+const filteredBusinessPersonnelLines = computed(() => {
+  if (!showBusinessPersonnelSection.value) return []
+  const q = searchQ.value.trim().toLowerCase()
+  const lines = businessPersonnelLines.value
+  if (!q) return lines
+  return lines.filter((line) => {
+    const personnel = String(line.personnel_label ?? '').toLowerCase()
+    const requester = String(line.requester_name ?? '').toLowerCase()
+    const route = businessRouteLabel(line).toLowerCase()
+    const trip = String(line.trip_id ?? '')
+    return personnel.includes(q) || requester.includes(q) || route.includes(q) || trip.includes(q)
+  })
+})
+
+const hasTableRows = computed(
+  () => filteredBusinessPersonnelLines.value.length > 0 || displayedItems.value.length > 0,
+)
+
+const tableBusy = computed(
+  () => loading.value || (showBusinessPersonnelSection.value && businessPersonnelLoading.value),
+)
 
 function rowIndex(idx) {
   const page = meta.value.current_page ?? 1
   const per = meta.value.per_page ?? DEFAULT_PER_PAGE
   return (page - 1) * per + idx + 1
+}
+
+function costRowIndex(idx) {
+  return filteredBusinessPersonnelLines.value.length + rowIndex(idx)
 }
 
 function countOnPage(status) {
@@ -1402,7 +1403,7 @@ function formatTripPickerLabel(tripRow) {
   const d = (dr?.destination ?? '—').trim().slice(0, 40)
   const dep = formatDateDMY(tripRow.depart_at)
   const typSlug = dr?.trip_type ?? null
-  const typStr = typSlug ? ` [${tripTypeLabel(typSlug)}]` : ''
+  const typStr = typSlug ? ` [${labelTripType(typSlug)}]` : ''
   return `#${tripRow.id}${typStr} · ${o} → ${d} · ${dep}`
 }
 
@@ -1694,5 +1695,9 @@ onMounted(async () => {
 
 .costs-pill--type {
   @apply bg-slate-200/90 text-slate-800;
+}
+
+.costs-pill--estimate {
+  @apply bg-violet-100/90 text-violet-900 dark:bg-violet-950/50 dark:text-violet-100;
 }
 </style>
