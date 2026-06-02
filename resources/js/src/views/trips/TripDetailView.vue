@@ -150,10 +150,10 @@
                         />
                         <TripSchedulesPanel
                             v-if="scheduleCount > 0"
-                            :cards="scheduleCards"
+                            :cards="scheduleCardsForPanel"
                             :schedule-legs="scheduleLegs"
                             :selected-key="selectedScheduleKey"
-                            :total-guests="scheduleGuestSum"
+                            :total-guests="unifiedPassengerCount"
                             :trip-type="tripTypeForSnap"
                             @update:selected-key="onSchedulePanelKeyChange"
                         />
@@ -1366,6 +1366,29 @@ const unifiedPassengerCount = computed(() => {
     }
     if (scheduleGuestSum.value > 0) return scheduleGuestSum.value;
     return dispatchRequestEffectivePassengerCount(dr);
+});
+
+/** Lịch trình: đồng bộ số khách chặng/tổng với unified (vd. CLB định kỳ student_count_actual). */
+const scheduleCardsForPanel = computed(() => {
+    const cards = scheduleCards.value;
+    const effective = unifiedPassengerCount.value;
+    if (!effective || cards.length !== 1) return cards;
+    const guestsLabel = t("trip_detail.schedules.guests_per_leg");
+    return cards.map((card) => ({
+        ...card,
+        lines: card.lines.map((ln) => {
+            if (ln.label !== guestsLabel) return ln;
+            const v = String(ln.value ?? "").trim();
+            if (!v || v === "—") {
+                return { ...ln, value: String(effective) };
+            }
+            const snapN = parseInt(v, 10);
+            if (Number.isFinite(snapN) && effective > snapN) {
+                return { ...ln, value: String(effective) };
+            }
+            return ln;
+        }),
+    }));
 });
 
 const legResourcesByKey = ref({});
