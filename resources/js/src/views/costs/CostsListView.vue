@@ -8,38 +8,6 @@
       </div>
     </div>
 
-    <section class="space-y-3" aria-labelledby="costs-section-kpis">
-      <h2 id="costs-section-kpis" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {{ t('costs_page.section_kpis') }}
-      </h2>
-      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div
-          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
-        >
-          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_total') }}</p>
-          <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-white">{{ meta.total ?? 0 }}</p>
-        </div>
-        <div
-          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
-        >
-          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_submitted') }}</p>
-          <p class="mt-1 text-2xl font-semibold tabular-nums text-amber-800 dark:text-amber-300">{{ countOnPage('submitted') }}</p>
-        </div>
-        <div
-          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
-        >
-          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_confirmed') }}</p>
-          <p class="mt-1 text-2xl font-semibold tabular-nums text-emerald-800 dark:text-emerald-300">{{ countOnPage('confirmed') }}</p>
-        </div>
-        <div
-          class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/[0.03] dark:border-slate-700 dark:bg-slate-900/50"
-        >
-          <p class="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('costs_page.kpi_rejected') }}</p>
-          <p class="mt-1 text-2xl font-semibold tabular-nums text-rose-800 dark:text-rose-300">{{ countOnPage('rejected') }}</p>
-        </div>
-      </div>
-    </section>
-
     <section class="space-y-3" aria-labelledby="costs-section-filters">
       <h2 id="costs-section-filters" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('costs_page.section_filters') }}
@@ -1647,10 +1615,6 @@ function rowIndex(idx) {
 
 function costRowIndex(idx) {
   return filteredBusinessPersonnelLines.value.length + rowIndex(idx)
-}
-
-function countOnPage(status) {
-  return items.value.filter((c) => c.status === status).length
 }
 
 function loadExtraCostTypesFromStorage() {
