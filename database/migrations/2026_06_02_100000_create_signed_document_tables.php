@@ -36,9 +36,9 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['dispatch_request_id', 'version_no']);
-            $table->index(['dispatch_request_id', 'is_current']);
-            $table->index(['verification_status', 'ocr_status']);
+            $table->unique(['dispatch_request_id', 'version_no'], 'sdv_dr_version_uniq');
+            $table->index(['dispatch_request_id', 'is_current'], 'sdv_dr_current_idx');
+            $table->index(['verification_status', 'ocr_status'], 'sdv_verif_ocr_idx');
         });
 
         Schema::create('signed_document_verifications', function (Blueprint $table) {
@@ -51,7 +51,7 @@ return new class extends Migration
             $table->json('payload')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->index(['signed_document_version_id', 'created_at']);
+            $table->index(['signed_document_version_id', 'created_at'], 'sdver_version_created_idx');
         });
 
         Schema::table('dispatch_requests', function (Blueprint $table) {
