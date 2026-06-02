@@ -3,8 +3,7 @@
     <img
       :src="LOGO_URL"
       alt="VA Dispatch"
-      :class="imgClass"
-      class="h-auto w-auto max-w-full object-contain object-left"
+      :class="['h-auto w-auto max-w-full object-contain', imgAlignClass, imgClass]"
       loading="lazy"
       decoding="async"
     />
@@ -35,6 +34,8 @@ const wrapperClass = computed(() => {
   const a = props.align === 'center' ? 'items-center' : 'items-start'
   return ['flex flex-col', a].join(' ')
 })
+
+const imgAlignClass = computed(() => (props.align === 'center' ? 'object-center' : 'object-left'))
 
 const imgClass = computed(() => {
   const map = {

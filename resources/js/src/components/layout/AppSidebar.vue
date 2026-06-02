@@ -6,29 +6,26 @@
   >
     <div
       class="shrink-0 border-b border-white/15 bg-[color:var(--va-brand)]/95 backdrop-blur-sm"
-      :class="ui.sidebarCollapsed ? 'px-1 py-1.5 md:px-1.5 md:py-2' : 'px-2 py-2 md:px-3 md:py-2.5'"
+      :class="ui.sidebarCollapsed ? 'px-1 py-2 md:px-1.5 md:py-2.5' : 'px-2 py-3 md:px-3 md:py-3.5'"
     >
       <div
-        class="flex w-full min-w-0 items-center"
-        :class="
-          ui.sidebarCollapsed
-            ? 'flex-col items-center gap-1'
-            : 'flex-row items-center justify-between gap-2'
-        "
+        class="relative flex w-full min-w-0 items-center justify-center"
+        :class="ui.sidebarCollapsed ? 'flex-col gap-1.5' : 'px-9'"
       >
         <AppLogo
-          class="min-w-0 [&_img]:object-contain"
-          :class="
-            ui.sidebarCollapsed
-              ? 'shrink-0 max-h-8 max-w-8 overflow-hidden [&_img]:max-h-8 [&_img]:max-w-8'
-              : 'min-w-0 flex-1 [&_img]:max-h-8 sm:[&_img]:max-h-9'
-          "
-          size="sm"
+          align="center"
+          class="w-full min-w-0 [&_img]:mx-auto [&_img]:object-contain"
+          :class="ui.sidebarCollapsed ? 'max-w-full px-0.5 [&_img]:max-h-10' : 'max-w-full'"
+          :size="ui.sidebarCollapsed ? 'sm' : 'lg'"
         />
         <button
           type="button"
           class="inline-flex shrink-0 items-center justify-center rounded-md text-white/85 transition hover:bg-white/10"
-          :class="ui.sidebarCollapsed ? 'h-7 w-7' : 'h-7 w-7 sm:h-8 sm:w-8'"
+          :class="
+            ui.sidebarCollapsed
+              ? 'h-7 w-7'
+              : 'absolute right-0 top-1/2 h-7 w-7 -translate-y-1/2 sm:h-8 sm:w-8'
+          "
           :title="ui.sidebarCollapsed ? t('app.sidebar_expand') : t('app.sidebar_collapse')"
           @click="ui.toggleSidebarCollapsed()"
         >
