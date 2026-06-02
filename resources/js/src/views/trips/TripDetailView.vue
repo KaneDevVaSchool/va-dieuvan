@@ -512,10 +512,7 @@
                             :rows="passengerRowsDisplay"
                             :request-passenger-count="unifiedPassengerCount"
                             :can-check-in="canPassengerCheckIn"
-                            :can-edit-list="
-                                canEditPassengerList &&
-                                !isSimplePassengerTripType
-                            "
+                            :can-edit-list="canEditPassengerList"
                             :special-summary="specialNeedsSummary"
                             @trip-updated="applyTripPayload"
                             @passenger-list-save="onPassengerListSave"
@@ -788,7 +785,10 @@ import {
 } from "../../util/formatDispatchNotes";
 import { parseMoneyVnd } from "../../util/money";
 import { dispatchRequestEffectivePassengerCount } from "../../util/dispatchRequestPassengers";
-import { passengerDisplayName } from "../../util/passengerDisplayName";
+import {
+    isAutoPassengerLabel,
+    passengerDisplayName,
+} from "../../util/passengerDisplayName";
 import {
     emptyPassengerRow,
     emptyBusinessRow,
@@ -1057,11 +1057,6 @@ const canEditPassengerList = computed(() => {
     );
 });
 
-const isSimplePassengerTripType = computed(() => {
-    const tt = trip.value?.dispatch_request?.trip_type;
-    return tt === "door_to_door" || tt === "point_to_point";
-});
-
 const canPassengerCheckIn = computed(() => {
     if (!trip.value) return false;
     const s = trip.value.status;
@@ -1190,7 +1185,15 @@ async function persistPassengerListSnapshot(mutator) {
     }
 }
 
-async function saveNamedPassengerSlot(rowIndex, draft) {
+function resolveNamedPassengerApiName(rawName, slotIndex) {
+    const trimmed = String(rawName ?? "").trim();
+    if (trimmed && !isAutoPassengerLabel(trimmed)) return trimmed;
+    return t("trip_detail.passengers.passenger", {
+        n: Math.max(1, slotIndex + 1),
+    });
+}
+
+async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
     const tid = trip.value?.id;
     const dr = trip.value?.dispatch_request;
     if (!tid || !dr) return false;
@@ -1202,14 +1205,17 @@ async function saveNamedPassengerSlot(rowIndex, draft) {
     const list = Array.from({ length: totalSlots }, (_, i) => {
         if (i === rowIndex) {
             return {
-                name: String(draft.person_in_charge ?? "").trim() || null,
+                name: resolveNamedPassengerApiName(
+                    draft.person_in_charge,
+                    rowIndex,
+                ),
                 phone: String(draft.phone ?? "").trim() || null,
                 note: String(draft.notes ?? "").trim() || null,
             };
         }
         const existing = tplist[i];
         return {
-            name: String(existing?.name ?? "").trim() || null,
+            name: resolveNamedPassengerApiName(existing?.name, i),
             phone: String(existing?.phone ?? "").trim() || null,
             note: String(existing?.note ?? "").trim() || null,
         };
@@ -1219,7 +1225,25 @@ async function saveNamedPassengerSlot(rowIndex, draft) {
             passenger_count: count,
             passengers: list,
         });
-        await load({ silent: true });
+        const busIdx = options.businessRowIndex;
+        if (
+            dr.trip_type === "business" &&
+            busIdx != null &&
+            Number.isFinite(busIdx)
+        ) {
+            const bizOk = await persistPassengerListSnapshot((arrays) => {
+                const cur = {
+                    ...emptyBusinessRow(),
+                    ...arrays.businessRows[busIdx],
+                };
+                cur.guests = String(draft.guests ?? cur.guests ?? "1");
+                cur.notes = String(draft.notes ?? "").trim();
+                arrays.businessRows[busIdx] = cur;
+            });
+            if (!bizOk) return false;
+        } else {
+            await load({ silent: true });
+        }
         showAppSuccess(t("trip_detail.passengers.dt_save_ok"));
         return true;
     } catch (e) {
@@ -1230,7 +1254,9 @@ async function saveNamedPassengerSlot(rowIndex, draft) {
 
 async function onPassengerListSave({ meta, draft, resolve }) {
     if (meta.kind === "named_tp") {
-        const ok = await saveNamedPassengerSlot(meta.rowIndex, draft);
+        const ok = await saveNamedPassengerSlot(meta.rowIndex, draft, {
+            businessRowIndex: meta.businessRowIndex,
+        });
         resolve(ok);
         return;
     }
@@ -1676,29 +1702,26 @@ const passengerRowsDisplay = computed(() => {
                 pickupAddress: (br?.pickup ?? "").trim(),
                 flagWheelchair: /xe lăn|wheelchair/i.test(note),
                 flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(note),
-                editMeta:
-                    bus != null
-                        ? { kind: "business", rowIndex: bus.rowIndex }
-                        : canEditPassengerList.value
-                          ? { kind: "named_tp", rowIndex: i }
-                          : null,
-                editable:
-                    bus != null
-                        ? passengerListRowEditable(tripType, "business")
-                        : canEditPassengerList.value,
-                editFields:
-                    bus != null
-                        ? {
-                              guests: String(br?.guests ?? "1"),
-                              notes: br?.notes ?? "",
-                          }
-                        : canEditPassengerList.value
-                          ? {
-                                person_in_charge: rawName,
-                                phone,
-                                notes: note,
-                            }
-                          : null,
+                editMeta: canEditPassengerList.value
+                    ? {
+                          kind: "named_tp",
+                          rowIndex: i,
+                          ...(bus != null
+                              ? { businessRowIndex: bus.rowIndex }
+                              : {}),
+                      }
+                    : null,
+                editable: canEditPassengerList.value,
+                editFields: canEditPassengerList.value
+                    ? {
+                          person_in_charge: rawName,
+                          phone,
+                          notes: note,
+                          ...(bus != null
+                              ? { guests: String(br?.guests ?? "1") }
+                              : {}),
+                      }
+                    : null,
             });
         }
         return built;

@@ -408,6 +408,26 @@
                                             />
                                         </div>
                                     </template>
+                                    <template
+                                        v-else-if="
+                                            row.editMeta?.kind === 'named_tp' &&
+                                            editDraft.guests != null &&
+                                            editDraft.guests !== ''
+                                        "
+                                    >
+                                        <input
+                                            v-model="editDraft.guests"
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            class="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                            :placeholder="
+                                                t(
+                                                    'trip_detail.passengers.ph_guests',
+                                                )
+                                            "
+                                        />
+                                    </template>
                                     <template v-else>
                                         <span
                                             class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
@@ -1294,6 +1314,7 @@ const WheelchairGlyph = {
 export type PassengerEditMeta = {
     kind: "passenger" | "business" | "cargo" | "named_tp";
     rowIndex: number;
+    businessRowIndex?: number;
 };
 
 export type PassengerRow = {
