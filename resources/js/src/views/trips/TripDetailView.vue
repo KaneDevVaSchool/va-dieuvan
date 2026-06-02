@@ -136,6 +136,7 @@
                                     trip.dispatch_request,
                                 )
                             "
+                            :schedule-guest-total="scheduleGuestSum"
                             :schedule-date-long="scheduleDateLong"
                             :schedule-time-range="scheduleTimeRange"
                             :schedule-duration="scheduleDuration"
@@ -157,6 +158,8 @@
                             :cards="scheduleCards"
                             :schedule-legs="scheduleLegs"
                             :selected-key="selectedScheduleKey"
+                            :total-guests="scheduleGuestSum"
+                            :trip-type="tripTypeForSnap"
                             @update:selected-key="onSchedulePanelKeyChange"
                         />
                     </div>
@@ -512,6 +515,12 @@
                             :trip-id="trip.id"
                             :trip="trip"
                             :rows="passengerRowsDisplay"
+                            :request-passenger-count="
+                                dispatchRequestEffectivePassengerCount(
+                                    trip.dispatch_request,
+                                )
+                            "
+                            :scheduled-guest-total="scheduleGuestSum"
                             :can-check-in="canPassengerCheckIn"
                             :can-edit-list="
                                 canEditPassengerList &&
@@ -788,7 +797,10 @@ import {
     isLegacyBm03NotesBlock,
 } from "../../util/formatDispatchNotes";
 import { parseMoneyVnd } from "../../util/money";
-import { dispatchRequestEffectivePassengerCount } from "../../util/dispatchRequestPassengers";
+import {
+    dispatchRequestEffectivePassengerCount,
+    wizardSnapshotGuestTotal,
+} from "../../util/dispatchRequestPassengers";
 import { passengerDisplayName } from "../../util/passengerDisplayName";
 import {
     emptyPassengerRow,
@@ -1328,10 +1340,8 @@ const tripTypeForSnap = computed(
     () => trip.value?.dispatch_request?.trip_type ?? "",
 );
 
-const { scheduleCards, scheduleCount } = useDispatchScheduleCards(
-    snap,
-    tripTypeForSnap,
-);
+const { scheduleCards, scheduleCount, totalGuests: scheduleGuestSum } =
+    useDispatchScheduleCards(snap, tripTypeForSnap);
 
 const legResourcesByKey = ref({});
 

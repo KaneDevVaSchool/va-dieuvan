@@ -2861,6 +2861,7 @@
             "duration_hours": "{n} giờ",
             "employee_code": "Mã NV: {code}",
             "pax_count": "Số khách theo yêu cầu: {n}",
+            "sched_guest_total": "Tổng trong lịch trình: {n}",
             "arrive_deadline": "Hạn đến nơi (chuyến): {time}",
             "depart_vs_request": "Khởi hành khác YC gốc: yêu cầu {req} · chuyến {trip}",
             "arrive_vs_request": "Hạn đến khác YC gốc: yêu cầu {req} · chuyến {trip}",
@@ -2877,7 +2878,10 @@
             "status_pending": "Chưa gán",
             "tab_short": "Lịch {n}",
             "assign_tabs_aria": "Chọn lịch để phân công",
-            "assign_progress": "Đã gán {done}/{total} lịch"
+            "assign_progress": "Đã gán {done}/{total} lịch",
+            "guests_per_leg": "Số khách (chặng)",
+            "total_guests": "Tổng số khách",
+            "total_guests_value": "{n} khách"
         },
         "route": {
             "section_title": "Chi tiết tuyến đường",
@@ -2898,6 +2902,9 @@
         },
         "passengers": {
             "title": "Hành khách ({n})",
+            "schedule_guest_total": "Trong lịch trình: {n}",
+            "schedule_guest_badge": "Lịch trình: {n}",
+            "pax_count_mismatch": "Số khách theo yêu cầu ({req}) chưa khớp với tổng trong lịch trình ({sched}). Hãy kiểm tra lại số khách trên từng chặng công tác.",
             "edit_inline": "Chỉnh sửa danh sách",
             "save": "Lưu",
             "cancel_edit": "Hủy",

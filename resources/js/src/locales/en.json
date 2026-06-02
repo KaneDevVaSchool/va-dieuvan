@@ -3057,6 +3057,7 @@
             "duration_hours": "{n} hours",
             "employee_code": "Employee ID: {code}",
             "pax_count": "Passengers (request): {n}",
+            "sched_guest_total": "Total on itineraries: {n}",
             "arrive_deadline": "Arrive-by (trip): {time}",
             "depart_vs_request": "Departure differs from request: request {req} · trip {trip}",
             "arrive_vs_request": "Arrive-by differs from request: request {req} · trip {trip}",
@@ -3073,7 +3074,10 @@
             "status_pending": "Unassigned",
             "tab_short": "Leg {n}",
             "assign_tabs_aria": "Select itinerary to assign",
-            "assign_progress": "Assigned {done}/{total} legs"
+            "assign_progress": "Assigned {done}/{total} legs",
+            "guests_per_leg": "Guests (this leg)",
+            "total_guests": "Total guests",
+            "total_guests_value": "{n} guests"
         },
         "route": {
             "section_title": "Route details",
@@ -3094,6 +3098,9 @@
         },
         "passengers": {
             "title": "Passengers ({n})",
+            "schedule_guest_total": "On itineraries: {n}",
+            "schedule_guest_badge": "Itineraries: {n}",
+            "pax_count_mismatch": "Request passenger count ({req}) does not match the total on itineraries ({sched}). Check guest counts on each business leg.",
             "edit_inline": "Edit list",
             "save": "Save",
             "cancel_edit": "Cancel",

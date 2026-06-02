@@ -8,6 +8,8 @@ const props = defineProps({
   cards: { type: Array, default: () => [] },
   scheduleLegs: { type: Array, default: () => [] },
   selectedKey: { type: String, default: '' },
+  totalGuests: { type: Number, default: 0 },
+  tripType: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:selectedKey'])
@@ -77,6 +79,13 @@ function toggle(key) {
 }
 
 const showPanel = computed(() => (props.cards?.length ?? 0) > 0)
+
+const showGuestTotalFooter = computed(
+  () =>
+    props.tripType !== 'cargo' &&
+    (props.cards?.length ?? 0) >= 1 &&
+    (props.totalGuests ?? 0) > 0,
+)
 </script>
 
 <template>
@@ -155,6 +164,18 @@ const showPanel = computed(() => (props.cards?.length ?? 0) > 0)
           </dl>
         </div>
       </div>
+    </div>
+
+    <div
+      v-if="showGuestTotalFooter"
+      class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-white px-3 py-2.5"
+    >
+      <span class="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+        {{ t('trip_detail.schedules.total_guests') }}
+      </span>
+      <span class="text-sm font-semibold tabular-nums text-slate-900">
+        {{ t('trip_detail.schedules.total_guests_value', { n: totalGuests }) }}
+      </span>
     </div>
   </section>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import {
     CalendarDaysIcon,
@@ -15,6 +16,8 @@ const props = defineProps<{
     trip: Record<string, any>;
     countdown: string | null;
     passengerCount: number;
+    /** Tổng guests trên các chặng lịch trình (wizard snapshot). */
+    scheduleGuestTotal?: number;
     scheduleDateLong: string;
     scheduleTimeRange: string;
     scheduleDuration: string;
@@ -35,6 +38,11 @@ const props = defineProps<{
 }>();
 
 const { t, locale } = useI18n();
+
+const showScheduleGuestSubline = computed(() => {
+    const sched = props.scheduleGuestTotal ?? 0;
+    return sched > 0 && props.passengerCount !== sched;
+});
 
 function fmtTime(v: string | null | undefined) {
     const l = locale.value === "en" ? "en-US" : "vi-VN";
@@ -236,6 +244,16 @@ function dotClass(state: string) {
                     </template>
                     <template v-else>—</template>
                 </div>
+                <p
+                    v-if="showScheduleGuestSubline"
+                    class="mt-1 text-xs font-medium text-slate-600"
+                >
+                    {{
+                        t("trip_detail.overview.sched_guest_total", {
+                            n: scheduleGuestTotal,
+                        })
+                    }}
+                </p>
                 <div v-if="trip.arrive_by" class="mt-1 text-xs text-slate-600">
                     {{
                         t("trip_detail.overview.arrive_deadline", {

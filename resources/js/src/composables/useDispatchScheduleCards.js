@@ -6,6 +6,7 @@ import {
   isCargoRowFilled,
 } from './dispatchWizardConstants'
 import { parseMoneyVnd } from '../util/money'
+import { wizardSnapshotGuestTotal } from '../util/dispatchRequestPassengers'
 
 function rowLineTotal(row) {
   return parseMoneyVnd(row?.unit_price) + parseMoneyVnd(row?.extra_fee)
@@ -105,7 +106,7 @@ export function useDispatchScheduleCards(snapshot, tripType) {
               value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
             },
             {
-              label: t('dispatch_wizard.confirm.guests_line'),
+              label: t('trip_detail.schedules.guests_per_leg'),
               value: String(row.guests ?? '').trim() || '—',
             },
           ],
@@ -128,7 +129,7 @@ export function useDispatchScheduleCards(snapshot, tripType) {
             value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
           },
           {
-            label: t('dispatch_wizard.confirm.guests_line'),
+            label: t('trip_detail.schedules.guests_per_leg'),
             value: String(row.guests ?? '').trim() || '—',
           },
         ]
@@ -159,5 +160,7 @@ export function useDispatchScheduleCards(snapshot, tripType) {
 
   const scheduleCount = computed(() => scheduleCards.value.length)
 
-  return { scheduleCards, scheduleCount, formatShortDt }
+  const totalGuests = computed(() => wizardSnapshotGuestTotal(unref(snapshot) ?? {}))
+
+  return { scheduleCards, scheduleCount, totalGuests, formatShortDt }
 }
