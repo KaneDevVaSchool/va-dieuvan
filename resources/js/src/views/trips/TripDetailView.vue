@@ -1359,13 +1359,16 @@ const { scheduleCards, scheduleCount, totalGuests: scheduleGuestSum } =
 const unifiedPassengerCount = computed(() => {
     const dr = trip.value?.dispatch_request;
     if (!dr) return 0;
-    const actual = dr.student_count_actual;
-    if (actual != null && actual !== "") {
-        const n = Number(actual);
-        if (Number.isFinite(n) && n > 0) return Math.round(n);
-    }
-    if (scheduleGuestSum.value > 0) return scheduleGuestSum.value;
-    return dispatchRequestEffectivePassengerCount(dr);
+    const fromRequest = dispatchRequestEffectivePassengerCount(dr);
+    const fromSnap = scheduleGuestSum.value;
+    const listed = Array.isArray(trip.value?.trip_passengers)
+        ? trip.value.trip_passengers.length
+        : 0;
+    return Math.max(
+        fromRequest,
+        fromSnap,
+        listed > 0 ? listed : 0,
+    );
 });
 
 /** Lịch trình: đồng bộ số khách chặng/tổng với unified (vd. CLB định kỳ student_count_actual). */
@@ -1373,11 +1376,10 @@ const scheduleCardsForPanel = computed(() => {
     const cards = scheduleCards.value;
     const effective = unifiedPassengerCount.value;
     if (!effective || cards.length !== 1) return cards;
-    const guestsLabel = t("trip_detail.schedules.guests_per_leg");
     return cards.map((card) => ({
         ...card,
         lines: card.lines.map((ln) => {
-            if (ln.label !== guestsLabel) return ln;
+            if (ln.lineKey !== "guests_per_leg") return ln;
             const v = String(ln.value ?? "").trim();
             if (!v || v === "—") {
                 return { ...ln, value: String(effective) };

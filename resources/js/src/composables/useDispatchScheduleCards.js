@@ -106,6 +106,7 @@ export function useDispatchScheduleCards(snapshot, tripType) {
               value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
             },
             {
+              lineKey: 'guests_per_leg',
               label: t('trip_detail.schedules.guests_per_leg'),
               value: String(row.guests ?? '').trim() || '—',
             },
@@ -129,6 +130,7 @@ export function useDispatchScheduleCards(snapshot, tripType) {
             value: `${formatShortDt(row.return_at)} — ${row.dropoff?.trim() || '—'}`,
           },
           {
+            lineKey: 'guests_per_leg',
             label: t('trip_detail.schedules.guests_per_leg'),
             value: String(row.guests ?? '').trim() || '—',
           },
