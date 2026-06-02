@@ -466,19 +466,6 @@
                 </div>
               </div>
 
-              <RequestCostEstimateCard
-                v-if="costEstimate"
-                :estimate="costEstimate"
-                :suggestions="pricingSuggestions"
-                :can-apply-pricing="canApplyPricingHints"
-                :applying-pricing="applyingPricingHints"
-                :format-date-time="fmtStepDetail"
-                :maps-url="routeMapsUrl"
-                @open-pricing="pricingModalOpen = true"
-                @go-form="setActiveTab('form')"
-                @apply-suggestion="onApplyPricingSuggestion"
-              />
-
               <RequestAuditTimeline
                 v-if="!isDeptRequestDetailRoute"
                 :items="auditLogs"
@@ -776,7 +763,6 @@ import RequestCloneLineageBanner from '../../components/requests/RequestCloneLin
 import RequestAuditTimeline from '../../components/requests/RequestAuditTimeline.vue'
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
-import RequestCostEstimateCard from '../../components/requests/RequestCostEstimateCard.vue'
 import RequestWorkflowBar from '../../components/requests/RequestWorkflowBar.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
 import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
@@ -791,7 +777,6 @@ import {
   decideDispatchRequest,
   deptDecideDispatchRequest,
   exportDispatchRequestPdf,
-  applyDispatchRequestPricingHints,
   fillPriceDispatchRequest,
   getDispatchRequest,
   getDispatchRequestAuditLogs,
@@ -800,7 +785,7 @@ import {
   cloneDispatchRequest,
   patchPassengerCount,
 } from '../../api/requests'
-import { getPricingSuggestions, getReferencePricing } from '../../api/pricing'
+import { getReferencePricing } from '../../api/pricing'
 import { formatApiError } from '../../api/http'
 import { saveAs } from 'file-saver'
 import { newIdempotencyKey } from '../../util/idempotency'
@@ -1034,25 +1019,10 @@ const { formTabActionCount, docsTabActionCount, todoItems: workflowTodoItems } =
   workflowCtx,
 )
 
-const canApplyPricingHints = computed(() => auth.hasPermission('request.fill_price'))
 const auditLogs = ref([])
 const auditLogsLoading = ref(false)
 const auditLogsErr = ref('')
 
-const routeMapsUrl = computed(() => {
-  const r = req.value
-  if (!r?.origin?.trim() && !r?.destination?.trim()) return ''
-  const params = new URLSearchParams({
-    api: '1',
-    origin: (r.origin || '').trim(),
-    destination: (r.destination || '').trim(),
-    travelmode: 'driving',
-  })
-  return `https://www.google.com/maps/dir/?${params.toString()}`
-})
-
-const pricingSuggestions = ref([])
-const applyingPricingHints = ref(false)
 const docsHighlightAttachmentId = ref(null)
 const focusHighlight = ref(null)
 
@@ -1210,46 +1180,6 @@ const passengerOrCargoLine = computed(() => {
   return '—'
 })
 
-async function loadPricingSuggestions() {
-  const r = req.value
-  if (!r) {
-    pricingSuggestions.value = []
-    return
-  }
-  try {
-    const data = await getPricingSuggestions({
-      trip_type: r.trip_type,
-      origin: r.origin ?? '',
-      destination: r.destination ?? '',
-      passenger_count: r.passenger_count ?? undefined,
-    })
-    pricingSuggestions.value = data?.enabled ? data.suggestions ?? [] : []
-  } catch {
-    pricingSuggestions.value = []
-  }
-}
-
-async function onApplyPricingSuggestion(suggestion) {
-  if (!suggestion || !req.value) return
-  applyingPricingHints.value = true
-  try {
-    const updated = await applyDispatchRequestPricingHints(Number(route.params.id), {
-      estimated_distance_km: suggestion.distance_km ?? undefined,
-      reference_unit_price: suggestion.reference_unit_price ?? undefined,
-      pricing_source: suggestion.source,
-      pricing_row_id: suggestion.id,
-      vehicle_hint: suggestion.vehicle_hint ?? undefined,
-    })
-    req.value = updated
-    showAppSuccess(t('request_detail.pricing_apply_success'), '')
-    await loadPricingSuggestions()
-  } catch (e) {
-    showAppError(formatApiError(e, 'Không áp dụng được gợi ý.'))
-  } finally {
-    applyingPricingHints.value = false
-  }
-}
-
 function onWorkflowNavigate({ tab, focus }) {
   if (tab) setActiveTab(tab)
   if (focus) {
@@ -1278,13 +1208,6 @@ watch(
     }
   },
   { immediate: true },
-)
-
-watch(
-  () => [req.value?.id, req.value?.origin, req.value?.destination, req.value?.trip_type],
-  () => {
-    loadPricingSuggestions()
-  },
 )
 
 function requestDetailLocaleTag() {

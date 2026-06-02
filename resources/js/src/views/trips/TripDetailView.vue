@@ -150,8 +150,8 @@
                             :step-pickup="stepPickup"
                             :step-current="stepCurrent"
                             :step-dropoff="stepDropoff"
-                            :origin-label="originLabel"
-                            :destination-label="destinationLabel"
+                            :origin-label="displayOriginLabel"
+                            :destination-label="displayDestinationLabel"
                             :current-label="currentLabel"
                         />
                         <TripSchedulesPanel
@@ -1347,6 +1347,30 @@ const multiScheduleMode = computed(() => scheduleCards.value.length > 1);
 const activeLegCard = computed(() => {
     const key = activeAssignLegKey.value || scheduleCards.value[0]?.key;
     return scheduleCards.value.find((c) => c.key === key) ?? scheduleCards.value[0] ?? null;
+});
+
+/** Lịch đang chọn (tab Lịch N hoặc mở panel lịch trình) — dùng cho điểm đón/trả trên thẻ tổng quan. */
+const routeInfoScheduleCard = computed(() => {
+    const cards = scheduleCards.value;
+    if (!cards.length) return null;
+    const key =
+        selectedScheduleKey.value ||
+        activeAssignLegKey.value ||
+        cards[0]?.key ||
+        "";
+    return cards.find((c) => c.key === key) ?? cards[0];
+});
+
+const displayOriginLabel = computed(() => {
+    const pickup = routeInfoScheduleCard.value?.pickup?.trim();
+    if (pickup) return pickup;
+    return originLabel.value;
+});
+
+const displayDestinationLabel = computed(() => {
+    const dropoff = routeInfoScheduleCard.value?.dropoff?.trim();
+    if (dropoff) return dropoff;
+    return destinationLabel.value;
 });
 
 watch(
