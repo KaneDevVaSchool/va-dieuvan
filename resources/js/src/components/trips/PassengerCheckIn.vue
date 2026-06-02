@@ -225,7 +225,9 @@
                                 <template
                                     v-if="editingKey === row.passengerKey && editDraft"
                                 >
-                                    <template v-if="row.editMeta?.kind === 'cargo'">
+                                    <template
+                                        v-if="row.editMeta?.kind === 'cargo'"
+                                    >
                                         <input
                                             v-model="editDraft.name"
                                             type="text"
@@ -236,6 +238,28 @@
                                                 )
                                             "
                                         />
+                                        <label class="mt-2 block">
+                                            <span
+                                                class="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                                >{{
+                                                    t(
+                                                        "trip_detail.passengers.col_qty",
+                                                    )
+                                                }}</span
+                                            >
+                                            <input
+                                                v-model="editDraft.qty"
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                class="mt-0.5 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                                :placeholder="
+                                                    t(
+                                                        'trip_detail.passengers.ph_qty',
+                                                    )
+                                                "
+                                            />
+                                        </label>
                                     </template>
                                     <template
                                         v-else-if="
@@ -245,6 +269,28 @@
                                         <div class="text-sm text-slate-600 dark:text-slate-400">
                                             {{ row.name }}
                                         </div>
+                                        <label class="mt-2 block">
+                                            <span
+                                                class="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                                >{{
+                                                    t(
+                                                        "trip_detail.passengers.col_guests",
+                                                    )
+                                                }}</span
+                                            >
+                                            <input
+                                                v-model="editDraft.guests"
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                class="mt-0.5 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                                :placeholder="
+                                                    t(
+                                                        'trip_detail.passengers.ph_guests',
+                                                    )
+                                                "
+                                            />
+                                        </label>
                                     </template>
                                     <template v-else>
                                         <input
@@ -255,6 +301,36 @@
                                                 t('trip_detail.passengers.ph_name')
                                             "
                                         />
+                                        <label
+                                            v-if="
+                                                row.editMeta?.kind ===
+                                                    'named_tp' &&
+                                                editDraft.guests != null &&
+                                                editDraft.guests !== ''
+                                            "
+                                            class="mt-2 block"
+                                        >
+                                            <span
+                                                class="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                                                >{{
+                                                    t(
+                                                        "trip_detail.passengers.col_guests",
+                                                    )
+                                                }}</span
+                                            >
+                                            <input
+                                                v-model="editDraft.guests"
+                                                type="number"
+                                                min="1"
+                                                step="1"
+                                                class="mt-0.5 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                                                :placeholder="
+                                                    t(
+                                                        'trip_detail.passengers.ph_guests',
+                                                    )
+                                                "
+                                            />
+                                        </label>
                                     </template>
                                 </template>
                                 <template v-else>
@@ -325,85 +401,13 @@
                                 class="px-3 py-2.5 align-top"
                                 @click="onRowContentClick(row)"
                             >
-                                <template
-                                    v-if="editingKey === row.passengerKey && editDraft"
+                                <span
+                                    class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                                    :class="rolePillClass(row.roleKind)"
                                 >
-                                    <template
-                                        v-if="row.editMeta?.kind === 'business'"
-                                    >
-                                        <input
-                                            v-model="editDraft.guests"
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            class="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                                            :placeholder="
-                                                t(
-                                                    'trip_detail.passengers.ph_guests',
-                                                )
-                                            "
-                                        />
-                                    </template>
-                                    <template v-else-if="row.editMeta?.kind === 'cargo'">
-                                        <div class="flex flex-col gap-0.5">
-                                            <span
-                                                class="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                                                >{{
-                                                    t(
-                                                        "trip_detail.passengers.col_qty",
-                                                    )
-                                                }}</span
-                                            >
-                                            <input
-                                                v-model="editDraft.qty"
-                                                type="number"
-                                                min="1"
-                                                step="1"
-                                                class="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                                                :placeholder="
-                                                    t(
-                                                        'trip_detail.passengers.ph_qty',
-                                                    )
-                                                "
-                                            />
-                                        </div>
-                                    </template>
-                                    <template
-                                        v-else-if="
-                                            row.editMeta?.kind === 'named_tp' &&
-                                            editDraft.guests != null &&
-                                            editDraft.guests !== ''
-                                        "
-                                    >
-                                        <input
-                                            v-model="editDraft.guests"
-                                            type="number"
-                                            min="1"
-                                            step="1"
-                                            class="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                                            :placeholder="
-                                                t(
-                                                    'trip_detail.passengers.ph_guests',
-                                                )
-                                            "
-                                        />
-                                    </template>
-                                    <template v-else>
-                                        <span
-                                            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                                            :class="rolePillClass(row.roleKind)"
-                                        >
-                                            {{ row.roleLabel }}
-                                        </span>
-                                    </template>
-                                </template>
-                                <template v-else>
-                                    <span
-                                        class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                                        :class="rolePillClass(row.roleKind)"
-                                    >
-                                        {{ row.roleLabel }}
-                                    </span>
+                                    {{ displayRoleLabel(row) }}
+                                </span>
+                                <template v-if="editingKey !== row.passengerKey">
                                     <span
                                         v-if="checkedLocal[row.passengerKey]"
                                         class="ml-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950/55 dark:text-emerald-200"
@@ -1530,6 +1534,16 @@ function rolePillClass(kind: string) {
     return "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200";
 }
 
+function displayRoleLabel(row: PassengerRow): string {
+    const raw = String(row.roleLabel ?? "").trim();
+    if (raw && !/^\d+$/.test(raw)) return raw;
+    const kind = String(row.roleKind ?? "guest");
+    if (kind === "student") return t("trip_detail.passengers.role_student");
+    if (kind === "staff") return t("trip_detail.passengers.role_staff");
+    if (kind === "cargo") return t("trip_detail.passengers.role_cargo");
+    return t("trip_detail.passengers.role_guest");
+}
+
 function telHref(contact: string) {
     const raw = String(contact ?? "").trim();
     if (!raw || raw === "—") return "";
@@ -1682,7 +1696,7 @@ function exportCsv(): void {
         lines.push(
             [
                 csvEscapeCell(row.name),
-                csvEscapeCell(row.roleLabel),
+                csvEscapeCell(displayRoleLabel(row)),
                 csvEscapeCell(row.contact),
                 csvEscapeCell(row.notes),
                 csvEscapeCell(row.pickupAddress ?? ""),
