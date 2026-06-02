@@ -17,13 +17,6 @@
         <div class="flex items-start justify-between gap-2">
           <p class="text-xs font-semibold uppercase tracking-wide text-slate-600">{{ card.title }}</p>
           <div class="flex shrink-0 items-center gap-1.5">
-            <span
-              v-if="card.trend != null && card.trend !== 0"
-              class="rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
-              :class="card.trend > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
-            >
-              {{ card.trend > 0 ? '+' : '' }}{{ card.trend }}
-            </span>
             <span class="flex rounded-xl p-2" :class="card.iconWrapClass">
               <component :is="card.icon" class="h-6 w-6 opacity-95" :class="card.iconClass" aria-hidden="true" />
             </span>
@@ -48,7 +41,7 @@ import {
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
-  /** @type {{ processing?: number, pending?: number, completed_this_month?: number, rejected?: number, trends?: { completed_this_month?: number } }} */
+  /** @type {{ processing?: number, pending?: number, completed_this_month?: number, rejected?: number }} */
   summary: { type: Object, default: null },
 })
 
@@ -56,7 +49,6 @@ const { t } = useI18n()
 
 const cards = computed(() => {
   const s = props.summary || {}
-  const trends = s.trends || {}
   const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
   return [
     {
@@ -64,7 +56,6 @@ const cards = computed(() => {
       title: t('portal.kpi_processing_title'),
       sub: t('portal.kpi_processing_sub'),
       value: n(s.processing),
-      trend: null,
       icon: TruckIcon,
       iconClass: 'text-sky-600',
       iconWrapClass: 'bg-sky-100 text-sky-600',
@@ -77,7 +68,6 @@ const cards = computed(() => {
       title: t('portal.kpi_pending_title'),
       sub: t('portal.kpi_pending_sub'),
       value: n(s.pending),
-      trend: null,
       icon: ClockIcon,
       iconClass: 'text-amber-600',
       iconWrapClass: 'bg-amber-100 text-amber-600',
@@ -90,7 +80,6 @@ const cards = computed(() => {
       title: t('portal.kpi_completed_title'),
       sub: t('portal.kpi_completed_sub'),
       value: n(s.completed_this_month),
-      trend: typeof trends.completed_this_month === 'number' ? trends.completed_this_month : null,
       icon: CheckCircleIcon,
       iconClass: 'text-emerald-600',
       iconWrapClass: 'bg-emerald-100 text-emerald-600',
@@ -103,7 +92,6 @@ const cards = computed(() => {
       title: t('portal.kpi_rejected_title'),
       sub: t('portal.kpi_rejected_sub'),
       value: n(s.rejected),
-      trend: null,
       icon: XCircleIcon,
       iconClass: 'text-rose-600',
       iconWrapClass: 'bg-rose-100 text-rose-600',
