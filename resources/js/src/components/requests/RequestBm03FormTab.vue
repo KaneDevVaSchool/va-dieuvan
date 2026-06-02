@@ -7,44 +7,6 @@
           <p class="mt-1 text-xs font-medium text-slate-600 sm:text-sm">{{ tripSubtitle }}</p>
         </div>
         <div class="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:items-end">
-          <div
-            v-if="showStudentCountHeaderTable"
-            class="mx-auto grid w-full max-w-[15rem] shrink-0 gap-px overflow-hidden rounded border border-teal-300/80 bg-teal-50/30 text-[11px] sm:mx-0"
-          >
-            <div class="col-span-2 border-b border-teal-200 bg-teal-50 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-teal-900">
-              {{ t('request_detail.bm03_student_count_header') }}
-            </div>
-            <div class="grid grid-cols-2 bg-white">
-              <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
-                {{ t('request_detail.bm03_student_count_plan_short') }}
-              </span>
-              <span class="border-b border-slate-300 px-2 py-1 text-right tabular-nums text-slate-900">
-                {{ studentCountPlanDisplay ?? '—' }}
-              </span>
-            </div>
-            <div class="grid grid-cols-2 bg-white">
-              <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
-                {{ t('request_detail.bm03_student_count_actual_short') }}
-              </span>
-              <span
-                class="border-b border-slate-300 px-2 py-1 text-right tabular-nums font-semibold"
-                :class="studentCountActualHighlight ? 'text-teal-800' : 'text-slate-900'"
-              >
-                {{ studentCountActualDisplay ?? '—' }}
-              </span>
-            </div>
-            <div class="grid grid-cols-2 bg-white">
-              <span class="border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
-                {{ t('request_detail.bm03_student_count_status') }}
-              </span>
-              <span class="flex justify-end px-1 py-0.5">
-                <StudentCountTrackingBadge
-                  :tracking-key="studentCountTrackingKey"
-                  i18n-prefix="requests_page.extracurricular_table"
-                />
-              </span>
-            </div>
-          </div>
           <div class="mx-auto grid w-full max-w-[13rem] shrink-0 gap-px overflow-hidden rounded border border-slate-300 text-[11px] sm:mx-0">
             <div class="grid grid-cols-2 bg-white">
               <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Ký hiệu</span>
@@ -650,22 +612,6 @@
       :budget-alert="req?.dispatch_package_budget_alert"
     />
 
-    <section
-      v-if="showPassengerAdjustSection"
-      class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-    >
-      <StudentCountField
-        v-model:passenger-count="passengerDraftModel"
-        :student-count-plan="req?.passenger_count != null ? Number(req.passenger_count) : null"
-        :locked="passengerDepartLocked"
-        :is-dispatcher-override="passengerDispatcherOverride"
-        :depart-at-formatted="departAtFormatted"
-        :saving="passengerSaving"
-        :error="passengerPatchErr"
-        @save="$emit('savePassenger')"
-      />
-    </section>
-
     <SignedPaperUpload
       v-if="showSignedPaperSection"
       :attachments="signedPaperAttachments"
@@ -691,9 +637,6 @@ import { useI18n } from 'vue-i18n'
 import Button from '../ui/Button.vue'
 import SignedPaperUpload from './SignedPaperUpload.vue'
 import CostLimitAlert from './CostLimitAlert.vue'
-import StudentCountField from '../recurring/StudentCountField.vue'
-import StudentCountTrackingBadge from './extracurricular/StudentCountTrackingBadge.vue'
-import { extracurricularStudentCountTrackingKey } from '../../composables/useExtracurricularStudentCountTracking'
 import BmRoField from './RequestBm03RoField.vue'
 import BmRoTd from './RequestBm03RoTd.vue'
 import { getAvailableDeptHeads } from '../../api/requests'
@@ -716,20 +659,9 @@ const props = defineProps({
     },
   },
   signedUploadErr: { type: String, default: '' },
-  passengerSaving: { type: Boolean, default: false },
-  passengerPatchErr: { type: String, default: '' },
-  passengerDepartLocked: { type: Boolean, default: true },
-  passengerDispatcherOverride: { type: Boolean, default: false },
-  departAtFormatted: { type: String, default: '' },
   showFillPriceSection: { type: Boolean, default: false },
   showSignedPaperSection: { type: Boolean, default: false },
-  showPassengerAdjustSection: { type: Boolean, default: false },
   approvalTabNeedsFocus: { type: Boolean, default: false },
-})
-
-const passengerDraftModel = defineModel('passengerDraft', {
-  type: Number,
-  default: 1,
 })
 
 const emit = defineEmits([
@@ -737,7 +669,6 @@ const emit = defineEmits([
   'open-reference-pricing',
   'downloadSigned',
   'signedUploaded',
-  'savePassenger',
 ])
 
 const deptHeadOptions = ref([])
@@ -752,31 +683,6 @@ const selectedDeptHeadId = ref('')
 const deptHeadLockedLabel = ref('')
 
 const deptHeadAssignRequired = computed(() => props.showFillPriceSection)
-
-const showStudentCountHeaderTable = computed(() => props.req?.dispatch_request_template_id != null)
-
-const studentCountPlanDisplay = computed(() => {
-  const n = props.req?.passenger_count
-  if (n == null || n === '') return null
-  return Number(n)
-})
-
-const studentCountActualDisplay = computed(() => {
-  const saved = props.req?.student_count_actual
-  if (saved != null && saved !== '') return Number(saved)
-  const draft = passengerDraftModel.value
-  if (draft != null && draft > 0) return Number(draft)
-  return null
-})
-
-const studentCountActualHighlight = computed(() => {
-  const plan = studentCountPlanDisplay.value
-  const actual = studentCountActualDisplay.value
-  if (plan == null || actual == null) return actual != null
-  return actual !== plan
-})
-
-const studentCountTrackingKey = computed(() => extracurricularStudentCountTrackingKey(props.req))
 
 /** Chỉ khóa ô khi đang gửi lưu giá — không khóa vì thiếu department_id trên SPA/DB để luôn gõ được. */
 const fillPriceLocked = computed(() => props.fillPriceActing)

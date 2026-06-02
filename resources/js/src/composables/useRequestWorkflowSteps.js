@@ -15,8 +15,13 @@ export function useRequestWorkflowSteps(reqRef, ctxRef) {
     let n = 0
     if (c.showFillPriceSection) n += 1
     if (c.showDeptDecisionSection) n += 1
-    if (c.showPassengerAdjustSection) n += 1
     return n
+  })
+
+  const studentsTabActionCount = computed(() => {
+    const c = unref(ctxRef)
+    if (!c) return 0
+    return c.showPassengerAdjustSection ? 1 : 0
   })
 
   const docsTabActionCount = computed(() => {
@@ -84,7 +89,7 @@ export function useRequestWorkflowSteps(reqRef, ctxRef) {
         key: 'passenger-adjust',
         label: t('request_detail.todo_passenger_adjust'),
         done: false,
-        tab: 'form',
+        tab: 'students',
         focus: 'passenger-adjust',
         priority: 5,
       })
@@ -95,6 +100,7 @@ export function useRequestWorkflowSteps(reqRef, ctxRef) {
 
   return {
     formTabActionCount,
+    studentsTabActionCount,
     docsTabActionCount,
     todoItems,
   }

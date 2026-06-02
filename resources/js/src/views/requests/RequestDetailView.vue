@@ -308,6 +308,27 @@
               />
             </button>
             <button
+              v-if="showStudentCountTab"
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'students'"
+              class="relative inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
+              :class="
+                activeTab === 'students'
+                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
+                  : 'text-slate-600 hover:bg-slate-50'
+              "
+              @click="setActiveTab('students')"
+            >
+              {{ t('request_detail.tab_students') }}
+              <span
+                v-if="studentsTabActionCount > 0"
+                class="ml-1.5 inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-teal-600 px-1 py-px text-[10px] font-bold text-white"
+              >
+                {{ studentsTabActionCount }}
+              </span>
+            </button>
+            <button
               type="button"
               role="tab"
               :aria-selected="activeTab === 'docs'"
@@ -572,7 +593,6 @@
               />
               <RequestBm03FormTab
                 v-if="req"
-                v-model:passenger-draft="passengerDraft"
                 :req="req"
                 :fill-price-acting="fillPriceActing"
                 :fill-price-msg="fillPriceMsg"
@@ -580,19 +600,26 @@
                 :signed-upload-component-key="`signed-${route.params.id}-${signedPaperAttachments.length}`"
                 :upload-signed-fn="uploadSignedPaper"
                 :signed-upload-err="signedUploadErr"
-                :passenger-saving="passengerSaving"
-                :passenger-patch-err="passengerPatchErr"
-                :passenger-depart-locked="passengerDepartLocked"
-                :passenger-dispatcher-override="passengerDispatcherOverride"
-                :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
                 :show-fill-price-section="showFillPriceSection"
                 :show-signed-paper-section="showSignedPaperSection"
-                :show-passenger-adjust-section="showPassengerAdjustSection"
                 :approval-tab-needs-focus="approvalTabNeedsFocus"
                 @save-row-prices="onSaveRowPrices"
                 @open-reference-pricing="pricingModalOpen = true"
                 @download-signed="downloadFile"
                 @signed-uploaded="onSignedUploaded"
+              />
+            </div>
+            <div v-show="activeTab === 'students' && showStudentCountTab" class="space-y-5">
+              <RequestStudentCountTab
+                v-if="req"
+                v-model:passenger-draft="passengerDraft"
+                :req="req"
+                :passenger-saving="passengerSaving"
+                :passenger-patch-err="passengerPatchErr"
+                :passenger-depart-locked="passengerDepartLocked"
+                :passenger-dispatcher-override="passengerDispatcherOverride"
+                :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
+                :show-passenger-adjust-section="showPassengerAdjustSection"
                 @save-passenger="savePassengerDraft"
               />
             </div>
@@ -758,6 +785,9 @@ import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 const RequestBm03FormTab = defineAsyncComponent(() =>
   import('../../components/requests/RequestBm03FormTab.vue'),
+)
+const RequestStudentCountTab = defineAsyncComponent(() =>
+  import('../../components/requests/RequestStudentCountTab.vue'),
 )
 import RequestCloneLineageBanner from '../../components/requests/RequestCloneLineageBanner.vue'
 import RequestAuditTimeline from '../../components/requests/RequestAuditTimeline.vue'
@@ -973,15 +1003,19 @@ const passengerDepartLocked = computed(() => {
   return h == null || h < 24
 })
 
-/** Chốt/cập nhật số HS định kỳ do người đề nghị trên cổng portal — không hiển thị trên SPA /mng. */
-const showPassengerAdjustSection = computed(() => false)
+/** Chốt/cập nhật số HS định kỳ: người đề nghị trên portal; điều vận chỉnh trên tab Học sinh chuyến. */
+const showStudentCountTab = computed(() => req.value?.dispatch_request_template_id != null)
+
+const showPassengerAdjustSection = computed(
+  () => showStudentCountTab.value && auth.hasPermission('trip.view_all'),
+)
 
 const showResetCloneBtn = computed(() => {
   if (!isCurrentUserRequester.value || !auth.hasPermission('request.create')) return false
   return ['approved', 'rejected'].includes(String(req.value?.status || ''))
 })
 
-const DOC_TABS = ['route', 'form', 'docs']
+const DETAIL_TABS = ['route', 'form', 'students', 'docs']
 
 const activeTab = ref('route')
 const previewOpen = ref(false)
@@ -1014,7 +1048,7 @@ const workflowCtx = computed(() => ({
   docsNeedsPaperScan: docsNeedsPaperScan.value,
 }))
 
-const { formTabActionCount, docsTabActionCount, todoItems: workflowTodoItems } = useRequestWorkflowSteps(
+const { formTabActionCount, studentsTabActionCount, docsTabActionCount, todoItems: workflowTodoItems } = useRequestWorkflowSteps(
   reqForDocs,
   workflowCtx,
 )
@@ -1036,10 +1070,13 @@ const FOCUS_TARGETS = {
 
 function tabFromRouteQuery() {
   const q = route.query.tab
-  return typeof q === 'string' && DOC_TABS.includes(q) ? q : null
+  if (typeof q !== 'string') return null
+  if (q === 'students' && !showStudentCountTab.value) return null
+  return DETAIL_TABS.includes(q) ? q : null
 }
 
 function setActiveTab(tab) {
+  if (tab === 'students' && !showStudentCountTab.value) return
   activeTab.value = tab
   const nextQuery = { ...route.query, tab }
   if (route.query.tab !== tab) {
@@ -1050,7 +1087,8 @@ function setActiveTab(tab) {
 watch(
   () => route.query.tab,
   (tab) => {
-    if (typeof tab === 'string' && DOC_TABS.includes(tab) && activeTab.value !== tab) {
+    if (typeof tab === 'string' && DETAIL_TABS.includes(tab) && activeTab.value !== tab) {
+      if (tab === 'students' && !showStudentCountTab.value) return
       activeTab.value = tab
     }
   },
@@ -1080,7 +1118,6 @@ const approvalTabNeedsFocus = computed(() => {
     r.dispatch_package_cost_alert ||
     r.dispatch_package_budget_alert ||
     showResetCloneBtn.value ||
-    showPassengerAdjustSection.value ||
     showFillPriceSection.value ||
     showDeptDecisionSection.value ||
     showSignedPaperSection.value
