@@ -515,10 +515,14 @@ function linesFor(n) {
     return { primary: t('notify.trip_error'), sub: t('notify.trip_error_sub') }
   }
   const { message, body, title, combined } = rawParts(n)
+  const navSub = resolveNavLink(n) ? t('notify.trip_new_sub') : ''
+  if (title && !looksTechnical(title)) {
+    const sub = body && body !== title ? clipText(body, 120) : navSub
+    return { primary: clipText(title, 100), sub }
+  }
   const text = message || body || title
   if (text && !looksTechnical(text)) {
-    const sub = resolveNavLink(n) ? t('notify.trip_new_sub') : ''
-    return { primary: clipText(text, 100), sub }
+    return { primary: clipText(text, 100), sub: navSub }
   }
   return {
     primary: t('notify.fallback'),
