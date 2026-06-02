@@ -102,15 +102,6 @@
                     <option :value="20">20</option>
                 </select>
                 <button
-                    v-if="canEditList && selectedKeys.length > 0"
-                    type="button"
-                    class="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-50"
-                    :disabled="listBusy"
-                    @click="onBulkDelete"
-                >
-                    {{ t("trip_detail.passengers.dt_bulk_delete") }}
-                </button>
-                <button
                     v-if="canEditList"
                     type="button"
                     class="rounded-lg border border-sky-200/80 bg-sky-50/80 px-3 py-1.5 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-50 dark:border-sky-800/50 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-950/70"
@@ -154,21 +145,6 @@
                     class="sticky top-0 z-10 bg-slate-50/95 shadow-sm backdrop-blur-sm dark:bg-slate-800/95 dark:shadow-slate-900/80"
                 >
                     <tr>
-                        <th
-                            v-if="canEditList"
-                            scope="col"
-                            class="w-10 px-3 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-300"
-                        >
-                            <div class="flex justify-center">
-                            <input
-                                ref="headerSelectRef"
-                                type="checkbox"
-                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                                :aria-label="t('trip_detail.passengers.dt_col_select')"
-                                @change="onToggleAll"
-                            />
-                            </div>
-                        </th>
                         <th
                             v-if="canCheckIn"
                             scope="col"
@@ -229,22 +205,6 @@
                             ]"
                             @click.self="onRowBackgroundClick(row)"
                         >
-                            <td
-                                v-if="canEditList"
-                                class="w-10 px-3 py-2.5 text-center align-middle"
-                                @click.stop
-                            >
-                                <div class="flex justify-center">
-                                <input
-                                    v-if="isRowSelectable(row)"
-                                    v-model="selectedKeys"
-                                    type="checkbox"
-                                    class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                                    :value="row.passengerKey"
-                                    :disabled="listBusy"
-                                />
-                                </div>
-                            </td>
                             <td
                                 v-if="canCheckIn"
                                 class="px-2 py-2.5 align-middle"
@@ -1282,7 +1242,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
     ArrowDownTrayIcon,
@@ -1385,7 +1345,6 @@ const statusFilter = ref<StatusFilterKey>("all");
 const passengerSearch = ref("");
 const page = ref(1);
 const pageSize = ref(10);
-const selectedKeys = ref<string[]>([]);
 const rowExpanded = ref<string | null>(null);
 const checkingKey = ref<string | null>(null);
 const checkedLocal = ref<Record<string, boolean>>({});
@@ -1393,7 +1352,6 @@ const checkedAtLocal = ref<Record<string, string>>({});
 const editingKey = ref<string | null>(null);
 const editDraft = ref<Record<string, string> | null>(null);
 const listBusy = ref(false);
-const headerSelectRef = ref<HTMLInputElement | null>(null);
 const addModalOpen = ref(false);
 const addForm = ref<Record<string, string>>({});
 
@@ -1425,9 +1383,6 @@ watch(
 watch(
     () => props.rows,
     () => {
-        selectedKeys.value = selectedKeys.value.filter((k) =>
-            props.rows.some((r) => r.passengerKey === k),
-        );
         if (editingKey.value && !props.rows.some((r) => r.passengerKey === editingKey.value)) {
             editingKey.value = null;
             editDraft.value = null;
@@ -1519,16 +1474,6 @@ const showTo = computed(() =>
     Math.min(pageStart.value + pageSize.value, totalFiltered.value),
 );
 
-const selectableKeysFiltered = computed(() =>
-    filteredRows.value
-        .filter((r) => isRowSelectable(r))
-        .map((r) => r.passengerKey),
-);
-
-function isRowSelectable(row: PassengerRow) {
-    return !!(props.canEditList && row.editable && row.editMeta);
-}
-
 function filterChipClass(key: StatusFilterKey): string {
     const on = statusFilter.value === key;
     return on
@@ -1562,7 +1507,7 @@ const filterOptions = computed(() => {
 
 const tableColSpan = computed(() => {
     let n = 4;
-    if (props.canEditList) n += 2;
+    if (props.canEditList) n += 1;
     if (props.canCheckIn) n += 1;
     return n;
 });
@@ -1622,33 +1567,6 @@ function checkTimeLabel(key: string) {
     });
 }
 
-function onToggleAll(ev: Event) {
-    const el = ev.target as HTMLInputElement;
-    const all = selectableKeysFiltered.value;
-    if (el.checked) {
-        selectedKeys.value = [...new Set([...selectedKeys.value, ...all])];
-    } else {
-        selectedKeys.value = selectedKeys.value.filter((k) => !all.includes(k));
-    }
-}
-
-watch(
-    [selectedKeys, selectableKeysFiltered],
-    () => {
-        nextTick(() => {
-            const el = headerSelectRef.value;
-            if (!el) return;
-            const all = selectableKeysFiltered.value;
-            const picked = selectedKeys.value.filter((k) =>
-                all.includes(k),
-            ).length;
-            el.checked = picked === all.length && all.length > 0;
-            el.indeterminate = picked > 0 && picked < all.length;
-        });
-    },
-    { deep: true },
-);
-
 function startEdit(row: PassengerRow) {
     if (!row.editFields || !row.editMeta) return;
     rowExpanded.value = null;
@@ -1694,34 +1612,6 @@ async function deleteRow(row: PassengerRow) {
             if (ok) {
                 editingKey.value = null;
                 editDraft.value = null;
-                selectedKeys.value = selectedKeys.value.filter(
-                    (k) => k !== row.passengerKey,
-                );
-            }
-        },
-    });
-}
-
-async function onBulkDelete() {
-    if (!selectedKeys.value.length) return;
-    const okC = await confirmAction({
-        title: t("trip_detail.passengers.dt_bulk_confirm_title"),
-        message: t("trip_detail.passengers.dt_bulk_confirm_body", {
-            n: selectedKeys.value.length,
-        }),
-        confirmLabel: t("trip_detail.passengers.dt_bulk_delete"),
-        cancelLabel: t("trip_detail.passengers.cancel_edit"),
-    });
-    if (!okC) return;
-    const keys = [...selectedKeys.value];
-    listBusy.value = true;
-    emit("passenger-list-delete", {
-        keys,
-        resolve(ok) {
-            listBusy.value = false;
-            if (ok) {
-                selectedKeys.value = [];
-                page.value = 1;
             }
         },
     });
