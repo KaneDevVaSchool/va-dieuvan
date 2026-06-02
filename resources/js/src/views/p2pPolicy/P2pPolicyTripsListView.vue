@@ -17,8 +17,11 @@
 
     <div class="relative z-40">
       <AppFilterBar>
-        <div ref="p2pTripsFilterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-          <details ref="funnelDetailsRef" class="group relative">
+        <div
+          ref="p2pTripsFilterBarRef"
+          class="relative flex flex-nowrap items-center gap-1 overflow-x-auto sm:gap-2"
+        >
+          <details ref="funnelDetailsRef" class="group relative shrink-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
             >
@@ -87,6 +90,27 @@
                     {{ t('p2p_policy_page.no_filters') }}
                   </li>
                 </ul>
+                <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                    {{ t('p2p_policy_page.filter_show_title') }}
+                  </p>
+                  <ul class="mt-2 max-h-[min(40vh,280px)] space-y-2 overflow-y-auto pr-0.5">
+                    <li v-for="fd in filterDefs" :key="'trips-vis-' + fd.id" class="flex items-start gap-2">
+                      <input
+                        :id="'p2p-trips-filter-vis-' + fd.id"
+                        v-model="visibility[fd.id]"
+                        type="checkbox"
+                        class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600"
+                      />
+                      <label
+                        :for="'p2p-trips-filter-vis-' + fd.id"
+                        class="cursor-pointer text-sm text-slate-700 dark:text-slate-300"
+                      >
+                        {{ t(fd.labelKey) }}
+                      </label>
+                    </li>
+                  </ul>
+                </div>
                 <button
                   type="button"
                   class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -98,47 +122,13 @@
             </div>
           </details>
 
-          <details ref="filterControlsRef" class="group relative shrink-0">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
-            >
-              <AdjustmentsHorizontalIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-              <span class="hidden sm:inline">{{ t('p2p_policy_page.trips_btn_filter_controls') }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl dark:border-violet-800/40 dark:bg-slate-900"
-              @click.stop
-            >
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                {{ t('p2p_policy_page.filter_show_title') }}
-              </p>
-              <ul class="mt-2 max-h-[min(40vh,280px)] space-y-2 overflow-y-auto pr-0.5">
-                <li v-for="fd in filterDefs" :key="'trips-vis-' + fd.id" class="flex items-start gap-2">
-                  <input
-                    :id="'p2p-trips-filter-vis-' + fd.id"
-                    v-model="visibility[fd.id]"
-                    type="checkbox"
-                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600"
-                  />
-                  <label
-                    :for="'p2p-trips-filter-vis-' + fd.id"
-                    class="cursor-pointer text-sm text-slate-700 dark:text-slate-300"
-                  >
-                    {{ t(fd.labelKey) }}
-                  </label>
-                </li>
-              </ul>
-            </div>
-          </details>
-
           <details ref="columnPickerRef" class="group relative shrink-0">
             <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
+              class="flex cursor-pointer list-none items-center rounded-xl border border-white/90 bg-white/95 p-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
+              :title="t('p2p_policy_page.col_visibility_title')"
+              :aria-label="t('p2p_policy_page.col_visibility_title')"
             >
-              <ViewColumnsIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-              <span class="hidden sm:inline">{{ t('p2p_policy_page.trips_btn_columns') }}</span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
             </summary>
             <div
               class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[240px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl dark:border-violet-800/40 dark:bg-slate-900"
@@ -166,14 +156,15 @@
             </div>
           </details>
 
-          <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
+          <div class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
-          <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+          <div class="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 sm:gap-2">
             <AppFilterDropdown
               v-if="visibility.p2p_policy_term_id"
+              root-class="shrink-0"
               :label="t('p2p_policy_page.filter_p2p_term')"
               :summary-text="filterLabel('p2p_policy_term_id')"
-              summary-text-class="max-w-[11rem]"
+              summary-text-class="max-w-[9rem] sm:max-w-[11rem]"
               panel-class="min-w-[240px] max-h-[min(50vh,280px)] overflow-y-auto py-1"
             >
               <ul class="space-y-0.5 px-1 py-1">
@@ -202,6 +193,7 @@
 
             <AppFilterDropdown
               v-if="visibility.policy_route_id"
+              root-class="shrink-0"
               :label="t('p2p_policy_page.filter_route')"
               :summary-text="filterLabel('policy_route_id')"
               summary-text-class="max-w-[11rem]"
@@ -231,7 +223,7 @@
               </ul>
             </AppFilterDropdown>
 
-            <details v-if="visibility.run_date_from" class="group relative min-w-0 shrink-0">
+            <details v-if="visibility.run_date_from" class="group relative shrink-0">
               <summary
                 class="flex cursor-pointer list-none items-center gap-2 rounded-lg border border-white/90 bg-white/95 px-2 py-1.5 text-sm shadow-sm ring-1 ring-slate-200/50 [&::-webkit-details-marker]:hidden dark:border-slate-700 dark:bg-slate-900/95"
               >
@@ -250,7 +242,7 @@
               </div>
             </details>
 
-            <details v-if="visibility.run_date_to" class="group relative min-w-0 shrink-0">
+            <details v-if="visibility.run_date_to" class="group relative shrink-0">
               <summary
                 class="flex cursor-pointer list-none items-center gap-2 rounded-lg border border-white/90 bg-white/95 px-2 py-1.5 text-sm shadow-sm ring-1 ring-slate-200/50 [&::-webkit-details-marker]:hidden dark:border-slate-700 dark:bg-slate-900/95"
               >
@@ -271,6 +263,7 @@
 
             <AppFilterDropdown
               v-if="visibility.leg"
+              root-class="shrink-0"
               :label="t('p2p_policy_page.filter_leg')"
               :summary-text="filterLabel('leg')"
               panel-class="min-w-[180px] py-1"
@@ -291,6 +284,7 @@
 
             <AppFilterDropdown
               v-if="visibility.trip_status"
+              root-class="shrink-0"
               :label="t('p2p_policy_page.filter_trip_status')"
               :summary-text="filterLabel('trip_status')"
               panel-class="min-w-[200px] py-1"
@@ -321,6 +315,7 @@
 
             <AppFilterDropdown
               v-if="visibility.has_trip"
+              root-class="shrink-0"
               :label="t('p2p_policy_page.filter_has_trip')"
               :summary-text="filterLabel('has_trip')"
               panel-class="min-w-[200px] py-1"
@@ -341,6 +336,7 @@
 
             <AppFilterDropdown
               v-if="visibility.reminder_status"
+              root-class="shrink-0"
               :label="t('p2p_policy_page.filter_reminder_status')"
               :summary-text="filterLabel('reminder_status')"
               panel-class="min-w-[200px] py-1"
@@ -623,14 +619,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import {
-  AdjustmentsHorizontalIcon,
-  ArrowLeftIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  FunnelIcon,
-  ViewColumnsIcon,
-} from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ChevronDownIcon, ChevronRightIcon, FunnelIcon, ViewColumnsIcon } from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
@@ -655,11 +644,9 @@ const route = useRoute()
 const router = useRouter()
 
 const funnelDetailsRef = ref(null)
-const filterControlsRef = ref(null)
 const columnPickerRef = ref(null)
 const p2pTripsFilterBarRef = ref(null)
 useDetailsAutoClose(funnelDetailsRef)
-useDetailsAutoClose(filterControlsRef)
 useDetailsAutoClose(columnPickerRef)
 useDetailsAutoCloseWithin(p2pTripsFilterBarRef)
 
@@ -883,18 +870,15 @@ function onTermFilterChange() {
 
 function onClearFilters() {
   clearFilters()
-  if (!filters.p2p_policy_term_id) {
-    const qTerm = resolveP2pTermIdFromRoute(route)
-    if (qTerm) filters.p2p_policy_term_id = qTerm
-    else if (p2pTerms.value[0]) filters.p2p_policy_term_id = p2pTerms.value[0].id
-  }
   if (funnelDetailsRef.value) funnelDetailsRef.value.open = false
   syncWorkflowQuery()
 }
 
 function syncWorkflowQuery() {
+  const termId = filters.p2p_policy_term_id || ''
   router.replace({
-    query: p2pWorkflowQuery(filters.p2p_policy_term_id || resolveP2pTermIdFromRoute(route)),
+    name: route.name,
+    query: p2pWorkflowQuery(termId),
   })
 }
 
@@ -914,8 +898,6 @@ onMounted(async () => {
   const qTerm = resolveP2pTermIdFromRoute(route)
   if (qTerm) {
     filters.p2p_policy_term_id = qTerm
-  } else if (p2pTerms.value[0] && !filters.p2p_policy_term_id) {
-    filters.p2p_policy_term_id = p2pTerms.value[0].id
   }
 
   await loadRouteOptions()

@@ -90,11 +90,9 @@ export function useP2pPolicyTripSlotFilters() {
     return n
   })
 
-  /** Clears optional filters; keeps `p2p_policy_term_id` so the list stays scoped to the current term. */
   function clearFilters() {
-    const keepTerm = filters.p2p_policy_term_id
     filters.q = ''
-    filters.p2p_policy_term_id = keepTerm
+    filters.p2p_policy_term_id = ''
     filters.policy_route_id = ''
     filters.run_date_from = ''
     filters.run_date_to = ''

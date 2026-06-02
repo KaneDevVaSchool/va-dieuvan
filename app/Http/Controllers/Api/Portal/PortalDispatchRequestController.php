@@ -23,6 +23,7 @@ use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
 use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
 use App\Http\Resources\SignedDocumentVersionResource;
+use App\Services\RecurringDispatch\PortalRecurringBm03GroupSyncService;
 use App\Services\SignedDocuments\SignedDocumentUploadService;
 use App\Services\SignedDocuments\SigningWorkflowService;
 use App\Support\Messages;

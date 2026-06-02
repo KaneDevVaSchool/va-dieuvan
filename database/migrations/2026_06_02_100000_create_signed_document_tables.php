@@ -8,11 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $schemaComplete = Schema::hasTable('signed_document_verifications')
+            && Schema::hasColumn('dispatch_requests', 'signing_workflow_status')
+            && Schema::hasColumn('attachments', 'sha256');
+
+        if ($schemaComplete) {
+            return;
+        }
+
         // Recover from a prior failed run (tables created, migration not recorded).
-        if (
-            Schema::hasTable('signed_document_versions')
-            && ! Schema::hasColumn('dispatch_requests', 'signing_workflow_status')
-        ) {
+        if (Schema::hasTable('signed_document_versions')) {
             Schema::dropIfExists('signed_document_verifications');
             Schema::dropIfExists('signed_document_versions');
         }
@@ -52,7 +57,11 @@ return new class extends Migration
 
         Schema::create('signed_document_verifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('signed_document_version_id')->constrained('signed_document_versions')->cascadeOnDelete();
+            $table->unsignedBigInteger('signed_document_version_id');
+            $table->foreign('signed_document_version_id', 'sdver_log_version_fk')
+                ->references('id')
+                ->on('signed_document_versions')
+                ->cascadeOnDelete();
             $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('action', 32);
             $table->string('before_status', 32)->nullable();
