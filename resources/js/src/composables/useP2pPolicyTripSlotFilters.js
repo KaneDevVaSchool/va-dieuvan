@@ -4,7 +4,6 @@ export const P2P_TRIPS_PER_PAGE_OPTIONS = [10, 20, 50, 100]
 export const P2P_TRIPS_DEFAULT_PER_PAGE = 10
 
 export const P2P_TRIPS_COL_DEFS = [
-  { id: 'leg', labelKey: 'p2p_policy_page.col_leg' },
   { id: 'depart', labelKey: 'p2p_policy_page.col_depart' },
   { id: 'driver', labelKey: 'p2p_policy_page.col_driver' },
   { id: 'vehicle', labelKey: 'p2p_policy_page.col_vehicle' },
@@ -50,7 +49,6 @@ export function useP2pPolicyTripSlotFilters() {
   })
 
   const colVisible = reactive({
-    leg: true,
     depart: true,
     driver: true,
     vehicle: true,

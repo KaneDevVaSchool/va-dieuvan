@@ -17,10 +17,7 @@
 
     <div class="relative z-40">
       <AppFilterBar>
-        <div
-          ref="p2pTripsFilterBarRef"
-          class="relative flex flex-nowrap items-center gap-1 overflow-x-auto sm:gap-2"
-        >
+        <div ref="p2pTripsFilterBarRef" class="relative flex flex-nowrap items-center gap-1 sm:gap-2">
           <details ref="funnelDetailsRef" class="group relative shrink-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
@@ -131,13 +128,13 @@
               <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
             </summary>
             <div
-              class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[240px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl dark:border-violet-800/40 dark:bg-slate-900"
+              class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[240px] rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900"
               @click.stop
             >
               <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                 {{ t('p2p_policy_page.col_visibility_title') }}
               </p>
-              <ul class="mt-2 max-h-[min(40vh,280px)] space-y-2 overflow-y-auto pr-0.5">
+              <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto pr-0.5">
                 <li v-for="cd in P2P_TRIPS_COL_DEFS" :key="'trips-col-vis-' + cd.id" class="flex items-start gap-2">
                   <input
                     :id="'p2p-trips-col-vis-' + cd.id"
@@ -158,7 +155,7 @@
 
           <div class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
-          <div class="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 sm:gap-2">
+          <div class="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 sm:gap-2">
             <AppFilterDropdown
               v-if="visibility.p2p_policy_term_id"
               root-class="shrink-0"
@@ -449,7 +446,6 @@
           <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80">
             <tr>
               <th class="px-3 py-2.5">{{ t('p2p_policy_page.col_run_date') }}</th>
-              <th v-if="colVisible.leg" class="px-3 py-2.5">{{ t('p2p_policy_page.col_leg') }}</th>
               <th class="px-3 py-2.5">{{ t('p2p_policy_page.col_route') }}</th>
               <th v-if="colVisible.depart" class="px-3 py-2.5">{{ t('p2p_policy_page.col_depart') }}</th>
               <th v-if="colVisible.driver" class="px-3 py-2.5">{{ t('p2p_policy_page.col_driver') }}</th>
@@ -500,11 +496,6 @@
                 >
                   <td class="whitespace-nowrap px-3 py-2.5 text-slate-800 dark:text-slate-200">
                     {{ formatIsoDate(row.run_date, p2pPolicyDateLocale(locale)) }}
-                  </td>
-                  <td v-if="colVisible.leg" class="px-3 py-2.5">
-                    <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                      {{ legLabel(row.leg) }}
-                    </span>
                   </td>
                   <td class="px-3 py-2.5">
                     <div class="font-medium text-slate-900 dark:text-white">{{ row.route_name || '—' }}</div>
