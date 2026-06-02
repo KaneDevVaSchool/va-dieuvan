@@ -1425,6 +1425,13 @@ export function useDispatchRequestWizard(options = {}) {
           : await createDispatchRequest(payload, { idempotencyKey })
       }
       created.value = createdResult
+      if (isPortal && created.value?.id) {
+        try {
+          sessionStorage.setItem('portal_recent_highlight_id', String(created.value.id))
+        } catch {
+          /* ignore */
+        }
+      }
       if (basisFile.value && created.value?.id) {
         try {
           await uploadAttachment({

@@ -17,7 +17,7 @@
             v-for="req in requests"
             :key="req.id"
             class="group/row transition hover:bg-indigo-50/40"
-            :class="isPendingApproval(req) ? 'bg-amber-50/40' : ''"
+            :class="rowHighlightClass(req)"
           >
             <td class="whitespace-nowrap px-4 py-3">
               <div class="group/id relative inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-slate-900">
@@ -74,7 +74,7 @@
         :key="req.id"
         :to="{ name: 'portalRequestDetail', params: { id: String(req.id) } }"
         class="group/card flex gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-200/80 hover:bg-indigo-50/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-        :class="isPendingApproval(req) ? 'border-amber-200/80 bg-amber-50/30' : ''"
+        :class="cardHighlightClass(req)"
       >
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2">
@@ -115,8 +115,9 @@ import { BoltIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
 import { formatPortalDepartLine, formatPortalTimeHm } from '../../util/portalDatetime.js'
 
-defineProps({
+const props = defineProps({
   requests: { type: Array, required: true },
+  highlightRequestId: { type: [Number, String, null], default: null },
 })
 
 const { t, locale } = useI18n()
@@ -139,6 +140,26 @@ function tripTypeLabel(req) {
 function isPendingApproval(req) {
   const s = req?.status
   return s === 'pending' || s === 'price_filled'
+}
+
+function isHighlighted(req) {
+  const hid = props.highlightRequestId
+  if (hid == null || hid === '') return false
+  return Number(req?.id) === Number(hid)
+}
+
+function rowHighlightClass(req) {
+  if (isHighlighted(req)) {
+    return 'bg-indigo-50/70 ring-2 ring-inset ring-indigo-400/70'
+  }
+  return isPendingApproval(req) ? 'bg-amber-50/40' : ''
+}
+
+function cardHighlightClass(req) {
+  if (isHighlighted(req)) {
+    return 'border-indigo-300/90 bg-indigo-50/50 ring-2 ring-indigo-400/50'
+  }
+  return isPendingApproval(req) ? 'border-amber-200/80 bg-amber-50/30' : ''
 }
 
 function departFmt(req) {

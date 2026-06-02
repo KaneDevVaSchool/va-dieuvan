@@ -76,7 +76,11 @@
             </template>
           </PortalEmptyState>
 
-          <PortalRequestsTable v-else :requests="displayItems" />
+          <PortalRequestsTable
+            v-else
+            :requests="displayItems"
+            :highlight-request-id="highlightRequestId"
+          />
         </div>
 
         <aside class="space-y-6 lg:sticky lg:top-[5.5rem] lg:self-start">
@@ -90,10 +94,10 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { PlusCircleIcon } from '@heroicons/vue/24/outline'
-import { getPortalRequestsSummary, listPortalRequests } from '../../api/requests'
+import { getPortalRequestsSummary, getPortalDispatchRequest, listPortalRequests } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import { useAuthStore } from '../../store'
 import { formatPortalTodayDate } from '../../util/portalDatetime.js'
@@ -106,15 +110,19 @@ import PortalRequestsTable from '../../components/portal/PortalRequestsTable.vue
 
 const RECENT_LIMIT = 8
 const APPROVED_FETCH_LIMIT = 40
+const PORTAL_RECENT_HIGHLIGHT_KEY = 'portal_recent_highlight_id'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 
 const loading = ref(true)
 const silentListRefresh = ref(false)
 const fetchError = ref('')
 const items = ref([])
 const recentFilter = ref('all')
+const highlightRequestId = ref(null)
 
 const summary = ref(null)
 const summaryLoading = ref(true)
@@ -178,6 +186,48 @@ function applyRecentFilter(list) {
 
 const displayItems = computed(() => applyRecentFilter(items.value).slice(0, RECENT_LIMIT))
 
+function consumeHighlightFromNavigation() {
+  let id = null
+  const q = route.query.highlight
+  if (q != null && String(q).trim() !== '') {
+    const n = Number(q)
+    if (Number.isFinite(n) && n > 0) id = n
+  }
+  if (id == null) {
+    try {
+      const raw = sessionStorage.getItem(PORTAL_RECENT_HIGHLIGHT_KEY)
+      if (raw) {
+        const n = Number(raw)
+        if (Number.isFinite(n) && n > 0) id = n
+        sessionStorage.removeItem(PORTAL_RECENT_HIGHLIGHT_KEY)
+      }
+    } catch {
+      /* ignore */
+    }
+  } else if (route.query.highlight != null) {
+    const next = { ...route.query }
+    delete next.highlight
+    router.replace({ query: next })
+  }
+  highlightRequestId.value = id
+}
+
+async function ensureHighlightVisible() {
+  const id = highlightRequestId.value
+  if (!id) return
+  if (applyRecentFilter(items.value).some((r) => Number(r.id) === Number(id))) return
+  try {
+    const req = await getPortalDispatchRequest(id)
+    if (req && applyRecentFilter([req]).length) {
+      items.value = [req, ...items.value.filter((r) => Number(r.id) !== Number(id))]
+    } else {
+      highlightRequestId.value = null
+    }
+  } catch {
+    highlightRequestId.value = null
+  }
+}
+
 async function loadSummary(silent = false) {
   if (!silent) summaryLoading.value = true
   try {
@@ -205,7 +255,7 @@ async function loadRecent(silent = false) {
   }
   try {
     const filter = recentFilter.value
-    const params = { page: 1 }
+    const params = { page: 1, sort: 'created_desc' }
     if (filter === 'pending') {
       params.filter = 'pending'
       params.per_page = RECENT_LIMIT
@@ -217,6 +267,7 @@ async function loadRecent(silent = false) {
     }
     const data = await listPortalRequests(params)
     items.value = data.items ?? []
+    await ensureHighlightVisible()
   } catch (e) {
     if (!silent) {
       fetchError.value = formatApiError(e, t('portal.load_requests_fail'))
@@ -244,6 +295,7 @@ function onVisibilityChange() {
 }
 
 onMounted(async () => {
+  consumeHighlightFromNavigation()
   await Promise.all([loadSummary(false), loadRecent(false)])
   pollTimer = window.setInterval(refreshAllQuiet, 30_000)
   document.addEventListener('visibilitychange', onVisibilityChange)
