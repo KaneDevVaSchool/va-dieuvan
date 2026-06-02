@@ -6,7 +6,14 @@ import {
   TruckIcon,
   UsersIcon,
 } from '@heroicons/vue/24/outline'
+import { tripStatusAdminPillClass } from '../constants/tripStatus'
 import { labelTripStatus, labelTripType } from '../util/labels'
+
+export const timelineTripCardHoverClass =
+  'transition-all duration-150 hover:z-20 hover:-translate-y-px hover:shadow-lg focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/45 dark:hover:brightness-105'
+
+export const timelineTripCardSelectedClass =
+  'ring-2 ring-teal-500 ring-offset-2 shadow-md dark:ring-offset-slate-900'
 
 const BAR = {
   completed: '#639922',
@@ -17,10 +24,14 @@ const BAR = {
 }
 
 const CARD = {
-  completed: 'bg-green-50 border-green-200 text-green-900',
-  in_progress: 'bg-blue-50 border-blue-200 text-blue-900',
-  pending: 'bg-white border-slate-200 text-slate-800',
-  late: 'bg-orange-50 border-orange-200 text-orange-900',
+  completed:
+    'bg-green-50 border-green-200 text-green-900 dark:bg-green-950/40 dark:border-green-800/60 dark:text-green-100',
+  in_progress:
+    'bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/40 dark:border-blue-800/60 dark:text-blue-100',
+  pending:
+    'bg-white border-slate-200 text-slate-800 dark:bg-slate-900/80 dark:border-slate-600 dark:text-slate-100',
+  late:
+    'bg-orange-50 border-orange-200 text-orange-900 dark:bg-orange-950/40 dark:border-orange-800/60 dark:text-orange-100',
 }
 
 function dispatchRequest(trip) {
@@ -148,11 +159,10 @@ export function useDispatchTimelineTripCard(tripSource) {
   })
 
   const statusPillClass = computed(() => {
-    const key = visual.value.key
-    if (key === 'completed') return 'bg-green-100 text-green-900'
-    if (key === 'in_progress') return 'bg-blue-100 text-blue-900'
-    if (key === 'late') return 'bg-orange-100 text-orange-900'
-    return 'bg-slate-100 text-slate-800'
+    if (late.value) {
+      return 'bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100'
+    }
+    return tripStatusAdminPillClass(trip.value?.status)
   })
 
   const driverLabel = computed(() => {
@@ -177,5 +187,7 @@ export function useDispatchTimelineTripCard(tripSource) {
     statusLabel,
     statusPillClass,
     driverLabel,
+    cardHoverClass: timelineTripCardHoverClass,
+    cardSelectedClass: timelineTripCardSelectedClass,
   }
 }
