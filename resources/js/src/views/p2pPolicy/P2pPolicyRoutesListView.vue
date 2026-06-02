@@ -17,95 +17,6 @@
 
     <P2pPolicyWorkflowBar current-step="routes" :term-id="workflowTermId" />
 
-    <form @submit.prevent="create">
-      <details
-        class="group overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03] transition-shadow duration-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/80 dark:ring-white/5"
-      >
-        <summary
-          class="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40 [&::-webkit-details-marker]:hidden"
-          :aria-label="t('p2p_policy_page.routes_quick_create_toggle')"
-        >
-          <ChevronDownIcon
-            class="h-5 w-5 shrink-0 text-teal-700 transition-transform duration-200 group-open:rotate-180 dark:text-teal-400"
-            aria-hidden="true"
-          />
-          <div class="min-w-0 flex-1 text-left">
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white sm:text-xl">
-              {{ t('p2p_policy_page.section_routes_create') }}
-            </h2>
-          </div>
-          <button
-            type="button"
-            class="shrink-0 rounded-md p-1.5 text-slate-400 outline-none ring-offset-2 transition hover:bg-slate-100 hover:text-teal-600 focus-visible:ring-2 focus-visible:ring-teal-500 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-teal-400"
-            :title="t('p2p_policy_page.tip_section_routes_create')"
-            :aria-label="t('p2p_policy_page.tip_section_routes_create')"
-            @click.prevent.stop
-          >
-            <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
-          </button>
-        </summary>
-
-        <div class="border-t border-slate-200/90 px-4 pb-4 pt-4 dark:border-slate-700">
-          <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">
-            {{ t('p2p_policy_page.tip_section_routes_create') }}
-          </p>
-          <div class="grid gap-5 sm:grid-cols-2">
-          <div class="sm:col-span-2">
-            <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_p2p_term')" :hint="t('p2p_policy_page.tip_p2p_term')" required />
-            <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-              <select v-model="createForm.p2p_policy_term_id" required class="p2p-term-input min-w-0 flex-1">
-                <option disabled value="">{{ t('p2p_policy_page.placeholder_select_term') }}</option>
-                <option v-for="term in terms" :key="term.id" :value="term.id">{{ p2pTermLabel(term) }}</option>
-              </select>
-              <button
-                type="button"
-                class="shrink-0 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5 text-base font-medium text-teal-900 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
-                @click="openTermModal"
-              >
-                {{ t('p2p_policy_page.add_p2p_term_btn') }}
-              </button>
-            </div>
-          </div>
-          <div class="sm:col-span-2">
-            <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_route_name')" :hint="t('p2p_policy_page.tip_route_name')" required />
-            <input
-              v-model="createForm.name"
-              required
-              class="p2p-term-input mt-2 w-full"
-              :placeholder="t('p2p_policy_page.placeholder_route_name')"
-            />
-          </div>
-          <div>
-            <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_origin_campus')" :hint="t('p2p_policy_page.tip_campus')" required />
-            <div class="mt-2 flex flex-col gap-2 sm:flex-row">
-              <select v-model="createForm.origin_campus_id" required class="p2p-term-input min-w-0 flex-1">
-                <option disabled value="">{{ t('p2p_policy_page.placeholder_campus') }}</option>
-                <option v-for="c in campuses" :key="c.id" :value="c.id">{{ c.name }}</option>
-              </select>
-              <button
-                type="button"
-                class="shrink-0 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5 text-base font-medium text-teal-900 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
-                @click="openCampusModal"
-              >
-                {{ t('p2p_policy_page.add_campus_btn') }}
-              </button>
-            </div>
-          </div>
-          <div>
-            <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_dest_campus')" :hint="t('p2p_policy_page.tip_campus')" required />
-            <select v-model="createForm.dest_campus_id" required class="p2p-term-input mt-2 w-full">
-              <option disabled value="">{{ t('p2p_policy_page.placeholder_campus') }}</option>
-              <option v-for="c in campuses" :key="c.id" :value="c.id">{{ c.name }}</option>
-            </select>
-          </div>
-        </div>
-        <button type="submit" class="mt-5 rounded-xl bg-va-800 px-6 py-3 text-base font-semibold text-white hover:bg-va-900">
-          {{ t('p2p_policy_page.add_route') }}
-        </button>
-        </div>
-      </details>
-    </form>
-
     <section class="space-y-3" aria-labelledby="p2p-routes-list-heading">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 id="p2p-routes-list-heading" class="text-lg font-bold text-slate-900 dark:text-white">
@@ -262,6 +173,14 @@
             <div
               class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:pl-3"
             >
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-va-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-va-900"
+                @click="openCreateRouteModal"
+              >
+                <PlusIcon class="h-4 w-4" aria-hidden="true" />
+                {{ t('p2p_policy_page.section_routes_create') }}
+              </button>
               <button
                 type="button"
                 class="inline-flex rounded-lg p-2 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:hover:bg-white/10"
@@ -432,6 +351,76 @@
       <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.tip_section_routes_list') }}</p>
     </section>
 
+    <dialog
+      ref="createRouteDialog"
+      class="w-[min(100vw-2rem,32rem)] max-w-lg rounded-2xl border p-0 shadow-2xl backdrop:bg-slate-900/40 dark:border-slate-700 dark:bg-slate-900"
+    >
+      <form class="p-6" @submit.prevent="create">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ t('p2p_policy_page.create_route_modal_title') }}</h3>
+        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.tip_section_routes_create') }}</p>
+        <div class="mt-5 space-y-4">
+          <div>
+            <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_p2p_term')" :hint="t('p2p_policy_page.tip_p2p_term')" required />
+            <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+              <select v-model="createForm.p2p_policy_term_id" required class="p2p-term-input min-w-0 flex-1">
+                <option disabled value="">{{ t('p2p_policy_page.placeholder_select_term') }}</option>
+                <option v-for="term in terms" :key="term.id" :value="term.id">{{ p2pTermLabel(term) }}</option>
+              </select>
+              <button
+                type="button"
+                class="shrink-0 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5 text-sm font-medium text-teal-900 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
+                @click="openTermModal"
+              >
+                {{ t('p2p_policy_page.add_p2p_term_btn') }}
+              </button>
+            </div>
+          </div>
+          <div>
+            <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_route_name')" :hint="t('p2p_policy_page.tip_route_name')" required />
+            <input
+              v-model="createForm.name"
+              required
+              class="p2p-term-input mt-2 w-full"
+              :placeholder="t('p2p_policy_page.placeholder_route_name')"
+            />
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_origin_campus')" :hint="t('p2p_policy_page.tip_campus')" required />
+              <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+                <select v-model="createForm.origin_campus_id" required class="p2p-term-input min-w-0 flex-1">
+                  <option disabled value="">{{ t('p2p_policy_page.placeholder_campus') }}</option>
+                  <option v-for="c in campuses" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+                <button
+                  type="button"
+                  class="shrink-0 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-900 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
+                  @click="openCampusModal"
+                >
+                  {{ t('p2p_policy_page.add_campus_btn') }}
+                </button>
+              </div>
+            </div>
+            <div>
+              <P2pPolicyFieldLabel :label="t('p2p_policy_page.field_dest_campus')" :hint="t('p2p_policy_page.tip_campus')" required />
+              <select v-model="createForm.dest_campus_id" required class="p2p-term-input mt-2 w-full">
+                <option disabled value="">{{ t('p2p_policy_page.placeholder_campus') }}</option>
+                <option v-for="c in campuses" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex flex-wrap justify-end gap-2">
+          <button type="button" class="rounded-lg border px-4 py-2.5 text-sm dark:border-slate-600" @click="closeCreateRouteModal">
+            {{ t('p2p_policy_page.create_route_close') }}
+          </button>
+          <button type="submit" class="rounded-lg bg-va-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-va-900">
+            {{ t('p2p_policy_page.add_route') }}
+          </button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog ref="campusDialog" class="w-[min(100%,28rem)] rounded-2xl border p-0 shadow-xl dark:border-slate-700 dark:bg-slate-900">
       <form class="p-5 space-y-4" @submit.prevent="submitCampus">
         <h3 class="text-lg font-bold">{{ t('p2p_policy_page.add_campus_modal_title') }}</h3>
@@ -568,7 +557,7 @@ import {
   p2pWorkflowQuery,
   resolveP2pTermIdFromRoute,
 } from '../../composables/useP2pPolicyWorkflow'
-import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon, InformationCircleIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon, PlusIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
@@ -677,6 +666,8 @@ const createForm = reactive({
   dest_campus_id: '',
 })
 
+const createRouteDialog = ref(null)
+
 const campusDialog = ref(null)
 const campusSaving = ref(false)
 const campusError = ref('')
@@ -699,9 +690,28 @@ const termForm = reactive({
   exclude_fixed_holidays: true,
 })
 
+function formatShortDate(iso) {
+  const [y, m, d] = (iso ?? '').split('-')
+  return d && m && y ? `${d}/${m}/${y}` : iso
+}
+
 function p2pTermLabel(term) {
   const year = term.academic_term?.academic_year ?? ''
-  return year ? `${year} — ${term.status}` : `#${term.id} — ${term.status}`
+  const from = term.operating_from ? formatShortDate(term.operating_from) : ''
+  const to = term.operating_to ? formatShortDate(term.operating_to) : ''
+  const dates = from && to ? ` · ${from} – ${to}` : ''
+  return year ? `${year}${dates}` : `#${term.id}${dates}`
+}
+
+function openCreateRouteModal() {
+  if (!createForm.p2p_policy_term_id && filters.p2p_policy_term_id) {
+    createForm.p2p_policy_term_id = filters.p2p_policy_term_id
+  }
+  createRouteDialog.value?.showModal()
+}
+
+function closeCreateRouteModal() {
+  createRouteDialog.value?.close()
 }
 
 async function loadCampuses() {
@@ -799,6 +809,7 @@ async function create() {
     await createPolicyRoute({ ...createForm })
     showAppSuccess(t('p2p_policy_page.routes_create_saved'))
     createForm.name = ''
+    closeCreateRouteModal()
     await loadRoutes()
   } catch (e) {
     showAppError(formatApiError(e))

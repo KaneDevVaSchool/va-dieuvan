@@ -4064,6 +4064,8 @@
         "tip_required_star": "Required field — must be filled before save.",
         "routes_subtitle": "Create campus routes and assign vehicle and driver for each route in the shuttle term.",
         "section_routes_create": "Quick create route",
+        "create_route_modal_title": "Quick create route",
+        "create_route_close": "Cancel",
         "section_routes_list": "Route list",
         "routes_quick_create_collapsed_hint": "Click to expand the new route form.",
         "routes_quick_create_toggle": "Expand or collapse quick create route",

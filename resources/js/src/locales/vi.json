@@ -4152,6 +4152,8 @@
         "tip_required_star": "Trường bắt buộc — cần nhập trước khi lưu.",
         "routes_subtitle": "Tạo tuyến theo campus và gán xe, tài xế cho từng tuyến trong kỳ P2P.",
         "section_routes_create": "Tạo tuyến nhanh",
+        "create_route_modal_title": "Tạo tuyến nhanh",
+        "create_route_close": "Hủy",
         "section_routes_list": "Danh sách tuyến",
         "routes_quick_create_collapsed_hint": "Bấm để mở form thêm tuyến mới.",
         "routes_quick_create_toggle": "Mở hoặc thu gọn form tạo tuyến nhanh",
