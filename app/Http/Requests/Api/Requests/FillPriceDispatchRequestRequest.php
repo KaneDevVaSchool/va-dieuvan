@@ -31,6 +31,8 @@ class FillPriceDispatchRequestRequest extends ApiFormRequest
             'rows.*.unit_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'rows.*.extra_fee' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'rows.*.notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'rows.*.transport_note' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'rows.*.cost' => ['sometimes', 'nullable', 'numeric', 'min:0'],
         ];
     }
 

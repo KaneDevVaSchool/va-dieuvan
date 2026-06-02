@@ -206,11 +206,37 @@
                   <tr v-for="(row, idx) in cargoDisplayRows" :key="'c-' + idx" class="odd:bg-white even:bg-slate-50/70">
                     <td class="border border-slate-300 px-1 py-0.5 text-center align-top">{{ idx + 1 }}</td>
                     <td
-                      v-for="ci in cargoColIndexes"
+                      v-for="ci in cargoDataColIndexes"
                       :key="'cx' + ci"
                       class="border border-slate-300 px-0.5 py-0 align-top"
                     >
-                      <BmRoTd :model-value="cargoCell(row, ci)" :align-right="ci === 12" />
+                      <BmRoTd :model-value="cargoCell(row, ci)" :align-right="false" />
+                    </td>
+                    <td class="border border-slate-300 px-1 py-0.5 align-top">
+                      <input
+                        v-if="showFillPriceSection && idx < cargoRowCount"
+                        type="text"
+                        autocomplete="off"
+                        maxlength="500"
+                        class="box-border w-full min-w-[5.5rem] rounded border border-teal-200/70 bg-white px-1 py-0.5 text-[11px] text-slate-900 outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        aria-label="Loại hình vận chuyển"
+                        :value="cargoTransportDraft[idx]"
+                        @input="onCargoTransportInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="cargoCell(row, 11)" />
+                    </td>
+                    <td class="border border-slate-300 px-1 py-0.5 align-top">
+                      <input
+                        v-if="showFillPriceSection && idx < cargoRowCount"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        class="w-full min-w-[5.5rem] rounded border border-teal-200/70 bg-white px-1 py-0.5 text-right text-[11px] tabular-nums outline-none ring-teal-500/20 focus:border-teal-500 focus:ring-1"
+                        aria-label="Chi phí dòng hàng hóa"
+                        :value="cargoCostDraft[idx]"
+                        @input="onCargoCostInput(idx, $event.target.value)"
+                      />
+                      <BmRoTd v-else :model-value="cargoCell(row, 12)" align-right />
                     </td>
                   </tr>
                   <tr class="bg-slate-100 font-semibold">
@@ -240,7 +266,12 @@
                     </div>
                     <BmRoField v-if="nz(form.cargo_extra_notes)" compact label="Ghi chú thêm" :model-value="form.cargo_extra_notes" multiline />
                   </div>
-                  <p class="text-[11px] text-slate-500 sm:self-start sm:max-w-[12rem]">(Liên hệ NV Điều vận để điền thông tin chi phí)</p>
+                  <p
+                    v-if="!showFillPriceSection"
+                    class="text-[11px] text-slate-500 sm:self-start sm:max-w-[12rem]"
+                  >
+                    (Liên hệ NV Điều vận để điền thông tin chi phí)
+                  </p>
                 </div>
               </div>
               <div
@@ -872,8 +903,8 @@ function onDeptHeadBlur() {
   }, 180)
 }
 
-/** Indices 0..12 matching cargo PDF columns → cost last */
-const cargoColIndexes = Array.from({ length: 13 }, (_, i) => i)
+/** Indices 0..10 — read-only data columns; 11–12 filled by dispatch */
+const cargoDataColIndexes = Array.from({ length: 11 }, (_, i) => i)
 
 const form = computed(() => props.req?.wizard_snapshot?.form ?? {})
 const snap = computed(() => props.req?.wizard_snapshot ?? {})
@@ -1010,6 +1041,9 @@ const EMPTY_BIZ = () => ({
 const cargoFilled = computed(() =>
   (Array.isArray(snap.value.cargoRows) ? snap.value.cargoRows : []).filter((r) => nz(r?.name)),
 )
+const cargoRowCount = computed(() =>
+  Array.isArray(snap.value.cargoRows) ? snap.value.cargoRows.length : 0,
+)
 const cargoDisplayRows = computed(() =>
   padRows(cargoFilled.value.map((r) => ({ ...EMPTY_CARGO(), ...r })), 10, EMPTY_CARGO),
 )
@@ -1066,6 +1100,8 @@ const passengerNotesDraft = ref([])
 const businessPriceDraftUnit = ref([])
 const businessPriceDraftExtra = ref([])
 const businessNotesDraft = ref([])
+const cargoTransportDraft = ref([])
+const cargoCostDraft = ref([])
 
 /** Đồng bộ tối đa với fill-price.rows.*.notes (backend max:2000) */
 function clampNoteDraft(s) {
@@ -1099,10 +1135,20 @@ function syncInlinePriceDrafts() {
   businessPriceDraftUnit.value = ba.map((r) => fmtDraftStored(r?.unit_price))
   businessPriceDraftExtra.value = ba.map((r) => fmtDraftStored(r?.extra_fee))
   businessNotesDraft.value = ba.map((r) => normalizeNoteFromSnapshot(r?.notes))
+
+  const cr = props.req?.wizard_snapshot?.cargoRows
+  const ca = Array.isArray(cr) ? cr : []
+  cargoTransportDraft.value = ca.map((r) => normalizeNoteFromSnapshot(r?.transport_note))
+  cargoCostDraft.value = ca.map((r) => fmtDraftStored(r?.cost))
 }
 
 watch(
-  () => [props.req?.id, props.req?.wizard_snapshot?.passengerRows, props.req?.wizard_snapshot?.businessRows],
+  () => [
+    props.req?.id,
+    props.req?.wizard_snapshot?.passengerRows,
+    props.req?.wizard_snapshot?.businessRows,
+    props.req?.wizard_snapshot?.cargoRows,
+  ],
   syncInlinePriceDrafts,
   { deep: true, immediate: true },
 )
@@ -1189,8 +1235,32 @@ function onBusinessNotesInput(idx, raw) {
   businessNotesDraft.value = cp
 }
 
+function onCargoTransportInput(idx, raw) {
+  const cp = [...cargoTransportDraft.value]
+  if (idx < 0 || idx >= cp.length) return
+  const t = String(raw ?? '')
+  cp[idx] = t.length > 500 ? t.slice(0, 500) : t
+  cargoTransportDraft.value = cp
+}
+
+function onCargoCostInput(idx, raw) {
+  const next = formatVndWhileTyping(raw)
+  const cp = [...cargoCostDraft.value]
+  if (idx < 0 || idx >= cp.length) return
+  cp[idx] = next
+  cargoCostDraft.value = cp
+}
+
 const grandTotalSum = computed(() => {
   if (isCargo.value) {
+    if (props.showFillPriceSection) {
+      let s = 0
+      const n = cargoRowCount.value
+      for (let i = 0; i < n; i++) {
+        s += parseMoneyVnd(cargoCostDraft.value[i] ?? '')
+      }
+      return s
+    }
     return cargoFilled.value.reduce((s, r) => s + parseMoney(r.cost), 0)
   }
   if (props.showFillPriceSection && !isCargo.value && isBusiness.value) {
@@ -1218,6 +1288,19 @@ const grandTotalSum = computed(() => {
 })
 
 const grandTotalFmt = computed(() => `${new Intl.NumberFormat('vi-VN').format(grandTotalSum.value)} đ`)
+
+function buildCargoRowsPayload() {
+  const n = cargoRowCount.value
+  const out = []
+  for (let i = 0; i < n; i++) {
+    const t = cargoTransportDraft.value[i] ?? ''
+    out.push({
+      transport_note: t.length > 500 ? t.slice(0, 500) : String(t),
+      cost: parseMoneyVnd(cargoCostDraft.value[i] ?? ''),
+    })
+  }
+  return out
+}
 
 function buildRowsPayload() {
   if (isBusiness.value) {
@@ -1256,7 +1339,7 @@ function emitSaveRowPrices(forCargoFill = false) {
   const raw = selectedDeptHeadId.value
   const dept_head_user_id = raw === '' || raw == null ? null : Number(raw)
   emit('save-row-prices', {
-    rows: forCargoFill ? [] : buildRowsPayload(),
+    rows: forCargoFill ? buildCargoRowsPayload() : buildRowsPayload(),
     service_price: grandTotalSum.value,
     dept_head_user_id,
   })

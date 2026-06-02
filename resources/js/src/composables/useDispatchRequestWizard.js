@@ -811,15 +811,12 @@ export function useDispatchRequestWizard(options = {}) {
 
   function syncRowDepartTimesFromRequested(isoLocal) {
     const v = isoLocal != null ? String(isoLocal).trim() : ''
-    for (const r of passengerRows.value) {
-      r.depart_at = v
-    }
-    for (const r of businessRows.value) {
-      r.depart_at = v
-    }
-    for (const r of cargoRows.value) {
-      r.pickup_at = v
-    }
+    const p0 = passengerRows.value[0]
+    if (p0) p0.depart_at = v
+    const b0 = businessRows.value[0]
+    if (b0) b0.depart_at = v
+    const c0 = cargoRows.value[0]
+    if (c0) c0.pickup_at = v
   }
 
   function applyRequestedDateTimeToFormAndRows() {

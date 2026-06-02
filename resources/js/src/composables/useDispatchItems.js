@@ -14,18 +14,7 @@ export function ensureScheduleRowIds(rows) {
   }
 }
 
-function prevPickupLike(row, variant) {
-  if (variant === 'cargo') return row.pickup_place ?? ''
-  return row.pickup ?? ''
-}
-
-function prevPic(row, variant) {
-  if (variant !== 'passenger') return ''
-  return row.person_in_charge ?? ''
-}
-
 export function appendScheduleRow(rows, variant) {
-  const prev = rows.length ? rows[rows.length - 1] : null
   let row
   if (variant === 'cargo') {
     row = emptyCargoRow()
@@ -35,14 +24,6 @@ export function appendScheduleRow(rows, variant) {
     row = emptyPassengerRow()
   }
   ensureScheduleRowIds([row])
-  if (prev) {
-    if (variant === 'cargo') {
-      row.pickup_place = prevPickupLike(prev, variant)
-    } else {
-      row.pickup = prevPickupLike(prev, variant)
-      row.person_in_charge = prevPic(prev, variant)
-    }
-  }
   rows.push(row)
 }
 
@@ -64,8 +45,10 @@ export function autoFillScheduleRowFromPrevious(rows, index, variant) {
   const row = rows[index]
   if (!prev || !row) return
   if (variant === 'cargo') {
+    row.pickup_at = prev.pickup_at ?? ''
     row.pickup_place = prev.pickup_place ?? ''
   } else {
+    row.depart_at = prev.depart_at ?? ''
     row.pickup = prev.pickup ?? ''
     if (variant === 'passenger') row.person_in_charge = prev.person_in_charge ?? ''
   }

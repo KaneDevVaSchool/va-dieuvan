@@ -36,21 +36,30 @@
           {{ t('dispatch_wizard.s3.trip_out') }}
         </legend>
         <div class="flex flex-col gap-1">
-          <span class="text-xs font-medium text-slate-700">{{ t('dispatch_wizard.s3.time') }}</span>
-          <input
-            :value="formattedTripStart"
-            type="text"
-            readonly
-            tabindex="-1"
-            :class="[
-              'rounded-lg border px-3 py-2 text-sm shadow-sm',
-              errs.departTime
-                ? 'border-rose-300 bg-rose-50/50 text-slate-900 ring-1 ring-rose-200'
-                : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-800',
-            ]"
-            :placeholder="t('dispatch_wizard.s3.readonly_depart_empty')"
+          <template v-if="index === 0">
+            <span class="text-xs font-medium text-slate-700">{{ t('dispatch_wizard.s3.time') }}</span>
+            <input
+              :value="formattedTripStart"
+              type="text"
+              readonly
+              tabindex="-1"
+              :class="[
+                'rounded-lg border px-3 py-2 text-sm shadow-sm',
+                errs.departTime
+                  ? 'border-rose-300 bg-rose-50/50 text-slate-900 ring-1 ring-rose-200'
+                  : 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-800',
+              ]"
+              :placeholder="t('dispatch_wizard.s3.readonly_depart_empty')"
+            />
+            <span v-if="errs.departTime" class="text-xs font-medium text-rose-600">{{ errs.departTime }}</span>
+          </template>
+          <BaseDateTime
+            v-else
+            :label="t('dispatch_wizard.s3.time')"
+            :model-value="outboundDepartModel"
+            :error="errs.departTime"
+            @update:model-value="setOutboundDepart"
           />
-          <span v-if="errs.departTime" class="text-xs font-medium text-rose-600">{{ errs.departTime }}</span>
         </div>
         <BaseInput
           :label="t('dispatch_wizard.s3.place')"
@@ -285,12 +294,27 @@ const costFieldClass = computed(() => {
 
 const formattedTripStart = computed(() => wizard?.formattedRequestedDateTime?.value ?? '')
 
+const outboundDepartKey = computed(() => (props.variant === 'cargo' ? 'pickup_at' : 'depart_at'))
+
+const outboundDepartModel = computed(() => String(props.row[outboundDepartKey.value] ?? ''))
+
+function setOutboundDepart(v) {
+  props.row[outboundDepartKey.value] = v
+}
+
+const outboundDepartRaw = computed(() => {
+  if (props.index === 0) {
+    return wizard?.requestedDateTime?.value?.trim() ?? ''
+  }
+  return outboundDepartModel.value.trim()
+})
+
 const returnModel = computed(() =>
   props.variant === 'cargo' ? props.row.delivery_at ?? '' : props.row.return_at ?? '',
 )
 
 const tripDurationLabel = computed(() => {
-  const startRaw = wizard?.requestedDateTime?.value?.trim() ?? ''
+  const startRaw = outboundDepartRaw.value
   const retRaw = String(returnModel.value ?? '').trim()
   if (!startRaw || !retRaw) return ''
   const a = new Date(startRaw).getTime()

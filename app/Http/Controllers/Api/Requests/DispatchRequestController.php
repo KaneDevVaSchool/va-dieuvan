@@ -182,7 +182,22 @@ class DispatchRequestController extends Controller
         $snap = $dispatchRequest->wizard_snapshot ?? [];
 
         $tripType = $dispatchRequest->trip_type ?? '';
-        if ($tripType !== '' && $tripType !== 'cargo' && ! empty($data['rows'])) {
+        if ($tripType === 'cargo' && ! empty($data['rows'])) {
+            foreach ($data['rows'] as $i => $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                if (! isset($snap['cargoRows'][$i]) || ! is_array($snap['cargoRows'][$i])) {
+                    continue;
+                }
+                if (array_key_exists('transport_note', $row)) {
+                    $snap['cargoRows'][$i]['transport_note'] = $row['transport_note'];
+                }
+                if (array_key_exists('cost', $row)) {
+                    $snap['cargoRows'][$i]['cost'] = $row['cost'];
+                }
+            }
+        } elseif ($tripType !== '' && $tripType !== 'cargo' && ! empty($data['rows'])) {
             $rowKey = $tripType === 'business' ? 'businessRows' : 'passengerRows';
             foreach ($data['rows'] as $i => $row) {
                 if (! is_array($row)) {
