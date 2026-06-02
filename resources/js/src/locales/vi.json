@@ -3604,6 +3604,8 @@
         }
     },
     "costs_page": {
+        "tab_all_trips": "Danh sách chi phí",
+        "tab_business_personnel": "Chi phí công tác",
         "hero_title": "Chi phí chuyến",
         "section_kpis": "Chỉ số trang",
         "section_list": "Danh sách chi phí",

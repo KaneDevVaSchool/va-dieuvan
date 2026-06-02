@@ -8,6 +8,48 @@
       </div>
     </div>
 
+    <div
+      class="flex gap-1 border-b border-slate-200 bg-slate-50/90 px-1 pt-1 dark:border-slate-700 dark:bg-slate-900/60"
+      role="tablist"
+      :aria-label="t('costs_page.hero_title')"
+    >
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'all_trips'"
+        class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 sm:flex-none sm:px-5 sm:text-sm"
+        :class="
+          activeTab === 'all_trips'
+            ? 'bg-white text-teal-800 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-teal-300 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
+            : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200'
+        "
+        @click="activeTab = 'all_trips'"
+      >
+        {{ t('costs_page.tab_all_trips') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'business_personnel'"
+        class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 sm:flex-none sm:px-5 sm:text-sm"
+        :class="
+          activeTab === 'business_personnel'
+            ? 'bg-white text-teal-800 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-teal-300 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
+            : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200'
+        "
+        @click="activeTab = 'business_personnel'"
+      >
+        {{ t('costs_page.tab_business_personnel') }}
+        <span
+          v-if="bpMeta.total > 0"
+          class="ml-1 inline-block min-w-[1.125rem] rounded-full bg-violet-100 px-1 py-px text-[10px] font-bold tabular-nums text-violet-800 dark:bg-violet-950/70 dark:text-violet-200"
+        >
+          {{ bpMeta.total }}
+        </span>
+      </button>
+    </div>
+
+    <template v-if="activeTab === 'all_trips'">
     <section class="space-y-3" aria-labelledby="costs-section-filters">
       <h2 id="costs-section-filters" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('costs_page.section_filters') }}
@@ -648,6 +690,173 @@
         </div>
       </div>
     </div>
+    </template>
+
+    <section
+      v-else
+      class="space-y-3"
+      aria-labelledby="costs-section-business-personnel"
+    >
+      <h2
+        id="costs-section-business-personnel"
+        class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+      >
+        {{ t('costs_page.section_business_personnel') }}
+      </h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400">
+        {{ t('costs_page.section_business_personnel_hint') }}
+      </p>
+      <AppFilterBar>
+        <div class="flex flex-wrap items-center gap-2">
+          <AppFilterDropdown
+            root-class="shrink-0"
+            show-chip-label
+            :label="t('costs_page.filter_recorded_date')"
+            :summary-text="bpFilterDateSummary"
+            panel-class="min-w-[260px] p-3"
+          >
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <label class="flex flex-1 flex-col gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('payments_hub.label_start_date') }}
+                <input v-model="bpFilters.from" type="date" class="costs-input h-9 w-full text-sm" @change="onBpFiltersChange" />
+              </label>
+              <span class="hidden text-slate-400 sm:inline">—</span>
+              <label class="flex flex-1 flex-col gap-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                {{ t('payments_hub.label_end_date') }}
+                <input v-model="bpFilters.to" type="date" class="costs-input h-9 w-full text-sm" @change="onBpFiltersChange" />
+              </label>
+            </div>
+          </AppFilterDropdown>
+
+          <AppFilterDropdown
+            root-class="shrink-0 min-w-0 max-w-full"
+            show-chip-label
+            :label="t('costs_page.filter_trip')"
+            :summary-text="bpTripFilterSummaryShort"
+            summary-text-class="max-w-[10rem]"
+            panel-class="w-[min(100vw-1.5rem,320px)] p-2"
+          >
+            <input
+              v-model="bpFilterTripSearch"
+              type="search"
+              class="costs-input mb-2 h-9 w-full text-sm"
+              :placeholder="t('costs_page.trip_search_ph')"
+              @click.stop
+            />
+            <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto">
+              <li>
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    !bpFilters.trip_id
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyBpTripFilter($event, '')"
+                >
+                  {{ t('costs_page.trip_all') }}
+                </button>
+              </li>
+              <li v-for="tripRow in filteredTripsForBpFilter" :key="tripRow.id">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    String(bpFilters.trip_id) === String(tripRow.id)
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyBpTripFilter($event, String(tripRow.id))"
+                >
+                  {{ formatTripPickerLabel(tripRow) }}
+                </button>
+              </li>
+            </ul>
+            <p v-if="tripOptionsRaw.length === 0 && !tripsForModalLoading" class="px-2 py-2 text-[11px] text-slate-500">
+              {{ t('costs_page.trip_empty_scope') }}
+            </p>
+          </AppFilterDropdown>
+
+          <button
+            type="button"
+            class="costs-btn-ghost h-9 shrink-0"
+            :title="t('dashboard_analytics.filter_clear_all')"
+            :aria-label="t('dashboard_analytics.filter_clear_all')"
+            @click="resetBpFilters"
+          >
+            {{ t('dashboard_analytics.filter_clear_all') }}
+          </button>
+        </div>
+      </AppFilterBar>
+
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05] dark:border-slate-700 dark:bg-slate-950/30">
+        <div class="border-b border-slate-200 bg-slate-100 px-4 py-3 sm:px-5 dark:border-slate-700 dark:bg-slate-900/50">
+          <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+            {{ t('costs_page.section_business_personnel') }}
+            <span v-if="bpMeta.total != null" class="ml-1 font-normal text-slate-500">({{ bpMeta.total }})</span>
+          </h3>
+        </div>
+        <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+          <table class="costs-sheet min-w-[900px] w-full border-collapse text-left text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-100 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:text-[11px] dark:bg-slate-900/50 dark:text-slate-400">
+                <th class="costs-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
+                <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
+                <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_personnel') }}</th>
+                <th class="costs-th min-w-[12rem]">{{ t('costs_page.col_route') }}</th>
+                <th class="costs-th costs-th--money min-w-[6.5rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
+                <th class="costs-th costs-th--money min-w-[6rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
+                <th class="costs-th costs-th--money min-w-[7rem] text-right">{{ t('costs_page.col_payment') }}</th>
+                <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_submitter') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(row, idx) in bpLines"
+                :key="`${row.trip_id}-${row.line_no}`"
+                class="border-t border-slate-100 odd:bg-white even:bg-slate-50/40 dark:border-slate-800 dark:odd:bg-slate-950/20 dark:even:bg-slate-900/30"
+              >
+                <td class="costs-td text-center tabular-nums text-slate-500">{{ idx + 1 }}</td>
+                <td class="costs-td">
+                  <RouterLink
+                    :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
+                    class="font-medium text-teal-800 hover:underline dark:text-teal-300"
+                  >
+                    #{{ row.trip_id }}
+                  </RouterLink>
+                </td>
+                <td class="costs-td">
+                  <span class="line-clamp-2">{{ row.personnel_label || '—' }}</span>
+                  <span v-if="row.guests" class="mt-0.5 block text-[11px] text-slate-500">{{ row.guests }}</span>
+                </td>
+                <td class="costs-td text-slate-700 dark:text-slate-300">
+                  <span v-if="row.pickup || row.dropoff">{{ row.pickup || '…' }} → {{ row.dropoff || '…' }}</span>
+                  <span v-else-if="row.request_origin || row.request_destination">
+                    {{ row.request_origin || '…' }} → {{ row.request_destination || '…' }}
+                  </span>
+                  <span v-else>—</span>
+                </td>
+                <td class="costs-td costs-td--money text-right">{{ formatVnd(row.unit_price) }}</td>
+                <td class="costs-td costs-td--money text-right">{{ formatVnd(row.extra_fee) }}</td>
+                <td class="costs-td costs-td--money text-right font-medium">{{ formatVnd(row.amount_total) }}</td>
+                <td class="costs-td">{{ row.requester_name || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="bpLoading && !bpLines.length" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
+            <span
+              class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700"
+              aria-hidden="true"
+            />
+            {{ t('costs_page.business_personnel_loading') }}
+          </div>
+          <div v-else-if="!bpLoading && !bpLines.length" class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+            {{ t('costs_page.business_personnel_empty') }}
+          </div>
+        </div>
+      </div>
+    </section>
 
     <Teleport to="body">
       <div
@@ -973,7 +1182,13 @@ import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, ViewColumnsIcon, XMarkIcon
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { listTripCosts, submitTripCost, decideTripCost, deleteTripCost } from '../../api/costs'
+import {
+  listTripCosts,
+  listBusinessPersonnelCostLines,
+  submitTripCost,
+  decideTripCost,
+  deleteTripCost,
+} from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd, formatVndDigitsInput, labelTripType } from '../../util/labels'
@@ -983,6 +1198,9 @@ import { useAuthStore } from '../../store'
 const { t, te, locale } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
+
+/** @type {import('vue').Ref<'all_trips' | 'business_personnel'>} */
+const activeTab = ref('all_trips')
 
 const DEFAULT_PER_PAGE = 25
 
@@ -1127,6 +1345,16 @@ const modalCostTypeOptions = computed(() => {
 const loading = ref(false)
 const items = ref([])
 const meta = ref({})
+
+const bpLoading = ref(false)
+const bpLines = ref([])
+const bpMeta = ref({ total: 0 })
+const bpFilterTripSearch = ref('')
+const bpFilters = reactive({
+  trip_id: '',
+  from: '',
+  to: '',
+})
 const searchQ = ref('')
 const funnelDetailsRef = ref(null)
 const columnPickerRef = ref(null)
@@ -1468,6 +1696,31 @@ const filteredTripsForFilter = computed(() => {
   return list.filter((tripRow) => tripMatchesSearch(tripRow, q))
 })
 
+const filteredTripsForBpFilter = computed(() => {
+  const q = bpFilterTripSearch.value
+  const list = tripOptionsRaw.value
+  if (!q.trim()) return list
+  return list.filter((tripRow) => tripMatchesSearch(tripRow, q))
+})
+
+const bpFilterDateSummary = computed(() => {
+  if (!bpFilters.from && !bpFilters.to) return t('filter_bar.all')
+  return `${bpFilters.from || '…'} → ${bpFilters.to || '…'}`
+})
+
+const bpTripFilterSummaryShort = computed(() => {
+  if (!bpFilters.trip_id) return t('filter_bar.all')
+  const id = Number(bpFilters.trip_id)
+  const tr = tripOptionsRaw.value.find((tripRow) => Number(tripRow.id) === id)
+  if (tr) {
+    const dr = tr.dispatch_request ?? tr.dispatchRequest
+    const o = (dr?.origin ?? '—').trim().slice(0, 22)
+    const d = (dr?.destination ?? '—').trim().slice(0, 22)
+    return `#${tr.id} · ${o} → ${d}`
+  }
+  return `#${bpFilters.trip_id}`
+})
+
 const selectedFilterTrip = computed(() => {
   if (!filters.trip_id) return null
   const id = Number(filters.trip_id)
@@ -1773,6 +2026,37 @@ async function reload() {
   }
 }
 
+async function reloadBp() {
+  bpLoading.value = true
+  try {
+    const p = { ...bpFilters }
+    Object.keys(p).forEach((k) => (p[k] === '' || p[k] === null ? delete p[k] : null))
+    const res = await listBusinessPersonnelCostLines(p)
+    bpLines.value = res.items ?? []
+    bpMeta.value = res.meta ?? { total: (res.items ?? []).length }
+  } finally {
+    bpLoading.value = false
+  }
+}
+
+function onBpFiltersChange() {
+  reloadBp()
+}
+
+function applyBpTripFilter(ev, tripId) {
+  bpFilters.trip_id = tripId
+  closeParentDetails(ev)
+  reloadBp()
+}
+
+function resetBpFilters() {
+  bpFilters.trip_id = ''
+  bpFilters.from = ''
+  bpFilters.to = ''
+  bpFilterTripSearch.value = ''
+  reloadBp()
+}
+
 function page(d) {
   filters.page = (meta.value.current_page ?? 1) + d
   reload()
@@ -1852,6 +2136,12 @@ watch(
     reload()
   },
 )
+
+watch(activeTab, (tab) => {
+  if (tab === 'business_personnel') {
+    reloadBp()
+  }
+})
 
 onMounted(async () => {
   loadFilterControlVisibility()
