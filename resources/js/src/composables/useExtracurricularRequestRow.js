@@ -39,8 +39,8 @@ export function useExtracurricularRequestRow(auth, userRef) {
 
   function showPassengerAdjust(req) {
     if (!isRecurringInstance(req)) return false
-    if (auth.hasPermission('trip.view_all')) {
-      return ['pending', 'price_filled', 'approved'].includes(String(req?.status || ''))
+    if (auth.hasPermission('request.fill_price') || auth.hasPermission('trip.view_all')) {
+      return false
     }
     return (
       isRequester(req) && ['pending', 'price_filled'].includes(String(req?.status || ''))

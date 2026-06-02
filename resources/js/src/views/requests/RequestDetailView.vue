@@ -988,16 +988,8 @@ const passengerDepartLocked = computed(() => {
   return h == null || h < 24
 })
 
-const showPassengerAdjustSection = computed(() => {
-  if (!req.value?.dispatch_request_template_id) return false
-  if (auth.hasPermission('trip.view_all')) {
-    return ['pending', 'price_filled', 'approved'].includes(String(req.value?.status || ''))
-  }
-  return (
-    isCurrentUserRequester.value &&
-    ['pending', 'price_filled'].includes(String(req.value?.status || ''))
-  )
-})
+/** Chốt/cập nhật số HS định kỳ do người đề nghị trên cổng portal — không hiển thị trên SPA /mng. */
+const showPassengerAdjustSection = computed(() => false)
 
 const showResetCloneBtn = computed(() => {
   if (!isCurrentUserRequester.value || !auth.hasPermission('request.create')) return false
