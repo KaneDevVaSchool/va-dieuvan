@@ -53,4 +53,30 @@ return [
 
     /** OCR paper_scan qua queue (false = xử lý đồng bộ như trước). */
     'ocr_use_queue' => filter_var(env('DISPATCH_OCR_USE_QUEUE', false), FILTER_VALIDATE_BOOLEAN),
+
+    /** Queue xử lý OCR + chữ ký bản signed_paper. */
+    'document_processing_queue' => env('DISPATCH_DOCUMENT_QUEUE', 'document-processing'),
+
+    /** OCR signed document qua queue (mặc định true). */
+    'signed_document_use_queue' => filter_var(env('DISPATCH_SIGNED_DOCUMENT_USE_QUEUE', true), FILTER_VALIDATE_BOOLEAN),
+
+    'signed_upload' => [
+        'max_mb' => max(1, (int) env('DISPATCH_SIGNED_UPLOAD_MAX_MB', 10)),
+        'allowed_mimes' => ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
+    ],
+
+    'signature_detection' => [
+        'enabled' => filter_var(env('DISPATCH_SIGNATURE_DETECTION_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+        'auto_pass_min_score' => (float) env('DISPATCH_SIGNATURE_AUTO_PASS_MIN_SCORE', 0.75),
+        'manual_review_min_score' => (float) env('DISPATCH_SIGNATURE_MANUAL_REVIEW_MIN_SCORE', 0.35),
+        /** ROI BM.03 section F — x, y, w, h as fraction of image width/height */
+        'roi_zones' => [
+            ['role' => 'procurement_head', 'x' => 0.02, 'y' => 0.72, 'w' => 0.30, 'h' => 0.22],
+            ['role' => 'requester', 'x' => 0.35, 'y' => 0.72, 'w' => 0.30, 'h' => 0.22],
+            ['role' => 'unit_head', 'x' => 0.68, 'y' => 0.72, 'w' => 0.30, 'h' => 0.22],
+        ],
+    ],
+
+    /** Nếu true, markPaperReceived từ chối khi verification chưa pass (mặc định false = chỉ cảnh báo). */
+    'paper_received_requires_verified' => filter_var(env('DISPATCH_PAPER_RECEIVED_REQUIRES_VERIFIED', false), FILTER_VALIDATE_BOOLEAN),
 ];

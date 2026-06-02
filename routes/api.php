@@ -52,6 +52,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::middleware([\App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {
+        Route::get('/portal/dispatch-requests/{dispatchRequest}/signed-documents', [PortalDispatchRequestController::class, 'signedDocuments'])
+            ->middleware('throttle:60,1');
         Route::post('/portal/dispatch-requests', [PortalDispatchRequestController::class, 'store'])
             ->middleware('idempotency');
         Route::post('/portal/dispatch-request-templates', [DispatchRequestTemplateController::class, 'storePortal'])
@@ -61,6 +63,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::patch('/portal/dispatch-request-templates/{dispatchRequestTemplate}/plan-label', [DispatchRequestTemplateController::class, 'updatePortalPlanLabel'])
             ->middleware('throttle:30,1');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/signed-paper', [PortalDispatchRequestController::class, 'uploadSignedPaper'])
+            ->middleware(['idempotency', 'throttle:30,1']);
+        Route::patch('/portal/dispatch-requests/{dispatchRequest}/signing-workflow', [PortalDispatchRequestController::class, 'patchSigningWorkflow'])
             ->middleware('throttle:30,1');
         Route::post('/portal/dispatch-requests/{dispatchRequest}/proposal-basis', [PortalDispatchRequestController::class, 'uploadProposalBasis'])
             ->middleware('throttle:30,1');

@@ -156,7 +156,7 @@
               @click="downloadPdf"
             >
               <DocumentArrowDownIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-              {{ t('portal.pdf_btn_label') }}
+              {{ t('portal.pdf_btn_signing_label') }}
             </button>
           </div>
         </div>
@@ -197,6 +197,27 @@
           </div>
         </div>
       </section>
+
+      <template v-if="showSignedDocSection">
+        <PortalSignedDocUpload
+          class="mt-8"
+          :attachments="signedPaperAttachments"
+          upload-component-key="portal-signed"
+          :upload-fn="uploadSignedFn"
+          :error="signedUploadErr"
+          @download="downloadSignedAttachment"
+          @uploaded="onSignedUploaded"
+        />
+        <PortalSignedDocStatus
+          :current="signedDocumentCurrent"
+          :signing-workflow-status="req.signing_workflow_status"
+        />
+        <PortalSignedDocCompare
+          :pdf-blob-url="pdfBlobUrl"
+          :signed-blob-url="signedPreviewBlobUrl"
+          :signed-mime="signedPreviewMime"
+        />
+      </template>
 
       <div
         v-if="req.status === 'rejected' && req.rejection_reason"
@@ -241,6 +262,8 @@ import {
   getPortalDispatchRequest,
   patchPassengerCount,
   submitStudentCount,
+  uploadPortalSignedPaper,
+  downloadPortalAttachmentBlob,
 } from '../../api/requests'
 import { formatApiError } from '../../api/http'
 import { useAuthStore } from '../../store'
@@ -258,6 +281,9 @@ import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.v
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
+import PortalSignedDocUpload from '../../components/portal/PortalSignedDocUpload.vue'
+import PortalSignedDocStatus from '../../components/portal/PortalSignedDocStatus.vue'
+import PortalSignedDocCompare from '../../components/portal/PortalSignedDocCompare.vue'
 
 const route = useRoute()
 const { routes: portalRoutes, isExtracurricularModule } = usePortalExtracurricularModule()
@@ -284,6 +310,12 @@ const pdfPreviewError = ref('')
 const welcomeOpen = ref(false)
 const pollingRefreshing = ref(false)
 const copyRejectionFeedback = ref(false)
+
+const signedUploadErr = ref('')
+const signedPreviewBlobUrl = ref('')
+const signedPreviewMime = ref('')
+let signedPreviewObjectUrl = ''
+let ocrPollTimer = null
 
 let copyRejectionTimer = null
 
@@ -352,6 +384,81 @@ async function load(opts = {}) {
 
 usePortalDetailPoll(load, req)
 
+function revokeSignedPreviewUrl() {
+  if (signedPreviewObjectUrl) {
+    URL.revokeObjectURL(signedPreviewObjectUrl)
+    signedPreviewObjectUrl = ''
+  }
+  signedPreviewBlobUrl.value = ''
+  signedPreviewMime.value = ''
+}
+
+const showSignedDocSection = computed(
+  () => req.value?.status === 'approved' && isCurrentUserRequester.value,
+)
+
+const signedPaperAttachments = computed(() => {
+  const list = req.value?.attachments ?? []
+  return list.filter((a) => a.kind === 'signed_paper')
+})
+
+const signedDocumentCurrent = computed(() => req.value?.signed_document?.current ?? null)
+
+async function loadSignedPreview() {
+  revokeSignedPreviewUrl()
+  const att = signedDocumentCurrent.value?.attachment
+  if (!att?.id || !req.value?.id) return
+  try {
+    const blob = await downloadPortalAttachmentBlob(Number(req.value.id), Number(att.id))
+    signedPreviewMime.value = att.mime_type || blob.type || ''
+    signedPreviewObjectUrl = URL.createObjectURL(blob)
+    signedPreviewBlobUrl.value = signedPreviewObjectUrl
+  } catch {
+    /* preview optional */
+  }
+}
+
+watch(signedDocumentCurrent, () => {
+  loadSignedPreview()
+})
+
+function syncOcrPoll() {
+  if (ocrPollTimer) {
+    clearInterval(ocrPollTimer)
+    ocrPollTimer = null
+  }
+  const st = signedDocumentCurrent.value?.ocr_status
+  if (st === 'queued' || st === 'processing') {
+    ocrPollTimer = setInterval(() => load({ silent: true }), 8000)
+  }
+}
+
+watch(
+  () => signedDocumentCurrent.value?.ocr_status,
+  () => syncOcrPoll(),
+  { immediate: true },
+)
+
+async function uploadSignedFn(file, onProgress) {
+  signedUploadErr.value = ''
+  await uploadPortalSignedPaper(Number(req.value.id), file, onProgress)
+}
+
+async function onSignedUploaded() {
+  await load()
+}
+
+async function downloadSignedAttachment(a) {
+  if (!req.value?.id || !a?.id) return
+  try {
+    const blob = await downloadPortalAttachmentBlob(Number(req.value.id), Number(a.id))
+    const { saveAs } = await import('file-saver')
+    saveAs(blob, a.original_name || `signed-${a.id}`)
+  } catch (e) {
+    window.alert(formatApiError(e, t('portal.signed_download_fail')))
+  }
+}
+
 onMounted(async () => {
   await load()
   if (route.query.created === '1') {
@@ -367,7 +474,9 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (copyRejectionTimer) clearTimeout(copyRejectionTimer)
+  if (ocrPollTimer) clearInterval(ocrPollTimer)
   revokePdfPreviewUrl()
+  revokeSignedPreviewUrl()
 })
 
 const routeSummary = computed(() => {

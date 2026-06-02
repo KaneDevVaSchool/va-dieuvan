@@ -72,6 +72,15 @@
           </span>
         </header>
 
+        <RequestSignedDocumentStatus
+          :current="signedDocumentCurrent"
+          :can-manage="canManageSignedDocument"
+          :ocr-busy="signedOcrBusy"
+          :verify-busy="signedVerifyBusy"
+          @rerun-ocr="$emit('signed-rerun-ocr')"
+          @verify="(d) => $emit('signed-verify', d)"
+        />
+
         <div v-if="!heroHasFiles" class="space-y-3">
           <div
             v-if="canHeroUpload && heroUploadFn"
@@ -373,6 +382,7 @@ import {
 import { CheckIcon } from '@heroicons/vue/24/solid'
 import FileUpload from '../ui/FileUpload.vue'
 import DocsFileActions from './DocsFileActions.vue'
+import RequestSignedDocumentStatus from './RequestSignedDocumentStatus.vue'
 import { useDispatchRequestDocs } from '../../composables/useDispatchRequestDocs'
 
 const props = defineProps({
@@ -383,6 +393,10 @@ const props = defineProps({
   highlightAttachmentId: { type: [Number, null], default: null },
   generalAttachments: { type: Array, default: () => [] },
   signedPaperAttachments: { type: Array, default: () => [] },
+  signedDocumentCurrent: { type: Object, default: null },
+  canManageSignedDocument: { type: Boolean, default: false },
+  signedOcrBusy: { type: Boolean, default: false },
+  signedVerifyBusy: { type: Boolean, default: false },
   paperScans: { type: Array, default: () => [] },
   attachErr: { type: String, default: '' },
   ocrErr: { type: String, default: '' },
@@ -409,6 +423,8 @@ const emit = defineEmits([
   'uploaded-general',
   'uploaded-signed',
   'uploaded-paper-scan',
+  'signed-rerun-ocr',
+  'signed-verify',
 ])
 
 const { t } = useI18n()

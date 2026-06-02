@@ -29,6 +29,8 @@ class Attachment extends Model
         'original_name',
         'size_bytes',
         'mime_type',
+        'sha256',
+        'signed_document_version_id',
         'file_binary',
         'ocr_text',
         'ocr_meta',
@@ -48,6 +50,11 @@ class Attachment extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function signedDocumentVersion(): BelongsTo
+    {
+        return $this->belongsTo(SignedDocumentVersion::class);
     }
 
     public function getUrlAttribute(): ?string

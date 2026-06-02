@@ -52,6 +52,7 @@ Queue name lấy từ `config/dispatch.php`:
 
 - `notifications_queue_default`
 - `notifications_queue_urgent`
+- `document_processing_queue` — job `ProcessSignedDocumentPipelineJob` (OCR/chữ ký bản `signed_paper`)
 
 ---
 

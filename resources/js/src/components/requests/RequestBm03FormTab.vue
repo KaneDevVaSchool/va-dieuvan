@@ -618,6 +618,7 @@
       :upload-component-key="signedUploadComponentKey"
       :upload-fn="uploadSignedFn"
       :error="signedUploadErr"
+      :signed-document-current="props.signedDocumentCurrent"
       @download="$emit('downloadSigned', $event)"
       @uploaded="$emit('signedUploaded')"
     />
@@ -661,6 +662,7 @@ const props = defineProps({
   signedUploadErr: { type: String, default: '' },
   showFillPriceSection: { type: Boolean, default: false },
   showSignedPaperSection: { type: Boolean, default: false },
+  signedDocumentCurrent: { type: Object, default: null },
   approvalTabNeedsFocus: { type: Boolean, default: false },
 })
 

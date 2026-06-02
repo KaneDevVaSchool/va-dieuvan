@@ -9,24 +9,17 @@ use App\Models\Attachment;
  */
 class PaperOcrStubService
 {
+    public function __construct(
+        private readonly DocumentOcrEngine $engine,
+    ) {}
+
     public function process(Attachment $attachment): void
     {
-        $hint = $attachment->original_name ?? 'file';
-        $lines = [
-            'Kết quả OCR (demo / stub engine)',
-            'File: '.$hint,
-            '---',
-            'Gợi ý nội dung: kiểm tra số phiếu, ngày, chữ ký thủ công.',
-            'Tích hợp thật: gửi ảnh tới API OCR, map field → paper_reference / notes.',
-        ];
+        $result = $this->engine->extract($attachment);
 
         $attachment->forceFill([
-            'ocr_text' => implode("\n", $lines),
-            'ocr_meta' => [
-                'engine' => 'stub',
-                'version' => 1,
-                'mime_type' => $attachment->mime_type,
-            ],
+            'ocr_text' => $result['text'],
+            'ocr_meta' => $result['meta'],
             'ocr_processed_at' => now(),
         ])->save();
     }

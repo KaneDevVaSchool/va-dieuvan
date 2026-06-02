@@ -602,6 +602,7 @@
                 :signed-upload-err="signedUploadErr"
                 :show-fill-price-section="showFillPriceSection"
                 :show-signed-paper-section="showSignedPaperSection"
+                :signed-document-current="signedDocumentCurrent"
                 :approval-tab-needs-focus="approvalTabNeedsFocus"
                 @save-row-prices="onSaveRowPrices"
                 @open-reference-pricing="pricingModalOpen = true"
@@ -642,6 +643,10 @@
                 :can-upload-paper-scan="canUploadAttachment"
                 :can-delete-attachment="canDeleteAttachment"
                 :can-run-ocr="canUploadAttachment"
+                :signed-document-current="signedDocumentCurrent"
+                :can-manage-signed-document="canManagePaper"
+                :signed-ocr-busy="signedOcrBusy"
+                :signed-verify-busy="signedVerifyBusy"
                 :upload-general-fn="uploadRequestDocument"
                 :upload-paper-scan-fn="uploadPaperScan"
                 :format-date-time="fmt"
@@ -651,6 +656,8 @@
                 @ocr="runOcr"
                 @uploaded-general="onDocUploaded"
                 @uploaded-paper-scan="onPaperScanUploaded"
+                @signed-rerun-ocr="onSignedRerunOcr"
+                @signed-verify="onSignedVerify"
               >
                 <template v-if="canManagePaper" #paper-forms>
                   <div v-if="req.paper_status === 'pending'" class="rounded-md border border-slate-100 bg-slate-50/60 p-2.5">
@@ -802,6 +809,7 @@ import { useRequestCostEstimate } from '../../composables/useRequestCostEstimate
 import { useRequestWorkflowSteps } from '../../composables/useRequestWorkflowSteps'
 import ReferencePricingReadOnlyBody from '../../components/pricing/ReferencePricingReadOnlyBody.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
+import { rerunSignedDocumentOcr, verifySignedDocument } from '../../api/signedDocuments'
 import { getDispatchFormSettings } from '../../api/dispatchSettings'
 import {
   decideDispatchRequest,
@@ -844,6 +852,8 @@ const paperRevertActing = ref(false)
 const paperMsg = ref('')
 const ocrBusy = ref(null)
 const ocrErr = ref('')
+const signedOcrBusy = ref(false)
+const signedVerifyBusy = ref(false)
 
 const attachErr = ref('')
 const deletingId = ref(null)
@@ -1030,6 +1040,8 @@ const {
   docsChecklist,
   docsProgressSteps,
 } = useDispatchRequestDocs(reqForDocs)
+
+const signedDocumentCurrent = computed(() => req.value?.signed_document?.current ?? null)
 
 const { costEstimate } = useRequestCostEstimate(reqForDocs)
 
@@ -1924,6 +1936,38 @@ function uploadSignedPaper(file, onProgress) {
 function onSignedUploaded() {
   signedUploadErr.value = ''
   load()
+}
+
+async function onSignedRerunOcr() {
+  const id = signedDocumentCurrent.value?.id
+  if (!id || signedOcrBusy.value) return
+  signedOcrBusy.value = true
+  ocrErr.value = ''
+  try {
+    await rerunSignedDocumentOcr(Number(id))
+    showAppSuccess(t('request_detail.ocr_queued_toast'), '')
+    await load()
+  } catch (e) {
+    ocrErr.value = formatApiError(e, t('request_detail.ocr_failed_fallback'))
+    showAppError(ocrErr.value)
+  } finally {
+    signedOcrBusy.value = false
+  }
+}
+
+async function onSignedVerify(decision) {
+  const id = signedDocumentCurrent.value?.id
+  if (!id || signedVerifyBusy.value) return
+  signedVerifyBusy.value = true
+  try {
+    await verifySignedDocument(Number(id), decision)
+    showAppSuccess(t('request_detail.signed_doc_verify_approve'), '')
+    await load()
+  } catch (e) {
+    showAppError(formatApiError(e, t('request_detail.ocr_failed_fallback')))
+  } finally {
+    signedVerifyBusy.value = false
+  }
 }
 
 function openPricingManagePage() {

@@ -194,7 +194,11 @@ Odometer, notes (driver/dispatcher), FK `trip_id`, `created_by`.
 
 ### `attachments`
 
-Polymorphic `attachable_*`, `kind`, `disk`, `path`, meta file; mở rộng **OCR fields**, **`file_binary`** (longBinary).
+Polymorphic `attachable_*`, `kind`, `disk`, `path`, meta file; mở rộng **OCR fields**, **`file_binary`** (longBinary), `sha256`, `signed_document_version_id`.
+
+### `signed_document_versions` / `signed_document_verifications`
+
+Versioning bản BM.03 đã ký + pipeline OCR/chữ ký. Chi tiết luồng: [SIGNED_DOCUMENT_WORKFLOW.md](SIGNED_DOCUMENT_WORKFLOW.md).
 
 ---
 

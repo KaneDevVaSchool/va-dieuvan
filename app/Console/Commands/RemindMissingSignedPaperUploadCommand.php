@@ -27,8 +27,11 @@ class RemindMissingSignedPaperUploadCommand extends Command
             ->where('status', 'approved')
             ->whereNotNull('requester_id')
             ->where('updated_at', '<=', $cutoff)
-            ->whereDoesntHave('attachments', function ($q): void {
-                $q->where('kind', 'signed_paper');
+            ->where(function ($q): void {
+                $q->whereNull('current_signed_version_id')
+                    ->whereDoesntHave('attachments', function ($a): void {
+                        $a->where('kind', 'signed_paper');
+                    });
             })
             ->with(['requester:id,name,email'])
             ->orderBy('id')

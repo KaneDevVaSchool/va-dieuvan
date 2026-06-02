@@ -25,6 +25,8 @@ export function useDispatchRequestDocs(reqRef) {
   const docsTabNeedsFocus = computed(() => {
     const r = reqRef.value
     if (!r || r.status !== 'approved') return false
+    const current = r.signed_document?.current
+    if (current) return false
     return signedPaperAttachments.value.length === 0
   })
 
@@ -66,17 +68,31 @@ export function useDispatchRequestDocs(reqRef) {
     const hasScan = paperScans.value.length > 0
     const paperReceived = r?.paper_status === 'received'
     const approved = r?.status === 'approved'
+    const current = r?.signed_document?.current
+    const verification = current?.verification_status
+    const ocrDone = current?.ocr_status === 'completed'
 
-    const signedState = !approved ? 'upcoming' : hasSigned ? 'done' : 'current'
+    const signedState = !approved
+      ? 'upcoming'
+      : hasSigned || current
+        ? verification === 'auto_pass' || verification === 'verified'
+          ? 'done'
+          : 'current'
+        : 'current'
+
     const scanState = !approved
       ? 'upcoming'
       : hasScan
         ? paperReceived
           ? 'done'
           : 'current'
-        : approved
+        : ocrDone && (verification === 'auto_pass' || verification === 'verified' || verification === 'manual_review')
           ? 'current'
-          : 'upcoming'
+          : hasSigned
+            ? 'current'
+            : approved
+              ? 'current'
+              : 'upcoming'
 
     return [
       {

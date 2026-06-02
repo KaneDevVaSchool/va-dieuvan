@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
+use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
 use App\Http\Controllers\Api\Trips\TripController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +49,15 @@ Route::prefix('dispatch-requests')->controller(DispatchRequestController::class)
     Route::post('/{dispatchRequest}/dept-decision', 'deptDecision')
         ->middleware(['throttle:120,1', 'idempotency', 'permission:request.approve_dept'])
         ->name('api.dispatch-requests.dept-decision');
+});
+
+Route::prefix('dispatch-requests')->controller(SignedDocumentController::class)->group(function () {
+    Route::post('/{dispatchRequest}/signed-documents', 'store')->middleware('throttle:30,1');
+});
+
+Route::prefix('signed-document-versions')->controller(SignedDocumentController::class)->group(function () {
+    Route::post('/{signedDocumentVersion}/ocr', 'runOcr')->middleware('throttle:15,1');
+    Route::post('/{signedDocumentVersion}/verify', 'verify')->middleware('throttle:30,1');
 });
 
 Route::controller(RequestController::class)->group(function () {

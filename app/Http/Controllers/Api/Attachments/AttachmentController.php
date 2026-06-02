@@ -16,7 +16,9 @@ use App\Models\TripCost;
 use App\Models\VehicleComplianceDocument;
 use App\Services\Auditing\AuditLogger;
 use App\Jobs\ProcessAttachmentOcrJob;
+use App\Http\Resources\SignedDocumentVersionResource;
 use App\Services\Ocr\PaperOcrStubService;
+use App\Services\SignedDocuments\SignedDocumentUploadService;
 use App\Support\FinancialDataLock;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -59,9 +61,30 @@ class AttachmentController extends Controller
             FinancialDataLock::assertTripCostAllowsNewAttachment($attachable);
         }
 
-        $disk = 'public';
         /** @var UploadedFile $file */
         $file = $request->file('file');
+
+        $kind = $data['kind'] ?? null;
+        if (
+            $attachable instanceof DispatchRequest
+            && $kind === 'signed_paper'
+        ) {
+            $result = app(SignedDocumentUploadService::class)->upload(
+                $attachable,
+                $file,
+                $user,
+                'staff',
+            );
+
+            return $this->created([
+                'version' => (new SignedDocumentVersionResource($result['version']))->resolve(),
+                'attachment' => array_merge($result['attachment']->toArray(), [
+                    'url' => Storage::url($result['attachment']->path),
+                ]),
+            ]);
+        }
+
+        $disk = 'public';
 
         $path = Storage::putFileAs(
             "attachments/{$folder}/{$attachable->getKey()}",

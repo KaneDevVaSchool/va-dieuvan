@@ -4,6 +4,14 @@
   >
     <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.signed_upload_title') }}</h2>
     <p class="mt-1 text-sm text-slate-600">{{ t('request_detail.signed_upload_lead') }}</p>
+    <div v-if="signedDocumentCurrent" class="mt-2 flex flex-wrap gap-2">
+      <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+        OCR: {{ signedDocumentCurrent.ocr_status }}
+      </span>
+      <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+        {{ signedDocumentCurrent.verification_status }}
+      </span>
+    </div>
     <ul v-if="attachments.length" class="mt-3 space-y-1.5">
       <li
         v-for="a in attachments"
@@ -41,6 +49,7 @@ defineProps({
   uploadComponentKey: { type: String, default: 'signed' },
   uploadFn: { type: Function, required: true },
   error: { type: String, default: '' },
+  signedDocumentCurrent: { type: Object, default: null },
 })
 
 defineEmits(['download', 'uploaded'])

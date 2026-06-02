@@ -55,6 +55,8 @@ class DispatchRequestController extends Controller
             'dispatchRequestTemplate.dispatchPackage',
             'clonedFrom:id,status,origin,destination,created_at',
             'attachments' => fn ($q) => $q->orderByDesc('id'),
+            'currentSignedVersion.attachment',
+            'currentSignedVersion.uploader',
         ]);
 
         $dispatchRequest->makeVisible(['wizard_snapshot']);
@@ -314,6 +316,18 @@ class DispatchRequestController extends Controller
 
         $data = DispatchRequestPdfPresenter::buildPdfData($dispatchRequest);
 
+        if ($dispatchRequest->signing_workflow_status === null) {
+            $dispatchRequest->forceFill(['signing_workflow_status' => 'awaiting_signature'])->saveQuietly();
+        }
+
+        app(AuditLogger::class)->log(
+            actorId: $request->user()?->id,
+            event: 'bm03.export',
+            auditable: $dispatchRequest,
+            before: null,
+            after: ['signing_workflow_status' => $dispatchRequest->fresh()->signing_workflow_status],
+        );
+
         logger()->debug('PDF trip_type', [
             'raw' => $dispatchRequest->trip_type,
             'isCargo' => $data['isCargo'],
@@ -343,6 +357,22 @@ class DispatchRequestController extends Controller
 
         $user = $request->user();
         $before = $dispatchRequest->toArray();
+
+        $verificationWarning = null;
+        if (
+            config('dispatch.paper_received_requires_verified', false)
+            && in_array($dispatchRequest->verification_status, ['no_signature', 'rejected'], true)
+        ) {
+            abort(422, 'Bản scan chưa được xác thực chữ ký.');
+        }
+
+        if (
+            ! config('dispatch.paper_received_requires_verified', false)
+            && in_array($dispatchRequest->verification_status, ['no_signature', 'rejected', 'manual_review'], true)
+            && $dispatchRequest->paper_status !== 'received'
+        ) {
+            $verificationWarning = 'signed_document_verification_incomplete';
+        }
 
         if ($dispatchRequest->paper_status === 'received') {
             $updates = [];
@@ -383,7 +413,13 @@ class DispatchRequestController extends Controller
             after: $dispatchRequest->toArray(),
         );
 
-        return $this->ok($dispatchRequest);
+        $fresh = $dispatchRequest->fresh();
+        $payload = $this->presentDispatchRequest($fresh);
+        if ($verificationWarning !== null) {
+            $payload['paper_received_warning'] = $verificationWarning;
+        }
+
+        return $this->ok($payload);
     }
 
     public function revertPaperReceived(RevertDispatchRequestPaperRequest $request, DispatchRequest $dispatchRequest)

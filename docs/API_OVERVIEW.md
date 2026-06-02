@@ -172,6 +172,9 @@ Tất cả endpoint dưới đây yêu cầu **`auth:sanctum`** + **`dispatch.we
 | PATCH | `/reference-pricing/notes/{pricingNote}` | idem |
 | POST | `/dispatch-requests` | **`idempotency`**, throttle `20,1` |
 | POST | `/dispatch-requests/{dispatchRequest}/paper-received` | throttle `20,1` |
+| POST | `/dispatch-requests/{dispatchRequest}/signed-documents` | upload bản ký (versioning) |
+| POST | `/signed-document-versions/{version}/ocr` | throttle `15,1` |
+| POST | `/signed-document-versions/{version}/verify` | `request.paper.manage` |
 | POST | `/dispatch-requests/{dispatchRequest}/paper-revert` | throttle `20,1` |
 | POST | `/dispatch-requests/{dispatchRequest}/decision` | **`idempotency`**, throttle `120,1` |
 | POST | `/requests/bulk-delete` | |

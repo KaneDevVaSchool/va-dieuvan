@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\NavBadgesController;
 use App\Http\Controllers\Api\Notifications\InboxController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
+use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
 use App\Http\Controllers\Api\Trips\TripController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,8 @@ Route::get('/dispatch-requests/{dispatchRequest}/available-dept-heads', [Dispatc
 Route::get('/dispatch-requests/{dispatchRequest}/export-pdf', [DispatchRequestController::class, 'exportPdf'])
     ->middleware('throttle:30,1')
     ->name('dispatch-requests.export-pdf');
+Route::get('/dispatch-requests/{dispatchRequest}/signed-documents', [SignedDocumentController::class, 'index'])
+    ->middleware('throttle:60,1');
 
 Route::controller(TripController::class)->group(function () {
     Route::get('/trips', 'index');

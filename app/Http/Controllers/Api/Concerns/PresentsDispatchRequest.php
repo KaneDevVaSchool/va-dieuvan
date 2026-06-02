@@ -9,12 +9,18 @@ use App\Services\RecurringDispatch\RecurringPackageBudgetService;
 
 trait PresentsDispatchRequest
 {
+    use PresentsSignedDocuments;
+
     /**
      * @return array<string, mixed>
      */
     protected function presentDispatchRequest(DispatchRequest $dispatchRequest, bool $includeWizardSnapshot = false): array
     {
-        $dispatchRequest->loadMissing('dispatchRequestTemplate.dispatchPackage');
+        $dispatchRequest->loadMissing([
+            'dispatchRequestTemplate.dispatchPackage',
+            'currentSignedVersion.attachment',
+            'currentSignedVersion.uploader',
+        ]);
 
         if ($includeWizardSnapshot) {
             $dispatchRequest->makeVisible(['wizard_snapshot']);
@@ -103,6 +109,6 @@ trait PresentsDispatchRequest
             }
         }
 
-        return $arr;
+        return array_merge($arr, $this->presentSignedDocumentBlock($dispatchRequest, false));
     }
 }

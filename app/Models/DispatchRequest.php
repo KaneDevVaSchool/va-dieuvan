@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -46,6 +47,13 @@ class DispatchRequest extends Model
         'paper_status',
         'paper_received_at',
         'paper_reference',
+        'signing_workflow_status',
+        'current_signed_version_id',
+        'signed_at',
+        'signed_by',
+        'signature_detected',
+        'signature_verified',
+        'verification_status',
         'rejection_reason',
         'wizard_snapshot',
         'urgent_reason',
@@ -57,6 +65,9 @@ class DispatchRequest extends Model
         'arrive_by' => 'datetime',
         'is_urgent' => 'boolean',
         'paper_received_at' => 'datetime',
+        'signed_at' => 'datetime',
+        'signature_detected' => 'boolean',
+        'signature_verified' => 'boolean',
         'service_price' => 'decimal:2',
         'price_filled_at' => 'datetime',
         'locked_at' => 'datetime',
@@ -112,6 +123,21 @@ class DispatchRequest extends Model
     public function attachments(): MorphMany
     {
         return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    public function signedDocumentVersions(): HasMany
+    {
+        return $this->hasMany(SignedDocumentVersion::class);
+    }
+
+    public function currentSignedVersion(): BelongsTo
+    {
+        return $this->belongsTo(SignedDocumentVersion::class, 'current_signed_version_id');
+    }
+
+    public function signedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'signed_by');
     }
 
     public static function wouldBeAutoUrgent(string $tripType, Carbon $departAt): bool

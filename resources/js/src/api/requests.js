@@ -131,6 +131,25 @@ export async function uploadPortalSignedPaper(dispatchRequestId, file, onProgres
 
 /**
  * @param {number} dispatchRequestId
+ * @param {string} status
+ */
+export async function patchPortalSigningWorkflow(dispatchRequestId, status) {
+  const { data } = await http.patch(`/portal/dispatch-requests/${dispatchRequestId}/signing-workflow`, { status })
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
+ */
+export async function getPortalSignedDocuments(dispatchRequestId) {
+  const { data } = await http.get(`/portal/dispatch-requests/${dispatchRequestId}/signed-documents`, {
+    params: { include_history: 1 },
+  })
+  return data.data
+}
+
+/**
+ * @param {number} dispatchRequestId
  * @param {File} file
  * @param {(pct: number) => void} [onProgress]
  */

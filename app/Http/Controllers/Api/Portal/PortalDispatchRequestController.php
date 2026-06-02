@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\CreatePortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\IndexPortalDispatchRequestsRequest;
 use App\Http\Requests\Api\Portal\PatchPortalRecurringDispatchInstanceRequest;
+use App\Http\Requests\Api\Portal\PortalPatchSigningWorkflowRequest;
 use App\Http\Requests\Api\Portal\PortalUploadProposalBasisRequest;
 use App\Http\Requests\Api\Portal\PortalUploadSignedPaperRequest;
 use App\Http\Requests\Api\Portal\ShowPortalDispatchRequestRequest;
@@ -20,7 +21,10 @@ use App\Models\DispatchRequest;
 use App\Models\User;
 use App\Notifications\NewDispatchRequestNotification;
 use App\Services\Auditing\AuditLogger;
-use App\Services\RecurringDispatch\PortalRecurringBm03GroupSyncService;
+use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
+use App\Http\Resources\SignedDocumentVersionResource;
+use App\Services\SignedDocuments\SignedDocumentUploadService;
+use App\Services\SignedDocuments\SigningWorkflowService;
 use App\Support\Messages;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
@@ -172,6 +176,8 @@ class PortalDispatchRequestController extends Controller
             'trip',
             'dispatchRequestTemplate.dispatchPackage',
             'attachments' => fn ($q) => $q->orderByDesc('id'),
+            'currentSignedVersion.attachment',
+            'currentSignedVersion.uploader',
         ]);
 
         return $this->ok($this->presentDispatchRequest($dispatchRequest, true));
@@ -197,53 +203,43 @@ class PortalDispatchRequestController extends Controller
         return app(AttachmentController::class)->download($request, $attachment);
     }
 
-    /**
-     * Giống AttachmentController cho dispatch_request / signed_paper nhưng chỉ portal user đã được duyệt phiếu.
-     */
-    public function uploadSignedPaper(PortalUploadSignedPaperRequest $request, DispatchRequest $dispatchRequest): \Illuminate\Http\JsonResponse
-    {
-        $user = $request->user();
-        $disk = 'public';
-        /** @var UploadedFile $file */
-        $file = $request->file('file');
-
-        $path = Storage::putFileAs(
-            "attachments/dispatch_requests/{$dispatchRequest->getKey()}",
-            $file,
-            $file->hashName(),
-            ['disk' => $disk],
-        );
-
-        $attachment = Attachment::create([
-            'uploaded_by' => $user?->id,
-            'attachable_type' => $dispatchRequest->getMorphClass(),
-            'attachable_id' => $dispatchRequest->getKey(),
-            'kind' => 'signed_paper',
-            'disk' => $disk,
-            'path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-            'size_bytes' => $file->getSize(),
-            'mime_type' => $file->getClientMimeType(),
-            'file_binary' => Attachment::bytesFromUpload($file),
-        ]);
-
-        app(AuditLogger::class)->log(
-            actorId: $user?->id,
-            event: 'attachment.upload',
-            auditable: $attachment,
-            before: null,
-            after: $attachment->toArray(),
-            metadata: [
-                'attachable_type' => 'dispatch_request',
-                'attachable_id' => $dispatchRequest->getKey(),
-                'source' => 'portal',
-            ],
+    public function uploadSignedPaper(
+        PortalUploadSignedPaperRequest $request,
+        DispatchRequest $dispatchRequest,
+        SignedDocumentUploadService $uploadService,
+    ): \Illuminate\Http\JsonResponse {
+        $result = $uploadService->upload(
+            $dispatchRequest,
+            $request->file('file'),
+            $request->user(),
+            'portal',
         );
 
         return $this->created([
-            ...$attachment->toArray(),
-            'url' => Storage::url($path),
+            'version' => (new SignedDocumentVersionResource($result['version']))->resolve(),
+            'attachment' => array_merge($result['attachment']->toArray(), [
+                'url' => \Illuminate\Support\Facades\Storage::url($result['attachment']->path),
+            ]),
+            ...$this->presentSignedDocumentBlock($dispatchRequest->fresh(['currentSignedVersion.attachment', 'currentSignedVersion.uploader']), false),
         ]);
+    }
+
+    public function signedDocuments(
+        \App\Http\Requests\Api\SignedDocuments\ShowSignedDocumentsRequest $request,
+        DispatchRequest $dispatchRequest,
+    ): \Illuminate\Http\JsonResponse {
+        return app(SignedDocumentController::class)->index($request, $dispatchRequest);
+    }
+
+    public function patchSigningWorkflow(
+        PortalPatchSigningWorkflowRequest $request,
+        DispatchRequest $dispatchRequest,
+        SigningWorkflowService $workflowService,
+    ): \Illuminate\Http\JsonResponse {
+        $data = $request->validated();
+        $fresh = $workflowService->updateStatus($dispatchRequest, $request->user(), $data['status']);
+
+        return $this->ok($this->presentDispatchRequest($fresh, true));
     }
 
     /**
