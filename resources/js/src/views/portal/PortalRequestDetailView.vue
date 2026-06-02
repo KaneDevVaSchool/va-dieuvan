@@ -328,70 +328,6 @@ const timelineSteps = usePortalTimelineSteps(req, t)
 const PORTAL_DETAIL_TAB_IDS = ['form', 'manage', 'pdf', 'docs']
 const activeTab = ref('form')
 
-const detailTabs = computed(() => {
-  const tabs = []
-  if (showExtracurricularBm03.value) {
-    tabs.push({ id: 'form', label: t('portal.detail_tab_form') })
-  }
-  if (showRecurringExtras.value) {
-    tabs.push({ id: 'manage', label: t('portal.detail_tab_manage') })
-  }
-  if (req.value?.status === 'approved') {
-    tabs.push({ id: 'pdf', label: t('portal.detail_tab_pdf') })
-  }
-  if (showSignedDocSection.value) {
-    tabs.push({ id: 'docs', label: t('portal.detail_tab_docs') })
-  }
-  return tabs
-})
-
-function portalTabVisible(id) {
-  return detailTabs.value.some((x) => x.id === id)
-}
-
-function tabFromRouteQuery() {
-  const q = route.query.tab
-  if (typeof q !== 'string' || !PORTAL_DETAIL_TAB_IDS.includes(q)) return null
-  return portalTabVisible(q) ? q : null
-}
-
-function resolveDefaultPortalTab() {
-  const fromQuery = tabFromRouteQuery()
-  if (fromQuery) return fromQuery
-  if (portalTabVisible('docs')) return 'docs'
-  if (portalTabVisible('form')) return 'form'
-  if (portalTabVisible('pdf')) return 'pdf'
-  if (portalTabVisible('manage')) return 'manage'
-  return detailTabs.value[0]?.id ?? 'form'
-}
-
-function setActiveTab(tab) {
-  if (!portalTabVisible(tab)) return
-  activeTab.value = tab
-  if (route.query.tab !== tab) {
-    router.replace({ query: { ...route.query, tab } })
-  }
-  if ((tab === 'pdf' || tab === 'docs') && req.value?.status === 'approved') {
-    loadPdfPreview()
-  }
-}
-
-watch(
-  () => route.query.tab,
-  (tab) => {
-    if (typeof tab === 'string' && PORTAL_DETAIL_TAB_IDS.includes(tab) && portalTabVisible(tab) && activeTab.value !== tab) {
-      activeTab.value = tab
-      if ((tab === 'pdf' || tab === 'docs') && req.value?.status === 'approved') loadPdfPreview()
-    }
-  },
-)
-
-watch(detailTabs, () => {
-  if (!portalTabVisible(activeTab.value)) {
-    activeTab.value = resolveDefaultPortalTab()
-  }
-})
-
 function revokePdfPreviewUrl() {
   if (pdfBlobUrl.value && pdfBlobUrl.value.startsWith('blob:')) {
     URL.revokeObjectURL(pdfBlobUrl.value)
@@ -468,10 +404,6 @@ function revokeSignedPreviewUrl() {
   signedPreviewBlobUrl.value = ''
   signedPreviewMime.value = ''
 }
-
-const showSignedDocSection = computed(
-  () => req.value?.status === 'approved' && isCurrentUserRequester.value,
-)
 
 const signedPaperAttachments = computed(() => {
   const list = req.value?.attachments ?? []
@@ -608,6 +540,10 @@ const isCurrentUserRequester = computed(
     Number(auth.user.id) === Number(req.value.requester_id),
 )
 
+const showSignedDocSection = computed(
+  () => req.value?.status === 'approved' && isCurrentUserRequester.value,
+)
+
 function hoursUntilDepartIso(iso) {
   if (!iso) return null
   try {
@@ -693,6 +629,70 @@ const showRecurringExtras = computed(() => {
     showResetCloneBtn.value ||
     showPassengerAdjustSection.value
   )
+})
+
+const detailTabs = computed(() => {
+  const tabs = []
+  if (showExtracurricularBm03.value) {
+    tabs.push({ id: 'form', label: t('portal.detail_tab_form') })
+  }
+  if (showRecurringExtras.value) {
+    tabs.push({ id: 'manage', label: t('portal.detail_tab_manage') })
+  }
+  if (req.value?.status === 'approved') {
+    tabs.push({ id: 'pdf', label: t('portal.detail_tab_pdf') })
+  }
+  if (showSignedDocSection.value) {
+    tabs.push({ id: 'docs', label: t('portal.detail_tab_docs') })
+  }
+  return tabs
+})
+
+function portalTabVisible(id) {
+  return detailTabs.value.some((x) => x.id === id)
+}
+
+function tabFromRouteQuery() {
+  const q = route.query.tab
+  if (typeof q !== 'string' || !PORTAL_DETAIL_TAB_IDS.includes(q)) return null
+  return portalTabVisible(q) ? q : null
+}
+
+function resolveDefaultPortalTab() {
+  const fromQuery = tabFromRouteQuery()
+  if (fromQuery) return fromQuery
+  if (portalTabVisible('docs')) return 'docs'
+  if (portalTabVisible('form')) return 'form'
+  if (portalTabVisible('pdf')) return 'pdf'
+  if (portalTabVisible('manage')) return 'manage'
+  return detailTabs.value[0]?.id ?? 'form'
+}
+
+function setActiveTab(tab) {
+  if (!portalTabVisible(tab)) return
+  activeTab.value = tab
+  if (route.query.tab !== tab) {
+    router.replace({ query: { ...route.query, tab } })
+  }
+  if ((tab === 'pdf' || tab === 'docs') && req.value?.status === 'approved') {
+    loadPdfPreview()
+  }
+}
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (typeof tab === 'string' && PORTAL_DETAIL_TAB_IDS.includes(tab) && portalTabVisible(tab) && activeTab.value !== tab) {
+      activeTab.value = tab
+      if ((tab === 'pdf' || tab === 'docs') && req.value?.status === 'approved') loadPdfPreview()
+    }
+  },
+)
+
+watch(detailTabs, () => {
+  if (!portalTabVisible(activeTab.value)) {
+    activeTab.value = resolveDefaultPortalTab()
+  }
 })
 
 async function onResetCloneRequest() {
