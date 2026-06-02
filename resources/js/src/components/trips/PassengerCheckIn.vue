@@ -158,12 +158,6 @@
                         </th>
                         <th
                             scope="col"
-                            class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
-                        >
-                            {{ t("trip_detail.passengers.col_role") }}
-                        </th>
-                        <th
-                            scope="col"
                             class="min-w-[9rem] max-w-[220px] px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
                         >
                             {{ t("trip_detail.passengers.col_contact") }}
@@ -269,28 +263,6 @@
                                         <div class="text-sm text-slate-600 dark:text-slate-400">
                                             {{ row.name }}
                                         </div>
-                                        <label class="mt-2 block">
-                                            <span
-                                                class="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                                                >{{
-                                                    t(
-                                                        "trip_detail.passengers.col_guests",
-                                                    )
-                                                }}</span
-                                            >
-                                            <input
-                                                v-model="editDraft.guests"
-                                                type="number"
-                                                min="1"
-                                                step="1"
-                                                class="mt-0.5 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                                                :placeholder="
-                                                    t(
-                                                        'trip_detail.passengers.ph_guests',
-                                                    )
-                                                "
-                                            />
-                                        </label>
                                     </template>
                                     <template v-else>
                                         <input
@@ -301,36 +273,6 @@
                                                 t('trip_detail.passengers.ph_name')
                                             "
                                         />
-                                        <label
-                                            v-if="
-                                                row.editMeta?.kind ===
-                                                    'named_tp' &&
-                                                editDraft.guests != null &&
-                                                editDraft.guests !== ''
-                                            "
-                                            class="mt-2 block"
-                                        >
-                                            <span
-                                                class="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                                                >{{
-                                                    t(
-                                                        "trip_detail.passengers.col_guests",
-                                                    )
-                                                }}</span
-                                            >
-                                            <input
-                                                v-model="editDraft.guests"
-                                                type="number"
-                                                min="1"
-                                                step="1"
-                                                class="mt-0.5 w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-sm tabular-nums shadow-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                                                :placeholder="
-                                                    t(
-                                                        'trip_detail.passengers.ph_guests',
-                                                    )
-                                                "
-                                            />
-                                        </label>
                                     </template>
                                 </template>
                                 <template v-else>
@@ -347,6 +289,30 @@
                                                 >
                                                     {{ row.name }}
                                                 </div>
+                                                <span
+                                                    v-if="
+                                                        checkedLocal[
+                                                            row.passengerKey
+                                                        ]
+                                                    "
+                                                    class="inline-flex shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950/55 dark:text-emerald-200"
+                                                >
+                                                    {{
+                                                        t(
+                                                            "trip_detail.passengers.checkin_on_vehicle",
+                                                        )
+                                                    }}
+                                                </span>
+                                                <span
+                                                    v-else-if="canCheckIn"
+                                                    class="inline-flex shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                                >
+                                                    {{
+                                                        t(
+                                                            "trip_detail.passengers.checkin_waiting",
+                                                        )
+                                                    }}
+                                                </span>
                                                 <button
                                                     v-if="
                                                         row.pickupAddress?.trim() ||
@@ -395,39 +361,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                </template>
-                            </td>
-                            <td
-                                class="px-3 py-2.5 align-top"
-                                @click="onRowContentClick(row)"
-                            >
-                                <span
-                                    class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                                    :class="rolePillClass(row.roleKind)"
-                                >
-                                    {{ displayRoleLabel(row) }}
-                                </span>
-                                <template v-if="editingKey !== row.passengerKey">
-                                    <span
-                                        v-if="checkedLocal[row.passengerKey]"
-                                        class="ml-1 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-950/55 dark:text-emerald-200"
-                                    >
-                                        {{
-                                            t(
-                                                "trip_detail.passengers.checkin_on_vehicle",
-                                            )
-                                        }}
-                                    </span>
-                                    <span
-                                        v-else-if="canCheckIn"
-                                        class="ml-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                                    >
-                                        {{
-                                            t(
-                                                "trip_detail.passengers.checkin_waiting",
-                                            )
-                                        }}
-                                    </span>
                                 </template>
                             </td>
                             <td
@@ -888,24 +821,6 @@
                         v-else-if="listKind === 'business'"
                         class="mt-4 grid gap-3 sm:grid-cols-2"
                     >
-                        <label class="block sm:col-span-2">
-                            <span
-                                class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400"
-                                >{{
-                                    t("trip_detail.passengers.col_guests")
-                                }}</span
-                            >
-                            <input
-                                v-model="addForm.guests"
-                                type="number"
-                                min="1"
-                                step="1"
-                                class="inp max-w-[12rem]"
-                                :placeholder="
-                                    t('trip_detail.passengers.ph_guests')
-                                "
-                            />
-                        </label>
                         <div
                             class="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2"
                         >
@@ -1452,7 +1367,6 @@ const filteredRows = computed(() => {
             row.name,
             row.contact,
             row.notes,
-            row.roleLabel,
             row.pickupAddress,
         ]
             .join(" ")
@@ -1510,7 +1424,7 @@ const filterOptions = computed(() => {
 });
 
 const tableColSpan = computed(() => {
-    let n = 4;
+    let n = 3;
     if (props.canEditList) n += 1;
     if (props.canCheckIn) n += 1;
     return n;
@@ -1522,26 +1436,6 @@ function initials(name: string) {
     const parts = n.split(/\s+/).filter(Boolean);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function rolePillClass(kind: string) {
-    if (kind === "staff")
-        return "bg-slate-200 text-slate-800 dark:bg-slate-700/70 dark:text-slate-100";
-    if (kind === "student")
-        return "bg-sky-50 text-sky-800 dark:bg-sky-950/55 dark:text-sky-200";
-    if (kind === "cargo")
-        return "bg-amber-50 text-amber-900 dark:bg-amber-950/45 dark:text-amber-100";
-    return "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200";
-}
-
-function displayRoleLabel(row: PassengerRow): string {
-    const raw = String(row.roleLabel ?? "").trim();
-    if (raw && !/^\d+$/.test(raw)) return raw;
-    const kind = String(row.roleKind ?? "guest");
-    if (kind === "student") return t("trip_detail.passengers.role_student");
-    if (kind === "staff") return t("trip_detail.passengers.role_staff");
-    if (kind === "cargo") return t("trip_detail.passengers.role_cargo");
-    return t("trip_detail.passengers.role_guest");
 }
 
 function telHref(contact: string) {
@@ -1682,7 +1576,6 @@ function exportCsv(): void {
     const delim = ",";
     const head = [
         t("trip_detail.passengers.col_name"),
-        t("trip_detail.passengers.col_role"),
         t("trip_detail.passengers.col_contact"),
         t("trip_detail.passengers.col_notes"),
         t("trip_detail.passengers.csv_pickup"),
@@ -1696,7 +1589,6 @@ function exportCsv(): void {
         lines.push(
             [
                 csvEscapeCell(row.name),
-                csvEscapeCell(displayRoleLabel(row)),
                 csvEscapeCell(row.contact),
                 csvEscapeCell(row.notes),
                 csvEscapeCell(row.pickupAddress ?? ""),
