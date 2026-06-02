@@ -13,8 +13,7 @@ use App\Http\Requests\Api\Portal\PortalUploadSignedPaperRequest;
 use App\Http\Requests\Api\Portal\ShowPortalDispatchRequestRequest;
 use App\Http\Requests\Api\Portal\SubmitPortalRecurringDispatchInstanceRequest;
 use App\Http\Requests\Api\Portal\SummaryPortalDispatchRequestsRequest;
-use App\Models\Role;
-use App\Notifications\RecurringStudentCountSubmittedNotification;
+use App\Services\Notifications\DispatchStaffNotificationRecipients;
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Models\Attachment;
 use App\Models\DispatchRequest;
@@ -367,9 +366,7 @@ class PortalDispatchRequestController extends Controller
             );
         }
 
-        $recipients = User::query()
-            ->role(['dispatcher', 'admin', 'superadmin'])
-            ->get();
+        $recipients = DispatchStaffNotificationRecipients::users();
         if ($recipients->isNotEmpty()) {
             $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
             Notification::send(
@@ -476,20 +473,7 @@ class PortalDispatchRequestController extends Controller
 
         $fresh = $dispatchRequest->fresh();
 
-        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
-            $recipients = User::query()
-                ->role('dispatcher')
-                ->get();
-            if ($recipients->isNotEmpty()) {
-                Notification::send(
-                    $recipients,
-                    new RecurringStudentCountSubmittedNotification(
-                        $fresh->id,
-                        (int) $fresh->student_count_actual,
-                    ),
-                );
-            }
-        }
+        DispatchStaffNotificationRecipients::notifyRecurringStudentCountSubmitted($fresh);
 
         return $this->ok([
             'dispatch_request' => $this->presentDispatchRequest($fresh, true),

@@ -6,8 +6,10 @@ use App\Models\DispatchRequest;
 use App\Models\DispatchRequestTemplate;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\RecurringStudentCountSubmittedNotification;
 use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class PortalRecurringInstanceTest extends TestCase
@@ -48,9 +50,14 @@ class PortalRecurringInstanceTest extends TestCase
     public function test_portal_patch_and_submit_recurring_instance(): void
     {
         $this->seed(RbacSeeder::class);
+        Notification::fake();
 
         $requester = User::factory()->create(['is_active' => true]);
         $requester->assignRole('internal_user');
+
+        User::factory()->create(['is_active' => true])->assignRole('dispatcher');
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('admin');
 
         $dr = $this->recurringRequestFor($requester);
 
@@ -72,6 +79,12 @@ class PortalRecurringInstanceTest extends TestCase
         $dr->refresh();
         $this->assertSame(22, (int) $dr->student_count_actual);
         $this->assertNotNull($dr->student_count_submitted_at);
+
+        Notification::assertSentTo(
+            User::role('dispatcher')->get(),
+            RecurringStudentCountSubmittedNotification::class,
+        );
+        Notification::assertSentTo($admin, RecurringStudentCountSubmittedNotification::class);
     }
 
     public function test_portal_patch_response_includes_wizard_snapshot_for_bm03(): void

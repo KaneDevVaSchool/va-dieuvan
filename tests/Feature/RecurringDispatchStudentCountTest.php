@@ -56,6 +56,8 @@ class RecurringDispatchStudentCountTest extends TestCase
         $requester->assignRole('internal_user');
 
         User::factory()->create(['is_active' => true])->assignRole('dispatcher');
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('admin');
 
         $dr = $this->recurringRequestFor($requester);
 
@@ -77,6 +79,7 @@ class RecurringDispatchStudentCountTest extends TestCase
             User::role('dispatcher')->get(),
             RecurringStudentCountSubmittedNotification::class,
         );
+        Notification::assertSentTo($admin, RecurringStudentCountSubmittedNotification::class);
 
         $this->patchJson("/api/dispatch-requests/{$dr->id}/passenger-count", [
             'student_count_actual' => 20,

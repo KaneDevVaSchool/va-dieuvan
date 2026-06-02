@@ -54,8 +54,8 @@ class RecurringStudentCountSubmittedNotification extends Notification implements
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Chốt số HS chuyến ngoại khóa',
-            'body' => 'Số HS thực tế: '.$this->studentCountActual,
+            'title' => 'Phiếu ngoại khóa định kỳ — đã gửi chốt số HS',
+            'body' => 'Số HS thực tế: '.$this->studentCountActual.' — mở phiếu để điền giá và điều phối.',
             'dispatch_request_id' => $this->dispatchRequestId,
             'event' => 'dispatch_request.student_count_submitted',
             'student_count_actual' => $this->studentCountActual,

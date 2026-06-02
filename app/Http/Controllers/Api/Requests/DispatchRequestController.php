@@ -25,8 +25,7 @@ use App\Models\User;
 use App\Notifications\DeptHeadApprovalRequestedNotification;
 use App\Notifications\DeptHeadDecisionNotification;
 use App\Notifications\SignedPaperUploadReminderNotification;
-use App\Notifications\NewDispatchRequestNotification;
-use App\Notifications\RecurringStudentCountSubmittedNotification;
+use App\Services\Notifications\DispatchStaffNotificationRecipients;
 use App\Http\Requests\Api\Requests\SubmitRecurringDispatchRequestStudentCountRequest;
 use App\Services\Auditing\AuditLogger;
 use App\Services\DispatchRequests\DispatchRequestPdfPresenter;
@@ -139,22 +138,7 @@ class DispatchRequestController extends Controller
             );
         }
 
-        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
-            $recipients = User::query()
-                ->role('dispatcher')
-                ->get();
-            if ($recipients->isNotEmpty()) {
-                $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
-                Notification::send(
-                    $recipients,
-                    new NewDispatchRequestNotification(
-                        $dispatchRequest->id,
-                        $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
-                        $dispatchRequest->is_urgent,
-                    ),
-                );
-            }
-        }
+        DispatchStaffNotificationRecipients::notifyNewDispatchRequest($dispatchRequest);
 
         return $this->created($this->presentDispatchRequest($dispatchRequest));
     }
@@ -642,21 +626,7 @@ class DispatchRequestController extends Controller
 
         $fresh = $dispatchRequest->fresh();
 
-        if (Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
-            $recipients = User::query()
-                ->role('dispatcher')
-                ->get();
-            if ($recipients->isNotEmpty()) {
-                $summary = trim(($fresh->origin ?? '').' → '.($fresh->destination ?? ''));
-                Notification::send(
-                    $recipients,
-                    new RecurringStudentCountSubmittedNotification(
-                        $fresh->id,
-                        (int) $fresh->student_count_actual,
-                    ),
-                );
-            }
-        }
+        DispatchStaffNotificationRecipients::notifyRecurringStudentCountSubmitted($fresh);
 
         return $this->ok([
             'dispatch_request' => $this->presentDispatchRequest($fresh),

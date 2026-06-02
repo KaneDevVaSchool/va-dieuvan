@@ -12,9 +12,7 @@ use App\Http\Requests\Api\Requests\StoreDispatchRequestTemplateRequest;
 use App\Models\DispatchPackage;
 use App\Models\DispatchRequest;
 use App\Models\DispatchRequestTemplate;
-use App\Models\Role;
-use App\Models\User;
-use App\Notifications\NewDispatchRequestNotification;
+use App\Services\Notifications\DispatchStaffNotificationRecipients;
 use App\Services\Auditing\AuditLogger;
 use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
 use App\Services\RecurringDispatch\RecurringPackageBudgetService;
@@ -22,7 +20,6 @@ use App\Support\Messages;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 
 class DispatchRequestTemplateController extends Controller
 {
@@ -213,22 +210,8 @@ class DispatchRequestTemplateController extends Controller
 
         app(DispatchRecurringMaintenanceService::class)->materializeForTemplate($template);
 
-        if (! $isExtracurricularRecurring
-            && Role::query()->where('name', 'dispatcher')->where('guard_name', 'web')->exists()) {
-            $recipients = User::query()
-                ->role('dispatcher')
-                ->get();
-            if ($recipients->isNotEmpty()) {
-                $summary = trim(($dispatchRequest->origin ?? '').' → '.($dispatchRequest->destination ?? ''));
-                Notification::send(
-                    $recipients,
-                    new NewDispatchRequestNotification(
-                        $dispatchRequest->id,
-                        $summary !== '→' ? $summary : 'Yêu cầu #'.$dispatchRequest->id,
-                        $dispatchRequest->is_urgent,
-                    ),
-                );
-            }
+        if (! $isExtracurricularRecurring) {
+            DispatchStaffNotificationRecipients::notifyNewDispatchRequest($dispatchRequest->fresh());
         }
 
         return $this->created([
