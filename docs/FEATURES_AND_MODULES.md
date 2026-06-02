@@ -78,25 +78,28 @@ Quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
 
 **Chức năng**
 
-- Tạo yêu cầu (staff mutate + idempotency)
+- Tạo yêu cầu (staff `common-mutate` + portal `/api/portal/*` + idempotency)
 - Phê duyệt / quyết định (`decision`)
+- **Điền giá** (`fill-price`, `pricing-hints`) — chọn Trưởng BP khi có role `department_head`
+- **Duyệt Trưởng BP** (`dept-decision`) — role `department_head`
 - Đánh dấu nhận phiếu giấy / revert
 - Export PDF (`export-pdf`)
-- Đọc chi tiết (`show`)
+- Đọc chi tiết + audit log (`show`, `audit-logs`)
+- Wizard / clone / template / recurring (staff + portal)
 
-**Roles:** `internal_user` (tạo/sửa của mình — theo policy/request), `dispatcher`/`admin` duyệt & giấy.
+**Roles:** `internal_user` (tạo/sửa của mình — theo policy/request), `dispatcher`/`admin` duyệt & giấy & fill giá, `department_head` duyệt BP.
 
-**Flow:** draft/pending → approved/rejected → sinh/trips liên quan (logic service/controller).
+**Flow:** draft/pending → (fill giá → duyệt BP nếu có) → approved/rejected → sinh/trips liên quan (logic service/controller).
 
 **Lộ trình nâng cấp UI chi tiết phiếu (workflow, dự toán, tài liệu):** [REQUEST_DETAIL_UPGRADE_PLAN.md](./REQUEST_DETAIL_UPGRADE_PLAN.md).
 
-**API:** `DispatchRequestController`, `RequestController` (list index / bulk soft-delete restore).
+**API:** `DispatchRequestController`, `RequestController` (list index / bulk soft-delete restore), `Portal\PortalDispatchRequestController`.
 
-**DB:** `dispatch_requests`.
+**DB:** `dispatch_requests`, `dispatch_request_templates`, `portal_form_templates`.
 
-**Queue/Event:** `NewDispatchRequestNotification` (nếu codebase emit — kiểm tra controller/service khi bổ sung).
+**Queue/Event:** `NewDispatchRequestNotification`, `DeptHeadApprovalRequestedNotification`, `DeptHeadDecisionNotification`, `SignedPaperUploadReminderNotification`.
 
-**Permissions:** `request.*`, `request.paper.manage`.
+**Permissions:** `request.*`, `request.fill_price`, `request.approve_dept`, `request.paper.manage`.
 
 ---
 
@@ -244,6 +247,54 @@ Quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
 
 ---
 
+### MODULE: PORTAL (User nội bộ)
+
+**Mục tiêu:** Shell SPA riêng cho user không có quyền dispatcher — tạo/xem yêu cầu qua wizard.
+
+**Chức năng**
+
+- Wizard tạo yêu cầu (`/portal/new`)
+- Danh sách/chi tiết phiếu portal, thông báo, biểu mẫu đã lưu
+- Upload giấy tờ (signed paper, proposal basis)
+- Kế hoạch định kỳ CLB ngoại khóa (template + instance)
+
+**Roles:** `internal_user` (và user có quyền portal nhưng không vào staff shell).
+
+**API:** `Portal\PortalDispatchRequestController`, `PortalFormTemplateController`, `PortalNotificationController` — prefix `/api/portal/*` trong `routes/api.php`.
+
+**Frontend:** `resources/js/src/views/portal/`, `components/portal/`.
+
+**Doc chi tiết:** [PORTAL_NEW_STRUCTURE.md](./PORTAL_NEW_STRUCTURE.md), [business/portal-recurring-extracurricular.md](./business/portal-recurring-extracurricular.md).
+
+**Permissions:** `request.create`, `request.update_own` (theo FormRequest/policy từng action).
+
+---
+
+### MODULE: P2P POLICY (Chính sách đón trả)
+
+**Mục tiêu:** Quản lý campus, học kỳ, kỳ chính sách, tuyến, học sinh và sinh chuyến theo policy P2P.
+
+**Chức năng**
+
+- CRUD campus, academic term, policy term (lịch, kích hoạt)
+- Tuyến policy, gán xe/tài xế, danh sách học sinh
+- Import/export Excel học sinh (OpenSpout)
+- Generation runs — theo dõi batch sinh chuyến
+
+**Roles:** Dispatcher/admin (`p2p_policy.manage`, `p2p_policy.activate`); accountant xem (`p2p_policy.view`).
+
+**API:** `P2pPolicy\*Controller` — prefix `/api/p2p-policy/*`, `/api/campuses`, `/api/academic-terms`.
+
+**Service:** `app/Services/P2pPolicy/`.
+
+**Jobs:** `PolicyStudentImportJob`, `PolicyGenerateTripsBatchJob`.
+
+**DB:** `campuses`, `academic_terms`, `p2p_policy_terms`, `policy_routes`, `policy_students`, `policy_trip_slots`, `policy_generation_runs`, …
+
+**Permissions:** `p2p_policy.view`, `p2p_policy.manage`, `p2p_policy.activate`, `p2p_policy.import_export`.
+
+---
+
 ## Operational modules
 
 ### MODULE: OPERATIONAL RESOURCES
@@ -377,6 +428,7 @@ Quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
 | Activity log | `LogApiActivity` trên mutate |
 | Offline/PWA | Vue `core/offline`, service worker |
 | PDF | DomPDF + Blade |
+| Excel import/export | OpenSpout (`openspout/openspout`) — P2P student import |
 
 ---
 
@@ -384,3 +436,4 @@ Quyền: [PERMISSION_AND_ROLE.md](./PERMISSION_AND_ROLE.md).
 
 - [API_OVERVIEW.md](./API_OVERVIEW.md)
 - [DATABASE_SPECIFICATION.md](./DATABASE_SPECIFICATION.md)
+- [PORTAL_NEW_STRUCTURE.md](./PORTAL_NEW_STRUCTURE.md)

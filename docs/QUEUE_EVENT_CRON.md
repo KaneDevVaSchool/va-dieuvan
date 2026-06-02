@@ -30,7 +30,13 @@ Cấu hình: [config/queue.php](../config/queue.php).
 
 ## Jobs (custom)
 
-Thư mục `app/Jobs/` **không chứa job class** trong repo hiện tại — hàng đợi nền chủ yếu qua **Notification implements ShouldQueue**.
+| Class | Mục đích | Queue |
+|-------|----------|-------|
+| `ProcessAttachmentOcrJob` | OCR attachment sau upload | default |
+| `PolicyStudentImportJob` | Import danh sách học sinh P2P (OpenSpout) | default |
+| `PolicyGenerateTripsBatchJob` | Sinh chuyến batch từ policy term | default |
+
+Ngoài các job trên, hàng đợi nền chủ yếu qua **Notification implements ShouldQueue** (bảng dưới).
 
 ---
 
@@ -46,7 +52,6 @@ Thư mục `app/Jobs/` **không chứa job class** trong repo hiện tại — h
 | `DeptHeadDecisionNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** (người đề xuất) |
 | `DeptApprovalReminderNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; cron `dispatch:remind-dept-approvals` |
 | `SignedPaperUploadReminderNotification` | `notifications_queue_default` | `ShouldQueue` + `ShouldQueueAfterCommit`; gửi ngay khi Trưởng BP duyệt (thiếu `signed_paper`) + cron `dispatch:remind-signed-paper-upload` (tối đa 1 lần/ngày) |
-| `TripAssignedNotification` | default hoặc urgent | `ShouldQueue` + `ShouldQueueAfterCommit`; `database` + **mail** (tài xế) |
 
 Queue name lấy từ `config/dispatch.php`:
 

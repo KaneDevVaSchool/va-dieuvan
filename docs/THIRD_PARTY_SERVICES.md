@@ -96,6 +96,22 @@
 
 ---
 
+## OpenSpout (Excel)
+
+| | |
+|--|--|
+| **Purpose** | Import/export danh sách học sinh P2P (`.xlsx`) |
+| **Package** | `openspout/openspout` |
+| **API liên quan** | `POST /api/p2p-policy/students/import*`, `GET .../export`, `GET .../import-template` |
+| **Job** | `PolicyStudentImportJob` — xử lý commit import nền |
+
+**Security**
+
+- Chỉ user có `p2p_policy.import_export` hoặc `p2p_policy.manage` (theo route).
+- Validate file type/size trong FormRequest trước khi dispatch job.
+
+---
+
 ## Frontend libraries
 
 | Thư viện | Purpose | Ghi chú |

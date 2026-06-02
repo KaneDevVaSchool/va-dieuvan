@@ -13,18 +13,18 @@ Chi tiết + diagram: `docs/PERMISSION_AND_ROLE.md`. Seed: `database/seeders/Rba
 
 ## Roles
 
-`superadmin`, `admin`, `dispatcher`, `driver`, `accountant`, `internal_user`.
+`superadmin`, `admin`, `dispatcher`, `department_head`, `driver`, `accountant`, `internal_user`.
 
 ## Permission keys (đồng bộ seed — không đổi tên tuỳ tiện)
 
-`request.create`, `request.update_own`, `request.cancel_own`, `request.approve`, `request.paper.manage`, `trip.assign`, `trip.view_all`, `trip.view_own`, `trip.update_status`, `trip.record.create`, `trip.event.create`, `trip.cost.view`, `trip.cost.reconcile`, `payment.reconcile`, `payment.execute`, `report.view`, `report.export`, `cargo.manage`, `route.manage`, `student.manage`, `attachment.upload`, `reference_pricing.manage`, `resource.driver.manage`, `resource.vehicle.manage`, `resource.provider.manage`, `user.manage`, `audit_log.view`, `data.override_confirmed`, `system.roles.manage`, `system.permissions.manage`, `system.user_roles.manage`, `system.feature_toggles.manage`, `dispatch.settings.manage`.
+`request.create`, `request.update_own`, `request.cancel_own`, `request.approve`, `request.fill_price`, `request.approve_dept`, `request.paper.manage`, `trip.assign`, `trip.view_all`, `trip.view_own`, `trip.update_status`, `trip.record.create`, `trip.event.create`, `trip.cost.view`, `trip.cost.reconcile`, `payment.reconcile`, `payment.execute`, `report.view`, `report.export`, `cargo.manage`, `route.manage`, `student.manage`, `attachment.upload`, `reference_pricing.manage`, `resource.driver.manage`, `resource.vehicle.manage`, `resource.provider.manage`, `user.manage`, `audit_log.view`, `data.override_confirmed`, `system.roles.manage`, `system.permissions.manage`, `system.user_roles.manage`, `system.feature_toggles.manage`, `dispatch.settings.manage`, `p2p_policy.view`, `p2p_policy.manage`, `p2p_policy.activate`, `p2p_policy.import_export`.
 
 Thêm permission mới: cập nhật **`RbacSeeder`** + (tuỳ chọn) `PermissionPlainVi` / JSON mô tả + docs.
 
 ## Middleware alias (`app/Http/Kernel.php`)
 
 - `dispatch.web` — được vào SPA (staff/driver tuỳ user).
-- `dispatch.staff` — không phải tài khoản chỉ driver.
+- `dispatch.staff` — superadmin, admin, dispatcher, department_head (không phải tài khoản chỉ driver).
 - `driver.spa` — nhóm route app tài xế.
 - `permission:name` — Spatie `hasPermissionTo`.
 - `permission:any,name` — một trong các permission (bulk roles).

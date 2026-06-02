@@ -36,7 +36,7 @@ Chi tiết thêm: `.cursor/rules/laravel.mdc`, `.cursor/rules/vue.mdc` khi làm 
 * Backend: `app/Http/Controllers/Api/`, `app/Http/Requests/`, `app/Http/Middleware/`
 * Services (nghiệp vụ tiêu biểu): `App\Services\Dispatching\DispatchingService`, `Auditing\AuditLogger`, `WebPushSender`, `Costs\CostCalculationService`, `Admin\UserRoleService`, `Operational\DriverWorkloadService`, `PermissionService`, `RoleService`, `FeatureToggleService`, `Trips\TripNamedPassengerSyncService`, `DispatchRequests\DispatchRequestPdfPresenter`, `Ocr\PaperOcrStubService`, `CmsUserInfoService`
 * Notifications / listeners: `app/Notifications/`, `app/Listeners/SendWebPushOnDatabaseNotification.php`
-* Frontend: `resources/js/src/` (`api/` 18 module, `store/`, `stores/`, `views/`, `components/`, `composables/`, `router/index.js`)
+* Frontend: `resources/js/src/` (`api/` 20 module, `store/`, `stores/`, `views/`, `components/`, `composables/`, `router/index.js`)
 
 # SCOPE CONTROL (CRITICAL)
 
