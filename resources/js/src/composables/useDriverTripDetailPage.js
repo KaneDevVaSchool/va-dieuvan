@@ -218,6 +218,43 @@ export function useDriverTripDetailPage() {
     return Number.isFinite(n) && n > 0 ? n : null
   })
 
+  const multiScheduleLegTrip = computed(() => (trip.value?.schedule_legs?.length ?? 0) > 1)
+
+  const driverOperationalLeg = computed(() => {
+    const all = trip.value?.schedule_legs ?? []
+    if (!Array.isArray(all) || !all.length) return null
+    const did = myDriverId.value
+    let pool = all
+    if (did) {
+      const mine = all.filter((l) => Number(l.assignment?.driver_id) === did)
+      if (mine.length) pool = mine
+    } else if (all.length === 1) {
+      pool = all
+    } else {
+      return null
+    }
+
+    const inProgress = pool.find((l) => l.status === 'in_progress')
+    if (inProgress) return inProgress
+
+    const waiting = pool.find(
+      (l) => !['completed', 'cancelled', 'incident'].includes(String(l.status ?? '')),
+    )
+    return waiting ?? pool[0] ?? null
+  })
+
+  function buildStatusPayload(status) {
+    const payload = { status }
+    if (multiScheduleLegTrip.value && driverOperationalLeg.value?.key) {
+      payload.schedule_key = driverOperationalLeg.value.key
+    }
+    return payload
+  }
+
+  const driverLegStatus = computed(
+    () => driverOperationalLeg.value?.status ?? trip.value?.status,
+  )
+
   const driverRouteLegs = computed(() => {
     const all = trip.value?.schedule_legs ?? []
     if (!Array.isArray(all) || !all.length) return []
@@ -576,10 +613,11 @@ export function useDriverTripDetailPage() {
 
   const canStart = computed(() => {
     if (!trip.value) return false
-    return ['assigned', 'driver_confirmed', 'pending', 'approved'].includes(trip.value.status)
+    const st = driverLegStatus.value
+    return ['assigned', 'driver_confirmed', 'pending', 'approved'].includes(st)
   })
 
-  const canEndTrip = computed(() => trip.value?.status === 'in_progress')
+  const canEndTrip = computed(() => driverLegStatus.value === 'in_progress')
 
   async function onEndTrip() {
     if (!canEndTrip.value) return
@@ -595,7 +633,7 @@ export function useDriverTripDetailPage() {
     if (id == null || actionBusy.value) return
     actionBusy.value = true
     try {
-      await updateTripStatus(id, { status: 'completed' })
+      await updateTripStatus(id, buildStatusPayload('completed'))
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
     } catch {
@@ -673,7 +711,7 @@ export function useDriverTripDetailPage() {
     if (id == null || actionBusy.value) return
     actionBusy.value = true
     try {
-      await updateTripStatus(id, { status: 'in_progress' })
+      await updateTripStatus(id, buildStatusPayload('in_progress'))
       await refresh()
       void driverDashboardStore.refreshTripsQuiet()
     } catch {

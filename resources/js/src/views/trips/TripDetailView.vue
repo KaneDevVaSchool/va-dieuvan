@@ -159,7 +159,7 @@
                             :cards="scheduleCards"
                             :schedule-legs="scheduleLegs"
                             :selected-key="selectedScheduleKey"
-                            @update:selected-key="selectedScheduleKey = $event"
+                            @update:selected-key="onSchedulePanelKeyChange"
                         />
                     </div>
 
@@ -836,6 +836,31 @@ function formatApiMessage(e) {
 
 const trip = ref(null);
 
+const selectedScheduleKey = ref("");
+const activeAssignLegKey = ref("");
+const scheduleLegs = computed(() => trip.value?.schedule_legs ?? []);
+
+const scheduleProgressKey = computed(() => {
+    const legs = scheduleLegs.value;
+    if (!legs?.length) return "";
+    return (
+        selectedScheduleKey.value ||
+        activeAssignLegKey.value ||
+        legs[0]?.key ||
+        ""
+    );
+});
+
+const workflowStatusForDisplay = computed(() => {
+    const legs = scheduleLegs.value;
+    if (!legs?.length || legs.length <= 1) {
+        return trip.value?.status ?? null;
+    }
+    const key = scheduleProgressKey.value;
+    const leg = legs.find((l) => l.key === key);
+    return leg?.status ?? trip.value?.status ?? null;
+});
+
 const {
     countdown,
     tripTypeLabel,
@@ -853,7 +878,7 @@ const {
     stepPickup: stepPickupBase,
     stepCurrent: stepCurrentBase,
     stepDropoff: stepDropoffBase,
-} = useTripDetail(trip);
+} = useTripDetail(trip, workflowStatusForDisplay);
 
 function isDriverTripCancellationEvent(e, tr) {
     if (!e || !tr) return false;
@@ -1315,10 +1340,6 @@ const { scheduleCards, scheduleCount } = useDispatchScheduleCards(
     tripTypeForSnap,
 );
 
-const scheduleLegs = computed(() => trip.value?.schedule_legs ?? []);
-
-const selectedScheduleKey = ref("");
-const activeAssignLegKey = ref("");
 const legResourcesByKey = ref({});
 
 const multiScheduleMode = computed(() => scheduleCards.value.length > 1);
@@ -1395,6 +1416,13 @@ function snapshotForLegKey(key) {
     };
 }
 
+function onSchedulePanelKeyChange(key) {
+    selectedScheduleKey.value = key;
+    if (multiScheduleMode.value && key) {
+        activeAssignLegKey.value = key;
+    }
+}
+
 function onActiveAssignLegChange(nextKey) {
     const prev = activeAssignLegKey.value;
     if (prev && dispatchResources.value) {
@@ -1404,6 +1432,7 @@ function onActiveAssignLegChange(nextKey) {
         };
     }
     activeAssignLegKey.value = nextKey;
+    selectedScheduleKey.value = nextKey;
     dispatchResources.value = legResourcesByKey.value[nextKey] ?? null;
 }
 
@@ -2255,7 +2284,7 @@ function eventTitle(e) {
 }
 
 const timelineWorkflowStatus = computed(() => {
-    const s = trip.value?.status;
+    const s = workflowStatusForDisplay.value ?? trip.value?.status;
     const m = {
         pending: "created",
         approved: "approved",

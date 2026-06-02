@@ -118,4 +118,70 @@ class TripScheduleAssignmentsTest extends TestCase
 
         $this->assertTrue(TripVisibility::userCanViewTrip($user, $trip));
     }
+
+    public function test_completing_one_leg_keeps_trip_in_progress_until_all_legs_done(): void
+    {
+        $service = app(TripScheduleLegService::class);
+        $snap = [
+            'cargoRows' => [
+                ['name' => 'A', 'pickup_place' => 'P1', 'delivery_place' => 'D1'],
+                ['name' => 'B', 'pickup_place' => 'P2', 'delivery_place' => 'D2'],
+            ],
+        ];
+        $dr = DispatchRequest::create([
+            'requester_id' => User::factory()->create()->id,
+            'trip_type' => 'cargo',
+            'origin' => 'P1',
+            'destination' => 'D2',
+            'depart_at' => now()->addDay(),
+            'status' => 'approved',
+            'source_channel' => 'portal',
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => $snap,
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $dr->id,
+            'status' => 'assigned',
+            'depart_at' => now()->addDay(),
+            'lock_version' => 0,
+            'schedule_assignments' => [
+                ['key' => 'cargo:0', 'driver_id' => 1, 'vehicle_id' => 1],
+                ['key' => 'cargo:1', 'driver_id' => 1, 'vehicle_id' => 1],
+            ],
+        ]);
+
+        $applied = $service->applyStatusChange($trip, 'in_progress', 'cargo:0');
+        $trip->update(array_merge($applied['trip'], [
+            'schedule_assignments' => $applied['schedule_assignments'],
+        ]));
+        $trip->refresh();
+
+        $this->assertSame('in_progress', $trip->status);
+        $legs = $service->resolveScheduleLegsForTrip($trip);
+        $this->assertSame('in_progress', $legs[0]['status']);
+        $this->assertSame('driver_confirmed', $legs[1]['status']);
+
+        $applied = $service->applyStatusChange($trip, 'completed', 'cargo:0');
+        $trip->update(array_merge($applied['trip'], [
+            'schedule_assignments' => $applied['schedule_assignments'],
+        ]));
+        $trip->refresh();
+
+        $this->assertSame('in_progress', $trip->status);
+        $this->assertNull($trip->completed_at);
+        $legs = $service->resolveScheduleLegsForTrip($trip);
+        $this->assertSame('completed', $legs[0]['status']);
+        $this->assertSame('driver_confirmed', $legs[1]['status']);
+
+        $applied = $service->applyStatusChange($trip, 'completed', 'cargo:1');
+        $trip->update(array_merge($applied['trip'], [
+            'schedule_assignments' => $applied['schedule_assignments'],
+        ]));
+        $trip->refresh();
+
+        $this->assertSame('completed', $trip->status);
+        $this->assertNotNull($trip->completed_at);
+    }
 }

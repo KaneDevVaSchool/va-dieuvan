@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { labelTripStatus } from '../../util/labels'
 
 const props = defineProps({
   cards: { type: Array, default: () => [] },
@@ -29,6 +30,23 @@ watch(
   },
   { immediate: true },
 )
+
+function operationStatusLabel(key) {
+  const leg = props.scheduleLegs.find((l) => l.key === key)
+  const st = leg?.status
+  if (!st) return ''
+  if (['pending', 'approved', 'assigned', 'driver_confirmed'].includes(st)) return ''
+  return labelTripStatus(st)
+}
+
+function operationChipClass(key) {
+  const leg = props.scheduleLegs.find((l) => l.key === key)
+  const st = leg?.status
+  if (st === 'in_progress') return 'bg-teal-50 text-teal-900 ring-teal-100'
+  if (st === 'completed') return 'bg-sky-50 text-sky-900 ring-sky-100'
+  if (st === 'cancelled' || st === 'incident') return 'bg-rose-50 text-rose-900 ring-rose-100'
+  return 'bg-slate-100 text-slate-600 ring-slate-200'
+}
 
 function assignmentStatus(key) {
   const leg = props.scheduleLegs.find((l) => l.key === key)
@@ -103,6 +121,13 @@ const showPanel = computed(() => (props.cards?.length ?? 0) > 0)
                 :class="statusChipClass(assignmentStatus(card.key))"
               >
                 {{ statusLabel(assignmentStatus(card.key)) }}
+              </span>
+              <span
+                v-if="operationStatusLabel(card.key)"
+                class="rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1"
+                :class="operationChipClass(card.key)"
+              >
+                {{ operationStatusLabel(card.key) }}
               </span>
             </div>
             <p class="mt-0.5 truncate text-xs text-slate-600">

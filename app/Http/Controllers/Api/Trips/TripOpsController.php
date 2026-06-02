@@ -7,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Trips\AddTripEventRequest;
 use App\Http\Requests\Api\Trips\UpdateTripStatusRequest;
 use App\Http\Requests\Api\Trips\UpsertTripRecordRequest;
+use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\TripEvent;
 use App\Services\Auditing\AuditLogger;
+use App\Services\Dispatching\TripScheduleLegService;
 use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
 use App\Support\TripVisibility;
@@ -27,25 +29,57 @@ class TripOpsController extends Controller
 
         $beforeStatus = (string) $trip->status;
 
-        $response = DB::transaction(function () use ($trip, $data, $user) {
+        $scheduleLegs = app(TripScheduleLegService::class);
+        $scheduleKey = isset($data['schedule_key']) ? trim((string) $data['schedule_key']) : null;
+        if ($scheduleKey === '') {
+            $scheduleKey = null;
+        }
+
+        if ($user->hasRole('driver') && $scheduleKey === null) {
+            $trip->loadMissing('dispatchRequest');
+            $defs = $scheduleLegs->buildLegDefinitionsFromSnapshot(
+                is_array($trip->dispatchRequest?->wizard_snapshot) ? $trip->dispatchRequest->wizard_snapshot : null,
+                (string) ($trip->dispatchRequest?->trip_type ?? ''),
+            );
+            if (count($defs) > 1) {
+                abort(422, 'Chuyến có nhiều lịch trình — gửi schedule_key khi đổi trạng thái.');
+            }
+        }
+
+        if ($scheduleKey !== null && $user->hasRole('driver')) {
+            $driverId = (int) (Driver::query()->where('user_id', $user->id)->value('id') ?? 0);
+            abort_unless(
+                $driverId > 0 && $scheduleLegs->driverAssignedToLeg($trip, $driverId, $scheduleKey),
+                403,
+            );
+        }
+
+        $response = DB::transaction(function () use ($trip, $data, $user, $scheduleLegs, $scheduleKey) {
             $before = $trip->toArray();
 
-            $updates = ['status' => $data['status']];
-            if ($data['status'] === 'in_progress') {
-                $updates['started_at'] = $trip->started_at ?? now();
-            }
-            if (in_array($data['status'], ['completed', 'cancelled'], true)) {
-                $updates['completed_at'] = $trip->completed_at ?? now();
+            $applied = $scheduleLegs->applyStatusChange($trip, $data['status'], $scheduleKey);
+            $updates = $applied['trip'];
+            if ($applied['schedule_assignments'] !== null) {
+                $updates['schedule_assignments'] = $applied['schedule_assignments'];
             }
 
             $trip->update($updates);
+
+            $eventData = [
+                'from' => $before['status'] ?? null,
+                'to' => $trip->status,
+            ];
+            if ($scheduleKey !== null) {
+                $eventData['schedule_key'] = $scheduleKey;
+                $eventData['leg_status'] = $data['status'];
+            }
 
             TripEvent::create([
                 'trip_id' => $trip->id,
                 'created_by' => $user->id,
                 'type' => 'status_change',
                 'message' => $data['message'] ?? null,
-                'data' => ['from' => $before['status'] ?? null, 'to' => $trip->status],
+                'data' => $eventData,
             ]);
 
             app(AuditLogger::class)->log(

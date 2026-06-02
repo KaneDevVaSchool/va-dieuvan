@@ -10,7 +10,7 @@ function scheduleSame(isoA: string | null | undefined, isoB: string | null | und
   return new Date(isoA).getTime() === new Date(isoB).getTime()
 }
 
-export function useTripDetail(trip: Ref<TripDetail>) {
+export function useTripDetail(trip: Ref<TripDetail>, workflowStatus?: Ref<string | null | undefined>) {
   const { t, locale } = useI18n()
 
   const tick = ref(0)
@@ -111,12 +111,14 @@ export function useTripDetail(trip: Ref<TripDetail>) {
   const originLabel = computed(() => trip.value?.dispatch_request?.origin ?? '—')
   const destinationLabel = computed(() => trip.value?.dispatch_request?.destination ?? '—')
   const currentLabel = computed(() => {
-    if (trip.value?.status === 'in_progress') return t('trip_detail.current_location.en_route')
+    if (statusForWorkflow.value === 'in_progress') return t('trip_detail.current_location.en_route')
     return '—'
   })
 
+  const statusForWorkflow = computed(() => workflowStatus?.value ?? trip.value?.status)
+
   const stepPickup = computed(() => {
-    const s = trip.value?.status
+    const s = statusForWorkflow.value
     if (s === 'completed') return { state: 'done' as const, label: t('trip_detail.step.completed') }
     if (s === 'in_progress') return { state: 'done' as const, label: t('trip_detail.step.completed') }
     if (s === 'cancelled') return { state: 'blocked' as const, label: t('trip_detail.step.cancelled') }
@@ -124,7 +126,7 @@ export function useTripDetail(trip: Ref<TripDetail>) {
   })
 
   const stepCurrent = computed(() => {
-    const s = trip.value?.status
+    const s = statusForWorkflow.value
     if (s === 'in_progress') return { state: 'active' as const, label: t('trip_detail.step.en_route') }
     if (s === 'completed') return { state: 'done' as const, label: t('trip_detail.step.arrived') }
     if (s === 'cancelled') return { state: 'blocked' as const, label: t('trip_detail.step.cancelled') }
@@ -132,7 +134,7 @@ export function useTripDetail(trip: Ref<TripDetail>) {
   })
 
   const stepDropoff = computed(() => {
-    const s = trip.value?.status
+    const s = statusForWorkflow.value
     if (s === 'completed') return { state: 'done' as const, label: t('trip_detail.step.completed') }
     if (s === 'cancelled') return { state: 'blocked' as const, label: t('trip_detail.step.cancelled') }
     if (s === 'in_progress') return { state: 'active' as const, label: t('trip_detail.step.pending') }

@@ -44,6 +44,28 @@ class DispatchingService
                 $defsByKey[$def['key']] = $def;
             }
 
+            $oldByKey = [];
+            foreach (is_array($trip->schedule_assignments) ? $trip->schedule_assignments : [] as $prev) {
+                if (! is_array($prev)) {
+                    continue;
+                }
+                $k = (string) ($prev['key'] ?? '');
+                if ($k !== '') {
+                    $oldByKey[$k] = $prev;
+                }
+            }
+            foreach ($assignments as $i => $assign) {
+                $key = (string) ($assign['key'] ?? '');
+                $old = $oldByKey[$key] ?? null;
+                if (is_array($old)) {
+                    foreach (['status', 'started_at', 'completed_at'] as $field) {
+                        if (array_key_exists($field, $old)) {
+                            $assignments[$i][$field] = $old[$field];
+                        }
+                    }
+                }
+            }
+
             foreach ($assignments as $assign) {
                 $key = (string) ($assign['key'] ?? '');
                 $def = $defsByKey[$key] ?? [

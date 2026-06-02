@@ -82,17 +82,251 @@ class TripScheduleLegService
             }
         }
 
+        $multiLeg = count($defs) > 1;
+        $tripStatus = (string) ($trip->status ?? 'pending');
+
         $out = [];
         foreach ($defs as $def) {
             $key = $def['key'];
             $assign = $assignByKey[$key] ?? null;
+            $assignArr = is_array($assign) ? $assign : null;
             $out[] = array_merge($def, [
-                'assignment' => is_array($assign) ? $assign : null,
-                'assigned' => $this->legAssignmentIsComplete(is_array($assign) ? $assign : null),
+                'assignment' => $assignArr,
+                'assigned' => $this->legAssignmentIsComplete($assignArr),
+                'status' => $this->effectiveLegStatus($assignArr, $tripStatus, $multiLeg),
+                'started_at' => $assignArr['started_at'] ?? null,
+                'completed_at' => $assignArr['completed_at'] ?? null,
             ]);
         }
 
         return $out;
+    }
+
+    /**
+     * Trạng thái vận hành hiển thị của từng lịch (lưu tại schedule_assignments[].status).
+     */
+    public function effectiveLegStatus(?array $assignment, string $tripStatus, bool $multiLeg): string
+    {
+        if (is_array($assignment) && ! empty($assignment['status'])) {
+            return (string) $assignment['status'];
+        }
+
+        if (! $multiLeg) {
+            return $tripStatus;
+        }
+
+        if (in_array($tripStatus, ['completed', 'cancelled', 'incident'], true)) {
+            return $tripStatus;
+        }
+
+        if ($tripStatus === 'in_progress') {
+            return 'driver_confirmed';
+        }
+
+        return $tripStatus;
+    }
+
+    public function driverAssignedToLeg(Trip $trip, int $driverId, string $scheduleKey): bool
+    {
+        foreach (is_array($trip->schedule_assignments) ? $trip->schedule_assignments : [] as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            if ((string) ($item['key'] ?? '') !== $scheduleKey) {
+                continue;
+            }
+
+            return (int) ($item['driver_id'] ?? 0) === $driverId;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array{trip: array<string, mixed>, schedule_assignments: list<array<string, mixed>>|null}
+     */
+    public function applyStatusChange(Trip $trip, string $newStatus, ?string $scheduleKey): array
+    {
+        $trip->loadMissing('dispatchRequest');
+        $defs = $this->buildLegDefinitionsFromSnapshot(
+            is_array($trip->dispatchRequest?->wizard_snapshot) ? $trip->dispatchRequest->wizard_snapshot : null,
+            (string) ($trip->dispatchRequest?->trip_type ?? ''),
+        );
+        $multiLeg = count($defs) > 1;
+
+        if (! $multiLeg) {
+            return [
+                'trip' => $this->wholeTripStatusFieldUpdates($trip, $newStatus),
+                'schedule_assignments' => null,
+            ];
+        }
+
+        $assignments = array_values(is_array($trip->schedule_assignments) ? $trip->schedule_assignments : []);
+
+        if ($scheduleKey === null || $scheduleKey === '') {
+            $assignments = $this->setAllLegsStatus($assignments, $defs, $newStatus);
+
+            return [
+                'trip' => $this->wholeTripStatusFieldUpdates($trip, $newStatus, $assignments),
+                'schedule_assignments' => $assignments,
+            ];
+        }
+
+        abort_unless($this->legKeyInDefinitions($defs, $scheduleKey), 422, 'Lịch trình không hợp lệ.');
+        $assignments = $this->setLegStatus($assignments, $scheduleKey, $newStatus);
+        $aggregated = $this->aggregateTripStatusFromLegs($assignments, $defs, (string) $trip->status);
+
+        $tripUpdates = ['status' => $aggregated];
+        if ($aggregated === 'in_progress') {
+            $tripUpdates['started_at'] = $trip->started_at ?? now();
+        }
+        if ($aggregated === 'completed') {
+            $tripUpdates['completed_at'] = $trip->completed_at ?? now();
+        } elseif ($aggregated !== 'cancelled') {
+            $tripUpdates['completed_at'] = null;
+        }
+
+        return [
+            'trip' => $tripUpdates,
+            'schedule_assignments' => $assignments,
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $assignments
+     * @param  list<array<string, mixed>>  $defs
+     * @return list<array<string, mixed>>
+     */
+    private function setAllLegsStatus(array $assignments, array $defs, string $newStatus): array
+    {
+        foreach ($defs as $def) {
+            $key = (string) $def['key'];
+            $assignments = $this->setLegStatus($assignments, $key, $newStatus);
+        }
+
+        return $assignments;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $assignments
+     * @return list<array<string, mixed>>
+     */
+    private function setLegStatus(array $assignments, string $scheduleKey, string $newStatus): array
+    {
+        $now = now()->toIso8601String();
+        $found = false;
+
+        foreach ($assignments as $i => $item) {
+            if (! is_array($item) || (string) ($item['key'] ?? '') !== $scheduleKey) {
+                continue;
+            }
+            $item['status'] = $newStatus;
+            if ($newStatus === 'in_progress' && empty($item['started_at'])) {
+                $item['started_at'] = $now;
+            }
+            if ($newStatus === 'completed') {
+                $item['completed_at'] = $now;
+            }
+            if ($newStatus === 'cancelled') {
+                $item['completed_at'] = $item['completed_at'] ?? $now;
+            }
+            $assignments[$i] = $item;
+            $found = true;
+            break;
+        }
+
+        abort_unless($found, 422, 'Chưa phân công lịch trình: '.$scheduleKey);
+
+        return $assignments;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $assignments
+     * @param  list<array<string, mixed>>  $defs
+     */
+    private function aggregateTripStatusFromLegs(array $assignments, array $defs, string $tripStatusFallback): string
+    {
+        $statuses = [];
+        foreach ($defs as $def) {
+            $assign = $this->findAssignmentByKey($assignments, (string) $def['key']);
+            $statuses[] = $this->effectiveLegStatus($assign, $tripStatusFallback, true);
+        }
+
+        if ($statuses === []) {
+            return $tripStatusFallback;
+        }
+
+        if (count(array_filter($statuses, fn ($s) => $s === 'incident')) > 0) {
+            return 'incident';
+        }
+
+        if (count(array_filter($statuses, fn ($s) => $s === 'cancelled')) === count($statuses)) {
+            return 'cancelled';
+        }
+
+        $completedCount = count(array_filter($statuses, fn ($s) => $s === 'completed'));
+        if ($completedCount === count($statuses)) {
+            return 'completed';
+        }
+
+        if (in_array('in_progress', $statuses, true) || ($completedCount > 0 && $completedCount < count($statuses))) {
+            return 'in_progress';
+        }
+
+        if (in_array('driver_confirmed', $statuses, true)) {
+            return 'driver_confirmed';
+        }
+
+        if (in_array('assigned', $statuses, true)) {
+            return 'assigned';
+        }
+
+        return $tripStatusFallback;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $assignments
+     */
+    private function findAssignmentByKey(array $assignments, string $key): ?array
+    {
+        foreach ($assignments as $item) {
+            if (is_array($item) && (string) ($item['key'] ?? '') === $key) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $defs
+     */
+    private function legKeyInDefinitions(array $defs, string $scheduleKey): bool
+    {
+        foreach ($defs as $def) {
+            if ((string) ($def['key'] ?? '') === $scheduleKey) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>|null  $assignmentsAfterLegUpdate
+     * @return array<string, mixed>
+     */
+    private function wholeTripStatusFieldUpdates(Trip $trip, string $newStatus, ?array $assignmentsAfterLegUpdate = null): array
+    {
+        $updates = ['status' => $newStatus];
+        if ($newStatus === 'in_progress') {
+            $updates['started_at'] = $trip->started_at ?? now();
+        }
+        if (in_array($newStatus, ['completed', 'cancelled'], true)) {
+            $updates['completed_at'] = $trip->completed_at ?? now();
+        }
+
+        return $updates;
     }
 
     /**

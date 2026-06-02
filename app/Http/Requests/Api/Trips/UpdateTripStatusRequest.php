@@ -16,6 +16,7 @@ class UpdateTripStatusRequest extends ApiFormRequest
     {
         return [
             'status' => ['required', Rule::in(['driver_confirmed', 'in_progress', 'completed', 'incident', 'cancelled'])],
+            'schedule_key' => ['nullable', 'string', 'max:64'],
             'message' => ['nullable', 'string', 'max:1000'],
         ];
     }

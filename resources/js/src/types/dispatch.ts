@@ -62,6 +62,9 @@ export interface TripScheduleAssignment {
   external_vehicle_ref?: string | null
   external_driver_ref?: string | null
   supplement_transports?: SupplementTransports | null
+  status?: string | null
+  started_at?: string | null
+  completed_at?: string | null
 }
 
 export interface TripScheduleLegResolved {
@@ -75,6 +78,9 @@ export interface TripScheduleLegResolved {
   dropoff: string
   waypoint?: string
   assigned?: boolean
+  status?: string
+  started_at?: string | null
+  completed_at?: string | null
   assignment?: TripScheduleAssignment | null
 }
 
