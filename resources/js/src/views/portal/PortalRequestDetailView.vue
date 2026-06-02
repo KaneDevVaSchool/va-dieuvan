@@ -237,10 +237,6 @@
               @download="downloadSignedAttachment"
               @uploaded="onSignedUploaded"
             />
-            <PortalSignedDocStatus
-              :current="signedDocumentCurrent"
-              :signing-workflow-status="req.signing_workflow_status"
-            />
             <PortalSignedDocCompare
               :pdf-blob-url="pdfBlobUrl"
               :signed-blob-url="signedPreviewBlobUrl"
@@ -286,7 +282,6 @@ import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
 import PortalSignedDocUpload from '../../components/portal/PortalSignedDocUpload.vue'
-import PortalSignedDocStatus from '../../components/portal/PortalSignedDocStatus.vue'
 import PortalSignedDocCompare from '../../components/portal/PortalSignedDocCompare.vue'
 
 const route = useRoute()
