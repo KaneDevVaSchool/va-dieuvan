@@ -11,6 +11,12 @@ export async function listBusinessPersonnelCostLines(params = {}) {
   return data.data
 }
 
+/** Dòng dự toán phiếu (wizard_snapshot) — chưa có trip_cost wizard_estimate. */
+export async function listWizardEstimateLines(params = {}) {
+  const { data } = await http.get('/trip-costs/wizard-estimate-lines', { params })
+  return data.data
+}
+
 export async function listCostsForTrip(tripId, params = {}) {
   const { data } = await http.get(`/trips/${tripId}/costs`, { params })
   return data.data

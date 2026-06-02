@@ -549,8 +549,11 @@
           <tbody>
             <tr
               v-for="(c, idx) in displayedItems"
-              :key="c.id"
-              :class="idx % 2 === 0 ? 'bg-white dark:bg-slate-950/20' : 'bg-slate-50/60 dark:bg-slate-900/30'"
+              :key="costRowKey(c)"
+              :class="[
+                idx % 2 === 0 ? 'bg-white dark:bg-slate-950/20' : 'bg-slate-50/60 dark:bg-slate-900/30',
+                isWizardEstimateLine(c) ? 'ring-1 ring-inset ring-violet-200/60 dark:ring-violet-900/40' : '',
+              ]"
               class="transition-colors hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
             >
               <td class="costs-td text-center text-slate-500">{{ rowIndex(idx) }}</td>
@@ -568,14 +571,24 @@
               <td v-if="colVisible.submitter" class="costs-td text-slate-800">{{ costSubmitterLabel(c) }}</td>
               <td v-if="colVisible.description" class="costs-td max-w-[20rem] text-slate-800">
                 <span class="line-clamp-2" :title="c.description || ''">{{ c.description || '—' }}</span>
+                <span
+                  v-if="isWizardEstimateLine(c)"
+                  class="mt-0.5 inline-flex rounded-full bg-violet-100/90 px-2 py-px text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100"
+                >
+                  {{ estimateKindLabel(c) }}
+                </span>
               </td>
               <td v-if="colVisible.fleet_source" class="costs-td whitespace-nowrap text-slate-700">
                 <span class="costs-pill">{{ fleetModeLabel(tripFleetModeFromCost(c)) }}</span>
               </td>
               <td v-if="colVisible.provider" class="costs-td text-slate-700">{{ costProviderName(c) || '—' }}</td>
               <td v-if="colVisible.advance" class="costs-td costs-td--money text-right text-slate-400">—</td>
-              <td v-if="colVisible.unit_price" class="costs-td costs-td--money text-right text-slate-400">—</td>
-              <td v-if="colVisible.extra_fee" class="costs-td costs-td--money text-right text-slate-400">—</td>
+              <td v-if="colVisible.unit_price" class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+                {{ isWizardEstimateLine(c) && Number(c.unit_price) > 0 ? formatVnd(c.unit_price) : '—' }}
+              </td>
+              <td v-if="colVisible.extra_fee" class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+                {{ isWizardEstimateLine(c) && Number(c.extra_fee) > 0 ? formatVnd(c.extra_fee) : '—' }}
+              </td>
               <td v-if="colVisible.payment" class="costs-td costs-td--money text-right font-medium tabular-nums text-slate-900">
                 {{ formatVnd(c.amount) }}
               </td>
@@ -612,10 +625,13 @@
                 <span v-else>—</span>
               </td>
               <td v-if="colVisible.trip_type" class="costs-td">
-                <span class="costs-pill costs-pill--type">{{ typeLabel(c.type) }}</span>
+                <span
+                  class="costs-pill"
+                  :class="isWizardEstimateLine(c) ? 'costs-pill--estimate' : 'costs-pill--type'"
+                >{{ isWizardEstimateLine(c) ? estimateKindLabel(c) : typeLabel(c.type) }}</span>
               </td>
               <td v-if="canReconcileCosts && colVisible.actions" class="costs-td">
-                <div class="flex flex-wrap gap-1">
+                <div v-if="!isWizardEstimateLine(c)" class="flex flex-wrap gap-1">
                   <template v-if="isCostPendingDecision(c)">
                     <button
                       type="button"
@@ -643,6 +659,7 @@
                     {{ t('costs_page.action_delete') }}
                   </button>
                 </div>
+                <span v-else class="text-[11px] text-slate-400">—</span>
               </td>
             </tr>
           </tbody>
@@ -692,20 +709,7 @@
     </div>
     </template>
 
-    <section
-      v-else
-      class="space-y-3"
-      aria-labelledby="costs-section-business-personnel"
-    >
-      <h2
-        id="costs-section-business-personnel"
-        class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-      >
-        {{ t('costs_page.section_business_personnel') }}
-      </h2>
-      <p class="text-sm text-slate-600 dark:text-slate-400">
-        {{ t('costs_page.section_business_personnel_hint') }}
-      </p>
+    <section v-else class="space-y-3" aria-labelledby="costs-section-business-personnel">
       <AppFilterBar>
         <div class="flex flex-wrap items-center gap-2">
           <AppFilterDropdown
@@ -792,7 +796,10 @@
 
       <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05] dark:border-slate-700 dark:bg-slate-950/30">
         <div class="border-b border-slate-200 bg-slate-100 px-4 py-3 sm:px-5 dark:border-slate-700 dark:bg-slate-900/50">
-          <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+          <h3
+            id="costs-section-business-personnel"
+            class="text-sm font-semibold text-slate-800 dark:text-slate-100"
+          >
             {{ t('costs_page.section_business_personnel') }}
             <span v-if="bpMeta.total != null" class="ml-1 font-normal text-slate-500">({{ bpMeta.total }})</span>
           </h3>
@@ -1185,6 +1192,7 @@ import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composable
 import {
   listTripCosts,
   listBusinessPersonnelCostLines,
+  listWizardEstimateLines,
   submitTripCost,
   decideTripCost,
   deleteTripCost,
@@ -1251,6 +1259,48 @@ function typeLabel(slug) {
   return hit?.label ?? slug
 }
 
+function isWizardEstimateLine(c) {
+  return Boolean(c?.is_wizard_estimate_line)
+}
+
+function costRowKey(c) {
+  if (isWizardEstimateLine(c)) return `wiz-${c.trip_id}-${c.line_key}`
+  return c.id
+}
+
+function mapWizardLineToCostRow(line) {
+  return {
+    id: `wiz-${line.trip_id}-${line.line_key}`,
+    is_wizard_estimate_line: true,
+    line_key: line.line_key,
+    estimate_kind: line.estimate_kind,
+    trip_id: line.trip_id,
+    trip: line.trip,
+    amount: line.amount,
+    unit_price: line.unit_price,
+    extra_fee: line.extra_fee,
+    description: line.description,
+    type: line.type || 'wizard_estimate',
+    status: 'estimate',
+    created_at: line.created_at,
+    requester_name: line.requester_name,
+  }
+}
+
+function estimateKindLabel(c) {
+  const k = c?.estimate_kind
+  if (k === 'business_row') return t('costs_page.cost_type_estimate_e2')
+  if (k === 'passenger_row') return t('costs_page.cost_type_estimate_passenger')
+  if (k === 'cargo_row') return t('costs_page.cost_type_estimate_cargo')
+  return typeLabel('wizard_estimate')
+}
+
+function estimatePassesListFilters(c) {
+  if (filters.status && filters.status !== 'submitted') return false
+  if (filters.type && filters.type !== 'wizard_estimate') return false
+  return passesClientRowFiltersForCost(c)
+}
+
 const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
 
 function tripTypeFromCost(c) {
@@ -1263,6 +1313,9 @@ function dispatchRequestFromCost(c) {
 
 /** Người đề xuất phiếu (công tác); chi phí phát sinh vẫn hiển thị người ghi nhận. */
 function costSubmitterLabel(c) {
+  if (isWizardEstimateLine(c)) {
+    return c.requester_name || dispatchRequestFromCost(c)?.requester?.name || '—'
+  }
   const dr = dispatchRequestFromCost(c)
   const requester = dr?.requester?.name
   if (tripTypeFromCost(c) === 'business' && requester) return requester
@@ -1343,7 +1396,9 @@ const modalCostTypeOptions = computed(() => {
 })
 
 const loading = ref(false)
+const estimatesLoading = ref(false)
 const items = ref([])
+const estimateItems = ref([])
 const meta = ref({})
 
 const bpLoading = ref(false)
@@ -1448,6 +1503,7 @@ function hydrateCostStatusFromRoute() {
 }
 
 function isCostPendingDecision(c) {
+  if (isWizardEstimateLine(c)) return false
   const s = String(c?.status ?? '').toLowerCase()
   return s === 'submitted' || s === 'draft'
 }
@@ -1501,7 +1557,7 @@ function quickRejectCost(c) {
 }
 
 function openDeleteModal(c) {
-  if (!c?.id) return
+  if (!c?.id || isWizardEstimateLine(c)) return
   deleteTarget.value = c
   deleteModalOpen.value = true
 }
@@ -1588,6 +1644,7 @@ const statusFilterOptions = computed(() => {
 
 const typeFilterOptions = computed(() => {
   const rows = [{ value: '', label: t('filter_bar.all') }]
+  rows.push({ value: 'wizard_estimate', label: typeLabel('wizard_estimate') })
   for (const value of BUILTIN_COST_TYPES) {
     rows.push({ value, label: typeLabel(value) })
   }
@@ -1748,23 +1805,34 @@ const tripFilterSummaryShort = computed(() => {
 
 const displayedItems = computed(() => {
   const q = searchQ.value.trim().toLowerCase()
-  let list = items.value
-  list = list.filter((c) => passesClientRowFiltersForCost(c))
-  if (!q) return list
-  return list.filter((c) => {
+  const est = estimateItems.value.filter((c) => estimatePassesListFilters(c))
+  let list = items.value.filter((c) => passesClientRowFiltersForCost(c))
+  const merged = [...est, ...list]
+  if (!q) return merged
+  return merged.filter((c) => {
     const d = String(c.description ?? '').toLowerCase()
     const creator = String(c.creator?.name ?? '').toLowerCase()
     const submitter = String(costSubmitterLabel(c) ?? '').toLowerCase()
     const ty = String(c.type ?? '').toLowerCase()
+    const kind = String(c.estimate_kind ?? '').toLowerCase()
     const trip = String(c.trip_id ?? '')
     const prov = costProviderName(c).toLowerCase()
     const fleet = fleetModeLabel(tripFleetModeFromCost(c)).toLowerCase()
-    return d.includes(q) || creator.includes(q) || submitter.includes(q) || ty.includes(q) || trip.includes(q) || prov.includes(q) || fleet.includes(q)
+    return (
+      d.includes(q) ||
+      creator.includes(q) ||
+      submitter.includes(q) ||
+      ty.includes(q) ||
+      kind.includes(q) ||
+      trip.includes(q) ||
+      prov.includes(q) ||
+      fleet.includes(q)
+    )
   })
 })
 
 const hasTableRows = computed(() => displayedItems.value.length > 0)
-const tableBusy = computed(() => loading.value)
+const tableBusy = computed(() => loading.value || estimatesLoading.value)
 
 function rowIndex(idx) {
   const page = meta.value.current_page ?? 1
@@ -2012,17 +2080,33 @@ function resetFilters() {
 
 async function reload() {
   loading.value = true
+  estimatesLoading.value = true
   try {
     const p = { ...filters }
     for (const k of ['provider', 'amount_min', 'amount_max']) {
       delete p[k]
     }
     Object.keys(p).forEach((k) => (p[k] === '' || p[k] === null ? delete p[k] : null))
-    const res = await listTripCosts(p)
+    const estimateParams = {
+      trip_id: p.trip_id,
+      trip_type: p.trip_type,
+      from: p.from,
+      to: p.to,
+      fleet_mode: p.fleet_mode,
+    }
+    Object.keys(estimateParams).forEach((k) =>
+      estimateParams[k] === undefined || estimateParams[k] === '' ? delete estimateParams[k] : null,
+    )
+    const [res, estRes] = await Promise.all([
+      listTripCosts(p),
+      listWizardEstimateLines(estimateParams),
+    ])
     items.value = res.items ?? []
     meta.value = res.meta ?? {}
+    estimateItems.value = (estRes.items ?? []).map(mapWizardLineToCostRow)
   } finally {
     loading.value = false
+    estimatesLoading.value = false
   }
 }
 

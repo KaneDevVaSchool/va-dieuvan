@@ -19,6 +19,7 @@ use App\Services\Auditing\AuditLogger;
 use App\Support\FinancialDataLock;
 use App\Support\Messages;
 use App\Services\Costs\BusinessPersonnelCostLinesQuery;
+use App\Services\Costs\WizardSnapshotCostLinesQuery;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
@@ -109,6 +110,25 @@ class TripCostController extends Controller
             'trip_id' => $data['trip_id'] ?? null,
             'from' => $data['from'] ?? null,
             'to' => $data['to'] ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        $items = $query->linesFor($request->user(), $filters);
+
+        return $this->ok([
+            'items' => $items,
+            'meta' => ['total' => count($items)],
+        ]);
+    }
+
+    public function wizardEstimateLines(ListAllTripCostsRequest $request, WizardSnapshotCostLinesQuery $query)
+    {
+        $data = $request->validated();
+        $filters = array_filter([
+            'trip_id' => $data['trip_id'] ?? null,
+            'trip_type' => $data['trip_type'] ?? null,
+            'from' => $data['from'] ?? null,
+            'to' => $data['to'] ?? null,
+            'fleet_mode' => $data['fleet_mode'] ?? null,
         ], fn ($v) => $v !== null && $v !== '');
 
         $items = $query->linesFor($request->user(), $filters);
