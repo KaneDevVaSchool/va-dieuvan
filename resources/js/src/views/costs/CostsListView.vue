@@ -92,6 +92,14 @@
                   <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_recorded_date') }}</span>
                   <span class="text-right font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
                 </li>
+                <li v-if="filters.amount_min || filters.amount_max" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_amount_range') }}</span>
+                  <span class="text-right font-medium">{{ amountRangeSummary }}</span>
+                </li>
+                <li v-if="filters.provider" class="flex justify-between gap-2">
+                  <span class="text-slate-500 dark:text-slate-400">{{ t('costs_page.filter_provider') }}</span>
+                  <span class="max-w-[12rem] truncate text-right font-medium">{{ providerFilterSummary }}</span>
+                </li>
                 <li v-if="filters.per_page !== DEFAULT_PER_PAGE" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}</span>
                   <span class="font-medium">{{ filters.per_page }}</span>
@@ -119,6 +127,27 @@
                       class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
                     >
                       {{ fd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
+              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('costs_page.column_visibility_title') }}
+                </p>
+                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="cd in colControlDefs" :key="'costs-col-vis-' + cd.id" class="flex items-start gap-2">
+                    <input
+                      :id="'costs-col-vis-' + cd.id"
+                      v-model="colVisible[cd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                    />
+                    <label
+                      :for="'costs-col-vis-' + cd.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ cd.label }}
                     </label>
                   </li>
                 </ul>
@@ -301,6 +330,68 @@
             </p>
           </AppFilterDropdown>
 
+          <AppFilterDropdown
+            v-if="filterControlVisible.amount_range"
+            root-class="shrink-0"
+            :label="t('costs_page.filter_amount_range')"
+            :summary-text="amountRangeSummary"
+            summary-text-class="max-w-[10rem]"
+            panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
+          >
+            <div class="flex flex-col gap-2">
+              <label class="text-xs text-slate-600 dark:text-slate-400">
+                {{ t('costs_page.filter_amount_min') }}
+                <input
+                  :value="formatVndDigitsInput(String(filters.amount_min).replace(/\D/g, ''))"
+                  type="text"
+                  inputmode="numeric"
+                  class="costs-input mt-1 h-9 w-full text-sm"
+                  autocomplete="off"
+                  @input="onAmountFilterInput('amount_min', $event)"
+                  @click.stop
+                />
+              </label>
+              <label class="text-xs text-slate-600 dark:text-slate-400">
+                {{ t('costs_page.filter_amount_max') }}
+                <input
+                  :value="formatVndDigitsInput(String(filters.amount_max).replace(/\D/g, ''))"
+                  type="text"
+                  inputmode="numeric"
+                  class="costs-input mt-1 h-9 w-full text-sm"
+                  autocomplete="off"
+                  @input="onAmountFilterInput('amount_max', $event)"
+                  @click.stop
+                />
+              </label>
+            </div>
+          </AppFilterDropdown>
+
+          <AppFilterDropdown
+            v-if="filterControlVisible.provider"
+            root-class="shrink-0"
+            :label="t('costs_page.filter_provider')"
+            :summary-text="providerFilterSummary"
+            summary-text-class="max-w-[10rem]"
+            panel-class="min-w-[220px] py-1"
+          >
+            <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-1 py-1">
+              <li v-for="opt in providerFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
+                <button
+                  type="button"
+                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
+                  :class="
+                    filters.provider === opt.value
+                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+                  "
+                  @click="applyClientFilterPatch($event, { provider: opt.value })"
+                >
+                  {{ opt.label }}
+                </button>
+              </li>
+            </ul>
+          </AppFilterDropdown>
+
           <input
             v-if="filterControlVisible.search"
             v-model="searchQ"
@@ -373,23 +464,25 @@
       <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         <table class="costs-sheet min-w-[1100px] w-full border-collapse text-left text-xs sm:text-sm">
           <thead>
-            <tr class="bg-slate-100 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:text-[11px]">
+            <tr class="bg-slate-100 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:text-[11px] dark:bg-slate-900/50 dark:text-slate-400">
               <th class="costs-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
-              <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
-              <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
-              <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_submitter') }}</th>
-              <th class="costs-th min-w-[14rem]">{{ t('costs_page.col_description') }}</th>
-              <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_provider') }}</th>
-              <th class="costs-th costs-th--money min-w-[7rem] text-right">{{ t('costs_page.col_advance') }}</th>
-              <th class="costs-th costs-th--money min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
-              <th class="costs-th min-w-[6.5rem] whitespace-nowrap">{{ t('costs_page.col_time') }}</th>
-              <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_owner') }}</th>
-              <th class="costs-th min-w-[6rem]">{{ t('costs_page.col_receipt') }}</th>
-              <th class="costs-th min-w-[7rem]">{{ t('costs_page.col_legal_entity') }}</th>
-              <th class="costs-th min-w-[6rem]">{{ t('costs_page.col_notes') }}</th>
-              <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
-              <th class="costs-th min-w-[7rem] whitespace-nowrap">{{ t('costs_page.col_trip_type') }}</th>
-              <th v-if="canReconcileCosts" class="costs-th min-w-[9rem] whitespace-nowrap">{{ t('costs_page.col_actions') }}</th>
+              <th v-if="colVisible.unit" class="costs-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
+              <th v-if="colVisible.category" class="costs-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
+              <th v-if="colVisible.submitter" class="costs-th min-w-[8rem]">{{ t('costs_page.col_submitter') }}</th>
+              <th v-if="colVisible.description" class="costs-th min-w-[14rem]">{{ t('costs_page.col_description') }}</th>
+              <th v-if="colVisible.provider" class="costs-th min-w-[8rem]">{{ t('costs_page.col_provider') }}</th>
+              <th v-if="colVisible.advance" class="costs-th costs-th--money min-w-[7rem] text-right">{{ t('costs_page.col_advance') }}</th>
+              <th v-if="colVisible.unit_price" class="costs-th costs-th--money min-w-[6.5rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
+              <th v-if="colVisible.extra_fee" class="costs-th costs-th--money min-w-[6rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
+              <th v-if="colVisible.payment" class="costs-th costs-th--money min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
+              <th v-if="colVisible.time" class="costs-th min-w-[6.5rem] whitespace-nowrap">{{ t('costs_page.col_time') }}</th>
+              <th v-if="colVisible.owner" class="costs-th min-w-[8rem]">{{ t('costs_page.col_owner') }}</th>
+              <th v-if="colVisible.receipt" class="costs-th min-w-[6rem]">{{ t('costs_page.col_receipt') }}</th>
+              <th v-if="colVisible.legal_entity" class="costs-th min-w-[7rem]">{{ t('costs_page.col_legal_entity') }}</th>
+              <th v-if="colVisible.notes" class="costs-th min-w-[6rem]">{{ t('costs_page.col_notes') }}</th>
+              <th v-if="colVisible.trip" class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
+              <th v-if="colVisible.trip_type" class="costs-th min-w-[7rem] whitespace-nowrap">{{ t('costs_page.col_trip_type') }}</th>
+              <th v-if="canReconcileCosts && colVisible.actions" class="costs-th min-w-[9rem] whitespace-nowrap">{{ t('costs_page.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -399,38 +492,36 @@
               class="bg-violet-50/35 transition-colors hover:bg-violet-50/60 dark:bg-violet-950/25 dark:hover:bg-violet-950/40"
             >
               <td class="costs-td text-center text-slate-500">{{ idx + 1 }}</td>
-              <td class="costs-td">
+              <td v-if="colVisible.unit" class="costs-td">
                 <span class="costs-pill">{{ unitLabel }}</span>
               </td>
-              <td class="costs-td">
+              <td v-if="colVisible.category" class="costs-td">
                 <span class="costs-pill" :class="tripTypePillClass('business')">{{ labelTripType('business') }}</span>
               </td>
-              <td class="costs-td text-slate-800">{{ line.requester_name || '—' }}</td>
-              <td class="costs-td max-w-[20rem] text-slate-800">
+              <td v-if="colVisible.submitter" class="costs-td text-slate-800">{{ line.requester_name || '—' }}</td>
+              <td v-if="colVisible.description" class="costs-td max-w-[20rem] text-slate-800">
                 <div class="font-medium text-slate-900 dark:text-slate-100">{{ line.personnel_label || '—' }}</div>
                 <div class="mt-0.5 line-clamp-2 text-[11px] text-slate-500 dark:text-slate-400" :title="businessRouteLabel(line)">
                   {{ businessRouteLabel(line) }}
                 </div>
               </td>
-              <td class="costs-td text-slate-400">—</td>
-              <td class="costs-td costs-td--money text-right text-slate-400">—</td>
-              <td class="costs-td costs-td--money text-right font-semibold tabular-nums text-slate-900">
+              <td v-if="colVisible.provider" class="costs-td text-slate-400">—</td>
+              <td v-if="colVisible.advance" class="costs-td costs-td--money text-right text-slate-400">—</td>
+              <td v-if="colVisible.unit_price" class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+                {{ line.unit_price > 0 ? formatVnd(line.unit_price) : '—' }}
+              </td>
+              <td v-if="colVisible.extra_fee" class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+                {{ line.extra_fee > 0 ? formatVnd(line.extra_fee) : '—' }}
+              </td>
+              <td v-if="colVisible.payment" class="costs-td costs-td--money text-right font-semibold tabular-nums text-slate-900">
                 {{ line.amount_total > 0 ? formatVnd(line.amount_total) : '—' }}
               </td>
-              <td class="costs-td text-slate-400">—</td>
-              <td class="costs-td text-slate-400">—</td>
-              <td class="costs-td text-slate-400">—</td>
-              <td class="costs-td text-slate-400">—</td>
-              <td class="costs-td max-w-[12rem] text-xs text-slate-600 dark:text-slate-400">
-                <span v-if="line.unit_price > 0 || line.extra_fee > 0">{{
-                  t('costs_page.note_estimate_breakdown', {
-                    unit: line.unit_price > 0 ? formatVnd(line.unit_price) : '—',
-                    extra: line.extra_fee > 0 ? formatVnd(line.extra_fee) : '—',
-                  })
-                }}</span>
-                <span v-else class="text-slate-400">—</span>
-              </td>
-              <td class="costs-td">
+              <td v-if="colVisible.time" class="costs-td text-slate-400">—</td>
+              <td v-if="colVisible.owner" class="costs-td text-slate-400">—</td>
+              <td v-if="colVisible.receipt" class="costs-td text-slate-400">—</td>
+              <td v-if="colVisible.legal_entity" class="costs-td text-slate-400">—</td>
+              <td v-if="colVisible.notes" class="costs-td text-slate-400">—</td>
+              <td v-if="colVisible.trip" class="costs-td">
                 <RouterLink
                   :to="{ name: 'tripDetail', params: { id: line.trip_id } }"
                   class="font-medium text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900 dark:text-sky-400"
@@ -438,10 +529,17 @@
                   #{{ line.trip_id }}
                 </RouterLink>
               </td>
-              <td class="costs-td">
-                <span class="costs-pill costs-pill--type costs-pill--estimate">{{ t('costs_page.cost_type_estimate_e2') }}</span>
+              <td v-if="colVisible.trip_type" class="costs-td">
+                <button
+                  type="button"
+                  class="costs-pill costs-pill--type costs-pill--estimate cursor-pointer transition hover:ring-2 hover:ring-violet-300/80 dark:hover:ring-violet-700"
+                  :aria-label="t('costs_page.e2_badge_aria')"
+                  @click="openE2Detail(line)"
+                >
+                  {{ t('costs_page.cost_type_estimate_e2') }}
+                </button>
               </td>
-              <td v-if="canReconcileCosts" class="costs-td text-slate-400">—</td>
+              <td v-if="canReconcileCosts && colVisible.actions" class="costs-td text-slate-400">—</td>
             </tr>
             <tr
               v-for="(c, idx) in displayedItems"
@@ -450,10 +548,10 @@
               class="transition-colors hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
             >
               <td class="costs-td text-center text-slate-500">{{ costRowIndex(idx) }}</td>
-              <td class="costs-td">
+              <td v-if="colVisible.unit" class="costs-td">
                 <span class="costs-pill">{{ unitLabel }}</span>
               </td>
-              <td class="costs-td">
+              <td v-if="colVisible.category" class="costs-td">
                 <span
                   v-if="tripTypeFromCost(c)"
                   class="costs-pill"
@@ -461,21 +559,23 @@
                 >{{ labelTripType(tripTypeFromCost(c)) }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td class="costs-td text-slate-800">{{ costSubmitterLabel(c) }}</td>
-              <td class="costs-td max-w-[20rem] text-slate-800">
+              <td v-if="colVisible.submitter" class="costs-td text-slate-800">{{ costSubmitterLabel(c) }}</td>
+              <td v-if="colVisible.description" class="costs-td max-w-[20rem] text-slate-800">
                 <span class="line-clamp-2" :title="c.description || ''">{{ c.description || '—' }}</span>
               </td>
-              <td class="costs-td text-slate-700">{{ c.trip?.transport_provider?.name ?? '—' }}</td>
-              <td class="costs-td costs-td--money text-right text-slate-400">—</td>
-              <td class="costs-td costs-td--money text-right font-medium tabular-nums text-slate-900">
+              <td v-if="colVisible.provider" class="costs-td text-slate-700">{{ c.trip?.transport_provider?.name ?? '—' }}</td>
+              <td v-if="colVisible.advance" class="costs-td costs-td--money text-right text-slate-400">—</td>
+              <td v-if="colVisible.unit_price" class="costs-td costs-td--money text-right text-slate-400">—</td>
+              <td v-if="colVisible.extra_fee" class="costs-td costs-td--money text-right text-slate-400">—</td>
+              <td v-if="colVisible.payment" class="costs-td costs-td--money text-right font-medium tabular-nums text-slate-900">
                 {{ formatVnd(c.amount) }}
               </td>
-              <td class="costs-td whitespace-nowrap text-slate-700">{{ formatDateDMY(c.created_at) }}</td>
-              <td class="costs-td">
+              <td v-if="colVisible.time" class="costs-td whitespace-nowrap text-slate-700">{{ formatDateDMY(c.created_at) }}</td>
+              <td v-if="colVisible.owner" class="costs-td">
                 <span v-if="c.confirmer?.name" class="costs-pill">{{ c.confirmer.name }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td class="costs-td">
+              <td v-if="colVisible.receipt" class="costs-td">
                 <a
                   v-if="c.receipt_url"
                   :href="c.receipt_url"
@@ -486,14 +586,14 @@
                 >
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td class="costs-td text-slate-500">{{ LEGAL_ENTITY_PLACEHOLDER }}</td>
-              <td class="costs-td max-w-[12rem] text-slate-600">
+              <td v-if="colVisible.legal_entity" class="costs-td text-slate-500">{{ LEGAL_ENTITY_PLACEHOLDER }}</td>
+              <td v-if="colVisible.notes" class="costs-td max-w-[12rem] text-slate-600">
                 <span v-if="c.rejection_reason" class="line-clamp-2 text-rose-700" :title="c.rejection_reason">{{
                   c.rejection_reason
                 }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td class="costs-td">
+              <td v-if="colVisible.trip" class="costs-td">
                 <RouterLink
                   v-if="c.trip_id"
                   class="font-medium text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900"
@@ -502,10 +602,10 @@
                 >
                 <span v-else>—</span>
               </td>
-              <td class="costs-td">
+              <td v-if="colVisible.trip_type" class="costs-td">
                 <span class="costs-pill costs-pill--type">{{ typeLabel(c.type) }}</span>
               </td>
-              <td v-if="canReconcileCosts" class="costs-td">
+              <td v-if="canReconcileCosts && colVisible.actions" class="costs-td">
                 <div class="flex flex-wrap gap-1">
                   <template v-if="isCostPendingDecision(c)">
                     <button
@@ -860,6 +960,87 @@
 
     <Teleport to="body">
       <div
+        v-if="e2DetailLine"
+        class="fixed inset-0 z-[105] flex items-end justify-center p-3 sm:items-center sm:p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="costs-e2-detail-title"
+      >
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeE2Detail" />
+        <div
+          class="relative z-10 flex max-h-[min(92vh,560px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-2xl ring-1 ring-violet-900/10 dark:border-violet-900/50 dark:bg-slate-900"
+          @click.stop
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-violet-100 px-5 py-4 dark:border-violet-900/40">
+            <div>
+              <h2 id="costs-e2-detail-title" class="text-base font-semibold text-slate-900 dark:text-slate-100">
+                {{ t('costs_page.e2_modal_title', { trip: e2DetailLine.trip_id }) }}
+              </h2>
+              <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                {{ t('costs_page.e2_modal_explain') }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              :aria-label="t('costs_page.e2_modal_close')"
+              @click="closeE2Detail"
+            >
+              <XMarkIcon class="h-5 w-5" />
+            </button>
+          </div>
+          <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <dl class="space-y-3 text-sm">
+              <div>
+                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t('costs_page.col_submitter') }}</dt>
+                <dd class="mt-0.5 text-slate-900 dark:text-slate-100">{{ e2DetailLine.requester_name || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t('costs_page.col_personnel') }}</dt>
+                <dd class="mt-0.5 font-medium text-slate-900 dark:text-slate-100">{{ e2DetailLine.personnel_label || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t('costs_page.col_route') }}</dt>
+                <dd class="mt-0.5 text-slate-800 dark:text-slate-200">{{ businessRouteLabel(e2DetailLine) }}</dd>
+              </div>
+              <div class="grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <div>
+                  <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t('costs_page.col_unit_price') }}</dt>
+                  <dd class="mt-0.5 tabular-nums font-medium text-slate-900">
+                    {{ e2DetailLine.unit_price > 0 ? formatVnd(e2DetailLine.unit_price) : '—' }}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t('costs_page.col_extra_fee') }}</dt>
+                  <dd class="mt-0.5 tabular-nums font-medium text-slate-900">
+                    {{ e2DetailLine.extra_fee > 0 ? formatVnd(e2DetailLine.extra_fee) : '—' }}
+                  </dd>
+                </div>
+                <div class="col-span-2">
+                  <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t('costs_page.col_payment') }}</dt>
+                  <dd class="mt-0.5 text-lg font-semibold tabular-nums text-violet-900 dark:text-violet-200">
+                    {{ e2DetailLine.amount_total > 0 ? formatVnd(e2DetailLine.amount_total) : '—' }}
+                  </dd>
+                </div>
+              </div>
+            </dl>
+          </div>
+          <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 px-5 py-3 dark:border-slate-700">
+            <button type="button" class="costs-btn-ghost text-sm" @click="closeE2Detail">{{ t('costs_page.e2_modal_close') }}</button>
+            <RouterLink
+              :to="{ name: 'tripDetail', params: { id: e2DetailLine.trip_id } }"
+              class="costs-btn-primary text-sm"
+              @click="closeE2Detail"
+            >
+              {{ t('costs_page.e2_modal_open_trip') }}
+            </RouterLink>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
         v-if="quickAddTypeOpen"
         class="fixed inset-0 z-[110] flex items-end justify-center p-4 sm:items-center"
         role="dialog"
@@ -931,10 +1112,34 @@ const LEGAL_ENTITY_PLACEHOLDER = '—'
 const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
 const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
 const COSTS_FILTER_CONTROL_VISIBILITY_KEY = 'va.costs.filter_control_visibility_v1'
-const FILTER_CONTROL_IDS = ['status', 'type', 'trip_type', 'date', 'trip', 'search', 'per_page']
+const COSTS_COL_VISIBILITY_KEY = 'va.costs.col_visibility_v1'
+const FILTER_CONTROL_IDS = ['status', 'type', 'trip_type', 'date', 'trip', 'search', 'per_page', 'amount_range', 'provider']
+const COL_IDS = [
+  'unit',
+  'category',
+  'submitter',
+  'description',
+  'provider',
+  'advance',
+  'unit_price',
+  'extra_fee',
+  'payment',
+  'time',
+  'owner',
+  'receipt',
+  'legal_entity',
+  'notes',
+  'trip',
+  'trip_type',
+  'actions',
+]
 
 function defaultFilterControlVisibility() {
   return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, true]))
+}
+
+function defaultColVisibility() {
+  return Object.fromEntries(COL_IDS.map((id) => [id, true]))
 }
 
 const extraCostTypes = ref([])
@@ -974,6 +1179,45 @@ function businessRouteLabel(line) {
   return '—'
 }
 
+function parseAmountFilterDigits(val) {
+  const d = String(val ?? '').replace(/\D/g, '')
+  if (!d) return null
+  const n = Number(d)
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
+function rowAmountMatchesFilter(amount) {
+  const min = parseAmountFilterDigits(filters.amount_min)
+  const max = parseAmountFilterDigits(filters.amount_max)
+  const a = Number(amount ?? 0)
+  if (min != null && a < min) return false
+  if (max != null && a > max) return false
+  return true
+}
+
+function costProviderName(c) {
+  return String(c?.trip?.transport_provider?.name ?? '').trim()
+}
+
+function providerFilterMatchesRecordedCost(c) {
+  const p = filters.provider
+  if (!p) return true
+  if (p === '__none__') return !costProviderName(c)
+  return costProviderName(c) === p
+}
+
+function providerFilterMatchesBusinessLine() {
+  return !filters.provider
+}
+
+function openE2Detail(line) {
+  e2DetailLine.value = line
+}
+
+function closeE2Detail() {
+  e2DetailLine.value = null
+}
+
 const TRIP_TYPE_PILL_CLASSES = {
   point_to_point: 'bg-sky-100/80 text-sky-800',
   cargo: 'bg-amber-100/80 text-amber-800',
@@ -1000,6 +1244,8 @@ const items = ref([])
 const meta = ref({})
 const businessPersonnelLoading = ref(false)
 const businessPersonnelLines = ref([])
+/** @type {import('vue').Ref<Record<string, unknown> | null>} */
+const e2DetailLine = ref(null)
 
 const showBusinessPersonnelSection = computed(
   () => !filters.trip_type || filters.trip_type === 'business',
@@ -1009,6 +1255,31 @@ const funnelDetailsRef = ref(null)
 useDetailsAutoClose(funnelDetailsRef)
 
 const filterControlVisible = reactive(defaultFilterControlVisibility())
+const colVisible = reactive(defaultColVisibility())
+
+function tableColLabel(colId) {
+  const keys = {
+    unit: 'col_unit',
+    category: 'col_category',
+    submitter: 'col_submitter',
+    description: 'col_description',
+    provider: 'col_provider',
+    advance: 'col_advance',
+    unit_price: 'col_unit_price',
+    extra_fee: 'col_extra_fee',
+    payment: 'col_payment',
+    time: 'col_time',
+    owner: 'col_owner',
+    receipt: 'col_receipt',
+    legal_entity: 'col_legal_entity',
+    notes: 'col_notes',
+    trip: 'col_trip',
+    trip_type: 'col_trip_type',
+    actions: 'col_actions',
+  }
+  const k = keys[colId]
+  return k ? t(`costs_page.${k}`) : colId
+}
 
 const filterControlDefs = computed(() => [
   { id: 'status', label: t('filter_bar.status') },
@@ -1016,6 +1287,8 @@ const filterControlDefs = computed(() => [
   { id: 'trip_type', label: t('costs_page.filter_trip_type') },
   { id: 'date', label: t('costs_page.filter_recorded_date') },
   { id: 'trip', label: t('costs_page.filter_trip') },
+  { id: 'amount_range', label: t('costs_page.filter_amount_range') },
+  { id: 'provider', label: t('costs_page.filter_provider') },
   { id: 'search', label: t('costs_page.filter_search_page') },
   { id: 'per_page', label: t('filter_bar.per_page') },
 ])
@@ -1045,6 +1318,9 @@ const filters = reactive({
   trip_id: '',
   from: '',
   to: '',
+  provider: '',
+  amount_min: '',
+  amount_max: '',
   page: 1,
   per_page: DEFAULT_PER_PAGE,
 })
@@ -1148,6 +1424,10 @@ const submitting = ref(false)
 const costMsg = ref('')
 
 const canReconcileCosts = computed(() => auth.hasPermission('trip.cost.reconcile'))
+const colControlDefs = computed(() => {
+  const ids = COL_IDS.filter((id) => id !== 'actions' || canReconcileCosts.value)
+  return ids.map((id) => ({ id, label: tableColLabel(id) }))
+})
 const costAmountDisplay = computed(() => formatVndDigitsInput(costAmountDigits.value))
 
 watch(extraCostTypes, (v) => {
@@ -1163,6 +1443,18 @@ watch(
   (v) => {
     try {
       localStorage.setItem(COSTS_FILTER_CONTROL_VISIBILITY_KEY, JSON.stringify({ ...v }))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+watch(
+  colVisible,
+  (v) => {
+    try {
+      localStorage.setItem(COSTS_COL_VISIBILITY_KEY, JSON.stringify({ ...v }))
     } catch {
       /* ignore */
     }
@@ -1207,10 +1499,53 @@ const activeFilterCount = computed(() => {
   if (filters.trip_type) n++
   if (filters.trip_id) n++
   if (filters.from || filters.to) n++
+  if (filters.provider) n++
+  if (filters.amount_min || filters.amount_max) n++
   if (filters.per_page !== DEFAULT_PER_PAGE) n++
   if (searchQ.value.trim()) n++
   return n
 })
+
+const amountRangeSummary = computed(() => {
+  if (!filters.amount_min && !filters.amount_max) return t('filter_bar.all')
+  const min = filters.amount_min ? formatVndDigitsInput(String(filters.amount_min).replace(/\D/g, '')) : '…'
+  const max = filters.amount_max ? formatVndDigitsInput(String(filters.amount_max).replace(/\D/g, '')) : '…'
+  return t('costs_page.amount_range_summary', { min, max })
+})
+
+const providerFilterOptions = computed(() => {
+  const names = new Set()
+  let hasEmpty = false
+  for (const c of items.value) {
+    const name = costProviderName(c)
+    if (name) names.add(name)
+    else hasEmpty = true
+  }
+  const rows = [{ value: '', label: t('costs_page.filter_provider_all') }]
+  if (hasEmpty) rows.push({ value: '__none__', label: t('costs_page.filter_provider_none') })
+  for (const name of [...names].sort((a, b) => a.localeCompare(b, 'vi'))) {
+    rows.push({ value: name, label: name })
+  }
+  return rows
+})
+
+const providerFilterSummary = computed(() => {
+  if (!filters.provider) return t('filter_bar.all')
+  const hit = providerFilterOptions.value.find((o) => o.value === filters.provider)
+  return hit?.label ?? filters.provider
+})
+
+function passesClientRowFiltersForCost(c) {
+  if (!providerFilterMatchesRecordedCost(c)) return false
+  if (!rowAmountMatchesFilter(c.amount)) return false
+  return true
+}
+
+function passesClientRowFiltersForBusinessLine(line) {
+  if (!providerFilterMatchesBusinessLine()) return false
+  if (!rowAmountMatchesFilter(line.amount_total)) return false
+  return true
+}
 
 const filterDateSummary = computed(() => {
   if (!filters.from && !filters.to) return t('filter_bar.all')
@@ -1268,21 +1603,24 @@ const tripFilterSummaryShort = computed(() => {
 
 const displayedItems = computed(() => {
   const q = searchQ.value.trim().toLowerCase()
-  if (!q) return items.value
-  return items.value.filter((c) => {
+  let list = items.value
+  list = list.filter((c) => passesClientRowFiltersForCost(c))
+  if (!q) return list
+  return list.filter((c) => {
     const d = String(c.description ?? '').toLowerCase()
     const creator = String(c.creator?.name ?? '').toLowerCase()
     const submitter = String(costSubmitterLabel(c) ?? '').toLowerCase()
     const ty = String(c.type ?? '').toLowerCase()
     const trip = String(c.trip_id ?? '')
-    return d.includes(q) || creator.includes(q) || submitter.includes(q) || ty.includes(q) || trip.includes(q)
+    const prov = costProviderName(c).toLowerCase()
+    return d.includes(q) || creator.includes(q) || submitter.includes(q) || ty.includes(q) || trip.includes(q) || prov.includes(q)
   })
 })
 
 const filteredBusinessPersonnelLines = computed(() => {
   if (!showBusinessPersonnelSection.value) return []
   const q = searchQ.value.trim().toLowerCase()
-  const lines = businessPersonnelLines.value
+  let lines = businessPersonnelLines.value.filter((line) => passesClientRowFiltersForBusinessLine(line))
   if (!q) return lines
   return lines.filter((line) => {
     const personnel = String(line.personnel_label ?? '').toLowerCase()
@@ -1435,9 +1773,12 @@ function closeAddCostModal() {
   costMsgIsError.value = false
 }
 
-watch([addCostModalOpen, rejectModalOpen, deleteModalOpen], () => {
+watch([addCostModalOpen, rejectModalOpen, deleteModalOpen, e2DetailLine], () => {
   if (typeof document === 'undefined') return
-  document.body.style.overflow = addCostModalOpen.value || rejectModalOpen.value || deleteModalOpen.value ? 'hidden' : ''
+  document.body.style.overflow =
+    addCostModalOpen.value || rejectModalOpen.value || deleteModalOpen.value || e2DetailLine.value != null
+      ? 'hidden'
+      : ''
 })
 
 let escapeCloseModal = null
@@ -1491,6 +1832,7 @@ onUnmounted(() => {
     if (escapeCloseModal) window.removeEventListener('keydown', escapeCloseModal)
     if (escapeCloseRejectModal) window.removeEventListener('keydown', escapeCloseRejectModal)
     if (escapeCloseDeleteModal) window.removeEventListener('keydown', escapeCloseDeleteModal)
+    if (escapeCloseE2Modal) window.removeEventListener('keydown', escapeCloseE2Modal)
   }
 })
 
@@ -1513,6 +1855,16 @@ function applyFilterPatch(ev, patch) {
   reload()
 }
 
+function applyClientFilterPatch(ev, patch) {
+  Object.assign(filters, patch)
+  closeParentDetails(ev)
+}
+
+function onAmountFilterInput(field, ev) {
+  const raw = String(ev?.target?.value ?? '').replace(/\D/g, '')
+  filters[field] = raw
+}
+
 function onFilterDropdownChange(ev) {
   closeParentDetails(ev)
   filters.page = 1
@@ -1531,6 +1883,9 @@ function resetFilters() {
   filters.trip_id = ''
   filters.from = ''
   filters.to = ''
+  filters.provider = ''
+  filters.amount_min = ''
+  filters.amount_max = ''
   filters.page = 1
   filters.per_page = DEFAULT_PER_PAGE
   searchQ.value = ''
@@ -1563,6 +1918,9 @@ async function reload() {
   loading.value = true
   try {
     const p = { ...filters }
+    for (const k of ['provider', 'amount_min', 'amount_max']) {
+      delete p[k]
+    }
     Object.keys(p).forEach((k) => (p[k] === '' || p[k] === null ? delete p[k] : null))
     const [res] = await Promise.all([listTripCosts(p), reloadBusinessPersonnelLines()])
     items.value = res.items ?? []
@@ -1628,6 +1986,21 @@ function loadFilterControlVisibility() {
   }
 }
 
+function loadColVisibility() {
+  try {
+    const raw = localStorage.getItem(COSTS_COL_VISIBILITY_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    const base = defaultColVisibility()
+    for (const id of COL_IDS) {
+      if (typeof o[id] === 'boolean') base[id] = o[id]
+    }
+    Object.assign(colVisible, base)
+  } catch {
+    /* ignore */
+  }
+}
+
 watch(
   () => route.query.status,
   () => {
@@ -1637,8 +2010,24 @@ watch(
   },
 )
 
+let escapeCloseE2Modal = null
+watch(e2DetailLine, (line) => {
+  if (typeof window === 'undefined') return
+  if (escapeCloseE2Modal) {
+    window.removeEventListener('keydown', escapeCloseE2Modal)
+    escapeCloseE2Modal = null
+  }
+  if (line) {
+    escapeCloseE2Modal = (e) => {
+      if (e.key === 'Escape') closeE2Detail()
+    }
+    window.addEventListener('keydown', escapeCloseE2Modal)
+  }
+})
+
 onMounted(async () => {
   loadFilterControlVisibility()
+  loadColVisibility()
   loadExtraCostTypesFromStorage()
   hydrateCostStatusFromRoute()
   await loadTripPickerOptions()
