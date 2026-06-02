@@ -487,14 +487,6 @@
                 </div>
               </div>
 
-              <RequestAuditTimeline
-                v-if="!isDeptRequestDetailRoute"
-                :items="auditLogs"
-                :loading="auditLogsLoading"
-                :error="auditLogsErr"
-                :format-date-time="fmtStepDetail"
-              />
-
               <section
                 v-if="showApprovalDecisionPanel"
                 class="rounded-xl border-2 border-slate-200 bg-white p-4 shadow-sm"
@@ -797,7 +789,6 @@ const RequestStudentCountTab = defineAsyncComponent(() =>
   import('../../components/requests/RequestStudentCountTab.vue'),
 )
 import RequestCloneLineageBanner from '../../components/requests/RequestCloneLineageBanner.vue'
-import RequestAuditTimeline from '../../components/requests/RequestAuditTimeline.vue'
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
 import RequestWorkflowBar from '../../components/requests/RequestWorkflowBar.vue'
@@ -817,7 +808,6 @@ import {
   exportDispatchRequestPdf,
   fillPriceDispatchRequest,
   getDispatchRequest,
-  getDispatchRequestAuditLogs,
   markPaperReceived,
   revertPaperReceived,
   cloneDispatchRequest,
@@ -1064,10 +1054,6 @@ const { formTabActionCount, studentsTabActionCount, docsTabActionCount, todoItem
   reqForDocs,
   workflowCtx,
 )
-
-const auditLogs = ref([])
-const auditLogsLoading = ref(false)
-const auditLogsErr = ref('')
 
 const docsHighlightAttachmentId = ref(null)
 const focusHighlight = ref(null)
@@ -1550,21 +1536,6 @@ async function savePassengerDraft() {
   }
 }
 
-async function loadAuditLogs() {
-  const id = route.params.id
-  if (!id) return
-  auditLogsLoading.value = true
-  auditLogsErr.value = ''
-  try {
-    auditLogs.value = await getDispatchRequestAuditLogs(id)
-  } catch (e) {
-    auditLogs.value = []
-    auditLogsErr.value = formatApiError(e, t('request_detail.audit_timeline_load_fail'))
-  } finally {
-    auditLogsLoading.value = false
-  }
-}
-
 async function load() {
   loading.value = true
   try {
@@ -1583,9 +1554,6 @@ async function load() {
     passengerPatchErr.value = ''
     const tabQ = tabFromRouteQuery()
     if (tabQ) activeTab.value = tabQ
-    if (!isDeptRequestDetailRoute.value) {
-      void loadAuditLogs()
-    }
   } finally {
     loading.value = false
   }
