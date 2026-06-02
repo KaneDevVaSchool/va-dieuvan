@@ -149,8 +149,9 @@
                         <th
                             v-if="canEditList"
                             scope="col"
-                            class="w-10 px-3 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300"
+                            class="w-10 px-3 py-2.5 text-center text-xs font-semibold text-slate-600 dark:text-slate-300"
                         >
+                            <div class="flex justify-center">
                             <input
                                 ref="headerSelectRef"
                                 type="checkbox"
@@ -158,6 +159,7 @@
                                 :aria-label="t('trip_detail.passengers.dt_col_select')"
                                 @change="onToggleAll"
                             />
+                            </div>
                         </th>
                         <th
                             v-if="canCheckIn"
@@ -221,9 +223,10 @@
                         >
                             <td
                                 v-if="canEditList"
-                                class="px-3 py-2.5 align-middle"
+                                class="w-10 px-3 py-2.5 text-center align-middle"
                                 @click.stop
                             >
+                                <div class="flex justify-center">
                                 <input
                                     v-if="isRowSelectable(row)"
                                     v-model="selectedKeys"
@@ -232,6 +235,7 @@
                                     :value="row.passengerKey"
                                     :disabled="listBusy"
                                 />
+                                </div>
                             </td>
                             <td
                                 v-if="canCheckIn"

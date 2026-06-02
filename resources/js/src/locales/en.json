@@ -3050,6 +3050,7 @@
             "role_guest": "Guest",
             "cargo_item": "Cargo {n}",
             "guest": "Guest {n}",
+            "passenger": "Passenger {n}",
             "business_party": "Business party {n}",
             "unlisted": "{n} people (per request)",
             "flag_wheelchair": "Wheelchair assistance",

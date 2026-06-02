@@ -791,6 +791,7 @@ import {
 } from "../../util/formatDispatchNotes";
 import { parseMoneyVnd } from "../../util/money";
 import { dispatchRequestEffectivePassengerCount } from "../../util/dispatchRequestPassengers";
+import { passengerDisplayName } from "../../util/passengerDisplayName";
 import {
     emptyPassengerRow,
     emptyBusinessRow,
@@ -1525,7 +1526,7 @@ const passengerRowsDisplay = computed(() => {
             const note = String(tp?.note ?? "").trim();
             built.push({
                 passengerKey: `tp_slot_${i}`,
-                name: name || t("trip_detail.passengers.guest", { n: i + 1 }),
+                name: passengerDisplayName(name, i, t),
                 roleKind: kind,
                 roleLabel,
                 contact: phone,
@@ -1587,14 +1588,75 @@ const passengerRowsDisplay = computed(() => {
         }));
     }
 
+    if (tripType === "business") {
+        const busEntries = (s?.businessRows ?? [])
+            .map((r, rowIndex) => ({ r, rowIndex }))
+            .filter(({ r }) => isBusinessRowFilled(r));
+        const targetN = dispatchRequestEffectivePassengerCount(dr);
+        const slotCount = Math.max(
+            targetN,
+            busEntries.length,
+            Array.isArray(tplist) ? tplist.length : 0,
+        );
+        if (slotCount === 0) return [];
+
+        const roleLabel = t("trip_detail.passengers.role_staff");
+        const built = [];
+        for (let i = 0; i < slotCount; i++) {
+            const tp = Array.isArray(tplist) ? tplist[i] : undefined;
+            const bus = busEntries[i];
+            const br = bus?.r;
+            const rawName = String(tp?.name ?? "").trim();
+            const phone = String(tp?.phone ?? "").trim();
+            const note = String(tp?.note ?? br?.notes ?? "").trim();
+            built.push({
+                passengerKey: `tp_slot_${i}`,
+                name: passengerDisplayName(rawName, i, t),
+                roleKind: "staff",
+                roleLabel,
+                contact: phone,
+                notes: note,
+                pickupAddress: (br?.pickup ?? "").trim(),
+                flagWheelchair: /xe lăn|wheelchair/i.test(note),
+                flagAllergy: /dị ứng|allergy|đậu phộng|peanut/i.test(note),
+                editMeta:
+                    bus != null
+                        ? { kind: "business", rowIndex: bus.rowIndex }
+                        : canEditPassengerList.value
+                          ? { kind: "named_tp", rowIndex: i }
+                          : null,
+                editable:
+                    bus != null
+                        ? passengerListRowEditable(tripType, "business")
+                        : canEditPassengerList.value,
+                editFields:
+                    bus != null
+                        ? {
+                              guests: String(br?.guests ?? "1"),
+                              notes: br?.notes ?? "",
+                          }
+                        : canEditPassengerList.value
+                          ? {
+                                person_in_charge: rawName,
+                                phone,
+                                notes: note,
+                            }
+                          : null,
+            });
+        }
+        return built;
+    }
+
     let idx = 0;
     for (let pi = 0; pi < (s?.passengerRows ?? []).length; pi++) {
         const r = s.passengerRows[pi];
         if (!isPassengerRowFilled(r)) continue;
         idx += 1;
-        const name =
-            r.person_in_charge?.trim() ||
-            t("trip_detail.passengers.guest", { n: idx });
+        const name = passengerDisplayName(
+            r.person_in_charge?.trim() || "",
+            idx - 1,
+            t,
+        );
         const notes = r.notes?.trim() || "";
         const kind = inferRoleKind(tripType);
         const meta = { kind: "passenger", rowIndex: pi };
@@ -1629,7 +1691,7 @@ const passengerRowsDisplay = computed(() => {
         const notes = r.notes?.trim() || "";
         const meta = { kind: "business", rowIndex: bi };
         rows.push({
-            name: t("trip_detail.passengers.business_party", { n: idx }),
+            name: passengerDisplayName("", idx - 1, t),
             roleKind: "staff",
             roleLabel: t("trip_detail.passengers.role_staff"),
             contact: "",

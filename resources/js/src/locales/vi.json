@@ -2878,6 +2878,7 @@
             "role_guest": "Khách",
             "cargo_item": "Hàng {n}",
             "guest": "Khách {n}",
+            "passenger": "Hành khách {n}",
             "business_party": "Đoàn công tác {n}",
             "unlisted": "{n} người (theo yêu cầu)",
             "flag_wheelchair": "Hỗ trợ xe lăn",

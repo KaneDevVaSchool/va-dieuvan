@@ -1,4 +1,5 @@
 import { dispatchRequestEffectivePassengerCount } from './dispatchRequestPassengers'
+import { isAutoPassengerLabel, passengerDisplayName } from './passengerDisplayName'
 
 export function normalizeTripPassengers(trip) {
   const raw = trip?.trip_passengers ?? trip?.tripPassengers
@@ -41,7 +42,7 @@ export function buildDriverTripPaxList(options) {
       if (!notes) notes = (wr.notes || '').trim()
     }
 
-    if (!name) name = t('driver_trip_detail.guest_n', { n: i + 1 })
+    if (!name || isAutoPassengerLabel(name)) name = passengerDisplayName(name, i, t)
 
     const classGuess = classFromNotes(notes)
     const rawTime = wr?.depart_at || ttr.depart_at
@@ -89,12 +90,13 @@ export function buildDriverTripPaxList(options) {
     for (const r of s.businessRows) {
       if (!isBusinessRowFilled(r)) continue
       out.push({
-        name: t('driver_trip_detail.biz_party', { n: ++i }),
+        name: passengerDisplayName('', i, t),
         subtitle: r.notes?.trim() || r.pickup || '—',
         phone: null,
         address: null,
         time: null,
       })
+      i += 1
     }
     const targetBiz = dispatchRequestEffectivePassengerCount(ttr)
     if (targetBiz > out.length) {
@@ -117,7 +119,7 @@ export function buildDriverTripPaxList(options) {
     if (!isBusinessRowFilled(r)) continue
     bizIdx += 1
     out.push({
-      name: t('driver_trip_detail.biz_party', { n: bizIdx }),
+      name: passengerDisplayName('', bizIdx - 1, t),
       subtitle: r.notes?.trim() || '—',
       phone: null,
       address: null,
