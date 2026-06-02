@@ -18,15 +18,20 @@ class GoogleAuthController extends Controller
         $next = $this->sanitizePostLoginRedirect($request->query('redirect', '/'));
         session(['oauth_redirect' => $next]);
 
-        Log::info('google.oauth.redirect', [
+        $response = $this->googleDriver()->redirect();
+
+        // Ghi session (oauth state của Socialite + oauth_redirect) trước khi trình duyệt rời site — giảm InvalidState khi driver=file hoặc proxy chậm.
+        $request->session()->save();
+
+        Log::info('google.oauth.redirect', array_merge([
             'ip' => $request->ip(),
             'next_length' => strlen($next),
             'user_agent' => Str::limit((string) $request->userAgent(), 200, '…'),
             'oauth_mode' => config('services.google.stateless', false) ? 'stateless' : 'session_state',
             'trusted_proxies' => config('trusted_proxies.proxies') === '*' ? '*' : (config('trusted_proxies.proxies') !== null ? 'set' : 'null'),
-        ]);
+        ], $this->oauthSessionLogFragment($request)));
 
-        return $this->googleDriver()->redirect();
+        return $response;
     }
 
     public function callback(Request $request)
@@ -164,6 +169,18 @@ class GoogleAuthController extends Controller
     }
 
     /**
+     * @return array{session_id_fragment: ?string}
+     */
+    private function oauthSessionLogFragment(Request $request): array
+    {
+        $id = $request->session()->getId();
+
+        return [
+            'session_id_fragment' => $id !== '' ? Str::substr($id, 0, 8).'…' : null,
+        ];
+    }
+
+    /**
      * Ngữ cảnh chẩn đoán OAuth (không log code/state/Google token).
      *
      * @return array<string, mixed>
@@ -172,10 +189,7 @@ class GoogleAuthController extends Controller
     {
         $cookieName = config('session.cookie');
 
-        return [
-            'session_id_fragment' => session()->getId()
-                ? Str::substr(session()->getId(), 0, 8).'…'
-                : null,
+        return array_merge($this->oauthSessionLogFragment($request), [
             'session_driver' => config('session.driver'),
             'session_same_site' => config('session.same_site'),
             'session_secure' => config('session.secure'),
@@ -188,7 +202,7 @@ class GoogleAuthController extends Controller
             'x_forwarded_proto' => $request->headers->get('X-Forwarded-Proto'),
             'host' => $request->getHost(),
             'app_url' => config('app.url'),
-        ];
+        ]);
     }
 
     /**
