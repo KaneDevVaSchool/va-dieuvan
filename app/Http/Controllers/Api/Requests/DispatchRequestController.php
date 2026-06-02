@@ -118,6 +118,14 @@ class DispatchRequestController extends Controller
             'paper_status' => 'pending',
         ]);
 
+        if (($data['trip_type'] ?? '') !== 'cargo' && ! empty($data['wizard_snapshot']) && is_array($data['wizard_snapshot'])) {
+            $recomputed = $this->sumGuestsFromSnapshot($data['wizard_snapshot']);
+            if ($recomputed !== null) {
+                $dispatchRequest->passenger_count = $recomputed;
+                $dispatchRequest->save();
+            }
+        }
+
         app(AuditLogger::class)->log(
             actorId: $user->id,
             event: 'request.create',
@@ -749,6 +757,14 @@ class DispatchRequestController extends Controller
 
         $before = $dispatchRequest->toArray();
 
+        $passengerCount = $data['passenger_count'] ?? null;
+        if (($data['trip_type'] ?? '') !== 'cargo' && ! empty($data['wizard_snapshot']) && is_array($data['wizard_snapshot'])) {
+            $recomputed = $this->sumGuestsFromSnapshot($data['wizard_snapshot']);
+            if ($recomputed !== null) {
+                $passengerCount = $recomputed;
+            }
+        }
+
         $dispatchRequest->update([
             'trip_type' => $data['trip_type'],
             'origin' => $data['origin'] ?? null,
@@ -757,7 +773,7 @@ class DispatchRequestController extends Controller
             'arrive_by' => isset($data['arrive_by']) && $data['arrive_by'] !== null && $data['arrive_by'] !== ''
                 ? Carbon::parse($data['arrive_by'])
                 : null,
-            'passenger_count' => $data['passenger_count'] ?? null,
+            'passenger_count' => $passengerCount,
             'notes' => $data['notes'] ?? null,
             'wizard_snapshot' => $data['wizard_snapshot'] ?? null,
             'source_channel' => $data['source_channel'] ?? ($dispatchRequest->source_channel ?: 'portal'),
@@ -870,5 +886,73 @@ class DispatchRequestController extends Controller
                 }
             }
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $snap
+     */
+    private function sumGuestsFromSnapshot(array $snap): ?int
+    {
+        $sum = 0;
+        foreach ($snap['passengerRows'] ?? [] as $r) {
+            if (! is_array($r) || ! $this->passengerSnapshotRowFilled($r)) {
+                continue;
+            }
+            $g = (int) ($r['guests'] ?? 1);
+            $sum += $g >= 1 ? $g : 1;
+        }
+        foreach ($snap['businessRows'] ?? [] as $r) {
+            if (! is_array($r) || ! $this->businessSnapshotRowFilled($r)) {
+                continue;
+            }
+            $g = (int) ($r['guests'] ?? 1);
+            $sum += $g >= 1 ? $g : 1;
+        }
+
+        return $sum > 0 ? $sum : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private function passengerSnapshotRowFilled(array $r): bool
+    {
+        if (trim((string) ($r['pickup'] ?? '')) !== '' || trim((string) ($r['dropoff'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['depart_at'] ?? '')) !== '' || trim((string) ($r['return_at'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['person_in_charge'] ?? '')) !== '' || trim((string) ($r['notes'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['unit_price'] ?? '')) !== '' || trim((string) ($r['extra_fee'] ?? '')) !== '') {
+            return true;
+        }
+        $g = trim((string) ($r['guests'] ?? ''));
+
+        return $g !== '' && $g !== '1';
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private function businessSnapshotRowFilled(array $r): bool
+    {
+        if (trim((string) ($r['pickup'] ?? '')) !== '' || trim((string) ($r['dropoff'] ?? '')) !== '' || trim((string) ($r['waypoint'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['depart_at'] ?? '')) !== '' || trim((string) ($r['return_at'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['unit_price'] ?? '')) !== '' || trim((string) ($r['extra_fee'] ?? '')) !== '') {
+            return true;
+        }
+        if (trim((string) ($r['notes'] ?? '')) !== '') {
+            return true;
+        }
+        $g = trim((string) ($r['guests'] ?? ''));
+
+        return $g !== '' && $g !== '1';
     }
 }

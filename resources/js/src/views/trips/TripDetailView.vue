@@ -131,12 +131,7 @@
                             :trip="trip"
                             :status-label-override="tripStatusLabelOverride"
                             :countdown="countdown"
-                            :passenger-count="
-                                dispatchRequestEffectivePassengerCount(
-                                    trip.dispatch_request,
-                                )
-                            "
-                            :schedule-guest-total="scheduleGuestSum"
+                            :passenger-count="unifiedPassengerCount"
                             :schedule-date-long="scheduleDateLong"
                             :schedule-time-range="scheduleTimeRange"
                             :schedule-duration="scheduleDuration"
@@ -515,12 +510,7 @@
                             :trip-id="trip.id"
                             :trip="trip"
                             :rows="passengerRowsDisplay"
-                            :request-passenger-count="
-                                dispatchRequestEffectivePassengerCount(
-                                    trip.dispatch_request,
-                                )
-                            "
-                            :scheduled-guest-total="scheduleGuestSum"
+                            :request-passenger-count="unifiedPassengerCount"
                             :can-check-in="canPassengerCheckIn"
                             :can-edit-list="
                                 canEditPassengerList &&
@@ -1343,6 +1333,18 @@ const tripTypeForSnap = computed(
 const { scheduleCards, scheduleCount, totalGuests: scheduleGuestSum } =
     useDispatchScheduleCards(snap, tripTypeForSnap);
 
+const unifiedPassengerCount = computed(() => {
+    const dr = trip.value?.dispatch_request;
+    if (!dr) return 0;
+    const actual = dr.student_count_actual;
+    if (actual != null && actual !== "") {
+        const n = Number(actual);
+        if (Number.isFinite(n) && n > 0) return Math.round(n);
+    }
+    if (scheduleGuestSum.value > 0) return scheduleGuestSum.value;
+    return dispatchRequestEffectivePassengerCount(dr);
+});
+
 const legResourcesByKey = ref({});
 
 const multiScheduleMode = computed(() => scheduleCards.value.length > 1);
@@ -1565,7 +1567,7 @@ const passengerRowsDisplay = computed(() => {
     /** @type {Array<Record<string, unknown>> | undefined} */
     const tplist = trip.value?.trip_passengers;
     if (tripType === "door_to_door" || tripType === "point_to_point") {
-        const targetN = dispatchRequestEffectivePassengerCount(dr);
+        const targetN = unifiedPassengerCount.value;
         if (targetN === 0) return [];
         const kind = inferRoleKind(tripType);
         const roleLabel =
@@ -1648,7 +1650,7 @@ const passengerRowsDisplay = computed(() => {
         const busEntries = (s?.businessRows ?? [])
             .map((r, rowIndex) => ({ r, rowIndex }))
             .filter(({ r }) => isBusinessRowFilled(r));
-        const targetN = dispatchRequestEffectivePassengerCount(dr);
+        const targetN = unifiedPassengerCount.value;
         const slotCount = Math.max(
             targetN,
             busEntries.length,
@@ -1764,7 +1766,7 @@ const passengerRowsDisplay = computed(() => {
         });
     }
 
-    const fallbackN = dispatchRequestEffectivePassengerCount(dr);
+    const fallbackN = unifiedPassengerCount.value;
     if (!rows.length && fallbackN > 0) {
         rows.push({
             name: t("trip_detail.passengers.unlisted", {
@@ -1808,9 +1810,7 @@ const specialNeedsSummary = computed(() => {
 });
 
 const neededSeats = computed(() => {
-    const n = dispatchRequestEffectivePassengerCount(
-        trip.value?.dispatch_request,
-    );
+    const n = unifiedPassengerCount.value;
     if (n > 0) return n;
     const guests = passengerRowsDisplay.value.length;
     return guests > 0 ? guests : 1;

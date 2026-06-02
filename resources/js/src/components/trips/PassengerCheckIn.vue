@@ -1,7 +1,11 @@
 <template>
     <section
         class="w-full min-w-0 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-700/70 dark:bg-slate-950/30"
-        :aria-label="t('trip_detail.passengers.title', { n: rows.length })"
+        :aria-label="
+            t('trip_detail.passengers.title', {
+                n: displayPassengerTotal,
+            })
+        "
     >
         <div
             class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
@@ -10,43 +14,24 @@
                 <h2
                     class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                 >
-                    {{ t("trip_detail.passengers.title", { n: rows.length }) }}
-                </h2>
-                <span
-                    v-if="showScheduleGuestBadge"
-                    class="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-200/80 dark:bg-amber-950/40 dark:text-amber-100 dark:ring-amber-800/60"
-                >
                     {{
-                        t("trip_detail.passengers.schedule_guest_badge", {
-                            n: scheduledGuestTotal,
+                        t("trip_detail.passengers.title", {
+                            n: displayPassengerTotal,
                         })
                     }}
-                </span>
+                </h2>
                 <span
-                    v-if="canCheckIn && rows.length"
+                    v-if="canCheckIn && displayPassengerTotal > 0"
                     class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200"
                 >
                     {{
                         t("trip_detail.passengers.checkin_header_badge", {
                             checked: checkedCount,
-                            total: rows.length,
+                            total: displayPassengerTotal,
                         })
                     }}
                 </span>
             </div>
-        </div>
-
-        <div
-            v-if="showPaxCountMismatch"
-            class="mt-3 rounded-xl border border-amber-200/90 bg-amber-50/90 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/35 dark:text-amber-100"
-            role="status"
-        >
-            {{
-                t("trip_detail.passengers.pax_count_mismatch", {
-                    req: requestPassengerCount,
-                    sched: scheduledGuestTotal,
-                })
-            }}
         </div>
 
         <div
@@ -1330,10 +1315,8 @@ const props = defineProps<{
     tripId: number;
     trip: Record<string, unknown> | null;
     rows: PassengerRow[];
-    /** Số khách theo yêu cầu (dispatch_request). */
+    /** Số khách thống nhất (yêu cầu / lịch trình). */
     requestPassengerCount?: number;
-    /** Tổng guests trên lịch trình (wizard). */
-    scheduledGuestTotal?: number;
     canCheckIn: boolean;
     canEditList: boolean;
     specialSummary?: string;
@@ -1365,21 +1348,15 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const scheduledGuestTotal = computed(
-    () => props.scheduledGuestTotal ?? 0,
-);
-
 const requestPassengerCount = computed(
     () => props.requestPassengerCount ?? 0,
 );
 
-const showPaxCountMismatch = computed(() => {
-    const sched = scheduledGuestTotal.value;
+const displayPassengerTotal = computed(() => {
     const req = requestPassengerCount.value;
-    return sched > 0 && req > 0 && req !== sched;
+    if (req > 0) return req;
+    return props.rows.length;
 });
-
-const showScheduleGuestBadge = computed(() => showPaxCountMismatch.value);
 
 type StatusFilterKey = "all" | "waiting" | "onboard";
 
