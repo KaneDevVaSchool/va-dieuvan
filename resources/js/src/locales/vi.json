@@ -3385,6 +3385,7 @@
             "type_parking": "Gửi xe / bãi",
             "type_labor": "Nhân công / phụ cấp",
             "type_other": "Khác",
+            "type_wizard_estimate": "Dự toán phiếu",
             "receipt_upload": "Biên lai",
             "receipt_drop_hint": "Kéo thả hoặc click — ảnh/PDF",
             "receipt_uploading": "Đang tải…",

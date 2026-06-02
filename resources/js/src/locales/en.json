@@ -3568,6 +3568,7 @@
             "type_parking": "Parking",
             "type_labor": "Labor / allowance",
             "type_other": "Other",
+            "type_wizard_estimate": "Request estimate",
             "receipt_upload": "Receipt",
             "receipt_drop_hint": "Drop or click — image/PDF",
             "receipt_uploading": "Uploading…",

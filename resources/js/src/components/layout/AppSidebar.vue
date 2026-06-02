@@ -15,7 +15,8 @@
         <AppLogo
           align="center"
           class="w-full min-w-0 [&_img]:mx-auto [&_img]:object-contain"
-          :class="ui.sidebarCollapsed ? 'max-w-full px-0.5 [&_img]:max-h-10' : 'max-w-full'"
+          :class="ui.sidebarCollapsed ? 'max-w-full px-0.5' : 'max-w-full'"
+          :variant="ui.sidebarCollapsed ? 'icon' : 'wordmark'"
           :size="ui.sidebarCollapsed ? 'sm' : 'lg'"
         />
         <button

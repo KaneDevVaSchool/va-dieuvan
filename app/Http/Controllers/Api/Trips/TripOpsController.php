@@ -11,6 +11,7 @@ use App\Models\Driver;
 use App\Models\Trip;
 use App\Models\TripEvent;
 use App\Services\Auditing\AuditLogger;
+use App\Services\Costs\TripWizardCostProvisioner;
 use App\Services\Dispatching\TripScheduleLegService;
 use App\Services\RecurringDispatch\DispatchRecurringMaintenanceService;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
@@ -90,6 +91,10 @@ class TripOpsController extends Controller
                 after: $trip->toArray(),
                 metadata: ['message' => $data['message'] ?? null],
             );
+
+            if (($data['status'] ?? '') === 'completed') {
+                app(TripWizardCostProvisioner::class)->provision($trip->fresh(), $user->id);
+            }
 
             return $this->ok($trip);
         });
