@@ -517,14 +517,14 @@
     </section>
 
     <!-- Bảng -->
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05] dark:border-slate-700 dark:bg-slate-950/30">
-      <div class="border-b border-slate-200 bg-slate-100 px-4 py-3 sm:px-5 dark:border-slate-700 dark:bg-slate-900/50">
-        <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ t('costs_page.table_title') }}</h2>
+    <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+      <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('costs_page.table_title') }}</h2>
       </div>
-      <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-        <table class="costs-sheet min-w-[1100px] w-full border-collapse text-left text-xs sm:text-sm">
+      <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+        <table class="costs-sheet min-w-[1100px] w-full">
           <thead>
-            <tr class="bg-slate-100 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:text-[11px] dark:bg-slate-900/50 dark:text-slate-400">
+            <tr>
               <th class="costs-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
               <th v-if="colVisible.unit" class="costs-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
               <th v-if="colVisible.category" class="costs-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
@@ -550,13 +550,13 @@
             <tr
               v-for="(c, idx) in displayedItems"
               :key="costRowKey(c)"
+              class="costs-data-row"
               :class="[
-                idx % 2 === 0 ? 'bg-white dark:bg-slate-950/20' : 'bg-slate-50/60 dark:bg-slate-900/30',
-                isWizardEstimateLine(c) ? 'ring-1 ring-inset ring-violet-200/60 dark:ring-violet-900/40' : '',
+                idx % 2 === 1 ? 'costs-data-row--alt' : '',
+                isWizardEstimateLine(c) ? 'costs-data-row--estimate' : '',
               ]"
-              class="transition-colors hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
             >
-              <td class="costs-td text-center text-slate-500">{{ rowIndex(idx) }}</td>
+              <td class="costs-td text-center tabular-nums text-slate-500 dark:text-slate-400">{{ rowIndex(idx) }}</td>
               <td v-if="colVisible.unit" class="costs-td">
                 <span class="costs-pill">{{ unitLabel }}</span>
               </td>
@@ -568,8 +568,8 @@
                 >{{ labelTripType(tripTypeFromCost(c)) }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td v-if="colVisible.submitter" class="costs-td text-slate-800">{{ costSubmitterLabel(c) }}</td>
-              <td v-if="colVisible.description" class="costs-td max-w-[20rem] text-slate-800">
+              <td v-if="colVisible.submitter" class="costs-td">{{ costSubmitterLabel(c) }}</td>
+              <td v-if="colVisible.description" class="costs-td max-w-[20rem]">
                 <span class="line-clamp-2" :title="c.description || ''">{{ c.description || '—' }}</span>
                 <span
                   v-if="isWizardEstimateLine(c)"
@@ -578,21 +578,21 @@
                   {{ estimateKindLabel(c) }}
                 </span>
               </td>
-              <td v-if="colVisible.fleet_source" class="costs-td whitespace-nowrap text-slate-700">
+              <td v-if="colVisible.fleet_source" class="costs-td whitespace-nowrap">
                 <span class="costs-pill">{{ fleetModeLabel(tripFleetModeFromCost(c)) }}</span>
               </td>
-              <td v-if="colVisible.provider" class="costs-td text-slate-700">{{ costProviderName(c) || '—' }}</td>
+              <td v-if="colVisible.provider" class="costs-td">{{ costProviderName(c) || '—' }}</td>
               <td v-if="colVisible.advance" class="costs-td costs-td--money text-right text-slate-400">—</td>
-              <td v-if="colVisible.unit_price" class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+              <td v-if="colVisible.unit_price" class="costs-td costs-td--money">
                 {{ isWizardEstimateLine(c) && Number(c.unit_price) > 0 ? formatVnd(c.unit_price) : '—' }}
               </td>
-              <td v-if="colVisible.extra_fee" class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+              <td v-if="colVisible.extra_fee" class="costs-td costs-td--money">
                 {{ isWizardEstimateLine(c) && Number(c.extra_fee) > 0 ? formatVnd(c.extra_fee) : '—' }}
               </td>
-              <td v-if="colVisible.payment" class="costs-td costs-td--money text-right font-medium tabular-nums text-slate-900">
+              <td v-if="colVisible.payment" class="costs-td costs-td--money font-semibold text-slate-900 dark:text-slate-100">
                 {{ formatVnd(c.amount) }}
               </td>
-              <td v-if="colVisible.time" class="costs-td whitespace-nowrap text-slate-700">{{ formatDateDMY(c.created_at) }}</td>
+              <td v-if="colVisible.time" class="costs-td whitespace-nowrap tabular-nums text-slate-600 dark:text-slate-400">{{ formatDateDMY(c.created_at) }}</td>
               <td v-if="colVisible.owner" class="costs-td">
                 <span v-if="c.confirmer?.name" class="costs-pill">{{ c.confirmer.name }}</span>
                 <span v-else class="text-slate-400">—</span>
@@ -618,7 +618,7 @@
               <td v-if="colVisible.trip" class="costs-td">
                 <RouterLink
                   v-if="c.trip_id"
-                  class="font-medium text-va-800 underline decoration-va-800/30 underline-offset-2 hover:text-va-900"
+                  class="font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
                   :to="`/trips/${c.trip_id}`"
                   >#{{ c.trip_id }}</RouterLink
                 >
@@ -676,8 +676,8 @@
         </div>
       </div>
 
-      <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <span class="text-sm text-slate-600">
+      <div class="flex flex-col gap-3 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/50">
+        <span class="text-sm text-slate-600 dark:text-slate-400">
           {{
             t('costs_page.pagination_of', {
               current: meta.current_page ?? 1,
@@ -690,7 +690,7 @@
         <div class="flex flex-wrap gap-2">
           <button
             type="button"
-            class="costs-btn-ghost"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             :disabled="loading || (meta.current_page ?? 1) <= 1"
             @click="page(-1)"
           >
@@ -698,7 +698,7 @@
           </button>
           <button
             type="button"
-            class="costs-btn-ghost"
+            class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             :disabled="loading || (meta.current_page ?? 1) >= (meta.last_page ?? 1)"
             @click="page(1)"
           >
@@ -794,20 +794,20 @@
         </div>
       </AppFilterBar>
 
-      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05] dark:border-slate-700 dark:bg-slate-950/30">
-        <div class="border-b border-slate-200 bg-slate-100 px-4 py-3 sm:px-5 dark:border-slate-700 dark:bg-slate-900/50">
+      <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+        <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
           <h3
             id="costs-section-business-personnel"
-            class="text-sm font-semibold text-slate-800 dark:text-slate-100"
+            class="text-sm font-semibold text-slate-900 dark:text-slate-100"
           >
             {{ t('costs_page.section_business_personnel') }}
-            <span v-if="bpMeta.total != null" class="ml-1 font-normal text-slate-500">({{ bpMeta.total }})</span>
+            <span v-if="bpMeta.total != null" class="ml-1 font-normal text-slate-500 dark:text-slate-400">({{ bpMeta.total }})</span>
           </h3>
         </div>
-        <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-          <table class="costs-sheet min-w-[900px] w-full border-collapse text-left text-xs sm:text-sm">
+        <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+          <table class="costs-sheet min-w-[900px] w-full">
             <thead>
-              <tr class="bg-slate-100 text-[10px] font-semibold uppercase tracking-wide text-slate-600 sm:text-[11px] dark:bg-slate-900/50 dark:text-slate-400">
+              <tr>
                 <th class="costs-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
                 <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
                 <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_personnel') }}</th>
@@ -822,20 +822,21 @@
               <tr
                 v-for="(row, idx) in bpLines"
                 :key="`${row.trip_id}-${row.line_no}`"
-                class="border-t border-slate-100 odd:bg-white even:bg-slate-50/40 dark:border-slate-800 dark:odd:bg-slate-950/20 dark:even:bg-slate-900/30"
+                class="costs-data-row"
+                :class="idx % 2 === 1 ? 'costs-data-row--alt' : ''"
               >
-                <td class="costs-td text-center tabular-nums text-slate-500">{{ idx + 1 }}</td>
+                <td class="costs-td text-center tabular-nums text-slate-500 dark:text-slate-400">{{ idx + 1 }}</td>
                 <td class="costs-td">
                   <RouterLink
                     :to="{ name: 'tripDetail', params: { id: row.trip_id } }"
-                    class="font-medium text-teal-800 hover:underline dark:text-teal-300"
+                    class="font-semibold text-teal-700 underline decoration-teal-700/30 underline-offset-2 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200"
                   >
                     #{{ row.trip_id }}
                   </RouterLink>
                 </td>
                 <td class="costs-td">
                   <span class="line-clamp-2">{{ row.personnel_label || '—' }}</span>
-                  <span v-if="row.guests" class="mt-0.5 block text-[11px] text-slate-500">{{ row.guests }}</span>
+                  <span v-if="row.guests" class="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">{{ row.guests }}</span>
                 </td>
                 <td class="costs-td text-slate-700 dark:text-slate-300">
                   <span v-if="row.pickup || row.dropoff">{{ row.pickup || '…' }} → {{ row.dropoff || '…' }}</span>
@@ -844,9 +845,9 @@
                   </span>
                   <span v-else>—</span>
                 </td>
-                <td class="costs-td costs-td--money text-right">{{ formatVnd(row.unit_price) }}</td>
-                <td class="costs-td costs-td--money text-right">{{ formatVnd(row.extra_fee) }}</td>
-                <td class="costs-td costs-td--money text-right font-medium">{{ formatVnd(row.amount_total) }}</td>
+                <td class="costs-td costs-td--money">{{ formatVnd(row.unit_price) }}</td>
+                <td class="costs-td costs-td--money">{{ formatVnd(row.extra_fee) }}</td>
+                <td class="costs-td costs-td--money font-semibold text-slate-900 dark:text-slate-100">{{ formatVnd(row.amount_total) }}</td>
                 <td class="costs-td">{{ row.requester_name || '—' }}</td>
               </tr>
             </tbody>
@@ -2239,11 +2240,11 @@ onMounted(async () => {
 
 <style scoped>
 .costs-page {
-  --cost-border: rgb(226 232 240);
+  @apply text-slate-900 dark:text-slate-100;
 }
 
 .costs-input {
-  @apply rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-va-800 focus:outline-none focus:ring-2 focus:ring-va-800/20;
+  @apply rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500;
 }
 
 .costs-btn-primary {
@@ -2251,41 +2252,51 @@ onMounted(async () => {
 }
 
 .costs-btn-ghost {
-  @apply rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
 }
 
-.costs-table-wrap {
-  @apply max-w-full;
+.costs-sheet {
+  @apply border-collapse text-left text-sm;
 }
 
-.costs-sheet .costs-th,
+.costs-sheet thead {
+  @apply bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80 dark:text-slate-400;
+}
+
+.costs-sheet .costs-th {
+  @apply border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700;
+}
+
+.costs-sheet .costs-th--money {
+  @apply text-right;
+}
+
 .costs-sheet .costs-td {
-  border: 1px dashed var(--cost-border);
-  padding: 0.5rem 0.6rem;
-  vertical-align: top;
+  @apply border-b border-slate-100 px-3 py-2.5 align-top text-slate-800 dark:border-slate-800 dark:text-slate-200;
 }
 
-@media (min-width: 640px) {
-  .costs-sheet .costs-th,
-  .costs-sheet .costs-td {
-    padding: 0.55rem 0.75rem;
-  }
+.costs-data-row {
+  @apply transition-colors hover:bg-teal-50/40 dark:hover:bg-teal-950/20;
 }
 
-.costs-th {
-  background: linear-gradient(to bottom, rgb(241 245 249), rgb(226 232 240 / 0.85));
+.costs-data-row--alt {
+  @apply bg-slate-50/40 dark:bg-slate-900/20;
+}
+
+.costs-data-row--estimate {
+  @apply bg-violet-50/35 hover:bg-violet-50/55 dark:bg-violet-950/20 dark:hover:bg-violet-950/30;
 }
 
 .costs-td--money {
-  font-variant-numeric: tabular-nums;
+  @apply text-right tabular-nums;
 }
 
 .costs-pill {
-  @apply inline-flex max-w-full items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 sm:text-xs;
+  @apply inline-flex max-w-full items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300;
 }
 
 .costs-pill--type {
-  @apply bg-slate-200/90 text-slate-800;
+  @apply bg-slate-200/90 text-slate-800 dark:bg-slate-700 dark:text-slate-100;
 }
 
 .costs-pill--estimate {
