@@ -2874,7 +2874,11 @@
         "package_budget_alert_body": "Package «{label}» in month {month}: cost {cost} (budget {budget}). Please submit a supplemental request for additional budget approval.",
         "package_budget_alert_note": "Contact Accounting or school leadership to approve additional monthly budget.",
         "passenger_count_plan_label": "Planned student count",
-        "passenger_count_actual_label": "Actual student count"
+        "passenger_count_actual_label": "Actual student count",
+        "bm03_student_count_header": "Trip student count",
+        "bm03_student_count_plan_short": "Planned",
+        "bm03_student_count_actual_short": "Actual",
+        "bm03_student_count_status": "Status"
     },
     "app": {
         "title": "VA Dispatch",

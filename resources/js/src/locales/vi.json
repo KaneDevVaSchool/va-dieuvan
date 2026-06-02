@@ -2702,7 +2702,11 @@
         "package_budget_alert_body": "Chi phí gói «{label}» tháng {month} đã đạt {cost} (ngưỡng {budget}). Vui lòng tạo đề xuất bổ sung để phê duyệt thêm ngân sách.",
         "package_budget_alert_note": "Liên hệ Kế toán hoặc BGH để phê duyệt bổ sung ngân sách tháng.",
         "passenger_count_plan_label": "Số lượng học sinh (kế hoạch)",
-        "passenger_count_actual_label": "Số lượng học sinh thực tế"
+        "passenger_count_actual_label": "Số lượng học sinh thực tế",
+        "bm03_student_count_header": "Số học sinh chuyến đi",
+        "bm03_student_count_plan_short": "Kế hoạch",
+        "bm03_student_count_actual_short": "Thực tế",
+        "bm03_student_count_status": "Trạng thái"
     },
     "app": {
         "title": "VA Dispatch · Điều vận",

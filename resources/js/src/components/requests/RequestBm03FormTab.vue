@@ -6,22 +6,62 @@
           <h2 class="text-base font-bold uppercase tracking-tight text-slate-900 sm:text-lg">Đề Nghị Điều Vận</h2>
           <p class="mt-1 text-xs font-medium text-slate-600 sm:text-sm">{{ tripSubtitle }}</p>
         </div>
-        <div class="mx-auto grid w-full max-w-[13rem] shrink-0 gap-px overflow-hidden rounded border border-slate-300 text-[11px] sm:mx-0">
-          <div class="grid grid-cols-2 bg-white">
-            <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Ký hiệu</span>
-            <span class="border-b border-slate-300 px-2 py-1 text-right text-slate-900">BM.03/MH.QT.04</span>
+        <div class="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:items-end">
+          <div
+            v-if="showStudentCountHeaderTable"
+            class="mx-auto grid w-full max-w-[15rem] shrink-0 gap-px overflow-hidden rounded border border-teal-300/80 bg-teal-50/30 text-[11px] sm:mx-0"
+          >
+            <div class="col-span-2 border-b border-teal-200 bg-teal-50 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-teal-900">
+              {{ t('request_detail.bm03_student_count_header') }}
+            </div>
+            <div class="grid grid-cols-2 bg-white">
+              <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
+                {{ t('request_detail.bm03_student_count_plan_short') }}
+              </span>
+              <span class="border-b border-slate-300 px-2 py-1 text-right tabular-nums text-slate-900">
+                {{ studentCountPlanDisplay ?? '—' }}
+              </span>
+            </div>
+            <div class="grid grid-cols-2 bg-white">
+              <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
+                {{ t('request_detail.bm03_student_count_actual_short') }}
+              </span>
+              <span
+                class="border-b border-slate-300 px-2 py-1 text-right tabular-nums font-semibold"
+                :class="studentCountActualHighlight ? 'text-teal-800' : 'text-slate-900'"
+              >
+                {{ studentCountActualDisplay ?? '—' }}
+              </span>
+            </div>
+            <div class="grid grid-cols-2 bg-white">
+              <span class="border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">
+                {{ t('request_detail.bm03_student_count_status') }}
+              </span>
+              <span class="flex justify-end px-1 py-0.5">
+                <StudentCountTrackingBadge
+                  :tracking-key="studentCountTrackingKey"
+                  i18n-prefix="requests_page.extracurricular_table"
+                />
+              </span>
+            </div>
           </div>
-          <div class="grid grid-cols-2 bg-white">
-            <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Ngày BH</span>
-            <span class="border-b border-slate-300 px-2 py-1 text-right text-slate-900">29/08/2025</span>
-          </div>
-          <div class="grid grid-cols-2 bg-white">
-            <span class="border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Lần BH</span>
-            <span class="px-2 py-1 text-right text-slate-900">01</span>
-          </div>
-          <div class="grid grid-cols-2 bg-white">
-            <span class="border-t border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Mã yêu cầu</span>
-            <span class="border-t border-slate-300 px-2 py-1 text-right font-medium text-slate-900">#{{ req?.id ?? '—' }}</span>
+          <div class="mx-auto grid w-full max-w-[13rem] shrink-0 gap-px overflow-hidden rounded border border-slate-300 text-[11px] sm:mx-0">
+            <div class="grid grid-cols-2 bg-white">
+              <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Ký hiệu</span>
+              <span class="border-b border-slate-300 px-2 py-1 text-right text-slate-900">BM.03/MH.QT.04</span>
+            </div>
+            <div class="grid grid-cols-2 bg-white">
+              <span class="border-b border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Ngày BH</span>
+              <span class="border-b border-slate-300 px-2 py-1 text-right text-slate-900">29/08/2025</span>
+            </div>
+            <div class="grid grid-cols-2 bg-white">
+              <span class="border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Lần BH</span>
+              <span class="px-2 py-1 text-right text-slate-900">01</span>
+            </div>
+            <div class="grid grid-cols-2 bg-white">
+              <span class="border-t border-r border-slate-300 px-2 py-1 font-semibold text-slate-600">Mã yêu cầu</span>
+              <span class="border-t border-slate-300 px-2 py-1 text-right font-medium text-slate-900">#{{ req?.id ?? '—' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -621,6 +661,8 @@ import Button from '../ui/Button.vue'
 import SignedPaperUpload from './SignedPaperUpload.vue'
 import CostLimitAlert from './CostLimitAlert.vue'
 import StudentCountField from '../recurring/StudentCountField.vue'
+import StudentCountTrackingBadge from './extracurricular/StudentCountTrackingBadge.vue'
+import { extracurricularStudentCountTrackingKey } from '../../composables/useExtracurricularStudentCountTracking'
 import BmRoField from './RequestBm03RoField.vue'
 import BmRoTd from './RequestBm03RoTd.vue'
 import { getAvailableDeptHeads } from '../../api/requests'
@@ -679,6 +721,31 @@ const selectedDeptHeadId = ref('')
 const deptHeadLockedLabel = ref('')
 
 const deptHeadAssignRequired = computed(() => props.showFillPriceSection)
+
+const showStudentCountHeaderTable = computed(() => props.req?.dispatch_request_template_id != null)
+
+const studentCountPlanDisplay = computed(() => {
+  const n = props.req?.passenger_count
+  if (n == null || n === '') return null
+  return Number(n)
+})
+
+const studentCountActualDisplay = computed(() => {
+  const saved = props.req?.student_count_actual
+  if (saved != null && saved !== '') return Number(saved)
+  const draft = passengerDraftModel.value
+  if (draft != null && draft > 0) return Number(draft)
+  return null
+})
+
+const studentCountActualHighlight = computed(() => {
+  const plan = studentCountPlanDisplay.value
+  const actual = studentCountActualDisplay.value
+  if (plan == null || actual == null) return actual != null
+  return actual !== plan
+})
+
+const studentCountTrackingKey = computed(() => extracurricularStudentCountTrackingKey(props.req))
 
 /** Chỉ khóa ô khi đang gửi lưu giá — không khóa vì thiếu department_id trên SPA/DB để luôn gõ được. */
 const fillPriceLocked = computed(() => props.fillPriceActing)
