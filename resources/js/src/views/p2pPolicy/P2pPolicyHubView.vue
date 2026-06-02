@@ -64,28 +64,29 @@
         <Squares2X2Icon class="h-4 w-4 text-teal-600 dark:text-teal-400" aria-hidden="true" />
         {{ t('p2p_policy_page.hub_nav_section') }}
       </h2>
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         <RouterLink
           v-for="card in cards"
           :key="card.to.name"
           :to="card.to"
+          :title="card.hint"
           :class="[
-            'group flex flex-col rounded-2xl border bg-gradient-to-b p-5 shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-md',
+            'group flex items-center gap-2.5 rounded-xl border bg-gradient-to-br p-3 shadow-sm ring-1 transition hover:-translate-y-px hover:shadow-md sm:flex-col sm:items-start sm:gap-2 sm:p-3.5',
             card.cardClass,
           ]"
         >
-          <div class="flex items-start justify-between gap-3">
-            <span
-              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/80 shadow-sm ring-1 ring-black/[0.04] dark:bg-slate-900/70 dark:ring-white/10"
-            >
-              <component :is="card.icon" :class="['h-7 w-7', card.iconClass]" aria-hidden="true" />
-            </span>
-            <ChevronRightIcon
-              class="h-5 w-5 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-teal-600 dark:text-slate-600 dark:group-hover:text-teal-400"
-              aria-hidden="true"
-            />
-          </div>
-          <p class="mt-4 text-base font-semibold text-slate-900 dark:text-white">{{ card.label }}</p>
+          <span
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 shadow-sm ring-1 ring-black/[0.04] dark:bg-slate-900/70 dark:ring-white/10"
+          >
+            <component :is="card.icon" :class="['h-5 w-5', card.iconClass]" aria-hidden="true" />
+          </span>
+          <p class="min-w-0 flex-1 text-xs font-semibold leading-snug text-slate-900 dark:text-white sm:flex-none sm:text-sm">
+            {{ card.label }}
+          </p>
+          <ChevronRightIcon
+            class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-teal-600 dark:text-slate-600 dark:group-hover:text-teal-400 sm:mt-0.5 sm:ml-auto"
+            aria-hidden="true"
+          />
         </RouterLink>
       </div>
     </section>

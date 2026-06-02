@@ -465,6 +465,7 @@ import Button from '../../components/ui/Button.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import { listCargoShipments } from '../../api/cargo'
+import { useNotificationStore } from '../../store/notificationCenter'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { labelCargoStatus } from '../../util/labels'
 
