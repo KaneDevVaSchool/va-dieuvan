@@ -51,10 +51,6 @@ class DispatchRequestPolicy
             return false;
         }
 
-        if ($user->hasPermission('trip.view_all')) {
-            return true;
-        }
-
         return $this->requesterMayManagePortalRecurringInstance($user, $dispatchRequest);
     }
 
@@ -66,10 +62,6 @@ class DispatchRequestPolicy
 
         if ($dispatchRequest->dispatch_request_template_id === null) {
             return false;
-        }
-
-        if ($user->hasPermission('trip.view_all')) {
-            return true;
         }
 
         return $this->requesterMayManagePortalRecurringInstance($user, $dispatchRequest);

@@ -628,14 +628,9 @@ class DispatchRequestController extends Controller
         }
         $dispatchRequest->update($updates);
 
-        $event = 'request.student_count_actual_updated';
-        if ($dispatchRequest->locked_at !== null && $user->hasPermission('trip.view_all')) {
-            $event = 'request.student_count_actual_updated_after_lock';
-        }
-
         app(AuditLogger::class)->log(
             actorId: $user->id,
-            event: $event,
+            event: 'request.student_count_actual_updated',
             auditable: $dispatchRequest,
             before: $before,
             after: $dispatchRequest->fresh()->toArray(),

@@ -67,10 +67,6 @@ class SubmitRecurringDispatchRequestStudentCountRequest extends ApiFormRequest
                 $v->errors()->add('status', 'Không thể gửi chốt cho phiếu đã từ chối.');
             }
 
-            if ($user !== null && $user->hasPermission('trip.view_all')) {
-                return;
-            }
-
             if ($dr->depart_at === null) {
                 return;
             }

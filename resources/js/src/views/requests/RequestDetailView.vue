@@ -989,26 +989,14 @@ function hoursUntilDepartIso(iso) {
   }
 }
 
-const passengerDispatcherOverride = computed(
-  () => auth.hasPermission('trip.view_all') && !!req.value?.locked_at,
-)
+const passengerDispatcherOverride = computed(() => false)
 
-const passengerDepartLocked = computed(() => {
-  if (auth.hasPermission('trip.view_all')) return false
-  const st = req.value?.status
-  if (!isCurrentUserRequester.value || !req.value?.dispatch_request_template_id) return true
-  if (req.value?.locked_at) return true
-  if (st !== 'pending' && st !== 'price_filled') return true
-  const h = hoursUntilDepartIso(req.value?.depart_at)
-  return h == null || h < 24
-})
+const passengerDepartLocked = computed(() => true)
 
-/** Chốt/cập nhật số HS định kỳ: người đề nghị trên portal; điều vận chỉnh trên tab Học sinh chuyến. */
+/** Tab số HS định kỳ trên màn điều vận: chỉ xem; người đề xuất cập nhật trên cổng (BM.03 / đề xuất phiếu). */
 const showStudentCountTab = computed(() => req.value?.dispatch_request_template_id != null)
 
-const showPassengerAdjustSection = computed(
-  () => showStudentCountTab.value && auth.hasPermission('trip.view_all'),
-)
+const showPassengerAdjustSection = computed(() => false)
 
 const showResetCloneBtn = computed(() => {
   if (!isCurrentUserRequester.value || !auth.hasPermission('request.create')) return false

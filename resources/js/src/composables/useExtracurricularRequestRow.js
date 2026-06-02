@@ -48,7 +48,6 @@ export function useExtracurricularRequestRow(auth, userRef) {
   }
 
   function passengerDepartLocked(req) {
-    if (auth.hasPermission('trip.view_all')) return false
     if (!isRequester(req) || !isRecurringInstance(req)) return true
     if (req?.student_count_submitted_at) return true
     if (req?.locked_at) return true
@@ -97,16 +96,16 @@ export function useExtracurricularRequestRow(auth, userRef) {
 
   function lockHintKey(req) {
     if (!isRecurringInstance(req)) return 'not_recurring'
-    if (req?.student_count_submitted_at && !auth.hasPermission('trip.view_all')) {
+    if (req?.student_count_submitted_at) {
       return 'already_submitted'
     }
-    if (req?.locked_at && !auth.hasPermission('trip.view_all')) return 'locked'
+    if (req?.locked_at) return 'locked'
     const st = req?.status
-    if (st !== 'pending' && st !== 'price_filled' && !auth.hasPermission('trip.view_all')) {
+    if (st !== 'pending' && st !== 'price_filled') {
       return 'status_locked'
     }
     const h = hoursUntilDepartIso(req?.depart_at)
-    if (h != null && h < 24 && !auth.hasPermission('trip.view_all')) {
+    if (h != null && h < 24) {
       return 'depart_soon'
     }
     return ''

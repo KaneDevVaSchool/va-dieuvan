@@ -52,10 +52,6 @@ class UpdateRecurringDispatchRequestPassengerCountRequest extends ApiFormRequest
                 $v->errors()->add('dispatch_request_template_id', Messages::REQUEST_NOT_RECURRING_INSTANCE);
             }
 
-            if ($user !== null && $user->hasPermission('trip.view_all')) {
-                return;
-            }
-
             if ($dr->student_count_submitted_at !== null) {
                 $v->errors()->add('student_count_actual', Messages::REQUEST_RECURRING_STUDENT_COUNT_ALREADY_SUBMITTED);
 

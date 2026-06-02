@@ -24,11 +24,11 @@ Route::post('/dispatch-requests/{dispatchRequest}/clone', [DispatchRequestContro
     ->name('api.dispatch-requests.clone');
 
 Route::patch('/dispatch-requests/{dispatchRequest}/passenger-count', [DispatchRequestController::class, 'patchRecurringPassengerCount'])
-    ->middleware(['throttle:60,1', 'permission:any,request.update_own,trip.view_all'])
+    ->middleware(['throttle:60,1', 'permission:any,request.update_own,request.create'])
     ->name('api.dispatch-requests.patch-passenger-count');
 
 Route::post('/dispatch-requests/{dispatchRequest}/submit-student-count', [DispatchRequestController::class, 'submitRecurringStudentCount'])
-    ->middleware(['throttle:30,1', 'permission:any,request.update_own,trip.view_all'])
+    ->middleware(['throttle:30,1', 'permission:any,request.update_own,request.create'])
     ->name('api.dispatch-requests.submit-student-count');
 
 Route::patch('/dispatch-requests/{dispatchRequest}/wizard', [DispatchRequestController::class, 'patchWizard'])

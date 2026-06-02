@@ -102,6 +102,25 @@ class RecurringDispatchStudentCountTest extends TestCase
             ->assertJsonValidationErrors(['student_count_actual']);
     }
 
+    public function test_dispatcher_cannot_patch_student_count(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $requester = User::factory()->create(['is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $dispatcher = User::factory()->create(['is_active' => true]);
+        $dispatcher->assignRole('dispatcher');
+
+        $dr = $this->recurringRequestFor($requester);
+
+        $this->actingAs($dispatcher);
+
+        $this->patchJson("/api/dispatch-requests/{$dr->id}/passenger-count", [
+            'student_count_actual' => 18,
+        ])->assertForbidden();
+    }
+
     public function test_cannot_patch_within_24_hours_of_departure(): void
     {
         $this->seed(RbacSeeder::class);
