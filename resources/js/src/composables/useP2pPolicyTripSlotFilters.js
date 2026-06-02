@@ -44,9 +44,9 @@ export function useP2pPolicyTripSlotFilters() {
     run_date_from: true,
     run_date_to: true,
     leg: true,
-    trip_status: false,
-    has_trip: false,
-    reminder_status: false,
+    trip_status: true,
+    has_trip: true,
+    reminder_status: true,
   })
 
   const colVisible = reactive({
@@ -90,9 +90,11 @@ export function useP2pPolicyTripSlotFilters() {
     return n
   })
 
+  /** Clears optional filters; keeps `p2p_policy_term_id` so the list stays scoped to the current term. */
   function clearFilters() {
+    const keepTerm = filters.p2p_policy_term_id
     filters.q = ''
-    filters.p2p_policy_term_id = ''
+    filters.p2p_policy_term_id = keepTerm
     filters.policy_route_id = ''
     filters.run_date_from = ''
     filters.run_date_to = ''

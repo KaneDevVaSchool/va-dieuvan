@@ -87,48 +87,6 @@
                     {{ t('p2p_policy_page.no_filters') }}
                   </li>
                 </ul>
-                <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                    {{ t('p2p_policy_page.filter_show_title') }}
-                  </p>
-                  <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                    <li v-for="fd in filterDefs" :key="'trips-vis-' + fd.id" class="flex items-start gap-2">
-                      <input
-                        :id="'p2p-trips-filter-vis-' + fd.id"
-                        v-model="visibility[fd.id]"
-                        type="checkbox"
-                        class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600"
-                      />
-                      <label
-                        :for="'p2p-trips-filter-vis-' + fd.id"
-                        class="cursor-pointer text-sm text-slate-700 dark:text-slate-300"
-                      >
-                        {{ t(fd.labelKey) }}
-                      </label>
-                    </li>
-                  </ul>
-                </div>
-                <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                    {{ t('p2p_policy_page.col_visibility_title') }}
-                  </p>
-                  <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                    <li v-for="cd in P2P_TRIPS_COL_DEFS" :key="'trips-col-vis-' + cd.id" class="flex items-start gap-2">
-                      <input
-                        :id="'p2p-trips-col-vis-' + cd.id"
-                        v-model="colVisible[cd.id]"
-                        type="checkbox"
-                        class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600"
-                      />
-                      <label
-                        :for="'p2p-trips-col-vis-' + cd.id"
-                        class="cursor-pointer text-sm text-slate-700 dark:text-slate-300"
-                      >
-                        {{ t(cd.labelKey) }}
-                      </label>
-                    </li>
-                  </ul>
-                </div>
                 <button
                   type="button"
                   class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -137,6 +95,74 @@
                   {{ t('p2p_policy_page.clear_filters') }}
                 </button>
               </div>
+            </div>
+          </details>
+
+          <details ref="filterControlsRef" class="group relative shrink-0">
+            <summary
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
+            >
+              <AdjustmentsHorizontalIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+              <span class="hidden sm:inline">{{ t('p2p_policy_page.trips_btn_filter_controls') }}</span>
+              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </summary>
+            <div
+              class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl dark:border-violet-800/40 dark:bg-slate-900"
+              @click.stop
+            >
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                {{ t('p2p_policy_page.filter_show_title') }}
+              </p>
+              <ul class="mt-2 max-h-[min(40vh,280px)] space-y-2 overflow-y-auto pr-0.5">
+                <li v-for="fd in filterDefs" :key="'trips-vis-' + fd.id" class="flex items-start gap-2">
+                  <input
+                    :id="'p2p-trips-filter-vis-' + fd.id"
+                    v-model="visibility[fd.id]"
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600"
+                  />
+                  <label
+                    :for="'p2p-trips-filter-vis-' + fd.id"
+                    class="cursor-pointer text-sm text-slate-700 dark:text-slate-300"
+                  >
+                    {{ t(fd.labelKey) }}
+                  </label>
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <details ref="columnPickerRef" class="group relative shrink-0">
+            <summary
+              class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-xs font-medium text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 [&::-webkit-details-marker]:hidden"
+            >
+              <ViewColumnsIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+              <span class="hidden sm:inline">{{ t('p2p_policy_page.trips_btn_columns') }}</span>
+              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </summary>
+            <div
+              class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[240px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl dark:border-violet-800/40 dark:bg-slate-900"
+              @click.stop
+            >
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                {{ t('p2p_policy_page.col_visibility_title') }}
+              </p>
+              <ul class="mt-2 max-h-[min(40vh,280px)] space-y-2 overflow-y-auto pr-0.5">
+                <li v-for="cd in P2P_TRIPS_COL_DEFS" :key="'trips-col-vis-' + cd.id" class="flex items-start gap-2">
+                  <input
+                    :id="'p2p-trips-col-vis-' + cd.id"
+                    v-model="colVisible[cd.id]"
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600"
+                  />
+                  <label
+                    :for="'p2p-trips-col-vis-' + cd.id"
+                    class="cursor-pointer text-sm text-slate-700 dark:text-slate-300"
+                  >
+                    {{ t(cd.labelKey) }}
+                  </label>
+                </li>
+              </ul>
             </div>
           </details>
 
@@ -354,8 +380,6 @@
             class="w-full rounded-lg border-0 bg-white/90 px-3 py-2.5 text-sm shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-900/90 dark:ring-slate-700 dark:placeholder:text-slate-500"
             :placeholder="t('p2p_policy_page.trips_search_placeholder')"
             :aria-label="t('p2p_policy_page.trips_search_placeholder')"
-            @keydown.enter="onSearch"
-            @input="onSearchInput"
           />
         </div>
       </AppFilterBar>
@@ -441,67 +465,100 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(row, idx) in items"
-              :key="row.id"
-              class="border-t border-slate-100 transition-colors hover:bg-violet-50/40 dark:border-slate-800 dark:hover:bg-violet-950/20"
-              :class="idx % 2 === 1 ? 'bg-slate-50/40 dark:bg-slate-900/20' : ''"
-            >
-              <td class="whitespace-nowrap px-3 py-2.5 text-slate-800 dark:text-slate-200">
-                {{ formatIsoDate(row.run_date, p2pPolicyDateLocale(locale)) }}
-              </td>
-              <td v-if="colVisible.leg" class="px-3 py-2.5">
-                <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                  {{ legLabel(row.leg) }}
-                </span>
-              </td>
-              <td class="px-3 py-2.5">
-                <div class="font-medium text-slate-900 dark:text-white">{{ row.route_name || '—' }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">
-                  {{ campusLine(row) }}
-                </div>
-              </td>
-              <td v-if="colVisible.depart" class="whitespace-nowrap px-3 py-2.5 text-slate-700 dark:text-slate-300">
-                {{ formatIsoDateTime(row.depart_at, p2pPolicyDateLocale(locale)) }}
-              </td>
-              <td v-if="colVisible.driver" class="px-3 py-2.5 text-slate-700 dark:text-slate-300">{{ row.driver?.full_name || '—' }}</td>
-              <td v-if="colVisible.vehicle" class="px-3 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">
-                {{ row.vehicle?.license_plate || '—' }}
-              </td>
-              <td v-if="colVisible.passengers" class="px-3 py-2.5 text-center text-slate-700 dark:text-slate-300">
-                {{ row.passenger_count ?? '—' }}
-              </td>
-              <td class="px-3 py-2.5">
-                <span
-                  v-if="row.trip_status"
-                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                  :class="tripStatusAdminPillClass(row.trip_status)"
+            <template v-for="group in legGroups" :key="'leg-' + group.leg">
+              <tr v-if="group.rows.length" class="border-t border-slate-200 bg-gradient-to-r from-slate-100/90 to-violet-50/40 dark:border-slate-700 dark:from-slate-800/90 dark:to-violet-950/30">
+                <td :colspan="tableColspan" class="px-3 py-0">
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-2 py-2.5 text-left text-sm font-semibold text-slate-800 dark:text-slate-100"
+                    :aria-expanded="legGroupOpen[group.leg]"
+                    @click="toggleLegGroup(group.leg)"
+                  >
+                    <ChevronRightIcon
+                      class="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200"
+                      :class="legGroupOpen[group.leg] ? 'rotate-90' : ''"
+                      aria-hidden="true"
+                    />
+                    <span
+                      class="inline-flex rounded-full px-2.5 py-0.5 text-xs"
+                      :class="
+                        group.leg === 'morning'
+                          ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
+                          : 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-200'
+                      "
+                    >
+                      {{ legLabel(group.leg) }}
+                    </span>
+                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      {{ t('p2p_policy_page.trips_group_count', { count: group.rows.length }) }}
+                    </span>
+                  </button>
+                </td>
+              </tr>
+              <template v-if="legGroupOpen[group.leg]">
+                <tr
+                  v-for="(row, idx) in group.rows"
+                  :key="row.id"
+                  class="border-t border-slate-100 transition-colors hover:bg-violet-50/40 dark:border-slate-800 dark:hover:bg-violet-950/20"
+                  :class="idx % 2 === 1 ? 'bg-slate-50/40 dark:bg-slate-900/20' : ''"
                 >
-                  {{ labelTripStatus(row.trip_status) }}
-                </span>
-                <span v-else class="text-slate-400">—</span>
-              </td>
-              <td v-if="colVisible.reminder" class="px-3 py-2.5 text-xs">
-                <span
-                  v-if="row.trip_id && row.depart_reminder_sent_at"
-                  class="text-emerald-700 dark:text-emerald-400"
-                >
-                  {{ t('p2p_policy_page.trips_reminder_sent') }}
-                </span>
-                <span v-else-if="row.trip_id" class="text-slate-500">{{ t('p2p_policy_page.trips_reminder_pending') }}</span>
-                <span v-else>—</span>
-              </td>
-              <td class="px-3 py-2.5">
-                <RouterLink
-                  v-if="row.trip_id"
-                  :to="staffPath(`/trips/${row.trip_id}`)"
-                  class="text-sm font-semibold text-teal-800 underline hover:text-teal-950 dark:text-teal-300"
-                >
-                  #{{ row.trip_id }}
-                </RouterLink>
-                <span v-else class="text-xs text-slate-400">{{ t('p2p_policy_page.trips_no_trip') }}</span>
-              </td>
-            </tr>
+                  <td class="whitespace-nowrap px-3 py-2.5 text-slate-800 dark:text-slate-200">
+                    {{ formatIsoDate(row.run_date, p2pPolicyDateLocale(locale)) }}
+                  </td>
+                  <td v-if="colVisible.leg" class="px-3 py-2.5">
+                    <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                      {{ legLabel(row.leg) }}
+                    </span>
+                  </td>
+                  <td class="px-3 py-2.5">
+                    <div class="font-medium text-slate-900 dark:text-white">{{ row.route_name || '—' }}</div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400">
+                      {{ campusLine(row) }}
+                    </div>
+                  </td>
+                  <td v-if="colVisible.depart" class="whitespace-nowrap px-3 py-2.5 text-slate-700 dark:text-slate-300">
+                    {{ formatIsoDateTime(row.depart_at, p2pPolicyDateLocale(locale)) }}
+                  </td>
+                  <td v-if="colVisible.driver" class="px-3 py-2.5 text-slate-700 dark:text-slate-300">{{ row.driver?.full_name || '—' }}</td>
+                  <td v-if="colVisible.vehicle" class="px-3 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">
+                    {{ row.vehicle?.license_plate || '—' }}
+                  </td>
+                  <td v-if="colVisible.passengers" class="px-3 py-2.5 text-center text-slate-700 dark:text-slate-300">
+                    {{ row.passenger_count ?? '—' }}
+                  </td>
+                  <td class="px-3 py-2.5">
+                    <span
+                      v-if="row.trip_status"
+                      class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                      :class="tripStatusAdminPillClass(row.trip_status)"
+                    >
+                      {{ labelTripStatus(row.trip_status) }}
+                    </span>
+                    <span v-else class="text-slate-400">—</span>
+                  </td>
+                  <td v-if="colVisible.reminder" class="px-3 py-2.5 text-xs">
+                    <span
+                      v-if="row.trip_id && row.depart_reminder_sent_at"
+                      class="text-emerald-700 dark:text-emerald-400"
+                    >
+                      {{ t('p2p_policy_page.trips_reminder_sent') }}
+                    </span>
+                    <span v-else-if="row.trip_id" class="text-slate-500">{{ t('p2p_policy_page.trips_reminder_pending') }}</span>
+                    <span v-else>—</span>
+                  </td>
+                  <td class="px-3 py-2.5">
+                    <RouterLink
+                      v-if="row.trip_id"
+                      :to="staffPath(`/trips/${row.trip_id}`)"
+                      class="text-sm font-semibold text-teal-800 underline hover:text-teal-950 dark:text-teal-300"
+                    >
+                      #{{ row.trip_id }}
+                    </RouterLink>
+                    <span v-else class="text-xs text-slate-400">{{ t('p2p_policy_page.trips_no_trip') }}</span>
+                  </td>
+                </tr>
+              </template>
+            </template>
             <tr v-if="!loading && !items.length">
               <td :colspan="tableColspan" class="px-3 py-10 text-center text-slate-500">{{ t('p2p_policy_page.empty') }}</td>
             </tr>
@@ -565,8 +622,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { ArrowLeftIcon, ChevronDownIcon, FunnelIcon } from '@heroicons/vue/24/outline'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {
+  AdjustmentsHorizontalIcon,
+  ArrowLeftIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  FunnelIcon,
+  ViewColumnsIcon,
+} from '@heroicons/vue/24/outline'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
@@ -591,9 +655,19 @@ const route = useRoute()
 const router = useRouter()
 
 const funnelDetailsRef = ref(null)
+const filterControlsRef = ref(null)
+const columnPickerRef = ref(null)
 const p2pTripsFilterBarRef = ref(null)
 useDetailsAutoClose(funnelDetailsRef)
+useDetailsAutoClose(filterControlsRef)
+useDetailsAutoClose(columnPickerRef)
 useDetailsAutoCloseWithin(p2pTripsFilterBarRef)
+
+const LEG_GROUP_ORDER = ['morning', 'afternoon']
+const legGroupOpen = reactive({
+  morning: true,
+  afternoon: true,
+})
 
 const activeOptClass =
   'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
@@ -644,6 +718,19 @@ const tableColspan = computed(() => {
   }
   return n
 })
+
+const legGroups = computed(() => {
+  const buckets = { morning: [], afternoon: [] }
+  for (const row of items.value) {
+    const leg = row.leg === 'afternoon' ? 'afternoon' : 'morning'
+    buckets[leg].push(row)
+  }
+  return LEG_GROUP_ORDER.map((leg) => ({ leg, rows: buckets[leg] }))
+})
+
+function toggleLegGroup(leg) {
+  legGroupOpen[leg] = !legGroupOpen[leg]
+}
 
 const pageFrom = computed(() => {
   if (!meta.value.total) return 0
@@ -794,17 +881,13 @@ function onTermFilterChange() {
   })
 }
 
-function onSearch() {
-  resetPage()
-}
-
-function onSearchInput() {
-  clearTimeout(searchDebounce)
-  searchDebounce = setTimeout(() => resetPage(), 400)
-}
-
 function onClearFilters() {
   clearFilters()
+  if (!filters.p2p_policy_term_id) {
+    const qTerm = resolveP2pTermIdFromRoute(route)
+    if (qTerm) filters.p2p_policy_term_id = qTerm
+    else if (p2pTerms.value[0]) filters.p2p_policy_term_id = p2pTerms.value[0].id
+  }
   if (funnelDetailsRef.value) funnelDetailsRef.value.open = false
   syncWorkflowQuery()
 }
@@ -851,11 +934,19 @@ watch(
 )
 
 watch(
-  apiParams,
+  () => ({ ...apiParams.value }),
   () => {
     if (!listReady.value) return
     reload()
   },
-  { deep: true },
+)
+
+watch(
+  () => filters.q,
+  () => {
+    if (!listReady.value) return
+    clearTimeout(searchDebounce)
+    searchDebounce = setTimeout(() => resetPage(), 300)
+  },
 )
 </script>
