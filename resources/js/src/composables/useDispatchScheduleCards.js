@@ -160,7 +160,9 @@ export function useDispatchScheduleCards(snapshot, tripType) {
 
   const scheduleCount = computed(() => scheduleCards.value.length)
 
-  const totalGuests = computed(() => wizardSnapshotGuestTotal(unref(snapshot) ?? {}))
+  const totalGuests = computed(() =>
+    wizardSnapshotGuestTotal(unref(snapshot) ?? {}, unref(tripType) ?? ''),
+  )
 
   return { scheduleCards, scheduleCount, totalGuests, formatShortDt }
 }

@@ -1,6 +1,7 @@
 import {
   isPassengerRowFilled,
   isBusinessRowFilled,
+  isCargoRowFilled,
 } from '../composables/dispatchWizardConstants'
 
 function rowGuestsValue(row) {
@@ -9,17 +10,34 @@ function rowGuestsValue(row) {
 }
 
 /**
- * Tổng `guests` trên các dòng lịch trình đã điền (passengerRows + businessRows).
+ * Tổng khách theo loại chuyến — cùng quy tắc lọc dòng như `useDispatchScheduleCards`.
  * @param {object | null | undefined} snapshot wizard_snapshot
+ * @param {string} [tripType] door_to_door | point_to_point | business | cargo
  */
-export function wizardSnapshotGuestTotal(snapshot) {
+export function wizardSnapshotGuestTotal(snapshot, tripType = '') {
   if (!snapshot || typeof snapshot !== 'object') return 0
-  let sum = 0
-  for (const r of snapshot.passengerRows ?? []) {
-    if (isPassengerRowFilled(r)) sum += rowGuestsValue(r)
+  const tt = String(tripType || '').trim()
+
+  if (tt === 'cargo') {
+    let sum = 0
+    for (const r of snapshot.cargoRows ?? []) {
+      if (!isCargoRowFilled(r)) continue
+      const q = parseInt(String(r?.qty ?? '1'), 10)
+      sum += Number.isFinite(q) && q >= 1 ? q : 1
+    }
+    return sum
   }
-  for (const r of snapshot.businessRows ?? []) {
-    if (isBusinessRowFilled(r)) sum += rowGuestsValue(r)
+
+  let sum = 0
+  if (tt !== 'business') {
+    for (const r of snapshot.passengerRows ?? []) {
+      if (isPassengerRowFilled(r)) sum += rowGuestsValue(r)
+    }
+  }
+  if (tt !== 'point_to_point') {
+    for (const r of snapshot.businessRows ?? []) {
+      if (isBusinessRowFilled(r)) sum += rowGuestsValue(r)
+    }
   }
   return sum
 }

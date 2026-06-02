@@ -787,10 +787,7 @@ import {
     isLegacyBm03NotesBlock,
 } from "../../util/formatDispatchNotes";
 import { parseMoneyVnd } from "../../util/money";
-import {
-    dispatchRequestEffectivePassengerCount,
-    wizardSnapshotGuestTotal,
-} from "../../util/dispatchRequestPassengers";
+import { dispatchRequestEffectivePassengerCount } from "../../util/dispatchRequestPassengers";
 import { passengerDisplayName } from "../../util/passengerDisplayName";
 import {
     emptyPassengerRow,
@@ -1651,11 +1648,13 @@ const passengerRowsDisplay = computed(() => {
             .map((r, rowIndex) => ({ r, rowIndex }))
             .filter(({ r }) => isBusinessRowFilled(r));
         const targetN = unifiedPassengerCount.value;
-        const slotCount = Math.max(
-            targetN,
-            busEntries.length,
-            Array.isArray(tplist) ? tplist.length : 0,
-        );
+        const slotCount =
+            targetN > 0
+                ? Math.max(targetN, busEntries.length)
+                : Math.max(
+                      busEntries.length,
+                      Array.isArray(tplist) ? tplist.length : 0,
+                  );
         if (slotCount === 0) return [];
 
         const roleLabel = t("trip_detail.passengers.role_staff");

@@ -119,7 +119,7 @@ class DispatchRequestController extends Controller
         ]);
 
         if (($data['trip_type'] ?? '') !== 'cargo' && ! empty($data['wizard_snapshot']) && is_array($data['wizard_snapshot'])) {
-            $recomputed = $this->sumGuestsFromSnapshot($data['wizard_snapshot']);
+            $recomputed = $this->sumGuestsFromSnapshot($data['wizard_snapshot'], (string) ($data['trip_type'] ?? ''));
             if ($recomputed !== null) {
                 $dispatchRequest->passenger_count = $recomputed;
                 $dispatchRequest->save();
@@ -759,7 +759,7 @@ class DispatchRequestController extends Controller
 
         $passengerCount = $data['passenger_count'] ?? null;
         if (($data['trip_type'] ?? '') !== 'cargo' && ! empty($data['wizard_snapshot']) && is_array($data['wizard_snapshot'])) {
-            $recomputed = $this->sumGuestsFromSnapshot($data['wizard_snapshot']);
+            $recomputed = $this->sumGuestsFromSnapshot($data['wizard_snapshot'], (string) ($data['trip_type'] ?? ''));
             if ($recomputed !== null) {
                 $passengerCount = $recomputed;
             }
@@ -891,25 +891,58 @@ class DispatchRequestController extends Controller
     /**
      * @param  array<string, mixed>  $snap
      */
-    private function sumGuestsFromSnapshot(array $snap): ?int
+    private function sumGuestsFromSnapshot(array $snap, string $tripType = ''): ?int
     {
+        $tt = trim($tripType);
         $sum = 0;
-        foreach ($snap['passengerRows'] ?? [] as $r) {
-            if (! is_array($r) || ! $this->passengerSnapshotRowFilled($r)) {
-                continue;
+
+        if ($tt === 'cargo') {
+            foreach ($snap['cargoRows'] ?? [] as $r) {
+                if (! is_array($r) || ! $this->cargoSnapshotRowFilled($r)) {
+                    continue;
+                }
+                $q = (int) ($r['qty'] ?? 1);
+                $sum += $q >= 1 ? $q : 1;
             }
-            $g = (int) ($r['guests'] ?? 1);
-            $sum += $g >= 1 ? $g : 1;
+
+            return $sum > 0 ? $sum : null;
         }
-        foreach ($snap['businessRows'] ?? [] as $r) {
-            if (! is_array($r) || ! $this->businessSnapshotRowFilled($r)) {
-                continue;
+
+        if ($tt !== 'business') {
+            foreach ($snap['passengerRows'] ?? [] as $r) {
+                if (! is_array($r) || ! $this->passengerSnapshotRowFilled($r)) {
+                    continue;
+                }
+                $g = (int) ($r['guests'] ?? 1);
+                $sum += $g >= 1 ? $g : 1;
             }
-            $g = (int) ($r['guests'] ?? 1);
-            $sum += $g >= 1 ? $g : 1;
+        }
+        if ($tt !== 'point_to_point') {
+            foreach ($snap['businessRows'] ?? [] as $r) {
+                if (! is_array($r) || ! $this->businessSnapshotRowFilled($r)) {
+                    continue;
+                }
+                $g = (int) ($r['guests'] ?? 1);
+                $sum += $g >= 1 ? $g : 1;
+            }
         }
 
         return $sum > 0 ? $sum : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $r
+     */
+    private function cargoSnapshotRowFilled(array $r): bool
+    {
+        if (trim((string) ($r['name'] ?? '')) !== '') {
+            return true;
+        }
+
+        return trim((string) ($r['pickup_place'] ?? '')) !== ''
+            || trim((string) ($r['delivery_place'] ?? '')) !== ''
+            || trim((string) ($r['pickup_at'] ?? '')) !== ''
+            || trim((string) ($r['delivery_at'] ?? '')) !== '';
     }
 
     /**
