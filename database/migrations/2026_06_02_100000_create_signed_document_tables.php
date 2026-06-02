@@ -8,6 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Recover from a prior failed run (tables created, migration not recorded).
+        if (
+            Schema::hasTable('signed_document_versions')
+            && ! Schema::hasColumn('dispatch_requests', 'signing_workflow_status')
+        ) {
+            Schema::dropIfExists('signed_document_verifications');
+            Schema::dropIfExists('signed_document_versions');
+        }
+
         Schema::create('signed_document_versions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('dispatch_request_id')->constrained('dispatch_requests')->cascadeOnDelete();
