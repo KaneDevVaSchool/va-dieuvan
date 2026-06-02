@@ -5,6 +5,12 @@ export async function listTripCosts(params = {}) {
   return data.data
 }
 
+/** Dòng chi phí công tác theo nhân sự (từ wizard businessRows trên chuyến loại công tác). */
+export async function listBusinessPersonnelCostLines(params = {}) {
+  const { data } = await http.get('/trip-costs/business-personnel-lines', { params })
+  return data.data
+}
+
 export async function listCostsForTrip(tripId, params = {}) {
   const { data } = await http.get(`/trips/${tripId}/costs`, { params })
   return data.data

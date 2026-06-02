@@ -723,4 +723,18 @@ router.afterEach((to) => {
     scrollAppMainToTop();
 });
 
+export const CHUNK_RELOAD_SESSION_KEY = "va-dieuvan:chunk-reload-once";
+
+router.onError((error, to) => {
+    const message = error?.message ?? String(error ?? "");
+    const isStaleChunk =
+        /Failed to fetch dynamically imported module/i.test(message) ||
+        /Loading chunk [\w-]+ failed/i.test(message) ||
+        error?.name === "ChunkLoadError";
+    if (!isStaleChunk) return;
+    if (sessionStorage.getItem(CHUNK_RELOAD_SESSION_KEY)) return;
+    sessionStorage.setItem(CHUNK_RELOAD_SESSION_KEY, "1");
+    window.location.assign(to?.fullPath || window.location.href);
+});
+
 export default router;

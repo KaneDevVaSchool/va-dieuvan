@@ -359,6 +359,80 @@
       </div>
     </section>
 
+    <section
+      v-if="showBusinessPersonnelSection"
+      class="space-y-3"
+      aria-labelledby="costs-section-business-personnel"
+    >
+      <div class="px-0.5">
+        <h2 id="costs-section-business-personnel" class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          {{ t('costs_page.section_business_personnel') }}
+        </h2>
+        <p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+          {{ t('costs_page.section_business_personnel_hint') }}
+        </p>
+      </div>
+      <div class="overflow-hidden rounded-2xl border border-violet-200/80 bg-white shadow-sm ring-1 ring-violet-900/[0.04] dark:border-violet-900/40 dark:bg-slate-950/30">
+        <div class="costs-table-wrap overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+          <table class="costs-sheet min-w-[960px] w-full border-collapse text-left text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-violet-50/90 text-[10px] font-semibold uppercase tracking-wide text-violet-900 sm:text-[11px] dark:bg-violet-950/40 dark:text-violet-100">
+                <th class="costs-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
+                <th class="costs-th min-w-[5rem]">{{ t('costs_page.col_trip') }}</th>
+                <th class="costs-th min-w-[8rem]">{{ t('costs_page.col_submitter') }}</th>
+                <th class="costs-th min-w-[10rem]">{{ t('costs_page.col_personnel') }}</th>
+                <th class="costs-th min-w-[12rem]">{{ t('costs_page.col_route') }}</th>
+                <th class="costs-th costs-th--money min-w-[6.5rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
+                <th class="costs-th costs-th--money min-w-[6rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
+                <th class="costs-th costs-th--money min-w-[7rem] text-right">{{ t('costs_page.col_payment') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(line, idx) in businessPersonnelLines"
+                :key="`${line.trip_id}-${line.line_no}-${idx}`"
+                :class="idx % 2 === 0 ? 'bg-white dark:bg-slate-950/20' : 'bg-violet-50/30 dark:bg-violet-950/15'"
+              >
+                <td class="costs-td text-center text-slate-500">{{ idx + 1 }}</td>
+                <td class="costs-td">
+                  <RouterLink
+                    :to="{ name: 'tripDetail', params: { id: line.trip_id } }"
+                    class="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
+                  >
+                    #{{ line.trip_id }}
+                  </RouterLink>
+                </td>
+                <td class="costs-td text-slate-800">{{ line.requester_name || '—' }}</td>
+                <td class="costs-td font-medium text-slate-900 dark:text-slate-100">
+                  {{ line.personnel_label || '—' }}
+                </td>
+                <td class="costs-td text-slate-700">
+                  <span class="line-clamp-2" :title="businessRouteLabel(line)">{{ businessRouteLabel(line) }}</span>
+                </td>
+                <td class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+                  {{ line.unit_price > 0 ? formatVnd(line.unit_price) : '—' }}
+                </td>
+                <td class="costs-td costs-td--money text-right tabular-nums text-slate-800">
+                  {{ line.extra_fee > 0 ? formatVnd(line.extra_fee) : '—' }}
+                </td>
+                <td class="costs-td costs-td--money text-right font-semibold tabular-nums text-slate-900">
+                  {{ line.amount_total > 0 ? formatVnd(line.amount_total) : '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p
+            v-if="!businessPersonnelLoading && businessPersonnelLines.length === 0"
+            class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400"
+          >
+            {{ t('costs_page.business_personnel_empty') }}
+          </p>
+          <p v-if="businessPersonnelLoading" class="px-4 py-6 text-center text-sm text-slate-500">
+            {{ t('costs_page.business_personnel_loading') }}
+          </p>
+        </div>
+      </div>
+    </section>
 
     <!-- Bảng -->
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-900/[0.05]">
@@ -406,7 +480,7 @@
                 >{{ tripTypeLabel(tripTypeFromCost(c)) }}</span>
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td class="costs-td text-slate-800">{{ c.creator?.name || '—' }}</td>
+              <td class="costs-td text-slate-800">{{ costSubmitterLabel(c) }}</td>
               <td class="costs-td max-w-[20rem] text-slate-800">
                 <span class="line-clamp-2" :title="c.description || ''">{{ c.description || '—' }}</span>
               </td>
@@ -851,7 +925,13 @@ import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, XMarkIcon } from '@heroico
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
-import { listTripCosts, submitTripCost, decideTripCost, deleteTripCost } from '../../api/costs'
+import {
+  listTripCosts,
+  listBusinessPersonnelCostLines,
+  submitTripCost,
+  decideTripCost,
+  deleteTripCost,
+} from '../../api/costs'
 import { listTrips } from '../../api/trips'
 import { newIdempotencyKey } from '../../util/idempotency'
 import { formatVnd, formatVndDigitsInput } from '../../util/labels'
@@ -899,6 +979,27 @@ function tripTypeFromCost(c) {
   return c?.trip?.dispatch_request?.trip_type ?? c?.trip?.dispatchRequest?.trip_type ?? null
 }
 
+function dispatchRequestFromCost(c) {
+  return c?.trip?.dispatch_request ?? c?.trip?.dispatchRequest ?? null
+}
+
+/** Người đề xuất phiếu (công tác); chi phí phát sinh vẫn hiển thị người ghi nhận. */
+function costSubmitterLabel(c) {
+  const dr = dispatchRequestFromCost(c)
+  const requester = dr?.requester?.name
+  if (tripTypeFromCost(c) === 'business' && requester) return requester
+  return c.creator?.name || '—'
+}
+
+function businessRouteLabel(line) {
+  const parts = [line.pickup, line.waypoint, line.dropoff].filter((x) => x && String(x).trim())
+  if (parts.length) return parts.join(' → ')
+  const o = line.request_origin
+  const d = line.request_destination
+  if (o || d) return [o, d].filter(Boolean).join(' → ')
+  return '—'
+}
+
 const TRIP_TYPE_PILL_CLASSES = {
   point_to_point: 'bg-sky-100/80 text-sky-800',
   cargo: 'bg-amber-100/80 text-amber-800',
@@ -923,6 +1024,12 @@ const modalCostTypeOptions = computed(() => {
 const loading = ref(false)
 const items = ref([])
 const meta = ref({})
+const businessPersonnelLoading = ref(false)
+const businessPersonnelLines = ref([])
+
+const showBusinessPersonnelSection = computed(
+  () => !filters.trip_type || filters.trip_type === 'business',
+)
 const searchQ = ref('')
 const funnelDetailsRef = ref(null)
 useDetailsAutoClose(funnelDetailsRef)
@@ -1431,12 +1538,32 @@ function resetFilters() {
   reload()
 }
 
+async function reloadBusinessPersonnelLines() {
+  if (!showBusinessPersonnelSection.value) {
+    businessPersonnelLines.value = []
+    return
+  }
+  businessPersonnelLoading.value = true
+  try {
+    const p = {}
+    if (filters.trip_id) p.trip_id = filters.trip_id
+    if (filters.from) p.from = filters.from
+    if (filters.to) p.to = filters.to
+    const res = await listBusinessPersonnelCostLines(p)
+    businessPersonnelLines.value = res.items ?? []
+  } catch {
+    businessPersonnelLines.value = []
+  } finally {
+    businessPersonnelLoading.value = false
+  }
+}
+
 async function reload() {
   loading.value = true
   try {
     const p = { ...filters }
     Object.keys(p).forEach((k) => (p[k] === '' || p[k] === null ? delete p[k] : null))
-    const res = await listTripCosts(p)
+    const [res] = await Promise.all([listTripCosts(p), reloadBusinessPersonnelLines()])
     items.value = res.items ?? []
     meta.value = res.meta ?? {}
   } finally {

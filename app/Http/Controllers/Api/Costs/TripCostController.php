@@ -18,6 +18,7 @@ use App\Models\TripCost;
 use App\Services\Auditing\AuditLogger;
 use App\Support\FinancialDataLock;
 use App\Support\Messages;
+use App\Services\Costs\BusinessPersonnelCostLinesQuery;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,7 +38,8 @@ class TripCostController extends Controller
         $q = TripCost::query()
             ->with([
                 'trip:id,status,depart_at,dispatcher_id,driver_id,transport_provider_id,dispatch_request_id',
-                'trip.dispatchRequest:id,trip_type,origin,destination',
+                'trip.dispatchRequest:id,trip_type,origin,destination,requester_id',
+                'trip.dispatchRequest.requester:id,name',
                 'trip.transportProvider:id,name',
                 'creator:id,name,email',
                 'confirmer:id,name,email',
@@ -79,6 +81,23 @@ class TripCostController extends Controller
                 'total' => $results->total(),
                 'last_page' => $results->lastPage(),
             ],
+        ]);
+    }
+
+    public function businessPersonnelLines(ListAllTripCostsRequest $request, BusinessPersonnelCostLinesQuery $query)
+    {
+        $data = $request->validated();
+        $filters = array_filter([
+            'trip_id' => $data['trip_id'] ?? null,
+            'from' => $data['from'] ?? null,
+            'to' => $data['to'] ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        $items = $query->linesFor($request->user(), $filters);
+
+        return $this->ok([
+            'items' => $items,
+            'meta' => ['total' => count($items)],
         ]);
     }
 

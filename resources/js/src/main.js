@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import router from './router'
+import router, { CHUNK_RELOAD_SESSION_KEY } from './router'
 import App from './App.vue'
 import '../../css/app.css'
 import { useAuthStore } from './store'
@@ -32,4 +32,5 @@ auth.initFromStorage()
 ;(async () => {
   await auth.restoreSession()
   app.mount('#app')
+  sessionStorage.removeItem(CHUNK_RELOAD_SESSION_KEY)
 })()

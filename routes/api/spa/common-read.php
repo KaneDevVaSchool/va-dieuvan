@@ -42,6 +42,7 @@ Route::controller(TripController::class)->group(function () {
 });
 
 Route::get('/trip-costs', [TripCostController::class, 'index']);
+Route::get('/trip-costs/business-personnel-lines', [TripCostController::class, 'businessPersonnelLines']);
 Route::get('/trip-costs/{tripCost}', [TripCostController::class, 'show']);
 Route::get('/trips/{trip}/costs', [TripCostController::class, 'costsForTrip']);
 
