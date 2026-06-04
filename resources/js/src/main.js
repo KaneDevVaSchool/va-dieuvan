@@ -10,6 +10,9 @@ import { bootstrapMonitoring } from './core/monitoring/bootstrapMonitoring'
 import { attachOnlineFlush } from './core/offline/outbox'
 import { initIntegrationsFromEnv } from './core/monitoring/logger'
 import { setupServiceWorker } from './pwa/registerSW'
+import { installBootstrapStaleAssetListener } from './pwa/staleBuildRecovery'
+
+installBootstrapStaleAssetListener()
 
 bootstrapMonitoring()
 initIntegrationsFromEnv()

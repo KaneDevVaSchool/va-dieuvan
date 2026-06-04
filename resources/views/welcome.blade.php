@@ -19,7 +19,35 @@
     @endphp
     <link rel="manifest" href="{{ $pwaManifest }}" />
     <title>VA Dispatch — Điều vận</title>
-   
+    {{-- Phục hồi khi shell HTML cũ trỏ tới chunk Vite đã xóa (trước khi app.js chạy). --}}
+    <script>
+      (function () {
+        var key = 'va-dieuvan:bootstrap-reload-once';
+        window.addEventListener('error', function (e) {
+          var t = e.target;
+          if (!t || t.tagName !== 'SCRIPT') return;
+          var s = t.src || '';
+          if (s.indexOf('/build/assets/') === -1) return;
+          if (sessionStorage.getItem(key)) return;
+          sessionStorage.setItem(key, '1');
+          var reload = function () { location.reload(); };
+          var chain = Promise.resolve();
+          if ('serviceWorker' in navigator) {
+            chain = navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            });
+          }
+          if ('caches' in window) {
+            chain = chain.then(function () {
+              return caches.keys().then(function (ks) {
+                return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+              });
+            });
+          }
+          chain.then(reload, reload);
+        }, true);
+      })();
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
   <body class="min-h-full antialiased" style="background:#020B0B">

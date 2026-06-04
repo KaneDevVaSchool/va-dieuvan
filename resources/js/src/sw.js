@@ -4,7 +4,7 @@ import { clientsClaim } from 'workbox-core'
 import {
   precacheAndRoute,
   cleanupOutdatedCaches,
-  createHandlerBoundToURL,
+  matchPrecache,
 } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies'
@@ -16,7 +16,23 @@ clientsClaim()
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 
-const navigationHandler = createHandlerBoundToURL('/')
+/** Ưu tiên HTML từ mạng sau deploy; offline mới dùng shell đã precache. */
+async function navigationHandler({ request }) {
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse?.ok) {
+      return networkResponse
+    }
+  } catch {
+    /* offline */
+  }
+  const precached = await matchPrecache('/')
+  if (precached) {
+    return precached
+  }
+  return Response.error()
+}
+
 registerRoute(
   new NavigationRoute(navigationHandler, {
     // Laravel OAuth endpoints must hit server (Google redirect_uri). If handled as SPA navigations,

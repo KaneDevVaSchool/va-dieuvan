@@ -25,18 +25,21 @@ function notifyPwaUpdateAvailable() {
   }
 }
 
-async function tryAutoApplyOnDesktop() {
-  if (!isDesktopViewport()) return
+async function tryAutoApplyPendingUpdate() {
   try {
     await applyServiceWorkerUpdate()
   } catch {
-    window.location.reload()
+    if (isDesktopViewport()) {
+      window.location.reload()
+    }
   }
 }
 
 function onServiceWorkerUpdateDetected() {
   notifyPwaUpdateAvailable()
-  void tryAutoApplyOnDesktop()
+  if (isDesktopViewport()) {
+    void tryAutoApplyPendingUpdate()
+  }
 }
 
 /** @param {ServiceWorkerRegistration | undefined | null} reg */

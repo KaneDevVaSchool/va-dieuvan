@@ -8,6 +8,13 @@ import {
 import { useAuthStore } from "../store";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
 import { resolvePostLoginTarget } from "../util/loginRedirect";
+import {
+    CHUNK_RELOAD_SESSION_KEY,
+    isStaleChunkMessage,
+    reloadOnceForStaleAssets,
+} from "../pwa/staleBuildRecovery";
+
+export { CHUNK_RELOAD_SESSION_KEY };
 
 function scrollAppMainToTop() {
     if (typeof document === "undefined") return;
@@ -723,18 +730,14 @@ router.afterEach((to) => {
     scrollAppMainToTop();
 });
 
-export const CHUNK_RELOAD_SESSION_KEY = "va-dieuvan:chunk-reload-once";
-
 router.onError((error, to) => {
     const message = error?.message ?? String(error ?? "");
-    const isStaleChunk =
-        /Failed to fetch dynamically imported module/i.test(message) ||
-        /Loading chunk [\w-]+ failed/i.test(message) ||
-        error?.name === "ChunkLoadError";
-    if (!isStaleChunk) return;
-    if (sessionStorage.getItem(CHUNK_RELOAD_SESSION_KEY)) return;
-    sessionStorage.setItem(CHUNK_RELOAD_SESSION_KEY, "1");
-    window.location.assign(to?.fullPath || window.location.href);
+    if (!isStaleChunkMessage(message, error)) return;
+    void reloadOnceForStaleAssets(
+        to?.fullPath
+            ? `${window.location.origin}${to.fullPath}`
+            : window.location.href,
+    );
 });
 
 export default router;
