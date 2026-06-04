@@ -11,6 +11,8 @@ import {
   ShieldCheckIcon,
   ChevronRightIcon,
   SparklesIcon,
+  ChevronDownIcon,
+  UsersIcon,
 } from '@heroicons/vue/24/outline'
 import { JOB_ROLE_TEMPLATES } from '../../config/jobRoleTemplates.js'
 import * as admin from '../../api/admin'
@@ -29,6 +31,33 @@ const roles   = ref([])
 const query   = ref('')
 const debouncedQuery = ref('')
 const bumpQ = debounceTrailing(() => { debouncedQuery.value = query.value }, 250)
+
+// Expand permission list per role card
+const expandedPermRoleId = ref(null)
+const permLoading        = ref(false)
+const permsByRoleId      = ref({})
+
+async function togglePermissions(role) {
+  if (expandedPermRoleId.value === role.id) {
+    expandedPermRoleId.value = null
+    return
+  }
+  expandedPermRoleId.value = role.id
+  if (permsByRoleId.value[role.id]) return  // đã cache
+  permLoading.value = true
+  try {
+    const detail = await admin.getRole(role.id)
+    permsByRoleId.value[role.id] = detail.permissions ?? []
+  } catch {
+    permsByRoleId.value[role.id] = []
+  } finally {
+    permLoading.value = false
+  }
+}
+
+function goToUserRoles(role) {
+  router.push({ name: 'systemUserRoles', query: { roles: role.name } })
+}
 
 // ─── Derived ─────────────────────────────────────────────────────────────────
 
@@ -263,25 +292,61 @@ onMounted(load)
                 <span class="font-semibold text-slate-700 dark:text-slate-300">{{ role.users_count ?? 0 }}</span>
                 nhân viên
               </span>
-              <span class="flex items-center gap-1.5">
+              <!-- Badge permissions — click để expand -->
+              <button
+                type="button"
+                class="flex items-center gap-1.5 transition hover:text-slate-800 dark:hover:text-slate-200"
+                :title="expandedPermRoleId === role.id ? 'Ẩn danh sách quyền' : 'Xem danh sách quyền'"
+                @click="togglePermissions(role)"
+              >
                 <ShieldCheckIcon class="h-3.5 w-3.5" />
                 <span class="font-semibold text-slate-700 dark:text-slate-300">{{ role.permissions_count ?? 0 }}</span>
                 quyền
-              </span>
+                <ChevronDownIcon
+                  class="h-3 w-3 transition-transform duration-200"
+                  :class="{ '-rotate-180': expandedPermRoleId === role.id }"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+
+            <!-- Expand: danh sách permissions -->
+            <div v-if="expandedPermRoleId === role.id" class="border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+              <div v-if="permLoading" class="text-xs text-slate-400">Đang tải…</div>
+              <div v-else-if="!permsByRoleId[role.id]?.length" class="text-xs text-slate-400">Chưa có quyền nào.</div>
+              <div v-else class="flex flex-wrap gap-1">
+                <span
+                  v-for="p in permsByRoleId[role.id]"
+                  :key="p.id"
+                  :title="p.plain_summary || p.name"
+                  class="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                >{{ p.display_name || p.name }}</span>
+              </div>
             </div>
           </div>
 
           <!-- Action bar -->
           <div class="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 dark:border-slate-800">
-            <!-- View detail -->
-            <button
-              type="button"
-              class="flex items-center gap-1 text-xs font-medium text-teal-600 transition hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200"
-              @click="openDetail(role)"
-            >
-              Xem chi tiết
-              <ChevronRightIcon class="h-3.5 w-3.5" />
-            </button>
+            <!-- View detail + Gán nhân viên -->
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                class="flex items-center gap-1 text-xs font-medium text-teal-600 transition hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200"
+                @click="openDetail(role)"
+              >
+                Xem chi tiết
+                <ChevronRightIcon class="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                class="flex items-center gap-1 text-xs font-medium text-violet-600 transition hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-200"
+                :title="`Gán nhân viên vào vai trò ${role.display_name || role.name}`"
+                @click="goToUserRoles(role)"
+              >
+                <UsersIcon class="h-3.5 w-3.5" />
+                Gán nhân viên
+              </button>
+            </div>
 
             <!-- Quick actions -->
             <div class="flex items-center gap-0.5">

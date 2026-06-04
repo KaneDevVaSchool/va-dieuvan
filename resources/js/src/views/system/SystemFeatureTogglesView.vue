@@ -1,398 +1,14 @@
-<template>
-  <div class="mx-auto max-w-6xl space-y-5 pb-6 sm:space-y-6 sm:pb-8">
-    <div>
-      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          {{ t('feature_toggles.section_list') }}
-        </h1>
-        <Button type="button" class="w-full shrink-0 sm:w-auto" @click="openAddModal">
-          {{ t('feature_toggles.add_new') }}
-        </Button>
-      </div>
-
-      <div class="relative z-40 mb-4">
-        <AppFilterBar>
-          <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-            <details ref="funnelDetailsRef" class="group relative">
-              <summary
-                class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-              >
-                <span class="relative inline-flex">
-                  <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                  <span
-                    v-if="activeFilterCount > 0"
-                    class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
-                  >
-                    {{ activeFilterCount }}
-                  </span>
-                </span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
-              >
-                <p
-                  class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300"
-                >
-                  {{ t('feature_toggles.funnel_applied') }}
-                </p>
-                <div class="p-3 pt-2">
-                  <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                    <li v-if="searchInput.trim()" class="flex justify-between gap-2">
-                      <span class="text-slate-500 dark:text-slate-400">{{ t('feature_toggles.filter_vis_search') }}</span>
-                      <span class="max-w-[10rem] truncate text-right font-medium">{{ searchInput }}</span>
-                    </li>
-                    <li v-if="filterStatus !== 'all'" class="flex justify-between gap-2">
-                      <span class="text-slate-500 dark:text-slate-400">{{ t('feature_toggles.filter_status_on_menu') }}</span>
-                      <span class="font-medium">{{ statusChipLabel }}</span>
-                    </li>
-                    <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">
-                      {{ t('feature_toggles.filter_no_conditions') }}
-                    </li>
-                  </ul>
-                  <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                      {{ t('feature_toggles.funnel_show_on_bar') }}
-                    </p>
-                    <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                      <li v-for="fd in filterControlDefsLabeled" :key="fd.id" class="flex items-start gap-2">
-                        <input
-                          :id="`feature-toggles-filter-vis-${fd.id}`"
-                          v-model="filterControlVisible[fd.id]"
-                          type="checkbox"
-                          class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                        />
-                        <label
-                          :for="`feature-toggles-filter-vis-${fd.id}`"
-                          class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                        >
-                          {{ fd.label }}
-                        </label>
-                      </li>
-                    </ul>
-                  </div>
-                  <button
-                    type="button"
-                    class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                    @click="resetFilters"
-                  >
-                    {{ t('feature_toggles.funnel_clear_all') }}
-                  </button>
-                </div>
-              </div>
-            </details>
-
-            <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-              <AppFilterDropdown
-                v-if="filterControlVisible.status"
-                root-class="shrink-0"
-                :label="t('feature_toggles.filter_status_on_menu')"
-                :summary-text="statusChipLabel"
-                summary-text-class="max-w-[9rem]"
-                panel-class="min-w-[220px] py-1"
-              >
-                <ul class="space-y-0.5 px-1 py-1">
-                  <li v-for="opt in STATUS_OPTS_LABELED" :key="opt.value">
-                    <button
-                      type="button"
-                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                      :class="
-                        filterStatus === opt.value
-                          ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                      "
-                      @click="setStatusFilter($event, opt.value)"
-                    >
-                      {{ opt.label }}
-                    </button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <input
-                v-if="filterControlVisible.search"
-                v-model="searchInput"
-                type="search"
-                :aria-label="t('feature_toggles.filter_ph')"
-                :placeholder="t('feature_toggles.filter_ph')"
-                class="h-9 w-[10rem] shrink-0 rounded-md border-0 bg-white/90 px-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500 sm:w-52"
-              />
-            </div>
-
-            <div
-              class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
-            >
-              <button
-                type="button"
-                class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-                aria-label="Xóa bộ lọc"
-                @click="resetFilters"
-              >
-                <span class="relative inline-flex">
-                  <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-                  <XMarkIcon
-                    class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-                  />
-                </span>
-              </button>
-            </div>
-          </div>
-        </AppFilterBar>
-      </div>
-
-      <div v-if="loading" class="flex items-center gap-3 py-10 text-sm text-slate-500 dark:text-slate-400">
-        <span
-          class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600 dark:border-slate-600 dark:border-t-teal-400"
-          aria-hidden="true"
-        />
-        {{ t('feature_toggles.loading') }}
-      </div>
-
-      <template v-else-if="!items.length">
-        <div
-          class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-12 text-center dark:border-slate-700 dark:bg-slate-900/30"
-        >
-          <MagnifyingGlassIcon class="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" aria-hidden="true" />
-          <p class="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">{{ t('feature_toggles.empty_list') }}</p>
-        </div>
-      </template>
-
-      <template v-else>
-        <div
-          v-if="filteredItems.length === 0"
-          class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 py-10 text-center text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200/90"
-        >
-          {{ t('feature_toggles.empty_filtered') }}
-        </div>
-
-        <div v-else class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700">
-          <div class="hidden md:block overflow-x-auto">
-            <table class="w-full min-w-[52rem] border-collapse text-left text-sm">
-              <thead>
-                <tr class="border-b border-slate-200 bg-slate-50/95 text-slate-600 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300">
-                  <th class="whitespace-nowrap py-2.5 pl-4 pr-3 text-xs font-semibold uppercase tracking-wide">{{ t('feature_toggles.col_name') }}</th>
-                  <th class="whitespace-nowrap py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">{{ t('feature_toggles.col_key') }}</th>
-                  <th class="whitespace-nowrap py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">{{ t('feature_toggles.col_group') }}</th>
-                  <th class="w-24 whitespace-nowrap py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide">{{ t('feature_toggles.col_show') }}</th>
-                  <th class="w-28 whitespace-nowrap py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide">{{ t('feature_toggles.col_maint_short') }}</th>
-                  <th class="w-28 whitespace-nowrap py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide">{{ t('feature_toggles.col_upgrade_short') }}</th>
-                  <th class="whitespace-nowrap py-2.5 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-wide">{{ t('feature_toggles.col_actions') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(row, ri) in filteredItems"
-                  :key="row.id"
-                  class="border-b border-slate-100 transition-colors hover:bg-slate-50/80 dark:border-slate-800 dark:hover:bg-slate-800/40"
-                  :class="ri % 2 === 1 ? 'bg-white dark:bg-transparent' : 'bg-slate-50/30 dark:bg-slate-900/40'"
-                >
-                  <td class="py-2.5 pl-4 pr-3 align-middle">
-                    <span class="font-semibold text-slate-900 dark:text-slate-50">{{ row.name }}</span>
-                  </td>
-                  <td class="max-w-[14rem] py-2.5 pr-3 align-middle font-mono text-xs text-slate-500 dark:text-slate-400">
-                    <span class="break-all">{{ row.key }}</span>
-                  </td>
-                  <td class="py-2.5 pr-3 align-middle text-sm text-slate-600 dark:text-slate-400">{{ row.module ?? '—' }}</td>
-                  <td class="py-2.5 px-2 text-center align-middle">
-                    <input
-                      type="checkbox"
-                      :checked="row.is_enabled"
-                      :disabled="saving"
-                      class="h-4 w-4 cursor-pointer rounded border-slate-300 text-teal-700 focus:ring-teal-600 disabled:opacity-50"
-                      :aria-label="t('feature_toggles.col_show')"
-                      @change="patchRow(row, { is_enabled: $event.target.checked })"
-                    />
-                  </td>
-                  <td class="py-2.5 px-2 text-center align-middle">
-                    <input
-                      type="checkbox"
-                      :checked="row.maintenance_mode"
-                      :disabled="saving"
-                      class="h-4 w-4 cursor-pointer rounded border-slate-300 text-amber-600 focus:ring-amber-500 disabled:opacity-50"
-                      :aria-label="t('feature_toggles.col_maint')"
-                      @change="patchRow(row, { maintenance_mode: $event.target.checked })"
-                    />
-                  </td>
-                  <td class="py-2.5 px-2 text-center align-middle">
-                    <input
-                      type="checkbox"
-                      :checked="row.upgrade_notice"
-                      :disabled="saving"
-                      class="h-4 w-4 cursor-pointer rounded border-slate-300 text-violet-600 focus:ring-violet-500 disabled:opacity-50"
-                      :aria-label="t('feature_toggles.col_upgrade')"
-                      @change="patchRow(row, { upgrade_notice: $event.target.checked })"
-                    />
-                  </td>
-                  <td class="relative py-2.5 pl-2 pr-4 text-right align-middle">
-                    <AppRowActionsMenu
-                      align="end"
-                      :aria-label="t('feature_toggles.col_actions')"
-                      :trigger-sr-only="t('feature_toggles.col_actions')"
-                      root-class="text-right"
-                      :disabled="saving"
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-700 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/40"
-                        :disabled="saving"
-                        @click="confirmRemove(row)"
-                      >
-                        <TrashIcon class="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
-                        {{ t('feature_toggles.delete') }}
-                      </button>
-                    </AppRowActionsMenu>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
-            <div
-              v-for="row in filteredItems"
-              :key="'m' + row.id"
-              class="bg-white p-4 dark:bg-slate-900/60"
-            >
-              <div class="font-semibold text-slate-900 dark:text-slate-100">{{ row.name }}</div>
-              <div class="mt-1 break-all font-mono text-xs text-slate-500 dark:text-slate-400">{{ row.key }}</div>
-              <div v-if="row.module" class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ row.module }}</div>
-              <div class="mt-4 grid gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-                <label class="flex items-center justify-between gap-2 text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">{{ t('feature_toggles.col_show') }}</span>
-                  <input
-                    type="checkbox"
-                    :checked="row.is_enabled"
-                    :disabled="saving"
-                    class="h-4 w-4 rounded border-slate-300 text-teal-700 disabled:opacity-50"
-                    @change="patchRow(row, { is_enabled: $event.target.checked })"
-                  />
-                </label>
-                <label class="flex items-center justify-between gap-2 text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">{{ t('feature_toggles.col_maint') }}</span>
-                  <input
-                    type="checkbox"
-                    :checked="row.maintenance_mode"
-                    :disabled="saving"
-                    class="h-4 w-4 rounded border-slate-300 text-amber-600 disabled:opacity-50"
-                    @change="patchRow(row, { maintenance_mode: $event.target.checked })"
-                  />
-                </label>
-                <label class="flex items-center justify-between gap-2 text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">{{ t('feature_toggles.col_upgrade') }}</span>
-                  <input
-                    type="checkbox"
-                    :checked="row.upgrade_notice"
-                    :disabled="saving"
-                    class="h-4 w-4 rounded border-slate-300 text-violet-600 disabled:opacity-50"
-                    @change="patchRow(row, { upgrade_notice: $event.target.checked })"
-                  />
-                </label>
-                <AppRowActionsMenu
-                  align="stretch"
-                  :aria-label="t('feature_toggles.col_actions')"
-                  :disabled="saving"
-                  trigger-class="w-full px-3 py-2 text-sm font-medium"
-                  menu-class="py-1"
-                >
-                  <template #trigger>
-                    <span class="flex items-center justify-center gap-2">
-                      <EllipsisVerticalIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-                      {{ t('feature_toggles.col_actions') }}
-                    </span>
-                  </template>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-700 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/40"
-                    :disabled="saving"
-                    @click="confirmRemove(row)"
-                  >
-                    <TrashIcon class="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
-                    {{ t('feature_toggles.delete') }}
-                  </button>
-                </AppRowActionsMenu>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
-
- 
-
-    <div
-      v-if="addModalOpen"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="feature-toggle-add-title"
-      @click.self="closeAddModal"
-    >
-      <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
-        <div id="feature-toggle-add-title" class="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {{ t('feature_toggles.section_add') }}
-        </div>
-        <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="create">
-          <Select
-            v-model="togglePresetIdx"
-            :label="t('feature_toggles.preset_label')"
-            :placeholder="t('feature_toggles.preset_ph')"
-            class="sm:col-span-2"
-          >
-            <option value="">{{ t('feature_toggles.preset_ph') }}</option>
-            <option v-for="(row, i) in seedToggles" :key="row.key" :value="String(i)">
-              {{ row.name }} ({{ row.key }})
-            </option>
-          </Select>
-          <Input
-            v-model="form.key"
-            :label="t('feature_toggles.key_label')"
-            :placeholder="t('feature_toggles.key_ph')"
-            required
-          />
-          <Input
-            v-model="form.name"
-            :label="t('feature_toggles.name_label')"
-            :placeholder="t('feature_toggles.name_ph')"
-            required
-          />
-          <Input v-model="form.module" :label="t('feature_toggles.module_label')" :placeholder="t('feature_toggles.module_ph')" class="sm:col-span-2" />
-          <label
-            class="flex min-h-[2.5rem] cursor-pointer items-center gap-2 rounded-lg border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-300 sm:col-span-2"
-          >
-            <input
-              v-model="form.is_enabled"
-              type="checkbox"
-              class="rounded border-slate-300 text-teal-700 focus:ring-teal-600 dark:border-slate-500"
-            />
-            {{ t('feature_toggles.default_on') }}
-          </label>
-          <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:col-span-2 sm:flex-row sm:justify-end">
-            <Button variant="secondary" type="button" class="w-full sm:w-auto" :disabled="saving" @click="closeAddModal">
-              {{ t('feature_toggles.cancel') }}
-            </Button>
-            <Button type="submit" class="w-full sm:w-auto" :loading="saving" :disabled="saving">
-              {{ t('feature_toggles.add_btn') }}
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { ChevronDownIcon, EllipsisVerticalIcon, FunnelIcon, MagnifyingGlassIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import {
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  TrashIcon,
+  XMarkIcon,
+  LinkIcon,
+} from '@heroicons/vue/24/outline'
 import Card from '../../components/ui/Card.vue'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
-import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
@@ -405,161 +21,92 @@ import { confirmAction } from '../../composables/useConfirm'
 import { debounceTrailing } from '../../composables/useDebounce'
 import { useAuthStore } from '../../store'
 
-const FEATURE_TOGGLES_FILTER_VIS_KEY = 'va.feature_toggles.filter_control_visibility_v1'
-const FILTER_CONTROL_IDS = ['status', 'search']
+// ─── Nav clusters: featureKey → links ─────────────────────────────────────────
+// Tính một lần, dùng per-row khi expand
+const navKeyMap = computed(() => {
+  const m = new Map()
+  for (const cluster of getFeatureToggleNavClusters()) {
+    for (const feat of cluster.features) {
+      if (!m.has(feat.featureKey)) m.set(feat.featureKey, [])
+      for (const link of feat.links) {
+        m.get(feat.featureKey).push(link)
+      }
+    }
+  }
+  return m
+})
 
-function defaultFilterControlVisibility() {
-  return FILTER_CONTROL_IDS.reduce((acc, id) => {
-    acc[id] = true
-    return acc
-  }, {})
+function navLinksForKey(key) {
+  return navKeyMap.value.get(key) ?? []
 }
 
-const { t } = useI18n()
+// ─── State ────────────────────────────────────────────────────────────────────
+
 const auth = useAuthStore()
 
-const navClusters = getFeatureToggleNavClusters()
+const loading    = ref(true)
+const saving     = ref(false)
+const items      = ref([])
+const expandedId = ref(null)  // id của row đang expand nav panel
 
-async function syncSessionFromServer() {
-  if (!auth.isLoggedIn) return
-  try {
-    await auth.fetchMe()
-  } catch {
-    /* ignore */
-  }
-}
-
-const loading = ref(true)
-const saving = ref(false)
-const items = ref([])
-const addModalOpen = ref(false)
-const searchInput = ref('')
-const filterQ = ref('')
+const searchRaw  = ref('')
+const searchQ    = ref('')
 const filterStatus = ref('all')
-const funnelDetailsRef = ref(null)
-useDetailsAutoClose(funnelDetailsRef)
-const filterControlVisible = reactive(defaultFilterControlVisibility())
 
-const form = reactive({ key: '', name: '', module: '', is_enabled: true })
-const seedToggles = SEED_FEATURE_TOGGLE_PRESETS
-const togglePresetIdx = ref('')
+const addModalOpen = ref(false)
+const presetIdx    = ref('')
+const form = reactive({ key: '', name: '', module: '', is_enabled: true, maintenance_mode: false, upgrade_notice: false })
 
-const STATUS_OPTS = Object.freeze([
-  { value: 'all', labelKey: 'feature_toggles.filter_status_all' },
-  { value: 'on', labelKey: 'feature_toggles.filter_status_on' },
-  { value: 'off', labelKey: 'feature_toggles.filter_status_off' },
-])
+const STATUS_OPTS = [
+  { value: 'all',         label: 'Tất cả' },
+  { value: 'on',          label: 'Đang bật' },
+  { value: 'off',         label: 'Đang tắt' },
+  { value: 'maintenance', label: 'Đang bảo trì' },
+  { value: 'upgrade',     label: 'Có thông báo nâng cấp' },
+]
 
-const STATUS_OPTS_LABELED = computed(() =>
-  STATUS_OPTS.map((o) => ({ value: o.value, label: t(o.labelKey) })),
-)
+// ─── Computed ─────────────────────────────────────────────────────────────────
 
-const filterControlDefs = Object.freeze([
-  { id: 'search', labelKey: 'feature_toggles.filter_vis_search' },
-  { id: 'status', labelKey: 'feature_toggles.filter_vis_status' },
-])
-
-const filterControlDefsLabeled = computed(() =>
-  filterControlDefs.map((d) => ({ id: d.id, label: t(d.labelKey) })),
-)
-
-const bumpSearchDebounced = debounceTrailing(() => {
-  filterQ.value = searchInput.value
-}, 300)
-
-watch(searchInput, () => bumpSearchDebounced())
-
-const statusChipLabel = computed(
-  () => STATUS_OPTS_LABELED.value.find((o) => o.value === filterStatus.value)?.label ?? t('feature_toggles.filter_status_all'),
-)
+const bumpSearch = debounceTrailing(() => { searchQ.value = searchRaw.value }, 300)
+watch(searchRaw, () => bumpSearch())
 
 const filteredItems = computed(() => {
   let list = items.value
-  if (filterStatus.value === 'on') list = list.filter((r) => r.is_enabled)
-  else if (filterStatus.value === 'off') list = list.filter((r) => !r.is_enabled)
 
-  const q = filterQ.value.trim().toLowerCase()
-  if (!q) return list
-  return list.filter((r) => {
-    const name = String(r.name ?? '').toLowerCase()
-    const key = String(r.key ?? '').toLowerCase()
-    const mod = String(r.module ?? '').toLowerCase()
-    return name.includes(q) || key.includes(q) || mod.includes(q)
-  })
+  switch (filterStatus.value) {
+    case 'on':          list = list.filter((r) => r.is_enabled); break
+    case 'off':         list = list.filter((r) => !r.is_enabled); break
+    case 'maintenance': list = list.filter((r) => r.maintenance_mode); break
+    case 'upgrade':     list = list.filter((r) => r.upgrade_notice); break
+  }
+
+  const q = searchQ.value.trim().toLowerCase()
+  if (q) {
+    list = list.filter((r) =>
+      (r.name ?? '').toLowerCase().includes(q) ||
+      (r.key ?? '').toLowerCase().includes(q) ||
+      (r.module ?? '').toLowerCase().includes(q),
+    )
+  }
+
+  return list
 })
 
-const activeFilterCount = computed(() => {
+const activeFilters = computed(() => {
   let n = 0
-  if (searchInput.value.trim()) n++
+  if (searchRaw.value.trim()) n++
   if (filterStatus.value !== 'all') n++
   return n
 })
 
-function loadFilterControlVisibility() {
-  try {
-    const raw = localStorage.getItem(FEATURE_TOGGLES_FILTER_VIS_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    const base = defaultFilterControlVisibility()
-    FILTER_CONTROL_IDS.forEach((id) => {
-      if (typeof o[id] === 'boolean') base[id] = o[id]
-    })
-    Object.assign(filterControlVisible, base)
-  } catch {
-    /* ignore */
-  }
+// ─── Sync session sau mutation ────────────────────────────────────────────────
+
+async function syncSession() {
+  if (!auth.isLoggedIn) return
+  try { await auth.fetchMe() } catch { /* ignore */ }
 }
 
-watch(
-  filterControlVisible,
-  () => {
-    try {
-      localStorage.setItem(FEATURE_TOGGLES_FILTER_VIS_KEY, JSON.stringify({ ...filterControlVisible }))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
-
-function closeParentDetails(ev) {
-  const el = ev.currentTarget
-  if (!el?.closest) return
-  const d = el.closest('details')
-  if (d) d.open = false
-}
-
-function resetFilters() {
-  searchInput.value = ''
-  filterQ.value = ''
-  filterStatus.value = 'all'
-  const el = funnelDetailsRef.value
-  if (el) el.open = false
-}
-
-function setStatusFilter(ev, v) {
-  filterStatus.value = v
-  closeParentDetails(ev)
-}
-
-function openAddModal() {
-  addModalOpen.value = true
-}
-
-function closeAddModal() {
-  if (saving.value) return
-  addModalOpen.value = false
-}
-
-watch(togglePresetIdx, (v) => {
-  if (v === '' || v == null) return
-  const row = seedToggles[Number(v)]
-  if (row) {
-    form.key = row.key
-    form.name = row.name
-    form.module = row.module
-  }
-})
+// ─── API ──────────────────────────────────────────────────────────────────────
 
 async function load() {
   loading.value = true
@@ -568,7 +115,7 @@ async function load() {
     items.value = list.map((r) => ({
       ...r,
       maintenance_mode: !!r.maintenance_mode,
-      upgrade_notice: !!r.upgrade_notice,
+      upgrade_notice:   !!r.upgrade_notice,
     }))
   } catch (e) {
     showAppError(formatApiError(e))
@@ -577,59 +124,35 @@ async function load() {
   }
 }
 
-async function create() {
-  if (!form.key.trim() || !form.name.trim()) return
+async function patchToggle(row, partial) {
+  if (saving.value) return
   saving.value = true
   try {
-    await admin.createFeatureToggle({
-      key: form.key.trim(),
-      name: form.name.trim(),
-      module: form.module.trim() || null,
-      is_enabled: !!form.is_enabled,
-      maintenance_mode: false,
-      upgrade_notice: false,
-    })
-    form.key = ''
-    form.name = ''
-    form.module = ''
-    form.is_enabled = true
-    togglePresetIdx.value = ''
-    await load()
-    await syncSessionFromServer()
-    showAppSuccess(t('feature_toggles.success_create'), t('feature_toggles.toast_success_title'))
-    addModalOpen.value = false
+    await admin.updateFeatureToggle(row.id, partial)
+    Object.assign(row, partial)
+    await syncSession()
   } catch (e) {
     showAppError(formatApiError(e))
+    await load()
   } finally {
     saving.value = false
   }
 }
 
-async function patchRow(row, partial) {
-  try {
-    await admin.updateFeatureToggle(row.id, partial)
-    Object.assign(row, partial)
-    await syncSessionFromServer()
-  } catch (e) {
-    showAppError(formatApiError(e))
-    await load()
-  }
-}
-
-async function confirmRemove(row) {
+async function confirmDelete(row) {
   const ok = await confirmAction({
-    title: t('feature_toggles.confirm_delete_title'),
-    message: t('feature_toggles.confirm_delete_body', { name: row.name, key: row.key }),
-    confirmLabel: t('feature_toggles.confirm_delete_ok'),
-    danger: true,
+    title:        'Xóa tính năng?',
+    message:      `Xóa tính năng «${row.name}» (${row.key})?\nCác menu liên quan sẽ bị ảnh hưởng ngay lập tức.`,
+    confirmLabel: 'Xóa',
+    danger:       true,
   })
   if (!ok) return
   saving.value = true
   try {
     await admin.deleteFeatureToggle(row.id)
     await load()
-    await syncSessionFromServer()
-    showAppSuccess(t('feature_toggles.success_delete'), t('feature_toggles.toast_success_title'))
+    await syncSession()
+    showAppSuccess('Đã xóa tính năng.')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -637,8 +160,458 @@ async function confirmRemove(row) {
   }
 }
 
-onMounted(() => {
-  loadFilterControlVisibility()
-  load()
+// ─── Create ───────────────────────────────────────────────────────────────────
+
+watch(presetIdx, (v) => {
+  if (v === '' || v == null) return
+  const row = SEED_FEATURE_TOGGLE_PRESETS[Number(v)]
+  if (row) {
+    form.key    = row.key
+    form.name   = row.name
+    form.module = row.module ?? ''
+  }
 })
+
+function openAdd() {
+  presetIdx.value          = ''
+  form.key                 = ''
+  form.name                = ''
+  form.module              = ''
+  form.is_enabled          = true
+  form.maintenance_mode    = false
+  form.upgrade_notice      = false
+  addModalOpen.value       = true
+}
+
+async function submitAdd() {
+  if (!form.key.trim() || !form.name.trim()) return
+  saving.value = true
+  try {
+    await admin.createFeatureToggle({
+      key:              form.key.trim(),
+      name:             form.name.trim(),
+      module:           form.module.trim() || null,
+      is_enabled:       !!form.is_enabled,
+      maintenance_mode: !!form.maintenance_mode,
+      upgrade_notice:   !!form.upgrade_notice,
+    })
+    addModalOpen.value = false
+    await load()
+    await syncSession()
+    showAppSuccess('Đã thêm tính năng mới.')
+  } catch (e) {
+    showAppError(formatApiError(e))
+  } finally {
+    saving.value = false
+  }
+}
+
+function resetFilters() {
+  searchRaw.value    = ''
+  searchQ.value      = ''
+  filterStatus.value = 'all'
+}
+
+function toggleExpand(id) {
+  expandedId.value = expandedId.value === id ? null : id
+}
+
+onMounted(load)
 </script>
+
+<template>
+  <div class="mx-auto max-w-6xl space-y-5 pb-8">
+
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">Tính năng hệ thống</h1>
+        <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          Bật / tắt các tính năng và quản lý chế độ bảo trì, thông báo nâng cấp.
+        </p>
+      </div>
+      <Button type="button" class="shrink-0 gap-1.5" :disabled="loading || saving" @click="openAdd">
+        <PlusIcon class="h-4 w-4" aria-hidden="true" />
+        Thêm tính năng
+      </Button>
+    </div>
+
+    <!-- ── Filter bar ─────────────────────────────────────────────────────── -->
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="relative">
+        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <input
+          v-model="searchRaw"
+          type="search"
+          placeholder="Tìm tính năng…"
+          aria-label="Tìm tính năng"
+          class="h-9 w-44 rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 sm:w-52"
+        />
+      </div>
+
+      <select
+        v-model="filterStatus"
+        aria-label="Lọc theo trạng thái"
+        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <option v-for="opt in STATUS_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+
+      <button
+        v-if="activeFilters > 0"
+        type="button"
+        class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+        @click="resetFilters"
+      >
+        <XMarkIcon class="h-4 w-4" aria-hidden="true" />
+        Xóa bộ lọc
+      </button>
+    </div>
+
+    <!-- ── Loading ────────────────────────────────────────────────────────── -->
+    <div v-if="loading" class="space-y-2">
+      <div v-for="i in 6" :key="i" class="h-14 animate-pulse rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
+    </div>
+
+    <!-- ── Empty ─────────────────────────────────────────────────────────── -->
+    <template v-else-if="!items.length">
+      <Card>
+        <div class="py-12 text-center">
+          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Chưa có tính năng nào.</p>
+          <Button class="mt-4" @click="openAdd">Thêm tính năng đầu tiên</Button>
+        </div>
+      </Card>
+    </template>
+
+    <template v-else>
+      <div
+        v-if="filteredItems.length === 0"
+        class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 py-10 text-center text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200"
+      >
+        Không tìm thấy tính năng nào khớp bộ lọc.
+      </div>
+
+      <!-- Desktop table -->
+      <div v-else class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700">
+        <div class="hidden md:block">
+          <table class="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50/95 text-slate-500 dark:border-slate-700 dark:bg-slate-800/80">
+                <th class="py-2.5 pl-4 pr-3 text-xs font-semibold uppercase tracking-wide">Tên tính năng</th>
+                <th class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Khoá (Key)</th>
+                <th class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Nhóm</th>
+                <th class="w-24 py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide text-teal-600 dark:text-teal-400">Bật</th>
+                <th class="w-28 py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Bảo trì</th>
+                <th class="w-28 py-2.5 px-2 text-center text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">Nâng cấp</th>
+                <th class="w-10 py-2.5 px-2 text-right text-xs font-semibold uppercase tracking-wide">Nav</th>
+                <th class="py-2.5 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-wide">Xoá</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="row in filteredItems" :key="row.id">
+                <tr
+                  class="border-b border-slate-100 transition-colors hover:bg-slate-50/60 dark:border-slate-800 dark:hover:bg-slate-800/30"
+                  :class="{ 'bg-slate-50/30 dark:bg-slate-900/30': !row.is_enabled }"
+                >
+                  <!-- Tên -->
+                  <td class="py-3 pl-4 pr-3 align-middle">
+                    <span class="font-semibold text-slate-900 dark:text-slate-100">{{ row.name }}</span>
+                    <div class="mt-0.5 flex gap-1">
+                      <span v-if="row.maintenance_mode" class="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">Bảo trì</span>
+                      <span v-if="row.upgrade_notice" class="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">Nâng cấp</span>
+                    </div>
+                  </td>
+
+                  <!-- Key -->
+                  <td class="max-w-[14rem] py-3 pr-3 align-middle">
+                    <span class="break-all font-mono text-xs text-slate-500 dark:text-slate-400">{{ row.key }}</span>
+                  </td>
+
+                  <!-- Module -->
+                  <td class="py-3 pr-3 align-middle text-sm text-slate-500 dark:text-slate-400">{{ row.module ?? '—' }}</td>
+
+                  <!-- Toggle: Bật -->
+                  <td class="py-3 px-2 text-center align-middle">
+                    <button
+                      type="button"
+                      role="switch"
+                      :aria-checked="row.is_enabled"
+                      :disabled="saving"
+                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-slate-900"
+                      :class="row.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'"
+                      @click="patchToggle(row, { is_enabled: !row.is_enabled })"
+                    >
+                      <span
+                        class="inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        :class="row.is_enabled ? 'translate-x-5' : 'translate-x-0'"
+                      />
+                    </button>
+                  </td>
+
+                  <!-- Toggle: Bảo trì -->
+                  <td class="py-3 px-2 text-center align-middle">
+                    <button
+                      type="button"
+                      role="switch"
+                      :aria-checked="row.maintenance_mode"
+                      :disabled="saving"
+                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-slate-900"
+                      :class="row.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'"
+                      @click="patchToggle(row, { maintenance_mode: !row.maintenance_mode })"
+                    >
+                      <span
+                        class="inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        :class="row.maintenance_mode ? 'translate-x-5' : 'translate-x-0'"
+                      />
+                    </button>
+                  </td>
+
+                  <!-- Toggle: Nâng cấp -->
+                  <td class="py-3 px-2 text-center align-middle">
+                    <button
+                      type="button"
+                      role="switch"
+                      :aria-checked="row.upgrade_notice"
+                      :disabled="saving"
+                      class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-offset-slate-900"
+                      :class="row.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'"
+                      @click="patchToggle(row, { upgrade_notice: !row.upgrade_notice })"
+                    >
+                      <span
+                        class="inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                        :class="row.upgrade_notice ? 'translate-x-5' : 'translate-x-0'"
+                      />
+                    </button>
+                  </td>
+
+                  <!-- Nav expand -->
+                  <td class="py-3 px-2 text-right align-middle">
+                    <button
+                      v-if="navLinksForKey(row.key).length > 0"
+                      type="button"
+                      :title="expandedId === row.id ? 'Ẩn nav' : 'Xem nav bị ảnh hưởng'"
+                      class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-teal-600 dark:hover:bg-slate-800 dark:hover:text-teal-400"
+                      @click="toggleExpand(row.id)"
+                    >
+                      <ChevronDownIcon
+                        class="h-4 w-4 transition-transform duration-200"
+                        :class="{ '-rotate-180': expandedId === row.id }"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </td>
+
+                  <!-- Delete -->
+                  <td class="py-3 pl-2 pr-4 text-right align-middle">
+                    <button
+                      type="button"
+                      title="Xóa"
+                      class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                      :disabled="saving"
+                      @click="confirmDelete(row)"
+                    >
+                      <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- Nav affected panel (expand) -->
+                <tr v-if="expandedId === row.id" :key="'nav-' + row.id">
+                  <td colspan="8" class="border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+                    <div class="flex items-start gap-2">
+                      <LinkIcon class="mt-0.5 h-4 w-4 shrink-0 text-teal-500" aria-hidden="true" />
+                      <div>
+                        <p class="mb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">MỤC MENU BỊ ẢNH HƯỞNG KHI TẮT TÍNH NĂNG NÀY</p>
+                        <div class="flex flex-wrap gap-1.5">
+                          <span
+                            v-for="link in navLinksForKey(row.key)"
+                            :key="link.to"
+                            class="rounded-lg border border-teal-200/60 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-teal-800/40 dark:bg-slate-900 dark:text-slate-300"
+                          >
+                            {{ link.labelKey.replace(/^nav\./, '') }} <span class="ml-1 font-mono text-[10px] text-slate-400">{{ link.to }}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile cards -->
+        <div class="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
+          <div v-for="row in filteredItems" :key="'m' + row.id" class="bg-white p-4 dark:bg-slate-900/60">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="font-semibold text-slate-900 dark:text-slate-100">{{ row.name }}</p>
+                <p class="mt-0.5 break-all font-mono text-xs text-slate-400 dark:text-slate-500">{{ row.key }}</p>
+                <p v-if="row.module" class="mt-0.5 text-xs text-slate-500">{{ row.module }}</p>
+                <div class="mt-1 flex gap-1">
+                  <span v-if="row.maintenance_mode" class="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">Bảo trì</span>
+                  <span v-if="row.upgrade_notice" class="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300">Nâng cấp</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                :disabled="saving"
+                @click="confirmDelete(row)"
+              >
+                <TrashIcon class="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div class="mt-4 grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+              <div class="flex flex-col items-center gap-1.5">
+                <span class="text-xs font-medium text-teal-600 dark:text-teal-400">Bật</span>
+                <button
+                  type="button"
+                  role="switch"
+                  :aria-checked="row.is_enabled"
+                  :disabled="saving"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors disabled:opacity-50"
+                  :class="row.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'"
+                  @click="patchToggle(row, { is_enabled: !row.is_enabled })"
+                >
+                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="row.is_enabled ? 'translate-x-5' : 'translate-x-0'" />
+                </button>
+              </div>
+              <div class="flex flex-col items-center gap-1.5">
+                <span class="text-xs font-medium text-amber-600 dark:text-amber-400">Bảo trì</span>
+                <button
+                  type="button"
+                  role="switch"
+                  :aria-checked="row.maintenance_mode"
+                  :disabled="saving"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors disabled:opacity-50"
+                  :class="row.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'"
+                  @click="patchToggle(row, { maintenance_mode: !row.maintenance_mode })"
+                >
+                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="row.maintenance_mode ? 'translate-x-5' : 'translate-x-0'" />
+                </button>
+              </div>
+              <div class="flex flex-col items-center gap-1.5">
+                <span class="text-xs font-medium text-violet-600 dark:text-violet-400">Nâng cấp</span>
+                <button
+                  type="button"
+                  role="switch"
+                  :aria-checked="row.upgrade_notice"
+                  :disabled="saving"
+                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors disabled:opacity-50"
+                  :class="row.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'"
+                  @click="patchToggle(row, { upgrade_notice: !row.upgrade_notice })"
+                >
+                  <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="row.upgrade_notice ? 'translate-x-5' : 'translate-x-0'" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Nav affected (mobile) -->
+            <div v-if="navLinksForKey(row.key).length" class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <button type="button" class="flex items-center gap-1 text-xs font-medium text-teal-600 dark:text-teal-400" @click="toggleExpand(row.id)">
+                <LinkIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                {{ expandedId === row.id ? 'Ẩn nav' : `${navLinksForKey(row.key).length} mục menu bị ảnh hưởng` }}
+              </button>
+              <div v-if="expandedId === row.id" class="mt-2 flex flex-wrap gap-1.5">
+                <span
+                  v-for="link in navLinksForKey(row.key)"
+                  :key="link.to"
+                  class="rounded-lg border border-teal-200/60 bg-slate-50 px-2 py-1 text-xs text-slate-600 dark:border-teal-800/40 dark:bg-slate-800 dark:text-slate-300"
+                >
+                  {{ link.labelKey.replace(/^nav\./, '') }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── Add modal ─────────────────────────────────────────────────────── -->
+    <div
+      v-if="addModalOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="feature-add-title"
+      @click.self="addModalOpen = false"
+    >
+      <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="feature-add-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Thêm tính năng mới</h2>
+          <button type="button" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" @click="addModalOpen = false">
+            <XMarkIcon class="h-5 w-5" />
+          </button>
+        </div>
+
+        <form class="space-y-4" @submit.prevent="submitAdd">
+          <Select v-model="presetIdx" label="Chọn từ mẫu có sẵn">
+            <option value="">— Không dùng mẫu —</option>
+            <option v-for="(row, i) in SEED_FEATURE_TOGGLE_PRESETS" :key="row.key" :value="String(i)">
+              {{ row.name }} ({{ row.key }})
+            </option>
+          </Select>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <Input v-model="form.key" label="Khoá (Key) *" placeholder="vd. module.reports" required />
+            <Input v-model="form.name" label="Tên hiển thị *" placeholder="vd. Báo cáo" required />
+          </div>
+
+          <Input v-model="form.module" label="Nhóm (tùy chọn)" placeholder="vd. reports" />
+
+          <!-- Toggle defaults -->
+          <div class="space-y-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">TRẠNG THÁI MẶC ĐỊNH</p>
+            <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <span>Bật tính năng</span>
+              <button
+                type="button"
+                role="switch"
+                :aria-checked="form.is_enabled"
+                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors"
+                :class="form.is_enabled ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'"
+                @click="form.is_enabled = !form.is_enabled"
+              >
+                <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.is_enabled ? 'translate-x-5' : 'translate-x-0'" />
+              </button>
+            </label>
+            <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <span>Chế độ bảo trì</span>
+              <button
+                type="button"
+                role="switch"
+                :aria-checked="form.maintenance_mode"
+                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors"
+                :class="form.maintenance_mode ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'"
+                @click="form.maintenance_mode = !form.maintenance_mode"
+              >
+                <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.maintenance_mode ? 'translate-x-5' : 'translate-x-0'" />
+              </button>
+            </label>
+            <label class="flex cursor-pointer items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <span>Thông báo nâng cấp</span>
+              <button
+                type="button"
+                role="switch"
+                :aria-checked="form.upgrade_notice"
+                class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent transition-colors"
+                :class="form.upgrade_notice ? 'bg-violet-500' : 'bg-slate-200 dark:bg-slate-700'"
+                @click="form.upgrade_notice = !form.upgrade_notice"
+              >
+                <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200" :class="form.upgrade_notice ? 'translate-x-5' : 'translate-x-0'" />
+              </button>
+            </label>
+          </div>
+
+          <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:justify-end">
+            <Button variant="secondary" type="button" :disabled="saving" @click="addModalOpen = false">Huỷ</Button>
+            <Button type="submit" :loading="saving" :disabled="saving || !form.key.trim() || !form.name.trim()">Thêm tính năng</Button>
+          </div>
+        </form>
+      </Card>
+    </div>
+
+  </div>
+</template>

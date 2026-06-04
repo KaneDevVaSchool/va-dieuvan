@@ -30,6 +30,11 @@ export async function listPermissions() {
   return data.data
 }
 
+export async function listPermissionsWithRoles() {
+  const { data } = await http.get('/admin/permissions/with-roles')
+  return data.data
+}
+
 export async function createPermission(payload) {
   const { data } = await http.post('/admin/permissions', payload)
   return data.data
@@ -83,5 +88,13 @@ export async function updateFeatureToggle(id, payload) {
 
 export async function deleteFeatureToggle(id) {
   const { data } = await http.delete(`/admin/feature-toggles/${id}`)
+  return data.data
+}
+
+/** Gán hoặc gỡ role hàng loạt cho nhiều user.
+ * @param {{ user_ids: number[], roles: string[], action: 'assign'|'remove' }} payload
+ */
+export async function bulkUpdateUserRoles(payload) {
+  const { data } = await http.post('/v1/users/roles/bulk-update', payload)
   return data.data
 }

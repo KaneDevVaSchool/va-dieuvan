@@ -1,21 +1,14 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import {
-  FunnelIcon,
   ChevronDownIcon,
-  ChevronRightIcon,
+  LockClosedIcon,
+  MagnifyingGlassIcon,
   PencilSquareIcon,
+  PlusIcon,
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
-import { useDetailsAutoClose } from '../../composables/useDetailsAutoClose.js'
-import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
-import Card from '../../components/ui/Card.vue'
-import Button from '../../components/ui/Button.vue'
-import Input from '../../components/ui/Input.vue'
-import Select from '../../components/ui/Select.vue'
 import { PERMISSION_MODULES, groupPermissions, getModuleId } from '../../config/permissionModules.js'
 import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
 import permissionPlainVi from '../../data/permission_plain_vi.json'
@@ -24,265 +17,185 @@ import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 import { debounceTrailing } from '../../composables/useDebounce'
+import Card from '../../components/ui/Card.vue'
+import Button from '../../components/ui/Button.vue'
+import Input from '../../components/ui/Input.vue'
+import Select from '../../components/ui/Select.vue'
 
-const PERMISSIONS_FILTER_VIS_KEY = 'va.permissions.filter_control_visibility_v2'
-const FILTER_CONTROL_IDS = ['search', 'role', 'module']
+// ─── Màu badge role ───────────────────────────────────────────────────────────
 
-function defaultFilterControlVisibility() {
-  return FILTER_CONTROL_IDS.reduce((acc, id) => { acc[id] = true; return acc }, {})
-}
+const ROLE_COLORS = [
+  'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300',
+  'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300',
+  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
+  'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
+  'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
+  'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300',
+  'bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300',
+]
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
 const loading  = ref(true)
 const saving   = ref(false)
-const items    = ref([])
-const editing  = ref(null)
-const form     = reactive({ name: '', display_name: '', plain_description: '' })
-const editForm = reactive({ name: '', display_name: '', plain_description: '' })
+const items    = ref([])   // permissions với role_ids + role_names
+const roles    = ref([])   // danh sách roles (cho filter dropdown)
 
-const seedPermissions    = SEED_PERMISSION_PRESETS
-const permissionPreset   = ref('')
-
-const rolesBrief            = ref([])
-const permissionIdsByRoleId = ref(new Map())
-const roleFacetsReady       = ref(false)
-
-const funnelDetailsRef = ref(null)
-useDetailsAutoClose(funnelDetailsRef)
-const filterControlVisible = reactive(defaultFilterControlVisibility())
-const createModalOpen      = ref(false)
-
-const searchInput  = ref('')
-const filterQ      = ref('')
+// Filter
+const searchRaw    = ref('')
+const searchQ      = ref('')
 const filterRoleId = ref('')
 const filterModule = ref('all')
+const filterUnassigned = ref(false)
 
-// Which module accordions are open
-const openModules  = ref(new Set())
+// Module accordions — mở mặc định tất cả
+const openModules = ref(new Set())
 
-const filterControlDefs = Object.freeze([
-  { id: 'search', label: 'Tìm trong danh sách' },
-  { id: 'role',   label: 'Theo vai trò' },
-  { id: 'module', label: 'Module' },
-])
+// Create modal
+const createOpen   = ref(false)
+const presetVal    = ref('')
+const createForm   = reactive({ name: '', display_name: '', plain_description: '' })
 
-// ─── Role badge colours (stable mapping by position) ─────────────────────────
+// Edit panel
+const editingPerm  = ref(null)
+const editForm     = reactive({ name: '', display_name: '', plain_description: '' })
 
-const BADGE_PALETTES = [
-  'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300',
-  'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300',
-  'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
-  'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
-  'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
-  'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300',
-  'bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300',
-]
+// ─── Computed ─────────────────────────────────────────────────────────────────
 
 const roleColorMap = computed(() => {
   const m = new Map()
-  rolesBrief.value.forEach((r, i) => m.set(r.id, BADGE_PALETTES[i % BADGE_PALETTES.length]))
+  roles.value.forEach((r, i) => m.set(r.id, ROLE_COLORS[i % ROLE_COLORS.length]))
   return m
 })
-
-// ─── Module options for filter ────────────────────────────────────────────────
 
 const MODULE_OPTS = computed(() => [
   { value: 'all', label: 'Tất cả module' },
   ...PERMISSION_MODULES.map((m) => ({ value: m.id, label: m.label })),
 ])
 
-// ─── Computed ─────────────────────────────────────────────────────────────────
-
-const bumpSearchDebounced = debounceTrailing(() => { filterQ.value = searchInput.value }, 300)
-watch(searchInput, () => bumpSearchDebounced())
-
-const roleChipSummaryText = computed(() => {
-  if (!roleFacetsReady.value) return 'Đang tải…'
-  if (!filterRoleId.value) return 'Tất cả'
-  const r = rolesBrief.value.find((x) => String(x.id) === String(filterRoleId.value))
-  if (!r) return '—'
-  const dn = r.display_name ?? ''
-  return dn ? `${r.name} — ${dn}` : r.name
-})
-
-const moduleChipSummaryText = computed(
-  () => MODULE_OPTS.value.find((o) => o.value === filterModule.value)?.label ?? 'Tất cả module',
-)
+const bumpSearch = debounceTrailing(() => { searchQ.value = searchRaw.value }, 300)
+watch(searchRaw, () => bumpSearch())
 
 const filteredItems = computed(() => {
-  const qRaw     = filterQ.value.trim().toLowerCase()
-  const roleIdSel = filterRoleId.value
-
   let list = items.value
 
-  // Role filter
-  if (roleIdSel && roleFacetsReady.value) {
-    const idNum = Number(roleIdSel)
-    const set   = permissionIdsByRoleId.value.get(idNum)
-    list = list.filter((p) => set && set.has(p.id))
+  if (filterUnassigned.value) {
+    list = list.filter((p) => !p.role_ids?.length)
   }
 
-  // Module filter
+  if (filterRoleId.value) {
+    const id = Number(filterRoleId.value)
+    list = list.filter((p) => p.role_ids?.includes(id))
+  }
+
   if (filterModule.value !== 'all') {
     list = list.filter((p) => getModuleId(p.name) === filterModule.value)
   }
 
-  // Search
-  if (qRaw) {
-    list = list.filter((p) => {
-      const name = (p.name ?? '').toLowerCase()
-      const dn   = (p.display_name ?? '').toLowerCase()
-      const sum  = (p.plain_summary ?? '').toLowerCase()
-      return name.includes(qRaw) || dn.includes(qRaw) || sum.includes(qRaw)
-    })
+  const q = searchQ.value.trim().toLowerCase()
+  if (q) {
+    list = list.filter((p) =>
+      (p.name ?? '').toLowerCase().includes(q) ||
+      (p.display_name ?? '').toLowerCase().includes(q) ||
+      (p.plain_summary ?? '').toLowerCase().includes(q),
+    )
   }
 
   return list
 })
 
-const groupedFilteredItems = computed(() => groupPermissions(filteredItems.value))
+const grouped = computed(() => groupPermissions(filteredItems.value))
 
-const activeFilterCount = computed(() => {
+const activeFilters = computed(() => {
   let n = 0
-  if (searchInput.value.trim()) n++
+  if (searchRaw.value.trim()) n++
   if (filterRoleId.value) n++
   if (filterModule.value !== 'all') n++
+  if (filterUnassigned.value) n++
   return n
 })
 
-// Roles that have a given permission
-function rolesForPerm(perm) {
-  if (!roleFacetsReady.value) return []
-  return rolesBrief.value.filter((r) => {
-    const set = permissionIdsByRoleId.value.get(r.id)
-    return set && set.has(perm.id)
-  })
+function isSystemPerm(name) {
+  return name?.startsWith('system.')
 }
 
-// ─── Module accordion ─────────────────────────────────────────────────────────
-
-function toggleModule(modId) {
-  if (openModules.value.has(modId)) openModules.value.delete(modId)
-  else openModules.value.add(modId)
+function rolesOfPerm(perm) {
+  return perm.role_names ?? []
 }
 
-// Open all modules that have matching perms when filter is active
-watch(filteredItems, () => {
-  if (activeFilterCount.value > 0) {
-    groupedFilteredItems.value.forEach((g) => openModules.value.add(g.module.id))
-  }
-})
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function closeParentDetails(ev) {
-  const d = ev.currentTarget?.closest?.('details')
-  if (d) d.open = false
-}
-
-function closeFunnelMenu() {
-  const el = funnelDetailsRef.value
-  if (el) el.open = false
-}
-
-function resetFilters() {
-  searchInput.value  = ''
-  filterQ.value      = ''
-  filterRoleId.value = ''
-  filterModule.value = 'all'
-  closeFunnelMenu()
-}
-
-function displayName(perm) {
+function permDisplayName(perm) {
   const dn = perm.display_name?.trim()
   return dn && dn !== perm.name ? dn : perm.name
 }
 
-// ─── localStorage ─────────────────────────────────────────────────────────────
+// ─── Accordions ──────────────────────────────────────────────────────────────
 
-function loadFilterControlVisibility() {
-  try {
-    const raw = localStorage.getItem(PERMISSIONS_FILTER_VIS_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    const base = defaultFilterControlVisibility()
-    FILTER_CONTROL_IDS.forEach((id) => { if (typeof o[id] === 'boolean') base[id] = o[id] })
-    Object.assign(filterControlVisible, base)
-  } catch { /* ignore */ }
+function toggleModule(id) {
+  if (openModules.value.has(id)) openModules.value.delete(id)
+  else openModules.value.add(id)
 }
 
-watch(filterControlVisible, () => {
-  try { localStorage.setItem(PERMISSIONS_FILTER_VIS_KEY, JSON.stringify({ ...filterControlVisible })) } catch { /* ignore */ }
-}, { deep: true })
-
-// ─── Role facets (load all roles + per-role perms) ────────────────────────────
-
-async function hydrateRoleFacets() {
-  roleFacetsReady.value        = false
-  permissionIdsByRoleId.value  = new Map()
-  try {
-    const brief = (await admin.listRoles()) ?? []
-    rolesBrief.value = brief
-    const pairs = await Promise.all(
-      brief.map(async (r) => {
-        try {
-          const d   = await admin.getRole(r.id)
-          const ids = new Set((d.permissions ?? []).map((p) => p.id))
-          return [r.id, ids]
-        } catch {
-          return [r.id, new Set()]
-        }
-      }),
-    )
-    permissionIdsByRoleId.value = new Map(pairs)
-  } catch {
-    rolesBrief.value = []
-  } finally {
-    roleFacetsReady.value = true
+// Mở accordion của các module có kết quả filter
+watch(filteredItems, () => {
+  if (activeFilters.value > 0) {
+    grouped.value.forEach((g) => openModules.value.add(g.module.id))
   }
-}
+})
 
-// ─── API ─────────────────────────────────────────────────────────────────────
+// ─── API load ─────────────────────────────────────────────────────────────────
 
 async function load() {
   loading.value = true
   try {
-    items.value = (await admin.listPermissions()) ?? []
+    const [perms, roleList] = await Promise.all([
+      admin.listPermissionsWithRoles(),
+      admin.listRoles(),
+    ])
+    items.value = perms ?? []
+    roles.value = roleList ?? []
+    // Mở tất cả module mặc định khi load lần đầu
+    if (openModules.value.size === 0) {
+      PERMISSION_MODULES.forEach((m) => openModules.value.add(m.id))
+    }
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
     loading.value = false
   }
-  void hydrateRoleFacets()
 }
 
-watch(permissionPreset, (v) => {
+// ─── Create ───────────────────────────────────────────────────────────────────
+
+watch(presetVal, (v) => {
   if (!v) return
-  const p = seedPermissions.find((x) => x.name === v)
+  const p = SEED_PERMISSION_PRESETS.find((x) => x.name === v)
   if (p) {
-    form.name             = p.name
-    form.display_name     = p.display_name
-    form.plain_description = permissionPlainVi[v] ?? ''
+    createForm.name            = p.name
+    createForm.display_name    = p.display_name ?? ''
+    createForm.plain_description = permissionPlainVi[p.name] ?? ''
   }
 })
 
-async function create() {
-  if (!form.name.trim()) return
+function openCreate() {
+  presetVal.value              = ''
+  createForm.name              = ''
+  createForm.display_name      = ''
+  createForm.plain_description = ''
+  createOpen.value             = true
+}
+
+async function submitCreate() {
+  if (!createForm.name.trim()) return
   saving.value = true
   try {
     await admin.createPermission({
-      name:              form.name.trim(),
-      display_name:      form.display_name?.trim() || null,
-      plain_description: form.plain_description?.trim() || null,
+      name:              createForm.name.trim(),
+      display_name:      createForm.display_name.trim() || null,
+      plain_description: createForm.plain_description.trim() || null,
     })
-    form.name             = ''
-    form.display_name     = ''
-    form.plain_description = ''
-    permissionPreset.value = ''
+    createOpen.value = false
     await load()
-    showAppSuccess('Đã thêm quyền mới.', 'Thành công')
-    createModalOpen.value = false
+    showAppSuccess('Đã thêm quyền mới.')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -290,30 +203,32 @@ async function create() {
   }
 }
 
-function closeCreateModal() {
+// ─── Edit ─────────────────────────────────────────────────────────────────────
+
+function openEdit(perm) {
+  editingPerm.value          = perm
+  editForm.name              = perm.name
+  editForm.display_name      = perm.display_name ?? ''
+  editForm.plain_description = perm.plain_description ?? ''
+}
+
+function closeEdit() {
   if (saving.value) return
-  createModalOpen.value = false
+  editingPerm.value = null
 }
 
-function openEdit(p) {
-  editing.value          = p
-  editForm.name          = p.name
-  editForm.display_name  = p.display_name ?? ''
-  editForm.plain_description = p.plain_description ?? ''
-}
-
-async function saveEdit() {
-  if (!editing.value) return
+async function submitEdit() {
+  if (!editingPerm.value) return
   saving.value = true
   try {
-    await admin.updatePermission(editing.value.id, {
+    await admin.updatePermission(editingPerm.value.id, {
       name:              editForm.name.trim(),
-      display_name:      editForm.display_name?.trim() || null,
-      plain_description: editForm.plain_description?.trim() || null,
+      display_name:      editForm.display_name.trim() || null,
+      plain_description: editForm.plain_description.trim() || null,
     })
-    editing.value = null
+    editingPerm.value = null
     await load()
-    showAppSuccess('Đã lưu thay đổi quyền.', 'Thành công')
+    showAppSuccess('Đã lưu thay đổi.')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -321,307 +236,354 @@ async function saveEdit() {
   }
 }
 
-async function remove(p) {
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+async function removePerm(perm) {
+  const roleCount = (perm.role_ids ?? []).length
+  const roleNames = (perm.role_names ?? []).map((r) => r.display_name || r.name).join(', ')
+  const detail    = roleCount > 0
+    ? `\n\nCó ${roleCount} vai trò đang dùng quyền này: ${roleNames}.\nXóa sẽ thu hồi quyền khỏi các vai trò đó.`
+    : ''
+
   const ok = await confirmAction({
     title:        'Xóa quyền?',
-    message:      `Xóa quyền «${p.name}»? Các vai trò đang dùng quyền này có thể cần chỉnh lại.`,
+    message:      `Xóa quyền «${perm.name}»?${detail}`,
     confirmLabel: 'Xóa',
     danger:       true,
   })
   if (!ok) return
   try {
-    await admin.deletePermission(p.id)
+    await admin.deletePermission(perm.id)
     await load()
-    showAppSuccess('Đã xóa quyền.', 'Thành công')
+    showAppSuccess('Đã xóa quyền.')
   } catch (e) {
     showAppError(formatApiError(e))
   }
 }
 
-function setRoleFilter(ev, idVal)  { filterRoleId.value = idVal; closeParentDetails(ev) }
-function setModuleFilter(ev, val)  { filterModule.value = val;   closeParentDetails(ev) }
+// ─── Reset filter ─────────────────────────────────────────────────────────────
 
-onMounted(() => {
-  loadFilterControlVisibility()
-  load()
-})
+function resetFilters() {
+  searchRaw.value      = ''
+  searchQ.value        = ''
+  filterRoleId.value   = ''
+  filterModule.value   = 'all'
+  filterUnassigned.value = false
+}
+
+onMounted(load)
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl space-y-5 pb-6 text-slate-900 dark:text-slate-100 sm:space-y-6 sm:pb-8">
-    <Card>
-      <!-- Page header -->
-      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">Danh sách quyền</h2>
-        <Button type="button" class="w-full sm:w-auto" :disabled="saving" @click="createModalOpen = true">
-          + Thêm quyền
-        </Button>
+  <div class="mx-auto max-w-6xl space-y-5 pb-8">
+
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">Quyền hệ thống</h1>
+        <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Quản lý danh sách quyền và mapping với vai trò.</p>
+      </div>
+      <Button type="button" class="shrink-0 gap-1.5" :disabled="loading || saving" @click="openCreate">
+        <PlusIcon class="h-4 w-4" aria-hidden="true" />
+        Thêm quyền
+      </Button>
+    </div>
+
+    <!-- ── Filter bar ─────────────────────────────────────────────────────── -->
+    <div class="flex flex-wrap items-center gap-2">
+
+      <!-- Search -->
+      <div class="relative">
+        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <input
+          v-model="searchRaw"
+          type="search"
+          placeholder="Tìm quyền…"
+          aria-label="Tìm quyền"
+          class="h-9 w-48 rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 sm:w-56"
+        />
       </div>
 
-      <!-- Filter bar -->
-      <div class="relative z-40 mb-4">
-        <AppFilterBar>
-          <div class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+      <!-- Module -->
+      <select
+        v-model="filterModule"
+        aria-label="Lọc theo module"
+        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <option v-for="opt in MODULE_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
 
-            <!-- Funnel -->
-            <details ref="funnelDetailsRef" class="group relative">
-              <summary class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden">
-                <span class="relative inline-flex">
-                  <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                  <span v-if="activeFilterCount > 0" class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white">{{ activeFilterCount }}</span>
-                </span>
-                <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-              </summary>
+      <!-- Role -->
+      <select
+        v-model="filterRoleId"
+        aria-label="Lọc theo vai trò"
+        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+      >
+        <option value="">Tất cả vai trò</option>
+        <option v-for="r in roles" :key="r.id" :value="String(r.id)">
+          {{ r.display_name || r.name }}
+        </option>
+      </select>
 
-              <div class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50">
-                <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">Đang áp dụng</p>
-                <div class="p-3 pt-2">
-                  <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                    <li v-if="searchInput.trim()" class="flex justify-between gap-2">
-                      <span class="text-slate-500 dark:text-slate-400">Tìm trong trang</span>
-                      <span class="max-w-[10rem] truncate text-right font-medium" :title="searchInput">{{ searchInput }}</span>
-                    </li>
-                    <li v-if="filterRoleId" class="flex justify-between gap-2">
-                      <span class="text-slate-500 dark:text-slate-400">Vai trò</span>
-                      <span class="max-w-[12rem] truncate text-right font-medium">{{ roleChipSummaryText }}</span>
-                    </li>
-                    <li v-if="filterModule !== 'all'" class="flex justify-between gap-2">
-                      <span class="text-slate-500 dark:text-slate-400">Module</span>
-                      <span class="font-medium">{{ moduleChipSummaryText }}</span>
-                    </li>
-                    <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">Chưa chọn điều kiện lọc.</li>
-                  </ul>
+      <!-- Chưa gán -->
+      <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+        <input v-model="filterUnassigned" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
+        Chưa gán vai trò
+      </label>
 
-                  <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Hiển thị trên thanh</p>
-                    <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                      <li v-for="fd in filterControlDefs" :key="fd.id" class="flex items-start gap-2">
-                        <input :id="`permissions-filter-vis-${fd.id}`" v-model="filterControlVisible[fd.id]" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900" />
-                        <label :for="`permissions-filter-vis-${fd.id}`" class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300">{{ fd.label }}</label>
-                      </li>
-                    </ul>
-                  </div>
+      <!-- Clear -->
+      <button
+        v-if="activeFilters > 0"
+        type="button"
+        class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+        @click="resetFilters"
+      >
+        <XMarkIcon class="h-4 w-4" aria-hidden="true" />
+        Xóa bộ lọc
+        <span class="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white">{{ activeFilters }}</span>
+      </button>
+    </div>
 
-                  <button type="button" class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @click="resetFilters">
-                    Xóa tất cả bộ lọc
-                  </button>
-                </div>
-              </div>
-            </details>
+    <!-- ── Loading ────────────────────────────────────────────────────────── -->
+    <div v-if="loading" class="space-y-3">
+      <div v-for="i in 4" :key="i" class="h-32 animate-pulse rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
+    </div>
 
-            <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-              <!-- Module filter -->
-              <AppFilterDropdown
-                v-if="filterControlVisible.module"
-                root-class="shrink-0"
-                label="Module"
-                :summary-text="moduleChipSummaryText"
-                summary-text-class="max-w-[10rem]"
-                panel-class="max-h-[min(60vh,360px)] min-w-[220px] overflow-hidden py-1"
-              >
-                <ul class="max-h-[min(50vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                  <li v-for="opt in MODULE_OPTS" :key="opt.value">
-                    <button
-                      type="button"
-                      class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                      :class="filterModule === opt.value ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'"
-                      @click="setModuleFilter($event, opt.value)"
-                    >{{ opt.label }}</button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <!-- Role filter -->
-              <AppFilterDropdown
-                v-if="filterControlVisible.role"
-                root-class="shrink-0"
-                label="Vai trò"
-                :summary-text="roleChipSummaryText"
-                summary-text-class="max-w-[10rem]"
-                panel-class="max-h-[min(60vh,320px)] min-w-[220px] overflow-hidden py-1"
-              >
-                <ul class="max-h-[min(50vh,280px)] space-y-0.5 overflow-y-auto px-1 py-1">
-                  <li>
-                    <button type="button" class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition disabled:opacity-50" :disabled="!roleFacetsReady" :class="!filterRoleId ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'" @click="setRoleFilter($event, '')">Tất cả</button>
-                  </li>
-                  <li v-for="r in rolesBrief" :key="r.id">
-                    <button type="button" class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition disabled:opacity-50" :disabled="!roleFacetsReady" :class="String(filterRoleId) === String(r.id) ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'" @click="setRoleFilter($event, String(r.id))">
-                      {{ r.name }} — {{ r.display_name ?? '—' }}
-                    </button>
-                  </li>
-                </ul>
-              </AppFilterDropdown>
-
-              <!-- Search -->
-              <input
-                v-if="filterControlVisible.search"
-                v-model="searchInput"
-                type="search"
-                aria-label="Tìm trong trang danh sách quyền"
-                placeholder="Tìm mã, nhãn hoặc mô tả…"
-                title="Tìm trong trang danh sách quyền"
-                class="h-9 w-[10rem] shrink-0 rounded-md border-0 bg-white/90 px-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200/80 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600 dark:placeholder:text-slate-500 sm:w-52"
-              />
-            </div>
-
-            <!-- Clear filters -->
-            <div class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3">
-              <button type="button" class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200" aria-label="Xóa bộ lọc" @click="resetFilters">
-                <span class="relative inline-flex">
-                  <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-                  <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40" />
-                </span>
-              </button>
-            </div>
-          </div>
-        </AppFilterBar>
-      </div>
-
-      <!-- Loading -->
-      <div v-if="loading" class="flex items-center gap-3 py-10 text-sm text-slate-500 dark:text-slate-400">
-        <span class="inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-teal-600 dark:border-slate-600 dark:border-t-teal-400" aria-hidden="true" />
-        Đang tải…
-      </div>
-
-      <!-- Empty (no perms at all) -->
-      <template v-else-if="!items.length">
-        <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-12 text-center dark:border-slate-700 dark:bg-slate-900/30">
-          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Chưa có quyền nào.</p>
+    <!-- ── Empty ─────────────────────────────────────────────────────────── -->
+    <template v-else-if="!items.length">
+      <Card>
+        <div class="py-12 text-center">
+          <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Chưa có quyền nào trong hệ thống.</p>
+          <Button class="mt-4" @click="openCreate">Thêm quyền đầu tiên</Button>
         </div>
-      </template>
+      </Card>
+    </template>
 
-      <template v-else>
-        <!-- No match -->
-        <div v-if="groupedFilteredItems.length === 0" class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 py-10 text-center text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200/90">
-          Không có quyền khớp bộ lọc.
-        </div>
+    <template v-else>
+      <!-- Không khớp filter -->
+      <div
+        v-if="grouped.length === 0"
+        class="rounded-xl border border-dashed border-amber-200/80 bg-amber-50/40 py-10 text-center text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200"
+      >
+        Không tìm thấy quyền nào khớp bộ lọc.
+      </div>
 
-        <!-- Grouped accordion -->
-        <div v-else class="space-y-2">
-          <div
-            v-for="group in groupedFilteredItems"
-            :key="group.module.id"
-            class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700"
+      <!-- Module groups -->
+      <div v-else class="space-y-3">
+        <div
+          v-for="group in grouped"
+          :key="group.module.id"
+          class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700"
+        >
+          <!-- Module header -->
+          <button
+            type="button"
+            class="flex w-full items-center justify-between px-4 py-3 text-left transition"
+            :class="openModules.has(group.module.id)
+              ? 'bg-slate-50 dark:bg-slate-800/60'
+              : 'bg-white hover:bg-slate-50/60 dark:bg-slate-900 dark:hover:bg-slate-800/40'"
+            @click="toggleModule(group.module.id)"
           >
-            <!-- Module header (clickable to expand) -->
-            <button
-              type="button"
-              class="flex w-full items-center justify-between px-4 py-3 text-left transition"
-              :class="openModules.has(group.module.id) ? 'bg-slate-50/90 dark:bg-slate-800/60' : 'bg-white hover:bg-slate-50/60 dark:bg-slate-900 dark:hover:bg-slate-800/40'"
-              :aria-expanded="openModules.has(group.module.id)"
-              @click="toggleModule(group.module.id)"
-            >
-              <span class="flex items-center gap-2.5">
-                <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ group.module.label }}</span>
-                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                  {{ group.perms.length }}
-                </span>
+            <span class="flex items-center gap-2.5">
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ group.module.label }}</span>
+              <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                {{ group.perms.length }}
               </span>
-              <ChevronRightIcon
-                class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200"
-                :class="{ 'rotate-90': openModules.has(group.module.id) }"
-                aria-hidden="true"
-              />
-            </button>
+            </span>
+            <ChevronDownIcon
+              class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200"
+              :class="{ '-rotate-180': openModules.has(group.module.id) }"
+              aria-hidden="true"
+            />
+          </button>
 
-            <!-- Permission rows -->
-            <div v-show="openModules.has(group.module.id)" class="divide-y divide-slate-100 dark:divide-slate-800">
-              <div
-                v-for="p in group.perms"
-                :key="p.id"
-                class="flex items-start gap-3 bg-white px-4 py-3 hover:bg-slate-50/60 dark:bg-slate-900/60 dark:hover:bg-slate-800/30"
-              >
-                <!-- Permission info -->
-                <div class="min-w-0 flex-1">
-                  <p class="font-semibold leading-snug text-slate-900 dark:text-slate-100">
-                    {{ displayName(p) }}
-                  </p>
-                  <p class="mt-0.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">{{ p.name }}</p>
-                  <p v-if="p.plain_summary" class="mt-1 text-xs leading-snug text-slate-500 dark:text-slate-400">{{ p.plain_summary }}</p>
-                </div>
-
-                <!-- Role badges (who has this perm) -->
-                <div class="flex shrink-0 flex-wrap justify-end gap-1 pt-0.5">
+          <!-- Perm rows -->
+          <div v-show="openModules.has(group.module.id)" class="divide-y divide-slate-100 dark:divide-slate-800">
+            <div
+              v-for="perm in group.perms"
+              :key="perm.id"
+              class="flex items-start gap-3 bg-white px-4 py-3 transition hover:bg-slate-50/50 dark:bg-slate-900/60 dark:hover:bg-slate-800/30"
+            >
+              <!-- Info -->
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="font-semibold text-slate-900 dark:text-slate-100">{{ permDisplayName(perm) }}</span>
+                  <!-- System badge -->
                   <span
-                    v-if="!roleFacetsReady"
-                    class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                  >…</span>
-                  <template v-else>
-                    <span
-                      v-for="r in rolesForPerm(p)"
-                      :key="r.id"
-                      :title="r.name"
-                      class="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                      :class="roleColorMap.get(r.id) ?? BADGE_PALETTES[0]"
-                    >{{ r.display_name || r.name }}</span>
-                    <span
-                      v-if="rolesForPerm(p).length === 0"
-                      class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                    >Chưa gán</span>
-                  </template>
+                    v-if="isSystemPerm(perm.name)"
+                    class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                  >
+                    <LockClosedIcon class="h-2.5 w-2.5" aria-hidden="true" />
+                    Hệ thống
+                  </span>
                 </div>
+                <p class="mt-0.5 font-mono text-[11px] text-slate-400 dark:text-slate-500">{{ perm.name }}</p>
+                <p v-if="perm.plain_summary" class="mt-1 text-xs leading-snug text-slate-500 dark:text-slate-400">{{ perm.plain_summary }}</p>
+              </div>
 
-                <!-- Row actions -->
-                <div class="shrink-0 self-start">
-                  <AppRowActionsMenu align="end" aria-label="Thao tác" trigger-sr-only="Thao tác" :disabled="saving">
-                    <button type="button" role="menuitem" class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50 disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800" :disabled="saving" @click="openEdit(p)">
-                      <PencilSquareIcon class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
-                      Sửa
-                    </button>
-                    <button type="button" role="menuitem" class="flex w-full items-center gap-2 px-3 py-2 text-left text-red-700 transition hover:bg-red-50 disabled:opacity-40 dark:text-red-400 dark:hover:bg-red-950/40" :disabled="saving" @click="remove(p)">
-                      <TrashIcon class="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
-                      Xóa
-                    </button>
-                  </AppRowActionsMenu>
-                </div>
+              <!-- Role badges -->
+              <div class="flex shrink-0 flex-wrap justify-end gap-1 pt-0.5">
+                <template v-if="rolesOfPerm(perm).length">
+                  <span
+                    v-for="r in rolesOfPerm(perm)"
+                    :key="r.id"
+                    :title="r.name"
+                    class="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    :class="roleColorMap.get(r.id) ?? ROLE_COLORS[0]"
+                  >{{ r.display_name || r.name }}</span>
+                </template>
+                <span
+                  v-else
+                  class="rounded-full border border-dashed border-slate-200 px-2 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                >Chưa gán</span>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex shrink-0 items-center gap-1 self-start">
+                <button
+                  type="button"
+                  title="Chỉnh sửa"
+                  class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                  :disabled="saving"
+                  @click="openEdit(perm)"
+                >
+                  <PencilSquareIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  v-if="!isSystemPerm(perm.name)"
+                  type="button"
+                  :title="(perm.role_ids?.length ?? 0) > 0 ? `${perm.role_ids.length} vai trò đang dùng` : 'Xóa quyền'"
+                  class="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                  :disabled="saving"
+                  @click="removePerm(perm)"
+                >
+                  <TrashIcon class="h-4 w-4" aria-hidden="true" />
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </template>
-    </Card>
+      </div>
+    </template>
 
-    <!-- Create modal -->
-    <div v-if="createModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-labelledby="system-permissions-create-title" @click.self="closeCreateModal">
+    <!-- ── Create modal ───────────────────────────────────────────────────── -->
+    <div
+      v-if="createOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="perm-create-title"
+      @click.self="createOpen = false"
+    >
       <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto shadow-xl">
-        <h2 id="system-permissions-create-title" class="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">Thêm quyền</h2>
-        <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="create">
-          <Select v-model="permissionPreset" label="Mẫu có sẵn" placeholder="— Không dùng mẫu —" class="sm:col-span-2">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 id="perm-create-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Thêm quyền mới</h2>
+          <button type="button" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" @click="createOpen = false">
+            <XMarkIcon class="h-5 w-5" />
+          </button>
+        </div>
+
+        <form class="space-y-4" @submit.prevent="submitCreate">
+          <Select v-model="presetVal" label="Chọn từ mẫu có sẵn">
             <option value="">— Không dùng mẫu —</option>
-            <option v-for="p in seedPermissions" :key="p.name" :value="p.name">{{ p.name }}</option>
+            <option v-for="p in SEED_PERMISSION_PRESETS" :key="p.name" :value="p.name">{{ p.name }}</option>
           </Select>
-          <Input v-model="form.name" label="Mã quyền" placeholder="vd. request.create" required />
-          <Input v-model="form.display_name" label="Nhãn hiển thị" placeholder="vd. Tạo yêu cầu điều xe" />
-          <label class="block sm:col-span-2">
-            <span class="mb-1 block text-sm font-medium text-slate-800 dark:text-slate-200">Mô tả</span>
-            <textarea v-model="form.plain_description" rows="3" class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" />
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <Input v-model="createForm.name" label="Mã quyền *" placeholder="vd. request.create" required class="sm:col-span-1" />
+            <Input v-model="createForm.display_name" label="Tên hiển thị" placeholder="vd. Tạo yêu cầu điều xe" class="sm:col-span-1" />
+          </div>
+
+          <label class="block">
+            <span class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Mô tả (tùy chọn)</span>
+            <textarea
+              v-model="createForm.plain_description"
+              rows="3"
+              placeholder="Giải thích ngắn về quyền này…"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            />
           </label>
-          <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:col-span-2 sm:flex-row sm:justify-end">
-            <Button variant="secondary" type="button" :disabled="saving" @click="closeCreateModal">Huỷ</Button>
-            <Button type="submit" :loading="saving" :disabled="saving">Thêm</Button>
+
+          <div class="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:justify-end">
+            <Button variant="secondary" type="button" :disabled="saving" @click="createOpen = false">Huỷ</Button>
+            <Button type="submit" :loading="saving" :disabled="saving || !createForm.name.trim()">Thêm quyền</Button>
           </div>
         </form>
       </Card>
     </div>
 
-    <!-- Edit modal -->
-    <div v-if="editing" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" @click.self="editing = null">
-      <Card class="max-h-[90vh] w-full max-w-lg overflow-y-auto" :title="`Sửa quyền: ${editing.name}`">
-        <div class="space-y-4">
-          <Input v-model="editForm.name" label="Mã quyền" />
-          <Input v-model="editForm.display_name" label="Nhãn hiển thị" />
-          <label class="block">
-            <span class="mb-1 block text-sm font-medium text-slate-800 dark:text-slate-200">Mô tả</span>
-            <textarea v-model="editForm.plain_description" rows="3" class="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-200 focus:ring-2 focus:ring-teal-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100" />
-          </label>
-          <div class="flex justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-            <Button variant="secondary" type="button" :disabled="saving" @click="editing = null">Đóng</Button>
-            <Button :loading="saving" :disabled="saving" @click="saveEdit">Lưu thay đổi</Button>
+    <!-- ── Edit slide panel ───────────────────────────────────────────────── -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="translate-x-full opacity-0"
+      enter-to-class="translate-x-0 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="translate-x-0 opacity-100"
+      leave-to-class="translate-x-full opacity-0"
+    >
+      <div v-if="editingPerm" class="fixed inset-0 z-50 flex justify-end">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/30" @click="closeEdit" />
+
+        <!-- Panel -->
+        <div class="relative z-10 flex h-full w-full max-w-md flex-col bg-white shadow-2xl dark:bg-slate-900">
+          <!-- Panel header -->
+          <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Chỉnh sửa quyền</h2>
+              <p class="mt-0.5 font-mono text-[11px] text-slate-400">{{ editingPerm.name }}</p>
+            </div>
+            <button type="button" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" :disabled="saving" @click="closeEdit">
+              <XMarkIcon class="h-5 w-5" />
+            </button>
+          </div>
+
+          <!-- Panel body -->
+          <div class="flex-1 space-y-4 overflow-y-auto p-5">
+            <!-- System warning -->
+            <div
+              v-if="isSystemPerm(editingPerm.name)"
+              class="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              <LockClosedIcon class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              Đây là quyền hệ thống. Chỉ chỉnh sửa tên hiển thị và mô tả.
+            </div>
+
+            <!-- Roles using this perm -->
+            <div v-if="rolesOfPerm(editingPerm).length" class="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/40">
+              <p class="mb-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">VAI TRÒ ĐANG DÙNG</p>
+              <div class="flex flex-wrap gap-1">
+                <span
+                  v-for="r in rolesOfPerm(editingPerm)"
+                  :key="r.id"
+                  class="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                  :class="roleColorMap.get(r.id) ?? ROLE_COLORS[0]"
+                >{{ r.display_name || r.name }}</span>
+              </div>
+            </div>
+
+            <Input v-model="editForm.name" label="Mã quyền" :disabled="isSystemPerm(editingPerm.name)" />
+            <Input v-model="editForm.display_name" label="Tên hiển thị" placeholder="Tên thân thiện để hiển thị trong UI" />
+
+            <label class="block">
+              <span class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Mô tả</span>
+              <textarea
+                v-model="editForm.plain_description"
+                rows="4"
+                placeholder="Giải thích quyền này cho phép làm gì…"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              />
+            </label>
+          </div>
+
+          <!-- Panel footer -->
+          <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
+            <Button variant="secondary" :disabled="saving" @click="closeEdit">Huỷ</Button>
+            <Button :loading="saving" :disabled="saving" @click="submitEdit">Lưu thay đổi</Button>
           </div>
         </div>
-      </Card>
-    </div>
+      </div>
+    </Transition>
+
   </div>
 </template>

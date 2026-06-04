@@ -74,6 +74,7 @@ Route::prefix('admin')->group(function () {
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
 
     Route::apiResource('roles', RoleController::class)->except(['create', 'edit']);
+    Route::get('permissions/with-roles', [PermissionController::class, 'withRoles'])->middleware('throttle:60,1');
     Route::apiResource('permissions', PermissionController::class)->except(['create', 'edit']);
     Route::apiResource('feature-toggles', FeatureToggleController::class)->except(['create', 'edit']);
 

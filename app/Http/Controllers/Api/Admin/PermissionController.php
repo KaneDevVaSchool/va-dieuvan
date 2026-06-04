@@ -24,6 +24,11 @@ class PermissionController extends Controller
         return $this->ok($permissions->list());
     }
 
+    public function withRoles(PermissionService $permissions): JsonResponse
+    {
+        return $this->ok($permissions->allWithRoles());
+    }
+
     public function show(Permission $permission): JsonResponse
     {
         return $this->ok($permission);
