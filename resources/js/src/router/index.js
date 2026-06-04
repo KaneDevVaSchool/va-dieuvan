@@ -345,7 +345,40 @@ const staffChildRoutes = [
         name: "systemRoles",
         component: () => import("../views/system/SystemRolesView.vue"),
         meta: {
-            title: "Vai trò người dùng",
+            title: "Vai trò & Phân quyền",
+            subtitle: "Quản trị",
+            permission: "system.roles.manage",
+            featureKey: "module.system.roles",
+        },
+    },
+    {
+        path: "system/roles/new",
+        name: "systemRoleNew",
+        component: () => import("../views/system/SystemRoleEditorView.vue"),
+        meta: {
+            title: "Tạo vai trò mới",
+            subtitle: "Quản trị",
+            permission: "system.roles.manage",
+            featureKey: "module.system.roles",
+        },
+    },
+    {
+        path: "system/roles/:id(\\d+)",
+        name: "systemRoleDetail",
+        component: () => import("../views/system/SystemRoleDetailView.vue"),
+        meta: {
+            title: "Chi tiết vai trò",
+            subtitle: "Quản trị",
+            permission: "system.roles.manage",
+            featureKey: "module.system.roles",
+        },
+    },
+    {
+        path: "system/roles/:id(\\d+)/edit",
+        name: "systemRoleEdit",
+        component: () => import("../views/system/SystemRoleEditorView.vue"),
+        meta: {
+            title: "Chỉnh sửa vai trò",
             subtitle: "Quản trị",
             permission: "system.roles.manage",
             featureKey: "module.system.roles",
