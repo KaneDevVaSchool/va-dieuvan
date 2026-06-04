@@ -181,7 +181,6 @@ export const useAuthStore = defineStore('auth', {
     isNavFeatureVisible(featureKey) {
       if (!featureKey) return true
       if (!this.user) return false
-      if (this.user.is_superadmin) return true
       const st = this.featureToggleRuntimeState(featureKey)
       if (st?.maintenance_mode) return true
       return this.isFeatureEnabled(featureKey)
