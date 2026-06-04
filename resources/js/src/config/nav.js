@@ -100,6 +100,25 @@ export const NAV_SECTIONS = [
       },
     ],
   },
+  // Transport Program redesign (tp_*) — module độc lập, chạy song song policy.
+  {
+    sectionKey: 'transport_program',
+    headingKey: 'nav.section_transport_program',
+    items: [
+      {
+        to: `${DISPATCH_WEB_BASE}/transport-programs`,
+        labelKey: 'nav.tp_programs',
+        icon: 'trips',
+        permissionKey: 'tp_program.view',
+      },
+      {
+        to: `${DISPATCH_WEB_BASE}/transport-students`,
+        labelKey: 'nav.tp_students',
+        icon: 'p2p_policy',
+        permissionKey: 'tp_student.view',
+      },
+    ],
+  },
   {
     sectionKey: 'reports',
     headingKey: 'nav.section_reports',

@@ -211,6 +211,76 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "transport-programs",
+        name: "tpPrograms",
+        component: () => import("../views/transportProgram/TpProgramListView.vue"),
+        meta: {
+            title: "Chương trình đưa đón",
+            subtitle: "Transport Program",
+            permission: "tp_program.view",
+        },
+    },
+    {
+        path: "transport-programs/create",
+        name: "tpProgramCreate",
+        component: () => import("../views/transportProgram/TpProgramCreateView.vue"),
+        meta: {
+            title: "Tạo chương trình",
+            subtitle: "Transport Program",
+            permission: "tp_program.manage",
+        },
+    },
+    {
+        path: "transport-programs/:id",
+        name: "tpProgramWorkspace",
+        component: () => import("../views/transportProgram/TpProgramWorkspaceView.vue"),
+        meta: {
+            title: "Chi tiết chương trình",
+            subtitle: "Transport Program",
+            permission: "tp_program.view",
+        },
+    },
+    {
+        path: "transport-programs/:id/enroll",
+        name: "tpEnrollStudents",
+        component: () => import("../views/transportProgram/TpEnrollStudentsView.vue"),
+        meta: {
+            title: "Đăng ký học sinh",
+            subtitle: "Transport Program",
+            permission: "tp_enrollment.manage",
+        },
+    },
+    {
+        path: "transport-program-days/:dayId/attendance",
+        name: "tpDayAttendance",
+        component: () => import("../views/transportProgram/TpDayAttendanceView.vue"),
+        meta: {
+            title: "Điểm danh ngày",
+            subtitle: "Transport Program",
+            permission: "tp_attendance.manage",
+        },
+    },
+    {
+        path: "transport-students",
+        name: "tpStudents",
+        component: () => import("../views/tpStudent/TpStudentListView.vue"),
+        meta: {
+            title: "Học sinh",
+            subtitle: "Transport Program",
+            permission: "tp_student.view",
+        },
+    },
+    {
+        path: "transport-students/import",
+        name: "tpImportWizard",
+        component: () => import("../views/tpStudent/TpImportWizardView.vue"),
+        meta: {
+            title: "Nhập học sinh",
+            subtitle: "Transport Program",
+            permission: "tp_import.manage",
+        },
+    },
+    {
         path: "resources/dashboard",
         redirect: { name: "resources" },
     },
@@ -647,6 +717,26 @@ const router = createRouter({
             meta: {
                 title: "Điểm danh",
                 subtitle: "Học sinh chính sách",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/tp-days",
+            name: "driverTpDays",
+            component: () => import("../views/driver/DriverTpDaysView.vue"),
+            meta: {
+                title: "Chuyến đưa đón",
+                subtitle: "Transport Program",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/tp-days/:dayId",
+            name: "driverTpAttendance",
+            component: () => import("../views/driver/DriverTpAttendanceView.vue"),
+            meta: {
+                title: "Điểm danh",
+                subtitle: "Transport Program",
                 driverApp: true,
             },
         },

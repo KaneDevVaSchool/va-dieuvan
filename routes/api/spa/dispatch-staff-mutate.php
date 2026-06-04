@@ -181,3 +181,43 @@ Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->
         ->where('date', '[0-9]{4}-[0-9]{2}-[0-9]{2}')
         ->middleware('throttle:30,1');
 });
+
+// Transport Program redesign (tp_*) — ghi
+Route::prefix('tp-programs')->group(function () {
+    Route::post('/', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'store'])->middleware('throttle:30,1');
+    Route::patch('/{tpProgram}', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'update'])->middleware('throttle:30,1');
+    Route::delete('/{tpProgram}', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'destroy'])->middleware('throttle:20,1');
+
+    Route::post('/{tpProgram}/activate', [\App\Http\Controllers\Api\TransportProgram\TpProgramLifecycleController::class, 'activate'])->middleware('throttle:30,1');
+    Route::post('/{tpProgram}/pause', [\App\Http\Controllers\Api\TransportProgram\TpProgramLifecycleController::class, 'pause'])->middleware('throttle:30,1');
+    Route::post('/{tpProgram}/cancel', [\App\Http\Controllers\Api\TransportProgram\TpProgramLifecycleController::class, 'cancel'])->middleware('throttle:30,1');
+
+    Route::post('/{tpProgram}/enrollments', [\App\Http\Controllers\Api\TransportProgram\TpEnrollmentController::class, 'store'])->middleware('throttle:30,1');
+    Route::delete('/{tpProgram}/enrollments/{student}', [\App\Http\Controllers\Api\TransportProgram\TpEnrollmentController::class, 'destroy'])->middleware('throttle:30,1');
+});
+
+Route::prefix('tp-program-days')->group(function () {
+    Route::patch('/{tpProgramDay}', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayController::class, 'update'])->middleware('throttle:60,1');
+    Route::patch('/{tpProgramDay}/assign-driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'assign'])->middleware('throttle:60,1');
+    Route::delete('/{tpProgramDay}/driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'remove'])->middleware('throttle:60,1');
+    Route::post('/{tpProgramDay}/absences', [\App\Http\Controllers\Api\TransportProgram\TpDayAbsenceController::class, 'store'])->middleware('throttle:60,1');
+    Route::delete('/{tpProgramDay}/absences/{student}', [\App\Http\Controllers\Api\TransportProgram\TpDayAbsenceController::class, 'destroy'])->middleware('throttle:60,1');
+});
+
+Route::patch('/tp-executions/{tpTripExecution}/cost', [\App\Http\Controllers\Api\TransportProgram\TpExecutionCostController::class, 'update'])->middleware('throttle:30,1');
+Route::post('/tp-executions/{tpTripExecution}/force-complete', [\App\Http\Controllers\Api\Driver\DriverTripCompleteController::class, 'forceComplete'])->middleware('throttle:30,1');
+
+// Students (tp_*) — ghi
+Route::prefix('tp-students')->group(function () {
+    Route::post('/', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'store'])->middleware('throttle:30,1');
+    Route::patch('/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'update'])->middleware('throttle:30,1');
+    Route::delete('/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'destroy'])->middleware('throttle:20,1');
+});
+
+// Import pipeline (tp_*) — ghi
+Route::prefix('tp-imports')->group(function () {
+    Route::post('/', [\App\Http\Controllers\Api\TpStudent\TpImportController::class, 'store'])->middleware('throttle:20,1');
+    Route::patch('/{tpImportBatch}/mapping', [\App\Http\Controllers\Api\TpStudent\TpImportMappingController::class, 'update'])->middleware('throttle:30,1');
+    Route::post('/{tpImportBatch}/apply-fixes', [\App\Http\Controllers\Api\TpStudent\TpImportFixController::class, 'apply'])->middleware('throttle:20,1');
+    Route::post('/{tpImportBatch}/execute', [\App\Http\Controllers\Api\TpStudent\TpImportExecuteController::class, 'execute'])->middleware('throttle:10,1');
+});

@@ -18,3 +18,7 @@ Route::get('/driver/trips/{trip}/policy-students', [DriverTripPolicyStudentsCont
 // P2P — luồng tài xế (§5, §10.2)
 Route::get('/driver/policy-trips', [DriverPolicyTripListController::class, 'index']);
 Route::get('/driver/policy-trips/{policyTrip}/students', [DriverPolicyTripStudentsController::class, 'index']);
+
+// Transport Program redesign (tp_*) — tài xế đọc
+Route::get('/driver/tp-days', [\App\Http\Controllers\Api\Driver\DriverTpDayListController::class, 'index']);
+Route::get('/driver/tp-days/{tpProgramDay}', [\App\Http\Controllers\Api\Driver\DriverTpDayDetailController::class, 'show']);

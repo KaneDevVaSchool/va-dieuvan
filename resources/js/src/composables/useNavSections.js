@@ -54,6 +54,11 @@ export function useNavSections() {
               icon: 'p2p_policy',
             },
             {
+              to: '/driver/tp-days',
+              labelKey: 'nav.driver_tp_days',
+              icon: 'calendar',
+            },
+            {
               to: '/driver/costs',
               labelKey: 'nav.bottom_driver_costs',
               icon: 'costs',

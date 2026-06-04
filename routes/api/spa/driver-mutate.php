@@ -47,6 +47,20 @@ Route::prefix('driver/policy-trip-students')->group(function () {
     Route::patch('/{policyTripStudent}/absent', PolicyTripStudentAbsentController::class)->middleware('throttle:60,1');
 });
 
+// Transport Program redesign (tp_*) — tài xế ghi (§5, §7)
+Route::prefix('driver/tp-days')->group(function () {
+    Route::post('/{tpProgramDay}/start', \App\Http\Controllers\Api\Driver\DriverTripStartController::class)->middleware('throttle:60,1');
+});
+
+Route::prefix('driver/tp-executions')->group(function () {
+    Route::post('/{tpTripExecution}/complete', [\App\Http\Controllers\Api\Driver\DriverTripCompleteController::class, 'complete'])->middleware('throttle:60,1');
+    Route::post('/{tpTripExecution}/sync', \App\Http\Controllers\Api\Driver\DriverTripSyncController::class)->middleware('throttle:60,1');
+    Route::patch('/{tpTripExecution}/students/{student}/board', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'board'])->middleware('throttle:120,1');
+    Route::patch('/{tpTripExecution}/students/{student}/alight', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'alight'])->middleware('throttle:120,1');
+    Route::patch('/{tpTripExecution}/students/{student}/absent', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'absent'])->middleware('throttle:60,1');
+    Route::patch('/{tpTripExecution}/students/{student}/undo-absent', [\App\Http\Controllers\Api\Driver\DriverTpStudentActionController::class, 'undoAbsent'])->middleware('throttle:60,1');
+});
+
 Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {
     Route::post('/', 'upload')->middleware('throttle:30,1');
     Route::delete('/{attachment}', 'destroy')

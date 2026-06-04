@@ -100,3 +100,30 @@ Route::prefix('student-policies')->controller(StudentPolicyController::class)->g
 Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->group(function () {
     Route::get('/', 'index');
 });
+
+// Transport Program redesign (tp_*) — đọc
+Route::prefix('tp-programs')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'index']);
+    Route::get('/{tpProgram}', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'show']);
+    Route::get('/{tpProgram}/days', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayController::class, 'index']);
+    Route::get('/{tpProgram}/enrollments', [\App\Http\Controllers\Api\TransportProgram\TpEnrollmentController::class, 'index']);
+    Route::get('/{tpProgram}/audit', [\App\Http\Controllers\Api\TransportProgram\TpAuditController::class, 'index']);
+    Route::get('/{tpProgram}/reports/absence', [\App\Http\Controllers\Api\TransportProgram\TpReportAbsenceController::class, 'index']);
+    Route::get('/{tpProgram}/reports/cost', [\App\Http\Controllers\Api\TransportProgram\TpReportCostController::class, 'index']);
+});
+
+Route::prefix('tp-program-days')->group(function () {
+    Route::get('/{tpProgramDay}', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayController::class, 'show']);
+    Route::get('/{tpProgramDay}/attendance', [\App\Http\Controllers\Api\TransportProgram\TpAttendanceController::class, 'show']);
+    Route::get('/{tpProgramDay}/live', \App\Http\Controllers\Api\TransportProgram\TpDayLiveUpdatesController::class)->middleware('throttle:30,1');
+});
+
+Route::get('/tp-students', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'index']);
+Route::get('/tp-students/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'show']);
+Route::get('/tp-students/{tpStudent}/programs', [\App\Http\Controllers\Api\TpStudent\TpStudentProgramHistoryController::class, 'index']);
+
+Route::prefix('tp-imports')->group(function () {
+    Route::get('/{tpImportBatch}', [\App\Http\Controllers\Api\TpStudent\TpImportController::class, 'show']);
+    Route::get('/{tpImportBatch}/rows', [\App\Http\Controllers\Api\TpStudent\TpImportRowController::class, 'index']);
+    Route::get('/{tpImportBatch}/error-report', [\App\Http\Controllers\Api\TpStudent\TpImportErrorReportController::class, 'download'])->middleware('throttle:30,1');
+});
