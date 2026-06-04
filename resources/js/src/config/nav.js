@@ -117,13 +117,6 @@ export const NAV_SECTIONS = [
         icon: 'settings',
         children: [
           {
-            to: `${DISPATCH_WEB_BASE}/system/dashboard`,
-            labelKey: 'nav.system_dashboard',
-            icon: 'home',
-            featureKey: 'module.system.roles',
-            permissionKey: 'system.roles.manage',
-          },
-          {
             to: `${DISPATCH_WEB_BASE}/system/roles`,
             labelKey: 'nav.system_roles',
             icon: 'roles',
@@ -136,27 +129,6 @@ export const NAV_SECTIONS = [
             icon: 'permissions',
             featureKey: 'module.system.permissions',
             permissionKey: 'system.permissions.manage',
-          },
-          {
-            to: `${DISPATCH_WEB_BASE}/system/permission-matrix`,
-            labelKey: 'nav.system_permission_matrix',
-            icon: 'permissions',
-            featureKey: 'module.system.permissions',
-            permissionKey: 'system.permissions.manage',
-          },
-          {
-            to: `${DISPATCH_WEB_BASE}/system/assignments`,
-            labelKey: 'nav.system_assignments',
-            icon: 'user_roles',
-            featureKey: 'module.system.user_roles',
-            permissionKey: 'system.user_roles.manage',
-          },
-          {
-            to: `${DISPATCH_WEB_BASE}/system/menu`,
-            labelKey: 'nav.system_menu',
-            icon: 'feature_toggle',
-            featureKey: 'module.system.feature_toggles',
-            permissionKey: 'system.feature_toggles.manage',
           },
           {
             to: `${DISPATCH_WEB_BASE}/system/user-roles`,
