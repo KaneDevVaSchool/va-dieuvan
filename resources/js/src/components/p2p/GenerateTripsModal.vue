@@ -17,7 +17,15 @@
         class="rounded-lg border px-3 py-2 text-sm"
         :class="result.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'"
       >
-        {{ result.message }}
+        <p>{{ result.message }}</p>
+        <router-link
+          v-if="result.showCalendarLink"
+          :to="{ name: 'p2pPolicyCalendar' }"
+          class="mt-2 inline-block text-xs font-medium text-teal-800 underline hover:text-teal-900"
+          @click="emit('close')"
+        >
+          {{ t('p2p_policy_page.generate_open_calendar') }}
+        </router-link>
       </div>
 
       <div class="flex justify-end gap-2 pt-1">
@@ -58,18 +66,29 @@ watch(
   },
 )
 
+function needsCalendarHint(message) {
+  const m = String(message || '').toLowerCase()
+  return /lịch|học kỳ|semester|ngày học|học\/bù|school/i.test(m)
+}
+
 async function submit() {
   loading.value = true
   result.value = null
   try {
     const res = await generatePolicyTrips(date.value)
-    result.value = {
-      ok: true,
-      message: t('p2p_policy_page.generate_result', { created: res.created, skipped: res.skipped }),
-    }
+    const msg = t('p2p_policy_page.generate_result', {
+      created: res.created ?? 0,
+      skipped: res.skipped ?? 0,
+    })
+    result.value = { ok: true, message: msg, showCalendarLink: false }
     emit('generated', { date: date.value, ...res })
   } catch (err) {
-    result.value = { ok: false, message: formatApiError(err) }
+    const msg = formatApiError(err)
+    result.value = {
+      ok: false,
+      message: msg,
+      showCalendarLink: needsCalendarHint(msg),
+    }
   } finally {
     loading.value = false
   }
