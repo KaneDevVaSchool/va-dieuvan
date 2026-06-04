@@ -101,6 +101,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::middleware(['dispatch.staff', 'throttle:120,1'])->group(function () {
             require base_path('routes/api/spa/dispatch-staff-read.php');
+            require base_path('routes/api/spa/system-admin-read.php');
         });
 
         // Ghi: log hoạt động + throttle (common + luồng tài xế)
@@ -111,6 +112,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::middleware(['dispatch.staff', \App\Http\Middleware\LogApiActivity::class, 'throttle:180,1'])->group(function () {
             require base_path('routes/api/spa/dispatch-staff-mutate.php');
+            require base_path('routes/api/spa/system-admin-mutate.php');
         });
     });
 });

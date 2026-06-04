@@ -292,6 +292,61 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "system/dashboard",
+        name: "systemDashboard",
+        component: () => import("../views/system/SystemDashboardView.vue"),
+        meta: {
+            title: "Hệ thống — Tổng quan",
+            subtitle: "Quản trị",
+            permission: "system.roles.manage",
+            featureKey: "module.system.roles",
+        },
+    },
+    {
+        path: "system/permission-matrix",
+        name: "systemPermissionMatrix",
+        component: () => import("../views/system/SystemPermissionMatrixView.vue"),
+        meta: {
+            title: "Ma trận quyền",
+            subtitle: "Quản trị",
+            permission: "system.permissions.manage",
+            featureKey: "module.system.permissions",
+        },
+    },
+    {
+        path: "system/assignments",
+        name: "systemAssignments",
+        component: () => import("../views/system/SystemAssignmentsView.vue"),
+        meta: {
+            title: "Gán vai trò",
+            subtitle: "Quản trị",
+            permission: "system.user_roles.manage",
+            featureKey: "module.system.user_roles",
+        },
+    },
+    {
+        path: "system/menu",
+        name: "systemMenu",
+        component: () => import("../views/system/SystemMenuView.vue"),
+        meta: {
+            title: "Menu động",
+            subtitle: "Quản trị",
+            permission: "system.feature_toggles.manage",
+            featureKey: "module.system.feature_toggles",
+        },
+    },
+    {
+        path: "system/audit-logs/:id",
+        name: "systemAuditDetail",
+        component: () => import("../views/system/SystemAuditView.vue"),
+        meta: {
+            title: "Chi tiết audit",
+            subtitle: "Quản trị",
+            permission: "audit_log.view",
+            featureKey: "module.system.audit",
+        },
+    },
+    {
         path: "system/roles",
         name: "systemRoles",
         component: () => import("../views/system/SystemRolesView.vue"),
