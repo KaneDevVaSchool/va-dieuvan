@@ -65,7 +65,6 @@ class RbacSeeder extends Seeder
             'report.export',
             // Vận hành khác
             'cargo.manage',
-            'route.manage',
             'student.manage',
             'attachment.upload',
             'reference_pricing.manage',
@@ -136,7 +135,6 @@ class RbacSeeder extends Seeder
                 'resource.vehicle.manage',
                 'resource.provider.manage',
                 'cargo.manage',
-                'route.manage',
                 'student.manage',
                 'attachment.upload',
                 'policy_trip.view',

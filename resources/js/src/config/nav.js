@@ -50,7 +50,6 @@ export const NAV_SECTIONS = [
         badgeKey: 'cargo_sla_breaches',
         featureKey: 'module.operations',
       },
-      { to: `${DISPATCH_WEB_BASE}/routes`, labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.d2d_routes' },
       {
         to: `${DISPATCH_WEB_BASE}/resources/list`,
         labelKey: 'nav.resources',

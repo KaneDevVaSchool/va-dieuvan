@@ -7,7 +7,6 @@
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Cargo\CargoController;
 use App\Http\Controllers\Api\Costs\TripCostController;
-use App\Http\Controllers\Api\D2D\RouteController;
 use App\Http\Controllers\Api\NavBadgesController;
 use App\Http\Controllers\Api\System\MenuController;
 use App\Http\Controllers\Api\Notifications\InboxController;
@@ -55,11 +54,6 @@ Route::controller(CargoController::class)->group(function () {
     Route::get('/cargo-shipments', 'index');
     Route::get('/cargo-shipments/{cargoShipment}/timeline', 'timeline');
     Route::get('/cargo-shipments/{cargoShipment}', 'show');
-});
-
-Route::controller(RouteController::class)->group(function () {
-    Route::get('/routes', 'index');
-    Route::get('/routes/{route}', 'show');
 });
 
 Route::get('/nav/badges', NavBadgesController::class)->middleware('throttle:60,1');

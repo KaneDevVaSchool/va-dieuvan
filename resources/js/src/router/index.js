@@ -149,13 +149,7 @@ const staffChildRoutes = [
     },
     {
         path: "routes",
-        name: "routes",
-        component: () => import("../views/d2d/RoutesListView.vue"),
-        meta: {
-            title: "Tuyến D2D",
-            subtitle: "Door-to-door",
-            featureKey: "module.d2d_routes",
-        },
+        redirect: { name: "p2pPolicyRoutes" },
     },
     {
         path: "p2p-policy",

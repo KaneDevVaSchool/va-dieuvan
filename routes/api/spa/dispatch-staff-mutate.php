@@ -7,7 +7,6 @@
 use App\Http\Controllers\Api\Admin\BulkUserRolesUpdateController;
 use App\Http\Controllers\Api\Cargo\CargoController;
 use App\Http\Controllers\Api\Costs\TripCostController;
-use App\Http\Controllers\Api\D2D\RouteController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
 use App\Http\Controllers\Api\OperationalResourceController;
@@ -94,16 +93,6 @@ Route::prefix('cargo-shipments')->controller(CargoController::class)->group(func
     Route::post('/', 'store')->middleware('throttle:20,1');
     Route::post('/{cargoShipment}/status', 'updateStatus')->middleware('throttle:60,1');
     Route::post('/{cargoShipment}/pod', 'uploadPod')->middleware('throttle:20,1');
-});
-
-Route::prefix('routes')->controller(RouteController::class)->group(function () {
-    Route::post('/', 'store')->middleware('throttle:10,1');
-    Route::post('/{route}/versions', 'createVersion')->middleware('throttle:10,1');
-    Route::post('/{route}/enroll-students', 'enrollStudents')->middleware('throttle:10,1');
-});
-Route::prefix('route-versions')->controller(RouteController::class)->group(function () {
-    Route::post('/{routeVersion}/decision', 'approveVersion')->middleware('throttle:10,1');
-    Route::post('/{routeVersion}/generate-trip', 'generateTrip')->middleware('throttle:10,1');
 });
 
 Route::post('/drivers', [OperationalResourceController::class, 'storeDriver'])
