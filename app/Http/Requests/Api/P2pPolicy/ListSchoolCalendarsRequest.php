@@ -6,6 +6,16 @@ use App\Http\Requests\Api\ApiFormRequest;
 
 class ListSchoolCalendarsRequest extends ApiFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('year')) {
+            $this->merge(['year' => (int) $this->input('year')]);
+        }
+        if ($this->has('month')) {
+            $this->merge(['month' => (int) $this->input('month')]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->allowAnyOf(['school_calendar.manage', 'policy_trip.view']);

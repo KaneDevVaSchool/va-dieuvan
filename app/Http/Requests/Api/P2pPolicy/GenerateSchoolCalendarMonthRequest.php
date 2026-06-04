@@ -6,6 +6,19 @@ use App\Http\Requests\Api\ApiFormRequest;
 
 class GenerateSchoolCalendarMonthRequest extends ApiFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('year')) {
+            $this->merge(['year' => (int) $this->input('year')]);
+        }
+        if ($this->has('month')) {
+            $this->merge(['month' => (int) $this->input('month')]);
+        }
+        if ($this->has('semester')) {
+            $this->merge(['semester' => (int) $this->input('semester')]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->allowAnyOf(['school_calendar.manage']);

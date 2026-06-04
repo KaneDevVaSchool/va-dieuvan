@@ -195,7 +195,7 @@ async function load() {
   loading.value = true
   try {
     const [year, month] = filterYearMonth.value.split('-')
-    const res = await listSchoolCalendars({ year, month })
+    const res = await listSchoolCalendars({ year: Number(year), month: Number(month) })
     items.value = res?.items ?? res ?? []
   } catch {
     items.value = []
@@ -230,12 +230,12 @@ async function saveEdit() {
 }
 
 async function runGenerateMonth() {
-  const [year, month] = filterYearMonth.value.split('-')
+  const [y, m] = filterYearMonth.value.split('-')
   genLoading.value = true
   try {
     await generateSchoolCalendarMonth({
-      year: Number(year),
-      month: Number(month),
+      year: Number(y),
+      month: Number(m),
       school_year: genSchoolYear.value,
       semester: Number(genSemester.value),
     })
