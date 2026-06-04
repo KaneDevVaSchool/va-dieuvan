@@ -15,7 +15,9 @@ class ListAuditLogsRequest extends ApiFormRequest
     {
         return [
             'actor_id' => ['nullable', 'integer', 'min:1'],
-            'event' => ['nullable', 'string', 'max:255'],
+            'event'    => ['nullable', 'string', 'max:255'],
+            'events'   => ['nullable', 'array'],
+            'events.*' => ['string', 'max:255'],
             'auditable_type' => ['nullable', 'string', 'max:255'],
             'auditable_id' => ['nullable', 'integer', 'min:1'],
             'from' => ['nullable', 'date'],

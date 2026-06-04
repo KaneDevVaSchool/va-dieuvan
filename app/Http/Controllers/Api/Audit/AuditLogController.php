@@ -23,6 +23,7 @@ class AuditLogController extends Controller
 
         $q->when(isset($data['actor_id']), fn (Builder $b) => $b->where('actor_id', $data['actor_id']));
         $q->when(isset($data['event']), fn (Builder $b) => $b->where('event', $data['event']));
+        $q->when(!empty($data['events']), fn (Builder $b) => $b->whereIn('event', $data['events']));
         $q->when(isset($data['auditable_type']), fn (Builder $b) => $b->where('auditable_type', $data['auditable_type']));
         $q->when(isset($data['auditable_id']), fn (Builder $b) => $b->where('auditable_id', $data['auditable_id']));
 

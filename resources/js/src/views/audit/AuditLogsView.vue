@@ -1,17 +1,15 @@
 <template>
-  <div class="mx-auto max-w-6xl space-y-5 pb-10">
+  <div class="mx-auto max-w-3xl space-y-4 pb-10">
 
-    <!-- ── Page header ────────────────────────────────────────────────────── -->
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-bold text-slate-900 dark:text-slate-50">{{ t('audit_logs_page.page_main_title') }}</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Ghi nhận mọi thao tác, truy cập và thay đổi dữ liệu trong hệ thống.
-        </p>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">Nhật ký hoạt động</h1>
+        <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Theo dõi ai đã làm gì trong hệ thống</p>
       </div>
       <button
         type="button"
-        class="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 sm:self-auto"
+        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
         :disabled="loading"
         @click="reload(true)"
       >
@@ -20,340 +18,190 @@
       </button>
     </div>
 
-    <!-- ── Stats strip ─────────────────────────────────────────────────────── -->
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <div class="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Tổng bản ghi</p>
-        <p class="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-50">
-          <span v-if="loading && !meta.total" class="inline-block h-7 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-          <template v-else>{{ (meta.total ?? 0).toLocaleString('vi-VN') }}</template>
-        </p>
-      </div>
-      <div class="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Loại sự kiện</p>
-        <p class="mt-1.5 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ eventSummaryLabel }}</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Khoảng ngày</p>
-        <p class="mt-1.5 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ dateRangeChip }}</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Trang</p>
-        <p class="mt-1.5 text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-200">
-          {{ meta.current_page ?? 1 }} / {{ meta.last_page ?? 1 }}
-        </p>
-      </div>
-    </div>
+    <!-- ── Filter strip ────────────────────────────────────────────────────── -->
+    <div class="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
 
-    <!-- ── Filter panel ────────────────────────────────────────────────────── -->
-    <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <!-- Category tabs -->
+      <div class="flex flex-wrap gap-1.5">
+        <button
+          v-for="cat in CATEGORIES"
+          :key="cat.key"
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition"
+          :class="activeCategory === cat.key
+            ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+            : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'"
+          @click="setCategory(cat.key)"
+        >
+          <span>{{ cat.icon }}</span>
+          {{ cat.label }}
+        </button>
+      </div>
 
-      <!-- Event type pills -->
-      <div class="mb-4">
-        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Loại sự kiện</p>
-        <div class="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition"
-            :class="
-              !filters.event
-                ? 'bg-teal-600 text-white shadow-sm'
-                : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-            "
-            @click="filters.event = ''"
-          >
-            Tất cả
-          </button>
-          <button
-            v-for="e in auditEventPresets"
-            :key="e.value"
-            type="button"
-            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition"
-            :class="
-              filters.event === e.value
-                ? 'text-white shadow-sm ' + eventActivePillClass(e.value)
-                : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-            "
-            @click="filters.event = e.value"
-          >
-            <component :is="eventIcon(e.value)" class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            {{ e.value }}
-          </button>
+      <!-- Search + date -->
+      <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+        <div class="relative min-w-0 flex-1">
+          <MagnifyingGlassIcon class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            v-model="searchInput"
+            type="search"
+            placeholder="Tìm theo tên người, hành động…"
+            class="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+          />
         </div>
+
+        <!-- Date toggle -->
+        <button
+          type="button"
+          class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-medium transition"
+          :class="showDateFilter
+            ? 'border-teal-400 bg-teal-50 text-teal-700 dark:border-teal-700 dark:bg-teal-950/40 dark:text-teal-300'
+            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'"
+          @click="showDateFilter = !showDateFilter"
+        >
+          <CalendarDaysIcon class="h-4 w-4" aria-hidden="true" />
+          {{ dateRangeLabel }}
+        </button>
+
+        <button
+          v-if="hasActiveFilters"
+          type="button"
+          class="inline-flex h-9 shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-500 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+          @click="resetFilters"
+        >
+          <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
+          Xóa lọc
+        </button>
       </div>
 
-      <!-- Date, actor, search, per page -->
-      <div class="flex flex-wrap items-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-        <label class="flex flex-col gap-1">
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Từ ngày</span>
+      <!-- Date range inputs (collapsible) -->
+      <div v-if="showDateFilter" class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+        <label class="flex items-center gap-2 text-sm">
+          <span class="w-14 shrink-0 text-slate-500">Từ ngày</span>
           <input
             v-model="filters.from"
             type="date"
-            class="h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            class="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           />
         </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Đến ngày</span>
+        <label class="flex items-center gap-2 text-sm">
+          <span class="w-14 shrink-0 text-slate-500">Đến ngày</span>
           <input
             v-model="filters.to"
             type="date"
-            class="h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            class="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           />
         </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Mã người thực hiện</span>
-          <input
-            v-model="actorDraft"
-            type="text"
-            inputmode="numeric"
-            placeholder="VD: 12"
-            class="h-9 w-28 rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-          />
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Tìm trong trang</span>
-          <div class="relative">
-            <MagnifyingGlassIcon class="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-            <input
-              v-model="inPageSearchInput"
-              type="search"
-              placeholder="Sự kiện, người dùng…"
-              class="h-9 w-44 rounded-xl border border-slate-200 bg-white pl-8 pr-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-            />
-          </div>
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Dòng / trang</span>
-          <select
-            v-model.number="filters.per_page"
-            class="h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            :disabled="loading"
-            @change="onPerPageChange"
-          >
-            <option :value="25">25</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-            <option :value="200">200</option>
-          </select>
-        </label>
-        <button
-          type="button"
-          class="ml-auto inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-          @click="resetFilters"
-        >
-          <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-          Xóa bộ lọc
-        </button>
       </div>
     </div>
 
-    <!-- ── Loading skeletons ──────────────────────────────────────────────── -->
-    <div v-if="loading" class="overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700">
-      <div class="border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/60">
-        <div class="h-4 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-      </div>
-      <div class="divide-y divide-slate-100 dark:divide-slate-800">
-        <div v-for="i in 8" :key="i" class="flex items-center gap-4 px-4 py-3.5">
-          <div class="h-6 w-28 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
-          <div class="h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-          <div class="h-4 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
-          <div class="ml-auto h-4 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+    <!-- ── Loading ────────────────────────────────────────────────────────── -->
+    <div v-if="loading" class="space-y-2">
+      <div v-for="i in 5" :key="i" class="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <div class="h-9 w-9 shrink-0 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+        <div class="flex-1 space-y-2 pt-0.5">
+          <div class="h-4 w-3/5 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+          <div class="h-3 w-2/5 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
         </div>
       </div>
     </div>
 
     <template v-else>
-      <!-- ── Empty state ──────────────────────────────────────────────────── -->
+      <!-- ── Empty ──────────────────────────────────────────────────────────── -->
       <div
-        v-if="!displayItems.length"
-        class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16 text-center dark:border-slate-700 dark:bg-slate-900/30"
+        v-if="!groupedItems.length"
+        class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-16 text-center dark:border-slate-700"
       >
-        <DocumentMagnifyingGlassIcon class="mb-4 h-14 w-14 text-slate-300 dark:text-slate-600" />
-        <p class="text-base font-semibold text-slate-700 dark:text-slate-300">Không có dữ liệu</p>
-        <p class="mt-1 max-w-xs text-sm text-slate-500 dark:text-slate-400">{{ t('audit_logs_page.empty') }}</p>
+        <ClockIcon class="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
+        <p class="text-base font-semibold text-slate-600 dark:text-slate-400">Không có hoạt động nào</p>
+        <p class="mt-1 text-sm text-slate-400 dark:text-slate-500">Thử điều chỉnh bộ lọc hoặc khoảng thời gian</p>
       </div>
 
-      <!-- ── Table ────────────────────────────────────────────────────────── -->
-      <div v-else class="overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm dark:border-slate-700">
+      <!-- ── Activity feed ──────────────────────────────────────────────────── -->
+      <div v-else class="space-y-5">
+        <div v-for="group in groupedItems" :key="group.date">
+          <!-- Date heading -->
+          <div class="mb-2 flex items-center gap-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ group.label }}</span>
+            <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+          </div>
 
-        <!-- Desktop table -->
-        <div class="hidden overflow-x-auto md:block">
-          <table class="w-full min-w-[52rem] border-collapse text-left text-sm">
-            <thead>
-              <tr class="border-b border-slate-200 bg-slate-50/90 dark:border-slate-700 dark:bg-slate-800/80">
-                <th class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Sự kiện</th>
-                <th class="whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Thời gian</th>
-                <th class="whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Người thực hiện</th>
-                <th class="whitespace-nowrap px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Đối tượng</th>
-                <th class="min-w-[14rem] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Chi tiết</th>
-                <th class="w-8 px-3 py-3" />
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr
-                v-for="l in displayItems"
-                :key="l.id"
-                class="group cursor-pointer transition-colors hover:bg-teal-50/50 dark:hover:bg-teal-950/20"
-                @click="goDetail(l)"
+          <!-- Items for this date -->
+          <div class="space-y-1.5">
+            <div
+              v-for="log in group.items"
+              :key="log.id"
+              class="group flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200/60 bg-white px-4 py-3.5 transition hover:border-slate-300 hover:shadow-sm dark:border-slate-700/60 dark:bg-slate-900 dark:hover:border-slate-600"
+              @click="goDetail(log)"
+            >
+              <!-- Avatar -->
+              <div
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+                :class="eventAvatarClass(log.event)"
               >
-                <!-- Event badge -->
-                <td class="px-4 py-3.5 align-middle">
+                {{ actorInitials(log.actor?.name) }}
+              </div>
+
+              <!-- Content -->
+              <div class="min-w-0 flex-1">
+                <p class="text-sm leading-snug text-slate-800 dark:text-slate-200">
+                  <span class="font-semibold">{{ log.actor?.name ?? 'Hệ thống' }}</span>
+                  <span class="text-slate-600 dark:text-slate-400"> {{ actionVerb(log) }}</span>
+                  <span v-if="subjectText(log)" class="font-medium text-slate-700 dark:text-slate-300"> {{ subjectText(log) }}</span>
+                </p>
+                <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span class="text-xs text-slate-400 dark:text-slate-500">{{ timeAgo(log.created_at) }}</span>
                   <span
-                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
-                    :class="eventBadgeClass(l.event)"
+                    v-if="log.metadata?.status && log.metadata.status >= 400"
+                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                    :class="log.metadata.status >= 500 ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400'"
                   >
-                    <component :is="eventIcon(l.event)" class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    {{ l.event }}
+                    <ExclamationCircleIcon class="h-3 w-3" aria-hidden="true" />
+                    Lỗi {{ log.metadata.status }}
                   </span>
-                </td>
+                </div>
+              </div>
 
-                <!-- Time + ID -->
-                <td class="whitespace-nowrap px-3 py-3.5 align-middle">
-                  <div class="text-xs text-slate-700 dark:text-slate-300">{{ formatDate(l.created_at) }}</div>
-                  <div class="mt-0.5 text-[11px] tabular-nums text-slate-400 dark:text-slate-500">#{{ l.id }}</div>
-                </td>
-
-                <!-- Actor -->
-                <td class="px-3 py-3.5 align-middle">
-                  <div v-if="l.actor" class="flex items-center gap-2">
-                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-                      {{ actorInitials(l.actor.name) }}
-                    </span>
-                    <div class="min-w-0">
-                      <p class="max-w-[7rem] truncate text-xs font-medium text-slate-800 dark:text-slate-200">{{ l.actor.name }}</p>
-                      <p v-if="l.actor.employee_code" class="text-[11px] text-slate-400">{{ l.actor.employee_code }}</p>
-                    </div>
-                  </div>
-                  <span v-else class="text-xs text-slate-400">{{ l.actor_id ?? '—' }}</span>
-                </td>
-
-                <!-- Subject -->
-                <td class="max-w-[10rem] px-3 py-3.5 align-middle">
-                  <p v-if="l.auditable_type" class="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
-                    {{ auditableLabel(l.auditable_type) }}
-                  </p>
-                  <p v-if="l.auditable_id" class="mt-0.5 text-[11px] tabular-nums text-slate-400">#{{ l.auditable_id }}</p>
-                  <span v-if="!l.auditable_type && !l.auditable_id" class="text-xs text-slate-400">—</span>
-                </td>
-
-                <!-- Details (metadata) -->
-                <td class="px-3 py-3.5 align-middle">
-                  <div v-if="l.metadata" class="flex flex-wrap items-center gap-1.5">
-                    <span
-                      v-if="l.metadata.method"
-                      class="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                      :class="httpMethodClass(l.metadata.method)"
-                    >{{ l.metadata.method }}</span>
-                    <span class="max-w-[12rem] truncate text-xs text-slate-500 dark:text-slate-400">{{ l.metadata.path }}</span>
-                    <span
-                      v-if="l.metadata.status"
-                      class="rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
-                      :class="httpStatusClass(l.metadata.status)"
-                    >{{ l.metadata.status }}</span>
-                    <span v-if="l.metadata.duration_ms != null" class="text-[11px] text-slate-400">{{ l.metadata.duration_ms }}ms</span>
-                  </div>
-                  <span v-else class="text-xs text-slate-400">—</span>
-                </td>
-
-                <!-- Chevron -->
-                <td class="px-3 py-3.5 align-middle">
-                  <ChevronRightIcon class="h-4 w-4 text-slate-300 transition group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400" aria-hidden="true" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Mobile cards -->
-        <div class="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
-          <div
-            v-for="l in displayItems"
-            :key="'m' + l.id"
-            class="cursor-pointer p-4 transition-colors hover:bg-teal-50/40 dark:hover:bg-teal-950/20"
-            @click="goDetail(l)"
-          >
-            <div class="flex items-start justify-between gap-2">
-              <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold"
-                :class="eventBadgeClass(l.event)"
-              >
-                <component :is="eventIcon(l.event)" class="h-3 w-3 shrink-0" aria-hidden="true" />
-                {{ l.event }}
-              </span>
-              <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" aria-hidden="true" />
+              <!-- Event tag (subtle) -->
+              <div class="shrink-0 text-right">
+                <span
+                  class="inline-block rounded-lg px-2 py-0.5 text-[11px] font-medium"
+                  :class="eventTagClass(log.event)"
+                >{{ eventLabel(log.event) }}</span>
+                <ChevronRightIcon class="mx-auto mt-1 h-3.5 w-3.5 text-slate-300 transition group-hover:text-slate-400 dark:text-slate-600" aria-hidden="true" />
+              </div>
             </div>
-            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ formatDate(l.created_at) }} · #{{ l.id }}</p>
-            <dl class="mt-2 space-y-1.5 text-xs">
-              <div class="flex gap-2">
-                <dt class="shrink-0 text-slate-500">Người TH</dt>
-                <dd class="min-w-0 font-medium text-slate-800 dark:text-slate-200">{{ l.actor?.name ?? l.actor_id ?? '—' }}</dd>
-              </div>
-              <div v-if="l.auditable_type" class="flex gap-2">
-                <dt class="shrink-0 text-slate-500">Đối tượng</dt>
-                <dd class="min-w-0 text-slate-600 dark:text-slate-400">{{ auditableLabel(l.auditable_type) }}#{{ l.auditable_id ?? '' }}</dd>
-              </div>
-              <div v-if="l.metadata" class="flex flex-wrap items-center gap-1">
-                <span
-                  v-if="l.metadata.method"
-                  class="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
-                  :class="httpMethodClass(l.metadata.method)"
-                >{{ l.metadata.method }}</span>
-                <span class="max-w-[12rem] truncate text-slate-500 dark:text-slate-400">{{ l.metadata.path }}</span>
-                <span
-                  v-if="l.metadata.status"
-                  class="rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums"
-                  :class="httpStatusClass(l.metadata.status)"
-                >{{ l.metadata.status }}</span>
-              </div>
-            </dl>
           </div>
         </div>
       </div>
 
-      <!-- ── Pagination ────────────────────────────────────────────────────── -->
-      <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <p class="text-xs text-slate-500 dark:text-slate-400">
-          Tổng <span class="font-semibold text-slate-700 dark:text-slate-200">{{ (meta.total ?? 0).toLocaleString('vi-VN') }}</span> bản ghi
+      <!-- ── Pagination ─────────────────────────────────────────────────────── -->
+      <div
+        v-if="meta.last_page > 1"
+        class="flex items-center justify-between pt-2"
+      >
+        <p class="text-xs text-slate-400 dark:text-slate-500">
+          Tổng <span class="font-medium text-slate-600 dark:text-slate-300">{{ (meta.total ?? 0).toLocaleString('vi-VN') }}</span> hoạt động
         </p>
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1">
           <button
             type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            :disabled="loading || (meta.current_page ?? 1) <= 1"
-            aria-label="Trang đầu"
-            @click="goPage(1)"
-          >
-            <ChevronDoubleLeftIcon class="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            :disabled="loading || (meta.current_page ?? 1) <= 1"
-            aria-label="Trang trước"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+            :disabled="(meta.current_page ?? 1) <= 1"
             @click="goPage((meta.current_page ?? 1) - 1)"
           >
-            <ChevronLeftIcon class="h-3.5 w-3.5" aria-hidden="true" />
+            <ChevronLeftIcon class="h-4 w-4" aria-hidden="true" />
           </button>
-          <span class="min-w-[5.5rem] text-center text-xs font-medium text-slate-700 dark:text-slate-300">
-            Trang {{ meta.current_page ?? 1 }} / {{ meta.last_page ?? 1 }}
+          <span class="min-w-[4.5rem] text-center text-xs font-medium text-slate-600 dark:text-slate-300">
+            {{ meta.current_page ?? 1 }} / {{ meta.last_page ?? 1 }}
           </span>
           <button
             type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            :disabled="loading || (meta.current_page ?? 1) >= (meta.last_page ?? 1)"
-            aria-label="Trang sau"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+            :disabled="(meta.current_page ?? 1) >= (meta.last_page ?? 1)"
             @click="goPage((meta.current_page ?? 1) + 1)"
           >
-            <ChevronRightIcon class="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-            :disabled="loading || (meta.current_page ?? 1) >= (meta.last_page ?? 1)"
-            aria-label="Trang cuối"
-            @click="goPage(meta.last_page ?? 1)"
-          >
-            <ChevronDoubleRightIcon class="h-3.5 w-3.5" aria-hidden="true" />
+            <ChevronRightIcon class="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -368,159 +216,206 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
   ArrowPathIcon,
-  ChevronRightIcon,
-  ChevronLeftIcon,
-  ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon,
-  DocumentMagnifyingGlassIcon,
-  GlobeAltIcon,
-  DocumentPlusIcon,
-  InboxArrowDownIcon,
-  XCircleIcon,
-  CheckCircleIcon,
-  ArrowUpTrayIcon,
-  EyeIcon,
-  ExclamationTriangleIcon,
-  BoltIcon,
   MagnifyingGlassIcon,
+  CalendarDaysIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClockIcon,
   XMarkIcon,
+  ExclamationCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { listAuditLogs } from '../../api/audit'
-import { AUDIT_EVENT_PRESETS } from '../../config/systemSeedOptions'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { formatApiError } from '../../api/http'
 import { debounceTrailing } from '../../composables/useDebounce'
 
-const { t, locale } = useI18n()
+const { locale } = useI18n()
 const router = useRouter()
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { key: 'all',        label: 'Tất cả',     icon: '📋', events: null },
+  { key: 'request',   label: 'Yêu cầu',    icon: '📝', events: ['request.create', 'request.paper_received', 'request.reject', 'request.approve'] },
+  { key: 'file',      label: 'Tài liệu',   icon: '📎', events: ['attachment.upload', 'attachment.ocr_stub'] },
+  { key: 'alert',     label: 'Cảnh báo',   icon: '⚠️',  events: ['cargo.sla_breached'] },
+  { key: 'system',    label: 'Hệ thống',   icon: '🔧', events: ['api.request'] },
+]
+
+// ─── Event labels (human-readable) ───────────────────────────────────────────
+
+const EVENT_LABELS = {
+  'api.request':            'Truy cập hệ thống',
+  'request.create':         'Tạo yêu cầu',
+  'request.paper_received': 'Nhận hồ sơ giấy',
+  'request.reject':         'Từ chối yêu cầu',
+  'request.approve':        'Duyệt yêu cầu',
+  'attachment.upload':      'Tải lên tài liệu',
+  'attachment.ocr_stub':    'Nhận dạng tài liệu',
+  'cargo.sla_breached':     'Vi phạm SLA',
+}
+
+const EVENT_VERBS = {
+  'api.request':            'truy cập hệ thống',
+  'request.create':         'đã tạo',
+  'request.paper_received': 'đã xác nhận nhận hồ sơ giấy',
+  'request.reject':         'đã từ chối',
+  'request.approve':        'đã duyệt',
+  'attachment.upload':      'đã tải lên tài liệu',
+  'attachment.ocr_stub':    'đã nhận dạng tài liệu',
+  'cargo.sla_breached':     '— cảnh báo vi phạm SLA',
+}
+
+const SUBJECT_LABELS = {
+  'DispatchRequest': 'yêu cầu',
+  'Trip':            'chuyến xe',
+  'Attachment':      'tài liệu',
+  'User':            'tài khoản',
+  'PolicyTrip':      'chuyến chính sách',
+  'Vehicle':         'phương tiện',
+  'Driver':          'tài xế',
+}
+
+const EVENT_AVATAR = {
+  'request.approve':        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+  'request.reject':         'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300',
+  'request.create':         'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+  'request.paper_received': 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300',
+  'attachment.upload':      'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+  'attachment.ocr_stub':    'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300',
+  'cargo.sla_breached':     'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+  'api.request':            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+}
+
+const EVENT_TAG = {
+  'request.approve':        'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
+  'request.reject':         'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400',
+  'request.create':         'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400',
+  'request.paper_received': 'bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400',
+  'attachment.upload':      'bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400',
+  'attachment.ocr_stub':    'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400',
+  'cargo.sla_breached':     'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
+}
+
+function eventLabel(event)      { return EVENT_LABELS[event] ?? event }
+function eventAvatarClass(event){ return EVENT_AVATAR[event] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' }
+function eventTagClass(event)   { return EVENT_TAG[event]   ?? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }
+
+function actionVerb(log) {
+  return EVENT_VERBS[log.event] ?? log.event
+}
+
+function subjectText(log) {
+  if (!log.auditable_type && !log.auditable_id) return null
+  const typeName = log.auditable_type?.split('\\').pop()
+  const label = SUBJECT_LABELS[typeName] ?? typeName
+  return log.auditable_id ? `${label} #${log.auditable_id}` : label
+}
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-const loading   = ref(false)
-const listReady = ref(false)
-const items     = ref([])
-const meta      = ref({})
+const loading        = ref(false)
+const listReady      = ref(false)
+const items          = ref([])
+const meta           = ref({})
+const activeCategory = ref('all')
+const searchInput    = ref('')
+const searchQ        = ref('')
+const showDateFilter = ref(false)
 
-const auditEventPresets = AUDIT_EVENT_PRESETS
-
-const actorDraft       = ref('')
-const inPageSearchInput = ref('')
-const inPageQ          = ref('')
-
-const filters = reactive({
-  event:    'api.request',
-  actor_id: '',
-  from:     '',
-  to:       '',
-  page:     1,
-  per_page: 50,
-})
-
-// ─── Event badge / icon config ────────────────────────────────────────────────
-
-const EVENT_CONFIG = {
-  'api.request':            { icon: GlobeAltIcon,           badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',           active: 'bg-blue-600' },
-  'request.create':         { icon: DocumentPlusIcon,        badge: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',       active: 'bg-green-600' },
-  'request.paper_received': { icon: InboxArrowDownIcon,      badge: 'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300',           active: 'bg-teal-600' },
-  'request.reject':         { icon: XCircleIcon,             badge: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',           active: 'bg-rose-600' },
-  'request.approve':        { icon: CheckCircleIcon,         badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300', active: 'bg-emerald-600' },
-  'attachment.upload':      { icon: ArrowUpTrayIcon,         badge: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',   active: 'bg-purple-600' },
-  'attachment.ocr_stub':    { icon: EyeIcon,                 badge: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300',   active: 'bg-indigo-600' },
-  'cargo.sla_breached':     { icon: ExclamationTriangleIcon, badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',       active: 'bg-amber-600' },
-}
-
-function eventIcon(event) {
-  return EVENT_CONFIG[event]?.icon ?? BoltIcon
-}
-
-function eventBadgeClass(event) {
-  return EVENT_CONFIG[event]?.badge ?? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-}
-
-function eventActivePillClass(event) {
-  return EVENT_CONFIG[event]?.active ?? 'bg-teal-600'
-}
-
-// ─── HTTP helpers ─────────────────────────────────────────────────────────────
-
-function httpMethodClass(method) {
-  const m = (method ?? '').toUpperCase()
-  if (m === 'GET')    return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-  if (m === 'POST')   return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-  if (m === 'PUT')    return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-  if (m === 'PATCH')  return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-  if (m === 'DELETE') return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
-  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-}
-
-function httpStatusClass(status) {
-  const n = Number(status)
-  if (n >= 200 && n < 300) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-  if (n >= 300 && n < 400) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-  if (n >= 400 && n < 500) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-  if (n >= 500)             return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'
-  return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-}
+const filters = reactive({ from: '', to: '', page: 1, per_page: 50 })
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
 
-const eventSummaryLabel = computed(() => {
-  if (!filters.event) return t('audit_logs_page.event_all')
-  const row = auditEventPresets.find((e) => e.value === filters.event)
-  return row?.label ?? filters.event
-})
+const hasActiveFilters = computed(() =>
+  activeCategory.value !== 'all' || searchInput.value.trim() || filters.from || filters.to,
+)
 
-const dateRangeChip = computed(() => {
-  if (!filters.from && !filters.to) return t('audit_logs_page.date_any')
+const dateRangeLabel = computed(() => {
+  if (!filters.from && !filters.to) return 'Khoảng ngày'
   const a = filters.from || '…'
-  const b = filters.to || '…'
-  return `${a} — ${b}`
+  const b = filters.to   || '…'
+  return `${a} – ${b}`
 })
 
-const bumpInPageDebounced = debounceTrailing(() => {
-  inPageQ.value = inPageSearchInput.value
-}, 300)
+const bumpSearch = debounceTrailing(() => { searchQ.value = searchInput.value }, 300)
+watch(searchInput, () => bumpSearch())
 
-watch(inPageSearchInput, () => bumpInPageDebounced())
-
-function metaMatchesQuery(l, q) {
+function itemMatchesSearch(log, q) {
+  if (!q) return true
   const blob = [
-    String(l.event ?? ''),
-    String(l.actor?.name ?? ''),
-    String(l.actor_id ?? ''),
-    String(l.auditable_type ?? ''),
-    String(l.auditable_id ?? ''),
-    JSON.stringify(l.metadata ?? ''),
+    log.actor?.name ?? '',
+    log.actor?.employee_code ?? '',
+    log.actor_id ?? '',
+    eventLabel(log.event),
+    EVENT_VERBS[log.event] ?? '',
+    subjectText(log) ?? '',
+    log.auditable_type ?? '',
+    String(log.auditable_id ?? ''),
   ].join(' ').toLowerCase()
   return blob.includes(q)
 }
 
-const displayItems = computed(() => {
-  const q = inPageQ.value.trim().toLowerCase()
+const filteredItems = computed(() => {
+  const q = searchQ.value.trim().toLowerCase()
   if (!q) return items.value
-  return items.value.filter((l) => metaMatchesQuery(l, q))
+  return items.value.filter((l) => itemMatchesSearch(l, q))
 })
 
-// ─── UI helpers ───────────────────────────────────────────────────────────────
+const groupedItems = computed(() => {
+  const groups = []
+  const seen = new Map()
+  for (const log of filteredItems.value) {
+    const key = dateGroupKey(log.created_at)
+    const label = dateGroupLabel(log.created_at)
+    if (!seen.has(key)) {
+      seen.set(key, groups.length)
+      groups.push({ date: key, label, items: [] })
+    }
+    groups[seen.get(key)].items.push(log)
+  }
+  return groups
+})
+
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+
+function dateGroupKey(v) {
+  if (!v) return 'unknown'
+  try { return new Date(v).toISOString().slice(0, 10) } catch { return 'unknown' }
+}
+
+function dateGroupLabel(v) {
+  if (!v) return 'Không rõ'
+  try {
+    const d    = new Date(v)
+    const now  = new Date()
+    const diff = Math.floor((now - d) / 86400000)
+    if (diff === 0) return 'Hôm nay'
+    if (diff === 1) return 'Hôm qua'
+    const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
+    return d.toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long' })
+  } catch { return String(v) }
+}
+
+function timeAgo(v) {
+  if (!v) return ''
+  try {
+    const diffMs   = Date.now() - new Date(v)
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffH    = Math.floor(diffMins / 60)
+    const diffD    = Math.floor(diffH / 24)
+    if (diffMins < 1)  return 'vừa xong'
+    if (diffMins < 60) return `${diffMins} phút trước`
+    if (diffH < 24)    return `${diffH} giờ trước`
+    if (diffD <= 1)    return 'hôm qua'
+    const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
+    return new Date(v).toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' })
+  } catch { return '' }
+}
 
 function actorInitials(name) {
   if (!name) return '?'
-  return name.split(' ').slice(-2).map((n) => n[0] ?? '').join('').toUpperCase().slice(0, 2)
-}
-
-function auditableLabel(type) {
-  if (!type) return '—'
-  return type.split('\\').pop()
-}
-
-function formatDate(v) {
-  if (!v) return '-'
-  try {
-    const loc = locale.value === 'en' ? 'en-US' : 'vi-VN'
-    return new Date(v).toLocaleString(loc)
-  } catch {
-    return String(v)
-  }
+  return name.split(' ').filter(Boolean).slice(-2).map((n) => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -529,33 +424,24 @@ const scheduleReload = debounceTrailing(() => {
   if (!listReady.value) return
   filters.page = 1
   reload(false)
-}, 400)
+}, 350)
 
-const bumpActorDebounced = debounceTrailing(() => {
-  const next = actorDraft.value.trim()
-  if (next === filters.actor_id) return
-  filters.actor_id = next
-  scheduleReload()
-}, 400)
+watch(() => [filters.from, filters.to], () => scheduleReload(), { deep: true })
 
-watch(actorDraft, () => bumpActorDebounced())
-watch(() => [filters.event, filters.from, filters.to], () => scheduleReload(), { deep: true })
-
-function onPerPageChange() {
+function setCategory(key) {
+  activeCategory.value = key
   filters.page = 1
-  reload(false)
+  if (listReady.value) reload(false)
 }
 
 function resetFilters() {
-  filters.event    = 'api.request'
-  filters.actor_id = ''
-  filters.from     = ''
-  filters.to       = ''
-  filters.per_page = 50
-  filters.page     = 1
-  actorDraft.value       = ''
-  inPageSearchInput.value = ''
-  inPageQ.value          = ''
+  activeCategory.value = 'all'
+  searchInput.value    = ''
+  searchQ.value        = ''
+  filters.from         = ''
+  filters.to           = ''
+  filters.page         = 1
+  showDateFilter.value = false
   if (listReady.value) reload(false)
 }
 
@@ -566,12 +452,16 @@ function goDetail(log) {
 async function reload(notify = false) {
   loading.value = true
   try {
-    const params = { ...filters }
-    Object.keys(params).forEach((k) => { if (params[k] === '') delete params[k] })
+    const cat    = CATEGORIES.find((c) => c.key === activeCategory.value)
+    const params = { page: filters.page, per_page: filters.per_page }
+    if (filters.from) params.from = filters.from
+    if (filters.to)   params.to   = filters.to
+    if (cat?.events)  params.events = cat.events
+
     const res = await listAuditLogs(params)
     items.value = res.items ?? []
-    meta.value  = res.meta ?? {}
-    if (notify) showAppSuccess(t('audit_logs_page.reload_success'), t('audit_logs_page.reload_success_title'))
+    meta.value  = res.meta  ?? {}
+    if (notify) showAppSuccess('Đã tải lại danh sách.', 'Thành công')
   } catch (e) {
     showAppError(formatApiError(e))
   } finally {
@@ -585,7 +475,6 @@ function goPage(p) {
 }
 
 onMounted(async () => {
-  actorDraft.value = filters.actor_id ? String(filters.actor_id) : ''
   await reload(false)
   listReady.value = true
 })
