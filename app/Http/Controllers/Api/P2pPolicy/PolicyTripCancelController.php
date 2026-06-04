@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\P2pPolicy\CancelPolicyTripRequest;
 use App\Models\PolicyTrip;
+use App\Services\P2pPolicy\PolicyTripPresenter;
 use App\Services\P2pPolicy\PolicyTripService;
 use Illuminate\Http\JsonResponse;
 
@@ -15,22 +16,24 @@ class PolicyTripCancelController extends Controller
 
     public function __construct(
         private readonly PolicyTripService $policyTripService,
+        private readonly PolicyTripPresenter $presenter,
     ) {}
 
+    /** Điều vận hủy chuyến thủ công + ghi lý do (§4.5, E4). Không tự hủy. */
     public function __invoke(CancelPolicyTripRequest $request, PolicyTrip $policyTrip): JsonResponse
     {
-        if (in_array($policyTrip->status, ['completed', 'cancelled'], true)) {
+        if (in_array($policyTrip->status, [PolicyTrip::STATUS_COMPLETED, PolicyTrip::STATUS_CANCELLED], true)) {
             abort(422, 'Không thể hủy chuyến đã hoàn thành hoặc đã hủy.');
         }
 
-        $data = $request->validated();
+        $reason = $request->validated()['reason'];
         $oldStatus = $policyTrip->status;
 
         $policyTrip->update([
-            'status' => 'cancelled',
+            'status' => PolicyTrip::STATUS_CANCELLED,
             'cancelled_at' => now(),
             'cancelled_by' => $request->user()?->id,
-            'cancel_reason' => $data['reason'],
+            'cancel_reason' => $reason,
         ]);
 
         $this->policyTripService->recordAudit(
@@ -38,11 +41,9 @@ class PolicyTripCancelController extends Controller
             $request->user()?->id,
             'cancelled',
             ['status' => $oldStatus],
-            ['status' => 'cancelled', 'reason' => $data['reason']],
+            ['status' => PolicyTrip::STATUS_CANCELLED, 'reason' => $reason],
         );
 
-        $policyTrip->load(['route', 'driver', 'vehicle']);
-
-        return $this->ok($this->policyTripService->tripToListArray($policyTrip));
+        return $this->ok($this->presenter->tripRow($policyTrip->fresh(['route', 'driver', 'vehicle'])));
     }
 }

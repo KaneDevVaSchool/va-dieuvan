@@ -16,18 +16,18 @@ class PolicyTripGenerateController extends Controller
         private readonly PolicyTripGeneratorService $generator,
     ) {}
 
+    /** Điều vận sinh chuyến thủ công cho một ngày (§4). Idempotent. */
     public function __invoke(GeneratePolicyTripsRequest $request): JsonResponse
     {
-        $date = $request->validated('date');
-        $result = $this->generator->generateForDate($date);
+        $result = $this->generator->generateForDate($request->validated('date'));
 
-        if (! empty($result['message']) && $result['created'] === 0 && $result['skipped'] === 0) {
-            return response()->json([
-                'message' => $result['message'],
-                'data' => $result,
-            ], 422);
+        if (in_array($result['result'], [
+            PolicyTripGeneratorService::RESULT_NOT_SERVICE_DAY,
+            PolicyTripGeneratorService::RESULT_MISSING_SEMESTER,
+        ], true)) {
+            return response()->json(['message' => $result['message'], 'data' => $result], 422);
         }
 
-        return $this->ok($result);
+        return $this->ok($result, sprintf('Đã sinh %d chuyến mới, bỏ qua %d chuyến đã có.', $result['created'], $result['skipped']));
     }
 }

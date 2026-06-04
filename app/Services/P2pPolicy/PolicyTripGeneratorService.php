@@ -7,139 +7,167 @@ use App\Models\PolicyTripStudent;
 use App\Models\Route;
 use App\Models\SchoolCalendar;
 use App\Models\StudentPolicy;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
+/**
+ * Tự động sinh chuyến policy cho một ngày (§4). Idempotent: dựa trên UNIQUE
+ * (trip_date, time_slot, route_id) + INSERT IGNORE nên chạy lại / chạy song song
+ * không tạo trùng (CRITICAL FIX L2). Không merge HS vào chuyến manual (E8).
+ */
 class PolicyTripGeneratorService
 {
     public function __construct(
         private readonly PolicyTripService $policyTripService,
+        private readonly PolicyTripPresenter $presenter,
     ) {}
 
+    public const RESULT_NOT_SERVICE_DAY = 'not_service_day';
+    public const RESULT_MISSING_SEMESTER = 'missing_semester';
+    public const RESULT_OK = 'ok';
+
     /**
-     * @return array{created: int, skipped: int, trips: array<int, array>}
+     * @return array{result:string, created:int, skipped:int, trips:array<int,array>, message:?string}
      */
     public function generateForDate(string $date): array
     {
         $calendar = SchoolCalendar::query()->whereDate('date', $date)->first();
 
-        if (! $calendar || ! in_array($calendar->day_type, ['school_day', 'makeup_day'], true)) {
-            return ['created' => 0, 'skipped' => 0, 'trips' => [], 'message' => 'Ngày không phải ngày học hoặc chưa có trong lịch.'];
+        if (! $calendar || ! $calendar->isServiceDay()) {
+            return $this->summary(self::RESULT_NOT_SERVICE_DAY, 0, 0, [], 'Ngày không phải ngày học/bù hoặc chưa có trong lịch — bỏ qua.');
         }
 
+        // [L1] semester phải có sẵn trên lịch — không suy diễn ngầm.
         if ($calendar->semester === null) {
-            return ['created' => 0, 'skipped' => 0, 'trips' => [], 'message' => 'Thiếu học kỳ (semester) trên lịch ngày này (L1).'];
+            return $this->summary(self::RESULT_MISSING_SEMESTER, 0, 0, [], 'Lịch ngày này thiếu học kỳ (semester) — không thể sinh chuyến (L1).');
         }
 
         $semester = (int) $calendar->semester;
         $created = 0;
         $skipped = 0;
-        $tripPayloads = [];
+        $trips = [];
 
-        foreach (['morning', 'afternoon'] as $timeSlot) {
+        foreach (PolicyTrip::TIME_SLOTS as $timeSlot) {
             $routeIds = StudentPolicy::query()
-                ->whereNull('deleted_at')
-                ->where('status', 'active')
-                ->where('time_slot', $timeSlot)
-                ->where('semester', $semester)
-                ->whereDate('effective_from', '<=', $date)
-                ->whereDate('effective_to', '>=', $date)
+                ->servingOn($date, $timeSlot, $semester)
                 ->distinct()
                 ->pluck('route_id');
 
             foreach ($routeIds as $routeId) {
-                $result = $this->ensureTripForRouteSlot($date, $timeSlot, (int) $routeId, $semester);
-                if ($result === 'created') {
-                    $created++;
-                } else {
-                    $skipped++;
+                [$trip, $wasCreated] = $this->ensureTrip($date, $timeSlot, (int) $routeId);
+
+                $wasCreated ? $created++ : $skipped++;
+
+                // E8: không merge HS vào chuyến tạo thủ công.
+                if ($trip->generated_by === 'system') {
+                    $this->syncStudentsOntoTrip($trip, $date, $timeSlot, $semester);
                 }
-                if ($result !== 'error') {
-                    $trip = PolicyTrip::query()
-                        ->whereDate('trip_date', $date)
-                        ->where('time_slot', $timeSlot)
-                        ->where('route_id', $routeId)
-                        ->first();
-                    if ($trip) {
-                        $tripPayloads[] = $this->policyTripService->tripToListArray($trip);
-                    }
-                }
+
+                $trips[] = $this->presenter->tripRow($trip->refresh());
             }
         }
 
-        return [
-            'created' => $created,
-            'skipped' => $skipped,
-            'trips' => $tripPayloads,
-            'message' => null,
-        ];
+        return $this->summary(self::RESULT_OK, $created, $skipped, $trips, null);
     }
 
-    private function ensureTripForRouteSlot(string $date, string $timeSlot, int $routeId, int $semester): string
+    /**
+     * Tạo (hoặc lấy lại) chuyến cho route+slot+ngày một cách idempotent.
+     *
+     * @return array{0: PolicyTrip, 1: bool} chuyến và cờ vừa được tạo
+     */
+    private function ensureTrip(string $date, string $timeSlot, int $routeId): array
     {
-        $existing = PolicyTrip::query()
-            ->whereDate('trip_date', $date)
+        $route = Route::query()->find($routeId);
+        $planned = $this->plannedDeparture($timeSlot);
+
+        $inserted = PolicyTrip::insertOrIgnore([
+            'trip_date' => $date,
+            'time_slot' => $timeSlot,
+            'route_id' => $routeId,
+            'status' => PolicyTrip::STATUS_SCHEDULED,
+            'planned_departure' => $planned,
+            'expected_count' => 0,
+            'boarded_count' => 0,
+            'absent_count' => 0,
+            'route_snapshot' => json_encode($this->routeSnapshot($route), JSON_UNESCAPED_UNICODE),
+            'generated_at' => now(),
+            'generated_by' => 'system',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $trip = PolicyTrip::query()
+            ->where('trip_date', $date)
             ->where('time_slot', $timeSlot)
             ->where('route_id', $routeId)
-            ->first();
+            ->firstOrFail();
 
-        if ($existing) {
-            $this->syncStudentsOntoTrip($existing, $date, $timeSlot, $routeId, $semester);
-
-            return 'skipped';
-        }
-
-        $route = Route::query()->find($routeId);
-        $planned = $timeSlot === 'morning' ? '06:00:00' : '15:30:00';
-
-        return DB::transaction(function () use ($date, $timeSlot, $routeId, $semester, $route, $planned) {
-            $trip = PolicyTrip::create([
+        $wasCreated = $inserted > 0;
+        if ($wasCreated) {
+            $this->policyTripService->recordAudit($trip, null, 'created', null, [
+                'generated_by' => 'system',
                 'trip_date' => $date,
                 'time_slot' => $timeSlot,
                 'route_id' => $routeId,
-                'status' => 'scheduled',
-                'planned_departure' => $planned,
-                'generated_at' => now(),
-                'generated_by' => 'system',
-                'route_snapshot' => $route ? ['id' => $route->id, 'name' => $route->name] : null,
             ]);
-
-            $this->syncStudentsOntoTrip($trip, $date, $timeSlot, $routeId, $semester);
-            $this->policyTripService->refreshTripCounts($trip);
-
-            return 'created';
-        });
-    }
-
-    private function syncStudentsOntoTrip(
-        PolicyTrip $trip,
-        string $date,
-        string $timeSlot,
-        int $routeId,
-        int $semester,
-    ): void {
-        $policies = StudentPolicy::query()
-            ->whereNull('deleted_at')
-            ->where('status', 'active')
-            ->where('route_id', $routeId)
-            ->where('time_slot', $timeSlot)
-            ->where('semester', $semester)
-            ->whereDate('effective_from', '<=', $date)
-            ->whereDate('effective_to', '>=', $date)
-            ->get();
-
-        foreach ($policies as $policy) {
-            PolicyTripStudent::firstOrCreate(
-                [
-                    'policy_trip_id' => $trip->id,
-                    'student_id' => $policy->student_id,
-                ],
-                [
-                    'student_policy_id' => $policy->id,
-                    'expected' => true,
-                ],
-            );
         }
 
-        $this->policyTripService->refreshTripCounts($trip);
+        return [$trip, $wasCreated];
+    }
+
+    /** Gắn (idempotent) tất cả HS đang phục vụ vào chuyến + đếm lại (§4.3). */
+    private function syncStudentsOntoTrip(PolicyTrip $trip, string $date, string $timeSlot, int $semester): void
+    {
+        $policies = StudentPolicy::query()
+            ->servingOn($date, $timeSlot, (int) $trip->route_id)
+            ->where('semester', $semester)
+            ->get(['id', 'student_id']);
+
+        if ($policies->isNotEmpty()) {
+            $now = now();
+            $rows = $policies->map(fn (StudentPolicy $p) => [
+                'policy_trip_id' => $trip->id,
+                'student_id' => $p->student_id,
+                'student_policy_id' => $p->id,
+                'expected' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all();
+
+            PolicyTripStudent::insertOrIgnore($rows);
+        }
+
+        $this->policyTripService->refreshCounts($trip);
+    }
+
+    private function plannedDeparture(string $timeSlot): string
+    {
+        $time = (string) config("p2p.departure_times.{$timeSlot}", '06:00');
+
+        return Carbon::createFromFormat('H:i', $time)->format('H:i:s');
+    }
+
+    private function routeSnapshot(?Route $route): array
+    {
+        if (! $route) {
+            return ['captured_at' => now()->toIso8601String()];
+        }
+
+        return [
+            'id' => $route->id,
+            'name' => $route->name,
+            'type' => $route->type,
+            'captured_at' => now()->toIso8601String(),
+        ];
+    }
+
+    private function summary(string $result, int $created, int $skipped, array $trips, ?string $message): array
+    {
+        return [
+            'result' => $result,
+            'created' => $created,
+            'skipped' => $skipped,
+            'trips' => $trips,
+            'message' => $message,
+        ];
     }
 }

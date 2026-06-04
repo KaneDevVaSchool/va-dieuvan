@@ -7,6 +7,10 @@
 
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Costs\TripCostController;
+use App\Http\Controllers\Api\Driver\DriverPolicyTripCompleteController;
+use App\Http\Controllers\Api\Driver\DriverPolicyTripStartController;
+use App\Http\Controllers\Api\Driver\DriverPolicyTripStudentAlightController;
+use App\Http\Controllers\Api\Driver\DriverPolicyTripStudentBoardController;
 use App\Http\Controllers\Api\Driver\PolicyTripStudentAbsentController;
 use App\Http\Controllers\Api\Trips\TripOpsController;
 use Illuminate\Support\Facades\Route;
@@ -31,8 +35,17 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
     Route::delete('/{tripCost}', 'destroyByDriver')->middleware('throttle:20,1');
 });
 
-Route::patch('/driver/policy-trip-students/{policyTripStudent}/absent', PolicyTripStudentAbsentController::class)
-    ->middleware('throttle:60,1');
+// P2P — luồng tài xế điểm danh (§5, §10.2)
+Route::prefix('driver/policy-trips')->group(function () {
+    Route::post('/{policyTrip}/start', DriverPolicyTripStartController::class)->middleware('throttle:60,1');
+    Route::post('/{policyTrip}/complete', DriverPolicyTripCompleteController::class)->middleware('throttle:60,1');
+});
+
+Route::prefix('driver/policy-trip-students')->group(function () {
+    Route::patch('/{policyTripStudent}/board', DriverPolicyTripStudentBoardController::class)->middleware('throttle:120,1');
+    Route::patch('/{policyTripStudent}/alight', DriverPolicyTripStudentAlightController::class)->middleware('throttle:120,1');
+    Route::patch('/{policyTripStudent}/absent', PolicyTripStudentAbsentController::class)->middleware('throttle:60,1');
+});
 
 Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {
     Route::post('/', 'upload')->middleware('throttle:30,1');

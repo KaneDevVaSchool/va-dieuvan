@@ -6,10 +6,28 @@ use App\Models\PolicyTrip;
 use App\Models\PolicyTripAudit;
 use App\Models\PolicyTripStudent;
 use App\Models\StudentPolicy;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * Nghiệp vụ dùng chung quanh chuyến policy: đếm lại số HS, ghi audit, kiểm tra
+ * xung đột tài xế (E2), đồng bộ danh sách HS khi policy đổi trạng thái (§4.4).
+ */
 class PolicyTripService
 {
+    /**
+     * Đếm lại expected/boarded/absent từ bảng con và ghi vào chuyến (U4).
+     * `expected_count` = số HS expected=true (gồm cả HS vắng có phép — §7.1).
+     */
+    public function refreshCounts(PolicyTrip $trip): void
+    {
+        $expected = $trip->students()->where('expected', true);
+
+        $trip->forceFill([
+            'expected_count' => (clone $expected)->count(),
+            'boarded_count' => (clone $expected)->whereNotNull('boarded_at')->count(),
+            'absent_count' => (clone $expected)->whereNotNull('absence_reason')->count(),
+        ])->save();
+    }
+
     public function recordAudit(
         PolicyTrip $trip,
         ?int $userId,
@@ -27,109 +45,84 @@ class PolicyTripService
         ]);
     }
 
-    public function refreshTripCounts(PolicyTrip $trip): void
+    /**
+     * Chuyến khác (không bị hủy) mà tài xế đã được giao trong cùng ngày + ca (E2).
+     * Trả về chuyến xung đột để nêu tên trong thông báo 409, hoặc null.
+     */
+    public function conflictingTrip(int $driverId, string $tripDate, string $timeSlot, ?int $excludeTripId = null): ?PolicyTrip
     {
-        $trip->refresh();
-        $students = PolicyTripStudent::query()
-            ->where('policy_trip_id', $trip->id)
-            ->where('expected', true)
-            ->get();
-
-        $expected = $students->count();
-        $boarded = $students->whereNotNull('boarded_at')->count();
-        $absent = $students->whereNotNull('absence_reason')->count();
-
-        $trip->update([
-            'expected_count' => $expected,
-            'boarded_count' => $boarded,
-            'absent_count' => $absent,
-        ]);
+        return PolicyTrip::query()
+            ->with('route')
+            ->where('driver_id', $driverId)
+            ->whereDate('trip_date', $tripDate)
+            ->where('time_slot', $timeSlot)
+            ->where('status', '!=', PolicyTrip::STATUS_CANCELLED)
+            ->when($excludeTripId, fn ($q) => $q->where('id', '!=', $excludeTripId))
+            ->first();
     }
 
     public function driverHasConflict(int $driverId, string $tripDate, string $timeSlot, ?int $excludeTripId = null): bool
     {
-        $q = PolicyTrip::query()
-            ->where('driver_id', $driverId)
-            ->whereDate('trip_date', $tripDate)
-            ->where('time_slot', $timeSlot)
-            ->whereNotIn('status', ['cancelled']);
-
-        if ($excludeTripId) {
-            $q->where('id', '!=', $excludeTripId);
-        }
-
-        return $q->exists();
+        return $this->conflictingTrip($driverId, $tripDate, $timeSlot, $excludeTripId) !== null;
     }
 
-    public function syncFutureTripsOnPolicySuspend(StudentPolicy $policy, int $changedByUserId): int
+    /**
+     * Số chuyến chưa khởi hành (tương lai) sẽ bị ảnh hưởng nếu policy này ngừng
+     * phục vụ — dùng để cảnh báo điều vận trước khi xác nhận (§4.4, §8.3).
+     */
+    public function countAffectedUpcomingTrips(StudentPolicy $policy): int
     {
-        $affected = 0;
-
-        PolicyTripStudent::query()
+        return PolicyTripStudent::query()
             ->where('student_policy_id', $policy->id)
             ->where('expected', true)
-            ->whereNull('absence_reason')
-            ->whereHas('policyTrip', function ($q) {
-                $q->whereIn('status', ['scheduled', 'assigned'])
-                    ->whereDate('trip_date', '>=', now()->toDateString());
-            })
-            ->with('policyTrip')
-            ->each(function (PolicyTripStudent $pts) use ($changedByUserId, &$affected) {
-                $pts->update([
-                    'absence_reason' => 'absent_reported',
-                    'reported_by' => $changedByUserId,
-                ]);
-                if ($pts->policyTrip) {
-                    $this->refreshTripCounts($pts->policyTrip);
-                }
-                $affected++;
-            });
-
-        return $affected;
+            ->whereHas('policyTrip', fn ($q) => $q->upcomingPending())
+            ->count();
     }
 
-    public function tripToListArray(PolicyTrip $trip): array
+    /**
+     * Đồng bộ khi policy chuyển sang inactive/suspended (§4.4, CRITICAL FIX L3):
+     * loại HS khỏi các chuyến tương lai chưa khởi hành (expected=false) và đếm lại.
+     *
+     * @return int số bản ghi HS đã cập nhật
+     */
+    public function syncStudentsOnPolicyStopService(StudentPolicy $policy, ?int $changedByUserId): int
     {
-        $trip->loadMissing(['route', 'driver', 'vehicle']);
+        $entries = PolicyTripStudent::query()
+            ->where('student_policy_id', $policy->id)
+            ->where('expected', true)
+            ->whereHas('policyTrip', fn ($q) => $q->upcomingPending())
+            ->with('policyTrip')
+            ->get();
 
-        $planned = $trip->planned_departure;
-        if ($planned && ! is_string($planned)) {
-            $planned = $planned->format('H:i');
+        $affectedTripIds = [];
+
+        foreach ($entries as $entry) {
+            $entry->update([
+                'expected' => false,
+                'absence_reason' => PolicyTripStudent::ABSENCE_REPORTED,
+                'reported_by' => $changedByUserId,
+            ]);
+            if ($entry->policyTrip) {
+                $affectedTripIds[$entry->policyTrip->id] = $entry->policyTrip;
+            }
         }
 
-        return [
-            'id' => $trip->id,
-            'trip_date' => $trip->trip_date?->format('Y-m-d'),
-            'time_slot' => $trip->time_slot,
-            'route_id' => $trip->route_id,
-            'route_name' => $trip->route?->name,
-            'planned_departure' => $planned,
-            'driver_id' => $trip->driver_id,
-            'driver_name' => $trip->driver?->full_name,
-            'driver_phone' => $trip->driver?->phone,
-            'vehicle_id' => $trip->vehicle_id,
-            'vehicle_plate' => $trip->vehicle?->license_plate,
-            'expected_count' => $trip->expected_count,
-            'boarded_count' => $trip->boarded_count,
-            'absent_count' => $trip->absent_count,
-            'status' => $trip->status,
-        ];
+        foreach ($affectedTripIds as $trip) {
+            $this->refreshCounts($trip);
+            $this->recordAudit($trip, $changedByUserId, 'student_marked_absent', null, [
+                'reason' => 'policy_stopped_service',
+                'student_policy_id' => $policy->id,
+            ]);
+        }
+
+        return $entries->count();
     }
 
-    public function studentEntryToArray(PolicyTripStudent $entry): array
+    /** Tất cả HS dự kiến của chuyến đều đã báo vắng (§7.2). */
+    public function allExpectedAbsent(PolicyTrip $trip): bool
     {
-        $entry->loadMissing(['student', 'reporter']);
+        $expected = (int) $trip->expected_count;
 
-        return [
-            'id' => $entry->id,
-            'student_id' => $entry->student_id,
-            'student_name' => $entry->student?->full_name,
-            'class_name' => $entry->student?->grade,
-            'expected' => $entry->expected,
-            'boarded_at' => $entry->boarded_at?->toIso8601String(),
-            'alighted_at' => $entry->alighted_at?->toIso8601String(),
-            'absence_reason' => $entry->absence_reason,
-            'reported_by_name' => $entry->reporter?->name ?? $entry->reporter?->email,
-        ];
+        return $expected > 0 && (int) $trip->absent_count >= $expected;
     }
 }

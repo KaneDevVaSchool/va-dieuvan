@@ -93,6 +93,7 @@ Route::prefix('policy-trips')->group(function () {
 
 Route::prefix('student-policies')->controller(StudentPolicyController::class)->group(function () {
     Route::get('/', 'index');
+    Route::get('/{studentPolicy}/impact', 'impact');
 });
 
 Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->group(function () {

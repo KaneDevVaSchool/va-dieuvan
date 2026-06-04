@@ -179,6 +179,7 @@ Route::patch('/policy-trips/{policyTrip}/cancel', PolicyTripCancelController::cl
 Route::prefix('student-policies')->controller(StudentPolicyController::class)->group(function () {
     Route::post('/', 'store')->middleware('throttle:30,1');
     Route::patch('/{studentPolicy}', 'update')->middleware('throttle:30,1');
+    Route::delete('/{studentPolicy}', 'destroy')->middleware('throttle:30,1');
 });
 
 Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->group(function () {

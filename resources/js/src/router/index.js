@@ -165,7 +165,7 @@ const staffChildRoutes = [
     {
         path: "p2p-policy/trips",
         name: "p2pPolicyTrips",
-        component: () => import("../views/p2pPolicy/P2pPolicyTripsListView.vue"),
+        component: () => import("../views/p2pPolicy/PolicyTripsDashboardView.vue"),
         meta: {
             title: "Chuyến học sinh chính sách",
             subtitle: "Policy P2P",
@@ -176,7 +176,7 @@ const staffChildRoutes = [
     {
         path: "p2p-policy/students",
         name: "p2pPolicyStudents",
-        component: () => import("../views/p2pPolicy/P2pPolicyStudentsListView.vue"),
+        component: () => import("../views/p2pPolicy/StudentPoliciesView.vue"),
         meta: {
             title: "Học sinh chính sách",
             subtitle: "Quản lý danh sách",
@@ -187,7 +187,7 @@ const staffChildRoutes = [
     {
         path: "p2p-policy/calendar",
         name: "p2pPolicyCalendar",
-        component: () => import("../views/p2pPolicy/P2pPolicyTermConfigView.vue"),
+        component: () => import("../views/p2pPolicy/SchoolCalendarView.vue"),
         meta: {
             title: "Lịch học",
             subtitle: "Cấu hình học kỳ",
@@ -198,7 +198,7 @@ const staffChildRoutes = [
     {
         path: "p2p-policy/routes",
         name: "p2pPolicyRoutes",
-        component: () => import("../views/p2pPolicy/P2pPolicyRoutesListView.vue"),
+        component: () => import("../views/p2pPolicy/PolicyRoutesView.vue"),
         meta: {
             title: "Tuyến Policy",
             subtitle: "P2P",
@@ -208,7 +208,7 @@ const staffChildRoutes = [
     {
         path: "p2p-policy/absence-report",
         name: "p2pPolicyAbsenceReport",
-        component: () => import("../views/p2pPolicy/P2pPolicyAbsenceReportView.vue"),
+        component: () => import("../views/p2pPolicy/PolicyAbsenceReportView.vue"),
         meta: {
             title: "Báo cáo vắng",
             subtitle: "Theo tuần",
@@ -589,6 +589,26 @@ const router = createRouter({
             meta: {
                 title: "Chi tiết chuyến",
                 subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/policy-trips",
+            name: "driverPolicyTrips",
+            component: () => import("../views/driver/DriverPolicyTripsView.vue"),
+            meta: {
+                title: "Chuyến đưa đón",
+                subtitle: "Học sinh chính sách",
+                driverApp: true,
+            },
+        },
+        {
+            path: "/driver/policy-trips/:id",
+            name: "driverPolicyAttendance",
+            component: () => import("../views/driver/DriverPolicyAttendanceView.vue"),
+            meta: {
+                title: "Điểm danh",
+                subtitle: "Học sinh chính sách",
                 driverApp: true,
             },
         },

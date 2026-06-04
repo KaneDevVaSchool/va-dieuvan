@@ -1,26 +1,31 @@
 <?php
 
-namespace App\Http\Controllers\Api\P2pPolicy;
+namespace App\Http\Controllers\Api\Driver;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
+use App\Http\Controllers\Api\Driver\Concerns\ActsOnPolicyTrips;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\P2pPolicy\ListPolicyTripStudentsRequest;
+use App\Http\Requests\Api\Driver\DriverPolicyTripActionRequest;
 use App\Models\PolicyTrip;
 use App\Services\P2pPolicy\PolicyTripPresenter;
 use Illuminate\Http\JsonResponse;
 
-class PolicyTripStudentListController extends Controller
+/** Danh sách HS để tài xế điểm danh (§5.1, §10.2). */
+class DriverPolicyTripStudentsController extends Controller
 {
+    use ActsOnPolicyTrips;
     use ApiResponses;
 
     public function __construct(
         private readonly PolicyTripPresenter $presenter,
     ) {}
 
-    /** Chi tiết HS của một chuyến cho điều vận (§8.2, L9). */
-    public function index(ListPolicyTripStudentsRequest $request, PolicyTrip $policyTrip): JsonResponse
+    public function index(DriverPolicyTripActionRequest $request, PolicyTrip $policyTrip): JsonResponse
     {
+        $this->assertCanActOnTrip($request->user(), $policyTrip);
+
         $items = $policyTrip->students()
+            ->where('expected', true)
             ->with(['student', 'reporter'])
             ->orderBy('id')
             ->get()
