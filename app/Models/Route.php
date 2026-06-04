@@ -11,6 +11,11 @@ class Route extends Model
 {
     use HasFactory;
 
+    public const TYPE_D2D = 'door_to_door';
+
+    /** Tuyến chỉ dùng cho đưa đón học sinh chính sách (P2P), tách khỏi D2D. */
+    public const TYPE_POLICY = 'policy';
+
     protected $fillable = [
         'name',
         'type',

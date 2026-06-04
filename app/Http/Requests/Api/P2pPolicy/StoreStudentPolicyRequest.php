@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\P2pPolicy;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use App\Models\Route;
 use Illuminate\Validation\Rule;
 
 class StoreStudentPolicyRequest extends ApiFormRequest
@@ -25,7 +26,10 @@ class StoreStudentPolicyRequest extends ApiFormRequest
                     ->where('school_year', $this->input('school_year'))
                     ->whereNull('deleted_at'),
             ],
-            'route_id' => ['required', 'integer', 'exists:routes,id'],
+            'route_id' => [
+                'required', 'integer',
+                Rule::exists('routes', 'id')->where('type', Route::TYPE_POLICY)->where('is_active', true),
+            ],
             'school_year' => ['required', 'string', 'max:9'],
             'semester' => ['required', 'integer', 'in:1,2'],
             'time_slot' => ['required', 'in:morning,afternoon'],

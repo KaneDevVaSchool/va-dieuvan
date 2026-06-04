@@ -90,7 +90,7 @@ export const NAV_SECTIONS = [
         labelKey: 'nav.p2p_policy_routes',
         icon: 'routes',
         featureKey: 'module.p2p_policy',
-        permissionKey: 'policy_trip.view',
+        permissionKey: 'student_policy.manage',
       },
       {
         to: `${DISPATCH_WEB_BASE}/p2p-policy/absence-report`,

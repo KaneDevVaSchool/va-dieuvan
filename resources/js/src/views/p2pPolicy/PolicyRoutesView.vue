@@ -8,14 +8,7 @@
         <p class="mt-1 text-sm text-slate-500">{{ t('p2p_policy_page.routes_subtitle') }}</p>
       </div>
       <div class="flex shrink-0 flex-wrap gap-2">
-        <router-link
-          v-if="canManageRoutes"
-          :to="{ name: 'routes' }"
-          class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-        >
-          {{ t('p2p_policy_page.routes_open_d2d') }}
-        </router-link>
-        <Button v-if="canManageRoutes" @click="showCreate = true">
+        <Button v-if="canManage" @click="showCreate = true">
           <PlusIcon class="h-4 w-4" /> {{ t('p2p_policy_page.routes_create') }}
         </Button>
         <button type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50" :disabled="loading" @click="load">
@@ -24,7 +17,7 @@
       </div>
     </div>
 
-    <p class="rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+    <p class="rounded-lg border border-teal-200/60 bg-teal-50/50 px-3 py-2 text-xs leading-relaxed text-slate-700">
       {{ t('p2p_policy_page.routes_help') }}
     </p>
 
@@ -34,7 +27,7 @@
     <div v-else-if="!items.length" class="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white py-16 text-center">
       <MapPinIcon class="mb-3 h-12 w-12 text-slate-300" />
       <p class="text-sm font-medium text-slate-600">{{ t('p2p_policy_page.routes_empty') }}</p>
-      <Button v-if="canManageRoutes" class="mt-4" @click="showCreate = true">
+      <Button v-if="canManage" class="mt-4" @click="showCreate = true">
         <PlusIcon class="h-4 w-4" /> {{ t('p2p_policy_page.routes_create') }}
       </Button>
     </div>
@@ -47,12 +40,9 @@
           </div>
           <div class="min-w-0 flex-1">
             <div class="truncate font-semibold text-slate-900">{{ r.name }}</div>
-            <div class="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
-              <span class="inline-flex items-center rounded-md bg-indigo-100 px-2 py-0.5 text-indigo-700">
+            <div class="mt-1">
+              <span class="inline-flex items-center rounded-md bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700">
                 {{ t('p2p_policy_page.route_policy_count', { n: r.policy_students_count }) }}
-              </span>
-              <span v-if="r.stops_count != null" class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5">
-                {{ t('p2p_policy_page.route_stops_count', { n: r.stops_count }) }}
               </span>
             </div>
           </div>
@@ -84,14 +74,13 @@ import { ArrowPathIcon, MapPinIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Modal from '../../components/ui/Modal.vue'
-import { listPolicyRoutes } from '../../api/p2p'
-import { createRoute } from '../../api/d2d'
+import { listPolicyRoutes, createPolicyRoute } from '../../api/p2p'
 import { useAuthStore } from '../../store'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 
 const { t } = useI18n()
 const auth = useAuthStore()
-const canManageRoutes = computed(() => auth.hasPermission('route.manage'))
+const canManage = computed(() => auth.hasPermission('student_policy.manage'))
 
 const loading = ref(false)
 const items = ref([])
@@ -115,7 +104,7 @@ async function submitCreate() {
   if (!name) return
   creating.value = true
   try {
-    await createRoute({ name })
+    await createPolicyRoute({ name })
     showAppSuccess(t('p2p_policy_page.routes_create_ok'))
     showCreate.value = false
     newRouteName.value = ''

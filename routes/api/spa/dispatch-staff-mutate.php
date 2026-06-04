@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyRouteController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripAssignDriverController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripCancelController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripGenerateController;
@@ -167,6 +168,8 @@ Route::post('/transport-providers/{id}/restore', [OperationalResourceController:
 Route::delete('/transport-providers/{id}/force', [OperationalResourceController::class, 'forceDeleteTransportProvider'])
     ->whereNumber('id')
     ->middleware('throttle:30,1');
+
+Route::post('/policy-routes', [PolicyRouteController::class, 'store'])->middleware('throttle:30,1');
 
 Route::post('/policy-trips/generate', PolicyTripGenerateController::class)
     ->middleware('throttle:10,1');

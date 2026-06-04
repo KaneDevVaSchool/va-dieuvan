@@ -7,9 +7,15 @@ import { http } from './http'
 
 // ── Lookups (dùng cho filter & modal) ────────────────────────────────────────
 
-/** GET /policy-routes — tuyến + số HS policy + số điểm dừng. */
+/** GET /policy-routes — chỉ tuyến loại P2P (type=policy), không gồm D2D. */
 export async function listPolicyRoutes() {
   const { data } = await http.get('/policy-routes')
+  return data.data
+}
+
+/** POST /policy-routes { name } — tạo tuyến P2P. */
+export async function createPolicyRoute(payload) {
+  const { data } = await http.post('/policy-routes', payload)
   return data.data
 }
 
