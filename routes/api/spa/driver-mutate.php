@@ -7,6 +7,7 @@
 
 use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Costs\TripCostController;
+use App\Http\Controllers\Api\Driver\PolicyTripStudentAbsentController;
 use App\Http\Controllers\Api\Trips\TripOpsController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,9 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
     Route::patch('/{tripCost}', 'updateByDriver')->middleware('throttle:30,1');
     Route::delete('/{tripCost}', 'destroyByDriver')->middleware('throttle:20,1');
 });
+
+Route::patch('/driver/policy-trip-students/{policyTripStudent}/absent', PolicyTripStudentAbsentController::class)
+    ->middleware('throttle:60,1');
 
 Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {
     Route::post('/', 'upload')->middleware('throttle:30,1');

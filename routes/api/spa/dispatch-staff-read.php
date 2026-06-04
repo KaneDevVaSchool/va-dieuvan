@@ -20,6 +20,12 @@ use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\Reports\ReportController;
 use App\Http\Controllers\Api\RequestController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyTripAbsenceReportController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyTripController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyTripLiveUpdatesController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyTripStudentListController;
+use App\Http\Controllers\Api\P2pPolicy\SchoolCalendarController;
+use App\Http\Controllers\Api\P2pPolicy\StudentPolicyController;
 use App\Http\Controllers\Api\UserSearchForDispatchFormController;
 use App\Http\Controllers\Api\UserSearchForDriverAssignmentController;
 use Illuminate\Support\Facades\Route;
@@ -71,4 +77,19 @@ Route::prefix('admin')->group(function () {
 
     Route::get('dispatch-settings', [DispatchSettingController::class, 'show']);
     Route::put('dispatch-settings', [DispatchSettingController::class, 'update']);
+});
+
+Route::prefix('policy-trips')->group(function () {
+    Route::get('/live-updates', PolicyTripLiveUpdatesController::class)->middleware('throttle:30,1');
+    Route::get('/absence-report', PolicyTripAbsenceReportController::class)->middleware('throttle:60,1');
+    Route::get('/', [PolicyTripController::class, 'index']);
+    Route::get('/{policyTrip}/students', [PolicyTripStudentListController::class, 'index']);
+});
+
+Route::prefix('student-policies')->controller(StudentPolicyController::class)->group(function () {
+    Route::get('/', 'index');
+});
+
+Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->group(function () {
+    Route::get('/', 'index');
 });

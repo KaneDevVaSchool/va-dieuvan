@@ -81,6 +81,12 @@ class RbacSeeder extends Seeder
             'system.user_roles.manage',
             'system.feature_toggles.manage',
             'dispatch.settings.manage',
+            // P2P policy (học sinh chính sách)
+            'policy_trip.view',
+            'policy_trip.assign_driver',
+            'policy_trip.cancel',
+            'student_policy.manage',
+            'school_calendar.manage',
         ];
 
         foreach ($permissions as $p) {
@@ -133,6 +139,11 @@ class RbacSeeder extends Seeder
                 'route.manage',
                 'student.manage',
                 'attachment.upload',
+                'policy_trip.view',
+                'policy_trip.assign_driver',
+                'policy_trip.cancel',
+                'student_policy.manage',
+                'school_calendar.manage',
             ],
             'department_head' => [
                 'request.approve_dept',

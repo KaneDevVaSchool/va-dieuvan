@@ -41,6 +41,27 @@
                 </li>
               </ul>
             </AppFilterDropdown>
+
+            <!-- Route filter -->
+            <AppFilterDropdown :summary-text="filterRouteName || 'Tuyến'" panel-class="min-w-[220px] py-1">
+              <div class="px-2 pt-2 pb-1">
+                <input v-model="routeSearch" type="search" placeholder="Tìm tuyến…" class="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800" />
+              </div>
+              <ul class="max-h-[min(50vh,240px)] space-y-0.5 overflow-y-auto px-1 pb-1">
+                <li>
+                  <button type="button" :class="['flex w-full rounded-lg px-3 py-2 text-left text-sm transition', !filterRouteId ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800']" @click="filterRouteId = ''; filterRouteName = ''; $event.currentTarget.closest('details').open = false">Tất cả tuyến</button>
+                </li>
+                <li v-for="r in filteredRoutes" :key="r.id">
+                  <button type="button" :class="['flex w-full rounded-lg px-3 py-2 text-left text-sm transition', filterRouteId === String(r.id) ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800']" @click="filterRouteId = String(r.id); filterRouteName = r.name; $event.currentTarget.closest('details').open = false">{{ r.name }}</button>
+                </li>
+              </ul>
+            </AppFilterDropdown>
+
+            <!-- Class filter -->
+            <AppFilterDropdown :summary-text="filterClass || 'Lớp'" panel-class="min-w-[160px] p-3">
+              <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Lọc theo lớp</label>
+              <input v-model="filterClass" type="text" placeholder="VD: 10A1, 11B…" class="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800" />
+            </AppFilterDropdown>
           </div>
 
           <div class="ml-auto flex shrink-0 items-center gap-2 pl-2">
@@ -68,6 +89,7 @@
           <thead>
             <tr class="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700">
               <th class="whitespace-nowrap py-3 pl-4 pr-3 min-w-[160px]">Học sinh</th>
+              <th class="whitespace-nowrap py-3 pr-3">Lớp</th>
               <th v-for="day in weekDays" :key="day.date" class="whitespace-nowrap py-3 px-2 text-center" :class="day.isToday ? 'text-teal-600 dark:text-teal-400' : ''">
                 <div>{{ day.dow }}</div>
                 <div class="font-normal normal-case tracking-normal text-slate-400">{{ day.shortDate }}</div>
@@ -80,6 +102,7 @@
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
             <tr v-for="row in rows" :key="row.student_id" class="transition hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
               <td class="whitespace-nowrap py-2.5 pl-4 pr-3 font-medium text-slate-900 dark:text-slate-100">{{ row.student_name }}</td>
+              <td class="whitespace-nowrap py-2.5 pr-3 text-xs text-slate-500 dark:text-slate-400">{{ row.class_name ?? '—' }}</td>
               <td v-for="day in weekDays" :key="day.date" class="py-2.5 px-2 text-center">
                 <span v-if="cellSymbol(row, day.date)" :class="['inline-flex items-center justify-center rounded-full w-6 h-6 text-xs font-bold', cellClass(row, day.date)]">
                   {{ cellSymbol(row, day.date) }}
@@ -106,6 +129,7 @@ import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { labelTimeSlot } from '../../constants/policyTripStatus.js'
 import { getAbsenceReport } from '../../api/p2p.js'
+import { listRoutes } from '../../api/d2d.js'
 
 const { t } = useI18n()
 const filterBarRef = ref(null)
@@ -122,6 +146,16 @@ function getMondayOfWeek(d = new Date()) {
 
 const filterWeekStart = ref(getMondayOfWeek())
 const filterSlot = ref('')
+const filterRouteId = ref('')
+const filterRouteName = ref('')
+const filterClass = ref('')
+const routeSearch = ref('')
+const routes = ref([])
+const filteredRoutes = computed(() => {
+  if (!routeSearch.value.trim()) return routes.value
+  const q = routeSearch.value.toLowerCase()
+  return routes.value.filter((r) => r.name.toLowerCase().includes(q))
+})
 const loading = ref(false)
 const reportData = ref(null)
 
@@ -201,6 +235,8 @@ async function load() {
   try {
     const params = { week_start: filterWeekStart.value }
     if (filterSlot.value) params.time_slot = filterSlot.value
+    if (filterRouteId.value) params.route_id = filterRouteId.value
+    if (filterClass.value.trim()) params.class = filterClass.value.trim()
     const res = await getAbsenceReport(params)
     reportData.value = res
   } catch {
@@ -210,6 +246,11 @@ async function load() {
   }
 }
 
-onMounted(load)
-watch([filterWeekStart, filterSlot], load)
+onMounted(async () => {
+  await Promise.all([
+    load(),
+    listRoutes({ per_page: 100 }).then((r) => { routes.value = r?.items ?? r ?? [] }).catch(() => {}),
+  ])
+})
+watch([filterWeekStart, filterSlot, filterRouteId, filterClass], load)
 </script>

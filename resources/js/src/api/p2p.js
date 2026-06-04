@@ -78,6 +78,20 @@ export async function bulkImportSchoolCalendar(payload) {
   return data.data
 }
 
+// ── Dispatcher absence marking (§7.1 Kênh 1) ─────────────────────────────────
+
+/**
+ * Dispatcher đánh dấu vắng trước cho học sinh trong chuyến.
+ * PATCH /api/driver/policy-trip-students/:id/absent
+ * body: { absence_reason: 'absent_reported' | 'late_cancellation' }
+ */
+export async function markPolicyTripStudentAbsent(studentEntryId, absenceReason = 'absent_reported') {
+  const { data } = await http.patch(`/driver/policy-trip-students/${studentEntryId}/absent`, {
+    absence_reason: absenceReason,
+  })
+  return data.data
+}
+
 // ── Reports ───────────────────────────────────────────────────────────────────
 
 /** GET /api/policy-trips/absence-report */
