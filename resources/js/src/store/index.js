@@ -183,7 +183,11 @@ export const useAuthStore = defineStore('auth', {
       if (!this.user) return false
       const st = this.featureToggleRuntimeState(featureKey)
       if (st?.maintenance_mode) return true
-      return this.isFeatureEnabled(featureKey)
+      // Đọc trực tiếp feature_toggles, không bypass superadmin
+      const ft = this.user.feature_toggles
+      if (!ft || typeof ft !== 'object') return true
+      if (!Object.prototype.hasOwnProperty.call(ft, featureKey)) return true
+      return ft[featureKey] === true
     },
   },
 })
