@@ -13,13 +13,6 @@ use App\Http\Controllers\Api\Admin\UserListController;
 use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\Admin\UserSearchController;
 use App\Http\Controllers\Api\Audit\AuditLogController;
-use App\Http\Controllers\Api\P2pPolicy\AcademicTermController;
-use App\Http\Controllers\Api\P2pPolicy\CampusController;
-use App\Http\Controllers\Api\P2pPolicy\P2pPolicyTermController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyGenerationRunController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyRouteController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyStudentController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripSlotController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
 use App\Http\Controllers\Api\Operational\DriverWorkloadController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
@@ -78,22 +71,4 @@ Route::prefix('admin')->group(function () {
 
     Route::get('dispatch-settings', [DispatchSettingController::class, 'show']);
     Route::put('dispatch-settings', [DispatchSettingController::class, 'update']);
-});
-
-Route::get('/campuses', [CampusController::class, 'index'])->middleware('permission:p2p_policy.view');
-Route::get('/academic-terms', [AcademicTermController::class, 'index'])->middleware('permission:p2p_policy.view');
-
-Route::prefix('p2p-policy')->middleware('permission:p2p_policy.view')->group(function () {
-    Route::get('/terms', [P2pPolicyTermController::class, 'index']);
-    Route::get('/fixed-holidays', [P2pPolicyTermController::class, 'fixedHolidays']);
-    Route::get('/terms/{p2pPolicyTerm}', [P2pPolicyTermController::class, 'show']);
-    Route::get('/terms/{p2pPolicyTerm}/readiness', [P2pPolicyTermController::class, 'readiness']);
-    Route::get('/routes', [PolicyRouteController::class, 'index']);
-    Route::get('/routes/{policyRoute}', [PolicyRouteController::class, 'show']);
-    Route::get('/students', [PolicyStudentController::class, 'index']);
-    Route::get('/trip-slots', [PolicyTripSlotController::class, 'index']);
-    Route::get('/students/export', [PolicyStudentController::class, 'export'])->middleware('permission:p2p_policy.import_export');
-    Route::get('/students/import-template', [PolicyStudentController::class, 'importTemplate'])->middleware('permission:p2p_policy.import_export');
-    Route::get('/generation-runs', [PolicyGenerationRunController::class, 'index']);
-    Route::get('/generation-runs/{policyGenerationRun}', [PolicyGenerationRunController::class, 'show']);
 });

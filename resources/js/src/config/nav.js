@@ -52,28 +52,6 @@ export const NAV_SECTIONS = [
       },
       { to: `${DISPATCH_WEB_BASE}/routes`, labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.d2d_routes' },
       {
-        labelKey: 'nav.p2p_policy',
-        icon: 'routes',
-        featureKey: 'module.p2p_policy',
-        navAccess: 'p2p_policy',
-        children: [
-          {
-            to: `${DISPATCH_WEB_BASE}/p2p-policy`,
-            labelKey: 'nav.p2p_policy_hub',
-            icon: 'routes',
-            featureKey: 'module.p2p_policy',
-            navAccess: 'p2p_policy',
-          },
-          {
-            to: `${DISPATCH_WEB_BASE}/p2p-policy/trips`,
-            labelKey: 'nav.p2p_policy_trips',
-            icon: 'trips',
-            featureKey: 'module.p2p_policy',
-            navAccess: 'p2p_policy',
-          },
-        ],
-      },
-      {
         to: `${DISPATCH_WEB_BASE}/resources/list`,
         labelKey: 'nav.resources',
         icon: 'resources',

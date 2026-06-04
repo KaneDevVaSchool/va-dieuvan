@@ -8,12 +8,6 @@ use App\Http\Controllers\Api\Admin\BulkUserRolesUpdateController;
 use App\Http\Controllers\Api\Cargo\CargoController;
 use App\Http\Controllers\Api\Costs\TripCostController;
 use App\Http\Controllers\Api\D2D\RouteController;
-use App\Http\Controllers\Api\P2pPolicy\AcademicTermController;
-use App\Http\Controllers\Api\P2pPolicy\CampusController;
-use App\Http\Controllers\Api\P2pPolicy\P2pPolicyTermController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyGenerationRunController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyRouteController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyStudentController;
 use App\Http\Controllers\Api\Operational\DriverComplianceDocumentController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
 use App\Http\Controllers\Api\OperationalResourceController;
@@ -168,42 +162,3 @@ Route::post('/transport-providers/{id}/restore', [OperationalResourceController:
 Route::delete('/transport-providers/{id}/force', [OperationalResourceController::class, 'forceDeleteTransportProvider'])
     ->whereNumber('id')
     ->middleware('throttle:30,1');
-
-Route::prefix('campuses')->controller(CampusController::class)->group(function () {
-    Route::post('/', 'store')->middleware('permission:p2p_policy.manage');
-    Route::patch('/{campus}', 'update')->middleware('permission:p2p_policy.manage');
-});
-
-Route::prefix('academic-terms')->controller(AcademicTermController::class)->group(function () {
-    Route::post('/', 'store')->middleware('permission:p2p_policy.manage');
-    Route::patch('/{academicTerm}', 'update')->middleware('permission:p2p_policy.manage');
-});
-
-Route::prefix('p2p-policy')->group(function () {
-    Route::controller(P2pPolicyTermController::class)->group(function () {
-        Route::post('/terms', 'store')->middleware('permission:p2p_policy.manage');
-        Route::patch('/terms/{p2pPolicyTerm}', 'update')->middleware('permission:p2p_policy.manage');
-        Route::delete('/terms/{p2pPolicyTerm}', 'destroy')->middleware('permission:p2p_policy.manage');
-        Route::put('/terms/{p2pPolicyTerm}/calendar', 'syncCalendar')->middleware('permission:p2p_policy.manage');
-        Route::post('/terms/{p2pPolicyTerm}/activate', 'activate')
-            ->name('api.p2p-policy.terms.activate')
-            ->middleware(['permission:p2p_policy.activate', 'idempotency', 'throttle:30,1']);
-    });
-
-    Route::controller(PolicyRouteController::class)->group(function () {
-        Route::post('/routes', 'store')->middleware('permission:p2p_policy.manage');
-        Route::patch('/routes/{policyRoute}', 'update')->middleware('permission:p2p_policy.manage');
-        Route::patch('/routes/{policyRoute}/assignment', 'assign')->middleware('permission:p2p_policy.manage');
-    });
-
-    Route::controller(PolicyStudentController::class)->group(function () {
-        Route::post('/students/bulk-delete', 'bulkDestroy')->middleware('permission:p2p_policy.manage');
-        Route::post('/students/bulk-assign', 'bulkAssign')->middleware('permission:p2p_policy.manage');
-        Route::post('/students', 'store')->middleware('permission:p2p_policy.manage');
-        Route::patch('/students/{policyStudent}', 'update')->middleware('permission:p2p_policy.manage');
-        Route::delete('/students/{policyStudent}', 'destroy')->middleware('permission:p2p_policy.manage');
-        Route::post('/students/import', 'import')->middleware(['permission:p2p_policy.import_export', 'throttle:10,1']);
-        Route::post('/students/import/preview', 'importPreview')->middleware(['permission:p2p_policy.import_export', 'throttle:20,1']);
-        Route::post('/students/import/commit', 'importCommit')->middleware(['permission:p2p_policy.import_export', 'throttle:10,1']);
-    });
-});

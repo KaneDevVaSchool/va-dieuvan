@@ -81,10 +81,6 @@ class RbacSeeder extends Seeder
             'system.user_roles.manage',
             'system.feature_toggles.manage',
             'dispatch.settings.manage',
-            'p2p_policy.view',
-            'p2p_policy.manage',
-            'p2p_policy.activate',
-            'p2p_policy.import_export',
         ];
 
         foreach ($permissions as $p) {
@@ -136,10 +132,6 @@ class RbacSeeder extends Seeder
                 'cargo.manage',
                 'route.manage',
                 'student.manage',
-                'p2p_policy.view',
-                'p2p_policy.manage',
-                'p2p_policy.activate',
-                'p2p_policy.import_export',
                 'attachment.upload',
             ],
             'department_head' => [
@@ -157,7 +149,6 @@ class RbacSeeder extends Seeder
                 'report.export',
                 'resource.provider.manage',
                 'attachment.upload',
-                'p2p_policy.view',
             ],
             'admin' => $permissions,
             'superadmin' => $permissions,

@@ -11,9 +11,6 @@ export function useNavSections() {
   const notifStore = useNotificationStore()
 
   function itemVisible(item) {
-    if (item.navAccess === 'p2p_policy') {
-      if (!auth.canAccessP2pPolicyNav()) return false
-    }
     if (!auth.isNavFeatureVisible(item.featureKey)) return false
     if (item.permissionKey && !auth.hasPermission(item.permissionKey)) return false
     return true

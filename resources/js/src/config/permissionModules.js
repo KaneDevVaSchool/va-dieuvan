@@ -57,12 +57,6 @@ export const PERMISSION_MODULES = Object.freeze([
     prefixes: ['resource.', 'reference_pricing.'],
   },
   {
-    id: 'p2p',
-    label: 'Chính sách P2P',
-    icon: 'ArrowsRightLeftIcon',
-    prefixes: ['p2p_policy.'],
-  },
-  {
     id: 'ops',
     label: 'Vận hành',
     icon: 'CogIcon',

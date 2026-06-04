@@ -186,17 +186,6 @@ export const useAuthStore = defineStore('auth', {
       if (st?.maintenance_mode) return true
       return this.isFeatureEnabled(featureKey)
     },
-    /** Menu P2P Policy: quyền P2P hoặc quyền D2D/roster (dispatcher trước khi sync RBAC mới). */
-    canAccessP2pPolicyNav() {
-      if (this.user?.is_superadmin) return true
-      return this.hasAnyPermission([
-        'p2p_policy.view',
-        'p2p_policy.manage',
-        'p2p_policy.activate',
-        'route.manage',
-        'student.manage',
-      ])
-    },
   },
 })
 

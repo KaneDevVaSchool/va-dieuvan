@@ -46,17 +46,12 @@ export const SEED_PERMISSION_PRESETS = [
     { name: 'system.user_roles.manage', display_name: 'system.user_roles.manage' },
     { name: 'system.feature_toggles.manage', display_name: 'system.feature_toggles.manage' },
     { name: 'dispatch.settings.manage', display_name: 'dispatch.settings.manage' },
-    { name: 'p2p_policy.view', display_name: 'p2p_policy.view' },
-    { name: 'p2p_policy.manage', display_name: 'p2p_policy.manage' },
-    { name: 'p2p_policy.activate', display_name: 'p2p_policy.activate' },
-    { name: 'p2p_policy.import_export', display_name: 'p2p_policy.import_export' },
 ]
 
 export const SEED_FEATURE_TOGGLE_PRESETS = [
     { key: 'module.overview', name: 'Tổng quan & lịch', module: 'overview' },
     { key: 'module.operations', name: 'Điều vận (yêu cầu, chuyến, chi phí…)', module: 'operations' },
     { key: 'module.d2d_routes', name: 'Tuyến D2D (/routes)', module: 'operations' },
-    { key: 'module.p2p_policy', name: 'P2P Policy (/p2p-policy)', module: 'operations' },
     { key: 'module.finance', name: 'Kế toán / đối soát', module: 'finance' },
     { key: 'module.reports', name: 'Báo cáo', module: 'reports' },
     { key: 'module.pricing', name: 'Bảng giá tham chiếu', module: 'reports' },
