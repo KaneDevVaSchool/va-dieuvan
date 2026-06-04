@@ -28,6 +28,7 @@ class TpProgramController extends Controller
         $data = $request->validated();
 
         $items = TpProgram::query()
+            ->with('responsibleUser:id,name')
             ->when($data['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
             ->when($data['responsible_user_id'] ?? null, fn ($q, $u) => $q->where('responsible_user_id', $u))
             ->when($data['search'] ?? null, fn ($q, $term) => $q->where(function ($qq) use ($term) {

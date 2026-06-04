@@ -12,6 +12,7 @@ class TpProgramPresenter
     public function programSummary(TpProgram $program): array
     {
         $program->loadCount(['days', 'enrollments' => fn ($q) => $q->whereNull('unenrolled_at')]);
+        $program->loadMissing('responsibleUser:id,name');
 
         return [
             'id' => $program->id,
@@ -32,6 +33,7 @@ class TpProgramPresenter
             'day_count' => $program->days_count,
             'enrolled_count' => $program->enrollments_count,
             'responsible_user_id' => $program->responsible_user_id,
+            'responsible_user_name' => $program->responsibleUser?->name,
             'created_at' => $program->created_at?->toIso8601String(),
         ];
     }

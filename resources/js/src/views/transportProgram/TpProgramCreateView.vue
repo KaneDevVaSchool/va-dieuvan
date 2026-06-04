@@ -1,46 +1,79 @@
 <template>
-  <div class="mx-auto max-w-4xl space-y-5 pb-24">
-    <div>
-      <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl md:text-2xl">Tạo chương trình đưa đón</h1>
-      <p class="mt-1 text-sm text-slate-500">Hệ thống sẽ tự sinh lịch vận hành theo cấu hình bên dưới.</p>
+  <div class="mx-auto max-w-5xl space-y-5 pb-28">
+    <!-- Header -->
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
+        aria-label="Quay lại"
+        @click="goBack"
+      >
+        <ArrowLeftIcon class="h-5 w-5" />
+      </button>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">Tạo Chương trình Đưa đón</h1>
+        <p class="mt-0.5 text-sm text-slate-500">Hệ thống sẽ tự sinh lịch vận hành theo cấu hình bên dưới.</p>
+      </div>
     </div>
 
-    <div class="grid gap-5 md:grid-cols-2">
-      <section class="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h2 class="text-sm font-semibold text-slate-700">1. Thông tin cơ bản</h2>
+    <div class="grid gap-4 lg:grid-cols-2">
+      <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <header class="flex items-center gap-3">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-va-800/10 text-sm font-bold text-va-800">1</span>
+          <div>
+            <h2 class="text-sm font-semibold text-slate-900">Thông tin cơ bản</h2>
+            <p class="text-xs text-slate-500">Tên và mô tả chương trình</p>
+          </div>
+        </header>
         <Input v-model="form.name" label="Tên chương trình" required placeholder="Đưa đón sáng Khối 1" />
         <Input v-model="form.code" label="Mã (để trống = tự sinh)" placeholder="TP-..." />
         <Input v-model="form.description" label="Mô tả" />
       </section>
 
-      <section class="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h2 class="text-sm font-semibold text-slate-700">2. Hành trình</h2>
-        <Input v-model="form.origin_name" label="Điểm đi" />
-        <Input v-model="form.destination_name" label="Điểm đến" />
+      <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <header class="flex items-center gap-3">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-50 text-sky-600">
+            <MapPinIcon class="h-5 w-5" />
+          </span>
+          <div>
+            <h2 class="text-sm font-semibold text-slate-900">Hành trình</h2>
+            <p class="text-xs text-slate-500">Điểm đi, điểm đến và khung giờ</p>
+          </div>
+        </header>
+        <Input v-model="form.origin_name" label="Điểm đi" placeholder="Quận Tây Hồ" />
+        <Input v-model="form.destination_name" label="Điểm đến" placeholder="Trường" />
         <div class="grid grid-cols-2 gap-3">
           <Input v-model="form.departure_time" type="time" label="Giờ đi" required />
           <Input v-model="form.return_time" type="time" label="Giờ về" />
         </div>
       </section>
 
-      <section class="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h2 class="text-sm font-semibold text-slate-700">3. Lịch vận hành</h2>
+      <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <header class="flex items-center gap-3">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+            <CalendarDaysIcon class="h-5 w-5" />
+          </span>
+          <div>
+            <h2 class="text-sm font-semibold text-slate-900">Lịch vận hành</h2>
+            <p class="text-xs text-slate-500">Khoảng ngày và các buổi chạy trong tuần</p>
+          </div>
+        </header>
         <div class="grid grid-cols-2 gap-3">
           <Input v-model="form.start_date" type="date" label="Từ ngày" required />
           <Input v-model="form.end_date" type="date" label="Đến ngày" required />
         </div>
         <div>
-          <div class="mb-1 text-xs font-medium text-slate-600">Chạy các ngày</div>
+          <div class="mb-1.5 text-xs font-medium text-slate-600">Chạy các ngày</div>
           <div class="flex flex-wrap gap-1.5">
             <button
               v-for="d in weekdays"
               :key="d.key"
               type="button"
               :class="[
-                'rounded-md border px-2.5 py-1 text-xs font-medium',
+                'rounded-lg border px-3 py-1.5 text-xs font-medium transition',
                 form.runs_on.includes(d.key)
-                  ? 'border-va-800 bg-va-800 text-white'
-                  : 'border-slate-200 bg-white text-slate-600',
+                  ? 'border-va-800 bg-va-800 text-white shadow-sm'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
               ]"
               @click="toggleDay(d.key)"
             >
@@ -50,8 +83,16 @@
         </div>
       </section>
 
-      <section class="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h2 class="text-sm font-semibold text-slate-700">4. Tài xế &amp; chi phí mặc định</h2>
+      <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <header class="flex items-center gap-3">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-50 text-amber-600">
+            <TruckIcon class="h-5 w-5" />
+          </span>
+          <div>
+            <h2 class="text-sm font-semibold text-slate-900">Tài xế &amp; chi phí mặc định</h2>
+            <p class="text-xs text-slate-500">Có thể điều chỉnh theo từng ngày sau khi tạo</p>
+          </div>
+        </header>
         <Select v-model="form.default_driver_id" label="Tài xế mặc định">
           <option value="">— Không —</option>
           <option v-for="d in drivers" :key="d.id" :value="String(d.id)">{{ d.full_name }}</option>
@@ -60,16 +101,17 @@
           <option value="">— Không —</option>
           <option v-for="v in vehicles" :key="v.id" :value="String(v.id)">{{ v.plate_number || v.name || ('#' + v.id) }}</option>
         </Select>
-        <Input v-model="form.cost_per_trip" type="number" label="Chi phí mỗi chuyến (VND)" />
+        <Input v-model="form.cost_per_trip" type="number" label="Chi phí mỗi chuyến (VND)" placeholder="0" />
       </section>
     </div>
 
-    <div class="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-      Khoảng ngày &amp; lịch chạy đã chọn — hệ thống sẽ sinh lịch khi lưu.
+    <div class="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+      <InformationCircleIcon class="mt-0.5 h-5 w-5 shrink-0 text-sky-500" />
+      <span>Khoảng ngày &amp; lịch chạy đã chọn — hệ thống sẽ sinh các ngày vận hành tương ứng ngay khi lưu.</span>
     </div>
 
-    <div class="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur md:left-auto md:right-6 md:w-[28rem] md:rounded-tl-xl md:border">
-      <div class="mx-auto flex max-w-4xl items-center justify-end gap-2">
+    <div class="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur md:left-auto md:right-6 md:w-[30rem] md:rounded-tl-2xl md:border">
+      <div class="mx-auto flex max-w-5xl items-center justify-end gap-2">
         <Button variant="secondary" @click="goBack">Hủy</Button>
         <Button :loading="saving" @click="submit">Lưu &amp; sinh lịch</Button>
       </div>
@@ -80,6 +122,13 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import {
+  ArrowLeftIcon,
+  MapPinIcon,
+  CalendarDaysIcon,
+  TruckIcon,
+  InformationCircleIcon,
+} from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import Input from '../../components/ui/Input.vue'
 import Select from '../../components/ui/Select.vue'
