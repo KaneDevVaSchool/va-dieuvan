@@ -131,6 +131,12 @@ async function patchToggle(row, partial) {
     await admin.updateFeatureToggle(row.id, partial)
     Object.assign(row, partial)
     await syncSession()
+    const label = 'is_enabled' in partial
+      ? (partial.is_enabled ? 'Đã bật tính năng.' : 'Đã tắt tính năng.')
+      : 'maintenance_mode' in partial
+        ? (partial.maintenance_mode ? 'Đã bật chế độ bảo trì.' : 'Đã tắt chế độ bảo trì.')
+        : (partial.upgrade_notice ? 'Đã bật thông báo nâng cấp.' : 'Đã tắt thông báo nâng cấp.')
+    showAppSuccess(label, row.name)
   } catch (e) {
     showAppError(formatApiError(e))
     await load()

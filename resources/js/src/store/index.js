@@ -181,13 +181,11 @@ export const useAuthStore = defineStore('auth', {
     isNavFeatureVisible(featureKey) {
       if (!featureKey) return true
       if (!this.user) return false
+      // Dùng feature_toggle_states (giá trị thực, không bypass superadmin)
       const st = this.featureToggleRuntimeState(featureKey)
-      if (st?.maintenance_mode) return true
-      // Đọc trực tiếp feature_toggles, không bypass superadmin
-      const ft = this.user.feature_toggles
-      if (!ft || typeof ft !== 'object') return true
-      if (!Object.prototype.hasOwnProperty.call(ft, featureKey)) return true
-      return ft[featureKey] === true
+      if (!st) return true   // key chưa có trong danh sách toggle → hiện
+      if (st.maintenance_mode) return true
+      return st.is_enabled
     },
   },
 })

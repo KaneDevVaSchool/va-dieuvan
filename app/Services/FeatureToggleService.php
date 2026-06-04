@@ -73,8 +73,7 @@ class FeatureToggleService
     {
         $out = [];
         foreach ($this->allCached() as $row) {
-            $k = $row['key'];
-            $out[$k] = $user->isSuperAdmin() ? true : (bool) $row['is_enabled'];
+            $out[$row['key']] = (bool) $row['is_enabled'];
         }
 
         return $out;
@@ -103,16 +102,23 @@ class FeatureToggleService
 
     public function create(array $data): FeatureToggle
     {
-        return $this->repository->create($data);
+        $toggle = $this->repository->create($data);
+        $this->clearCache();
+
+        return $toggle;
     }
 
     public function update(FeatureToggle $toggle, array $data): FeatureToggle
     {
-        return $this->repository->update($toggle, $data);
+        $result = $this->repository->update($toggle, $data);
+        $this->clearCache();
+
+        return $result;
     }
 
     public function delete(FeatureToggle $toggle): void
     {
         $this->repository->delete($toggle);
+        $this->clearCache();
     }
 }
