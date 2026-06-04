@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripAssignDriverController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripCancelController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyTripGenerateController;
 use App\Http\Controllers\Api\P2pPolicy\SchoolCalendarController;
 use App\Http\Controllers\Api\P2pPolicy\StudentPolicyController;
 use App\Http\Controllers\Api\Trips\TripController;
@@ -167,6 +168,9 @@ Route::delete('/transport-providers/{id}/force', [OperationalResourceController:
     ->whereNumber('id')
     ->middleware('throttle:30,1');
 
+Route::post('/policy-trips/generate', PolicyTripGenerateController::class)
+    ->middleware('throttle:10,1');
+
 Route::patch('/policy-trips/{policyTrip}/assign-driver', PolicyTripAssignDriverController::class)
     ->middleware('throttle:60,1');
 Route::patch('/policy-trips/{policyTrip}/cancel', PolicyTripCancelController::class)
@@ -178,6 +182,7 @@ Route::prefix('student-policies')->controller(StudentPolicyController::class)->g
 });
 
 Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->group(function () {
+    Route::post('/generate-month', 'generateMonth')->middleware('throttle:10,1');
     Route::post('/bulk', 'bulkImport')->middleware('throttle:10,1');
     Route::patch('/{date}', 'update')
         ->where('date', '[0-9]{4}-[0-9]{2}-[0-9]{2}')

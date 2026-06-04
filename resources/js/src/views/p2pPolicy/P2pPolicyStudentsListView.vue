@@ -94,7 +94,7 @@
       <div v-else-if="!items.length" class="flex flex-col items-center justify-center py-16 text-center">
         <UserGroupIcon class="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
         <p class="text-sm font-medium text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.empty') }}</p>
-        <p class="mt-1 text-xs text-slate-400">{{ t('p2p_policy_page.developing') }}</p>
+        <p class="mt-1 text-xs text-slate-400">Thêm học sinh policy hoặc kiểm tra bộ lọc.</p>
       </div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -157,11 +157,20 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Học sinh <span class="text-rose-500">*</span></label>
-            <input v-model="form.student_id" type="text" placeholder="ID hoặc tên học sinh" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" required />
+            <input v-model="studentSearch" type="search" placeholder="Tìm học sinh…" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" @input="searchStudentsDebounced" />
+            <ul v-if="studentResults.length && !form.student_id" class="mt-1 max-h-40 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-700">
+              <li v-for="s in studentResults" :key="s.id">
+                <button type="button" class="flex w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800" @click="pickStudent(s)">{{ s.full_name }} <span class="text-slate-400">({{ s.grade ?? s.student_code }})</span></button>
+              </li>
+            </ul>
+            <p v-if="form.student_id" class="mt-1 text-xs text-teal-700 dark:text-teal-300">Đã chọn ID {{ form.student_id }} — <button type="button" class="underline" @click="clearStudent">Đổi</button></p>
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Tuyến <span class="text-rose-500">*</span></label>
-            <input v-model="form.route_id" type="text" placeholder="ID tuyến" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" required />
+            <select v-model="form.route_id" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" required>
+              <option value="">Chọn tuyến…</option>
+              <option v-for="r in routeOptions" :key="r.id" :value="String(r.id)">{{ r.name }}</option>
+            </select>
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Ca <span class="text-rose-500">*</span></label>
@@ -226,7 +235,7 @@ import {
   labelTimeSlot,
   studentPolicyStatusPillClass,
 } from '../../constants/policyTripStatus.js'
-import { createStudentPolicy, listStudentPolicies, updateStudentPolicy } from '../../api/p2p.js'
+import { createStudentPolicy, listPolicyRoutes, listStudentPolicies, searchPolicyStudents, updateStudentPolicy } from '../../api/p2p.js'
 
 const { t } = useI18n()
 const filterBarRef = ref(null)
@@ -281,7 +290,45 @@ async function load() {
   }
 }
 
-onMounted(load)
+const routeOptions = ref([])
+const studentSearch = ref('')
+const studentResults = ref([])
+let studentDebounce = null
+
+function searchStudentsDebounced() {
+  clearTimeout(studentDebounce)
+  form.student_id = ''
+  if (!studentSearch.value.trim()) {
+    studentResults.value = []
+    return
+  }
+  studentDebounce = setTimeout(async () => {
+    try {
+      const res = await searchPolicyStudents(studentSearch.value.trim())
+      studentResults.value = res?.items ?? res ?? []
+    } catch {
+      studentResults.value = []
+    }
+  }, 300)
+}
+
+function pickStudent(s) {
+  form.student_id = String(s.id)
+  studentSearch.value = s.full_name
+  studentResults.value = []
+}
+
+function clearStudent() {
+  form.student_id = ''
+  studentSearch.value = ''
+}
+
+onMounted(async () => {
+  await Promise.all([
+    load(),
+    listPolicyRoutes().then((r) => { routeOptions.value = r?.items ?? r ?? [] }).catch(() => {}),
+  ])
+})
 watch([filterStatus, filterSlot, filterSemester], load)
 
 // Form modal
@@ -304,12 +351,16 @@ const form = reactive({
 function openAddModal() {
   editTarget.value = null
   Object.keys(form).forEach((k) => (form[k] = ''))
+  studentSearch.value = ''
+  studentResults.value = []
   formError.value = ''
   showFormModal.value = true
 }
 
 function openEdit(row) {
   editTarget.value = row
+  studentSearch.value = row.student_name ?? ''
+  studentResults.value = []
   Object.assign(form, {
     student_id: row.student_id ?? '',
     route_id: row.route_id ?? '',
@@ -334,7 +385,12 @@ async function submitForm() {
   formError.value = ''
   actionLoading.value = true
   try {
-    const payload = { ...form }
+    const payload = {
+      ...form,
+      student_id: form.student_id ? Number(form.student_id) : form.student_id,
+      route_id: form.route_id ? Number(form.route_id) : form.route_id,
+      semester: form.semester ? Number(form.semester) : form.semester,
+    }
     if (editTarget.value) {
       await updateStudentPolicy(editTarget.value.id, payload)
     } else {

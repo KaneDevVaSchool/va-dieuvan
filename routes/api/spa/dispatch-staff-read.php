@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\Reports\ReportController;
 use App\Http\Controllers\Api\RequestController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyRouteController;
+use App\Http\Controllers\Api\P2pPolicy\PolicyStudentSearchController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripAbsenceReportController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripController;
 use App\Http\Controllers\Api\P2pPolicy\PolicyTripLiveUpdatesController;
@@ -78,6 +80,9 @@ Route::prefix('admin')->group(function () {
     Route::get('dispatch-settings', [DispatchSettingController::class, 'show']);
     Route::put('dispatch-settings', [DispatchSettingController::class, 'update']);
 });
+
+Route::get('/policy-routes', [PolicyRouteController::class, 'index']);
+Route::get('/policy-students/search', PolicyStudentSearchController::class);
 
 Route::prefix('policy-trips')->group(function () {
     Route::get('/live-updates', PolicyTripLiveUpdatesController::class)->middleware('throttle:30,1');

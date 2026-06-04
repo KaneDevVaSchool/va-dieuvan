@@ -82,7 +82,7 @@
       <div v-else-if="!rows.length" class="flex flex-col items-center justify-center py-16 text-center">
         <ChartBarIcon class="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
         <p class="text-sm font-medium text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.empty') }}</p>
-        <p class="mt-1 text-xs text-slate-400">{{ t('p2p_policy_page.developing') }}</p>
+        <p class="mt-1 text-xs text-slate-400">Chưa có báo cáo vắng trong tuần đã chọn.</p>
       </div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full text-sm">

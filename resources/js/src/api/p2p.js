@@ -32,6 +32,18 @@ export async function cancelPolicyTrip(id, reason) {
   return data.data
 }
 
+/** POST /api/policy-trips/generate — sinh chuyến theo lịch + HS policy (ngày học) */
+export async function generatePolicyTripsForDate(date) {
+  const { data } = await http.post('/policy-trips/generate', { date })
+  return data.data
+}
+
+/** GET /api/policy-routes — tuyến + số HS policy */
+export async function listPolicyRoutes() {
+  const { data } = await http.get('/policy-routes')
+  return data.data
+}
+
 // ── Student Policies ──────────────────────────────────────────────────────────
 
 /** GET /api/student-policies */
@@ -75,6 +87,18 @@ export async function updateSchoolCalendarDay(date, payload) {
 /** POST /api/school-calendars/bulk */
 export async function bulkImportSchoolCalendar(payload) {
   const { data } = await http.post('/school-calendars/bulk', payload)
+  return data.data
+}
+
+/** POST /api/school-calendars/generate-month */
+export async function generateSchoolCalendarMonth(payload) {
+  const { data } = await http.post('/school-calendars/generate-month', payload)
+  return data.data
+}
+
+/** GET /api/policy-students/search?q= */
+export async function searchPolicyStudents(q = '') {
+  const { data } = await http.get('/policy-students/search', { params: { q } })
   return data.data
 }
 

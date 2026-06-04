@@ -18,6 +18,15 @@
           <ChevronRightIcon class="h-4 w-4" />
         </button>
         <button v-if="filterDate !== todayIso" type="button" class="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-300" @click="filterDate = todayIso">Hôm nay</button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
+          :disabled="generateLoading"
+          @click="runGenerateTrips"
+        >
+          <ArrowPathIcon class="h-4 w-4" :class="generateLoading ? 'animate-spin' : ''" />
+          Sinh chuyến
+        </button>
       </div>
     </div>
 
@@ -151,7 +160,7 @@
       <div v-else-if="!items.length" class="flex flex-col items-center justify-center py-16 text-center">
         <AcademicCapIcon class="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
         <p class="text-sm font-medium text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.empty') }}</p>
-        <p class="mt-1 text-xs text-slate-400">{{ t('p2p_policy_page.developing') }}</p>
+        <p class="mt-1 text-xs text-slate-400">Chưa có chuyến — bấm «Sinh chuyến» sau khi cấu hình lịch học và HS policy.</p>
       </div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -409,6 +418,7 @@ import {
 import {
   assignDriverToPolicyTrip,
   cancelPolicyTrip,
+  generatePolicyTripsForDate,
   listPolicyTrips,
   listPolicyTripStudents,
   markPolicyTripStudentAbsent,
@@ -471,8 +481,21 @@ function resetFilters() {
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 const loading = ref(false)
+const generateLoading = ref(false)
 const items = ref([])
 const lastRefreshed = ref('—')
+
+async function runGenerateTrips() {
+  generateLoading.value = true
+  try {
+    await generatePolicyTripsForDate(filterDate.value)
+    await loadTrips()
+  } catch {
+    // http interceptor
+  } finally {
+    generateLoading.value = false
+  }
+}
 
 async function loadTrips() {
   loading.value = true

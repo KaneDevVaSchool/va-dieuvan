@@ -25,7 +25,7 @@
     <div v-else-if="!items.length" class="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white py-16 text-center dark:border-slate-800 dark:bg-slate-900/80">
       <MapPinIcon class="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
       <p class="text-sm font-medium text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.empty') }}</p>
-      <p class="mt-1 text-xs text-slate-400">{{ t('p2p_policy_page.developing') }}</p>
+      <p class="mt-1 text-xs text-slate-400">Chưa có tuyến active hoặc chưa có quyền xem.</p>
     </div>
 
     <div v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -62,7 +62,7 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowPathIcon, MapPinIcon } from '@heroicons/vue/24/outline'
-import { listRoutes } from '../../api/d2d'
+import { listPolicyRoutes } from '../../api/p2p.js'
 
 const { t } = useI18n()
 const loading = ref(false)
@@ -71,7 +71,7 @@ const items = ref([])
 async function load() {
   loading.value = true
   try {
-    const res = await listRoutes({ per_page: 100 })
+    const res = await listPolicyRoutes()
     items.value = res?.items ?? res ?? []
   } catch {
     items.value = []

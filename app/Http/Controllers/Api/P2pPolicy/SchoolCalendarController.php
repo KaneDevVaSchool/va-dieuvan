@@ -6,9 +6,11 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\P2pPolicy\BulkSchoolCalendarRequest;
 use App\Http\Requests\Api\P2pPolicy\ListSchoolCalendarsRequest;
+use App\Http\Requests\Api\P2pPolicy\GenerateSchoolCalendarMonthRequest;
 use App\Http\Requests\Api\P2pPolicy\UpdateSchoolCalendarRequest;
 use App\Models\SchoolCalendar;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 
 class SchoolCalendarController extends Controller
 {
@@ -81,6 +83,38 @@ class SchoolCalendarController extends Controller
                     'day_type' => $dayType,
                     'semester' => $semester,
                     'note' => $entry['note'] ?? null,
+                    'created_by' => $userId,
+                ],
+            );
+            $imported++;
+        }
+
+        return $this->ok(['imported' => $imported]);
+    }
+
+    public function generateMonth(GenerateSchoolCalendarMonthRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $year = (int) $data['year'];
+        $month = (int) $data['month'];
+        $schoolYear = $data['school_year'];
+        $semester = (int) $data['semester'];
+        $userId = $request->user()?->id;
+
+        $start = Carbon::create($year, $month, 1)->startOfDay();
+        $end = $start->copy()->endOfMonth();
+        $imported = 0;
+
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $dow = (int) $d->dayOfWeek;
+            $dayType = ($dow === 0 || $dow === 6) ? 'weekend' : 'school_day';
+
+            SchoolCalendar::updateOrCreate(
+                ['date' => $d->toDateString()],
+                [
+                    'school_year' => $schoolYear,
+                    'day_type' => $dayType,
+                    'semester' => $dayType === 'school_day' ? $semester : null,
                     'created_by' => $userId,
                 ],
             );

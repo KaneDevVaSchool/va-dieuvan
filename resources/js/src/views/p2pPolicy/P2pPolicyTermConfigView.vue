@@ -8,6 +8,15 @@
         </h1>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('p2p_policy_page.calendar_subtitle') }}</p>
       </div>
+      <button
+        type="button"
+        class="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
+        :disabled="genLoading"
+        @click="runGenerateMonth"
+      >
+        <ArrowPathIcon class="h-4 w-4" :class="genLoading ? 'animate-spin' : ''" />
+        Tạo lịch tháng
+      </button>
     </div>
 
     <!-- Legend -->
@@ -55,7 +64,7 @@
       <div v-else-if="!filteredItems.length" class="flex flex-col items-center justify-center py-16 text-center">
         <CalendarDaysIcon class="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
         <p class="text-sm font-medium text-slate-600 dark:text-slate-400">{{ t('p2p_policy_page.empty') }}</p>
-        <p class="mt-1 text-xs text-slate-400">{{ t('p2p_policy_page.developing') }}</p>
+        <p class="mt-1 text-xs text-slate-400">Chưa có dữ liệu tháng này — dùng «Tạo lịch tháng».</p>
       </div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -83,33 +92,58 @@
                 <span v-else class="text-slate-400">—</span>
               </td>
               <td class="whitespace-nowrap py-3 pr-3 tabular-nums text-slate-600 dark:text-slate-400">{{ row.school_year ?? '—' }}</td>
-              <td class="py-3 pr-4 text-slate-500 dark:text-slate-400">{{ row.note ?? '' }}</td>
+              <td class="py-3 pr-4 text-slate-500 dark:text-slate-400">
+                {{ row.note ?? '' }}
+                <button type="button" class="ml-2 text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400" @click="openEdit(row)">Sửa</button>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Import note -->
-    <div class="rounded-xl border border-violet-200/60 bg-violet-50/50 px-4 py-3 text-xs text-violet-800 dark:border-violet-800/40 dark:bg-violet-950/20 dark:text-violet-200">
-      <span class="font-semibold">Import bulk:</span>
-      Dùng <code class="rounded bg-violet-100 px-1 dark:bg-violet-900/40">POST /api/school-calendars/bulk</code>
-      để nhập lịch theo học kỳ. Bắt buộc điền cột <code class="rounded bg-violet-100 px-1 dark:bg-violet-900/40">semester</code>
-      cho tất cả <code class="rounded bg-violet-100 px-1 dark:bg-violet-900/40">school_day</code> và <code class="rounded bg-violet-100 px-1 dark:bg-violet-900/40">makeup_day</code>
-      — xem CRITICAL FIX L1 trong <code>docs/business/p2p.md</code>.
-    </div>
+    <Modal :open="!!editRow" title="Sửa ngày lịch" :description="editRow?.date ?? ''" @close="editRow = null">
+      <form v-if="editRow" class="space-y-3" @submit.prevent="saveEdit">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Loại ngày</label>
+          <select v-model="editForm.day_type" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800">
+            <option value="school_day">Ngày học</option>
+            <option value="makeup_day">Học bù</option>
+            <option value="holiday">Nghỉ lễ</option>
+            <option value="weekend">Cuối tuần</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Học kỳ (bắt buộc với ngày học / học bù)</label>
+          <select v-model="editForm.semester" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800">
+            <option :value="''">—</option>
+            <option value="1">HK 1</option>
+            <option value="2">HK 2</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Ghi chú</label>
+          <input v-model="editForm.note" type="text" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" />
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-sm" @click="editRow = null">Đóng</button>
+          <button type="submit" class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white" :disabled="editLoading">Lưu</button>
+        </div>
+      </form>
+    </Modal>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ArrowPathIcon, CalendarDaysIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import Modal from '../../components/ui/Modal.vue'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { dayTypePillClass, labelDayType } from '../../constants/policyTripStatus.js'
-import { listSchoolCalendars } from '../../api/p2p.js'
+import { generateSchoolCalendarMonth, listSchoolCalendars, updateSchoolCalendarDay } from '../../api/p2p.js'
 
 const { t } = useI18n()
 const filterBarRef = ref(null)
@@ -119,7 +153,13 @@ const today = new Date()
 const filterYearMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
 const filterDayType = ref('')
 const loading = ref(false)
+const genLoading = ref(false)
 const items = ref([])
+const editRow = ref(null)
+const editLoading = ref(false)
+const editForm = reactive({ day_type: 'school_day', semester: '1', note: '' })
+const genSchoolYear = ref('2025-2026')
+const genSemester = ref('1')
 
 const dayTypeLegend = [
   { type: 'school_day', label: 'Ngày học', cls: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100' },
@@ -161,6 +201,49 @@ async function load() {
     items.value = []
   } finally {
     loading.value = false
+  }
+}
+
+function openEdit(row) {
+  editRow.value = row
+  editForm.day_type = row.day_type
+  editForm.semester = row.semester != null ? String(row.semester) : ''
+  editForm.note = row.note ?? ''
+}
+
+async function saveEdit() {
+  if (!editRow.value) return
+  editLoading.value = true
+  try {
+    await updateSchoolCalendarDay(editRow.value.date, {
+      day_type: editForm.day_type,
+      semester: editForm.semester === '' ? null : Number(editForm.semester),
+      note: editForm.note || null,
+    })
+    editRow.value = null
+    await load()
+  } catch {
+    // interceptor
+  } finally {
+    editLoading.value = false
+  }
+}
+
+async function runGenerateMonth() {
+  const [year, month] = filterYearMonth.value.split('-')
+  genLoading.value = true
+  try {
+    await generateSchoolCalendarMonth({
+      year: Number(year),
+      month: Number(month),
+      school_year: genSchoolYear.value,
+      semester: Number(genSemester.value),
+    })
+    await load()
+  } catch {
+    // interceptor
+  } finally {
+    genLoading.value = false
   }
 }
 
