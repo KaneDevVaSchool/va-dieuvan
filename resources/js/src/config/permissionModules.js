@@ -51,6 +51,12 @@ export const PERMISSION_MODULES = Object.freeze([
     prefixes: ['route.', 'student.'],
   },
   {
+    id: 'p2p_policy',
+    label: 'Học sinh Chính Sách (P2P)',
+    icon: 'AcademicCapIcon',
+    prefixes: ['policy_trip.', 'student_policy.', 'school_calendar.'],
+  },
+  {
     id: 'resource',
     label: 'Tài nguyên',
     icon: 'WrenchScrewdriverIcon',

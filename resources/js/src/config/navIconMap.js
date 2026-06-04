@@ -1,4 +1,5 @@
 import {
+  AcademicCapIcon,
   AdjustmentsHorizontalIcon,
   BellIcon,
   CalendarDaysIcon,
@@ -50,4 +51,5 @@ export const NAV_ICON_MAP = {
   permissions: KeyIcon,
   user_roles: UsersIcon,
   feature_toggle: AdjustmentsHorizontalIcon,
+  p2p_policy: AcademicCapIcon,
 }

@@ -52,6 +52,47 @@ export const NAV_SECTIONS = [
       },
       { to: `${DISPATCH_WEB_BASE}/routes`, labelKey: 'nav.routes', icon: 'routes', featureKey: 'module.d2d_routes' },
       {
+        labelKey: 'nav.p2p_policy',
+        icon: 'p2p_policy',
+        featureKey: 'module.p2p_policy',
+        children: [
+          {
+            to: `${DISPATCH_WEB_BASE}/p2p-policy/trips`,
+            labelKey: 'nav.p2p_policy_trips',
+            icon: 'trips',
+            featureKey: 'module.p2p_policy',
+            permissionKey: 'policy_trip.view',
+          },
+          {
+            to: `${DISPATCH_WEB_BASE}/p2p-policy/students`,
+            labelKey: 'nav.p2p_policy_students',
+            icon: 'requests',
+            featureKey: 'module.p2p_policy',
+            permissionKey: 'student_policy.manage',
+          },
+          {
+            to: `${DISPATCH_WEB_BASE}/p2p-policy/calendar`,
+            labelKey: 'nav.p2p_policy_calendar',
+            icon: 'calendar',
+            featureKey: 'module.p2p_policy',
+            permissionKey: 'school_calendar.manage',
+          },
+          {
+            to: `${DISPATCH_WEB_BASE}/p2p-policy/routes`,
+            labelKey: 'nav.p2p_policy_routes',
+            icon: 'routes',
+            featureKey: 'module.p2p_policy',
+          },
+          {
+            to: `${DISPATCH_WEB_BASE}/p2p-policy/absence-report`,
+            labelKey: 'nav.p2p_policy_absence',
+            icon: 'reports',
+            featureKey: 'module.p2p_policy',
+            permissionKey: 'policy_trip.view',
+          },
+        ],
+      },
+      {
         to: `${DISPATCH_WEB_BASE}/resources/list`,
         labelKey: 'nav.resources',
         icon: 'resources',
