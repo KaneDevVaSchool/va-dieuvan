@@ -23,30 +23,7 @@ class ImportValidatorService
         $batch->rows()->orderBy('row_number')->chunkById(200, function ($rows) use ($mapping, &$valid, &$warning, &$error, $existingCodes) {
             foreach ($rows as $row) {
                 $mapped = $this->applyMapping($row, $mapping);
-                $errors = [];
-                $status = 'valid';
-
-                $name = trim((string) ($mapped['full_name'] ?? ''));
-                if ($name === '' || mb_strlen($name) < 2 || mb_strlen($name) > 100) {
-                    $errors[] = ['field' => 'full_name', 'level' => 'error', 'message' => 'Họ tên bắt buộc, 2-100 ký tự.'];
-                    $status = 'error';
-                }
-
-                $code = trim((string) ($mapped['code'] ?? ''));
-                if ($code !== '' && $existingCodes->has($code)) {
-                    $errors[] = ['field' => 'code', 'level' => 'warning', 'message' => 'Mã đã tồn tại — sẽ bỏ qua hoặc cập nhật.'];
-                    if ($status !== 'error') {
-                        $status = 'warning';
-                    }
-                }
-
-                $phone = trim((string) ($mapped['parent_phone'] ?? ''));
-                if ($phone !== '' && ! preg_match('/^(0|\+84)[0-9]{8,11}$/', preg_replace('/\s+/', '', $phone))) {
-                    $errors[] = ['field' => 'parent_phone', 'level' => 'warning', 'message' => 'Số điện thoại không đúng định dạng VN.'];
-                    if ($status !== 'error') {
-                        $status = 'warning';
-                    }
-                }
+                ['status' => $status, 'errors' => $errors] = $this->evaluateMappedDataInternal($mapped, $existingCodes);
 
                 $row->update([
                     'mapped_data' => $mapped,
@@ -79,6 +56,17 @@ class ImportValidatorService
     public function evaluateMappedData(array $data): array
     {
         $existingCodes = TpStudent::query()->pluck('id', 'code');
+        $result = $this->evaluateMappedDataInternal($data, $existingCodes);
+
+        return ['validation_status' => $result['status'], 'validation_errors' => $result['errors']];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<string, int>|array<string, int>  $existingCodes
+     * @return array{status: string, errors: list<array<string, string>>}
+     */
+    private function evaluateMappedDataInternal(array $data, $existingCodes): array
+    {
         $errors = [];
         $status = 'valid';
 
@@ -96,15 +84,38 @@ class ImportValidatorService
             }
         }
 
-        $phone = trim((string) ($data['parent_phone'] ?? ''));
-        if ($phone !== '' && ! preg_match('/^(0|\+84)[0-9]{8,11}$/', preg_replace('/\s+/', '', $phone))) {
-            $errors[] = ['field' => 'parent_phone', 'level' => 'warning', 'message' => 'Số điện thoại không đúng định dạng VN.'];
+        foreach (['parent_phone' => 'SĐT liên hệ chính', 'father_phone' => 'SĐT cha', 'mother_phone' => 'SĐT mẹ'] as $field => $label) {
+            $phone = trim((string) ($data[$field] ?? ''));
+            if ($phone !== '' && ! $this->isValidVnPhone($phone)) {
+                $errors[] = ['field' => $field, 'level' => 'warning', 'message' => "{$label} không đúng định dạng VN."];
+                if ($status !== 'error') {
+                    $status = 'warning';
+                }
+            }
+        }
+
+        $genderRaw = trim((string) ($data['gender'] ?? ''));
+        if ($genderRaw !== '' && TpImportStudentPayload::normalizeGender($genderRaw) === null) {
+            $errors[] = ['field' => 'gender', 'level' => 'warning', 'message' => 'Giới tính không hợp lệ (Nam/Nữ/Khác).'];
             if ($status !== 'error') {
                 $status = 'warning';
             }
         }
 
-        return ['validation_status' => $status, 'validation_errors' => $errors];
+        $dobRaw = $data['date_of_birth'] ?? null;
+        if ($dobRaw !== null && $dobRaw !== '' && TpImportStudentPayload::normalizeDateOfBirth($dobRaw) === null) {
+            $errors[] = ['field' => 'date_of_birth', 'level' => 'warning', 'message' => 'Ngày sinh không đúng định dạng.'];
+            if ($status !== 'error') {
+                $status = 'warning';
+            }
+        }
+
+        return ['status' => $status, 'errors' => $errors];
+    }
+
+    private function isValidVnPhone(string $phone): bool
+    {
+        return (bool) preg_match('/^(0|\+84)[0-9]{8,11}$/', preg_replace('/\s+/', '', $phone));
     }
 
     public function applyManualRowEdit(TpImportRow $row, array $data): TpImportRow

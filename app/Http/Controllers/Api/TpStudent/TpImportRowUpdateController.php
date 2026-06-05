@@ -41,9 +41,17 @@ class TpImportRowUpdateController extends Controller
             'data.code' => ['nullable', 'string', 'max:64'],
             'data.grade' => ['nullable', 'string', 'max:32'],
             'data.class_name' => ['nullable', 'string', 'max:64'],
-            'data.parent_name' => ['nullable', 'string', 'max:100'],
+            'data.parent_name' => ['nullable', 'string', 'max:255'],
             'data.parent_phone' => ['nullable', 'string', 'max:32'],
-            'data.address' => ['nullable', 'string', 'max:500'],
+            'data.address' => ['nullable', 'string', 'max:2000'],
+            'data.gender' => ['nullable', 'string', 'max:32'],
+            'data.date_of_birth' => ['nullable', 'string', 'max:32'],
+            'data.father_name' => ['nullable', 'string', 'max:255'],
+            'data.father_phone' => ['nullable', 'string', 'max:32'],
+            'data.mother_name' => ['nullable', 'string', 'max:255'],
+            'data.mother_phone' => ['nullable', 'string', 'max:32'],
+            'data.pickup_point' => ['nullable', 'string', 'max:255'],
+            'data.note' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $row = $this->validator->applyManualRowEdit($tpImportRow, $payload['data']);

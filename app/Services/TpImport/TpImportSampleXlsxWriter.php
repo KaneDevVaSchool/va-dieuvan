@@ -26,13 +26,21 @@ class TpImportSampleXlsxWriter
         'Phụ huynh',
         'SĐT phụ huynh',
         'Địa chỉ',
+        'Giới tính',
+        'Ngày sinh',
+        'Họ tên cha',
+        'SĐT cha',
+        'Họ tên mẹ',
+        'SĐT mẹ',
+        'Điểm đón',
+        'Ghi chú',
     ];
 
     /** @var list<list<string>> */
     private const SAMPLE_ROWS = [
-        ['Nguyễn Văn An', 'HS001', '3', '3A1', 'Nguyễn Văn Bình', '0901234567', '12 Nguyễn Huệ, Q.1, TP.HCM'],
-        ['Trần Thị Bình', 'HS002', '4', '4B2', 'Trần Văn Cường', '0912345678', '45 Lê Lợi, Q.3, TP.HCM'],
-        ['Lê Quốc Cường', 'HS003', '5', '5C3', 'Lê Thị Dung', '0923456789', '78 Đinh Tiên Hoàng, Q.BT, TP.HCM'],
+        ['Nguyễn Văn An', 'HS001', '3', '3A1', 'Nguyễn Văn Bình', '0901234567', '12 Nguyễn Huệ, Q.1, TP.HCM', 'Nam', '2015-03-12', 'Nguyễn Văn Bình', '0901234567', 'Trần Thị Hoa', '0907654321', 'Cổng chung cư Sunrise', ''],
+        ['Trần Thị Bình', 'HS002', '4', '4B2', 'Trần Văn Cường', '0912345678', '45 Lê Lợi, Q.3, TP.HCM', 'Nữ', '2014-08-20', 'Trần Văn Cường', '0912345678', 'Phạm Thị Lan', '0918765432', 'Sảnh tòa B', 'Dị ứng đậu phộng'],
+        ['Lê Quốc Cường', 'HS003', '5', '5C3', 'Lê Thị Dung', '0923456789', '78 Đinh Tiên Hoàng, Q.BT, TP.HCM', 'Nam', '2013-11-05', 'Lê Văn Hùng', '0923111222', 'Lê Thị Dung', '0923456789', 'Trước cổng trường', ''],
     ];
 
     public function writeTempFile(): string
@@ -63,7 +71,7 @@ class TpImportSampleXlsxWriter
 
     private function buildDataSheet(Worksheet $ws): void
     {
-        $lastCol = 'G';
+        $lastCol = 'O';
         $headerRow = 1;
         foreach (self::HEADERS as $i => $label) {
             $col = chr(ord('A') + $i);
@@ -96,7 +104,7 @@ class TpImportSampleXlsxWriter
             'alignment' => ['vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
         ]);
 
-        $widths = [28, 14, 8, 10, 22, 16, 42];
+        $widths = [28, 14, 8, 10, 22, 16, 36, 10, 12, 22, 14, 22, 14, 28, 24];
         foreach ($widths as $i => $w) {
             $ws->getColumnDimension(chr(ord('A') + $i))->setWidth($w);
         }
@@ -124,7 +132,15 @@ class TpImportSampleXlsxWriter
             ['Lớp', 'Tên lớp (vd: 3A1, 4B2).'],
             ['Phụ huynh', 'Họ tên người liên hệ.'],
             ['SĐT phụ huynh', 'Số Việt Nam: bắt đầu 0 (vd: 090…) hoặc +84. Có thể bật chuẩn hóa SĐT ở bước sửa lỗi.'],
-            ['Địa chỉ', 'Địa chỉ đón/trả hoặc liên hệ (một dòng).'],
+            ['Địa chỉ', 'Địa chỉ nhà thường trú (một dòng).'],
+            ['Giới tính', 'Nam, Nữ hoặc Khác (cũng chấp nhận male/female).'],
+            ['Ngày sinh', 'Định dạng YYYY-MM-DD (vd: 2015-03-12).'],
+            ['Họ tên cha', 'Họ tên đầy đủ của cha.'],
+            ['SĐT cha', 'Số điện thoại cha — định dạng VN như SĐT phụ huynh.'],
+            ['Họ tên mẹ', 'Họ tên đầy đủ của mẹ.'],
+            ['SĐT mẹ', 'Số điện thoại mẹ.'],
+            ['Điểm đón', 'Vị trí cụ thể tài xế đón/trả (có thể khác địa chỉ nhà).'],
+            ['Ghi chú', 'Lưu ý đặc biệt: sức khỏe, người đón thay, v.v. (tối đa 1000 ký tự).'],
             ['', ''],
             ['3. Lưu ý', ''],
             ['', '• Dòng trống hoàn toàn sẽ bị bỏ qua.'],

@@ -10,6 +10,9 @@ use Illuminate\Support\Str;
 
 class ImportExecutorService
 {
+    public function __construct(
+        private readonly TpImportStudentPayload $studentPayload,
+    ) {}
     /**
      * @param  array{skip_errors?: bool, include_warnings?: bool, update_existing?: bool, target_program_id?: int}  $options
      * @return array{imported: int, skipped: int, failed: int}
@@ -50,15 +53,7 @@ class ImportExecutorService
                                 return;
                             }
 
-                            $payload = [
-                                'full_name' => $data['full_name'] ?? '',
-                                'grade' => $data['grade'] ?? null,
-                                'class_name' => $data['class_name'] ?? null,
-                                'parent_name' => $data['parent_name'] ?? null,
-                                'parent_phone' => $data['parent_phone'] ?? null,
-                                'address' => $data['address'] ?? null,
-                                'source' => 'excel_import',
-                            ];
+                            $payload = $this->studentPayload->fromImportRow($data, $existing);
 
                             $student = TpStudent::query()->updateOrCreate(['code' => $code], $payload);
 

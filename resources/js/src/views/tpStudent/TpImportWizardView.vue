@@ -561,13 +561,93 @@
                             @keydown.escape.prevent="cancelRowEdit"
                           />
                         </div>
+                        <div>
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Giới tính</label>
+                          <input
+                            v-model="editDraft.gender"
+                            type="text"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                            placeholder="Nam / Nữ"
+                            @keydown.enter.prevent="saveRowEdit(r)"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
+                        <div>
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Ngày sinh</label>
+                          <input
+                            v-model="editDraft.date_of_birth"
+                            type="date"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
+                        <div>
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Họ tên cha</label>
+                          <input
+                            v-model="editDraft.father_name"
+                            type="text"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                            @keydown.enter.prevent="saveRowEdit(r)"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
+                        <div>
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">SĐT cha</label>
+                          <input
+                            v-model="editDraft.father_phone"
+                            type="tel"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                            @keydown.enter.prevent="saveRowEdit(r)"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
+                        <div>
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Họ tên mẹ</label>
+                          <input
+                            v-model="editDraft.mother_name"
+                            type="text"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                            @keydown.enter.prevent="saveRowEdit(r)"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
+                        <div>
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">SĐT mẹ</label>
+                          <input
+                            v-model="editDraft.mother_phone"
+                            type="tel"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                            @keydown.enter.prevent="saveRowEdit(r)"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
                         <div class="sm:col-span-2">
-                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Địa chỉ</label>
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Địa chỉ nhà</label>
                           <input
                             v-model="editDraft.address"
                             type="text"
                             class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
                             placeholder="Địa chỉ"
+                            @keydown.enter.prevent="saveRowEdit(r)"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
+                        <div class="sm:col-span-2">
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Điểm đón</label>
+                          <input
+                            v-model="editDraft.pickup_point"
+                            type="text"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
+                            @keydown.enter.prevent="saveRowEdit(r)"
+                            @keydown.escape.prevent="cancelRowEdit"
+                          />
+                        </div>
+                        <div class="sm:col-span-2 lg:col-span-4">
+                          <label class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Ghi chú</label>
+                          <input
+                            v-model="editDraft.note"
+                            type="text"
+                            class="h-8 w-full rounded-md border border-slate-300 px-2 text-sm focus:border-va-500 focus:outline-none focus:ring-1 focus:ring-va-500/30"
                             @keydown.enter.prevent="saveRowEdit(r)"
                             @keydown.escape.prevent="cancelRowEdit"
                           />
@@ -861,9 +941,17 @@ const mappableFields = [
   { key: 'code', label: 'Mã học sinh' },
   { key: 'grade', label: 'Khối' },
   { key: 'class_name', label: 'Lớp' },
-  { key: 'parent_name', label: 'Phụ huynh' },
-  { key: 'parent_phone', label: 'SĐT phụ huynh' },
-  { key: 'address', label: 'Địa chỉ' },
+  { key: 'gender', label: 'Giới tính' },
+  { key: 'date_of_birth', label: 'Ngày sinh' },
+  { key: 'father_name', label: 'Họ tên cha' },
+  { key: 'father_phone', label: 'SĐT cha' },
+  { key: 'mother_name', label: 'Họ tên mẹ' },
+  { key: 'mother_phone', label: 'SĐT mẹ' },
+  { key: 'parent_name', label: 'Liên hệ chính' },
+  { key: 'parent_phone', label: 'SĐT liên hệ chính' },
+  { key: 'address', label: 'Địa chỉ nhà' },
+  { key: 'pickup_point', label: 'Điểm đón' },
+  { key: 'note', label: 'Ghi chú' },
 ]
 
 // ── Status chips config ──────────────────────────────────────────────
@@ -1020,9 +1108,17 @@ function autoGuessMapping() {
     code: ['mã', 'code', 'mshs'],
     grade: ['khối', 'grade'],
     class_name: ['lớp', 'class'],
-    parent_name: ['phụ huynh', 'parent'],
-    parent_phone: ['sđt', 'phone', 'điện thoại'],
-    address: ['địa chỉ', 'address'],
+    gender: ['giới tính', 'gioi tinh', 'gender'],
+    date_of_birth: ['ngày sinh', 'ngay sinh', 'dob', 'birth'],
+    father_name: ['họ tên cha', 'ten cha', 'father'],
+    father_phone: ['sđt cha', 'sdt cha', 'father phone'],
+    mother_name: ['họ tên mẹ', 'ten me', 'mother'],
+    mother_phone: ['sđt mẹ', 'sdt me', 'mother phone'],
+    parent_name: ['phụ huynh', 'liên hệ', 'parent', 'người liên hệ'],
+    parent_phone: ['sđt phụ huynh', 'sđt liên hệ', 'phone', 'điện thoại'],
+    address: ['địa chỉ nhà', 'địa chỉ', 'address'],
+    pickup_point: ['điểm đón', 'diem don', 'pickup'],
+    note: ['ghi chú', 'ghichu', 'note'],
   }
   for (const f of mappableFields) {
     const found = (batch.value.header_row || []).find((c) =>
@@ -1141,9 +1237,17 @@ function startRowEdit(row) {
     code: d.code ?? '',
     grade: d.grade ?? '',
     class_name: d.class_name ?? '',
+    gender: d.gender ?? '',
+    date_of_birth: d.date_of_birth ?? '',
+    father_name: d.father_name ?? '',
+    father_phone: d.father_phone ?? '',
+    mother_name: d.mother_name ?? '',
+    mother_phone: d.mother_phone ?? '',
     parent_name: d.parent_name ?? '',
     parent_phone: d.parent_phone ?? '',
     address: d.address ?? '',
+    pickup_point: d.pickup_point ?? '',
+    note: d.note ?? '',
   }
 }
 

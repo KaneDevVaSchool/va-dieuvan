@@ -23,8 +23,12 @@ class ImportAutoFixService
                 $data = $row->mapped_data ?? $row->raw_data ?? [];
                 $original = $data;
 
-                if (! empty($rules['normalize_phone']) && ! empty($data['parent_phone'])) {
-                    $data['parent_phone'] = $this->normalizePhone((string) $data['parent_phone']);
+                if (! empty($rules['normalize_phone'])) {
+                    foreach (['parent_phone', 'father_phone', 'mother_phone'] as $phoneField) {
+                        if (! empty($data[$phoneField])) {
+                            $data[$phoneField] = $this->normalizePhone((string) $data[$phoneField]);
+                        }
+                    }
                 }
                 if (! empty($rules['trim_whitespace'])) {
                     foreach ($data as $k => $v) {
@@ -33,8 +37,12 @@ class ImportAutoFixService
                         }
                     }
                 }
-                if (! empty($rules['capitalize_name']) && ! empty($data['full_name'])) {
-                    $data['full_name'] = mb_convert_case(mb_strtolower((string) $data['full_name']), MB_CASE_TITLE, 'UTF-8');
+                if (! empty($rules['capitalize_name'])) {
+                    foreach (['full_name', 'parent_name', 'father_name', 'mother_name'] as $nameField) {
+                        if (! empty($data[$nameField])) {
+                            $data[$nameField] = mb_convert_case(mb_strtolower((string) $data[$nameField]), MB_CASE_TITLE, 'UTF-8');
+                        }
+                    }
                 }
                 if (! empty($rules['uppercase_code']) && ! empty($data['code'])) {
                     $data['code'] = strtoupper(trim((string) $data['code']));
