@@ -198,6 +198,7 @@ Route::prefix('tp-students')->group(function () {
 Route::prefix('tp-imports')->group(function () {
     Route::post('/', [\App\Http\Controllers\Api\TpStudent\TpImportController::class, 'store'])->middleware('throttle:20,1');
     Route::patch('/{tpImportBatch}/mapping', [\App\Http\Controllers\Api\TpStudent\TpImportMappingController::class, 'update'])->middleware('throttle:30,1');
+    Route::patch('/{tpImportBatch}/rows/{tpImportRow}', \App\Http\Controllers\Api\TpStudent\TpImportRowUpdateController::class)->middleware('throttle:60,1');
     Route::post('/{tpImportBatch}/apply-fixes', [\App\Http\Controllers\Api\TpStudent\TpImportFixController::class, 'apply'])->middleware('throttle:20,1');
     Route::post('/{tpImportBatch}/execute', [\App\Http\Controllers\Api\TpStudent\TpImportExecuteController::class, 'execute'])->middleware('throttle:10,1');
 });

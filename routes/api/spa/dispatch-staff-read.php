@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
 use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\Reports\ReportController;
+use App\Http\Controllers\Api\Reports\TripCostReportController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\UserSearchForDispatchFormController;
 use App\Http\Controllers\Api\UserSearchForDriverAssignmentController;
@@ -46,6 +47,15 @@ Route::controller(RequestController::class)->group(function () {
 
 Route::controller(ReportController::class)->group(function () {
     Route::get('/reports/summary', 'summary');
+});
+
+Route::prefix('reports/trip-costs')->group(function () {
+    Route::get('/statistics', [TripCostReportController::class, 'statistics'])
+        ->middleware('permission:report.view');
+    Route::get('/export-xlsx', [TripCostReportController::class, 'exportXlsx'])
+        ->middleware(['permission:report.export', 'throttle:30,1']);
+    Route::get('/export-pdf', [TripCostReportController::class, 'exportPdf'])
+        ->middleware(['permission:report.export', 'throttle:30,1']);
 });
 
 Route::get('/reference-pricing', [ReferencePricingController::class, 'index'])->middleware('throttle:60,1');

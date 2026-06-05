@@ -272,6 +272,16 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "reports/costs",
+        name: "costReport",
+        component: () => import("../views/reports/CostReportView.vue"),
+        meta: {
+            title: "Báo cáo chi phí chuyến",
+            subtitle: "Thống kê & xuất file",
+            featureKey: "module.reports",
+        },
+    },
+    {
         path: "pricing",
         name: "pricing",
         component: () => import("../views/pricing/PricingReferenceView.vue"),

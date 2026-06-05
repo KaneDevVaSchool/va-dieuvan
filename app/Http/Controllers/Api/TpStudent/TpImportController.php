@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\TpStudent;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\TpStudent\TpImportStoreRequest;
 use App\Models\TpImportBatch;
 use App\Services\TpImport\ImportParserService;
 use Illuminate\Http\JsonResponse;
@@ -17,18 +18,15 @@ class TpImportController extends Controller
         private readonly ImportParserService $parser,
     ) {}
 
-    public function store(Request $request): JsonResponse
+    public function store(TpImportStoreRequest $request): JsonResponse
     {
         $user = $request->user();
-        abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_import.manage')), 403);
-
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
-            'target_program_id' => ['nullable', 'integer', 'exists:tp_programs,id'],
-        ]);
 
         $file = $request->file('file');
         $ext = strtolower($file->getClientOriginalExtension());
+        if ($ext === '' && str_ends_with(strtolower($file->getClientOriginalName()), '.xlsx')) {
+            $ext = 'xlsx';
+        }
         $path = $file->store('tp-imports/uploads');
 
         $batch = TpImportBatch::query()->create([

@@ -83,6 +83,7 @@ export const NAV_SECTIONS = [
     headingKey: 'nav.section_reports',
     items: [
       { to: `${DISPATCH_WEB_BASE}/reports`, labelKey: 'nav.reports', icon: 'reports', featureKey: 'module.reports' },
+      { to: `${DISPATCH_WEB_BASE}/reports/costs`, labelKey: 'nav.cost_report', icon: 'costs', featureKey: 'module.reports', permissionKey: 'report.view' },
       { to: `${DISPATCH_WEB_BASE}/pricing`, labelKey: 'nav.pricing', icon: 'pricing', featureKey: 'module.pricing' },
     ],
   },

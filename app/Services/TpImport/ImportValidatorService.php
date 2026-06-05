@@ -73,6 +73,75 @@ class ImportValidatorService
     }
 
     /**
+     * @param  array<string, mixed>  $data
+     * @return array{validation_status: string, validation_errors: list<array<string, string>>}
+     */
+    public function evaluateMappedData(array $data): array
+    {
+        $existingCodes = TpStudent::query()->pluck('id', 'code');
+        $errors = [];
+        $status = 'valid';
+
+        $name = trim((string) ($data['full_name'] ?? ''));
+        if ($name === '' || mb_strlen($name) < 2 || mb_strlen($name) > 100) {
+            $errors[] = ['field' => 'full_name', 'level' => 'error', 'message' => 'Họ tên bắt buộc, 2-100 ký tự.'];
+            $status = 'error';
+        }
+
+        $code = trim((string) ($data['code'] ?? ''));
+        if ($code !== '' && $existingCodes->has($code)) {
+            $errors[] = ['field' => 'code', 'level' => 'warning', 'message' => 'Mã đã tồn tại — sẽ bỏ qua hoặc cập nhật.'];
+            if ($status !== 'error') {
+                $status = 'warning';
+            }
+        }
+
+        $phone = trim((string) ($data['parent_phone'] ?? ''));
+        if ($phone !== '' && ! preg_match('/^(0|\+84)[0-9]{8,11}$/', preg_replace('/\s+/', '', $phone))) {
+            $errors[] = ['field' => 'parent_phone', 'level' => 'warning', 'message' => 'Số điện thoại không đúng định dạng VN.'];
+            if ($status !== 'error') {
+                $status = 'warning';
+            }
+        }
+
+        return ['validation_status' => $status, 'validation_errors' => $errors];
+    }
+
+    public function applyManualRowEdit(TpImportRow $row, array $data): TpImportRow
+    {
+        $current = $row->fixed_data ?? $row->mapped_data ?? [];
+        $merged = array_merge($current, $data);
+        $result = $this->evaluateMappedData($merged);
+
+        $row->update([
+            'fixed_data' => $merged,
+            'mapped_data' => $merged,
+            'validation_status' => $result['validation_status'],
+            'validation_errors' => $result['validation_errors'],
+        ]);
+
+        return $row->fresh();
+    }
+
+    /**
+     * @return array{valid: int, warning: int, error: int}
+     */
+    public function refreshBatchRowCounts(TpImportBatch $batch): array
+    {
+        $valid = $batch->rows()->where('validation_status', 'valid')->count();
+        $warning = $batch->rows()->where('validation_status', 'warning')->count();
+        $error = $batch->rows()->where('validation_status', 'error')->count();
+
+        $batch->update([
+            'valid_rows' => $valid,
+            'warning_rows' => $warning,
+            'error_rows' => $error,
+        ]);
+
+        return ['valid' => $valid, 'warning' => $warning, 'error' => $error];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function applyMapping(TpImportRow $row, array $mapping): array

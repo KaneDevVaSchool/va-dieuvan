@@ -338,15 +338,14 @@
       </div>
     </template>
 
-    <!-- ── Sticky footer ─────────────────────────────────────────────────────── -->
-    <Teleport to="body">
+    <!-- Sticky footer (trong vùng main — không đè sidebar) -->
+    <div
+      v-if="data && !loading"
+      class="sticky bottom-0 z-30 pt-2 supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    >
       <div
-        v-if="data && !loading"
-        class="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-3"
+        class="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/15 backdrop-blur-md"
       >
-        <div
-          class="pointer-events-auto mx-auto max-w-6xl overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-slate-900/15 backdrop-blur-md"
-        >
           <!-- Warning ── -->
           <div
             v-if="data.missing_reason_count > 0"
@@ -398,8 +397,7 @@
             </div>
           </div>
         </div>
-      </div>
-    </Teleport>
+    </div>
 
   </div>
 </template>

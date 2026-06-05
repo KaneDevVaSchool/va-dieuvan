@@ -209,11 +209,9 @@ export async function getStudentPrograms(id) {
 
 export async function uploadImport(file, targetProgramId = null) {
   const form = new FormData()
-  form.append('file', file)
-  if (targetProgramId) form.append('target_program_id', targetProgramId)
-  const { data } = await http.post('/tp-imports', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  form.append('file', file, file.name || 'import.xlsx')
+  if (targetProgramId) form.append('target_program_id', String(targetProgramId))
+  const { data } = await http.post('/tp-imports', form)
   return data.data
 }
 
@@ -232,6 +230,11 @@ export async function listImportRows(id, params = {}) {
   return data.data
 }
 
+export async function updateImportRow(batchId, rowId, rowData) {
+  const { data } = await http.patch(`/tp-imports/${batchId}/rows/${rowId}`, { data: rowData })
+  return data.data
+}
+
 export async function applyImportFixes(id, rules) {
   const { data } = await http.post(`/tp-imports/${id}/apply-fixes`, { rules })
   return data.data
@@ -246,8 +249,34 @@ export function importErrorReportUrl(id) {
   return `/api/tp-imports/${id}/error-report`
 }
 
-export function importSampleUrl() {
-  return `/api/tp-imports/sample`
+export async function downloadImportErrorReport(id) {
+  const { data } = await http.get(`/tp-imports/${id}/error-report`, {
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `bao-cao-loi-import-${id}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
+export async function downloadImportSample() {
+  const { data } = await http.get('/tp-imports/sample', {
+    responseType: 'blob',
+    headers: { Accept: '*/*' },
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'mau-import-hoc-sinh.xlsx')
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
 }
 
 // ── Driver ──────────────────────────────────────────────────────────────────────
