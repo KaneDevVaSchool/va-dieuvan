@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-3xl space-y-4 pb-24">
+  <div class="mx-auto max-w-3xl space-y-4 pb-6">
     <div>
       <button class="text-xs text-slate-400 hover:text-slate-600" @click="goBack">← Quay lại chương trình</button>
       <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">Đăng ký học sinh</h1>
@@ -24,8 +24,8 @@
       <div v-if="!students.length" class="px-3 py-8 text-center text-sm text-slate-400">Không có học sinh.</div>
     </div>
 
-    <div class="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
-      <div class="mx-auto flex max-w-3xl items-center justify-between">
+    <div class="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 py-3 backdrop-blur">
+      <div class="flex items-center justify-between">
         <span class="text-sm text-slate-600">Đã chọn {{ selected.length }}</span>
         <div class="flex gap-2">
           <Button variant="secondary" @click="goBack">Hủy</Button>

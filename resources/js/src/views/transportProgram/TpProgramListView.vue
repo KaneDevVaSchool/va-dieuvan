@@ -1,29 +1,20 @@
 <template>
   <div class="space-y-5 pb-10">
     <!-- Header -->
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
           Chương trình Đưa đón
         </h1>
-        <p class="mt-1 text-sm text-slate-500">Quản lý tất cả chương trình vận chuyển học sinh</p>
+        <p class="mt-1.5 text-base text-slate-500">Quản lý tất cả chương trình vận chuyển học sinh</p>
       </div>
       <div class="flex items-center gap-2">
         <button
           type="button"
-          class="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
-          aria-label="Thông báo"
-          @click="goNotifications"
-        >
-          <BellIcon class="h-5 w-5" />
-          <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500"></span>
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-va-800/20 transition hover:bg-va-900"
+          class="inline-flex items-center gap-2 rounded-xl bg-va-800 px-5 py-3 text-base font-semibold text-white shadow-sm shadow-va-800/20 transition hover:bg-va-900"
           @click="goCreate"
         >
-          <PlusIcon class="h-4 w-4" /> Tạo Chương trình
+          <PlusIcon class="h-5 w-5" /> Tạo Chương trình
         </button>
       </div>
     </div>
@@ -33,31 +24,36 @@
       <div
         v-for="tile in statTiles"
         :key="tile.key"
-        class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+        class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >
-        <div class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">{{ tile.value }}</div>
-        <div class="mt-1 text-xs font-medium" :class="tile.hintClass">{{ tile.hint }}</div>
+        <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="tile.iconBg">
+          <component :is="tile.icon" class="h-6 w-6" :class="tile.iconText" />
+        </span>
+        <div class="min-w-0">
+          <div class="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">{{ tile.value }}</div>
+          <div class="mt-0.5 text-sm font-medium" :class="tile.hintClass">{{ tile.hint }}</div>
+        </div>
       </div>
     </div>
 
     <!-- Filter / toolbar -->
-    <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div class="flex flex-wrap items-center gap-2">
+    <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+      <div class="flex flex-wrap items-center gap-2.5">
         <div class="relative min-w-[14rem] flex-1">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <input
             v-model="filters.search"
             type="search"
             placeholder="Tìm kiếm chương trình, tuyến đường..."
             aria-label="Tìm kiếm chương trình"
-            class="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-9 pr-3 text-sm outline-none ring-va-800/20 transition focus:bg-white focus:ring"
+            class="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 pl-11 pr-3 text-base outline-none ring-va-800/20 transition focus:bg-white focus:ring"
           />
         </div>
 
         <select
           v-model="filters.status"
           aria-label="Lọc theo trạng thái"
-          class="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring"
+          class="h-12 rounded-xl border border-slate-200 bg-white px-3.5 text-base text-slate-700 outline-none ring-va-800/20 focus:ring"
         >
           <option value="">Tất cả trạng thái</option>
           <option value="draft">Nháp</option>
@@ -70,7 +66,7 @@
         <select
           v-model="filters.schoolYear"
           aria-label="Lọc theo năm học"
-          class="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring"
+          class="h-12 rounded-xl border border-slate-200 bg-white px-3.5 text-base text-slate-700 outline-none ring-va-800/20 focus:ring"
         >
           <option value="">Năm học</option>
           <option v-for="y in schoolYearOptions" :key="y" :value="y">{{ y }}</option>
@@ -79,7 +75,7 @@
         <select
           v-model="filters.route"
           aria-label="Lọc theo tuyến"
-          class="h-10 max-w-[12rem] rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring"
+          class="h-12 max-w-[12rem] rounded-xl border border-slate-200 bg-white px-3.5 text-base text-slate-700 outline-none ring-va-800/20 focus:ring"
         >
           <option value="">Tất cả tuyến</option>
           <option v-for="r in routeOptions" :key="r" :value="r">{{ r }}</option>
@@ -88,42 +84,42 @@
         <button
           v-if="hasActiveFilters"
           type="button"
-          class="inline-flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+          class="inline-flex items-center gap-1 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
           @click="clearFilters"
         >
           <XMarkIcon class="h-4 w-4" /> Xóa lọc
         </button>
 
-        <div class="ml-auto flex items-center gap-1 rounded-xl border border-slate-200 p-0.5">
+        <div class="ml-auto flex items-center gap-1 rounded-xl border border-slate-200 p-1">
           <button
             type="button"
-            class="grid h-8 w-8 place-items-center rounded-lg transition"
+            class="grid h-9 w-9 place-items-center rounded-lg transition"
             :class="view === 'grid' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'"
             aria-label="Xem dạng lưới"
             @click="view = 'grid'"
           >
-            <Squares2X2Icon class="h-4 w-4" />
+            <Squares2X2Icon class="h-5 w-5" />
           </button>
           <button
             type="button"
-            class="grid h-8 w-8 place-items-center rounded-lg transition"
+            class="grid h-9 w-9 place-items-center rounded-lg transition"
             :class="view === 'list' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'"
             aria-label="Xem dạng danh sách"
             @click="view = 'list'"
           >
-            <ListBulletIcon class="h-4 w-4" />
+            <ListBulletIcon class="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      <div class="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2.5">
-        <p class="text-xs text-slate-500">Hiển thị {{ visibleItems.length }} chương trình</p>
-        <label class="flex items-center gap-2 text-xs text-slate-500">
+      <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+        <p class="text-sm text-slate-500">Hiển thị {{ visibleItems.length }} chương trình</p>
+        <label class="flex items-center gap-2 text-sm text-slate-500">
           Sắp xếp:
           <select
             v-model="sort"
             aria-label="Sắp xếp"
-            class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 outline-none ring-va-800/20 focus:ring"
+            class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring"
           >
             <option value="newest">Mới nhất</option>
             <option value="oldest">Cũ nhất</option>
@@ -135,13 +131,13 @@
     </div>
 
     <!-- States -->
-    <div v-if="loading" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
-      <ArrowPathIcon class="mr-2 h-5 w-5 animate-spin" /> Đang tải…
+    <div v-if="loading" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-base text-slate-500">
+      <ArrowPathIcon class="mr-2 h-6 w-6 animate-spin" /> Đang tải…
     </div>
     <div v-else-if="!visibleItems.length" class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-center">
-      <AcademicCapIcon class="mb-3 h-12 w-12 text-slate-300" />
-      <p class="text-sm font-medium text-slate-600">Không có chương trình phù hợp</p>
-      <Button class="mt-3" @click="goCreate">Tạo chương trình đầu tiên</Button>
+      <AcademicCapIcon class="mb-3 h-14 w-14 text-slate-300" />
+      <p class="text-base font-medium text-slate-600">Không có chương trình phù hợp</p>
+      <Button class="mt-4" @click="goCreate">Tạo chương trình đầu tiên</Button>
     </div>
 
     <!-- Card grid -->
@@ -149,16 +145,16 @@
       <article
         v-for="p in visibleItems"
         :key="p.id"
-        class="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-va-800/30 hover:shadow-md"
+        class="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-va-800/30 hover:shadow-md"
         @click="goWorkspace(p.id)"
       >
         <div class="flex items-start gap-3">
-          <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl" :class="accent(p.status).iconBg">
-            <TruckIcon class="h-6 w-6" :class="accent(p.status).iconText" />
+          <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl" :class="accent(p.status).iconBg">
+            <TruckIcon class="h-7 w-7" :class="accent(p.status).iconText" />
           </div>
           <div class="min-w-0 flex-1">
-            <h3 class="truncate text-sm font-semibold text-slate-900">{{ p.name }}</h3>
-            <p class="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            <h3 class="truncate text-base font-semibold text-slate-900">{{ p.name }}</h3>
+            <p class="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">
               Năm học {{ schoolYear(p) }}
             </p>
           </div>
@@ -168,51 +164,51 @@
           </span>
         </div>
 
-        <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div class="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50/70 py-3 text-center">
           <div>
-            <div class="text-lg font-bold text-slate-900">{{ p.enrolled_count ?? 0 }}</div>
-            <div class="text-[11px] text-slate-500">Học sinh</div>
+            <div class="text-2xl font-bold text-slate-900">{{ p.enrolled_count ?? 0 }}</div>
+            <div class="mt-0.5 text-xs text-slate-500">Học sinh</div>
+          </div>
+          <div class="border-x border-slate-200/70">
+            <div class="text-2xl font-bold text-slate-900">{{ p.day_count ?? 0 }}</div>
+            <div class="mt-0.5 text-xs text-slate-500">Số ngày</div>
           </div>
           <div>
-            <div class="text-lg font-bold text-slate-900">{{ p.day_count ?? 0 }}</div>
-            <div class="text-[11px] text-slate-500">Số ngày</div>
-          </div>
-          <div>
-            <div class="text-lg font-bold" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
-            <div class="text-[11px] text-slate-500">Buổi/tuần</div>
+            <div class="text-2xl font-bold" :class="accent(p.status).iconText">{{ runsPerWeek(p) }}</div>
+            <div class="mt-0.5 text-xs text-slate-500">Buổi/tuần</div>
           </div>
         </div>
 
-        <div class="mt-3 space-y-1.5 text-xs text-slate-500">
-          <div class="flex items-center gap-1.5">
-            <MapPinIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <div class="mt-4 space-y-2 text-sm text-slate-500">
+          <div class="flex items-center gap-2">
+            <MapPinIcon class="h-4 w-4 shrink-0 text-slate-400" />
             <span class="truncate">{{ p.origin_name || '—' }} → {{ p.destination_name || 'Trường' }}</span>
           </div>
-          <div class="flex items-center gap-1.5">
-            <ClockIcon class="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <div class="flex items-center gap-2">
+            <ClockIcon class="h-4 w-4 shrink-0 text-slate-400" />
             <span>{{ timeRange(p) }}</span>
           </div>
         </div>
 
-        <div class="mt-3">
-          <div class="mb-1 flex items-center justify-between text-[11px]">
+        <div class="mt-4">
+          <div class="mb-1.5 flex items-center justify-between text-xs">
             <span class="text-slate-500">Tiến độ chương trình</span>
-            <span class="font-medium text-slate-700">{{ progress(p) }}%</span>
+            <span class="font-semibold text-slate-700">{{ progress(p) }}%</span>
           </div>
-          <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
             <div class="h-full rounded-full transition-all" :class="accent(p.status).bar" :style="{ width: progress(p) + '%' }"></div>
           </div>
         </div>
 
-        <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-          <div class="flex items-center gap-2 text-xs text-slate-600">
-            <span class="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500">
+        <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5">
+          <div class="flex items-center gap-2 text-sm text-slate-600">
+            <span class="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
               {{ initials(p.responsible_user_name) }}
             </span>
             <span class="truncate">{{ p.responsible_user_name || 'Chưa phân công' }}</span>
           </div>
-          <span class="inline-flex items-center gap-1 text-xs font-medium text-va-800 group-hover:underline">
-            Xem chi tiết <ArrowRightIcon class="h-3.5 w-3.5" />
+          <span class="inline-flex items-center gap-1 text-sm font-medium text-va-800 group-hover:underline">
+            Xem chi tiết <ArrowRightIcon class="h-4 w-4" />
           </span>
         </div>
       </article>
@@ -220,16 +216,16 @@
 
     <!-- List view -->
     <div v-else class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <table class="w-full min-w-[56rem] text-left text-sm">
-        <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <table class="w-full min-w-[56rem] text-left text-base">
+        <thead class="bg-slate-50 text-sm uppercase tracking-wide text-slate-500">
           <tr>
-            <th class="px-4 py-3 font-medium">Chương trình</th>
-            <th class="px-4 py-3 font-medium">Tuyến</th>
-            <th class="px-4 py-3 font-medium">Giờ</th>
-            <th class="px-4 py-3 font-medium">Học sinh</th>
-            <th class="px-4 py-3 font-medium">Số ngày</th>
-            <th class="px-4 py-3 font-medium">Phụ trách</th>
-            <th class="px-4 py-3 font-medium">Trạng thái</th>
+            <th class="px-4 py-3.5 font-medium">Chương trình</th>
+            <th class="px-4 py-3.5 font-medium">Tuyến</th>
+            <th class="px-4 py-3.5 font-medium">Giờ</th>
+            <th class="px-4 py-3.5 font-medium">Học sinh</th>
+            <th class="px-4 py-3.5 font-medium">Số ngày</th>
+            <th class="px-4 py-3.5 font-medium">Phụ trách</th>
+            <th class="px-4 py-3.5 font-medium">Trạng thái</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
@@ -239,16 +235,16 @@
             class="cursor-pointer hover:bg-slate-50/60"
             @click="goWorkspace(p.id)"
           >
-            <td class="px-4 py-3">
+            <td class="px-4 py-3.5">
               <div class="font-medium text-slate-900">{{ p.name }}</div>
-              <div class="font-mono text-[11px] text-slate-400">{{ p.code }}</div>
+              <div class="font-mono text-xs text-slate-400">{{ p.code }}</div>
             </td>
-            <td class="px-4 py-3 text-slate-600">{{ p.origin_name || '—' }} → {{ p.destination_name || 'Trường' }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ timeRange(p) }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ p.enrolled_count ?? 0 }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ p.day_count ?? 0 }}</td>
-            <td class="px-4 py-3 text-slate-600">{{ p.responsible_user_name || '—' }}</td>
-            <td class="px-4 py-3">
+            <td class="px-4 py-3.5 text-slate-600">{{ p.origin_name || '—' }} → {{ p.destination_name || 'Trường' }}</td>
+            <td class="px-4 py-3.5 text-slate-600">{{ timeRange(p) }}</td>
+            <td class="px-4 py-3.5 text-slate-600">{{ p.enrolled_count ?? 0 }}</td>
+            <td class="px-4 py-3.5 text-slate-600">{{ p.day_count ?? 0 }}</td>
+            <td class="px-4 py-3.5 text-slate-600">{{ p.responsible_user_name || '—' }}</td>
+            <td class="px-4 py-3.5">
               <span :class="statusClass(p.status)">
                 <span class="h-1.5 w-1.5 rounded-full" :class="accent(p.status).dot"></span>
                 {{ statusLabel(p.status) }}
@@ -266,7 +262,6 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   PlusIcon,
-  BellIcon,
   MagnifyingGlassIcon,
   Squares2X2Icon,
   ListBulletIcon,
@@ -277,6 +272,10 @@ import {
   TruckIcon,
   XMarkIcon,
   ArrowRightIcon,
+  RectangleStackIcon,
+  BoltIcon,
+  CheckBadgeIcon,
+  CalendarDaysIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import { listPrograms } from '../../api/transportProgram'
@@ -395,14 +394,46 @@ const statTiles = computed(() => {
   const all = items.value
   const total = all.length
   const active = all.filter((p) => p.status === 'active').length
-  const students = all.reduce((sum, p) => sum + (p.enrolled_count ?? 0), 0)
-  const pending = all.filter((p) => p.status === 'draft' || p.status === 'paused').length
+  const completed = all.filter((p) => p.status === 'completed').length
+  const operatingDays = all.reduce((sum, p) => sum + (p.day_count ?? 0), 0)
   const activePct = total ? Math.round((active / total) * 100) : 0
   return [
-    { key: 'total', value: total, hint: `${total} chương trình`, hintClass: 'text-slate-400' },
-    { key: 'active', value: active, hint: `${activePct}% đang hoạt động`, hintClass: 'text-emerald-600' },
-    { key: 'students', value: students, hint: 'tổng học sinh đăng ký', hintClass: 'text-slate-400' },
-    { key: 'pending', value: pending, hint: 'nháp / tạm dừng', hintClass: 'text-amber-600' },
+    {
+      key: 'total',
+      value: total,
+      hint: 'chương trình',
+      hintClass: 'text-slate-500',
+      icon: RectangleStackIcon,
+      iconBg: 'bg-slate-100',
+      iconText: 'text-slate-600',
+    },
+    {
+      key: 'active',
+      value: active,
+      hint: `${activePct}% đang hoạt động`,
+      hintClass: 'text-emerald-600',
+      icon: BoltIcon,
+      iconBg: 'bg-emerald-50',
+      iconText: 'text-emerald-600',
+    },
+    {
+      key: 'completed',
+      value: completed,
+      hint: 'đã hoàn thành',
+      hintClass: 'text-sky-600',
+      icon: CheckBadgeIcon,
+      iconBg: 'bg-sky-50',
+      iconText: 'text-sky-600',
+    },
+    {
+      key: 'days',
+      value: operatingDays,
+      hint: 'ngày vận hành',
+      hintClass: 'text-violet-600',
+      icon: CalendarDaysIcon,
+      iconBg: 'bg-violet-50',
+      iconText: 'text-violet-600',
+    },
   ]
 })
 
@@ -419,9 +450,6 @@ function goCreate() {
 function goWorkspace(id) {
   router.push({ name: 'tpProgramWorkspace', params: { id } })
 }
-function goNotifications() {
-  router.push({ name: 'notificationsHub' })
-}
 
 function statusLabel(s) {
   return {
@@ -433,7 +461,7 @@ function statusLabel(s) {
   }[s] || s
 }
 function statusClass(s) {
-  const base = 'inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium '
+  const base = 'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium '
   return base + ({
     draft: 'bg-slate-100 text-slate-600',
     active: 'bg-emerald-50 text-emerald-700',

@@ -1,41 +1,132 @@
 <template>
-  <div class="space-y-4">
-    <div v-if="program" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <button class="text-xs text-slate-400 hover:text-slate-600" @click="goList">← Danh sách chương trình</button>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">{{ program.name }}</h1>
-        <p class="text-xs text-slate-500">{{ program.code }} · {{ program.start_date }} → {{ program.end_date }}</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <span :class="statusClass(program.status)">{{ statusLabel(program.status) }}</span>
-        <Button v-if="program.status === 'draft' || program.status === 'paused'" variant="secondary" @click="lifecycle('activate')">Kích hoạt</Button>
-        <Button v-if="program.status === 'active'" variant="secondary" @click="lifecycle('pause')">Tạm dừng</Button>
-        <Button v-if="program.status !== 'cancelled'" variant="danger" @click="lifecycle('cancel')">Hủy</Button>
-      </div>
+  <div class="space-y-5 pb-10">
+    <!-- Loading -->
+    <div v-if="!program" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-20 text-base text-slate-500">
+      <ArrowPathIcon class="mr-2 h-6 w-6 animate-spin" /> Đang tải chương trình…
     </div>
 
-    <div class="flex gap-1 overflow-x-auto border-b border-slate-200">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        :class="[
-          'whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium',
-          active === tab.key ? 'border-va-800 text-va-900' : 'border-transparent text-slate-500 hover:text-slate-700',
-        ]"
-        @click="active = tab.key"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
+    <template v-else>
+      <!-- Header banner -->
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="relative bg-gradient-to-br from-va-800 to-va-900 px-5 py-5 sm:px-6">
+          <button
+            class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-white/70 transition hover:text-white"
+            @click="goList"
+          >
+            <ArrowLeftIcon class="h-4 w-4" /> Danh sách chương trình
+          </button>
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h1 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">{{ program.name }}</h1>
+                <span :class="statusBadge(program.status)">
+                  <span class="h-1.5 w-1.5 rounded-full bg-current opacity-80"></span>
+                  {{ statusLabel(program.status) }}
+                </span>
+              </div>
+              <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/70">
+                <span class="font-mono">{{ program.code }}</span>
+                <span v-if="program.start_date">· {{ program.start_date }} → {{ program.end_date }}</span>
+                <span v-if="program.responsible_user_name">· Phụ trách: {{ program.responsible_user_name }}</span>
+              </p>
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+              <button
+                v-if="program.status === 'draft' || program.status === 'paused'"
+                class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-va-900 shadow-sm transition hover:bg-white/90"
+                @click="lifecycle('activate')"
+              >
+                <BoltIcon class="h-4 w-4" /> Kích hoạt
+              </button>
+              <button
+                v-if="program.status === 'active'"
+                class="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 transition hover:bg-white/25"
+                @click="lifecycle('pause')"
+              >
+                <PauseIcon class="h-4 w-4" /> Tạm dừng
+              </button>
+              <button
+                v-if="program.status !== 'cancelled'"
+                class="inline-flex items-center gap-1.5 rounded-xl bg-rose-500/90 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-500"
+                @click="lifecycle('cancel')"
+              >
+                <XMarkIcon class="h-4 w-4" /> Hủy
+              </button>
+            </div>
+          </div>
+        </div>
 
-    <component :is="activeComponent" v-if="program" :program="program" @refresh="load" />
+        <!-- Quick facts -->
+        <div class="grid grid-cols-2 divide-x divide-slate-100 border-t border-slate-100 sm:grid-cols-4">
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <UserGroupIcon class="h-4 w-4" /> Học sinh
+            </div>
+            <div class="mt-0.5 text-xl font-bold text-slate-900">{{ program.enrolled_count ?? 0 }}</div>
+          </div>
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <CalendarDaysIcon class="h-4 w-4" /> Ngày vận hành
+            </div>
+            <div class="mt-0.5 text-xl font-bold text-slate-900">{{ program.day_count ?? 0 }}</div>
+          </div>
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <ClockIcon class="h-4 w-4" /> Khung giờ
+            </div>
+            <div class="mt-0.5 truncate text-xl font-bold text-slate-900">{{ timeRange }}</div>
+          </div>
+          <div class="px-5 py-3.5">
+            <div class="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <MapPinIcon class="h-4 w-4" /> Tuyến
+            </div>
+            <div class="mt-0.5 truncate text-sm font-semibold text-slate-700">{{ program.origin_name || '—' }} → {{ program.destination_name || 'Trường' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="[
+            'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition',
+            active === tab.key ? 'bg-va-800 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
+          ]"
+          @click="active = tab.key"
+        >
+          <component :is="tab.icon" class="h-4 w-4" />
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <component :is="activeComponent" :program="program" @refresh="load" />
+    </template>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Button from '../../components/ui/Button.vue'
+import {
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  BoltIcon,
+  PauseIcon,
+  XMarkIcon,
+  UserGroupIcon,
+  CalendarDaysIcon,
+  ClockIcon,
+  MapPinIcon,
+  ChartBarIcon,
+  CalendarIcon,
+  UsersIcon,
+  ClipboardDocumentCheckIcon,
+  IdentificationIcon,
+  BanknotesIcon,
+  DocumentChartBarIcon,
+} from '@heroicons/vue/24/outline'
 import { getProgram, activateProgram, pauseProgram, cancelProgram } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
@@ -46,7 +137,6 @@ import AttendanceTab from './tabs/AttendanceTab.vue'
 import DriverAssignmentTab from './tabs/DriverAssignmentTab.vue'
 import CostTab from './tabs/CostTab.vue'
 import ReportsTab from './tabs/ReportsTab.vue'
-import AuditTab from './tabs/AuditTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,17 +144,24 @@ const program = ref(null)
 const active = ref('overview')
 
 const tabs = [
-  { key: 'overview', label: 'Tổng quan', comp: OverviewTab },
-  { key: 'schedule', label: 'Lịch', comp: ScheduleTab },
-  { key: 'students', label: 'Học sinh', comp: StudentsTab },
-  { key: 'attendance', label: 'Điểm danh', comp: AttendanceTab },
-  { key: 'driver', label: 'Tài xế', comp: DriverAssignmentTab },
-  { key: 'cost', label: 'Chi phí', comp: CostTab },
-  { key: 'reports', label: 'Báo cáo', comp: ReportsTab },
-  { key: 'audit', label: 'Nhật ký', comp: AuditTab },
+  { key: 'overview', label: 'Tổng quan', comp: OverviewTab, icon: ChartBarIcon },
+  { key: 'schedule', label: 'Lịch', comp: ScheduleTab, icon: CalendarIcon },
+  { key: 'students', label: 'Học sinh', comp: StudentsTab, icon: UsersIcon },
+  { key: 'attendance', label: 'Điểm danh', comp: AttendanceTab, icon: ClipboardDocumentCheckIcon },
+  { key: 'driver', label: 'Tài xế', comp: DriverAssignmentTab, icon: IdentificationIcon },
+  { key: 'cost', label: 'Chi phí', comp: CostTab, icon: BanknotesIcon },
+  { key: 'reports', label: 'Báo cáo', comp: ReportsTab, icon: DocumentChartBarIcon },
 ]
 
 const activeComponent = computed(() => tabs.find((t) => t.key === active.value)?.comp)
+
+const timeRange = computed(() => {
+  const fmt = (t) => (t ? String(t).slice(0, 5) : null)
+  const a = fmt(program.value?.departure_time)
+  const b = fmt(program.value?.return_time)
+  if (a && b) return `${a} – ${b}`
+  return a || '—'
+})
 
 async function load() {
   try {
@@ -96,9 +193,15 @@ function goList() {
 function statusLabel(s) {
   return { draft: 'Nháp', active: 'Đang chạy', paused: 'Tạm dừng', completed: 'Hoàn thành', cancelled: 'Đã hủy' }[s] || s
 }
-function statusClass(s) {
-  const base = 'inline-flex rounded-full px-2 py-0.5 text-xs font-medium '
-  return base + ({ draft: 'bg-slate-100 text-slate-600', active: 'bg-emerald-100 text-emerald-700', paused: 'bg-amber-100 text-amber-700', completed: 'bg-sky-100 text-sky-700', cancelled: 'bg-rose-100 text-rose-700' }[s] || 'bg-slate-100 text-slate-600')
+function statusBadge(s) {
+  const base = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold '
+  return base + ({
+    draft: 'bg-white/20 text-white',
+    active: 'bg-emerald-400/90 text-emerald-950',
+    paused: 'bg-amber-300/90 text-amber-950',
+    completed: 'bg-sky-300/90 text-sky-950',
+    cancelled: 'bg-rose-400/90 text-rose-950',
+  }[s] || 'bg-white/20 text-white')
 }
 
 onMounted(load)

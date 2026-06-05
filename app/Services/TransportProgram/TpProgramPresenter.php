@@ -34,6 +34,7 @@ class TpProgramPresenter
             'enrolled_count' => $program->enrollments_count,
             'responsible_user_id' => $program->responsible_user_id,
             'responsible_user_name' => $program->responsibleUser?->name,
+            'settings' => $program->settings ?? [],
             'created_at' => $program->created_at?->toIso8601String(),
         ];
     }
