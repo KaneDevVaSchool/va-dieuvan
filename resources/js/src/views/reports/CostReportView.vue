@@ -1,7 +1,6 @@
 ﻿<template>
   <div class="cost-report-page space-y-5 pb-14 text-slate-900 dark:text-slate-100">
 
-    <!-- â”€â”€ PAGE HEADING â”€â”€ -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
@@ -19,7 +18,7 @@
           @click="doExportXlsx"
         >
           <span v-if="exporting === 'xlsx'" class="inline-block size-4 animate-spin rounded-full border-2 border-emerald-300 border-t-emerald-700" />
-          <span v-else class="text-base leading-none">ðŸ“Š</span>
+          <TableCellsIcon v-else class="size-4 shrink-0" aria-hidden="true" />
           {{ t('cost_report.btn_export_xlsx') }}
         </button>
         <button
@@ -29,17 +28,15 @@
           @click="doExportPdf"
         >
           <span v-if="exporting === 'pdf'" class="inline-block size-4 animate-spin rounded-full border-2 border-rose-300 border-t-rose-700" />
-          <span v-else class="text-base leading-none">ðŸ“„</span>
+          <DocumentTextIcon v-else class="size-4 shrink-0" aria-hidden="true" />
           {{ t('cost_report.btn_export_pdf') }}
         </button>
       </div>
     </div>
 
-    <!-- â”€â”€ FILTER TOOLBAR â”€â”€ -->
     <AppFilterBar>
       <div ref="filterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
 
-        <!-- Funnel summary â”€ -->
         <details ref="funnelRef" class="group relative">
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
@@ -61,22 +58,43 @@
               <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                 <li v-if="filters.trip_type" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('cost_report.filter_trip_type') }}</span>
-                  <span class="font-medium">{{ TRIP_TYPE_LABELS[filters.trip_type] }}</span>
+                  <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
                 </li>
                 <li v-if="filters.status" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
-                  <span class="font-medium">{{ STATUS_LABELS[filters.status] ?? filters.status }}</span>
+                  <span class="font-medium">{{ statusLabel(filters.status) }}</span>
                 </li>
                 <li v-if="filters.fleet_mode" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_fleet') }}</span>
-                  <span class="font-medium">{{ FLEET_LABELS[filters.fleet_mode] }}</span>
+                  <span class="font-medium">{{ fleetModeLabel(filters.fleet_mode) }}</span>
                 </li>
                 <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('cost_report.filter_date') }}</span>
-                  <span class="font-medium">{{ filters.from || 'â€¦' }} â†’ {{ filters.to || 'â€¦' }}</span>
+                  <span class="font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
                 </li>
                 <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">{{ t('filter_bar.empty') }}</li>
               </ul>
+              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('trips_page.filter_show_controls_title') }}
+                </p>
+                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="fd in filterControlDefs" :key="'cost-report-vis-' + fd.id" class="flex items-start gap-2">
+                    <input
+                      :id="'cost-report-filter-vis-' + fd.id"
+                      v-model="filterControlVisible[fd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                    />
+                    <label
+                      :for="'cost-report-filter-vis-' + fd.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ fd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
               <button
                 type="button"
                 class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -89,8 +107,8 @@
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-          <!-- Date range â”€ -->
           <AppFilterDropdown
+            v-if="filterControlVisible.date"
             root-class="shrink-0"
             show-chip-label
             :label="t('cost_report.filter_date')"
@@ -100,17 +118,17 @@
           >
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input v-model="filters.from" type="date" class="cr-input h-9 w-full text-sm sm:w-auto" @change="onFilterChange" />
-              <span class="hidden text-slate-300 sm:inline dark:text-slate-600">â€”</span>
+              <span class="hidden text-slate-300 sm:inline dark:text-slate-600">—</span>
               <input v-model="filters.to" type="date" class="cr-input h-9 w-full text-sm sm:w-auto" @change="onFilterChange" />
             </div>
           </AppFilterDropdown>
 
-          <!-- Trip type â”€ -->
           <AppFilterDropdown
+            v-if="filterControlVisible.trip_type"
             root-class="shrink-0"
             show-chip-label
             :label="t('cost_report.filter_trip_type')"
-            :summary-text="filters.trip_type ? TRIP_TYPE_LABELS[filters.trip_type] : t('filter_bar.all')"
+            :summary-text="filters.trip_type ? labelTripType(filters.trip_type) : t('filter_bar.all')"
             panel-class="min-w-[200px] py-1"
           >
             <ul class="space-y-0.5 px-1 py-1">
@@ -122,12 +140,12 @@
             </ul>
           </AppFilterDropdown>
 
-          <!-- Status â”€ -->
           <AppFilterDropdown
+            v-if="filterControlVisible.status"
             root-class="shrink-0"
             show-chip-label
             :label="t('filter_bar.status')"
-            :summary-text="filters.status ? (STATUS_LABELS[filters.status] ?? filters.status) : t('filter_bar.all')"
+            :summary-text="filters.status ? statusLabel(filters.status) : t('filter_bar.all')"
             panel-class="min-w-[200px] py-1"
           >
             <ul class="space-y-0.5 px-1 py-1">
@@ -139,12 +157,12 @@
             </ul>
           </AppFilterDropdown>
 
-          <!-- Fleet mode â”€ -->
           <AppFilterDropdown
+            v-if="filterControlVisible.fleet_mode"
             root-class="shrink-0"
             show-chip-label
             :label="t('dashboard_analytics.filter_fleet')"
-            :summary-text="filters.fleet_mode ? FLEET_LABELS[filters.fleet_mode] : t('filter_bar.all')"
+            :summary-text="filters.fleet_mode ? fleetModeLabel(filters.fleet_mode) : t('filter_bar.all')"
             panel-class="min-w-[200px] py-1"
           >
             <ul class="space-y-0.5 px-1 py-1">
@@ -157,7 +175,6 @@
           </AppFilterDropdown>
         </div>
 
-        <!-- Clear + refresh â”€ -->
         <div class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3">
           <button
             type="button"
@@ -183,7 +200,6 @@
       </div>
     </AppFilterBar>
 
-    <!-- â”€â”€ KPI CARDS â”€â”€ -->
     <section aria-labelledby="cr-kpi">
       <h2 id="cr-kpi" class="mb-3 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('cost_report.section_kpi') }}
@@ -194,7 +210,7 @@
           <div class="mt-1.5 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
             <template v-if="stats">{{ formatVnd(stats.total_amount) }}</template>
             <template v-else-if="loading"><span class="inline-block h-6 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>â€”</template>
+            <template v-else>—</template>
           </div>
         </div>
         <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
@@ -202,7 +218,7 @@
           <div class="mt-1.5 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
             <template v-if="stats">{{ stats.count.toLocaleString('vi-VN') }}</template>
             <template v-else-if="loading"><span class="inline-block h-6 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>â€”</template>
+            <template v-else>—</template>
           </div>
         </div>
         <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
@@ -210,7 +226,7 @@
           <div class="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">
             <template v-if="stats && topCategory">{{ topCategory }}</template>
             <template v-else-if="loading"><span class="inline-block h-6 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>â€”</template>
+            <template v-else>—</template>
           </div>
         </div>
         <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
@@ -218,39 +234,33 @@
           <div class="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">
             <template v-if="stats && topProvider">{{ topProvider }}</template>
             <template v-else-if="loading"><span class="inline-block h-6 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>â€”</template>
+            <template v-else>—</template>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- â”€â”€ CHARTS â”€â”€ -->
     <section v-if="stats && !loading" aria-labelledby="cr-charts" class="space-y-3">
       <h2 id="cr-charts" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('cost_report.section_charts') }}
       </h2>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <!-- By category â”€ -->
         <div class="cr-chart-card">
           <p class="cr-chart-title">{{ t('cost_report.chart_by_category') }}</p>
           <DashboardEChart :option="chartByCategory" height="220px" :aria-label="t('cost_report.chart_by_category')" />
         </div>
-        <!-- By status â”€ -->
         <div class="cr-chart-card">
           <p class="cr-chart-title">{{ t('cost_report.chart_by_status') }}</p>
           <DashboardEChart :option="chartByStatus" height="220px" :aria-label="t('cost_report.chart_by_status')" />
         </div>
-        <!-- By provider â”€ -->
         <div class="cr-chart-card">
           <p class="cr-chart-title">{{ t('cost_report.chart_by_provider') }}</p>
           <DashboardEChart :option="chartByProvider" height="220px" :aria-label="t('cost_report.chart_by_provider')" />
         </div>
-        <!-- By month (trend) â”€ -->
         <div v-if="stats.by_month && stats.by_month.length > 1" class="cr-chart-card lg:col-span-2 xl:col-span-2">
           <p class="cr-chart-title">{{ t('cost_report.chart_trend') }}</p>
           <DashboardEChart :option="chartByMonth" height="220px" :aria-label="t('cost_report.chart_trend')" />
         </div>
-        <!-- By unit â”€ -->
         <div v-if="stats.by_unit && stats.by_unit.length" class="cr-chart-card">
           <p class="cr-chart-title">{{ t('cost_report.chart_by_unit') }}</p>
           <DashboardEChart :option="chartByUnit" height="220px" :aria-label="t('cost_report.chart_by_unit')" />
@@ -258,14 +268,63 @@
       </div>
     </section>
 
-    <!-- â”€â”€ DETAIL TABLE â”€â”€ -->
     <section aria-labelledby="cr-table-title">
       <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-        <div class="flex items-center justify-between border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
+        <div ref="detailTableToolbarRef" class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
           <h2 id="cr-table-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
             {{ t('cost_report.table_title') }}
             <span v-if="rows.length" class="ml-1 text-xs font-normal text-slate-500">({{ rows.length }})</span>
           </h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="inline-flex shrink-0 items-center gap-1.5">
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}:</span>
+              <select
+                v-model.number="detailPerPage"
+                class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+                :aria-label="t('filter_bar.per_page')"
+                @change="onDetailPerPageChange"
+              >
+                <option :value="5">5</option>
+                <option :value="10">10</option>
+                <option :value="15">15</option>
+                <option :value="20">20</option>
+              </select>
+              <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('costs_page.per_page_unit') }}</span>
+            </label>
+            <details ref="columnPickerRef" class="group relative shrink-0">
+              <summary
+                class="flex cursor-pointer list-none items-center rounded-lg border border-slate-200/90 bg-white px-2 py-1.5 text-slate-700 shadow-sm transition hover:border-teal-200/70 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+                :title="t('costs_page.column_visibility_title')"
+                :aria-label="t('costs_page.column_visibility_title')"
+              >
+                <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+              </summary>
+              <div
+                class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[240px] rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
+                @click.stop
+              >
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  {{ t('costs_page.column_visibility_title') }}
+                </p>
+                <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto pr-0.5">
+                  <li v-for="cd in colControlDefs" :key="'cost-report-col-vis-' + cd.id" class="flex items-start gap-2">
+                    <input
+                      :id="'cost-report-col-vis-' + cd.id"
+                      v-model="colVisible[cd.id]"
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                    />
+                    <label
+                      :for="'cost-report-col-vis-' + cd.id"
+                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                    >
+                      {{ cd.label }}
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </details>
+          </div>
         </div>
 
         <div class="overflow-x-auto overscroll-x-contain">
@@ -273,53 +332,53 @@
             <thead>
               <tr>
                 <th class="cr-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
-                <th class="cr-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
-                <th class="cr-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
-                <th class="cr-th min-w-[9rem]">{{ t('costs_page.col_submitter') }}</th>
-                <th class="cr-th min-w-[16rem]">{{ t('costs_page.col_description') }}</th>
-                <th class="cr-th min-w-[10rem]">{{ t('costs_page.col_fleet_source') }}</th>
-                <th class="cr-th min-w-[9rem]">{{ t('costs_page.col_provider') }}</th>
-                <th class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
-                <th class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
-                <th class="cr-th cr-th--money min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
-                <th class="cr-th min-w-[8rem]">{{ t('filter_bar.status') }}</th>
+                <th v-if="colVisible.unit" class="cr-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
+                <th v-if="colVisible.category" class="cr-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
+                <th v-if="colVisible.submitter" class="cr-th min-w-[9rem]">{{ t('costs_page.col_submitter') }}</th>
+                <th v-if="colVisible.description" class="cr-th min-w-[16rem]">{{ t('costs_page.col_description') }}</th>
+                <th v-if="colVisible.fleet_source" class="cr-th min-w-[10rem]">{{ t('costs_page.col_fleet_source') }}</th>
+                <th v-if="colVisible.provider" class="cr-th min-w-[9rem]">{{ t('costs_page.col_provider') }}</th>
+                <th v-if="colVisible.unit_price" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
+                <th v-if="colVisible.extra_fee" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
+                <th v-if="colVisible.payment" class="cr-th cr-th--money min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
+                <th v-if="colVisible.status" class="cr-th min-w-[8rem]">{{ t('filter_bar.status') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="(row, idx) in rows"
+                v-for="(row, idx) in paginatedRows"
                 :key="row.id"
                 class="cr-data-row"
                 :class="[idx % 2 === 1 ? 'cr-data-row--alt' : '', row.source === 'estimate' ? 'cr-data-row--estimate' : '']"
               >
-                <td class="cr-td text-center tabular-nums text-slate-500">{{ idx + 1 }}</td>
-                <td class="cr-td"><span class="cr-pill">{{ row.unit || 'â€”' }}</span></td>
-                <td class="cr-td">
+                <td class="cr-td text-center tabular-nums text-slate-500">{{ detailRowNo(idx) }}</td>
+                <td v-if="colVisible.unit" class="cr-td"><span class="cr-pill">{{ row.unit || '—' }}</span></td>
+                <td v-if="colVisible.category" class="cr-td">
                   <span v-if="row.category" class="cr-pill" :class="TRIP_TYPE_PILL_CLASSES[row.category] ?? ''">
-                    {{ TRIP_TYPE_LABELS[row.category] ?? row.category }}
+                    {{ labelTripType(row.category) }}
                   </span>
-                  <span v-else class="text-slate-400">â€”</span>
+                  <span v-else class="text-slate-400">—</span>
                 </td>
-                <td class="cr-td">{{ row.submitter || 'â€”' }}</td>
-                <td class="cr-td max-w-[22rem]">
-                  <span class="line-clamp-2">{{ row.description || 'â€”' }}</span>
+                <td v-if="colVisible.submitter" class="cr-td">{{ row.submitter || '—' }}</td>
+                <td v-if="colVisible.description" class="cr-td max-w-[22rem]">
+                  <span class="line-clamp-2">{{ row.description || '—' }}</span>
                   <span
                     v-if="row.source === 'estimate'"
                     class="mt-0.5 inline-flex rounded-full bg-violet-100/90 px-2 py-px text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100"
-                  >Æ¯á»›c tÃ­nh</span>
+                  >{{ t('cost_report.badge_estimate') }}</span>
                 </td>
-                <td class="cr-td whitespace-nowrap"><span class="cr-pill">{{ row.fleet_source || 'â€”' }}</span></td>
-                <td class="cr-td">{{ row.provider || 'â€”' }}</td>
-                <td class="cr-td cr-td--money">
-                  {{ row.unit_price != null && row.unit_price > 0 ? formatVnd(row.unit_price) : 'â€”' }}
+                <td v-if="colVisible.fleet_source" class="cr-td whitespace-nowrap"><span class="cr-pill">{{ row.fleet_source || '—' }}</span></td>
+                <td v-if="colVisible.provider" class="cr-td">{{ row.provider || '—' }}</td>
+                <td v-if="colVisible.unit_price" class="cr-td cr-td--money">
+                  {{ row.unit_price != null && row.unit_price > 0 ? formatVnd(row.unit_price) : '—' }}
                 </td>
-                <td class="cr-td cr-td--money">
-                  {{ row.extra_fee != null && row.extra_fee > 0 ? formatVnd(row.extra_fee) : 'â€”' }}
+                <td v-if="colVisible.extra_fee" class="cr-td cr-td--money">
+                  {{ row.extra_fee != null && row.extra_fee > 0 ? formatVnd(row.extra_fee) : '—' }}
                 </td>
-                <td class="cr-td cr-td--money font-semibold text-slate-900 dark:text-slate-100">{{ formatVnd(row.amount) }}</td>
-                <td class="cr-td">
+                <td v-if="colVisible.payment" class="cr-td cr-td--money font-semibold text-slate-900 dark:text-slate-100">{{ formatVnd(row.amount) }}</td>
+                <td v-if="colVisible.status" class="cr-td">
                   <span class="cr-pill" :class="STATUS_PILL_CLASSES[row.status] ?? 'bg-slate-100 text-slate-700'">
-                    {{ row.status_label || row.status || 'â€”' }}
+                    {{ row.status_label || statusLabel(row.status) || '—' }}
                   </span>
                 </td>
               </tr>
@@ -335,17 +394,45 @@
           </div>
         </div>
 
-        <!-- Total footer â”€ -->
-        <div v-if="rows.length" class="flex items-center justify-end gap-6 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-800/50">
-          <span class="text-slate-500 dark:text-slate-400">{{ t('cost_report.total_rows', { n: rows.length }) }}</span>
-          <span class="font-semibold text-slate-800 dark:text-slate-100">
-            {{ t('cost_report.total_amount_label') }}: <span class="tabular-nums text-va-800 dark:text-va-400">{{ formatVnd(totalAmount) }}</span>
+        <div v-if="rows.length" class="flex flex-col gap-3 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/50">
+          <span class="text-sm text-slate-600 dark:text-slate-400">
+            {{
+              t('costs_page.pagination_of', {
+                current: detailPage,
+                last: detailLastPage,
+              })
+            }}
+            <span class="text-slate-400"> · </span>
+            {{ rows.length }} {{ t('costs_page.pagination_records_suffix') }}
           </span>
+          <div class="flex flex-wrap items-center gap-4">
+            <span class="text-sm text-slate-500 dark:text-slate-400">
+              {{ t('cost_report.total_amount_label') }}:
+              <span class="font-semibold tabular-nums text-va-800 dark:text-va-400">{{ formatVnd(totalAmount) }}</span>
+            </span>
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                :disabled="loading || detailPage <= 1"
+                @click="detailPageStep(-1)"
+              >
+                {{ t('costs_page.prev') }}
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                :disabled="loading || detailPage >= detailLastPage"
+                @click="detailPageStep(1)"
+              >
+                {{ t('costs_page.next') }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Export error â”€ -->
     <p v-if="exportError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
       {{ exportError }}
     </p>
@@ -353,128 +440,194 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { FunnelIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import {
+  FunnelIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+  ViewColumnsIcon,
+  TableCellsIcon,
+  DocumentTextIcon,
+} from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { getTripCostReport, downloadTripCostXlsx, downloadTripCostPdf } from '../../api/reports'
-import { formatVnd } from '../../util/labels'
+import { formatVnd, labelTripType } from '../../util/labels'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Constants
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-const TRIP_TYPE_LABELS = {
-  point_to_point: 'Äiá»ƒm â€” Äiá»ƒm',
-  business:       'CÃ´ng tÃ¡c',
-  cargo:          'HÃ ng hÃ³a',
-  door_to_door:   'ÄÆ°a Ä‘Ã³n',
-}
+const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
+const FLEET_MODES = ['internal', 'vendor_hire', 'taxi', 'unspecified']
+const STATUS_FILTER_KEYS = ['draft', 'submitted', 'confirmed', 'rejected', 'estimate']
 
 const TRIP_TYPE_PILL_CLASSES = {
   point_to_point: 'bg-sky-100/80 text-sky-800',
-  cargo:          'bg-amber-100/80 text-amber-800',
-  business:       'bg-violet-100/80 text-violet-800',
-  door_to_door:   'bg-teal-100/80 text-teal-800',
-}
-
-const STATUS_LABELS = {
-  draft:     'NhÃ¡p',
-  submitted: 'Chá» duyá»‡t',
-  confirmed: 'ÄÃ£ duyá»‡t',
-  rejected:  'Tá»« chá»‘i',
-  estimate:  'Æ¯á»›c tÃ­nh phiáº¿u',
+  cargo: 'bg-amber-100/80 text-amber-800',
+  business: 'bg-violet-100/80 text-violet-800',
+  door_to_door: 'bg-teal-100/80 text-teal-800',
 }
 
 const STATUS_PILL_CLASSES = {
   confirmed: 'bg-emerald-100 text-emerald-800',
-  rejected:  'bg-rose-100 text-rose-800',
+  rejected: 'bg-rose-100 text-rose-800',
   submitted: 'bg-blue-100 text-blue-800',
-  estimate:  'bg-violet-100/90 text-violet-900',
-  draft:     'bg-slate-100 text-slate-700',
-}
-
-const FLEET_LABELS = {
-  internal:    'Xe ná»™i bá»™',
-  vendor_hire: 'ThuÃª xe NCC',
-  taxi:        'Taxi',
-  unspecified: 'KhÃ´ng xÃ¡c Ä‘á»‹nh',
+  estimate: 'bg-violet-100/90 text-violet-900',
+  draft: 'bg-slate-100 text-slate-700',
 }
 
 const CHART_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#f97316']
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// State
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const COST_REPORT_FILTER_VISIBILITY_KEY = 'va.cost_report.filter_control_visibility_v1'
+const COST_REPORT_COL_VISIBILITY_KEY = 'va.cost_report.col_visibility_v1'
+const COST_REPORT_DETAIL_PER_PAGE_KEY = 'va.cost_report.detail_per_page_v1'
 
-const loading   = ref(false)
-const exporting = ref(null)    // 'xlsx' | 'pdf' | null
+const FILTER_CONTROL_IDS = ['date', 'trip_type', 'status', 'fleet_mode']
+const COL_IDS = [
+  'unit',
+  'category',
+  'submitter',
+  'description',
+  'fleet_source',
+  'provider',
+  'unit_price',
+  'extra_fee',
+  'payment',
+  'status',
+]
+
+const DEFAULT_DETAIL_PER_PAGE = 10
+
+function defaultFilterControlVisibility() {
+  return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, true]))
+}
+
+function defaultColVisibility() {
+  return Object.fromEntries(COL_IDS.map((id) => [id, true]))
+}
+
+function statusLabel(s) {
+  if (!s) return '—'
+  if (s === 'estimate') return t('cost_report.badge_estimate')
+  const key = `dashboard_analytics.cost_status_${s}`
+  return te(key) ? t(key) : s
+}
+
+function fleetModeLabel(mode) {
+  if (!mode) return t('filter_bar.all')
+  const key = `dashboard_analytics.fleet_${mode}`
+  return te(key) ? t(key) : mode
+}
+
+function tableColLabel(colId) {
+  const keys = {
+    unit: 'col_unit',
+    category: 'col_category',
+    submitter: 'col_submitter',
+    description: 'col_description',
+    fleet_source: 'col_fleet_source',
+    provider: 'col_provider',
+    unit_price: 'col_unit_price',
+    extra_fee: 'col_extra_fee',
+    payment: 'col_payment',
+    status: 'col_status',
+  }
+  const k = keys[colId]
+  if (k === 'col_status') return t('filter_bar.status')
+  return k ? t(`costs_page.${k}`) : colId
+}
+
+const loading = ref(false)
+const exporting = ref(null)
 const exportError = ref('')
 
 /** @type {import('vue').Ref<Record<string, any>|null>} */
 const stats = ref(null)
 /** @type {import('vue').Ref<Array<Record<string, any>>>} */
-const rows  = ref([])
+const rows = ref([])
 
 const filters = reactive({
-  from:       '',
-  to:         '',
-  trip_type:  '',
-  status:     '',
+  from: '',
+  to: '',
+  trip_type: '',
+  status: '',
   fleet_mode: '',
 })
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Filter toolbar refs (auto-close)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const filterControlVisible = reactive(defaultFilterControlVisibility())
+const colVisible = reactive(defaultColVisibility())
 
-const funnelRef    = ref(null)
+const detailPage = ref(1)
+const detailPerPage = ref(DEFAULT_DETAIL_PER_PAGE)
+
+const funnelRef = ref(null)
 const filterBarRef = ref(null)
+const columnPickerRef = ref(null)
+const detailTableToolbarRef = ref(null)
 useDetailsAutoClose(funnelRef)
+useDetailsAutoClose(columnPickerRef)
 useDetailsAutoCloseWithin(filterBarRef)
+useDetailsAutoCloseWithin(detailTableToolbarRef)
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Filter options
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const filterControlDefs = computed(() => [
+  { id: 'date', label: t('cost_report.filter_date') },
+  { id: 'trip_type', label: t('cost_report.filter_trip_type') },
+  { id: 'status', label: t('filter_bar.status') },
+  { id: 'fleet_mode', label: t('dashboard_analytics.filter_fleet') },
+])
+
+const colControlDefs = computed(() => COL_IDS.map((id) => ({ id, label: tableColLabel(id) })))
 
 const tripTypeOptions = computed(() => [
   { value: '', label: t('filter_bar.all') },
-  ...Object.entries(TRIP_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+  ...TRIP_TYPE_SLUGS.map((value) => ({ value, label: labelTripType(value) })),
 ])
 
 const statusOptions = computed(() => [
   { value: '', label: t('filter_bar.all') },
-  ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })),
+  ...STATUS_FILTER_KEYS.map((value) => ({ value, label: statusLabel(value) })),
 ])
 
 const fleetOptions = computed(() => [
   { value: '', label: t('filter_bar.all') },
-  ...Object.entries(FLEET_LABELS).map(([value, label]) => ({ value, label })),
+  ...FLEET_MODES.map((value) => ({ value, label: fleetModeLabel(value) })),
 ])
 
 const filterDateSummary = computed(() => {
   if (!filters.from && !filters.to) return t('filter_bar.all')
-  return `${filters.from || 'â€¦'} â†’ ${filters.to || 'â€¦'}`
+  return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
 const activeFilterCount = computed(() => {
   let n = 0
   if (filters.from || filters.to) n++
-  if (filters.trip_type)  n++
-  if (filters.status)     n++
+  if (filters.trip_type) n++
+  if (filters.status) n++
   if (filters.fleet_mode) n++
   return n
 })
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Derived KPI
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const detailLastPage = computed(() => {
+  const total = rows.value.length
+  if (!total) return 1
+  return Math.max(1, Math.ceil(total / detailPerPage.value))
+})
+
+const paginatedRows = computed(() => {
+  const list = rows.value
+  if (!list.length) return []
+  const page = Math.min(detailPage.value, detailLastPage.value)
+  const start = (page - 1) * detailPerPage.value
+  return list.slice(start, start + detailPerPage.value)
+})
+
+function detailRowNo(idx) {
+  const page = Math.min(detailPage.value, detailLastPage.value)
+  return (page - 1) * detailPerPage.value + idx + 1
+}
 
 const topCategory = computed(() => {
   const list = stats.value?.by_category ?? []
@@ -492,15 +645,11 @@ const topProvider = computed(() => {
 
 const totalAmount = computed(() => stats.value?.total_amount ?? 0)
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// ECharts options
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 const tooltipMoney = {
   trigger: 'item',
   formatter: (p) => {
     const v = typeof p.value === 'number' ? p.value : (p.data?.value ?? 0)
-    return `${p.name}<br/><b>${Number(v).toLocaleString('vi-VN')} â‚«</b>`
+    return `${p.name}<br/><b>${Number(v).toLocaleString('vi-VN')} đ</b>`
   },
 }
 
@@ -522,23 +671,23 @@ function pieOption(dataList) {
 function barHorizontalOption(dataList, limit = 10) {
   const top = [...dataList].sort((a, b) => b.amount - a.amount).slice(0, limit)
   return {
-    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].name}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} â‚«</b>` },
+    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].name}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} đ</b>` },
     grid: { left: '4%', right: '6%', top: 10, bottom: 10, containLabel: true },
     xAxis: { type: 'value', axisLabel: { formatter: (v) => `${(v / 1000000).toFixed(0)}M`, fontSize: 9 } },
-    yAxis: { type: 'category', data: top.map(d => d.label), axisLabel: { fontSize: 9, overflow: 'truncate', width: 90 } },
+    yAxis: { type: 'category', data: top.map((d) => d.label), axisLabel: { fontSize: 9, overflow: 'truncate', width: 90 } },
     series: [{ type: 'bar', data: top.map((d, i) => ({ value: d.amount, itemStyle: { color: CHART_PALETTE[i % CHART_PALETTE.length] } })), barMaxWidth: 22 }],
   }
 }
 
 function lineOption(dataList) {
   return {
-    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].axisValue}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} â‚«</b>` },
+    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].axisValue}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} đ</b>` },
     grid: { left: '4%', right: '4%', top: 14, bottom: 24, containLabel: true },
-    xAxis: { type: 'category', data: dataList.map(d => d.key), axisLabel: { fontSize: 9, rotate: 30 } },
+    xAxis: { type: 'category', data: dataList.map((d) => d.key), axisLabel: { fontSize: 9, rotate: 30 } },
     yAxis: { type: 'value', axisLabel: { formatter: (v) => `${(v / 1000000).toFixed(0)}M`, fontSize: 9 } },
     series: [{
       type: 'line',
-      data: dataList.map(d => d.amount),
+      data: dataList.map((d) => d.amount),
       smooth: true,
       symbol: 'circle',
       symbolSize: 5,
@@ -550,21 +699,17 @@ function lineOption(dataList) {
 }
 
 const chartByCategory = computed(() => pieOption(stats.value?.by_category ?? []))
-const chartByStatus   = computed(() => pieOption(stats.value?.by_status ?? []))
+const chartByStatus = computed(() => pieOption(stats.value?.by_status ?? []))
 const chartByProvider = computed(() => barHorizontalOption(stats.value?.by_provider ?? []))
-const chartByMonth    = computed(() => lineOption(stats.value?.by_month ?? []))
-const chartByUnit     = computed(() => barHorizontalOption(stats.value?.by_unit ?? []))
-
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Data loading
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const chartByMonth = computed(() => lineOption(stats.value?.by_month ?? []))
+const chartByUnit = computed(() => barHorizontalOption(stats.value?.by_unit ?? []))
 
 function buildApiParams() {
   const p = {}
-  if (filters.from)       p.from       = filters.from
-  if (filters.to)         p.to         = filters.to
-  if (filters.trip_type)  p.trip_type  = filters.trip_type
-  if (filters.status)     p.status     = filters.status
+  if (filters.from) p.from = filters.from
+  if (filters.to) p.to = filters.to
+  if (filters.trip_type) p.trip_type = filters.trip_type
+  if (filters.status) p.status = filters.status
   if (filters.fleet_mode) p.fleet_mode = filters.fleet_mode
   return p
 }
@@ -574,7 +719,8 @@ async function reload() {
   try {
     const res = await getTripCostReport(buildApiParams())
     stats.value = res.stats
-    rows.value  = res.rows ?? []
+    rows.value = res.rows ?? []
+    detailPage.value = 1
   } catch (e) {
     showAppErrorFromApi(e, t('cost_report.load_error'))
   } finally {
@@ -589,26 +735,108 @@ function applyFilter(ev, patch) {
     const d = el.closest('details')
     if (d) d.open = false
   }
+  detailPage.value = 1
   reload()
 }
 
 function onFilterChange() {
+  detailPage.value = 1
   reload()
 }
 
 function resetFilters() {
-  filters.from       = ''
-  filters.to         = ''
-  filters.trip_type  = ''
-  filters.status     = ''
+  filters.from = ''
+  filters.to = ''
+  filters.trip_type = ''
+  filters.status = ''
   filters.fleet_mode = ''
   if (funnelRef.value) funnelRef.value.open = false
+  detailPage.value = 1
   reload()
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Export
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function detailPageStep(delta) {
+  const next = detailPage.value + delta
+  if (next < 1 || next > detailLastPage.value) return
+  detailPage.value = next
+}
+
+function onDetailPerPageChange() {
+  detailPage.value = 1
+  try {
+    localStorage.setItem(COST_REPORT_DETAIL_PER_PAGE_KEY, String(detailPerPage.value))
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadFilterControlVisibility() {
+  try {
+    const raw = localStorage.getItem(COST_REPORT_FILTER_VISIBILITY_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    const base = defaultFilterControlVisibility()
+    for (const id of FILTER_CONTROL_IDS) {
+      if (typeof o[id] === 'boolean') base[id] = o[id]
+    }
+    Object.assign(filterControlVisible, base)
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadColVisibility() {
+  try {
+    const raw = localStorage.getItem(COST_REPORT_COL_VISIBILITY_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    const base = defaultColVisibility()
+    for (const id of COL_IDS) {
+      if (typeof o[id] === 'boolean') base[id] = o[id]
+    }
+    Object.assign(colVisible, base)
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadDetailPerPage() {
+  try {
+    const raw = localStorage.getItem(COST_REPORT_DETAIL_PER_PAGE_KEY)
+    const n = Number(raw)
+    if ([5, 10, 15, 20].includes(n)) detailPerPage.value = n
+  } catch {
+    /* ignore */
+  }
+}
+
+watch(
+  filterControlVisible,
+  (v) => {
+    try {
+      localStorage.setItem(COST_REPORT_FILTER_VISIBILITY_KEY, JSON.stringify({ ...v }))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+watch(
+  colVisible,
+  (v) => {
+    try {
+      localStorage.setItem(COST_REPORT_COL_VISIBILITY_KEY, JSON.stringify({ ...v }))
+    } catch {
+      /* ignore */
+    }
+  },
+  { deep: true },
+)
+
+watch(detailLastPage, (last) => {
+  if (detailPage.value > last) detailPage.value = last
+})
 
 async function doExportXlsx() {
   if (exporting.value) return
@@ -636,9 +864,12 @@ async function doExportPdf() {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-onMounted(() => reload())
+onMounted(() => {
+  loadFilterControlVisibility()
+  loadColVisibility()
+  loadDetailPerPage()
+  reload()
+})
 </script>
 
 <style scoped>
@@ -706,4 +937,3 @@ onMounted(() => reload())
   @apply inline-flex max-w-full items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300;
 }
 </style>
-

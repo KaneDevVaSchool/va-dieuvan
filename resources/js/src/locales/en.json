@@ -3888,6 +3888,7 @@
         "load_error": "Failed to load report. Please try again.",
         "export_error": "Export failed. Please try again.",
         "total_rows": "{n} rows",
-        "total_amount_label": "Total"
+        "total_amount_label": "Total",
+        "badge_estimate": "Estimate"
     }
 }

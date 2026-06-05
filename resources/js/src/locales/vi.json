@@ -3967,6 +3967,7 @@
         "load_error": "Không thể tải báo cáo. Vui lòng thử lại.",
         "export_error": "Xuất file thất bại. Vui lòng thử lại.",
         "total_rows": "{n} dòng",
-        "total_amount_label": "Tổng cộng"
+        "total_amount_label": "Tổng cộng",
+        "badge_estimate": "Ước tính"
     }
 }
