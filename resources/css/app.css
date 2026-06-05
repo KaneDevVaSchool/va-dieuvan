@@ -15,9 +15,9 @@
 
 @layer base {
   :root {
-    --va-brand: #78001e;
-    --va-brand-dark: #5c0017;
-    --va-brand-soft: rgba(120, 0, 30, 0.14);
+    --va-brand: #9a0036;
+    --va-brand-dark: #7d0029;
+    --va-brand-soft: rgba(154, 0, 54, 0.14);
   }
 
   html {
@@ -51,7 +51,7 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-color: #5c0017;
+  background-color: #7d0029;
   padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
     max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
   transition:
@@ -72,11 +72,11 @@ body {
   inset: -35% -20%;
   background: conic-gradient(
     from 220deg at 50% 45%,
-    #78001e 0deg,
-    #9a1530 90deg,
-    #5c0017 200deg,
-    #a01835 280deg,
-    #78001e 360deg
+    #9a0036 0deg,
+    #c41450 90deg,
+    #7d0029 200deg,
+    #c81a54 280deg,
+    #9a0036 360deg
   );
   opacity: 0.95;
   animation: pwa-splash-mesh 14s linear infinite;

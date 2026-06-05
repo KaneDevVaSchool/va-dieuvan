@@ -1,6 +1,6 @@
 <template>
   <!-- Overlay che form khi đang xử lý OAuth token (tránh flash nếu fetchMe chậm > 800ms) -->
-  <div v-if="bootstrapping" class="fixed inset-0 z-[9998] bg-[#78001e]" aria-hidden="true" />
+  <div v-if="bootstrapping" class="fixed inset-0 z-[9998] bg-[#9a0036]" aria-hidden="true" />
   <div class="login-page">
     <div class="login-container">
       <div class="logo-container">
@@ -130,7 +130,7 @@ onMounted(async () => {
   min-height: 100dvh;
   min-height: 100svh;
   width: 100%;
-  background-color: #78001e;
+  background-color: #9a0036;
   display: flex;
   flex-direction: column;
   align-items: center;

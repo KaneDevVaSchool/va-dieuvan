@@ -29,12 +29,12 @@ Tài liệu đầy đủ luồng login web. File UI chính: [`LoginView.vue`](re
 
 ### Trạng thái
 
-- `bootstrapping`: overlay `#78001e` full screen khi xử lý `?token=` (tránh flash form nếu `fetchMe` chậm)
+- `bootstrapping`: overlay `#9a0036` full screen khi xử lý `?token=` (tránh flash form nếu `fetchMe` chậm)
 - `google-login-btn.is-busy`: vô hiệu click khi `bootstrapping`
 
 ### Visual (scoped CSS)
 
-- Nền brand `#78001e`, pseudo `::before` background `/images/background/background-logo.png` (filter brightness/contrast)
+- Nền brand `#9a0036`, pseudo `::before` background `/images/background/background-logo.png` (filter brightness/contrast)
 - Card trắng `.login-box`, responsive `clamp`, safe-area padding, `@media (max-height: 520px)` cho màn thấp
 - `.wave-footer`: fixed decorative layer (`z-index: 1`)
 
