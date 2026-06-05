@@ -18,28 +18,10 @@
       </p>
     </div>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between print:hidden">
-      <div>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl md:text-2xl">
-          {{ t('reports_page.hero_title') }}
-        </h1>
-      </div>
-      <div class="flex flex-col items-stretch gap-2 sm:items-end">
-        <div class="flex flex-wrap items-center gap-2">
-          <RouterLink
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-            to="/"
-          >
-            {{ t('reports_page.link_dashboard') }}
-          </RouterLink>
-          <Button v-if="summary" variant="secondary" type="button" @click="downloadExcel">
-            {{ t('reports_page.export_excel') }}
-          </Button>
-          <Button v-if="summary" variant="secondary" type="button" @click="printReport">
-            {{ t('reports_page.export_pdf') }}
-          </Button>
-        </div>
-      </div>
+    <div class="print:hidden">
+      <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl md:text-2xl">
+        {{ t('reports_page.hero_title') }}
+      </h1>
     </div>
 
     <TransportReportFilters class="print:hidden" />
@@ -255,24 +237,19 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Card from '../../components/ui/Card.vue'
-import Button from '../../components/ui/Button.vue'
 import TransportReportFilters from '../../components/reports/TransportReportFilters.vue'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import DashboardChartSection from '../../components/dashboard/DashboardChartSection.vue'
 import { useTransportReportSummary } from '../../composables/useTransportReportSummary'
-import { labelTripStatus, labelTripType, labelRequestStatus } from '../../util/labels'
-
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const {
   loading,
   loadError,
   summary,
-  summaryFilters,
   formatMoney,
   totalTrips,
   completionRate,
@@ -290,8 +267,6 @@ const {
   optRequesters,
   optPlates,
   reloadSummary,
-  activeFilterLines,
-  currentPresetLabel,
   rangeDisplayFormatted,
 } = useTransportReportSummary()
 
@@ -308,184 +283,6 @@ const avgCostPerTripDisplay = computed(() => {
   if (!trips || trips <= 0 || !sum) return '—'
   return formatMoney(sum / trips)
 })
-
-function csvEscape(cell) {
-  const s = String(cell ?? '')
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`
-  return s
-}
-
-function printReport() {
-  window.dispatchEvent(new Event('resize'))
-  nextTick(() => {
-    requestAnimationFrame(() => {
-      window.print()
-    })
-  })
-}
-
-function downloadExcel() {
-  const s = summary.value
-  if (!s) return
-
-  const lines = []
-  const pushRow = (cells) => lines.push(cells.map(csvEscape).join(','))
-  const section = (titleKey) => {
-    lines.push('')
-    lines.push(`# === ${t(titleKey)} ===`)
-  }
-
-  section('reports_page.csv_sheet_meta')
-  pushRow([t('reports_page.csv_col_key'), t('reports_page.csv_col_value')])
-  pushRow(['generated_at', new Date().toISOString()])
-  pushRow(['locale', String(locale.value ?? '')])
-  const rng = s.range ?? {}
-  pushRow(['range_from', rng.from ?? ''])
-  pushRow(['range_to', rng.to ?? ''])
-  pushRow(['range_all_time', rng.all_time ? '1' : '0'])
-
-  section('reports_page.csv_sheet_filters')
-  pushRow([t('reports_page.csv_col_key'), t('reports_page.csv_col_value')])
-  pushRow(['preset_label', currentPresetLabel.value])
-  pushRow(['range_display', rangeDisplayFormatted.value])
-  const sf = summaryFilters.value
-  Object.entries(sf).forEach(([k, v]) => {
-    if (v === undefined || v === null || v === '') return
-    pushRow([k, String(v)])
-  })
-  activeFilterLines.value.forEach((row) => {
-    pushRow([row.label, row.value])
-  })
-
-  section('reports_page.csv_sheet_trips_status')
-  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
-  const tbs = s.trips_by_status ?? {}
-  Object.entries(tbs).forEach(([k, v]) => {
-    pushRow([labelTripStatus(k), String(v)])
-  })
-
-  section('reports_page.csv_sheet_trips_fleet')
-  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
-  const tbf = s.trips_by_fleet_mode ?? {}
-  Object.entries(tbf).forEach(([k, v]) => {
-    const labMap = {
-      internal: t('reports_page.fleet_internal'),
-      vendor_hire: t('reports_page.fleet_vendor_hire'),
-      taxi: t('reports_page.fleet_taxi'),
-      unspecified: t('reports_page.fleet_unspecified'),
-    }
-    pushRow([labMap[k] ?? k, String(v)])
-  })
-
-  section('reports_page.csv_sheet_trips_type')
-  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
-  const tbt = s.trips_by_trip_type ?? {}
-  Object.entries(tbt).forEach(([k, v]) => {
-    const lab = k === 'unspecified' ? k : labelTripType(k)
-    pushRow([lab, String(v)])
-  })
-
-  section('reports_page.csv_sheet_trips_hour')
-  pushRow([t('reports_page.csv_col_hour'), t('reports_page.csv_col_count')])
-  const tbh = s.trips_by_hour
-  if (tbh && typeof tbh === 'object' && !Array.isArray(tbh)) {
-    for (let h = 0; h < 24; h++) {
-      pushRow([String(h), String(tbh[h] ?? 0)])
-    }
-  }
-
-  section('reports_page.csv_sheet_trip_completion')
-  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
-  const tc = s.trip_completion ?? {}
-  pushRow(['completed', String(tc.completed ?? '')])
-  pushRow(['total', String(tc.total ?? '')])
-  pushRow(['rate_pct', tc.rate_pct != null ? String(tc.rate_pct) : ''])
-
-  section('reports_page.csv_sheet_dispatch')
-  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_count')])
-  const dr = s.dispatch_requests_by_status ?? {}
-  Object.entries(dr).forEach(([k, v]) => {
-    pushRow([labelRequestStatus(k), String(v)])
-  })
-
-  section('reports_page.csv_sheet_costs_type')
-  pushRow([t('reports_page.csv_col_label'), t('reports_page.csv_col_amount')])
-  const cbt = s.confirmed_costs_by_type ?? {}
-  Object.entries(cbt).forEach(([k, v]) => {
-    pushRow([k, String(v)])
-  })
-
-  section('reports_page.csv_sheet_costs_pipeline')
-  pushRow([t('reports_page.csv_col_status'), t('reports_page.csv_col_amount')])
-  const cbp = s.costs_by_pipeline_status ?? {}
-  const costLab = (k) =>
-    ({
-      draft: t('reports_page.cost_status_draft'),
-      submitted: t('reports_page.cost_status_submitted'),
-      confirmed: t('reports_page.cost_status_confirmed'),
-      rejected: t('reports_page.cost_status_rejected'),
-    })[k] ?? k
-  Object.entries(cbp).forEach(([k, v]) => {
-    pushRow([costLab(k), String(v)])
-  })
-
-  section('reports_page.csv_sheet_providers')
-  pushRow([t('reports_page.csv_col_provider'), t('reports_page.csv_col_amount')])
-  providerRows.value.forEach((row) => {
-    pushRow([row.provider, String(row.total_amount ?? '')])
-  })
-
-  section('reports_page.csv_sheet_requesters')
-  pushRow([t('reports_page.csv_col_requester'), t('reports_page.csv_col_trips')])
-  const tr = s.top_requesters ?? []
-  if (Array.isArray(tr)) {
-    tr.forEach((row) => {
-      pushRow([row.requester_label ?? '', String(row.trip_count ?? '')])
-    })
-  }
-
-  section('reports_page.csv_sheet_plates')
-  pushRow([t('reports_page.csv_col_plate'), t('reports_page.csv_col_count')])
-  const tbp = s.trips_by_license_plate ?? {}
-  if (tbp && typeof tbp === 'object') {
-    Object.entries(tbp).forEach(([plate, c]) => {
-      pushRow([plate, String(c)])
-    })
-  }
-
-  section('reports_page.csv_sheet_distance')
-  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
-  pushRow(['trip_records_distance_km', String(s.trip_records_distance_km ?? '')])
-
-  section('reports_page.csv_sheet_sla')
-  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
-  pushRow(['cargo_sla_breaches', String(s.cargo_sla_breaches ?? 0)])
-
-  section('reports_page.csv_sheet_compliance')
-  pushRow([t('reports_page.csv_col_metric'), t('reports_page.csv_col_numeric')])
-  const vc = s.vehicle_compliance ?? {}
-  const flatten = (prefix, obj) => {
-    if (!obj || typeof obj !== 'object') return
-    Object.entries(obj).forEach(([k, v]) => {
-      if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
-        flatten(`${prefix}${k}.`, v)
-      } else {
-        pushRow([`${prefix}${k}`, String(v ?? '')])
-      }
-    })
-  }
-  flatten('', vc)
-
-  const tag = locale.value === 'vi' ? 'vi' : 'en'
-  const from = sf.from || 'all'
-  const to = sf.to || 'all'
-  const blob = new Blob(['\ufeff', lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = `${tag}-dispatch-report_${from}_${to}.csv`
-  a.click()
-  URL.revokeObjectURL(a.href)
-}
 
 onMounted(() => {
   reloadSummary()

@@ -1,939 +1,659 @@
 ﻿<template>
-  <div class="cost-report-page space-y-5 pb-14 text-slate-900 dark:text-slate-100">
+  <div class="freq-dash space-y-5 pb-14">
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
-          {{ t('cost_report.hero_title') }}
-        </h1>
-        <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-          {{ t('cost_report.hero_sub') }}
-        </p>
+    <!-- ============================================================
+         HEADER
+         ============================================================ -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#9b0036] text-sm font-extrabold tracking-wide text-white shadow-md" aria-hidden="true">VA</div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {{ t('driver_freq.hero_title') }}
+          </h1>
+          <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+            {{ t('driver_freq.hero_sub') }}
+          </p>
+        </div>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          :disabled="exporting"
-          class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 shadow-sm transition hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
-          @click="doExportXlsx"
-        >
-          <span v-if="exporting === 'xlsx'" class="inline-block size-4 animate-spin rounded-full border-2 border-emerald-300 border-t-emerald-700" />
-          <TableCellsIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-          {{ t('cost_report.btn_export_xlsx') }}
-        </button>
-        <button
-          type="button"
-          :disabled="exporting"
-          class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-900/40"
-          @click="doExportPdf"
-        >
-          <span v-if="exporting === 'pdf'" class="inline-block size-4 animate-spin rounded-full border-2 border-rose-300 border-t-rose-700" />
-          <DocumentTextIcon v-else class="size-4 shrink-0" aria-hidden="true" />
-          {{ t('cost_report.btn_export_pdf') }}
-        </button>
+      <button type="button" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#9b0036] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#7a0029] focus:outline-none focus:ring-2 focus:ring-[#9b0036]/40" @click="onSuggestBonus">
+        {{ t('driver_freq.btn_suggest_bonus') }}
+        <ArrowTopRightOnSquareIcon class="size-4 shrink-0" aria-hidden="true" />
+      </button>
+    </div>
+
+    <!-- ============================================================
+         FILTER BAR
+         ============================================================ -->
+    <div class="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/80 bg-gradient-to-r from-slate-50 via-violet-50/30 to-indigo-50/20 px-3 py-2.5 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+      <select v-model.number="filters.year" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
+        <option v-for="y in YEAR_OPTIONS" :key="y" :value="y">{{ y }}</option>
+      </select>
+      <select v-model="filters.quarter" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
+        <option value="">{{ t('driver_freq.all_quarters') }}</option>
+        <option value="q1">{{ t('driver_freq.filter_quarter_q1') }}</option>
+        <option value="q2">{{ t('driver_freq.filter_quarter_q2') }}</option>
+        <option value="q3">{{ t('driver_freq.filter_quarter_q3') }}</option>
+        <option value="q4">{{ t('driver_freq.filter_quarter_q4') }}</option>
+      </select>
+      <select v-model="filters.driverCode" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
+        <option value="">{{ t('driver_freq.all_drivers') }}</option>
+        <option v-for="d in MOCK_DRIVERS" :key="d.code" :value="d.code">{{ d.name }}</option>
+      </select>
+      <select v-model="filters.vehiclePlate" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
+        <option value="">{{ t('driver_freq.all_vehicles') }}</option>
+        <option v-for="v in MOCK_VEHICLES" :key="v.plate" :value="v.plate">{{ v.plate }}</option>
+      </select>
+      <select v-model="filters.tripType" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
+        <option value="">{{ t('driver_freq.all_trip_types') }}</option>
+        <option v-for="tt in TRIP_TYPES" :key="tt.value" :value="tt.value">{{ tt.label }}</option>
+      </select>
+    </div>
+
+    <!-- ============================================================
+         KPI CARDS
+         ============================================================ -->
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div class="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_total_trips') }}</p>
+        <p class="mt-1.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ kpi.totalTrips.toLocaleString('vi-VN') }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_total_trips_sub', { year: filters.year }) }}</p>
+        <span class="mt-1.5 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+          +12% vs 2024
+        </span>
+      </div>
+
+      <div class="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_active_drivers') }}</p>
+        <p class="mt-1.5 text-2xl font-bold tabular-nums text-sky-700 dark:text-sky-400">{{ kpi.activeDrivers }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_active_drivers_avg', { avg: kpi.avgTripsPerDriver }) }}</p>
+        <span class="mt-1 text-[11px] text-sky-600 dark:text-sky-400">
+          ≥ 60 chuyến: {{ kpi.driversAboveThreshold }} người
+        </span>
+      </div>
+
+      <div class="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_active_vehicles') }}</p>
+        <p class="mt-1.5 text-2xl font-bold tabular-nums text-amber-700 dark:text-amber-400">{{ kpi.activeVehicles }}</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_active_vehicles_avg', { avg: kpi.avgTripsPerVehicle }) }}</p>
+        <span class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">
+          {{ kpi.vehiclesBelowThreshold }} xe dưới ngưỡng
+        </span>
+      </div>
+
+      <div class="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_total_hours') }}</p>
+        <p class="mt-1.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ kpi.totalHours.toLocaleString('vi-VN') }}h</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_total_hours_avg', { avg: kpi.avgHoursPerDriver }) }}</p>
+        <span class="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+          Đúng giờ {{ kpi.overallOnTime }}%
+        </span>
       </div>
     </div>
 
-    <AppFilterBar>
-      <div ref="filterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-
-        <details ref="funnelRef" class="group relative">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-              <span
-                v-if="activeFilterCount > 0"
-                class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
-              >{{ activeFilterCount }}</span>
-            </span>
-            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30">
-            <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
-              {{ t('dashboard_analytics.filter_applied_title') }}
-            </p>
-            <div class="p-3 pt-2">
-              <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                <li v-if="filters.trip_type" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('cost_report.filter_trip_type') }}</span>
-                  <span class="font-medium">{{ labelTripType(filters.trip_type) }}</span>
-                </li>
-                <li v-if="filters.status" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
-                  <span class="font-medium">{{ statusLabel(filters.status) }}</span>
-                </li>
-                <li v-if="filters.fleet_mode" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_fleet') }}</span>
-                  <span class="font-medium">{{ fleetModeLabel(filters.fleet_mode) }}</span>
-                </li>
-                <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
-                  <span class="text-slate-500 dark:text-slate-400">{{ t('cost_report.filter_date') }}</span>
-                  <span class="font-medium">{{ filters.from || '…' }} → {{ filters.to || '…' }}</span>
-                </li>
-                <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">{{ t('filter_bar.empty') }}</li>
-              </ul>
-              <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                  {{ t('trips_page.filter_show_controls_title') }}
-                </p>
-                <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                  <li v-for="fd in filterControlDefs" :key="'cost-report-vis-' + fd.id" class="flex items-start gap-2">
-                    <input
-                      :id="'cost-report-filter-vis-' + fd.id"
-                      v-model="filterControlVisible[fd.id]"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                    />
-                    <label
-                      :for="'cost-report-filter-vis-' + fd.id"
-                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                    >
-                      {{ fd.label }}
-                    </label>
-                  </li>
-                </ul>
-              </div>
-              <button
-                type="button"
-                class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                @click="resetFilters"
-              >{{ t('dashboard_analytics.filter_clear_all') }}</button>
-            </div>
-          </div>
-        </details>
-
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-          <AppFilterDropdown
-            v-if="filterControlVisible.date"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('cost_report.filter_date')"
-            :summary-text="filterDateSummary"
-            full-width-summary
-            panel-class="w-[min(100vw-1.5rem,320px)] p-3 sm:w-max"
-          >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <input v-model="filters.from" type="date" class="cr-input h-9 w-full text-sm sm:w-auto" @change="onFilterChange" />
-              <span class="hidden text-slate-300 sm:inline dark:text-slate-600">—</span>
-              <input v-model="filters.to" type="date" class="cr-input h-9 w-full text-sm sm:w-auto" @change="onFilterChange" />
-            </div>
-          </AppFilterDropdown>
-
-          <AppFilterDropdown
-            v-if="filterControlVisible.trip_type"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('cost_report.filter_trip_type')"
-            :summary-text="filters.trip_type ? labelTripType(filters.trip_type) : t('filter_bar.all')"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in tripTypeOptions" :key="opt.value || '_all'">
-                <button type="button" class="cr-filter-btn" :class="filters.trip_type === opt.value ? 'cr-filter-btn--active' : ''" @click="applyFilter($event, { trip_type: opt.value })">
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
-
-          <AppFilterDropdown
-            v-if="filterControlVisible.status"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('filter_bar.status')"
-            :summary-text="filters.status ? statusLabel(filters.status) : t('filter_bar.all')"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in statusOptions" :key="opt.value || '_all'">
-                <button type="button" class="cr-filter-btn" :class="filters.status === opt.value ? 'cr-filter-btn--active' : ''" @click="applyFilter($event, { status: opt.value })">
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
-
-          <AppFilterDropdown
-            v-if="filterControlVisible.fleet_mode"
-            root-class="shrink-0"
-            show-chip-label
-            :label="t('dashboard_analytics.filter_fleet')"
-            :summary-text="filters.fleet_mode ? fleetModeLabel(filters.fleet_mode) : t('filter_bar.all')"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in fleetOptions" :key="opt.value || '_all'">
-                <button type="button" class="cr-filter-btn" :class="filters.fleet_mode === opt.value ? 'cr-filter-btn--active' : ''" @click="applyFilter($event, { fleet_mode: opt.value })">
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
-        </div>
-
-        <div class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('filter_bar.clear_icon')"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40" />
-            </span>
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
-            :disabled="loading"
-            @click="reload"
-          >
-            <span v-if="loading" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            <template v-else>{{ t('cost_report.btn_refresh') }}</template>
-          </button>
-        </div>
+    <!-- ============================================================
+         ROW 1: Two bar charts
+         ============================================================ -->
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('driver_freq.chart_driver_trips') }}</p>
+        <DashboardEChart
+          :option="chartDriverTrips"
+          height="260px"
+          :aria-label="t('driver_freq.chart_driver_trips')"
+          @chart-click="onDriverChartClick"
+        />
       </div>
-    </AppFilterBar>
-
-    <section aria-labelledby="cr-kpi">
-      <h2 id="cr-kpi" class="mb-3 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {{ t('cost_report.section_kpi') }}
-      </h2>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_total_amount') }}</div>
-          <div class="mt-1.5 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
-            <template v-if="stats">{{ formatVnd(stats.total_amount) }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>—</template>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_count') }}</div>
-          <div class="mt-1.5 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
-            <template v-if="stats">{{ stats.count.toLocaleString('vi-VN') }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>—</template>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_top_category') }}</div>
-          <div class="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">
-            <template v-if="stats && topCategory">{{ topCategory }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>—</template>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_top_provider') }}</div>
-          <div class="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">
-            <template v-if="stats && topProvider">{{ topProvider }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
-            <template v-else>—</template>
-          </div>
-        </div>
+      <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('driver_freq.chart_vehicle_freq') }}</p>
+        <DashboardEChart
+          :option="chartVehicleFreq"
+          height="260px"
+          :aria-label="t('driver_freq.chart_vehicle_freq')"
+        />
       </div>
-    </section>
+    </div>
 
-    <section v-if="stats && !loading" aria-labelledby="cr-charts" class="space-y-3">
-      <h2 id="cr-charts" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        {{ t('cost_report.section_charts') }}
-      </h2>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <div class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_category') }}</p>
-          <DashboardEChart :option="chartByCategory" height="220px" :aria-label="t('cost_report.chart_by_category')" />
-        </div>
-        <div class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_status') }}</p>
-          <DashboardEChart :option="chartByStatus" height="220px" :aria-label="t('cost_report.chart_by_status')" />
-        </div>
-        <div class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_provider') }}</p>
-          <DashboardEChart :option="chartByProvider" height="220px" :aria-label="t('cost_report.chart_by_provider')" />
-        </div>
-        <div v-if="stats.by_month && stats.by_month.length > 1" class="cr-chart-card lg:col-span-2 xl:col-span-2">
-          <p class="cr-chart-title">{{ t('cost_report.chart_trend') }}</p>
-          <DashboardEChart :option="chartByMonth" height="220px" :aria-label="t('cost_report.chart_trend')" />
-        </div>
-        <div v-if="stats.by_unit && stats.by_unit.length" class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_unit') }}</p>
-          <DashboardEChart :option="chartByUnit" height="220px" :aria-label="t('cost_report.chart_by_unit')" />
-        </div>
-      </div>
-    </section>
+    <!-- ============================================================
+         ROW 2: Ranking table (3/5) + Right column: Bonus + Quarterly (2/5)
+         ============================================================ -->
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
 
-    <section aria-labelledby="cr-table-title">
-      <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-        <div ref="detailTableToolbarRef" class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
-          <h2 id="cr-table-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {{ t('cost_report.table_title') }}
-            <span v-if="rows.length" class="ml-1 text-xs font-normal text-slate-500">({{ rows.length }})</span>
+      <!-- Ranking table -->
+      <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50 lg:col-span-3">
+        <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+          <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {{ t('driver_freq.section_ranking') }}
           </h2>
-          <div class="flex flex-wrap items-center gap-2">
-            <label class="inline-flex shrink-0 items-center gap-1.5">
-              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('filter_bar.per_page') }}:</span>
-              <select
-                v-model.number="detailPerPage"
-                class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-                :aria-label="t('filter_bar.per_page')"
-                @change="onDetailPerPageChange"
-              >
-                <option :value="5">5</option>
-                <option :value="10">10</option>
-                <option :value="15">15</option>
-                <option :value="20">20</option>
-              </select>
-              <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('costs_page.per_page_unit') }}</span>
-            </label>
-            <details ref="columnPickerRef" class="group relative shrink-0">
-              <summary
-                class="flex cursor-pointer list-none items-center rounded-lg border border-slate-200/90 bg-white px-2 py-1.5 text-slate-700 shadow-sm transition hover:border-teal-200/70 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-                :title="t('costs_page.column_visibility_title')"
-                :aria-label="t('costs_page.column_visibility_title')"
-              >
-                <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-              </summary>
-              <div
-                class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[240px] rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
-                @click.stop
-              >
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                  {{ t('costs_page.column_visibility_title') }}
-                </p>
-                <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto pr-0.5">
-                  <li v-for="cd in colControlDefs" :key="'cost-report-col-vis-' + cd.id" class="flex items-start gap-2">
-                    <input
-                      :id="'cost-report-col-vis-' + cd.id"
-                      v-model="colVisible[cd.id]"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
-                    />
-                    <label
-                      :for="'cost-report-col-vis-' + cd.id"
-                      class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
-                    >
-                      {{ cd.label }}
-                    </label>
-                  </li>
-                </ul>
-              </div>
-            </details>
-          </div>
         </div>
-
         <div class="overflow-x-auto overscroll-x-contain">
-          <table class="cr-sheet min-w-[1100px] w-full">
-            <thead>
+          <table class="w-full min-w-[500px] border-collapse text-left text-sm">
+            <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80 dark:text-slate-400">
               <tr>
-                <th class="cr-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
-                <th v-if="colVisible.unit" class="cr-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
-                <th v-if="colVisible.category" class="cr-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
-                <th v-if="colVisible.submitter" class="cr-th min-w-[9rem]">{{ t('costs_page.col_submitter') }}</th>
-                <th v-if="colVisible.description" class="cr-th min-w-[16rem]">{{ t('costs_page.col_description') }}</th>
-                <th v-if="colVisible.fleet_source" class="cr-th min-w-[10rem]">{{ t('costs_page.col_fleet_source') }}</th>
-                <th v-if="colVisible.provider" class="cr-th min-w-[9rem]">{{ t('costs_page.col_provider') }}</th>
-                <th v-if="colVisible.unit_price" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
-                <th v-if="colVisible.extra_fee" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
-                <th v-if="colVisible.payment" class="cr-th cr-th--money min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
-                <th v-if="colVisible.status" class="cr-th min-w-[8rem]">{{ t('filter_bar.status') }}</th>
+                <th class="w-10 border-b border-slate-200/90 px-3 py-2.5 text-center align-top font-semibold dark:border-slate-700">{{ t('driver_freq.col_rank') }}</th>
+                <th class="min-w-[9rem] border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700">{{ t('driver_freq.col_driver') }}</th>
+                <th class="min-w-[7rem] border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700">{{ t('driver_freq.col_trips') }}</th>
+                <th class="min-w-[5rem] border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700">{{ t('driver_freq.col_hours') }}</th>
+                <th class="min-w-[5rem] border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700">{{ t('driver_freq.col_ontime') }}</th>
+                <th class="min-w-[6rem] border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700">{{ t('driver_freq.col_trip_types') }}</th>
+                <th class="min-w-[4.5rem] border-b border-slate-200/90 px-3 py-2.5 pr-4 text-right align-top font-semibold dark:border-slate-700">{{ t('driver_freq.col_kpi') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="(row, idx) in paginatedRows"
-                :key="row.id"
-                class="cr-data-row"
-                :class="[idx % 2 === 1 ? 'cr-data-row--alt' : '', row.source === 'estimate' ? 'cr-data-row--estimate' : '']"
+                v-for="(driver, idx) in filteredDrivers"
+                :key="driver.code"
+                class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-red-950/5 dark:border-slate-800 dark:hover:bg-red-950/10"
+                :class="[
+                  idx % 2 === 1 ? 'bg-slate-50/40 dark:bg-slate-900/20' : '',
+                  selectedDriverCode === driver.code
+                    ? 'bg-red-950/5 outline outline-1 -outline-offset-1 outline-red-900/20'
+                    : '',
+                ]"
+                @click="toggleSelectedDriver(driver.code)"
               >
-                <td class="cr-td text-center tabular-nums text-slate-500">{{ detailRowNo(idx) }}</td>
-                <td v-if="colVisible.unit" class="cr-td"><span class="cr-pill">{{ row.unit || '—' }}</span></td>
-                <td v-if="colVisible.category" class="cr-td">
-                  <span v-if="row.category" class="cr-pill" :class="TRIP_TYPE_PILL_CLASSES[row.category] ?? ''">
-                    {{ labelTripType(row.category) }}
-                  </span>
-                  <span v-else class="text-slate-400">—</span>
-                </td>
-                <td v-if="colVisible.submitter" class="cr-td">{{ row.submitter || '—' }}</td>
-                <td v-if="colVisible.description" class="cr-td max-w-[22rem]">
-                  <span class="line-clamp-2">{{ row.description || '—' }}</span>
+                <td class="px-3 py-2.5 align-middle text-center text-slate-700 dark:text-slate-300">
                   <span
-                    v-if="row.source === 'estimate'"
-                    class="mt-0.5 inline-flex rounded-full bg-violet-100/90 px-2 py-px text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100"
-                  >{{ t('cost_report.badge_estimate') }}</span>
+                    class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold"
+                    :class="rankBadgeClass(idx + 1)"
+                  >{{ idx + 1 }}</span>
                 </td>
-                <td v-if="colVisible.fleet_source" class="cr-td whitespace-nowrap"><span class="cr-pill">{{ row.fleet_source || '—' }}</span></td>
-                <td v-if="colVisible.provider" class="cr-td">{{ row.provider || '—' }}</td>
-                <td v-if="colVisible.unit_price" class="cr-td cr-td--money">
-                  {{ row.unit_price != null && row.unit_price > 0 ? formatVnd(row.unit_price) : '—' }}
+                <td class="px-3 py-2.5 align-middle font-semibold text-slate-900 dark:text-slate-100">{{ driver.name }}</td>
+                <td class="px-3 py-2.5 align-middle text-slate-700 dark:text-slate-300">
+                  <div class="flex flex-col gap-1.5">
+                    <span class="font-bold tabular-nums">{{ driver.trips }}</span>
+                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                      <div
+                        class="h-full rounded-full bg-[#9b0036] transition-all duration-500"
+                        :style="{ width: `${(driver.trips / (filteredDrivers[0]?.trips || 1)) * 100}%` }"
+                      />
+                    </div>
+                  </div>
                 </td>
-                <td v-if="colVisible.extra_fee" class="cr-td cr-td--money">
-                  {{ row.extra_fee != null && row.extra_fee > 0 ? formatVnd(row.extra_fee) : '—' }}
+                <td class="px-3 py-2.5 align-middle tabular-nums text-slate-600 dark:text-slate-300">{{ driver.hours }}h</td>
+                <td class="px-3 py-2.5 align-middle text-slate-700 dark:text-slate-300">
+                  <span
+                    class="font-semibold"
+                    :class="driver.onTime >= 92 ? 'text-emerald-600 dark:text-emerald-400'
+                           : driver.onTime >= 86 ? 'text-amber-600 dark:text-amber-400'
+                           : 'text-rose-600 dark:text-rose-400'"
+                  >{{ driver.onTime }}%</span>
                 </td>
-                <td v-if="colVisible.payment" class="cr-td cr-td--money font-semibold text-slate-900 dark:text-slate-100">{{ formatVnd(row.amount) }}</td>
-                <td v-if="colVisible.status" class="cr-td">
-                  <span class="cr-pill" :class="STATUS_PILL_CLASSES[row.status] ?? 'bg-slate-100 text-slate-700'">
-                    {{ row.status_label || statusLabel(row.status) || '—' }}
+                <td class="px-3 py-2.5 align-middle text-slate-700 dark:text-slate-300">
+                  <span class="text-[15px] leading-none text-amber-400 dark:text-amber-300">
+                    {{ starsForKpi(driver.kpi) }}
                   </span>
+                </td>
+                <td class="px-3 py-2.5 pr-4 text-right align-middle text-slate-700 dark:text-slate-300">
+                  <span
+                    class="inline-flex min-w-[2rem] items-center justify-center rounded-full px-2 py-0.5 text-sm font-bold"
+                    :class="kpiBadgeClass(driver.kpi)"
+                  >{{ driver.kpi }}</span>
                 </td>
               </tr>
             </tbody>
           </table>
-
-          <div v-if="loading" class="flex items-center justify-center gap-2 px-4 py-12 text-sm text-slate-500">
-            <span class="inline-block size-5 animate-spin rounded-full border-2 border-slate-200 border-t-va-700" aria-hidden="true" />
-            {{ t('cost_report.loading') }}
-          </div>
-          <div v-else-if="!loading && !rows.length" class="px-4 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
-            {{ t('cost_report.empty_table') }}
-          </div>
         </div>
+        <p class="px-4 py-2.5 text-[11px] italic text-slate-400 dark:text-slate-500">
+          {{ t('driver_freq.kpi_formula') }}
+        </p>
+      </div>
 
-        <div v-if="rows.length" class="flex flex-col gap-3 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/50">
-          <span class="text-sm text-slate-600 dark:text-slate-400">
-            {{
-              t('costs_page.pagination_of', {
-                current: detailPage,
-                last: detailLastPage,
-              })
-            }}
-            <span class="text-slate-400"> · </span>
-            {{ rows.length }} {{ t('costs_page.pagination_records_suffix') }}
-          </span>
-          <div class="flex flex-wrap items-center gap-4">
-            <span class="text-sm text-slate-500 dark:text-slate-400">
-              {{ t('cost_report.total_amount_label') }}:
-              <span class="font-semibold tabular-nums text-va-800 dark:text-va-400">{{ formatVnd(totalAmount) }}</span>
-            </span>
-            <div class="flex flex-wrap gap-2">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                :disabled="loading || detailPage <= 1"
-                @click="detailPageStep(-1)"
-              >
-                {{ t('costs_page.prev') }}
-              </button>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                :disabled="loading || detailPage >= detailLastPage"
-                @click="detailPageStep(1)"
-              >
-                {{ t('costs_page.next') }}
-              </button>
+      <!-- Right column: Bonus panel + Quarterly trend (stacked) -->
+      <div class="flex flex-col gap-4 lg:col-span-2">
+
+        <!-- Bonus preview panel -->
+        <div class="flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+          <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+            <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {{ t('driver_freq.section_bonus') }}
+            </h2>
+          </div>
+          <div class="divide-y divide-slate-100 dark:divide-slate-700">
+            <div
+              v-for="driver in filteredDrivers"
+              :key="driver.code"
+              class="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40"
+            >
+              <div
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white shadow-sm"
+                :style="{ backgroundColor: driverAvatarColor(driver.code) }"
+              >{{ driver.code }}</div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">{{ driver.name }}</p>
+                <p class="text-[10px] text-slate-500">{{ driver.trips }} chuyến · {{ driver.hours }}h</p>
+              </div>
+              <div class="flex flex-col items-end gap-0.5">
+                <span
+                  class="rounded-full px-2 py-0.5 text-[11px] font-bold"
+                  :class="bonusTierClass(driver.bonus)"
+                >{{ t(`driver_freq.bonus_tier_${driver.bonus.toLowerCase()}`) }}</span>
+                <span
+                  class="text-xs font-bold tabular-nums"
+                  :class="kpiBadgeClass(driver.kpi)"
+                >{{ driver.kpi }}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <p v-if="exportError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
-      {{ exportError }}
-    </p>
+        <!-- Quarterly trend chart -->
+        <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('driver_freq.chart_quarterly') }}</p>
+          <DashboardEChart
+            :option="chartQuarterlyTrend"
+            height="175px"
+            :aria-label="t('driver_freq.chart_quarterly')"
+          />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============================================================
+         ROW 3: Trip types stacked + Monthly activity
+         ============================================================ -->
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('driver_freq.chart_driver_types') }}</p>
+        <DashboardEChart
+          :option="chartDriverTypes"
+          height="280px"
+          :aria-label="t('driver_freq.chart_driver_types')"
+        />
+      </div>
+      <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('driver_freq.chart_monthly') }}</p>
+        <DashboardEChart
+          :option="chartMonthlyActivity"
+          height="280px"
+          :aria-label="t('driver_freq.chart_monthly')"
+        />
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  FunnelIcon,
-  ChevronDownIcon,
-  XMarkIcon,
-  ViewColumnsIcon,
-  TableCellsIcon,
-  DocumentTextIcon,
-} from '@heroicons/vue/24/outline'
-import AppFilterBar from '../../components/filters/AppFilterBar.vue'
-import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
-import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
-import { getTripCostReport, downloadTripCostXlsx, downloadTripCostPdf } from '../../api/reports'
-import { formatVnd, labelTripType } from '../../util/labels'
-import { showAppErrorFromApi } from '../../composables/appMessage'
 
-const { t, te } = useI18n()
+const { t } = useI18n()
 
-const TRIP_TYPE_SLUGS = ['point_to_point', 'cargo', 'business', 'door_to_door']
-const FLEET_MODES = ['internal', 'vendor_hire', 'taxi', 'unspecified']
-const STATUS_FILTER_KEYS = ['draft', 'submitted', 'confirmed', 'rejected', 'estimate']
+// ============================================================
+// MOCK DATA — replace with getTripFrequencyReport(filters) when API is ready
+// ============================================================
 
-const TRIP_TYPE_PILL_CLASSES = {
-  point_to_point: 'bg-sky-100/80 text-sky-800',
-  cargo: 'bg-amber-100/80 text-amber-800',
-  business: 'bg-violet-100/80 text-violet-800',
-  door_to_door: 'bg-teal-100/80 text-teal-800',
-}
-
-const STATUS_PILL_CLASSES = {
-  confirmed: 'bg-emerald-100 text-emerald-800',
-  rejected: 'bg-rose-100 text-rose-800',
-  submitted: 'bg-blue-100 text-blue-800',
-  estimate: 'bg-violet-100/90 text-violet-900',
-  draft: 'bg-slate-100 text-slate-700',
-}
-
-const CHART_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#f97316']
-
-const COST_REPORT_FILTER_VISIBILITY_KEY = 'va.cost_report.filter_control_visibility_v1'
-const COST_REPORT_COL_VISIBILITY_KEY = 'va.cost_report.col_visibility_v1'
-const COST_REPORT_DETAIL_PER_PAGE_KEY = 'va.cost_report.detail_per_page_v1'
-
-const FILTER_CONTROL_IDS = ['date', 'trip_type', 'status', 'fleet_mode']
-const COL_IDS = [
-  'unit',
-  'category',
-  'submitter',
-  'description',
-  'fleet_source',
-  'provider',
-  'unit_price',
-  'extra_fee',
-  'payment',
-  'status',
+const MOCK_DRIVERS = [
+  { code: 'NVA', name: 'Nguyễn Văn An',   trips: 142, hours: 312, onTime: 96, kpi: 94, bonus: 'A', types: [40, 35, 50, 17] },
+  { code: 'TMĐ', name: 'Trần Minh Đức',   trips: 128, hours: 285, onTime: 93, kpi: 88, bonus: 'B', types: [38, 30, 42, 18] },
+  { code: 'LHN', name: 'Lê Hoàng Nam',    trips: 115, hours: 258, onTime: 91, kpi: 83, bonus: 'B', types: [35, 28, 38, 14] },
+  { code: 'PVB', name: 'Phạm Văn Bình',   trips:  98, hours: 220, onTime: 89, kpi: 76, bonus: 'B', types: [28, 25, 33, 12] },
+  { code: 'VTH', name: 'Võ Thị Hương',    trips:  87, hours: 195, onTime: 95, kpi: 74, bonus: 'C', types: [25, 22, 28, 12] },
+  { code: 'ĐQT', name: 'Đặng Quốc Toàn', trips:  79, hours: 178, onTime: 88, kpi: 67, bonus: 'C', types: [22, 20, 26, 11] },
+  { code: 'HVT', name: 'Hoàng Văn Tú',    trips:  72, hours: 162, onTime: 86, kpi: 62, bonus: 'C', types: [20, 18, 24, 10] },
+  { code: 'NTM', name: 'Nguyễn Thị Mai',  trips:  68, hours: 152, onTime: 90, kpi: 59, bonus: 'C', types: [20, 17, 22,  9] },
+  { code: 'TVH', name: 'Trịnh Văn Hùng',  trips:  58, hours: 130, onTime: 84, kpi: 51, bonus: 'C', types: [17, 15, 19,  7] },
 ]
 
-const DEFAULT_DETAIL_PER_PAGE = 10
+const MOCK_VEHICLES = [
+  { plate: '12345', trips: 185, color: '#1b3a5c' },
+  { plate: '67890', trips: 165, color: '#1e4d8c' },
+  { plate: '11223', trips: 155, color: '#225499' },
+  { plate: '44556', trips: 130, color: '#1b3a5c' },
+  { plate: '77889', trips: 120, color: '#b8860b' },
+  { plate: '22334', trips:  88, color: '#b8860b' },
+  { plate: '55678', trips:  25, color: '#94a3b8' },
+]
 
-function defaultFilterControlVisibility() {
-  return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, true]))
+const MOCK_QUARTERLY = [195, 220, 240, 192]
+const MOCK_MONTHLY   = [65, 68, 72, 78, 82, 75, 88, 91, 95, 88, 96, 103]
+
+const MOCK_KPI = {
+  totalTrips: 847,
+  activeDrivers: 12,
+  avgTripsPerDriver: 70.6,
+  driversAboveThreshold: 8,
+  activeVehicles: 7,
+  avgTripsPerVehicle: 121,
+  vehiclesBelowThreshold: 2,
+  totalHours: 3241,
+  avgHoursPerDriver: 270,
+  overallOnTime: 91.3,
 }
 
-function defaultColVisibility() {
-  return Object.fromEntries(COL_IDS.map((id) => [id, true]))
-}
+// ============================================================
+// CONSTANTS
+// ============================================================
 
-function statusLabel(s) {
-  if (!s) return '—'
-  if (s === 'estimate') return t('cost_report.badge_estimate')
-  const key = `dashboard_analytics.cost_status_${s}`
-  return te(key) ? t(key) : s
-}
+const YEAR_OPTIONS = [2025, 2024, 2023]
 
-function fleetModeLabel(mode) {
-  if (!mode) return t('filter_bar.all')
-  const key = `dashboard_analytics.fleet_${mode}`
-  return te(key) ? t(key) : mode
-}
+const TRIP_TYPES = [
+  { value: 'point_to_point', label: 'Điểm đến điểm' },
+  { value: 'business',       label: 'Công tác' },
+  { value: 'door_to_door',   label: 'Đưa đón' },
+  { value: 'cargo',          label: 'Hàng hóa' },
+]
 
-function tableColLabel(colId) {
-  const keys = {
-    unit: 'col_unit',
-    category: 'col_category',
-    submitter: 'col_submitter',
-    description: 'col_description',
-    fleet_source: 'col_fleet_source',
-    provider: 'col_provider',
-    unit_price: 'col_unit_price',
-    extra_fee: 'col_extra_fee',
-    payment: 'col_payment',
-    status: 'col_status',
-  }
-  const k = keys[colId]
-  if (k === 'col_status') return t('filter_bar.status')
-  return k ? t(`costs_page.${k}`) : colId
-}
+const DRIVER_BAR_COLORS = [
+  '#7a0029', '#9b0036', '#b5103d', '#c03058',
+  '#ca506c', '#d47080', '#dd8898', '#e6a0b0', '#eebbca',
+]
 
-const loading = ref(false)
-const exporting = ref(null)
-const exportError = ref('')
+const DRIVER_AVATAR_COLORS = [
+  '#9b0036', '#1b3a5c', '#0f766e', '#6b21a8',
+  '#0369a1', '#b45309', '#c41849', '#15803d', '#475569',
+]
 
-/** @type {import('vue').Ref<Record<string, any>|null>} */
-const stats = ref(null)
-/** @type {import('vue').Ref<Array<Record<string, any>>>} */
-const rows = ref([])
+const TRIP_TYPE_LABELS = ['Điểm-điểm', 'Công tác', 'Đưa đón', 'Hàng hóa']
+const TRIP_TYPE_COLORS = ['#9b0036', '#1b3a5c', '#b8860b', '#0f766e']
+
+const QUARTER_RANGES = { q1: [0, 3], q2: [3, 6], q3: [6, 9], q4: [9, 12] }
+const MONTH_LABELS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12']
+
+const CHART_GRID = { left: '2%', right: '3%', top: 16, bottom: 28, containLabel: true }
+const CHART_AXIS_LABEL_X = { fontSize: 10, color: '#64748b' }
+const CHART_AXIS_LABEL_Y = { fontSize: 9, color: '#94a3b8' }
+const CHART_AXIS_LINE = { lineStyle: { color: '#e2e8f0' } }
+const CHART_SPLIT_LINE = { lineStyle: { color: '#f1f5f9', type: 'dashed' } }
+
+// ============================================================
+// STATE
+// ============================================================
 
 const filters = reactive({
-  from: '',
-  to: '',
-  trip_type: '',
-  status: '',
-  fleet_mode: '',
+  year: 2025,
+  quarter: '',
+  driverCode: '',
+  vehiclePlate: '',
+  tripType: '',
 })
 
-const filterControlVisible = reactive(defaultFilterControlVisibility())
-const colVisible = reactive(defaultColVisibility())
+const selectedDriverCode = ref('')
 
-const detailPage = ref(1)
-const detailPerPage = ref(DEFAULT_DETAIL_PER_PAGE)
+// ============================================================
+// COMPUTED — DATA
+// ============================================================
 
-const funnelRef = ref(null)
-const filterBarRef = ref(null)
-const columnPickerRef = ref(null)
-const detailTableToolbarRef = ref(null)
-useDetailsAutoClose(funnelRef)
-useDetailsAutoClose(columnPickerRef)
-useDetailsAutoCloseWithin(filterBarRef)
-useDetailsAutoCloseWithin(detailTableToolbarRef)
-
-const filterControlDefs = computed(() => [
-  { id: 'date', label: t('cost_report.filter_date') },
-  { id: 'trip_type', label: t('cost_report.filter_trip_type') },
-  { id: 'status', label: t('filter_bar.status') },
-  { id: 'fleet_mode', label: t('dashboard_analytics.filter_fleet') },
-])
-
-const colControlDefs = computed(() => COL_IDS.map((id) => ({ id, label: tableColLabel(id) })))
-
-const tripTypeOptions = computed(() => [
-  { value: '', label: t('filter_bar.all') },
-  ...TRIP_TYPE_SLUGS.map((value) => ({ value, label: labelTripType(value) })),
-])
-
-const statusOptions = computed(() => [
-  { value: '', label: t('filter_bar.all') },
-  ...STATUS_FILTER_KEYS.map((value) => ({ value, label: statusLabel(value) })),
-])
-
-const fleetOptions = computed(() => [
-  { value: '', label: t('filter_bar.all') },
-  ...FLEET_MODES.map((value) => ({ value, label: fleetModeLabel(value) })),
-])
-
-const filterDateSummary = computed(() => {
-  if (!filters.from && !filters.to) return t('filter_bar.all')
-  return `${filters.from || '…'} → ${filters.to || '…'}`
+const filteredDrivers = computed(() => {
+  if (filters.driverCode) return MOCK_DRIVERS.filter((d) => d.code === filters.driverCode)
+  return MOCK_DRIVERS
 })
 
-const activeFilterCount = computed(() => {
-  let n = 0
-  if (filters.from || filters.to) n++
-  if (filters.trip_type) n++
-  if (filters.status) n++
-  if (filters.fleet_mode) n++
-  return n
+const kpi = computed(() => {
+  if (filters.driverCode) {
+    const d = MOCK_DRIVERS.find((dr) => dr.code === filters.driverCode)
+    if (d) {
+      return {
+        totalTrips: d.trips,
+        activeDrivers: 1,
+        avgTripsPerDriver: d.trips,
+        driversAboveThreshold: d.trips >= 60 ? 1 : 0,
+        activeVehicles: MOCK_KPI.activeVehicles,
+        avgTripsPerVehicle: MOCK_KPI.avgTripsPerVehicle,
+        vehiclesBelowThreshold: MOCK_KPI.vehiclesBelowThreshold,
+        totalHours: d.hours,
+        avgHoursPerDriver: d.hours,
+        overallOnTime: d.onTime,
+      }
+    }
+  }
+  return MOCK_KPI
 })
 
-const detailLastPage = computed(() => {
-  const total = rows.value.length
-  if (!total) return 1
-  return Math.max(1, Math.ceil(total / detailPerPage.value))
-})
+// ============================================================
+// COMPUTED — ECHARTS OPTIONS
+// ============================================================
 
-const paginatedRows = computed(() => {
-  const list = rows.value
-  if (!list.length) return []
-  const page = Math.min(detailPage.value, detailLastPage.value)
-  const start = (page - 1) * detailPerPage.value
-  return list.slice(start, start + detailPerPage.value)
-})
-
-function detailRowNo(idx) {
-  const page = Math.min(detailPage.value, detailLastPage.value)
-  return (page - 1) * detailPerPage.value + idx + 1
-}
-
-const topCategory = computed(() => {
-  const list = stats.value?.by_category ?? []
-  if (!list.length) return null
-  const sorted = [...list].sort((a, b) => b.amount - a.amount)
-  return sorted[0]?.label ?? null
-})
-
-const topProvider = computed(() => {
-  const list = stats.value?.by_provider ?? []
-  if (!list.length) return null
-  const sorted = [...list].sort((a, b) => b.amount - a.amount)
-  return sorted[0]?.label ?? null
-})
-
-const totalAmount = computed(() => stats.value?.total_amount ?? 0)
-
-const tooltipMoney = {
-  trigger: 'item',
-  formatter: (p) => {
-    const v = typeof p.value === 'number' ? p.value : (p.data?.value ?? 0)
-    return `${p.name}<br/><b>${Number(v).toLocaleString('vi-VN')} đ</b>`
-  },
-}
-
-function pieOption(dataList) {
+const chartDriverTrips = computed(() => {
+  const sel = selectedDriverCode.value
   return {
-    tooltip: tooltipMoney,
-    legend: { bottom: 0, type: 'scroll', textStyle: { fontSize: 10 } },
+    tooltip: {
+      trigger: 'axis',
+      formatter(params) {
+        const d = MOCK_DRIVERS[params[0].dataIndex]
+        return `<b>${d.name}</b><br/>Chuyến: <b>${d.trips}</b><br/>Giờ lái: ${d.hours}h`
+      },
+    },
+    grid: CHART_GRID,
+    xAxis: {
+      type: 'category',
+      data: MOCK_DRIVERS.map((d) => d.code),
+      axisLabel: CHART_AXIS_LABEL_X,
+      axisLine: CHART_AXIS_LINE,
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: CHART_AXIS_LABEL_Y,
+      splitLine: CHART_SPLIT_LINE,
+    },
     series: [{
-      type: 'pie',
-      radius: ['35%', '65%'],
-      center: ['50%', '44%'],
-      data: dataList.map((d, i) => ({ name: d.label, value: d.amount, itemStyle: { color: CHART_PALETTE[i % CHART_PALETTE.length] } })),
-      label: { formatter: '{d}%', fontSize: 10 },
-      emphasis: { scale: true, scaleSize: 8 },
+      type: 'bar',
+      data: MOCK_DRIVERS.map((d, i) => ({
+        value: d.trips,
+        itemStyle: {
+          color: DRIVER_BAR_COLORS[i] ?? '#e6a0b0',
+          opacity: sel && sel !== d.code ? 0.3 : 1,
+          borderRadius: [4, 4, 0, 0],
+        },
+      })),
+      barMaxWidth: 38,
+      emphasis: { focus: 'self' },
     }],
   }
-}
+})
 
-function barHorizontalOption(dataList, limit = 10) {
-  const top = [...dataList].sort((a, b) => b.amount - a.amount).slice(0, limit)
-  return {
-    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].name}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} đ</b>` },
-    grid: { left: '4%', right: '6%', top: 10, bottom: 10, containLabel: true },
-    xAxis: { type: 'value', axisLabel: { formatter: (v) => `${(v / 1000000).toFixed(0)}M`, fontSize: 9 } },
-    yAxis: { type: 'category', data: top.map((d) => d.label), axisLabel: { fontSize: 9, overflow: 'truncate', width: 90 } },
-    series: [{ type: 'bar', data: top.map((d, i) => ({ value: d.amount, itemStyle: { color: CHART_PALETTE[i % CHART_PALETTE.length] } })), barMaxWidth: 22 }],
-  }
-}
+const chartVehicleFreq = computed(() => ({
+  tooltip: {
+    trigger: 'axis',
+    formatter: (p) => `Xe <b>${p[0].name}</b><br/>Chuyến: <b>${p[0].value}</b>`,
+  },
+  grid: CHART_GRID,
+  xAxis: {
+    type: 'category',
+    data: MOCK_VEHICLES.map((v) => v.plate),
+    axisLabel: CHART_AXIS_LABEL_X,
+    axisLine: CHART_AXIS_LINE,
+    axisTick: { show: false },
+  },
+  yAxis: {
+    type: 'value',
+    axisLabel: CHART_AXIS_LABEL_Y,
+    splitLine: CHART_SPLIT_LINE,
+  },
+  series: [{
+    type: 'bar',
+    data: MOCK_VEHICLES.map((v) => ({
+      value: v.trips,
+      itemStyle: { color: v.color, borderRadius: [4, 4, 0, 0] },
+    })),
+    barMaxWidth: 44,
+    emphasis: { focus: 'self' },
+  }],
+}))
 
-function lineOption(dataList) {
+const chartQuarterlyTrend = computed(() => {
+  const selQ = filters.quarter
+  const seriesData = MOCK_QUARTERLY.map((val, i) => ({
+    value: val,
+    itemStyle: { opacity: selQ && `q${i + 1}` !== selQ ? 0.3 : 1 },
+  }))
   return {
-    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].axisValue}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} đ</b>` },
-    grid: { left: '4%', right: '4%', top: 14, bottom: 24, containLabel: true },
-    xAxis: { type: 'category', data: dataList.map((d) => d.key), axisLabel: { fontSize: 9, rotate: 30 } },
-    yAxis: { type: 'value', axisLabel: { formatter: (v) => `${(v / 1000000).toFixed(0)}M`, fontSize: 9 } },
+    tooltip: {
+      trigger: 'axis',
+      formatter: (p) => `${p[0].name}<br/><b>${p[0].value} chuyến</b>`,
+    },
+    grid: { left: '2%', right: '3%', top: 16, bottom: 24, containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: ['Q1', 'Q2', 'Q3', 'Q4'],
+      boundaryGap: false,
+      axisLabel: { ...CHART_AXIS_LABEL_X, fontSize: 11 },
+      axisLine: CHART_AXIS_LINE,
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      min: 150,
+      axisLabel: CHART_AXIS_LABEL_Y,
+      splitLine: CHART_SPLIT_LINE,
+    },
     series: [{
       type: 'line',
-      data: dataList.map((d) => d.amount),
+      data: seriesData,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 8,
+      lineStyle: { color: '#c41849', width: 2.5 },
+      itemStyle: { color: '#c41849', borderColor: '#fff', borderWidth: 2 },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(196,24,73,0.18)' },
+            { offset: 1, color: 'rgba(196,24,73,0.02)' },
+          ],
+        },
+      },
+    }],
+  }
+})
+
+const chartDriverTypes = computed(() => {
+  const top5 = MOCK_DRIVERS.slice(0, 5)
+  return {
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: {
+      data: TRIP_TYPE_LABELS,
+      bottom: 0,
+      icon: 'roundRect',
+      textStyle: { fontSize: 10, color: '#64748b' },
+    },
+    grid: { left: '2%', right: '3%', top: 10, bottom: 44, containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: top5.map((d) => d.code),
+      axisLabel: { ...CHART_AXIS_LABEL_X, fontSize: 11 },
+      axisLine: CHART_AXIS_LINE,
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: CHART_AXIS_LABEL_Y,
+      splitLine: CHART_SPLIT_LINE,
+    },
+    series: TRIP_TYPE_LABELS.map((label, ti) => ({
+      name: label,
+      type: 'bar',
+      stack: 'types',
+      data: top5.map((d) => d.types[ti]),
+      itemStyle: { color: TRIP_TYPE_COLORS[ti] },
+      emphasis: { focus: 'series' },
+      barMaxWidth: 52,
+    })),
+  }
+})
+
+const chartMonthlyActivity = computed(() => {
+  const range = filters.quarter ? QUARTER_RANGES[filters.quarter] : [0, 12]
+  const labels = MONTH_LABELS.slice(...range)
+  const data = MOCK_MONTHLY.slice(...range)
+  return {
+    tooltip: {
+      trigger: 'axis',
+      formatter: (p) => `${p[0].name}<br/><b>${p[0].value} chuyến</b>`,
+    },
+    grid: { left: '2%', right: '3%', top: 16, bottom: 24, containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      boundaryGap: false,
+      axisLabel: CHART_AXIS_LABEL_X,
+      axisLine: CHART_AXIS_LINE,
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: CHART_AXIS_LABEL_Y,
+      splitLine: CHART_SPLIT_LINE,
+    },
+    series: [{
+      type: 'line',
+      data,
       smooth: true,
       symbol: 'circle',
       symbolSize: 5,
-      areaStyle: { opacity: 0.12 },
-      lineStyle: { color: '#9a0036', width: 2 },
-      itemStyle: { color: '#9a0036' },
+      lineStyle: { color: '#1b3a5c', width: 2 },
+      itemStyle: { color: '#1b3a5c' },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(27,58,92,0.14)' },
+            { offset: 1, color: 'rgba(27,58,92,0.01)' },
+          ],
+        },
+      },
     }],
   }
+})
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function starsForKpi(score) {
+  if (score >= 88) return '★★★★★'
+  if (score >= 73) return '★★★★☆'
+  if (score >= 58) return '★★★☆☆'
+  return '★★☆☆☆'
 }
 
-const chartByCategory = computed(() => pieOption(stats.value?.by_category ?? []))
-const chartByStatus = computed(() => pieOption(stats.value?.by_status ?? []))
-const chartByProvider = computed(() => barHorizontalOption(stats.value?.by_provider ?? []))
-const chartByMonth = computed(() => lineOption(stats.value?.by_month ?? []))
-const chartByUnit = computed(() => barHorizontalOption(stats.value?.by_unit ?? []))
-
-function buildApiParams() {
-  const p = {}
-  if (filters.from) p.from = filters.from
-  if (filters.to) p.to = filters.to
-  if (filters.trip_type) p.trip_type = filters.trip_type
-  if (filters.status) p.status = filters.status
-  if (filters.fleet_mode) p.fleet_mode = filters.fleet_mode
-  return p
+function rankBadgeClass(rank) {
+  if (rank === 1) return 'bg-amber-400 text-white'
+  if (rank === 2) return 'bg-slate-400 text-white'
+  if (rank === 3) return 'bg-amber-600/80 text-white'
+  return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
 }
 
-async function reload() {
-  loading.value = true
-  try {
-    const res = await getTripCostReport(buildApiParams())
-    stats.value = res.stats
-    rows.value = res.rows ?? []
-    detailPage.value = 1
-  } catch (e) {
-    showAppErrorFromApi(e, t('cost_report.load_error'))
-  } finally {
-    loading.value = false
+function kpiBadgeClass(score) {
+  if (score >= 88) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+  if (score >= 70) return 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300'
+  if (score >= 55) return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+}
+
+function bonusTierClass(tier) {
+  if (tier === 'A') return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+  if (tier === 'B') return 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300'
+  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+}
+
+function driverAvatarColor(code) {
+  const idx = MOCK_DRIVERS.findIndex((d) => d.code === code)
+  return idx >= 0 ? (DRIVER_AVATAR_COLORS[idx] ?? '#475569') : '#475569'
+}
+
+function toggleSelectedDriver(code) {
+  selectedDriverCode.value = selectedDriverCode.value === code ? '' : code
+}
+
+function onDriverChartClick(params) {
+  if (params.componentType === 'series') {
+    toggleSelectedDriver(params.name)
   }
-}
-
-function applyFilter(ev, patch) {
-  Object.assign(filters, patch)
-  const el = ev?.currentTarget
-  if (el && typeof el.closest === 'function') {
-    const d = el.closest('details')
-    if (d) d.open = false
-  }
-  detailPage.value = 1
-  reload()
 }
 
 function onFilterChange() {
-  detailPage.value = 1
-  reload()
+  selectedDriverCode.value = ''
 }
 
-function resetFilters() {
-  filters.from = ''
-  filters.to = ''
-  filters.trip_type = ''
-  filters.status = ''
-  filters.fleet_mode = ''
-  if (funnelRef.value) funnelRef.value.open = false
-  detailPage.value = 1
-  reload()
+function onSuggestBonus() {
+  // placeholder — future: open bonus suggestion modal / navigate
 }
-
-function detailPageStep(delta) {
-  const next = detailPage.value + delta
-  if (next < 1 || next > detailLastPage.value) return
-  detailPage.value = next
-}
-
-function onDetailPerPageChange() {
-  detailPage.value = 1
-  try {
-    localStorage.setItem(COST_REPORT_DETAIL_PER_PAGE_KEY, String(detailPerPage.value))
-  } catch {
-    /* ignore */
-  }
-}
-
-function loadFilterControlVisibility() {
-  try {
-    const raw = localStorage.getItem(COST_REPORT_FILTER_VISIBILITY_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    const base = defaultFilterControlVisibility()
-    for (const id of FILTER_CONTROL_IDS) {
-      if (typeof o[id] === 'boolean') base[id] = o[id]
-    }
-    Object.assign(filterControlVisible, base)
-  } catch {
-    /* ignore */
-  }
-}
-
-function loadColVisibility() {
-  try {
-    const raw = localStorage.getItem(COST_REPORT_COL_VISIBILITY_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    const base = defaultColVisibility()
-    for (const id of COL_IDS) {
-      if (typeof o[id] === 'boolean') base[id] = o[id]
-    }
-    Object.assign(colVisible, base)
-  } catch {
-    /* ignore */
-  }
-}
-
-function loadDetailPerPage() {
-  try {
-    const raw = localStorage.getItem(COST_REPORT_DETAIL_PER_PAGE_KEY)
-    const n = Number(raw)
-    if ([5, 10, 15, 20].includes(n)) detailPerPage.value = n
-  } catch {
-    /* ignore */
-  }
-}
-
-watch(
-  filterControlVisible,
-  (v) => {
-    try {
-      localStorage.setItem(COST_REPORT_FILTER_VISIBILITY_KEY, JSON.stringify({ ...v }))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
-
-watch(
-  colVisible,
-  (v) => {
-    try {
-      localStorage.setItem(COST_REPORT_COL_VISIBILITY_KEY, JSON.stringify({ ...v }))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
-
-watch(detailLastPage, (last) => {
-  if (detailPage.value > last) detailPage.value = last
-})
-
-async function doExportXlsx() {
-  if (exporting.value) return
-  exportError.value = ''
-  exporting.value = 'xlsx'
-  try {
-    await downloadTripCostXlsx(buildApiParams())
-  } catch (e) {
-    exportError.value = e?.response?.data?.message ?? t('cost_report.export_error')
-  } finally {
-    exporting.value = null
-  }
-}
-
-async function doExportPdf() {
-  if (exporting.value) return
-  exportError.value = ''
-  exporting.value = 'pdf'
-  try {
-    await downloadTripCostPdf(buildApiParams())
-  } catch (e) {
-    exportError.value = e?.response?.data?.message ?? t('cost_report.export_error')
-  } finally {
-    exporting.value = null
-  }
-}
-
-onMounted(() => {
-  loadFilterControlVisibility()
-  loadColVisibility()
-  loadDetailPerPage()
-  reload()
-})
 </script>
 
-<style scoped>
-.cost-report-page {
-  @apply text-slate-900 dark:text-slate-100;
-}
-
-.cr-chart-card {
-  @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50;
-}
-
-.cr-chart-title {
-  @apply mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400;
-}
-
-.cr-input {
-  @apply rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100;
-}
-
-.cr-filter-btn {
-  @apply flex w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800;
-}
-
-.cr-filter-btn--active {
-  @apply bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100;
-}
-
-.cr-sheet {
-  @apply border-collapse text-left text-sm;
-}
-
-.cr-sheet thead {
-  @apply bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80 dark:text-slate-400;
-}
-
-.cr-th {
-  @apply border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700;
-}
-
-.cr-th--money {
-  @apply text-right;
-}
-
-.cr-td {
-  @apply border-b border-slate-100 px-3 py-2.5 align-top text-slate-800 dark:border-slate-800 dark:text-slate-200;
-}
-
-.cr-data-row {
-  @apply transition-colors hover:bg-teal-50/40 dark:hover:bg-teal-950/20;
-}
-
-.cr-data-row--alt {
-  @apply bg-slate-50/40 dark:bg-slate-900/20;
-}
-
-.cr-data-row--estimate {
-  @apply bg-violet-50/35 hover:bg-violet-50/55 dark:bg-violet-950/20 dark:hover:bg-violet-950/30;
-}
-
-.cr-td--money {
-  @apply text-right tabular-nums;
-}
-
-.cr-pill {
-  @apply inline-flex max-w-full items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300;
-}
-</style>
