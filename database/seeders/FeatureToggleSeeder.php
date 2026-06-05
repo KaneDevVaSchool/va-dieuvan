@@ -13,7 +13,6 @@ class FeatureToggleSeeder extends Seeder
         $rows = [
             ['key' => 'module.overview', 'name' => 'Tổng quan & lịch', 'module' => 'overview', 'is_enabled' => true],
             ['key' => 'module.operations', 'name' => 'Điều vận (yêu cầu, chuyến, chi phí…)', 'module' => 'operations', 'is_enabled' => true],
-            ['key' => 'module.p2p_policy', 'name' => 'Học sinh chính sách (P2P)', 'module' => 'operations', 'is_enabled' => true],
             ['key' => 'module.finance', 'name' => 'Kế toán / đối soát', 'module' => 'finance', 'is_enabled' => true],
             ['key' => 'module.reports', 'name' => 'Báo cáo', 'module' => 'reports', 'is_enabled' => true],
             ['key' => 'module.pricing', 'name' => 'Bảng giá tham chiếu', 'module' => 'reports', 'is_enabled' => true],

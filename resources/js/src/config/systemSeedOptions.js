@@ -30,8 +30,6 @@ export const SEED_PERMISSION_PRESETS = [
     { name: 'payment.reconcile', display_name: 'payment.reconcile' },
     { name: 'payment.execute', display_name: 'payment.execute' },
     { name: 'cargo.manage', display_name: 'cargo.manage' },
-    { name: 'route.manage', display_name: 'route.manage' },
-    { name: 'student.manage', display_name: 'student.manage' },
     { name: 'attachment.upload', display_name: 'attachment.upload' },
     { name: 'report.view', display_name: 'report.view' },
     { name: 'report.export', display_name: 'report.export' },
@@ -46,17 +44,11 @@ export const SEED_PERMISSION_PRESETS = [
     { name: 'system.user_roles.manage', display_name: 'system.user_roles.manage' },
     { name: 'system.feature_toggles.manage', display_name: 'system.feature_toggles.manage' },
     { name: 'dispatch.settings.manage', display_name: 'dispatch.settings.manage' },
-    { name: 'policy_trip.view', display_name: 'policy_trip.view' },
-    { name: 'policy_trip.assign_driver', display_name: 'policy_trip.assign_driver' },
-    { name: 'policy_trip.cancel', display_name: 'policy_trip.cancel' },
-    { name: 'student_policy.manage', display_name: 'student_policy.manage' },
-    { name: 'school_calendar.manage', display_name: 'school_calendar.manage' },
 ]
 
 export const SEED_FEATURE_TOGGLE_PRESETS = [
     { key: 'module.overview', name: 'Tổng quan & lịch', module: 'overview' },
     { key: 'module.operations', name: 'Điều vận (yêu cầu, chuyến, chi phí…)', module: 'operations' },
-    { key: 'module.p2p_policy', name: 'Học sinh Chính Sách (P2P)', module: 'operations' },
     { key: 'module.finance', name: 'Kế toán / đối soát', module: 'finance' },
     { key: 'module.reports', name: 'Báo cáo', module: 'reports' },
     { key: 'module.pricing', name: 'Bảng giá tham chiếu', module: 'reports' },

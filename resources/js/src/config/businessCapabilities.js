@@ -87,31 +87,6 @@ export const BUSINESS_CAPABILITY_GROUPS = Object.freeze([
     ],
   },
   {
-    id: 'd2d_students',
-    icon: '🎓',
-    title: 'Tuyến D2D & Học sinh',
-    description: 'Quản lý tuyến đưa đón door-to-door và danh sách học sinh.',
-    colorKey: 'indigo',
-    capabilities: [
-      { perm: 'route.manage',   label: 'Quản lý tuyến door-to-door' },
-      { perm: 'student.manage', label: 'Quản lý danh sách học sinh' },
-    ],
-  },
-  {
-    id: 'p2p_policy',
-    icon: '🏫',
-    title: 'Học sinh Chính Sách (P2P)',
-    description: 'Quản lý chuyến đưa đón học sinh theo chính sách.',
-    colorKey: 'purple',
-    capabilities: [
-      { perm: 'policy_trip.view',          label: 'Xem chuyến học sinh chính sách' },
-      { perm: 'policy_trip.assign_driver', label: 'Phân công tài xế cho chuyến' },
-      { perm: 'policy_trip.cancel',        label: 'Hủy chuyến học sinh' },
-      { perm: 'student_policy.manage',     label: 'Quản lý học sinh chính sách' },
-      { perm: 'school_calendar.manage',    label: 'Quản lý lịch học' },
-    ],
-  },
-  {
     id: 'reports',
     icon: '📊',
     title: 'Báo cáo & Phân tích',

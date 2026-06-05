@@ -19,8 +19,8 @@ class TpDayLiveUpdatesController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_program.view') || $user->can('tp_attendance.manage')), 403);
 
-        $tick = (int) config('p2p.sse.tick_seconds', 3);
-        $maxSeconds = (int) config('p2p.sse.max_seconds', 60);
+        $tick = 3;
+        $maxSeconds = 60;
         $maxIterations = max(1, (int) ceil($maxSeconds / max(1, $tick)));
 
         return response()->stream(function () use ($tpProgramDay, $tick, $maxIterations) {

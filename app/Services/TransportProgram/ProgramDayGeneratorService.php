@@ -2,7 +2,6 @@
 
 namespace App\Services\TransportProgram;
 
-use App\Models\SchoolCalendar;
 use App\Models\TpProgram;
 use App\Models\TpProgramDay;
 use Carbon\Carbon;
@@ -142,11 +141,6 @@ class ProgramDayGeneratorService
 
     private function isSchoolHoliday(string $date): bool
     {
-        $cal = SchoolCalendar::query()->whereDate('date', $date)->first();
-        if (! $cal) {
-            return false;
-        }
-
-        return in_array($cal->day_type, ['holiday', 'weekend'], true);
+        return false;
     }
 }

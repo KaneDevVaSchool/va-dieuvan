@@ -52,7 +52,16 @@
             <h2 class="text-base font-semibold text-slate-900">Chọn tệp để tải lên</h2>
             <p class="mt-0.5 text-sm text-slate-500">Hỗ trợ định dạng .xlsx, .xls, .csv — Tối đa 10MB</p>
           </div>
-          <span class="rounded-full bg-va-50 px-2.5 py-1 text-xs font-medium text-va-700">Bước 1 / 3</span>
+          <div class="flex items-center gap-2">
+            <a
+              :href="sampleUrl"
+              download
+              class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:border-va-300 hover:text-va-700"
+            >
+              <ArrowDownTrayIcon class="h-3.5 w-3.5" /> Tải file mẫu
+            </a>
+            <span class="rounded-full bg-va-50 px-2.5 py-1 text-xs font-medium text-va-700">Bước 1 / 3</span>
+          </div>
         </div>
 
         <div
@@ -243,8 +252,9 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  ArrowLeftIcon, ArrowRightIcon, CheckIcon, CloudArrowUpIcon, DocumentIcon, XMarkIcon,
-  FolderOpenIcon, TableCellsIcon, DocumentTextIcon, ScaleIcon, PencilSquareIcon,
+  ArrowDownTrayIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon, CloudArrowUpIcon,
+  DocumentIcon, XMarkIcon, FolderOpenIcon, TableCellsIcon, DocumentTextIcon, ScaleIcon,
+  PencilSquareIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import Select from '../../components/ui/Select.vue'
@@ -256,6 +266,7 @@ import {
   applyImportFixes,
   executeImport,
   importErrorReportUrl,
+  importSampleUrl,
   listPrograms,
 } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
@@ -308,6 +319,7 @@ const rules = reactive({ trim_whitespace: true, normalize_phone: true, capitaliz
 const options = reactive({ include_warnings: true, update_existing: false })
 
 const errorReportUrl = computed(() => importErrorReportUrl(batch.value.id))
+const sampleUrl = importSampleUrl()
 
 function onFile(e) {
   file.value = e.target.files?.[0] ?? null

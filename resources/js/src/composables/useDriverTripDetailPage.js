@@ -16,8 +16,7 @@ import {
   parseTripInstant,
 } from '../util/tripDatetime'
 import { dispatchRequestEffectivePassengerCount } from '../util/dispatchRequestPassengers'
-import { buildDriverTripPaxList, mapPolicyStudentsToDriverPax } from '../util/buildDriverTripPaxList'
-import { listDriverTripPolicyStudents } from '../api/driver'
+import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
 
 const PASSENGER_PICKUP_EVENT = 'passenger_pickup'
 
@@ -32,7 +31,6 @@ export function useDriverTripDetailPage() {
   const { start: startTripDetailVisiblePoll } = useDriverVisiblePoll(() => refresh(), { intervalMs: 55_000 })
 
   const trip = ref(null)
-  const policyStudents = ref([])
   const loading = ref(true)
   const loadError = ref('')
   const moreOpen = ref(false)
@@ -491,11 +489,8 @@ export function useDriverTripDetailPage() {
     return `${s.slice(0, 36)}…`
   }
 
-  const paxList = computed(() => {
-    const fromPolicy = mapPolicyStudentsToDriverPax(policyStudents.value, t)
-    if (fromPolicy.length) return fromPolicy
-
-    return buildDriverTripPaxList({
+  const paxList = computed(() =>
+    buildDriverTripPaxList({
       dr: dr.value,
       trip: trip.value,
       snap: snap.value,
@@ -506,8 +501,8 @@ export function useDriverTripDetailPage() {
       isBusinessRowFilled,
       isCargoRowFilled,
       classFromNotes,
-    })
-  })
+    }),
+  )
 
   const indexedPaxList = computed(() => paxList.value.map((p, i) => ({ ...p, _origIndex: i })))
 
@@ -643,19 +638,6 @@ export function useDriverTripDetailPage() {
     }
   }
 
-  async function loadPolicyStudents() {
-    const id = tripId.value
-    if (id == null || dr.value?.trip_type !== 'door_to_door') {
-      policyStudents.value = []
-      return
-    }
-    try {
-      policyStudents.value = await listDriverTripPolicyStudents(id)
-    } catch {
-      policyStudents.value = []
-    }
-  }
-
   async function load() {
     const id = tripId.value
     if (id == null) {
@@ -665,14 +647,11 @@ export function useDriverTripDetailPage() {
     }
     loading.value = true
     loadError.value = ''
-    policyStudents.value = []
     try {
       trip.value = await getTrip(id)
-      await loadPolicyStudents()
     } catch {
       loadError.value = t('driver_home.load_error')
       trip.value = null
-      policyStudents.value = []
     } finally {
       loading.value = false
     }
@@ -683,7 +662,6 @@ export function useDriverTripDetailPage() {
     if (id == null) return
     try {
       trip.value = await getTrip(id)
-      await loadPolicyStudents()
     } catch {
       /* keep stale data */
     }

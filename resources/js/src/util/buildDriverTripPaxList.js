@@ -140,23 +140,3 @@ export function buildDriverTripPaxList(options) {
   return out
 }
 
-/**
- * Học sinh tuyến D2D (GET policy-students) → dòng danh sách tài xế.
- */
-export function mapPolicyStudentsToDriverPax(students, t) {
-  if (!Array.isArray(students) || !students.length) return []
-  return students.map((s, i) => {
-    const grade = (s.grade || '').trim()
-    const code = (s.student_code || '').trim()
-    const subtitle = grade ? (grade.match(/^lớp/i) ? grade : `Lớp ${grade}`) : code || '—'
-    return {
-      name: (s.full_name || '').trim() || t('driver_trip_detail.guest_n', { n: i + 1 }),
-      subtitle,
-      phone: null,
-      address: null,
-      time: null,
-      policyCheckInKey: s.check_in_key || `stu_${s.student_id}`,
-      policyCheckedInAt: s.checked_in_at || null,
-    }
-  })
-}

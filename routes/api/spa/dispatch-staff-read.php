@@ -20,14 +20,6 @@ use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\Reports\ReportController;
 use App\Http\Controllers\Api\RequestController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyRouteController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyStudentSearchController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripAbsenceReportController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripLiveUpdatesController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripStudentListController;
-use App\Http\Controllers\Api\P2pPolicy\SchoolCalendarController;
-use App\Http\Controllers\Api\P2pPolicy\StudentPolicyController;
 use App\Http\Controllers\Api\UserSearchForDispatchFormController;
 use App\Http\Controllers\Api\UserSearchForDriverAssignmentController;
 use Illuminate\Support\Facades\Route;
@@ -82,25 +74,6 @@ Route::prefix('admin')->group(function () {
     Route::put('dispatch-settings', [DispatchSettingController::class, 'update']);
 });
 
-Route::get('/policy-routes', [PolicyRouteController::class, 'index']);
-Route::get('/policy-students/search', PolicyStudentSearchController::class);
-
-Route::prefix('policy-trips')->group(function () {
-    Route::get('/live-updates', PolicyTripLiveUpdatesController::class)->middleware('throttle:30,1');
-    Route::get('/absence-report', PolicyTripAbsenceReportController::class)->middleware('throttle:60,1');
-    Route::get('/', [PolicyTripController::class, 'index']);
-    Route::get('/{policyTrip}/students', [PolicyTripStudentListController::class, 'index']);
-});
-
-Route::prefix('student-policies')->controller(StudentPolicyController::class)->group(function () {
-    Route::get('/', 'index');
-    Route::get('/{studentPolicy}/impact', 'impact');
-});
-
-Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->group(function () {
-    Route::get('/', 'index');
-});
-
 // Transport Program redesign (tp_*) — đọc
 Route::prefix('tp-programs')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\TransportProgram\TpProgramController::class, 'index']);
@@ -123,6 +96,7 @@ Route::get('/tp-students/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpSt
 Route::get('/tp-students/{tpStudent}/programs', [\App\Http\Controllers\Api\TpStudent\TpStudentProgramHistoryController::class, 'index']);
 
 Route::prefix('tp-imports')->group(function () {
+    Route::get('/sample', \App\Http\Controllers\Api\TpStudent\TpImportSampleController::class)->middleware('throttle:30,1');
     Route::get('/{tpImportBatch}', [\App\Http\Controllers\Api\TpStudent\TpImportController::class, 'show']);
     Route::get('/{tpImportBatch}/rows', [\App\Http\Controllers\Api\TpStudent\TpImportRowController::class, 'index']);
     Route::get('/{tpImportBatch}/error-report', [\App\Http\Controllers\Api\TpStudent\TpImportErrorReportController::class, 'download'])->middleware('throttle:30,1');

@@ -59,48 +59,7 @@ export const NAV_SECTIONS = [
     ],
   },
   // P2P — Đưa đón học sinh chính sách: section riêng cho rõ ràng (module độc lập).
-  {
-    sectionKey: 'p2p',
-    headingKey: 'nav.section_p2p',
-    items: [
-      {
-        to: `${DISPATCH_WEB_BASE}/p2p-policy/trips`,
-        labelKey: 'nav.p2p_policy_trips',
-        icon: 'trips',
-        featureKey: 'module.p2p_policy',
-        permissionKey: 'policy_trip.view',
-      },
-      {
-        to: `${DISPATCH_WEB_BASE}/p2p-policy/students`,
-        labelKey: 'nav.p2p_policy_students',
-        icon: 'p2p_policy',
-        featureKey: 'module.p2p_policy',
-        permissionKey: 'student_policy.manage',
-      },
-      {
-        to: `${DISPATCH_WEB_BASE}/p2p-policy/calendar`,
-        labelKey: 'nav.p2p_policy_calendar',
-        icon: 'calendar',
-        featureKey: 'module.p2p_policy',
-        permissionKey: 'school_calendar.manage',
-      },
-      {
-        to: `${DISPATCH_WEB_BASE}/p2p-policy/routes`,
-        labelKey: 'nav.p2p_policy_routes',
-        icon: 'routes',
-        featureKey: 'module.p2p_policy',
-        permissionKey: 'student_policy.manage',
-      },
-      {
-        to: `${DISPATCH_WEB_BASE}/p2p-policy/absence-report`,
-        labelKey: 'nav.p2p_policy_absence',
-        icon: 'reports',
-        featureKey: 'module.p2p_policy',
-        permissionKey: 'policy_trip.view',
-      },
-    ],
-  },
-  // Transport Program redesign (tp_*) — module độc lập, chạy song song policy.
+  // Transport Program redesign (tp_*)
   {
     sectionKey: 'transport_program',
     headingKey: 'nav.section_transport_program',

@@ -58,17 +58,4 @@ final class Messages
 
     public const REQUEST_PDF_REQUIRES_APPROVAL = 'PDF chỉ khả dụng sau khi phiếu đã được duyệt.';
 
-    public const P2P_POLICY_TERM_NOT_DRAFT = 'Kỳ P2P Policy chỉ có thể kích hoạt khi đang ở trạng thái nháp.';
-
-    public const P2P_POLICY_OPERATING_DATES_REQUIRED = 'Vui lòng cấu hình ngày bắt đầu và kết thúc vận hành.';
-
-    public const P2P_POLICY_OPERATING_RANGE_INVALID = 'Ngày kết thúc vận hành phải sau ngày bắt đầu.';
-
-    public const P2P_POLICY_GENERATION_IN_PROGRESS = 'Đang có tiến trình sinh chuyến; vui lòng đợi hoàn tất.';
-
-    public const P2P_POLICY_NO_ACTIVE_ROUTES = 'Chưa có tuyến P2P Policy đang hoạt động.';
-
-    public const P2P_POLICY_ROUTE_MISSING_ASSIGNMENT = 'Tuyến «%s» chưa gán xe và tài xế chính.';
-
-    public const P2P_POLICY_ROUTE_NO_STUDENTS = 'Tuyến «%s» chưa có học sinh chính sách trong kỳ vận hành.';
 }

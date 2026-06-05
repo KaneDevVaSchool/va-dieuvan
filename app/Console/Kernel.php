@@ -15,15 +15,6 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('cargo:sla-check')->everyFiveMinutes();
         $schedule->command('dispatch:materialize-recurring-requests')->hourly();
-        // P2P (§4.2): PRIMARY sinh chuyến cho hôm sau lúc 22:00; FALLBACK sinh bù
-        // cho hôm nay lúc 05:00 + alert admin nếu vẫn fail (sau lần 2).
-        $schedule->command('p2p:generate-trips --for=tomorrow')
-            ->dailyAt(config('p2p.generation.primary_at', '22:00'))
-            ->withoutOverlapping();
-        $schedule->command('p2p:generate-trips --for=today --alert-on-fail')
-            ->dailyAt(config('p2p.generation.fallback_at', '05:00'))
-            ->withoutOverlapping();
-
         $schedule->command('dispatch:remind-dept-approvals')->dailyAt('08:00');
         $schedule->command('dispatch:remind-signed-paper-upload')->dailyAt('08:15');
     }

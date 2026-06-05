@@ -613,7 +613,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import { createProgram } from '../../api/transportProgram'
-import { listDrivers } from '../../api/p2p'
+import { listDrivers } from '../../api/operational'
 import { searchUsersForDispatchForm } from '../../api/operational'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 

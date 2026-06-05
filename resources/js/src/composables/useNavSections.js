@@ -49,11 +49,6 @@ export function useNavSections() {
               icon: 'calendar',
             },
             {
-              to: '/driver/policy-trips',
-              labelKey: 'nav.driver_policy_trips',
-              icon: 'p2p_policy',
-            },
-            {
               to: '/driver/tp-days',
               labelKey: 'nav.driver_tp_days',
               icon: 'calendar',

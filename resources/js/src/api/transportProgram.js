@@ -205,6 +205,10 @@ export function importErrorReportUrl(id) {
   return `/api/tp-imports/${id}/error-report`
 }
 
+export function importSampleUrl() {
+  return `/api/tp-imports/sample`
+}
+
 // ── Driver ──────────────────────────────────────────────────────────────────────
 
 export async function driverListDays(params = {}) {

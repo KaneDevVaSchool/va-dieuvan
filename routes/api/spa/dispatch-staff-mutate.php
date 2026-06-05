@@ -14,12 +14,6 @@ use App\Http\Controllers\Api\ReferencePricingController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
 use App\Http\Controllers\Api\SignedDocuments\SignedDocumentController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyRouteController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripAssignDriverController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripCancelController;
-use App\Http\Controllers\Api\P2pPolicy\PolicyTripGenerateController;
-use App\Http\Controllers\Api\P2pPolicy\SchoolCalendarController;
-use App\Http\Controllers\Api\P2pPolicy\StudentPolicyController;
 use App\Http\Controllers\Api\Trips\TripController;
 use Illuminate\Support\Facades\Route;
 
@@ -157,30 +151,6 @@ Route::post('/transport-providers/{id}/restore', [OperationalResourceController:
 Route::delete('/transport-providers/{id}/force', [OperationalResourceController::class, 'forceDeleteTransportProvider'])
     ->whereNumber('id')
     ->middleware('throttle:30,1');
-
-Route::post('/policy-routes', [PolicyRouteController::class, 'store'])->middleware('throttle:30,1');
-
-Route::post('/policy-trips/generate', PolicyTripGenerateController::class)
-    ->middleware('throttle:10,1');
-
-Route::patch('/policy-trips/{policyTrip}/assign-driver', PolicyTripAssignDriverController::class)
-    ->middleware('throttle:60,1');
-Route::patch('/policy-trips/{policyTrip}/cancel', PolicyTripCancelController::class)
-    ->middleware('throttle:60,1');
-
-Route::prefix('student-policies')->controller(StudentPolicyController::class)->group(function () {
-    Route::post('/', 'store')->middleware('throttle:30,1');
-    Route::patch('/{studentPolicy}', 'update')->middleware('throttle:30,1');
-    Route::delete('/{studentPolicy}', 'destroy')->middleware('throttle:30,1');
-});
-
-Route::prefix('school-calendars')->controller(SchoolCalendarController::class)->group(function () {
-    Route::post('/generate-month', 'generateMonth')->middleware('throttle:10,1');
-    Route::post('/bulk', 'bulkImport')->middleware('throttle:10,1');
-    Route::patch('/{date}', 'update')
-        ->where('date', '[0-9]{4}-[0-9]{2}-[0-9]{2}')
-        ->middleware('throttle:30,1');
-});
 
 // Transport Program redesign (tp_*) — ghi
 Route::prefix('tp-programs')->group(function () {
