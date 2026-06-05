@@ -135,6 +135,13 @@ function createSharedApi() {
     return s.trim() !== '' ? s : fb
   }
 
+  /** Nhãn field là dòng đầu trong panel lọc, sau đó mới tới «Tất cả» và các giá trị. */
+  function optionsWithFieldLabel(fieldLabel, options) {
+    const label = safeLabel(fieldLabel)
+    const opts = Array.isArray(options) ? options : []
+    return [{ header: true, label, value: null }, ...opts]
+  }
+
   const presetDefs = computed(() =>
     [
       { id: 'all', label: t('dashboard_analytics.preset_all_time') },
@@ -273,8 +280,8 @@ function createSharedApi() {
       {
         id: 'trip_type',
         label: safeLabel(t('dashboard_analytics.filter_trip_type')),
-        summary: filterTripType.value ? labelTripType(filterTripType.value) : fa,
-        options: tripTypeOpts,
+        summary: filterTripType.value ? labelTripType(filterTripType.value) : safeLabel(t('dashboard_analytics.filter_trip_type')),
+        options: optionsWithFieldLabel(t('dashboard_analytics.filter_trip_type'), tripTypeOpts),
         isSelected: (v) => (v === '' ? !filterTripType.value : filterTripType.value === v),
         pick: (v) => {
           filterTripType.value = v || ''
@@ -284,8 +291,8 @@ function createSharedApi() {
       {
         id: 'channel',
         label: safeLabel(t('dashboard_analytics.filter_channel')),
-        summary: filterSourceChannel.value ? t(`labels.source_channel.${filterSourceChannel.value}`) : fa,
-        options: channelOpts,
+        summary: filterSourceChannel.value ? t(`labels.source_channel.${filterSourceChannel.value}`) : safeLabel(t('dashboard_analytics.filter_channel')),
+        options: optionsWithFieldLabel(t('dashboard_analytics.filter_channel'), channelOpts),
         isSelected: (v) => (v === '' ? !filterSourceChannel.value : filterSourceChannel.value === v),
         pick: (v) => {
           filterSourceChannel.value = v || ''
@@ -295,8 +302,8 @@ function createSharedApi() {
       {
         id: 'paper',
         label: safeLabel(t('dashboard_analytics.filter_paper')),
-        summary: filterPaperStatus.value ? t(`labels.paper_status.${filterPaperStatus.value}`) : fa,
-        options: paperOpts,
+        summary: filterPaperStatus.value ? t(`labels.paper_status.${filterPaperStatus.value}`) : safeLabel(t('dashboard_analytics.filter_paper')),
+        options: optionsWithFieldLabel(t('dashboard_analytics.filter_paper'), paperOpts),
         isSelected: (v) => (v === '' ? !filterPaperStatus.value : filterPaperStatus.value === v),
         pick: (v) => {
           filterPaperStatus.value = v || ''
@@ -306,8 +313,8 @@ function createSharedApi() {
       {
         id: 'urgent',
         label: safeLabel(t('dashboard_analytics.filter_urgent')),
-        summary: filterIsUrgent.value ? t('dashboard_analytics.filter_urgent_only') : fa,
-        options: urgentOpts,
+        summary: filterIsUrgent.value ? t('dashboard_analytics.filter_urgent_only') : safeLabel(t('dashboard_analytics.filter_urgent')),
+        options: optionsWithFieldLabel(t('dashboard_analytics.filter_urgent'), urgentOpts),
         isSelected: (v) => (v === '' ? !filterIsUrgent.value : filterIsUrgent.value),
         pick: (v) => {
           filterIsUrgent.value = v === '1'
@@ -317,8 +324,8 @@ function createSharedApi() {
       {
         id: 'trip_run',
         label: safeLabel(t('dashboard_analytics.filter_trip_run_status')),
-        summary: filterTripRunStatus.value ? labelTripStatus(filterTripRunStatus.value) : fa,
-        options: runStatusOpts,
+        summary: filterTripRunStatus.value ? labelTripStatus(filterTripRunStatus.value) : safeLabel(t('dashboard_analytics.filter_trip_run_status')),
+        options: optionsWithFieldLabel(t('dashboard_analytics.filter_trip_run_status'), runStatusOpts),
         isSelected: (v) => (v === '' ? !filterTripRunStatus.value : filterTripRunStatus.value === v),
         pick: (v) => {
           filterTripRunStatus.value = v || ''
@@ -335,8 +342,8 @@ function createSharedApi() {
               taxi: t('dashboard_analytics.fleet_taxi'),
               unspecified: t('dashboard_analytics.fleet_unspecified'),
             }[filterFleetMode.value] ?? filterFleetMode.value
-          : fa,
-        options: fleetOpts,
+          : safeLabel(t('dashboard_analytics.filter_fleet')),
+        options: optionsWithFieldLabel(t('dashboard_analytics.filter_fleet'), fleetOpts),
         isSelected: (v) => (v === '' ? !filterFleetMode.value : filterFleetMode.value === v),
         pick: (v) => {
           filterFleetMode.value = v || ''
@@ -354,7 +361,7 @@ function createSharedApi() {
               .filter((o) => o != null && typeof o === 'object')
               .map((o) => ({
                 ...o,
-                label: safeLabel(o.label, fa),
+                label: o.header ? safeLabel(o.label) : safeLabel(o.label, fa),
               }))
           : [],
       }))

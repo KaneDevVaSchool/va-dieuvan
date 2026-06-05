@@ -69,9 +69,15 @@ class SendWebPushOnDatabaseNotification
         }
 
         $tripId = $data['trip_id'] ?? null;
-        $tag = is_numeric($tripId)
-            ? 'va-trip-'.$tripId
-            : 'va-'.($data['id'] ?? uniqid('n', true));
+        $programDayId = $data['program_day_id'] ?? null;
+        if (is_numeric($programDayId)) {
+            $tag = 'va-tp-day-'.$programDayId;
+        } elseif (is_numeric($tripId)) {
+            $tag = 'va-trip-'.$tripId;
+        } else {
+            $event = isset($data['event']) ? (string) $data['event'] : '';
+            $tag = $event !== '' ? 'va-'.$event : 'va-'.($data['id'] ?? uniqid('n', true));
+        }
 
         $payload = [
             'title' => $title,

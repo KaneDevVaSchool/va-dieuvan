@@ -90,6 +90,14 @@
             class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[220px] rounded-xl border border-slate-200/90 bg-white py-1 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
           >
             <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
+              <li>
+                <div
+                  class="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                  role="presentation"
+                >
+                  {{ t('dashboard_analytics.filter_period_label') }}
+                </div>
+              </li>
               <li v-for="p in presetDefs" :key="p.id">
                 <button
                   type="button"
@@ -226,9 +234,17 @@
               <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
                 <li
                   v-for="(opt, optIdx) in (fd.options || []).filter((o) => o != null && typeof o === 'object')"
-                  :key="fd.id + '-' + optIdx + '-' + String(opt?.value ?? '')"
+                  :key="fd.id + '-' + optIdx + '-' + String(opt?.header ? 'hdr' : opt?.value ?? '')"
                 >
+                  <div
+                    v-if="opt.header"
+                    class="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                    role="presentation"
+                  >
+                    {{ opt?.label ?? '—' }}
+                  </div>
                   <button
+                    v-else
                     type="button"
                     :class="[
                       'flex w-full rounded-lg px-3 py-2 text-left text-sm transition',

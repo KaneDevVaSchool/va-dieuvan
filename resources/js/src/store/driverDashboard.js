@@ -15,6 +15,7 @@ import {
   dashPerfHydrateDone,
   dashPerfSkipStale,
 } from '../util/devDriverDashboardPerf'
+import { expandTripsForDriverCalendar } from '../composables/driverScheduleExpand'
 
 const CACHE_KEY = 'va_driver_dash_snap_v1'
 const CACHE_SCHEMA = 1
@@ -239,6 +240,11 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
 
     listLoadingForUi(state) {
       return state.loadingInitial && state.rawListItems.length === 0
+    },
+
+    /** Chuyến điều vận + từng ca (sáng/chiều) để hiển thị lịch tuần. */
+    calendarDispatchEntries() {
+      return expandTripsForDriverCalendar(this.rawTrips)
     },
   },
 

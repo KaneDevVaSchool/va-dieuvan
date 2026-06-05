@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Driver;
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Driver\DriverTripHistoryRequest;
+use App\Models\Driver;
 use App\Models\Trip;
+use App\Services\Dispatching\TripScheduleLegService;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -18,9 +20,15 @@ class DriverTripController extends Controller
     /** @var list<string> */
     private const PENDING_STATUSES = ['pending', 'assigned', 'driver_confirmed', 'approved'];
 
+    public function __construct(
+        private readonly TripScheduleLegService $scheduleLegs,
+    ) {}
+
     public function history(DriverTripHistoryRequest $request): JsonResponse
     {
         $user = $request->user();
+        $driverId = Driver::query()->where('user_id', $user->id)->value('id');
+        $driverId = $driverId !== null ? (int) $driverId : null;
         $data = $request->validated();
         $perPage = isset($data['per_page']) ? (int) $data['per_page'] : 15;
         $perPage = min(100, max(1, $perPage));
@@ -33,7 +41,7 @@ class DriverTripController extends Controller
         $q = TripVisibility::visibleTripsQuery($user)
             ->whereHas('dispatchRequest')
             ->with([
-                'dispatchRequest:id,trip_type,origin,destination,passenger_count,is_urgent,depart_at,arrive_by',
+                'dispatchRequest:id,trip_type,origin,destination,passenger_count,is_urgent,depart_at,arrive_by,wizard_snapshot',
                 'tripPassengers',
                 'record:id,trip_id,distance_km',
             ]);
@@ -51,7 +59,10 @@ class DriverTripController extends Controller
 
         $results = $q->paginate($perPage);
 
-        $items = collect($results->items())->map(fn (Trip $trip) => $this->serializeTrip($trip))->values()->all();
+        $items = collect($results->items())
+            ->map(fn (Trip $trip) => $this->serializeTrip($trip, $driverId))
+            ->values()
+            ->all();
 
         return $this->ok([
             'items' => $items,
@@ -126,7 +137,7 @@ class DriverTripController extends Controller
         ];
     }
 
-    private function serializeTrip(Trip $trip): array
+    private function serializeTrip(Trip $trip, ?int $driverId): array
     {
         $dr = $trip->dispatchRequest;
         $depart = $trip->depart_at;
@@ -163,7 +174,51 @@ class DriverTripController extends Controller
             'passenger_count' => $passengerCount,
             'duration_minutes' => $durationMinutes,
             'distance_km' => $distanceKm,
+            'dispatch_request' => $dr ? [
+                'trip_type' => $dr->trip_type,
+                'origin' => $dr->origin,
+                'destination' => $dr->destination,
+                'depart_at' => $dr->depart_at?->toIso8601String(),
+                'arrive_by' => $dr->arrive_by?->toIso8601String(),
+            ] : null,
+            'schedule_legs' => $this->legsForDriver($trip, $driverId),
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function legsForDriver(Trip $trip, ?int $driverId): array
+    {
+        $all = $this->scheduleLegs->resolveScheduleLegsForTrip($trip);
+        if ($all === []) {
+            return [];
+        }
+
+        $pool = $all;
+        if ($driverId !== null) {
+            $mine = array_values(array_filter(
+                $all,
+                fn (array $leg) => (int) ($leg['assignment']['driver_id'] ?? 0) === $driverId,
+            ));
+            if ($mine !== []) {
+                $pool = $mine;
+            } elseif (count($all) === 1 && (int) $trip->driver_id === $driverId) {
+                $pool = $all;
+            } else {
+                return [];
+            }
+        }
+
+        return array_map(fn (array $leg) => [
+            'key' => $leg['key'],
+            'label_seq' => $leg['label_seq'] ?? null,
+            'depart_at' => $leg['depart_at'] ?? null,
+            'arrive_by' => $leg['arrive_by'] ?? null,
+            'pickup' => $leg['pickup'] ?? '',
+            'dropoff' => $leg['dropoff'] ?? '',
+            'status' => $leg['status'] ?? $trip->status,
+        ], $pool);
     }
 
     private function tripTypeCode(?string $tripType): string

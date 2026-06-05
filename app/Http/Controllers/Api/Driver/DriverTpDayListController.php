@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Driver\Concerns\ActsOnTpExecutions;
 use App\Http\Controllers\Controller;
 use App\Models\TpProgramDay;
+use App\Services\TransportProgram\TpProgramScheduleSlots;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,10 @@ class DriverTpDayListController extends Controller
 {
     use ActsOnTpExecutions;
     use ApiResponses;
+
+    public function __construct(
+        private readonly TpProgramScheduleSlots $scheduleSlots,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -31,18 +36,48 @@ class DriverTpDayListController extends Controller
             ->where('day_type', TpProgramDay::DAY_OPERATING)
             ->whereBetween('scheduled_date', [$from, $to])
             ->get()
-            ->filter(fn (TpProgramDay $d) => optional($d->effectiveDriver())->id === $driver->id)
-            ->map(fn (TpProgramDay $d) => [
-                'day_id' => $d->id,
-                'program_name' => $d->program->name,
-                'scheduled_date' => $d->scheduled_date->toDateString(),
-                'departure_time' => $d->program->departure_time,
-                'expected_count' => $d->expected_count,
-                'is_default_driver' => $d->driver_id === null,
-                'execution_status' => $d->execution?->status,
-                'confirmed_at' => $d->confirmed_at?->toIso8601String(),
-            ])->values()->all();
+            ->filter(fn (TpProgramDay $d) => optional($d->effectiveDriver())->id === $driver->id);
 
-        return $this->ok(['items' => $days]);
+        $items = [];
+        foreach ($days as $d) {
+            $program = $d->program;
+            if ($program === null) {
+                continue;
+            }
+            $slots = $this->scheduleSlots->slotsForProgram($program);
+            if ($slots === []) {
+                $slots = [['shift' => 'morning', 'departure_time' => $program->departure_time, 'arrival_time' => null]];
+            }
+
+            foreach ($slots as $slot) {
+                $shift = (string) ($slot['shift'] ?? 'morning');
+                $items[] = [
+                    'day_id' => $d->id,
+                    'list_key' => $d->id.'-'.$shift,
+                    'shift' => $shift,
+                    'program_name' => $program->name,
+                    'scheduled_date' => $d->scheduled_date->toDateString(),
+                    'departure_time' => $slot['departure_time'] ?? $program->departure_time,
+                    'arrival_time' => $slot['arrival_time'] ?? null,
+                    'expected_count' => $d->expected_count,
+                    'is_default_driver' => $d->driver_id === null,
+                    'execution_status' => $d->execution?->status,
+                    'confirmed_at' => $d->confirmed_at?->toIso8601String(),
+                ];
+            }
+        }
+
+        usort($items, function (array $a, array $b) {
+            $cmp = strcmp($a['scheduled_date'], $b['scheduled_date']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            $ta = (string) ($a['departure_time'] ?? '');
+            $tb = (string) ($b['departure_time'] ?? '');
+
+            return strcmp($ta, $tb);
+        });
+
+        return $this->ok(['items' => array_values($items)]);
     }
 }

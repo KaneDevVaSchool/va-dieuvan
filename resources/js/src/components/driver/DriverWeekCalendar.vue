@@ -128,7 +128,7 @@
       <div v-else class="flex flex-col">
         <div
           v-for="(trip, i) in tripsForDay"
-          :key="trip.id"
+          :key="trip.calendar_key || trip.id"
           class="flex items-stretch gap-0"
         >
           <!-- Left column: time + dot + connector -->
@@ -151,12 +151,14 @@
 
           <!-- Card -->
           <RouterLink
-            :to="`/driver/trips/${trip.id}`"
+            :to="trip._rowKind === 'tp' ? `/driver/tp-days/${trip.day_id}` : `/driver/trips/${trip.id}`"
             class="mb-3 ml-3 min-w-0 flex-1 overflow-hidden rounded-2xl bg-[#0a1c1a] ring-1 ring-[#7fdcc8]/12 transition active:scale-[0.99]"
             :class="
-              tripVariant(trip) === 'blue'
-                ? 'hover:ring-sky-400/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/35'
-                : 'hover:ring-teal-400/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/35'
+              trip._rowKind === 'tp'
+                ? 'hover:ring-violet-400/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/35'
+                : tripVariant(trip) === 'blue'
+                  ? 'hover:ring-sky-400/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/35'
+                  : 'hover:ring-teal-400/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/35'
             "
           >
             <!-- Top row -->
@@ -164,10 +166,22 @@
               <span
                 class="shrink-0 rounded-md bg-white/10 px-2 py-0.5 text-sm font-extrabold uppercase tracking-wide text-white"
               >
-                {{ tripTypeBadgeText(trip) }}
+                {{ trip._rowKind === 'tp' ? 'TP' : tripTypeBadgeText(trip) }}
+              </span>
+              <span
+                v-if="trip._rowKind === 'tp' && trip.shift"
+                class="shrink-0 rounded-md bg-violet-500/20 px-2 py-0.5 text-xs font-bold text-violet-200"
+              >
+                {{ shiftLabel(trip.shift) }}
+              </span>
+              <span
+                v-else-if="trip.calendar_shift"
+                class="shrink-0 rounded-md bg-violet-500/20 px-2 py-0.5 text-xs font-bold text-violet-200"
+              >
+                {{ shiftLabel(trip.calendar_shift) }}
               </span>
               <span class="min-w-0 flex-1 truncate text-sm font-semibold text-white/65">
-                {{ tripServiceFullName(trip) }}
+                {{ trip._rowKind === 'tp' ? (trip.program_name || t('driver_home.svc_name_d2d')) : tripServiceFullName(trip) }}
               </span>
               <span
                 class="shrink-0 rounded-lg px-2 py-1 text-xs font-bold"
@@ -190,27 +204,37 @@
               </svg>
             </div>
 
-            <!-- Route -->
+            <!-- Route / TP summary -->
             <div class="space-y-2 px-4 py-3">
-              <div class="flex items-start gap-2.5">
-                <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
-                <p class="line-clamp-2 text-base font-bold leading-snug text-white">
-                  {{ tripOrigin(trip) }}
+              <template v-if="trip._rowKind === 'tp'">
+                <p class="text-sm font-medium text-[#7fdcc8]/75">
+                  {{ t('driver_home.calendar_tp_hint') }}
                 </p>
-              </div>
-              <div class="flex items-start gap-2.5">
-                <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-400" aria-hidden="true" />
-                <p class="line-clamp-2 text-base font-medium leading-snug text-[#7fdcc8]/65">
-                  {{ tripDestination(trip) }}
+                <p v-if="trip.expected_count" class="text-sm text-slate-400">
+                  {{ trip.expected_count }} HS
                 </p>
-              </div>
+              </template>
+              <template v-else>
+                <div class="flex items-start gap-2.5">
+                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
+                  <p class="line-clamp-2 text-base font-bold leading-snug text-white">
+                    {{ tripOrigin(trip) }}
+                  </p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-400" aria-hidden="true" />
+                  <p class="line-clamp-2 text-base font-medium leading-snug text-[#7fdcc8]/65">
+                    {{ tripDestination(trip) }}
+                  </p>
+                </div>
+              </template>
             </div>
 
             <!-- Footer -->
             <div
               class="flex flex-wrap items-center gap-3 border-t border-[#7fdcc8]/10 px-4 py-2.5 text-sm tabular-nums text-slate-500"
             >
-              <span class="font-semibold">{{ tripRefLabel(trip) }}</span>
+              <span v-if="trip._rowKind !== 'tp'" class="font-semibold">{{ tripRefLabel(trip) }}</span>
               <span v-if="formatTripArriveTime(trip)">
                 → {{ formatTripArriveTime(trip) }}
               </span>
@@ -233,7 +257,10 @@ import {
 } from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
+  /** Đã mở rộng theo từng lịch (sáng/chiều) — xem `expandTripsForDriverCalendar`. */
   rawTrips: { type: Array, default: () => [] },
+  /** Ca chương trình đưa đón — xem `tpItemsToCalendarSlots`. */
+  tpSlots: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
 })
 
@@ -307,12 +334,24 @@ function tripServiceFullName(trip) {
   return t('driver_home.calendar_svc_other')
 }
 
+function dateKeyFromDepart(iso) {
+  if (!iso) return null
+  if (typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}/.test(iso)) return iso.slice(0, 10)
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return ymd(d)
+}
+
 const tripCountByDate = computed(() => {
   const map = {}
   for (const trip of props.rawTrips) {
-    const iso = trip.depart_at
-    if (!iso) continue
-    const key = iso.slice(0, 10)
+    const key = dateKeyFromDepart(trip.depart_at)
+    if (!key) continue
+    map[key] = (map[key] ?? 0) + 1
+  }
+  for (const slot of props.tpSlots) {
+    const key = dateKeyFromDepart(slot.depart_at)
+    if (!key) continue
     map[key] = (map[key] ?? 0) + 1
   }
   return map
@@ -370,13 +409,22 @@ const weekRangeLabel = computed(() => {
 const tripsForDay = computed(() => {
   const iso = selectedIso.value
   if (!iso) return []
-  return props.rawTrips
-    .filter((trip) => trip.depart_at && trip.depart_at.slice(0, 10) === iso)
-    .slice()
-    .sort(
-      (a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0),
-    )
+  const dispatch = props.rawTrips
+    .filter((trip) => dateKeyFromDepart(trip.depart_at) === iso)
+    .map((trip) => ({ ...trip, _rowKind: 'dispatch' }))
+  const tp = props.tpSlots
+    .filter((slot) => dateKeyFromDepart(slot.depart_at) === iso)
+    .map((slot) => ({ ...slot, _rowKind: 'tp' }))
+  return [...dispatch, ...tp].sort(
+    (a, b) => (new Date(a.depart_at).getTime() || 0) - (new Date(b.depart_at).getTime() || 0),
+  )
 })
+
+function shiftLabel(shift) {
+  if (shift === 'morning') return t('driver_home.shift_morning')
+  if (shift === 'afternoon') return t('driver_home.shift_afternoon')
+  return ''
+}
 
 function tripVariant(trip) {
   const tt = trip.dispatch_request?.trip_type

@@ -35,6 +35,8 @@
 
     <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-3 pt-4 sm:px-4">
       <div class="min-w-0 space-y-4">
+        <DriverPushBanner class="mb-1" />
+
         <DriverPendingConfirmationSection
           v-if="dash.needsConfirmationTrips.length > 0 || (dash.loadingInitial && dash.rawListItems.length === 0)"
           :trips="dash.needsConfirmationTrips"
@@ -59,6 +61,12 @@
           :list-loading="dash.listLoadingForUi"
           :start-busy-trip-id="dash.startBusyTripId"
           @start-trip="onStartTrip"
+        />
+
+        <DriverWeekCalendar
+          :raw-trips="dash.calendarDispatchEntries"
+          :tp-slots="tpCalendarSlots"
+          :loading="dash.listLoadingForUi || tpCalendarLoading"
         />
       </div>
 
@@ -91,7 +99,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
@@ -99,9 +107,13 @@ import { useAuthStore, useDriverDashboardStore } from '../../store/index'
 import { dashPerfMounted } from '../../util/devDriverDashboardPerf'
 import { playNotificationChime } from '../../util/notificationChime'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
+import DriverPushBanner from '../../components/driver/DriverPushBanner.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverPendingConfirmationSection from '../../components/driver/dashboard/DriverPendingConfirmationSection.vue'
 import DriverUpcomingTripsSection from '../../components/driver/dashboard/DriverUpcomingTripsSection.vue'
+import DriverWeekCalendar from '../../components/driver/DriverWeekCalendar.vue'
+import { driverListDays } from '../../api/transportProgram'
+import { tpItemsToCalendarSlots } from '../../composables/driverScheduleExpand'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -118,6 +130,39 @@ const initials = computed(() => {
 })
 
 const dispatcherPhone = import.meta.env.VITE_DISPATCHER_PHONE || null
+
+const tpCalendarSlots = ref([])
+const tpCalendarLoading = ref(false)
+
+function ymdLocal(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function currentWeekFromTo() {
+  const today = new Date()
+  const dow = today.getDay()
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - ((dow + 6) % 7))
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  return { from: ymdLocal(monday), to: ymdLocal(sunday) }
+}
+
+async function refreshTpCalendar() {
+  tpCalendarLoading.value = true
+  try {
+    const { from, to } = currentWeekFromTo()
+    const res = await driverListDays({ date_from: from, date_to: to })
+    tpCalendarSlots.value = tpItemsToCalendarSlots(res?.items ?? [])
+  } catch {
+    tpCalendarSlots.value = []
+  } finally {
+    tpCalendarLoading.value = false
+  }
+}
 
 const SEEN_PENDING_INIT_KEY = 'va_driver_pending_seen_init'
 const SEEN_PENDING_IDS_KEY = 'va_driver_pending_ids_seen'
@@ -282,7 +327,14 @@ onMounted(() => {
   scheduleDeferredPushBoot()
 
   void nextTick(() => {
-    void dash.fetchDashboard({ silent, force: true })
+    void dash.fetchDashboard({ silent, force: true }).finally(() => refreshTpCalendar())
   })
 })
+
+watch(
+  () => dash.lastFetchedAt,
+  (ts, prev) => {
+    if (ts && ts !== prev) void refreshTpCalendar()
+  },
+)
 </script>

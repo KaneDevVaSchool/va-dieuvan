@@ -123,6 +123,22 @@
               <span v-else>{{ t('notify.driver_enable_btn') }}</span>
             </button>
 
+            <!-- Prod: đã cho quyền trình duyệt nhưng chưa đăng ký push (VAPID) -->
+            <button
+              v-if="notificationPermission === 'granted' && isProd && notifStore.pushState !== 'subscribed'"
+              type="button"
+              :disabled="pushLoading"
+              class="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-[#7fdcc8] text-base font-bold text-[#020B0B] shadow-sm active:opacity-90 disabled:opacity-60"
+              @click="onEnableAll"
+            >
+              <span
+                v-if="pushLoading"
+                class="h-5 w-5 animate-spin rounded-full border-2 border-[#020B0B] border-t-transparent"
+                aria-hidden="true"
+              />
+              <span v-else>{{ t('notify.driver_enable_push') }}</span>
+            </button>
+
             <!-- Permission granted, non-prod: show done state -->
             <div
               v-if="notificationPermission === 'granted' && !isProd"
@@ -442,6 +458,9 @@ function classifyKind(n) {
   if (d.event === 'trip.assigned' || type === 'TripAssignedNotification') {
     return 'trip_assigned'
   }
+  if (d.event === 'tp.driver.morning_reminder' || type === 'TpDriverMorningReminderNotification') {
+    return 'tp_morning'
+  }
   if (d.event === 'dispatch_request.created' || type === 'NewDispatchRequestNotification') {
     return 'new_trip'
   }
@@ -505,6 +524,11 @@ function linesFor(n) {
 
     return { primary: t('notify.trip_assigned'), sub }
   }
+  if (kind === 'tp_morning') {
+    const { d } = rawParts(n)
+    const sub = d.body != null ? String(d.body).trim() : t('notify.tp_morning_sub')
+    return { primary: t('notify.tp_morning_title'), sub }
+  }
   if (kind === 'new_trip') {
     return { primary: t('notify.trip_new'), sub: t('notify.trip_new_sub') }
   }
@@ -537,6 +561,10 @@ function resolveNavLink(n) {
   }
   if (d.action_url) {
     return String(d.action_url)
+  }
+  const programDayId = d.program_day_id
+  if (programDayId != null && programDayId !== '' && isDriverApp.value) {
+    return `/driver/tp-days/${String(programDayId)}`
   }
   const tripId = d.trip_id ?? d.tripId
   if (tripId != null && tripId !== '') {

@@ -25,7 +25,7 @@
       <div v-else class="space-y-2">
         <button
           v-for="d in visibleDays"
-          :key="d.day_id"
+          :key="d.list_key || d.day_id"
           type="button"
           class="block w-full rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-left transition active:scale-[0.99]"
           @click="open(d)"
@@ -34,7 +34,13 @@
             <div class="min-w-0 font-semibold truncate">{{ d.program_name }}</div>
             <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium" :class="statusClass(d)">{{ statusLabel(d) }}</span>
           </div>
-          <div class="mt-1 text-xs text-driver-ink/50">{{ d.scheduled_date }} · {{ d.departure_time }} · {{ d.expected_count }} HS</div>
+          <div class="mt-1 text-xs text-driver-ink/50">
+            <span v-if="d.shift" class="font-semibold text-[#7fdcc8]">{{ shiftLabel(d.shift) }}</span>
+            <span v-if="d.shift"> · </span>
+            {{ d.scheduled_date }} · {{ d.departure_time }}
+            <span v-if="d.arrival_time">–{{ d.arrival_time }}</span>
+            · {{ d.expected_count }} HS
+          </div>
         </button>
       </div>
     </div>
@@ -48,9 +54,11 @@ import { useRouter } from 'vue-router'
 import { driverListDays } from '../../api/transportProgram'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import WeekCalendar from '../../components/trips/WeekCalendar.vue'
+import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
 
 const { t } = useI18n()
 const router = useRouter()
+const { bootDriverOutboundNotifications } = useDriverWebPushBoot()
 const loading = ref(false)
 const days = ref([])
 const selectedDate = ref(new Date())
@@ -105,6 +113,12 @@ const dayTitle = computed(() =>
   selectedDate.value.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric' }),
 )
 
+function shiftLabel(shift) {
+  if (shift === 'morning') return t('driver_home.shift_morning')
+  if (shift === 'afternoon') return t('driver_home.shift_afternoon')
+  return ''
+}
+
 async function load() {
   loading.value = true
   try {
@@ -143,6 +157,7 @@ function statusClass(d) {
 watch(selectedDate, () => { void load() })
 
 onMounted(() => {
+  void bootDriverOutboundNotifications()
   load()
   window.addEventListener('online', setOnline)
   window.addEventListener('offline', setOnline)
