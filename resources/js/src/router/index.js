@@ -282,6 +282,17 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "reports/driver-frequency",
+        name: "driverFrequencyReport",
+        component: () =>
+            import("../views/reports/DriverFrequencyReportView.vue"),
+        meta: {
+            title: "Báo cáo tần suất tài xế",
+            subtitle: "Tần suất tài xế & xe",
+            featureKey: "module.reports",
+        },
+    },
+    {
         path: "pricing",
         name: "pricing",
         component: () => import("../views/pricing/PricingReferenceView.vue"),

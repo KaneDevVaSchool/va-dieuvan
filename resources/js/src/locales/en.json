@@ -90,6 +90,7 @@
         "payments": "Reconciliation & payments",
         "reports": "Reports",
         "cost_report": "Trip Cost Report",
+        "driver_frequency_report": "Driver Frequency",
         "pricing": "Reference pricing",
         "help": "Help",
         "roadmap": "Roadmap & ideas",

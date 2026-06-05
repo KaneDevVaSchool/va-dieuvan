@@ -84,6 +84,7 @@ export const NAV_SECTIONS = [
     items: [
       { to: `${DISPATCH_WEB_BASE}/reports`, labelKey: 'nav.reports', icon: 'reports', featureKey: 'module.reports' },
       { to: `${DISPATCH_WEB_BASE}/reports/costs`, labelKey: 'nav.cost_report', icon: 'costs', featureKey: 'module.reports', permissionKey: 'report.view' },
+      { to: `${DISPATCH_WEB_BASE}/reports/driver-frequency`, labelKey: 'nav.driver_frequency_report', icon: 'driver', featureKey: 'module.reports', permissionKey: 'report.view' },
       { to: `${DISPATCH_WEB_BASE}/pricing`, labelKey: 'nav.pricing', icon: 'pricing', featureKey: 'module.pricing' },
     ],
   },
