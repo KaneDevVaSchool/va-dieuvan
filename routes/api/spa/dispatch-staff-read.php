@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Operational\DriverWorkloadController;
 use App\Http\Controllers\Api\Operational\VehicleComplianceDocumentController;
 use App\Http\Controllers\Api\OperationalResourceController;
 use App\Http\Controllers\Api\ReferencePricingController;
+use App\Http\Controllers\Api\Reports\DriverFrequencyReportController;
 use App\Http\Controllers\Api\Reports\ReportController;
 use App\Http\Controllers\Api\Reports\TripCostReportController;
 use App\Http\Controllers\Api\RequestController;
@@ -55,6 +56,15 @@ Route::prefix('reports/trip-costs')->group(function () {
     Route::get('/export-xlsx', [TripCostReportController::class, 'exportXlsx'])
         ->middleware(['permission:report.export', 'throttle:30,1']);
     Route::get('/export-pdf', [TripCostReportController::class, 'exportPdf'])
+        ->middleware(['permission:report.export', 'throttle:30,1']);
+});
+
+Route::prefix('reports/driver-frequency')->group(function () {
+    Route::get('/', [DriverFrequencyReportController::class, 'statistics'])
+        ->middleware('permission:report.view');
+    Route::get('/export-xlsx', [DriverFrequencyReportController::class, 'exportXlsx'])
+        ->middleware(['permission:report.export', 'throttle:30,1']);
+    Route::get('/export-pdf', [DriverFrequencyReportController::class, 'exportPdf'])
         ->middleware(['permission:report.export', 'throttle:30,1']);
 });
 

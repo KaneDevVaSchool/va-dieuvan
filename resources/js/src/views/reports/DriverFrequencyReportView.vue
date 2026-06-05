@@ -16,10 +16,28 @@
           </p>
         </div>
       </div>
-      <button type="button" class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#9b0036] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#7a0029] focus:outline-none focus:ring-2 focus:ring-[#9b0036]/40" @click="onSuggestBonus">
-        {{ t('driver_freq.btn_suggest_bonus') }}
-        <ArrowTopRightOnSquareIcon class="size-4 shrink-0" aria-hidden="true" />
-      </button>
+      <div v-if="canExport" class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          :disabled="!!exporting || loading"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 shadow-sm transition hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+          @click="doExportXlsx"
+        >
+          <span v-if="exporting === 'xlsx'" class="inline-block size-4 animate-spin rounded-full border-2 border-emerald-300 border-t-emerald-700" />
+          <TableCellsIcon v-else class="size-4 shrink-0" aria-hidden="true" />
+          {{ t('driver_freq.btn_export_xlsx') }}
+        </button>
+        <button
+          type="button"
+          :disabled="!!exporting || loading"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200"
+          @click="doExportPdf"
+        >
+          <span v-if="exporting === 'pdf'" class="inline-block size-4 animate-spin rounded-full border-2 border-rose-300 border-t-rose-700" />
+          <DocumentTextIcon v-else class="size-4 shrink-0" aria-hidden="true" />
+          {{ t('driver_freq.btn_export_pdf') }}
+        </button>
+      </div>
     </div>
 
     <!-- ============================================================
@@ -36,13 +54,13 @@
         <option value="q3">{{ t('driver_freq.filter_quarter_q3') }}</option>
         <option value="q4">{{ t('driver_freq.filter_quarter_q4') }}</option>
       </select>
-      <select v-model="filters.driverCode" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
+      <select v-model="filters.driverId" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
         <option value="">{{ t('driver_freq.all_drivers') }}</option>
-        <option v-for="d in MOCK_DRIVERS" :key="d.code" :value="d.code">{{ d.name }}</option>
+        <option v-for="d in filterOptions.drivers" :key="d.id" :value="d.id">{{ d.name }}</option>
       </select>
       <select v-model="filters.vehiclePlate" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
         <option value="">{{ t('driver_freq.all_vehicles') }}</option>
-        <option v-for="v in MOCK_VEHICLES" :key="v.plate" :value="v.plate">{{ v.plate }}</option>
+        <option v-for="v in filterOptions.vehicles" :key="v.id" :value="v.plate">{{ v.plate }}</option>
       </select>
       <select v-model="filters.tripType" class="h-9 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-teal-300 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" @change="onFilterChange">
         <option value="">{{ t('driver_freq.all_trip_types') }}</option>
@@ -53,13 +71,18 @@
     <!-- ============================================================
          KPI CARDS
          ============================================================ -->
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <p v-if="loading" class="text-sm text-slate-500 dark:text-slate-400">{{ t('driver_freq.loading') }}</p>
+    <div v-else class="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <div class="flex flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
         <p class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_total_trips') }}</p>
         <p class="mt-1.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ kpi.totalTrips.toLocaleString('vi-VN') }}</p>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_total_trips_sub', { year: filters.year }) }}</p>
-        <span class="mt-1.5 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-          +12% vs 2024
+        <span
+          v-if="yearDeltaLabel"
+          class="mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold"
+          :class="yearDeltaClass"
+        >
+          {{ yearDeltaLabel }}
         </span>
       </div>
 
@@ -68,7 +91,7 @@
         <p class="mt-1.5 text-2xl font-bold tabular-nums text-sky-700 dark:text-sky-400">{{ kpi.activeDrivers }}</p>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_active_drivers_avg', { avg: kpi.avgTripsPerDriver }) }}</p>
         <span class="mt-1 text-[11px] text-sky-600 dark:text-sky-400">
-          ≥ 60 chuyến: {{ kpi.driversAboveThreshold }} người
+          {{ t('driver_freq.kpi_active_drivers_above', { n: kpi.driversAboveThreshold }) }}
         </span>
       </div>
 
@@ -77,7 +100,7 @@
         <p class="mt-1.5 text-2xl font-bold tabular-nums text-amber-700 dark:text-amber-400">{{ kpi.activeVehicles }}</p>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_active_vehicles_avg', { avg: kpi.avgTripsPerVehicle }) }}</p>
         <span class="mt-1 text-[11px] text-amber-600 dark:text-amber-400">
-          {{ kpi.vehiclesBelowThreshold }} xe dưới ngưỡng
+          {{ t('driver_freq.kpi_active_vehicles_below', { n: kpi.vehiclesBelowThreshold }) }}
         </span>
       </div>
 
@@ -86,7 +109,7 @@
         <p class="mt-1.5 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{{ kpi.totalHours.toLocaleString('vi-VN') }}h</p>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ t('driver_freq.kpi_total_hours_avg', { avg: kpi.avgHoursPerDriver }) }}</p>
         <span class="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">
-          Đúng giờ {{ kpi.overallOnTime }}%
+          {{ t('driver_freq.kpi_total_hours_ontime', { pct: kpi.overallOnTime }) }}
         </span>
       </div>
     </div>
@@ -140,9 +163,14 @@
               </tr>
             </thead>
             <tbody>
+              <tr v-if="!loading && filteredDrivers.length === 0">
+                <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                  {{ t('driver_freq.empty_ranking') }}
+                </td>
+              </tr>
               <tr
                 v-for="(driver, idx) in filteredDrivers"
-                :key="driver.code"
+                :key="driver.id"
                 class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-red-950/5 dark:border-slate-800 dark:hover:bg-red-950/10"
                 :class="[
                   idx % 2 === 1 ? 'bg-slate-50/40 dark:bg-slate-900/20' : '',
@@ -221,7 +249,7 @@
               >{{ driver.code }}</div>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">{{ driver.name }}</p>
-                <p class="text-[10px] text-slate-500">{{ driver.trips }} chuyến · {{ driver.hours }}h</p>
+                <p class="text-[10px] text-slate-500">{{ driver.trips }} {{ t('driver_freq.trips_unit') }} · {{ driver.hours }}{{ t('driver_freq.hours_unit') }}</p>
               </div>
               <div class="flex flex-col items-end gap-0.5">
                 <span
@@ -276,72 +304,50 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/24/outline'
+import { DocumentTextIcon, TableCellsIcon } from '@heroicons/vue/24/outline'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
+import {
+  downloadDriverFrequencyPdf,
+  downloadDriverFrequencyXlsx,
+  getDriverFrequencyReport,
+} from '../../api/reports'
+import { useAuthStore } from '../../store'
 
 const { t } = useI18n()
+const auth = useAuthStore()
 
-// ============================================================
-// MOCK DATA — replace with getTripFrequencyReport(filters) when API is ready
-// ============================================================
+const canExport = computed(() => auth.hasPermission('report.export'))
 
-const MOCK_DRIVERS = [
-  { code: 'NVA', name: 'Nguyễn Văn An',   trips: 142, hours: 312, onTime: 96, kpi: 94, bonus: 'A', types: [40, 35, 50, 17] },
-  { code: 'TMĐ', name: 'Trần Minh Đức',   trips: 128, hours: 285, onTime: 93, kpi: 88, bonus: 'B', types: [38, 30, 42, 18] },
-  { code: 'LHN', name: 'Lê Hoàng Nam',    trips: 115, hours: 258, onTime: 91, kpi: 83, bonus: 'B', types: [35, 28, 38, 14] },
-  { code: 'PVB', name: 'Phạm Văn Bình',   trips:  98, hours: 220, onTime: 89, kpi: 76, bonus: 'B', types: [28, 25, 33, 12] },
-  { code: 'VTH', name: 'Võ Thị Hương',    trips:  87, hours: 195, onTime: 95, kpi: 74, bonus: 'C', types: [25, 22, 28, 12] },
-  { code: 'ĐQT', name: 'Đặng Quốc Toàn', trips:  79, hours: 178, onTime: 88, kpi: 67, bonus: 'C', types: [22, 20, 26, 11] },
-  { code: 'HVT', name: 'Hoàng Văn Tú',    trips:  72, hours: 162, onTime: 86, kpi: 62, bonus: 'C', types: [20, 18, 24, 10] },
-  { code: 'NTM', name: 'Nguyễn Thị Mai',  trips:  68, hours: 152, onTime: 90, kpi: 59, bonus: 'C', types: [20, 17, 22,  9] },
-  { code: 'TVH', name: 'Trịnh Văn Hùng',  trips:  58, hours: 130, onTime: 84, kpi: 51, bonus: 'C', types: [17, 15, 19,  7] },
-]
-
-const MOCK_VEHICLES = [
-  { plate: '12345', trips: 185, color: '#1b3a5c' },
-  { plate: '67890', trips: 165, color: '#1e4d8c' },
-  { plate: '11223', trips: 155, color: '#225499' },
-  { plate: '44556', trips: 130, color: '#1b3a5c' },
-  { plate: '77889', trips: 120, color: '#b8860b' },
-  { plate: '22334', trips:  88, color: '#b8860b' },
-  { plate: '55678', trips:  25, color: '#94a3b8' },
-]
-
-const MOCK_QUARTERLY = [195, 220, 240, 192]
-const MOCK_MONTHLY   = [65, 68, 72, 78, 82, 75, 88, 91, 95, 88, 96, 103]
-
-const MOCK_KPI = {
-  totalTrips: 847,
-  activeDrivers: 12,
-  avgTripsPerDriver: 70.6,
-  driversAboveThreshold: 8,
-  activeVehicles: 7,
-  avgTripsPerVehicle: 121,
-  vehiclesBelowThreshold: 2,
-  totalHours: 3241,
-  avgHoursPerDriver: 270,
-  overallOnTime: 91.3,
+const EMPTY_KPI = {
+  totalTrips: 0,
+  activeDrivers: 0,
+  avgTripsPerDriver: 0,
+  driversAboveThreshold: 0,
+  activeVehicles: 0,
+  avgTripsPerVehicle: 0,
+  vehiclesBelowThreshold: 0,
+  totalHours: 0,
+  avgHoursPerDriver: 0,
+  overallOnTime: 0,
 }
 
-// ============================================================
-// CONSTANTS
-// ============================================================
-
-const YEAR_OPTIONS = [2025, 2024, 2023]
+const YEAR_OPTIONS = [new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2]
 
 const TRIP_TYPES = [
   { value: 'point_to_point', label: 'Điểm đến điểm' },
-  { value: 'business',       label: 'Công tác' },
-  { value: 'door_to_door',   label: 'Đưa đón' },
-  { value: 'cargo',          label: 'Hàng hóa' },
+  { value: 'business', label: 'Công tác' },
+  { value: 'door_to_door', label: 'Đưa đón' },
+  { value: 'cargo', label: 'Hàng hóa' },
 ]
 
 const DRIVER_BAR_COLORS = [
   '#7a0029', '#9b0036', '#b5103d', '#c03058',
   '#ca506c', '#d47080', '#dd8898', '#e6a0b0', '#eebbca',
 ]
+
+const VEHICLE_BAR_COLORS = ['#1b3a5c', '#1e4d8c', '#225499', '#b8860b', '#0f766e', '#6b21a8', '#94a3b8']
 
 const DRIVER_AVATAR_COLORS = [
   '#9b0036', '#1b3a5c', '#0f766e', '#6b21a8',
@@ -352,7 +358,7 @@ const TRIP_TYPE_LABELS = ['Điểm-điểm', 'Công tác', 'Đưa đón', 'Hàng
 const TRIP_TYPE_COLORS = ['#9b0036', '#1b3a5c', '#b8860b', '#0f766e']
 
 const QUARTER_RANGES = { q1: [0, 3], q2: [3, 6], q3: [6, 9], q4: [9, 12] }
-const MONTH_LABELS = ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12']
+const MONTH_LABELS = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12']
 
 const CHART_GRID = { left: '2%', right: '3%', top: 16, bottom: 28, containLabel: true }
 const CHART_AXIS_LABEL_X = { fontSize: 10, color: '#64748b' }
@@ -360,68 +366,101 @@ const CHART_AXIS_LABEL_Y = { fontSize: 9, color: '#94a3b8' }
 const CHART_AXIS_LINE = { lineStyle: { color: '#e2e8f0' } }
 const CHART_SPLIT_LINE = { lineStyle: { color: '#f1f5f9', type: 'dashed' } }
 
-// ============================================================
-// STATE
-// ============================================================
-
 const filters = reactive({
-  year: 2025,
+  year: new Date().getFullYear(),
   quarter: '',
-  driverCode: '',
+  driverId: '',
   vehiclePlate: '',
   tripType: '',
 })
 
 const selectedDriverCode = ref('')
+const reportData = ref(null)
+const loading = ref(false)
+const loadError = ref('')
+const exporting = ref('')
 
-// ============================================================
-// COMPUTED — DATA
-// ============================================================
+const driversList = computed(() => reportData.value?.drivers ?? [])
+const filterOptions = computed(() => reportData.value?.filter_options ?? { drivers: [], vehicles: [] })
+const quarterlyData = computed(() => reportData.value?.quarterly ?? [0, 0, 0, 0])
+const monthlyData = computed(() => reportData.value?.monthly ?? Array(12).fill(0))
+const vehiclesList = computed(() => reportData.value?.vehicles ?? [])
 
 const filteredDrivers = computed(() => {
-  if (filters.driverCode) return MOCK_DRIVERS.filter((d) => d.code === filters.driverCode)
-  return MOCK_DRIVERS
-})
-
-const kpi = computed(() => {
-  if (filters.driverCode) {
-    const d = MOCK_DRIVERS.find((dr) => dr.code === filters.driverCode)
-    if (d) {
-      return {
-        totalTrips: d.trips,
-        activeDrivers: 1,
-        avgTripsPerDriver: d.trips,
-        driversAboveThreshold: d.trips >= 60 ? 1 : 0,
-        activeVehicles: MOCK_KPI.activeVehicles,
-        avgTripsPerVehicle: MOCK_KPI.avgTripsPerVehicle,
-        vehiclesBelowThreshold: MOCK_KPI.vehiclesBelowThreshold,
-        totalHours: d.hours,
-        avgHoursPerDriver: d.hours,
-        overallOnTime: d.onTime,
-      }
-    }
+  if (filters.driverId) {
+    return driversList.value.filter((d) => String(d.id) === String(filters.driverId))
   }
-  return MOCK_KPI
+  return driversList.value
 })
 
-// ============================================================
-// COMPUTED — ECHARTS OPTIONS
-// ============================================================
+const kpi = computed(() => reportData.value?.kpi ?? EMPTY_KPI)
+
+const yearComparison = computed(() => reportData.value?.year_comparison ?? {})
+
+const yearDeltaLabel = computed(() => {
+  const pct = yearComparison.value.trips_delta_pct
+  const prev = yearComparison.value.previous_year
+  if (pct === null || pct === undefined || !prev) return ''
+  const sign = pct > 0 ? '+' : ''
+  return t('driver_freq.kpi_total_trips_vs', { pct: `${sign}${pct}`, prev })
+})
+
+const yearDeltaClass = computed(() => {
+  const pct = yearComparison.value.trips_delta_pct
+  if (pct === null || pct === undefined) return 'bg-slate-100 text-slate-600'
+  if (pct >= 0) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+  return 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
+})
+
+function buildApiParams() {
+  const params = { year: filters.year }
+  if (filters.quarter) params.quarter = filters.quarter
+  if (filters.driverId) params.driver_id = filters.driverId
+  if (filters.vehiclePlate) params.vehicle_plate = filters.vehiclePlate
+  if (filters.tripType) params.trip_type = filters.tripType
+  return params
+}
+
+async function fetchReport() {
+  loading.value = true
+  loadError.value = ''
+  try {
+    reportData.value = await getDriverFrequencyReport(buildApiParams())
+  } catch (e) {
+    loadError.value = e?.response?.data?.message ?? e?.message ?? 'load_failed'
+    reportData.value = {
+      kpi: { ...EMPTY_KPI },
+      drivers: [],
+      vehicles: [],
+      quarterly: [0, 0, 0, 0],
+      monthly: Array(12).fill(0),
+      filter_options: { drivers: [], vehicles: [] },
+      year_comparison: {},
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchReport)
+watch(() => ({ ...filters }), fetchReport, { deep: true })
 
 const chartDriverTrips = computed(() => {
+  const list = filteredDrivers.value
   const sel = selectedDriverCode.value
   return {
     tooltip: {
       trigger: 'axis',
       formatter(params) {
-        const d = MOCK_DRIVERS[params[0].dataIndex]
+        const d = list[params[0].dataIndex]
+        if (!d) return ''
         return `<b>${d.name}</b><br/>Chuyến: <b>${d.trips}</b><br/>Giờ lái: ${d.hours}h`
       },
     },
     grid: CHART_GRID,
     xAxis: {
       type: 'category',
-      data: MOCK_DRIVERS.map((d) => d.code),
+      data: list.map((d) => d.code),
       axisLabel: CHART_AXIS_LABEL_X,
       axisLine: CHART_AXIS_LINE,
       axisTick: { show: false },
@@ -433,7 +472,7 @@ const chartDriverTrips = computed(() => {
     },
     series: [{
       type: 'bar',
-      data: MOCK_DRIVERS.map((d, i) => ({
+      data: list.map((d, i) => ({
         value: d.trips,
         itemStyle: {
           color: DRIVER_BAR_COLORS[i] ?? '#e6a0b0',
@@ -455,7 +494,7 @@ const chartVehicleFreq = computed(() => ({
   grid: CHART_GRID,
   xAxis: {
     type: 'category',
-    data: MOCK_VEHICLES.map((v) => v.plate),
+    data: vehiclesList.value.map((v) => v.plate),
     axisLabel: CHART_AXIS_LABEL_X,
     axisLine: CHART_AXIS_LINE,
     axisTick: { show: false },
@@ -467,9 +506,9 @@ const chartVehicleFreq = computed(() => ({
   },
   series: [{
     type: 'bar',
-    data: MOCK_VEHICLES.map((v) => ({
+    data: vehiclesList.value.map((v, i) => ({
       value: v.trips,
-      itemStyle: { color: v.color, borderRadius: [4, 4, 0, 0] },
+      itemStyle: { color: VEHICLE_BAR_COLORS[i % VEHICLE_BAR_COLORS.length], borderRadius: [4, 4, 0, 0] },
     })),
     barMaxWidth: 44,
     emphasis: { focus: 'self' },
@@ -478,10 +517,13 @@ const chartVehicleFreq = computed(() => ({
 
 const chartQuarterlyTrend = computed(() => {
   const selQ = filters.quarter
-  const seriesData = MOCK_QUARTERLY.map((val, i) => ({
+  const values = quarterlyData.value
+  const seriesData = values.map((val, i) => ({
     value: val,
     itemStyle: { opacity: selQ && `q${i + 1}` !== selQ ? 0.3 : 1 },
   }))
+  const minVal = Math.min(...values)
+  const yMin = minVal > 0 ? Math.floor(minVal * 0.85) : 0
   return {
     tooltip: {
       trigger: 'axis',
@@ -498,7 +540,7 @@ const chartQuarterlyTrend = computed(() => {
     },
     yAxis: {
       type: 'value',
-      min: 150,
+      min: yMin,
       axisLabel: CHART_AXIS_LABEL_Y,
       splitLine: CHART_SPLIT_LINE,
     },
@@ -524,7 +566,7 @@ const chartQuarterlyTrend = computed(() => {
 })
 
 const chartDriverTypes = computed(() => {
-  const top5 = MOCK_DRIVERS.slice(0, 5)
+  const top5 = filteredDrivers.value.slice(0, 5)
   return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: {
@@ -550,7 +592,7 @@ const chartDriverTypes = computed(() => {
       name: label,
       type: 'bar',
       stack: 'types',
-      data: top5.map((d) => d.types[ti]),
+      data: top5.map((d) => (d.types ?? [])[ti] ?? 0),
       itemStyle: { color: TRIP_TYPE_COLORS[ti] },
       emphasis: { focus: 'series' },
       barMaxWidth: 52,
@@ -561,7 +603,7 @@ const chartDriverTypes = computed(() => {
 const chartMonthlyActivity = computed(() => {
   const range = filters.quarter ? QUARTER_RANGES[filters.quarter] : [0, 12]
   const labels = MONTH_LABELS.slice(...range)
-  const data = MOCK_MONTHLY.slice(...range)
+  const data = monthlyData.value.slice(...range)
   return {
     tooltip: {
       trigger: 'axis',
@@ -602,10 +644,6 @@ const chartMonthlyActivity = computed(() => {
   }
 })
 
-// ============================================================
-// HELPERS
-// ============================================================
-
 function starsForKpi(score) {
   if (score >= 88) return '★★★★★'
   if (score >= 73) return '★★★★☆'
@@ -634,7 +672,7 @@ function bonusTierClass(tier) {
 }
 
 function driverAvatarColor(code) {
-  const idx = MOCK_DRIVERS.findIndex((d) => d.code === code)
+  const idx = driversList.value.findIndex((d) => d.code === code)
   return idx >= 0 ? (DRIVER_AVATAR_COLORS[idx] ?? '#475569') : '#475569'
 }
 
@@ -652,8 +690,26 @@ function onFilterChange() {
   selectedDriverCode.value = ''
 }
 
-function onSuggestBonus() {
-  // placeholder — future: open bonus suggestion modal / navigate
+async function doExportXlsx() {
+  exporting.value = 'xlsx'
+  try {
+    await downloadDriverFrequencyXlsx(buildApiParams())
+  } catch {
+    // normalizeAxiosBlobError surfaces message in toast elsewhere if configured
+  } finally {
+    exporting.value = ''
+  }
+}
+
+async function doExportPdf() {
+  exporting.value = 'pdf'
+  try {
+    await downloadDriverFrequencyPdf(buildApiParams())
+  } catch {
+    // ignore
+  } finally {
+    exporting.value = ''
+  }
 }
 </script>
 
