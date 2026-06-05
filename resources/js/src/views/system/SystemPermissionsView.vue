@@ -467,6 +467,7 @@ onMounted(load)
     </template>
 
     <!-- ── Create modal ───────────────────────────────────────────────────── -->
+    <Teleport to="body">
     <div
       v-if="createOpen"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -511,8 +512,10 @@ onMounted(load)
         </form>
       </Card>
     </div>
+    </Teleport>
 
     <!-- ── Edit slide panel ───────────────────────────────────────────────── -->
+    <Teleport to="body">
     <Transition
       enter-active-class="transition duration-200 ease-out"
       enter-from-class="translate-x-full opacity-0"
@@ -584,6 +587,7 @@ onMounted(load)
         </div>
       </div>
     </Transition>
+    </Teleport>
 
   </div>
 </template>

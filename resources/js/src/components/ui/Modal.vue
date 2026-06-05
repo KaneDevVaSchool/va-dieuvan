@@ -1,7 +1,9 @@
 <template>
-  <!-- py-* trên lớp flex: khoảng cách với mép viewport; không scroll dọc trong modal. -->
-  <div v-if="open" class="fixed inset-0 z-50 overflow-hidden bg-black/45 backdrop-blur-[1px]">
-    <div class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+  <!-- Teleport ra <body>: tránh ancestor (vùng <main> cuộn) làm fixed bám sai, để backdrop phủ trọn viewport. -->
+  <Teleport to="body">
+    <!-- py-* trên lớp flex: khoảng cách với mép viewport; không scroll dọc trong modal. -->
+    <div v-if="open" class="fixed inset-0 z-50 overflow-hidden bg-black/45 backdrop-blur-[1px]">
+      <div class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
       <div
         class="w-full rounded-xl border border-slate-200/80 bg-white shadow-xl ring-1 ring-slate-900/5"
         :class="panelClass"
@@ -24,9 +26,10 @@
         <div class="min-h-0 flex-1 overflow-visible px-4 py-4 md:px-5 md:py-5">
           <slot />
         </div>
+        </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>

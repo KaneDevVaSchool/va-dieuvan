@@ -101,6 +101,7 @@
     </div>
 
     <!-- Day detail drawer -->
+    <Teleport to="body">
     <Transition
       enter-active-class="transition-opacity duration-200"
       enter-from-class="opacity-0"
@@ -189,6 +190,7 @@
         </Transition>
       </div>
     </Transition>
+    </Teleport>
   </div>
 </template>
 

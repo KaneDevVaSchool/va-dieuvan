@@ -323,48 +323,68 @@
             <div class="space-y-4 p-5">
               <div>
                 <label class="mb-1 block text-sm font-medium text-slate-600">
-                  Loại xe <span class="text-rose-500">*</span>
+                  Chọn xe <span class="font-normal text-slate-400">(từ Quản lý nguồn lực)</span>
                 </label>
-                <select v-model="form.vehicle_type" :class="selectClass" @change="onVehicleTypeChange">
-                  <option value="">— Chọn loại xe —</option>
-                  <option v-for="t in vehicleTypeOptions" :key="t.label" :value="t.label">{{ t.label }}</option>
+                <div v-if="loadingVehicles" class="flex items-center gap-2 py-2.5 text-sm text-slate-500">
+                  <ArrowPathIcon class="h-4 w-4 animate-spin" /> Đang tải danh sách xe…
+                </div>
+                <select v-else-if="vehicles.length" v-model="form.vehicle_id" :class="selectClass" @change="onVehicleChange">
+                  <option value="">— Chưa chọn xe —</option>
+                  <option v-for="v in vehicleOptions" :key="v.id" :value="v.id">{{ vehicleOptionLabel(v) }}</option>
                 </select>
-                <p class="mt-1 text-xs text-slate-400">Chọn loại xe để tự điền sức chứa tương ứng.</p>
+                <div v-else class="flex items-center gap-2.5 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3.5 py-3 text-sm text-slate-500">
+                  <ExclamationCircleIcon class="h-5 w-5 shrink-0 text-slate-400" />
+                  <span>Chưa có xe nào trong hệ thống.
+                    <a :href="vehiclesHref" target="_blank" rel="noopener" class="font-medium text-va-800 hover:underline">Thêm xe</a>
+                    rồi quay lại chọn.
+                  </span>
+                </div>
+                <p v-if="vehicles.length" class="mt-1 text-xs text-slate-400">
+                  Xe lấy từ
+                  <a :href="vehiclesHref" target="_blank" rel="noopener" class="font-medium text-va-800 hover:underline">Quản lý nguồn lực</a>.
+                  Biển số &amp; sức chứa tự điền theo xe.
+                </p>
               </div>
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-600">Biển số xe</label>
+
+              <div>
+                <label class="mb-1 block text-sm font-medium text-slate-600">
+                  Sức chứa tối đa <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
                   <input
-                    v-model.trim="form.plate_number"
-                    type="text"
-                    placeholder="30A-56789"
-                    class="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-base uppercase outline-none ring-va-800/20 transition focus:border-va-800/40 focus:ring"
+                    v-model.number="form.max_capacity"
+                    type="number"
+                    min="1"
+                    :class="[
+                      'w-full rounded-lg border bg-white py-3 pl-3.5 pr-16 text-base outline-none transition focus:ring',
+                      errors.max_capacity
+                        ? 'border-rose-300 ring-rose-200 focus:border-rose-400'
+                        : 'border-slate-200 ring-va-800/20 focus:border-va-800/40',
+                    ]"
+                    @input="errors.max_capacity = ''"
                   />
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">chỗ</span>
                 </div>
-                <div>
-                  <label class="mb-1 block text-sm font-medium text-slate-600">
-                    Sức chứa tối đa <span class="text-rose-500">*</span>
-                  </label>
-                  <div class="relative">
-                    <input
-                      v-model.number="form.max_capacity"
-                      type="number"
-                      min="1"
-                      class="w-full rounded-lg border border-slate-200 bg-white py-3 pl-3.5 pr-16 text-base outline-none ring-va-800/20 transition focus:border-va-800/40 focus:ring"
-                    />
-                    <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">chỗ</span>
-                  </div>
-                </div>
+                <p v-if="errors.max_capacity" class="mt-1 flex items-center gap-1 text-sm text-rose-600">
+                  <ExclamationCircleIcon class="h-4 w-4" /> {{ errors.max_capacity }}
+                </p>
+                <p v-else class="mt-1 text-xs text-slate-400">Mặc định theo số chỗ của xe, có thể điều chỉnh.</p>
               </div>
 
               <div class="flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50/60 px-4 py-3">
                 <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-teal-600 shadow-sm">
                   <TruckIcon class="h-5 w-5" />
                 </span>
-                <div class="min-w-0">
-                  <div class="truncate text-sm font-semibold text-slate-800">
-                    {{ form.vehicle_type || 'Chưa chọn xe' }}
-                    <span v-if="form.plate_number" class="font-normal text-slate-500">· {{ form.plate_number }}</span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="truncate text-sm font-semibold text-slate-800">
+                      {{ form.vehicle_type || 'Chưa chọn xe' }}
+                      <span v-if="form.plate_number" class="font-normal text-slate-500">· {{ form.plate_number }}</span>
+                    </span>
+                    <span
+                      v-if="selectedVehicle && vehicleStatusLabel(selectedVehicle.status)"
+                      :class="['shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium', vehicleStatusBadge(selectedVehicle.status)]"
+                    >{{ vehicleStatusLabel(selectedVehicle.status) }}</span>
                   </div>
                   <div class="text-xs text-teal-700">Tối đa {{ form.max_capacity || 0 }} chỗ ngồi</div>
                 </div>
@@ -548,15 +568,18 @@ import {
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import { createProgram } from '../../api/transportProgram'
-import { listDrivers } from '../../api/operational'
+import { listDrivers, listVehicles } from '../../api/operational'
 import { searchUsersForDispatchForm } from '../../api/operational'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 
 const router = useRouter()
 const saving = ref(false)
 const loadingDrivers = ref(false)
+const loadingVehicles = ref(false)
 const drivers = ref([])
+const vehicles = ref([])
 const users = ref([])
+const vehiclesHref = router.resolve({ name: 'resourcesList' }).href
 
 // ── Section anchors / scroll spy ───────────────────────────────────────────────
 const sections = [
@@ -613,14 +636,6 @@ const weekdays = [
   { key: 'sun', label: 'CN' },
 ]
 
-const vehicleTypeOptions = [
-  { label: 'Xe 7 chỗ', seats: 7 },
-  { label: 'Xe 16 chỗ', seats: 16 },
-  { label: 'Minibus 16 chỗ', seats: 16 },
-  { label: 'Xe 29 chỗ', seats: 29 },
-  { label: 'Xe 35 chỗ', seats: 35 },
-  { label: 'Xe 45 chỗ', seats: 45 },
-]
 
 const schoolYearOptions = computed(() => {
   const base = new Date().getFullYear()
@@ -649,6 +664,7 @@ const form = reactive({
   afternoon_departure: '17:00',
   afternoon_arrival: '18:00',
 
+  vehicle_id: '',
   vehicle_type: '',
   plate_number: '',
   max_capacity: 45,
@@ -665,13 +681,59 @@ const errors = reactive({
   end_date: '',
   runs_on: '',
   trips: '',
+  max_capacity: '',
   driver: '',
 })
 
-// Auto-fill capacity from chosen vehicle type
-function onVehicleTypeChange() {
-  const match = vehicleTypeOptions.find((t) => t.label === form.vehicle_type)
-  if (match) form.max_capacity = match.seats
+// ── Xe (lấy từ Quản lý nguồn lực) → tự điền biển số / loại / sức chứa ────────────
+const VEHICLE_STATUS = {
+  ready: { label: 'Sẵn sàng', order: 0, badge: 'bg-emerald-50 text-emerald-600' },
+  in_use: { label: 'Đang dùng', order: 1, badge: 'bg-sky-50 text-sky-600' },
+  maintenance: { label: 'Bảo trì', order: 2, badge: 'bg-amber-50 text-amber-600' },
+  broken: { label: 'Hỏng', order: 3, badge: 'bg-rose-50 text-rose-500' },
+}
+
+// Ưu tiên xe sẵn sàng lên đầu, rồi sắp theo biển số
+const vehicleOptions = computed(() =>
+  [...vehicles.value].sort(
+    (a, b) =>
+      (VEHICLE_STATUS[a.status]?.order ?? 9) - (VEHICLE_STATUS[b.status]?.order ?? 9) ||
+      String(a.license_plate || '').localeCompare(String(b.license_plate || ''), 'vi'),
+  ),
+)
+
+const selectedVehicle = computed(
+  () => vehicles.value.find((v) => String(v.id) === String(form.vehicle_id)) || null,
+)
+
+function vehicleStatusLabel(s) {
+  return VEHICLE_STATUS[s]?.label || ''
+}
+function vehicleStatusBadge(s) {
+  return VEHICLE_STATUS[s]?.badge || 'bg-slate-100 text-slate-500'
+}
+
+function vehicleOptionLabel(v) {
+  const base =
+    [v.license_plate, v.type, v.seat_count ? `${v.seat_count} chỗ` : null].filter(Boolean).join(' · ') ||
+    `Xe #${v.id}`
+  const st = vehicleStatusLabel(v.status)
+  return st ? `${base} — ${st}` : base
+}
+
+function onVehicleChange() {
+  const v = selectedVehicle.value
+  if (!v) {
+    form.vehicle_type = ''
+    form.plate_number = ''
+    return
+  }
+  form.vehicle_type = v.type || ''
+  form.plate_number = v.license_plate || ''
+  if (v.seat_count) {
+    form.max_capacity = v.seat_count
+    errors.max_capacity = ''
+  }
 }
 
 // ── Drivers ──────────────────────────────────────────────────────────────────
@@ -754,9 +816,10 @@ function validate() {
   }
   errors.runs_on = form.runs_on.length ? '' : 'Chọn ít nhất một ngày hoạt động'
   errors.trips = form.morning_enabled || form.afternoon_enabled ? '' : 'Bật ít nhất một chiều (sáng hoặc chiều)'
+  errors.max_capacity = form.max_capacity && Number(form.max_capacity) > 0 ? '' : 'Nhập sức chứa hợp lệ (> 0)'
   errors.driver = mainDriverId.value ? '' : 'Chọn tài xế chính'
 
-  const firstBad = ['name', 'start_date', 'end_date', 'runs_on', 'trips', 'driver'].find((k) => errors[k])
+  const firstBad = ['name', 'start_date', 'end_date', 'runs_on', 'trips', 'max_capacity', 'driver'].find((k) => errors[k])
   if (firstBad) {
     const sectionByField = {
       name: 'basic',
@@ -764,6 +827,7 @@ function validate() {
       end_date: 'schedule',
       runs_on: 'schedule',
       trips: 'schedule',
+      max_capacity: 'capacity',
       driver: 'drivers',
     }
     scrollTo(sectionByField[firstBad])
@@ -786,6 +850,7 @@ function buildPayload() {
     end_date: form.end_date,
     runs_on: form.runs_on,
     default_driver_id: mainDriverId.value ? Number(mainDriverId.value) : null,
+    default_vehicle_id: form.vehicle_id ? Number(form.vehicle_id) : null,
     responsible_user_id: form.responsible_user_id ? Number(form.responsible_user_id) : null,
     notes: form.notes || null,
     settings: {
@@ -839,6 +904,16 @@ onMounted(async () => {
     drivers.value = []
   } finally {
     loadingDrivers.value = false
+  }
+
+  loadingVehicles.value = true
+  try {
+    const res = await listVehicles({ per_page: 200 })
+    vehicles.value = res?.items ?? []
+  } catch {
+    vehicles.value = []
+  } finally {
+    loadingVehicles.value = false
   }
 
   try {

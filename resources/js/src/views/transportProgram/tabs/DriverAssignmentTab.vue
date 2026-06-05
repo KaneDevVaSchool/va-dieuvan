@@ -1,79 +1,41 @@
 <template>
   <div class="space-y-5">
-    <!-- ── Program-level drivers: default + backup ─────────────────────────── -->
+    <!-- ── Program-level drivers: luôn hiển thị + chọn inline có tìm kiếm ──────── -->
     <div class="grid gap-4 lg:grid-cols-2">
-      <!-- Default driver -->
-      <div class="relative overflow-hidden rounded-2xl border border-va-800/20 bg-white p-4 shadow-sm">
-        <span class="absolute inset-x-0 top-0 h-1 bg-[color:var(--va-brand)]"></span>
-        <div class="flex items-center justify-between">
-          <div class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-va-800">
-            <IdentificationIcon class="h-4 w-4" /> Tài xế mặc định
-          </div>
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-            @click="openProgramPicker('default')"
-          >
-            {{ defaultDriver ? 'Thay đổi' : 'Gán tài xế' }}
-          </button>
+      <!-- Tài xế chạy chuyến -->
+      <div class="rounded-2xl border border-va-800/20 bg-white p-4 shadow-sm">
+        <div class="mb-2.5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-va-800">
+          <IdentificationIcon class="h-4 w-4" /> Tài xế chạy chuyến
         </div>
-        <div v-if="defaultDriver" class="mt-3 flex items-center gap-3">
-          <DriverAvatar :driver="defaultDriver" />
-          <div class="min-w-0">
-            <div class="truncate text-base font-semibold text-slate-900">{{ defaultDriver.full_name }}</div>
-            <div class="truncate text-xs text-slate-500">
-              GPLX {{ defaultDriver.license_class || '—' }}
-              <span v-if="defaultDriver.phone">· {{ defaultDriver.phone }}</span>
-              · <span :class="availabilityTextClass(defaultDriver.availability_status)">{{ availabilityLabel(defaultDriver.availability_status) }}</span>
-            </div>
-          </div>
-        </div>
-        <button
-          v-else
-          type="button"
-          class="mt-3 flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-200 px-3 py-3 text-left text-sm text-slate-400 transition hover:border-va-800/30 hover:text-va-800"
-          @click="openProgramPicker('default')"
-        >
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-50"><UserPlusIcon class="h-5 w-5" /></span>
-          Chưa gán — bấm để chọn tài xế chính
-        </button>
+        <DriverCombobox
+          :model-value="defaultSel"
+          :drivers="driverOptions"
+          :exclude-id="backupDriverId"
+          exclude-label="đang là sơ cua"
+          :loading="loadingDrivers"
+          :disabled="programBusy"
+          accent="brand"
+          placeholder="Chọn tài xế chạy chuyến"
+          @update:model-value="(v) => onProgramDriverChange('default', v)"
+        />
       </div>
 
-      <!-- Backup driver -->
-      <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <span class="absolute inset-x-0 top-0 h-1 bg-amber-400"></span>
-        <div class="flex items-center justify-between">
-          <div class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-600">
-            <LifebuoyIcon class="h-4 w-4" /> Tài xế sơ cua
-          </div>
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-            @click="openProgramPicker('backup')"
-          >
-            {{ backupDriver ? 'Thay đổi' : 'Gán tài xế' }}
-          </button>
+      <!-- Tài xế sơ cua -->
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mb-2.5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-600">
+          <LifebuoyIcon class="h-4 w-4" /> Tài xế sơ cua
         </div>
-        <div v-if="backupDriver" class="mt-3 flex items-center gap-3">
-          <DriverAvatar :driver="backupDriver" muted />
-          <div class="min-w-0">
-            <div class="truncate text-base font-semibold text-slate-900">{{ backupDriver.full_name }}</div>
-            <div class="truncate text-xs text-slate-500">
-              GPLX {{ backupDriver.license_class || '—' }}
-              <span v-if="backupDriver.phone">· {{ backupDriver.phone }}</span>
-              · <span :class="availabilityTextClass(backupDriver.availability_status)">{{ availabilityLabel(backupDriver.availability_status) }}</span>
-            </div>
-          </div>
-        </div>
-        <button
-          v-else
-          type="button"
-          class="mt-3 flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-200 px-3 py-3 text-left text-sm text-slate-400 transition hover:border-amber-300 hover:text-amber-600"
-          @click="openProgramPicker('backup')"
-        >
-          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-50"><UserPlusIcon class="h-5 w-5" /></span>
-          Chưa gán — bấm để chọn tài xế dự phòng
-        </button>
+        <DriverCombobox
+          :model-value="backupSel"
+          :drivers="driverOptions"
+          :exclude-id="defaultDriverId"
+          exclude-label="đang chạy chuyến"
+          :loading="loadingDrivers"
+          :disabled="programBusy"
+          accent="amber"
+          placeholder="Chọn tài xế sơ cua"
+          @update:model-value="(v) => onProgramDriverChange('backup', v)"
+        />
       </div>
     </div>
 
@@ -198,13 +160,12 @@
 
     <DriverPickerModal
       :open="picker.open"
-      :title="pickerTitle"
+      title="Đổi tài xế cho chuyến"
       :description="pickerDescription"
-      :drivers="drivers"
+      :drivers="driverOptions"
       :selected-id="pickerSelectedId"
-      :exclude-ids="pickerExcludeIds"
       :allow-clear="pickerAllowClear"
-      :clear-label="picker.mode === 'day' ? 'Trả về tài xế mặc định' : 'Bỏ phân công'"
+      clear-label="Trả về tài xế mặc định"
       @select="onPickerSelect"
       @close="picker.open = false"
     />
@@ -226,6 +187,7 @@ import {
   ArrowUturnLeftIcon,
 } from '@heroicons/vue/24/outline'
 import DriverPickerModal from '../components/DriverPickerModal.vue'
+import DriverCombobox from '../components/DriverCombobox.vue'
 import { listProgramDays, assignDayDriver, clearDayDriver, updateProgram } from '../../../api/transportProgram'
 import { listDrivers } from '../../../api/operational'
 import { showAppErrorFromApi, showAppSuccess } from '../../../composables/appMessage'
@@ -234,12 +196,14 @@ const props = defineProps({ program: { type: Object, required: true } })
 const emit = defineEmits(['refresh'])
 
 const loading = ref(false)
+const loadingDrivers = ref(false)
 const days = ref([])
 const drivers = ref([])
 const month = ref(new Date().toISOString().slice(0, 7))
 const busyDayId = ref(null)
+const programBusy = ref(false)
 
-const picker = ref({ open: false, mode: 'default', day: null })
+const picker = ref({ open: false, day: null })
 
 const WD = ['CN', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
 
@@ -247,6 +211,26 @@ const defaultDriver = computed(() => props.program.default_driver || null)
 const backupDriver = computed(() => props.program.backup_driver || null)
 const defaultDriverId = computed(() => props.program.default_driver_id ?? null)
 const backupDriverId = computed(() => props.program.backup_driver_id ?? null)
+
+// Lựa chọn inline (đồng bộ từ server, tránh nhấp nháy khi đang lưu)
+const defaultSel = ref(defaultDriverId.value)
+const backupSel = ref(backupDriverId.value)
+watch(defaultDriverId, (v) => { defaultSel.value = v })
+watch(backupDriverId, (v) => { backupSel.value = v })
+
+// Danh sách cho combobox: gộp thêm tài xế đang gán nếu không có trong danh sách tải về
+// (vd. tài xế đã nghỉ việc) để vẫn hiển thị đúng người đang phụ trách.
+const driverOptions = computed(() => {
+  const list = [...drivers.value]
+  const ids = new Set(list.map((d) => String(d.id)))
+  for (const d of [defaultDriver.value, backupDriver.value]) {
+    if (d && !ids.has(String(d.id))) {
+      list.push(d)
+      ids.add(String(d.id))
+    }
+  }
+  return list
+})
 
 const vehicleLabel = computed(() => {
   const v = props.program.default_vehicle
@@ -258,62 +242,47 @@ const vehicleLabel = computed(() => {
 
 const rows = computed(() => days.value.filter((d) => d.day_type !== 'cancelled'))
 
-// ── Picker config ──────────────────────────────────────────────────────────────
-const pickerTitle = computed(() => ({
-  default: 'Chọn tài xế mặc định',
-  backup: 'Chọn tài xế sơ cua',
-  day: 'Đổi tài xế cho chuyến',
-}[picker.value.mode]))
+// ── Picker config (chỉ dùng cho đổi tài xế theo từng chuyến) ─────────────────────
 const pickerDescription = computed(() => {
-  if (picker.value.mode === 'day' && picker.value.day) {
-    return `${formatDate(picker.value.day.scheduled_date)} · ${weekday(picker.value.day.scheduled_date)}`
-  }
-  if (picker.value.mode === 'backup') return 'Tài xế dự phòng khi tài xế chính bận.'
-  return 'Áp dụng cho mọi ngày chưa được phân công riêng.'
+  const day = picker.value.day
+  return day ? `${formatDate(day.scheduled_date)} · ${weekday(day.scheduled_date)}` : ''
 })
-const pickerSelectedId = computed(() => {
-  if (picker.value.mode === 'default') return defaultDriverId.value
-  if (picker.value.mode === 'backup') return backupDriverId.value
-  return picker.value.day?.effective_driver?.id ?? null
-})
-const pickerExcludeIds = computed(() => {
-  if (picker.value.mode === 'default') return backupDriverId.value ? [backupDriverId.value] : []
-  if (picker.value.mode === 'backup') return defaultDriverId.value ? [defaultDriverId.value] : []
-  return []
-})
-const pickerAllowClear = computed(() => {
-  // Ngày: chỉ cho "trả về mặc định" khi đang có override riêng
-  if (picker.value.mode === 'day') return !!picker.value.day?.driver_id
-  return !!pickerSelectedId.value
-})
+const pickerSelectedId = computed(() => picker.value.day?.effective_driver?.id ?? null)
+const pickerAllowClear = computed(() => !!picker.value.day?.driver_id)
 
-function openProgramPicker(mode) {
-  picker.value = { open: true, mode, day: null }
-}
 function openDayPicker(day) {
-  picker.value = { open: true, mode: 'day', day }
+  picker.value = { open: true, day }
 }
 
 async function onPickerSelect(driverId) {
-  const mode = picker.value.mode
-  if (mode === 'default' || mode === 'backup') {
-    await saveProgramDriver(mode, driverId)
-  } else {
-    await saveDayDriver(picker.value.day, driverId)
-  }
+  await saveDayDriver(picker.value.day, driverId)
   picker.value.open = false
 }
 
-// ── Program default / backup ────────────────────────────────────────────────────
+// ── Program: tài xế chạy chuyến / sơ cua (chọn inline) ──────────────────────────
+function onProgramDriverChange(mode, val) {
+  const id = val != null && val !== '' ? Number(val) : null
+  // Cập nhật lạc quan để không nhấp nháy giá trị trong lúc lưu
+  if (mode === 'default') defaultSel.value = id
+  else backupSel.value = id
+  saveProgramDriver(mode, id)
+}
+
 async function saveProgramDriver(mode, driverId) {
   const field = mode === 'default' ? 'default_driver_id' : 'backup_driver_id'
+  programBusy.value = true
   try {
     await updateProgram(props.program.id, { [field]: driverId })
-    showAppSuccess(mode === 'default' ? 'Đã cập nhật tài xế mặc định.' : 'Đã cập nhật tài xế sơ cua.')
+    showAppSuccess(mode === 'default' ? 'Đã cập nhật tài xế chạy chuyến.' : 'Đã cập nhật tài xế sơ cua.')
     emit('refresh')
     await loadDays()
   } catch (err) {
     showAppErrorFromApi(err)
+    // Hoàn nguyên lựa chọn về trạng thái server khi lưu lỗi
+    defaultSel.value = defaultDriverId.value
+    backupSel.value = backupDriverId.value
+  } finally {
+    programBusy.value = false
   }
 }
 
@@ -367,12 +336,6 @@ function sourceBadgeClass(s) {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
-function availabilityLabel(s) {
-  return { available: 'Rảnh', busy: 'Bận', offline: 'Nghỉ' }[s] || '—'
-}
-function availabilityTextClass(s) {
-  return { available: 'text-emerald-600', busy: 'text-amber-600', offline: 'text-rose-500' }[s] || 'text-slate-400'
-}
 function weekday(dateStr) {
   return WD[new Date(dateStr + 'T00:00:00').getDay()]
 }
@@ -410,10 +373,13 @@ async function loadDays() {
 }
 
 async function loadDrivers() {
+  loadingDrivers.value = true
   try {
     drivers.value = (await listDrivers({ per_page: 200 }))?.items ?? []
   } catch {
     drivers.value = []
+  } finally {
+    loadingDrivers.value = false
   }
 }
 

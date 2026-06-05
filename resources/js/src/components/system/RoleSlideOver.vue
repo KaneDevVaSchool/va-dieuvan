@@ -137,6 +137,7 @@ async function submit() {
 </script>
 
 <template>
+  <Teleport to="body">
   <!-- Backdrop -->
   <div
     class="fixed inset-0 z-50 flex justify-end"
@@ -257,4 +258,5 @@ async function submit() {
       </div>
     </div>
   </div>
+  </Teleport>
 </template>

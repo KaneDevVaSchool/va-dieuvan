@@ -94,11 +94,17 @@ class TpStudentController extends Controller
             'grade' => $student->grade,
             'class_name' => $student->class_name,
             'gender' => $metadata['gender'] ?? null,
-            'age' => $metadata['age'] ?? null,
+            'date_of_birth' => $metadata['date_of_birth'] ?? null,
+            'age' => $this->resolveAge($metadata),
             'parent_name' => $student->parent_name,
             'parent_phone' => $student->parent_phone,
+            'father_name' => $metadata['father_name'] ?? null,
+            'father_phone' => $metadata['father_phone'] ?? null,
+            'mother_name' => $metadata['mother_name'] ?? null,
+            'mother_phone' => $metadata['mother_phone'] ?? null,
             'address' => $student->address,
             'pickup_point' => $metadata['pickup_point'] ?? null,
+            'note' => $metadata['note'] ?? null,
             'status' => $student->status,
             'transport_status' => $transportStatus,
             'program' => $program ? [
@@ -109,6 +115,19 @@ class TpStudentController extends Controller
                 'start_date' => optional($program->start_date)->toDateString(),
             ] : null,
         ];
+    }
+
+    private function resolveAge(array $metadata): ?int
+    {
+        if (! empty($metadata['date_of_birth'])) {
+            try {
+                return \Carbon\Carbon::parse($metadata['date_of_birth'])->age;
+            } catch (\Throwable) {
+                // fall through to legacy age value
+            }
+        }
+
+        return isset($metadata['age']) ? (int) $metadata['age'] : null;
     }
 
     private function buildStats(): array
@@ -154,9 +173,20 @@ class TpStudentController extends Controller
 
     public function store(StoreTpStudentRequest $request): JsonResponse
     {
-        $student = TpStudent::query()->create($request->validated());
+        $data = $request->validated();
+        $data['metadata'] = $this->cleanMetadata($data['metadata'] ?? []);
+
+        $student = TpStudent::query()->create($data);
 
         return $this->created($student);
+    }
+
+    /**
+     * Drop empty metadata entries so we don't persist blank strings.
+     */
+    private function cleanMetadata(array $metadata): array
+    {
+        return array_filter($metadata, fn ($value) => $value !== null && $value !== '');
     }
 
     public function show(TpStudent $tpStudent): JsonResponse
@@ -166,7 +196,16 @@ class TpStudentController extends Controller
 
     public function update(UpdateTpStudentRequest $request, TpStudent $tpStudent): JsonResponse
     {
-        $tpStudent->update($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('metadata', $data)) {
+            // Merge so keys not present in the form (e.g. legacy values) are preserved.
+            $data['metadata'] = $this->cleanMetadata(
+                array_merge($tpStudent->metadata ?? [], $data['metadata'] ?? [])
+            );
+        }
+
+        $tpStudent->update($data);
 
         return $this->ok($tpStudent->fresh());
     }
