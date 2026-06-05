@@ -5,8 +5,8 @@
       style="padding-top: max(0.75rem, env(safe-area-inset-top))"
     >
       <div class="min-w-0 flex-1">
-        <h1 class="truncate text-lg font-bold tracking-tight">Chuyến đưa đón định kì</h1>
-        <p class="truncate text-xs text-driver-ink/50">Chương trình P2P</p>
+        <h1 class="truncate text-lg font-bold tracking-tight">{{ t('nav.driver_tp_days') }}</h1>
+        <p class="truncate text-xs text-driver-ink/50">{{ t('driver_tp_days.subtitle') }}</p>
       </div>
       <span v-if="!online" class="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">Ngoại tuyến</span>
     </header>
@@ -43,11 +43,13 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { driverListDays } from '../../api/transportProgram'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 import WeekCalendar from '../../components/trips/WeekCalendar.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const loading = ref(false)
 const days = ref([])

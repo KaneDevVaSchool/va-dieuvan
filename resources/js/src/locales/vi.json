@@ -71,7 +71,8 @@
         "section_transport_program": "Chương trình đưa đón",
         "tp_programs": "Chương trình đưa đón",
         "tp_students": "Học sinh đưa đón",
-        "driver_tp_days": "Chuyến đưa đón",
+        "driver_tp_days": "Lịch chương trình đưa đón",
+        "bottom_driver_tp_schedule": "Lịch đưa đón",
         "driver_home": "Trang tài xế",
         "driver_trips": "Chuyến của tôi",
         "bottom_driver_home": "Trang chủ",
@@ -134,6 +135,9 @@
             "resources": "Nguồn lực",
             "resources_overview": "Nguồn lực"
         }
+    },
+    "driver_tp_days": {
+        "subtitle": "Chương trình đưa đón học sinh"
     },
     "driver_home": {
         "hello": "Xin chào,",

@@ -12,6 +12,7 @@
       :key="item.to"
       :to="item.to"
       :label="t(item.labelKey)"
+      :full-label="item.fullLabelKey ? t(item.fullLabelKey) : undefined"
       :icon="item.icon"
       :badge-count="badgeCount(item)"
       variant="bottom"

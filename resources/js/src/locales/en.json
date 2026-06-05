@@ -71,7 +71,8 @@
         "section_transport_program": "Transport programs",
         "tp_programs": "Transport programs",
         "tp_students": "Transport students",
-        "driver_tp_days": "Transport trips",
+        "driver_tp_days": "Transport program schedule",
+        "bottom_driver_tp_schedule": "School run",
         "driver_home": "Driver home",
         "driver_trips": "My trips",
         "bottom_driver_home": "Driver",
@@ -131,6 +132,9 @@
             "resources": "Resources",
             "resources_overview": "Resources"
         }
+    },
+    "driver_tp_days": {
+        "subtitle": "Student transport program"
     },
     "driver_home": {
         "hello": "Hello,",

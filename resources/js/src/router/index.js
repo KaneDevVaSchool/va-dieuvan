@@ -652,8 +652,8 @@ const router = createRouter({
             name: "driverTpDays",
             component: () => import("../views/driver/DriverTpDaysView.vue"),
             meta: {
-                title: "Chuyến đưa đón",
-                subtitle: "Transport Program",
+                title: "Lịch chương trình đưa đón",
+                subtitle: "Tài xế",
                 driverApp: true,
             },
         },

@@ -51,7 +51,7 @@ export function useNavSections() {
             {
               to: '/driver/tp-days',
               labelKey: 'nav.driver_tp_days',
-              icon: 'calendar',
+              icon: 'p2p_policy',
             },
             {
               to: '/driver/costs',
@@ -80,6 +80,12 @@ export function useNavSections() {
       return [
         { to: '/driver', labelKey: 'nav.bottom_driver_home', icon: 'home' },
         { to: '/driver/schedule', labelKey: 'nav.bottom_driver_schedule', icon: 'calendar' },
+        {
+          to: '/driver/tp-days',
+          labelKey: 'nav.bottom_driver_tp_schedule',
+          fullLabelKey: 'nav.driver_tp_days',
+          icon: 'p2p_policy',
+        },
         { to: '/driver/costs', labelKey: 'nav.bottom_driver_costs', icon: 'costs' },
         { to: '/driver/account', labelKey: 'nav.bottom_driver_account', icon: 'user' },
       ]
