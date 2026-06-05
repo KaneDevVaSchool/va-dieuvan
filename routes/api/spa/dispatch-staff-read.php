@@ -110,6 +110,7 @@ Route::get('/tp-students/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpSt
 Route::get('/tp-students/{tpStudent}/programs', [\App\Http\Controllers\Api\TpStudent\TpStudentProgramHistoryController::class, 'index']);
 
 Route::prefix('tp-imports')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\TpStudent\TpImportListController::class, 'index'])->middleware('throttle:60,1');
     Route::get('/sample', \App\Http\Controllers\Api\TpStudent\TpImportSampleController::class)->middleware('throttle:30,1');
     Route::get('/{tpImportBatch}', [\App\Http\Controllers\Api\TpStudent\TpImportController::class, 'show']);
     Route::get('/{tpImportBatch}/rows', [\App\Http\Controllers\Api\TpStudent\TpImportRowController::class, 'index']);

@@ -235,6 +235,16 @@ export async function updateImportRow(batchId, rowId, rowData) {
   return data.data
 }
 
+export async function skipImportRow(batchId, rowId, skip) {
+  const { data } = await http.patch(`/tp-imports/${batchId}/rows/${rowId}`, { skip })
+  return data.data
+}
+
+export async function listImportBatches(params = {}) {
+  const { data } = await http.get('/tp-imports', { params })
+  return data.data
+}
+
 export async function applyImportFixes(id, rules) {
   const { data } = await http.post(`/tp-imports/${id}/apply-fixes`, { rules })
   return data.data

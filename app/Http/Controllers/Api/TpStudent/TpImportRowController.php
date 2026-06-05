@@ -17,8 +17,13 @@ class TpImportRowController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_import.manage')), 403);
 
+        $statusFilter = $request->query('status');
         $rows = $tpImportBatch->rows()
-            ->when($request->query('status'), fn ($q, $s) => $q->where('validation_status', $s))
+            ->when($statusFilter === 'skipped', fn ($q) => $q->where('import_status', 'skipped'))
+            ->when($statusFilter && $statusFilter !== 'skipped', fn ($q) => $q
+                ->where('validation_status', $statusFilter)
+                ->where('import_status', '!=', 'skipped'))
+            ->when(! $statusFilter, fn ($q) => $q)
             ->orderBy('row_number')
             ->paginate((int) $request->query('per_page', 50));
 

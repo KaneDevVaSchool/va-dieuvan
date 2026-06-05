@@ -24,6 +24,17 @@ class TpImportRowUpdateController extends Controller
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_import.manage')), 403);
         abort_unless((int) $tpImportRow->batch_id === (int) $tpImportBatch->id, 404);
 
+        if ($request->has('skip')) {
+            $skip = $request->boolean('skip');
+            $tpImportRow->update(['import_status' => $skip ? 'skipped' : 'pending']);
+            $counts = $this->validator->refreshBatchRowCounts($tpImportBatch);
+
+            return $this->ok([
+                'row' => $this->rowPayload($tpImportRow->fresh()),
+                ...$counts,
+            ]);
+        }
+
         $payload = $request->validate([
             'data' => ['required', 'array'],
             'data.full_name' => ['nullable', 'string', 'max:100'],
@@ -39,16 +50,20 @@ class TpImportRowUpdateController extends Controller
         $counts = $this->validator->refreshBatchRowCounts($tpImportBatch);
 
         return $this->ok([
-            'row' => [
-                'id' => $row->id,
-                'row_number' => $row->row_number,
-                'data' => $row->fixed_data ?? $row->mapped_data ?? [],
-                'validation_status' => $row->validation_status,
-                'validation_errors' => $row->validation_errors,
-            ],
-            'valid_rows' => $counts['valid'],
-            'warning_rows' => $counts['warning'],
-            'error_rows' => $counts['error'],
+            'row' => $this->rowPayload($row),
+            ...$counts,
         ]);
+    }
+
+    private function rowPayload(TpImportRow $row): array
+    {
+        return [
+            'id' => $row->id,
+            'row_number' => $row->row_number,
+            'data' => $row->fixed_data ?? $row->mapped_data ?? [],
+            'validation_status' => $row->validation_status,
+            'validation_errors' => $row->validation_errors,
+            'import_status' => $row->import_status,
+        ];
     }
 }

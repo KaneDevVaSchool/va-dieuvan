@@ -83,7 +83,7 @@ function padRow(row, len) {
 }
 
 async function parseXlsxPreview(file, maxPreviewRows) {
-  const readXlsxFile = (await import('read-excel-file')).default
+  const readXlsxFile = (await import('read-excel-file/browser')).default
   const matrix = await readXlsxFile(file, { sheet: 1 })
   if (!matrix.length) {
     return { headers: [], rows: [], totalRows: 0, note: 'Sheet đầu tiên trống.' }

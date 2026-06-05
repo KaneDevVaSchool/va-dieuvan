@@ -128,9 +128,11 @@ class ImportValidatorService
      */
     public function refreshBatchRowCounts(TpImportBatch $batch): array
     {
-        $valid = $batch->rows()->where('validation_status', 'valid')->count();
-        $warning = $batch->rows()->where('validation_status', 'warning')->count();
-        $error = $batch->rows()->where('validation_status', 'error')->count();
+        $active = $batch->rows()->where('import_status', '!=', 'skipped');
+        $valid = (clone $active)->where('validation_status', 'valid')->count();
+        $warning = (clone $active)->where('validation_status', 'warning')->count();
+        $error = (clone $active)->where('validation_status', 'error')->count();
+        $skippedManual = $batch->rows()->where('import_status', 'skipped')->count();
 
         $batch->update([
             'valid_rows' => $valid,
@@ -138,7 +140,7 @@ class ImportValidatorService
             'error_rows' => $error,
         ]);
 
-        return ['valid' => $valid, 'warning' => $warning, 'error' => $error];
+        return ['valid' => $valid, 'warning' => $warning, 'error' => $error, 'skipped_manual' => $skippedManual];
     }
 
     /**
