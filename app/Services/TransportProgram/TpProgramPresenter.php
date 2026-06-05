@@ -71,6 +71,7 @@ class TpProgramPresenter
             ] : null,
             'has_execution' => $day->execution !== null,
             'execution_status' => $day->execution?->status,
+            'confirmed_at' => $day->confirmed_at?->toIso8601String(),
             'notes' => $day->notes,
         ];
     }

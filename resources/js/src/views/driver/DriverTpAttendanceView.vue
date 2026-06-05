@@ -24,15 +24,34 @@
           <span><b class="text-[#7fdcc8]">{{ execution.total_boarded }}</b>/{{ execution.total_expected }} · <span class="text-rose-300">{{ execution.total_absent }} vắng</span></span>
         </div>
 
-        <button
-          v-if="!execution"
-          type="button"
-          class="w-full rounded-2xl bg-[#7fdcc8] py-3.5 text-center text-base font-semibold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
-          :disabled="busy"
-          @click="start"
-        >
-          Bắt đầu chuyến
-        </button>
+        <!-- Bước 1: tài xế xác nhận sẽ chạy chuyến -->
+        <div v-if="!execution && !day.confirmed_at" class="space-y-2">
+          <p class="px-1 text-sm text-driver-ink/60">Xác nhận bạn sẽ chạy chuyến này. Sau khi xác nhận mới có thể bắt đầu chuyến.</p>
+          <button
+            type="button"
+            class="w-full rounded-2xl bg-[#7fdcc8] py-3.5 text-center text-base font-semibold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
+            :disabled="busy"
+            @click="confirm"
+          >
+            Xác nhận chuyến
+          </button>
+        </div>
+
+        <!-- Bước 2: đã xác nhận → bắt đầu chuyến -->
+        <div v-else-if="!execution" class="space-y-2">
+          <div class="flex items-center justify-between rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">
+            <span>Đã xác nhận chuyến</span>
+            <button type="button" class="text-xs text-emerald-200/70 underline disabled:opacity-50" :disabled="busy" @click="unconfirm">Bỏ xác nhận</button>
+          </div>
+          <button
+            type="button"
+            class="w-full rounded-2xl bg-[#7fdcc8] py-3.5 text-center text-base font-semibold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
+            :disabled="busy"
+            @click="start"
+          >
+            Bắt đầu chuyến
+          </button>
+        </div>
 
         <div v-if="execution && execution.status === 'in_progress'" class="space-y-2">
           <div v-for="s in execution.student_logs" :key="s.student_id" class="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
@@ -98,6 +117,8 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   driverGetDay,
+  driverConfirmDay,
+  driverUnconfirmDay,
   driverStartTrip,
   driverCompleteTrip,
   driverBoard,
@@ -126,6 +147,29 @@ async function load() {
     showAppErrorFromApi(err)
   } finally {
     loading.value = false
+  }
+}
+
+async function confirm() {
+  busy.value = true
+  try {
+    day.value = await driverConfirmDay(route.params.dayId)
+    showAppSuccess('Đã xác nhận chuyến.')
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function unconfirm() {
+  busy.value = true
+  try {
+    day.value = await driverUnconfirmDay(route.params.dayId)
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    busy.value = false
   }
 }
 

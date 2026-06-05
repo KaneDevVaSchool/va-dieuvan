@@ -40,6 +40,7 @@ class DriverTpDayListController extends Controller
                 'expected_count' => $d->expected_count,
                 'is_default_driver' => $d->driver_id === null,
                 'execution_status' => $d->execution?->status,
+                'confirmed_at' => $d->confirmed_at?->toIso8601String(),
             ])->values()->all();
 
         return $this->ok(['items' => $days]);

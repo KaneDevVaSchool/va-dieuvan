@@ -221,6 +221,16 @@ export async function driverGetDay(dayId) {
   return data.data
 }
 
+export async function driverConfirmDay(dayId) {
+  const { data } = await http.post(`/driver/tp-days/${dayId}/confirm`)
+  return data.data
+}
+
+export async function driverUnconfirmDay(dayId) {
+  const { data } = await http.delete(`/driver/tp-days/${dayId}/confirm`)
+  return data.data
+}
+
 export async function driverStartTrip(dayId, deviceId = null) {
   const { data } = await http.post(`/driver/tp-days/${dayId}/start`, { device_id: deviceId })
   return data.data

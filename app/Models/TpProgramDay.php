@@ -17,12 +17,14 @@ class TpProgramDay extends Model
     protected $fillable = [
         'program_id', 'scheduled_date', 'day_type', 'expected_count',
         'driver_id', 'vehicle_id', 'assigned_at', 'assigned_by',
+        'confirmed_at', 'confirmed_by_driver_id',
         'estimated_cost', 'cancel_reason', 'notes',
     ];
 
     protected $casts = [
         'scheduled_date' => 'date',
         'assigned_at' => 'datetime',
+        'confirmed_at' => 'datetime',
         'expected_count' => 'integer',
         'estimated_cost' => 'decimal:2',
     ];
@@ -45,6 +47,16 @@ class TpProgramDay extends Model
     public function assignedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function confirmedByDriver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'confirmed_by_driver_id');
+    }
+
+    public function isConfirmed(): bool
+    {
+        return $this->confirmed_at !== null;
     }
 
     public function execution(): HasOne

@@ -32,6 +32,8 @@ Route::prefix('trip-costs')->controller(TripCostController::class)->group(functi
 
 // Transport Program redesign (tp_*) — tài xế ghi (§5, §7)
 Route::prefix('driver/tp-days')->group(function () {
+    Route::post('/{tpProgramDay}/confirm', [\App\Http\Controllers\Api\Driver\DriverTpDayConfirmController::class, 'confirm'])->middleware('throttle:60,1');
+    Route::delete('/{tpProgramDay}/confirm', [\App\Http\Controllers\Api\Driver\DriverTpDayConfirmController::class, 'unconfirm'])->middleware('throttle:60,1');
     Route::post('/{tpProgramDay}/start', \App\Http\Controllers\Api\Driver\DriverTripStartController::class)->middleware('throttle:60,1');
 });
 
