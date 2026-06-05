@@ -355,7 +355,7 @@
             </button>
           </nav>
 
-          <div class="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+          <div class="min-h-0 flex-1 overflow-visible p-3 sm:p-4">
             <RequestWorkflowBar
               v-if="workflowTodoItems.length"
               class="mb-4"
@@ -708,7 +708,7 @@
           @click.self="pricingModalOpen = false"
         >
           <div
-            class="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-2xl ring-1 ring-slate-900/5"
+            class="flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-teal-200 bg-white shadow-2xl ring-1 ring-slate-900/5"
             @click.stop
           >
             <div class="shrink-0 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-white px-4 py-3 sm:px-5">
@@ -719,7 +719,7 @@
                 {{ t('request_detail.pricing_modal_lead') }}
               </p>
             </div>
-            <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-3 sm:px-5 sm:pt-4">
+            <div class="min-h-0 flex-1 overflow-visible px-4 pb-4 pt-3 sm:px-5 sm:pt-4">
               <ReferencePricingReadOnlyBody
                 :loading="pricingModalLoading"
                 :error="pricingModalError"

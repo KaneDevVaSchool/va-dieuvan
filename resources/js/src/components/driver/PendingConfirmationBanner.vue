@@ -250,7 +250,7 @@
         @click.self="closeDeclineModal"
       >
         <div
-          class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-[#0f1816] p-5 shadow-2xl shadow-black/60"
+          class="w-full max-w-md rounded-3xl bg-[#0f1816] p-5 shadow-2xl shadow-black/60"
           @click.stop
         >
           <h2 id="decline-modal-title" class="text-lg font-bold text-white">

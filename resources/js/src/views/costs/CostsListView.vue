@@ -876,7 +876,7 @@
       >
         <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeAddCostModal" />
         <div
-          class="relative z-10 flex max-h-[min(92vh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10 max-sm:rounded-t-2xl max-sm:rounded-b-none"
+          class="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
         >
           <div class="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
@@ -893,7 +893,7 @@
             </button>
           </div>
 
-          <form class="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4" @submit.prevent="submitCost">
+          <form class="flex min-h-0 flex-1 flex-col overflow-visible px-5 py-4" @submit.prevent="submitCost">
             <div class="grid gap-4">
               <div>
                 <label class="mb-1 block text-xs font-medium text-slate-700"
@@ -1002,7 +1002,7 @@
       >
         <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeRejectModal" />
         <div
-          class="relative z-10 flex max-h-[min(92vh,560px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
+          class="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
         >
           <div
@@ -1042,7 +1042,7 @@
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
-          <div class="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
+          <div class="flex min-h-0 flex-1 flex-col overflow-visible px-5 py-4">
             <label class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">{{
               t('costs_page.reject_modal_reason_label')
             }}</label>

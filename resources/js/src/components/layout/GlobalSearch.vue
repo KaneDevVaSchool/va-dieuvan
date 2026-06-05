@@ -65,7 +65,7 @@
 
         <!-- Results -->
         <ul
-          class="max-h-[min(60vh,22rem)] overflow-y-auto overscroll-contain py-2"
+          class="py-2"
           role="listbox"
           :aria-label="t('app.search_label')"
         >

@@ -1,9 +1,6 @@
 <template>
-  <!--
-    overflow-y-auto + flex min-h-full items-center: căn giữa theo chiều dọc đúng cách;
-    py-* trên lớp flex: luôn có khoảng cách với mép trên/dưới viewport (tránh modal “dính” sát trên).
-  -->
-  <div v-if="open" class="fixed inset-0 z-50 overflow-y-auto bg-black/45 backdrop-blur-[1px]">
+  <!-- py-* trên lớp flex: khoảng cách với mép viewport; không scroll dọc trong modal. -->
+  <div v-if="open" class="fixed inset-0 z-50 overflow-hidden bg-black/45 backdrop-blur-[1px]">
     <div class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
       <div
         class="w-full rounded-xl border border-slate-200/80 bg-white shadow-xl ring-1 ring-slate-900/5"
@@ -24,7 +21,7 @@
             </button>
           </div>
         </div>
-        <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-5 md:py-5">
+        <div class="min-h-0 flex-1 overflow-visible px-4 py-4 md:px-5 md:py-5">
           <slot />
         </div>
       </div>
@@ -45,9 +42,7 @@ const props = defineProps({
 })
 
 const panelClass = computed(() =>
-  props.wide
-    ? 'max-w-3xl max-h-[min(90vh,calc(100vh-5rem))] overflow-hidden flex flex-col'
-    : 'max-w-lg max-h-[min(90vh,calc(100vh-5rem))] overflow-hidden flex flex-col',
+  props.wide ? 'max-w-3xl flex flex-col' : 'max-w-lg flex flex-col',
 )
 
 defineEmits(['close'])

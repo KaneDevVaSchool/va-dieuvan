@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto min-w-0 w-full max-w-5xl space-y-6 pb-10 pt-1 sm:space-y-7">
+  <div class="min-w-0 w-full space-y-6 pb-10 pt-1 sm:space-y-7">
     <header class="space-y-3">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0 space-y-1">

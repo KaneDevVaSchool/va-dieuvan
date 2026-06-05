@@ -421,7 +421,7 @@
         <Teleport to="body">
             <div
                 v-if="scheduleDetailPopupOpen"
-                class="fixed inset-0 z-[240] flex items-start justify-center overflow-y-auto bg-black/45 p-4 pb-10 pt-10 dark:bg-black/55"
+                class="fixed inset-0 z-[240] flex items-start justify-center overflow-hidden bg-black/45 p-4 pb-10 pt-10 dark:bg-black/55"
                 role="dialog"
                 aria-modal="true"
                 :aria-label="
@@ -491,7 +491,7 @@
                                 )
                             }}
                         </div>
-                        <ul class="max-h-[40vh] space-y-1.5 overflow-y-auto overscroll-contain text-[12px]">
+                        <ul class="space-y-1.5 text-[12px]">
                             <li
                                 v-for="row in overlappingOtherTrips"
                                 :key="'pop-' + row.id"

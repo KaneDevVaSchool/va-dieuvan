@@ -251,7 +251,7 @@
           @click.self="closeEditSheet"
         >
           <div
-            class="max-h-[min(92dvh,900px)] w-full max-w-lg overflow-y-auto rounded-t-[1.75rem] bg-driver-card px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 shadow-2xl ring-1 ring-white/[0.08] sm:rounded-[1.75rem]"
+            class="w-full max-w-lg rounded-t-[1.75rem] bg-driver-card px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 shadow-2xl ring-1 ring-white/[0.08] sm:rounded-[1.75rem]"
             @click.stop
           >
             <div class="mx-auto mb-4 h-1.5 w-12 shrink-0 rounded-full bg-white/15 sm:hidden" aria-hidden="true" />

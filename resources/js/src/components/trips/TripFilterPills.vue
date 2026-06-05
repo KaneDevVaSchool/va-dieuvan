@@ -75,7 +75,7 @@
         @click.self="showPanel = false"
       >
         <div
-          class="sheet-inner w-full max-w-lg max-h-[min(560px,85dvh)] overflow-y-auto overscroll-contain rounded-t-3xl bg-driver-card px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5 ring-1 ring-white/10"
+          class="sheet-inner w-full max-w-lg rounded-t-3xl bg-driver-card px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5 ring-1 ring-white/10"
         >
           <!-- Handle -->
           <div class="mb-4 flex items-center justify-between">

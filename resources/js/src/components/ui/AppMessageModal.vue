@@ -9,7 +9,7 @@
       @click.self="dismissModal"
     >
       <div
-        class="max-h-[min(32rem,90vh)] w-full overflow-hidden rounded-xl border shadow-xl"
+        class="w-full overflow-hidden rounded-xl border shadow-xl"
         :class="[panelClass, state.apiDetails ? 'max-w-2xl' : 'max-w-lg']"
       >
         <div class="flex items-start justify-between gap-3 border-b px-4 py-3 sm:px-5" :class="headerBorderClass">
@@ -23,7 +23,7 @@
             {{ t('message_modal.close') }}
           </button>
         </div>
-        <div class="max-h-[min(22rem,75vh)] overflow-y-auto px-4 py-3 sm:px-5">
+        <div class="px-4 py-3 sm:px-5">
           <div
             v-if="state.variant === 'success'"
             class="flex gap-4 rounded-xl border border-emerald-100/90 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/40 p-4 dark:border-emerald-900/40 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/30"

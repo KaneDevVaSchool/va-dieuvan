@@ -825,7 +825,7 @@
         @click.self="closeDraftsModal"
       >
         <div
-          class="flex max-h-[min(85vh,560px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          class="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
           @click.stop
         >
           <div class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
@@ -847,7 +847,7 @@
               </button>
             </div>
           </div>
-          <div class="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+          <div class="min-h-0 flex-1 overflow-visible px-3 py-3 sm:px-4">
             <p v-if="!savedDraftsList.length" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-600">
               {{ t('dispatch_wizard.create.library_empty', { action: t('dispatch_wizard.create.save_draft') }) }}
             </p>

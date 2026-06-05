@@ -9,14 +9,14 @@
       @click.self="onCancel"
     >
       <div
-        class="max-h-[min(28rem,90vh)] w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        class="w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
       >
         <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:px-5">
           <h2 :id="titleId" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
             {{ state.title }}
           </h2>
         </div>
-        <div class="max-h-[min(18rem,70vh)] overflow-y-auto px-4 py-3 sm:px-5">
+        <div class="px-4 py-3 sm:px-5">
           <p class="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             {{ state.message }}
           </p>

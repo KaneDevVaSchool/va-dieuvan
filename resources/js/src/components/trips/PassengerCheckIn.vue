@@ -669,7 +669,7 @@
                 @click.self="closeAddModal"
             >
                 <div
-                    class="max-h-[min(90vh,44rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                    class="w-full max-w-lg rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
                 >
                     <h3
                         class="text-sm font-semibold text-slate-900 dark:text-slate-100"

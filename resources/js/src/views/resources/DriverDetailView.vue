@@ -334,7 +334,7 @@
               }}
             </h2>
           </div>
-          <form class="max-h-[75vh] space-y-3 overflow-y-auto p-4" @submit.prevent="submitDocForm">
+          <form class="space-y-3 p-4" @submit.prevent="submitDocForm">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('driver_detail.col_doc_type') }}
               <select
