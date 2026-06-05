@@ -19,13 +19,16 @@ class TpProgramDay extends Model
         'driver_id', 'vehicle_id', 'assigned_at', 'assigned_by',
         'confirmed_at', 'confirmed_by_driver_id',
         'estimated_cost', 'cancel_reason', 'notes',
+        'attendance_status', 'attendance_confirmed_at', 'attendance_confirmed_by', 'attendance_lock_version',
     ];
 
     protected $casts = [
         'scheduled_date' => 'date',
         'assigned_at' => 'datetime',
         'confirmed_at' => 'datetime',
+        'attendance_confirmed_at' => 'datetime',
         'expected_count' => 'integer',
+        'attendance_lock_version' => 'integer',
         'estimated_cost' => 'decimal:2',
     ];
 

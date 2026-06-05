@@ -10,7 +10,7 @@ class TpDayAbsence extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'program_day_id', 'student_id', 'absence_type', 'absence_reason',
+        'program_day_id', 'student_id', 'absence_type', 'category', 'reason_code', 'absence_reason',
         'recorded_by', 'recorded_at', 'source', 'notes',
     ];
 

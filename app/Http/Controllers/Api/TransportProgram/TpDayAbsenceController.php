@@ -27,6 +27,8 @@ class TpDayAbsenceController extends Controller
             $data['absence_type'],
             $data['absence_reason'] ?? null,
             $request->user()?->id,
+            $data['category'] ?? null,
+            $data['reason_code'] ?? null,
         );
 
         return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh()));

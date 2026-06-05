@@ -2,7 +2,6 @@
 
 namespace App\Services\TransportProgram;
 
-use App\Models\TpDayAbsence;
 use App\Models\TpTripStudentLog;
 use Carbon\Carbon;
 
@@ -29,6 +28,7 @@ class StudentLogService
 
         if ($wasAbsent) {
             $log->execution->decrement('total_absent');
+            $this->attendance->markPresent($log->execution->programDay, $log->student_id, $actorId);
         }
         $log->execution->increment('total_boarded');
 
@@ -55,6 +55,7 @@ class StudentLogService
         abort_unless(in_array($log->final_status, [TpTripStudentLog::FINAL_PENDING, TpTripStudentLog::FINAL_BOARDED], true), 422);
 
         $wasPending = $log->final_status === TpTripStudentLog::FINAL_PENDING;
+        $wasBoarded = $log->final_status === TpTripStudentLog::FINAL_BOARDED;
 
         $log->update([
             'final_status' => TpTripStudentLog::FINAL_ABSENT,
@@ -68,16 +69,25 @@ class StudentLogService
         if ($wasPending) {
             $log->execution->increment('total_absent');
         }
+        if ($wasBoarded) {
+            $log->execution->decrement('total_boarded');
+        }
 
         $day = $log->execution->programDay;
-        TpDayAbsence::query()->updateOrCreate(
-            ['program_day_id' => $day->id, 'student_id' => $log->student_id],
-            [
-                'absence_type' => $type === 'no_notice' ? 'no_notice' : ($type === 'late_cancel' ? 'late_cancel' : 'parent_notified'),
-                'recorded_by' => $actorId,
-                'recorded_at' => now(),
-                'source' => 'driver',
-            ]
+        $absenceType = $type === 'no_notice' ? 'no_notice' : ($type === 'late_cancel' ? 'late_cancel' : 'parent_notified');
+        $category = in_array($type, ['parent_notified', 'late_cancel'], true) ? 'excused' : 'unexcused';
+        $reasonCode = $type === 'no_notice' ? 'no_notice' : null;
+
+        $this->attendance->markAbsent(
+            $day,
+            $log->student_id,
+            $absenceType,
+            $notes,
+            $actorId,
+            'driver',
+            $category,
+            $reasonCode,
+            syncExecution: false,
         );
 
         return $log->fresh();

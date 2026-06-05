@@ -2,6 +2,7 @@
 
 namespace App\Services\TransportProgram;
 
+use App\Models\TpDayAbsence;
 use App\Models\TpEnrollment;
 use App\Models\TpProgram;
 use App\Models\TpProgramDay;
@@ -68,7 +69,7 @@ class ProgramEnrollmentService
             'unenroll_reason' => $reason,
         ]);
 
-        $this->adjustFutureExpectedCounts($program, -1);
+        $this->adjustFutureExpectedCountsOnUnenroll($program, $studentId);
         $this->audit->log($actorId, 'enrollment.unenrolled', $enrollment, $program);
     }
 
@@ -84,5 +85,30 @@ class ProgramEnrollmentService
             ->update([
                 'expected_count' => DB::raw('CASE WHEN expected_count + ('.(int) $delta.') < 0 THEN 0 ELSE expected_count + ('.(int) $delta.') END'),
             ]);
+    }
+
+    private function adjustFutureExpectedCountsOnUnenroll(TpProgram $program, int $studentId): void
+    {
+        $today = Carbon::today()->toDateString();
+
+        $days = TpProgramDay::query()
+            ->where('program_id', $program->id)
+            ->where('day_type', TpProgramDay::DAY_OPERATING)
+            ->whereDate('scheduled_date', '>=', $today)
+            ->whereDoesntHave('execution')
+            ->get();
+
+        foreach ($days as $day) {
+            $alreadyAbsent = TpDayAbsence::query()
+                ->where('program_day_id', $day->id)
+                ->where('student_id', $studentId)
+                ->exists();
+
+            if ($alreadyAbsent) {
+                continue;
+            }
+
+            $day->decrement('expected_count');
+        }
     }
 }

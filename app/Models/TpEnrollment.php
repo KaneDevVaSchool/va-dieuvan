@@ -12,7 +12,7 @@ class TpEnrollment extends Model
 
     protected $fillable = [
         'program_id', 'student_id', 'enrolled_at', 'enrolled_by',
-        'unenrolled_at', 'unenrolled_by', 'unenroll_reason', 'notes',
+        'unenrolled_at', 'unenrolled_by', 'unenroll_reason', 'notes', 'pickup_point',
     ];
 
     protected $casts = [

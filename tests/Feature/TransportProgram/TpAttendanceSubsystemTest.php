@@ -1,0 +1,144 @@
+<?php
+
+namespace Tests\Feature\TransportProgram;
+
+use App\Actions\CreateTransportProgramAction;
+use App\Models\Driver;
+use App\Models\TpProgram;
+use App\Models\TpStudent;
+use App\Models\User;
+use App\Services\TransportProgram\AttendanceService;
+use App\Services\TransportProgram\ProgramEnrollmentService;
+use App\Services\TransportProgram\StudentLogService;
+use App\Services\TransportProgram\TripExecutionService;
+use Database\Seeders\RbacSeeder;
+use Database\Seeders\TpAbsenceReasonSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+class TpAttendanceSubsystemTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(RbacSeeder::class);
+        $this->seed(TpAbsenceReasonSeeder::class);
+    }
+
+    private function dispatcher(): User
+    {
+        $user = User::factory()->create(['is_active' => true]);
+        $user->assignRole('dispatcher');
+
+        return $user;
+    }
+
+    private function programWithStudents(): array
+    {
+        $driver = Driver::create(['full_name' => 'TX Test']);
+        $result = app(CreateTransportProgramAction::class)->execute([
+            'name' => 'CT điểm danh',
+            'departure_time' => '06:30',
+            'start_date' => Carbon::today()->toDateString(),
+            'end_date' => Carbon::today()->addDays(2)->toDateString(),
+            'runs_on' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'default_driver_id' => $driver->id,
+        ], null);
+
+        $program = TpProgram::findOrFail($result['program']['id']);
+        $s1 = TpStudent::create(['code' => 'AD001', 'full_name' => 'HS A', 'status' => 'active', 'class_name' => '6A']);
+        $s2 = TpStudent::create(['code' => 'AD002', 'full_name' => 'HS B', 'status' => 'active', 'class_name' => '6B']);
+        app(ProgramEnrollmentService::class)->enrollBulk($program, [$s1->id, $s2->id], null);
+        $day = $program->days()->orderBy('scheduled_date')->first();
+
+        return compact('program', 'day', 's1', 's2', 'driver');
+    }
+
+    public function test_get_attendance_summary_and_confirm_blocks_missing_reason(): void
+    {
+        ['day' => $day, 's1' => $s1] = $this->programWithStudents();
+        $attendance = app(AttendanceService::class);
+
+        $attendance->markAbsent($day, $s1->id, 'no_notice', null, null, 'dispatcher', 'unexcused', null);
+        $payload = $attendance->getAttendance($day->fresh());
+
+        $this->assertSame(2, $payload['summary']['total']);
+        $this->assertSame(1, $payload['summary']['present']);
+        $this->assertSame(1, $payload['summary']['unexcused']);
+        $this->assertSame(1, $payload['missing_reason_count']);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $attendance->confirmAttendance($day->fresh(), 0, null);
+    }
+
+    public function test_confirm_with_reason_and_lock_version(): void
+    {
+        ['day' => $day, 's1' => $s1] = $this->programWithStudents();
+        $attendance = app(AttendanceService::class);
+        $attendance->markAbsent($day, $s1->id, 'no_notice', null, null, 'dispatcher', 'unexcused', 'no_notice');
+
+        $confirmed = $attendance->confirmAttendance($day->fresh(), 0, null);
+        $this->assertSame('confirmed', $confirmed->attendance_status);
+        $this->assertSame(1, (int) $confirmed->attendance_lock_version);
+    }
+
+    public function test_driver_mark_absent_syncs_expected_count(): void
+    {
+        ['day' => $day, 's2' => $s2, 'driver' => $driver] = $this->programWithStudents();
+        $before = (int) $day->fresh()->expected_count;
+
+        $execution = app(TripExecutionService::class)->start($day->fresh(), $driver);
+        $log = $execution->studentLogs()->where('student_id', $s2->id)->first();
+        app(StudentLogService::class)->markAbsent($log, 'no_notice', null, null);
+
+        $after = (int) $day->fresh()->expected_count;
+        $this->assertSame($before - 1, $after);
+    }
+
+    public function test_confirm_returns_409_on_stale_lock_version(): void
+    {
+        $user = $this->dispatcher();
+        ['day' => $day, 's1' => $s1] = $this->programWithStudents();
+
+        $this->actingAs($user)
+            ->postJson("/api/tp-program-days/{$day->id}/absences", [
+                'student_ids' => [$s1->id],
+                'absence_type' => 'parent_notified',
+                'category' => 'excused',
+                'reason_code' => 'sick',
+            ])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->postJson("/api/tp-program-days/{$day->id}/attendance/confirm", [
+                'attendance_lock_version' => 99,
+            ])
+            ->assertStatus(409);
+    }
+
+    public function test_api_mark_absent_and_confirm(): void
+    {
+        $user = $this->dispatcher();
+        ['day' => $day, 's1' => $s1] = $this->programWithStudents();
+
+        $this->actingAs($user)
+            ->postJson("/api/tp-program-days/{$day->id}/absences", [
+                'student_ids' => [$s1->id],
+                'absence_type' => 'parent_notified',
+                'category' => 'excused',
+                'reason_code' => 'sick',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.summary.excused', 1);
+
+        $this->actingAs($user)
+            ->postJson("/api/tp-program-days/{$day->id}/attendance/confirm", [
+                'attendance_lock_version' => 0,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.attendance_status', 'confirmed');
+    }
+}

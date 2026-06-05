@@ -170,8 +170,18 @@ Route::prefix('tp-program-days')->group(function () {
     Route::patch('/{tpProgramDay}', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayController::class, 'update'])->middleware('throttle:60,1');
     Route::patch('/{tpProgramDay}/assign-driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'assign'])->middleware('throttle:60,1');
     Route::delete('/{tpProgramDay}/driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'remove'])->middleware('throttle:60,1');
-    Route::post('/{tpProgramDay}/absences', [\App\Http\Controllers\Api\TransportProgram\TpDayAbsenceController::class, 'store'])->middleware('throttle:60,1');
+    Route::post('/{tpProgramDay}/absences', [\App\Http\Controllers\Api\TransportProgram\TpDayAbsenceController::class, 'store'])
+        ->middleware(['throttle:60,1', 'idempotency']);
     Route::delete('/{tpProgramDay}/absences/{student}', [\App\Http\Controllers\Api\TransportProgram\TpDayAbsenceController::class, 'destroy'])->middleware('throttle:60,1');
+    Route::post('/{tpProgramDay}/present', [\App\Http\Controllers\Api\TransportProgram\TpDayPresentController::class, 'store'])
+        ->middleware(['throttle:60,1', 'idempotency']);
+    Route::post('/{tpProgramDay}/attendance/draft', [\App\Http\Controllers\Api\TransportProgram\TpAttendanceSessionController::class, 'saveDraft'])
+        ->middleware(['throttle:60,1', 'idempotency']);
+    Route::post('/{tpProgramDay}/attendance/confirm', [\App\Http\Controllers\Api\TransportProgram\TpAttendanceSessionController::class, 'confirm'])
+        ->middleware(['throttle:60,1', 'idempotency'])
+        ->name('api.tp-program-days.attendance.confirm');
+    Route::post('/{tpProgramDay}/notify-parents', [\App\Http\Controllers\Api\TransportProgram\TpDayNotifyParentsController::class, 'store'])
+        ->middleware(['throttle:30,1', 'idempotency']);
 });
 
 Route::patch('/tp-executions/{tpTripExecution}/cost', [\App\Http\Controllers\Api\TransportProgram\TpExecutionCostController::class, 'update'])->middleware('throttle:30,1');

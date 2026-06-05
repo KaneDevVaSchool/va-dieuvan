@@ -110,6 +110,47 @@ export async function unmarkDayAbsence(dayId, studentId) {
   return data.data
 }
 
+export async function markDayPresent(dayId, payload = {}) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/present`, payload)
+  return data.data
+}
+
+export async function saveAttendanceDraft(dayId) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/attendance/draft`)
+  return data.data
+}
+
+export async function confirmDayAttendance(dayId, attendanceLockVersion) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/attendance/confirm`, {
+    attendance_lock_version: attendanceLockVersion,
+  })
+  return data.data
+}
+
+export async function listAbsenceReasons() {
+  const { data } = await http.get('/tp-absence-reasons')
+  return data.data
+}
+
+export async function notifyDayParents(dayId) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/notify-parents`)
+  return data.data
+}
+
+export async function downloadDayAttendanceExport(dayId) {
+  const { data } = await http.get(`/tp-program-days/${dayId}/attendance/export`, {
+    responseType: 'blob',
+  })
+  const url = window.URL.createObjectURL(new Blob([data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `diem-danh-${dayId}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
 // ── Reports & Audit ─────────────────────────────────────────────────────────────
 
 export async function getAbsenceReport(id, params = {}) {
