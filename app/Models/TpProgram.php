@@ -31,7 +31,7 @@ class TpProgram extends Model
         'origin_name', 'destination_name', 'origin_location_id', 'destination_location_id',
         'departure_time', 'return_time', 'start_date', 'end_date',
         'runs_on', 'excluded_dates', 'extra_dates',
-        'default_driver_id', 'default_vehicle_id',
+        'default_driver_id', 'backup_driver_id', 'default_vehicle_id',
         'cost_per_trip', 'cost_currency', 'cost_notes',
         'responsible_user_id', 'status', 'notes', 'settings', 'created_by',
     ];
@@ -69,6 +69,11 @@ class TpProgram extends Model
     public function defaultDriver(): BelongsTo
     {
         return $this->belongsTo(Driver::class, 'default_driver_id');
+    }
+
+    public function backupDriver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'backup_driver_id');
     }
 
     public function defaultVehicle(): BelongsTo

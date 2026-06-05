@@ -4,12 +4,34 @@ namespace App\Http\Requests\Api\TransportProgram;
 
 use App\Http\Requests\Api\ApiFormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateTpProgramRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
         return $this->allowAnyOf(['tp_program.manage']);
+    }
+
+    /**
+     * Tài xế sơ cua không được trùng tài xế chính — so cả với giá trị hiện tại
+     * khi payload chỉ gửi một trong hai trường.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $v) {
+            if (! $this->has('backup_driver_id') || $this->input('backup_driver_id') === null) {
+                return;
+            }
+            $program = $this->route('tpProgram');
+            $defaultId = $this->has('default_driver_id')
+                ? $this->input('default_driver_id')
+                : $program?->default_driver_id;
+
+            if ($defaultId !== null && (int) $this->input('backup_driver_id') === (int) $defaultId) {
+                $v->errors()->add('backup_driver_id', 'Tài xế sơ cua phải khác tài xế chính.');
+            }
+        });
     }
 
     public function rules(): array
@@ -33,6 +55,7 @@ class UpdateTpProgramRequest extends ApiFormRequest
             'extra_dates' => ['nullable', 'array'],
             'extra_dates.*' => ['date'],
             'default_driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
+            'backup_driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
             'default_vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
             'cost_per_trip' => ['nullable', 'numeric', 'min:0'],
             'cost_notes' => ['nullable', 'string'],

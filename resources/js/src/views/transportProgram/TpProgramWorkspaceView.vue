@@ -8,7 +8,7 @@
     <template v-else>
       <!-- Header banner -->
       <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="relative bg-gradient-to-br from-va-800 to-va-900 px-5 py-5 sm:px-6">
+        <div class="relative bg-gradient-to-br from-[color:var(--va-brand)] via-va-800 to-va-900 px-5 py-5 sm:px-6">
           <button
             class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-white/70 transition hover:text-white"
             @click="goList"
@@ -92,7 +92,7 @@
           :key="tab.key"
           :class="[
             'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition',
-            active === tab.key ? 'bg-va-800 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
+            active === tab.key ? 'bg-[color:var(--va-brand)] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
           ]"
           @click="active = tab.key"
         >
@@ -124,8 +124,6 @@ import {
   UsersIcon,
   ClipboardDocumentCheckIcon,
   IdentificationIcon,
-  BanknotesIcon,
-  DocumentChartBarIcon,
 } from '@heroicons/vue/24/outline'
 import { getProgram, activateProgram, pauseProgram, cancelProgram } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
@@ -135,8 +133,6 @@ import ScheduleTab from './tabs/ScheduleTab.vue'
 import StudentsTab from './tabs/StudentsTab.vue'
 import AttendanceTab from './tabs/AttendanceTab.vue'
 import DriverAssignmentTab from './tabs/DriverAssignmentTab.vue'
-import CostTab from './tabs/CostTab.vue'
-import ReportsTab from './tabs/ReportsTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -149,8 +145,6 @@ const tabs = [
   { key: 'students', label: 'Học sinh', comp: StudentsTab, icon: UsersIcon },
   { key: 'attendance', label: 'Điểm danh', comp: AttendanceTab, icon: ClipboardDocumentCheckIcon },
   { key: 'driver', label: 'Tài xế', comp: DriverAssignmentTab, icon: IdentificationIcon },
-  { key: 'cost', label: 'Chi phí', comp: CostTab, icon: BanknotesIcon },
-  { key: 'reports', label: 'Báo cáo', comp: ReportsTab, icon: DocumentChartBarIcon },
 ]
 
 const activeComponent = computed(() => tabs.find((t) => t.key === active.value)?.comp)

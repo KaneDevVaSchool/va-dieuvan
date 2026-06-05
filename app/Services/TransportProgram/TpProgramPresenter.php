@@ -2,17 +2,24 @@
 
 namespace App\Services\TransportProgram;
 
+use App\Models\Driver;
 use App\Models\TpProgram;
 use App\Models\TpProgramDay;
 use App\Models\TpTripExecution;
 use App\Models\TpTripStudentLog;
+use App\Models\Vehicle;
 
 class TpProgramPresenter
 {
     public function programSummary(TpProgram $program): array
     {
         $program->loadCount(['days', 'enrollments' => fn ($q) => $q->whereNull('unenrolled_at')]);
-        $program->loadMissing('responsibleUser:id,name');
+        $program->loadMissing([
+            'responsibleUser:id,name',
+            'defaultDriver.user:id,name,avatar_url',
+            'backupDriver.user:id,name,avatar_url',
+            'defaultVehicle',
+        ]);
 
         return [
             'id' => $program->id,
@@ -28,7 +35,11 @@ class TpProgramPresenter
             'destination_name' => $program->destination_name,
             'runs_on' => $program->runs_on,
             'default_driver_id' => $program->default_driver_id,
+            'backup_driver_id' => $program->backup_driver_id,
             'default_vehicle_id' => $program->default_vehicle_id,
+            'default_driver' => $this->driverMini($program->defaultDriver),
+            'backup_driver' => $this->driverMini($program->backupDriver),
+            'default_vehicle' => $this->vehicleMini($program->defaultVehicle),
             'cost_per_trip' => $program->cost_per_trip,
             'day_count' => $program->days_count,
             'enrolled_count' => $program->enrollments_count,
@@ -52,17 +63,49 @@ class TpProgramPresenter
             'expected_count' => $day->expected_count,
             'driver_id' => $day->driver_id,
             'vehicle_id' => $day->vehicle_id,
-            'effective_driver' => $effective['driver'] ? [
-                'id' => $effective['driver']->id,
-                'full_name' => $effective['driver']->full_name,
-            ] : null,
+            'effective_driver' => $this->driverMini($effective['driver']),
+            'effective_source' => $day->driver_id ? 'override' : 'default',
             'effective_vehicle' => $effective['vehicle'] ? [
                 'id' => $effective['vehicle']->id,
-                'plate_number' => $effective['vehicle']->plate_number ?? null,
+                'license_plate' => $effective['vehicle']->license_plate ?? null,
             ] : null,
             'has_execution' => $day->execution !== null,
             'execution_status' => $day->execution?->status,
             'notes' => $day->notes,
+        ];
+    }
+
+    /**
+     * Mini driver payload dùng chung cho program & day (default / backup / effective).
+     */
+    private function driverMini(?Driver $driver): ?array
+    {
+        if (! $driver) {
+            return null;
+        }
+
+        return [
+            'id' => $driver->id,
+            'full_name' => $driver->full_name,
+            'phone' => $driver->phone,
+            'license_class' => $driver->license_class,
+            'availability_status' => $driver->availability_status,
+            'employment_status' => $driver->employment_status,
+            'avatar_url' => $driver->relationLoaded('user') ? $driver->user?->avatar_url : null,
+        ];
+    }
+
+    private function vehicleMini(?Vehicle $vehicle): ?array
+    {
+        if (! $vehicle) {
+            return null;
+        }
+
+        return [
+            'id' => $vehicle->id,
+            'license_plate' => $vehicle->license_plate,
+            'type' => $vehicle->type,
+            'seat_count' => $vehicle->seat_count,
         ];
     }
 
