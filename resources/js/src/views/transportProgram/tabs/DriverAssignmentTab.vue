@@ -1,8 +1,52 @@
 <template>
   <div class="space-y-5">
-    <!-- ── Program-level drivers: luôn hiển thị + chọn inline có tìm kiếm ──────── -->
-    <div class="grid gap-4 lg:grid-cols-2">
-      <!-- Tài xế chạy chuyến -->
+    <!-- ── Program-level drivers ───────────────────────────────────────────────── -->
+    <div v-if="hasBothShifts" class="grid gap-4 lg:grid-cols-2">
+      <div
+        v-for="card in programShiftCards"
+        :key="card.shift"
+        class="rounded-2xl border bg-white p-4 shadow-sm"
+        :class="card.shift === 'morning' ? 'border-amber-200/80' : 'border-violet-200/80'"
+      >
+        <div
+          class="mb-3 text-xs font-semibold uppercase tracking-wide"
+          :class="card.shift === 'morning' ? 'text-amber-700' : 'text-violet-700'"
+        >
+          {{ card.label }}{{ card.time ? ` · ${card.time}` : '' }}
+        </div>
+        <div class="space-y-3">
+          <div>
+            <div class="mb-1.5 text-[11px] font-medium text-slate-500">Tài xế chạy chuyến</div>
+            <DriverCombobox
+              :model-value="card.mainSel"
+              :drivers="driverOptions"
+              :exclude-id="card.backupSel"
+              exclude-label="đang là sơ cua"
+              :loading="loadingDrivers"
+              :disabled="programBusy"
+              accent="brand"
+              placeholder="Chọn tài xế chạy chuyến"
+              @update:model-value="(v) => onProgramShiftDriverChange(card.shift, 'default', v)"
+            />
+          </div>
+          <div>
+            <div class="mb-1.5 text-[11px] font-medium text-slate-500">Tài xế sơ cua</div>
+            <DriverCombobox
+              :model-value="card.backupSel"
+              :drivers="driverOptions"
+              :exclude-id="card.mainSel"
+              exclude-label="đang chạy chuyến"
+              :loading="loadingDrivers"
+              :disabled="programBusy"
+              accent="amber"
+              placeholder="Chọn tài xế sơ cua"
+              @update:model-value="(v) => onProgramShiftDriverChange(card.shift, 'backup', v)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else class="grid gap-4 lg:grid-cols-2">
       <div class="rounded-2xl border border-va-800/20 bg-white p-4 shadow-sm">
         <div class="mb-2.5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-va-800">
           <IdentificationIcon class="h-4 w-4" /> Tài xế chạy chuyến
@@ -19,8 +63,6 @@
           @update:model-value="(v) => onProgramDriverChange('default', v)"
         />
       </div>
-
-      <!-- Tài xế sơ cua -->
       <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-2.5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-600">
           <LifebuoyIcon class="h-4 w-4" /> Tài xế sơ cua
@@ -161,17 +203,17 @@
               <!-- Tài xế chạy chuyến -->
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2.5">
-                  <DriverAvatar v-if="d.effective_driver" :driver="d.effective_driver" small />
+                  <DriverAvatar v-if="dayShiftView(d).effective_driver" :driver="dayShiftView(d).effective_driver" small />
                   <span v-else class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-300"><UserPlusIcon class="h-4 w-4" /></span>
                   <span class="min-w-0">
                     <span class="flex items-center gap-1.5">
-                      <span class="block truncate text-sm font-medium text-slate-800">{{ d.effective_driver?.full_name || 'Chưa có tài xế' }}</span>
+                      <span class="block truncate text-sm font-medium text-slate-800">{{ dayShiftView(d).effective_driver?.full_name || 'Chưa có tài xế' }}</span>
                       <span
-                        v-if="d.driver_id"
+                        v-if="dayShiftView(d).driver_override_id"
                         class="shrink-0 rounded-full bg-va-800/10 px-1.5 py-0.5 text-[10px] font-semibold text-va-800"
                       >Ngày</span>
                     </span>
-                    <span v-if="d.effective_driver?.phone" class="block truncate text-xs text-slate-400">{{ d.effective_driver.phone }}</span>
+                    <span v-if="dayShiftView(d).effective_driver?.phone" class="block truncate text-xs text-slate-400">{{ dayShiftView(d).effective_driver.phone }}</span>
                   </span>
                 </div>
               </td>
@@ -179,19 +221,19 @@
               <!-- Tài xế sơ cua -->
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2.5">
-                  <DriverAvatar v-if="d.effective_backup_driver" :driver="d.effective_backup_driver" small muted />
+                  <DriverAvatar v-if="dayShiftView(d).effective_backup_driver" :driver="dayShiftView(d).effective_backup_driver" small muted />
                   <span v-else class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-300"><LifebuoyIcon class="h-4 w-4" /></span>
                   <span class="min-w-0">
                     <span class="flex items-center gap-1.5">
-                      <span class="block truncate text-sm font-medium" :class="d.effective_backup_driver ? 'text-slate-700' : 'text-slate-400 italic'">
-                        {{ d.effective_backup_driver?.full_name || 'Chưa có sơ cua' }}
+                      <span class="block truncate text-sm font-medium" :class="dayShiftView(d).effective_backup_driver ? 'text-slate-700' : 'text-slate-400 italic'">
+                        {{ dayShiftView(d).effective_backup_driver?.full_name || 'Chưa có sơ cua' }}
                       </span>
                       <span
-                        v-if="d.backup_driver_id"
+                        v-if="dayShiftView(d).backup_override_id"
                         class="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
                       >Ngày</span>
                     </span>
-                    <span v-if="d.effective_backup_driver?.phone" class="block truncate text-xs text-slate-400">{{ d.effective_backup_driver.phone }}</span>
+                    <span v-if="dayShiftView(d).effective_backup_driver?.phone" class="block truncate text-xs text-slate-400">{{ dayShiftView(d).effective_backup_driver.phone }}</span>
                   </span>
                 </div>
               </td>
@@ -217,7 +259,7 @@
                     </button>
                     <!-- Reset tài xế chạy chuyến -->
                     <button
-                      v-if="d.driver_id"
+                      v-if="dayShiftView(d).driver_override_id"
                       type="button"
                       class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
                       :disabled="busyDayId === d.id"
@@ -241,7 +283,7 @@
                     </button>
                     <!-- Reset sơ cua về mặc định -->
                     <button
-                      v-if="d.backup_driver_id"
+                      v-if="dayShiftView(d).backup_override_id"
                       type="button"
                       class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-amber-400 transition hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
                       :disabled="busyDayId === d.id"
@@ -392,20 +434,89 @@ const hasAfternoon = computed(() => {
 
 const hasBothShifts = computed(() => hasMorning.value && hasAfternoon.value)
 
+const morningDefaultSel = ref(null)
+const morningBackupSel = ref(null)
+const afternoonDefaultSel = ref(null)
+const afternoonBackupSel = ref(null)
+
+function syncProgramShiftSelections() {
+  const s = props.program.settings || {}
+  const m = s.morning || {}
+  const a = s.afternoon || {}
+  morningDefaultSel.value = m.default_driver_id ?? props.program.default_driver_id ?? null
+  morningBackupSel.value = m.backup_driver_id ?? props.program.backup_driver_id ?? null
+  afternoonDefaultSel.value = a.default_driver_id ?? props.program.default_driver_id ?? null
+  afternoonBackupSel.value = a.backup_driver_id ?? props.program.backup_driver_id ?? null
+}
+
+watch(() => props.program, syncProgramShiftSelections, { deep: true, immediate: true })
+
+const programShiftCards = computed(() => [
+  {
+    shift: 'morning',
+    label: 'Ca sáng',
+    time: morningTime.value,
+    mainSel: morningDefaultSel.value,
+    backupSel: morningBackupSel.value,
+  },
+  {
+    shift: 'afternoon',
+    label: 'Ca chiều',
+    time: afternoonTime.value,
+    mainSel: afternoonDefaultSel.value,
+    backupSel: afternoonBackupSel.value,
+  },
+])
+
+function dayShiftView(day) {
+  if (!day) {
+    return {
+      effective_driver: null,
+      effective_backup_driver: null,
+      driver_override_id: null,
+      backup_override_id: null,
+    }
+  }
+  if (hasBothShifts.value && day.shift_assignments) {
+    const block = day.shift_assignments[activeShift.value] || {}
+    return {
+      effective_driver: block.effective_driver ?? null,
+      effective_backup_driver: block.effective_backup_driver ?? null,
+      driver_override_id: block.driver_id ?? null,
+      backup_override_id: block.backup_driver_id ?? null,
+    }
+  }
+  return {
+    effective_driver: day.effective_driver ?? null,
+    effective_backup_driver: day.effective_backup_driver ?? null,
+    driver_override_id: day.driver_id ?? null,
+    backup_override_id: day.backup_driver_id ?? null,
+  }
+}
+
+function shiftQueryParam() {
+  return hasBothShifts.value ? { shift: activeShift.value } : {}
+}
+
+function shiftLabelForPicker() {
+  if (!hasBothShifts.value) return ''
+  return activeShift.value === 'afternoon' ? ' · Ca chiều' : ' · Ca sáng'
+}
+
 // ── Rows ─────────────────────────────────────────────────────────────────────
 const rows = computed(() => days.value.filter((d) => d.day_type !== 'cancelled'))
 
 // ── Main picker ──────────────────────────────────────────────────────────────
 const mainPickerDescription = computed(() => {
   const day = mainPicker.value.day
-  return day ? `${formatDate(day.scheduled_date)} · ${weekday(day.scheduled_date)}` : ''
+  return day ? `${formatDate(day.scheduled_date)} · ${weekday(day.scheduled_date)}${shiftLabelForPicker()}` : ''
 })
-const mainPickerSelectedId = computed(() => mainPicker.value.day?.effective_driver?.id ?? null)
-const mainPickerAllowClear = computed(() => !!mainPicker.value.day?.driver_id)
+const mainPickerSelectedId = computed(() => dayShiftView(mainPicker.value.day).effective_driver?.id ?? null)
+const mainPickerAllowClear = computed(() => !!dayShiftView(mainPicker.value.day).driver_override_id)
 const mainPickerExcludeIds = computed(() => {
-  const day = mainPicker.value.day
+  const view = dayShiftView(mainPicker.value.day)
   const ids = []
-  if (day?.effective_backup_driver?.id) ids.push(day.effective_backup_driver.id)
+  if (view.effective_backup_driver?.id) ids.push(view.effective_backup_driver.id)
   return ids
 })
 
@@ -421,14 +532,14 @@ async function onMainPickerSelect(driverId) {
 // ── Backup picker ────────────────────────────────────────────────────────────
 const backupPickerDescription = computed(() => {
   const day = backupPicker.value.day
-  return day ? `${formatDate(day.scheduled_date)} · ${weekday(day.scheduled_date)}` : ''
+  return day ? `${formatDate(day.scheduled_date)} · ${weekday(day.scheduled_date)}${shiftLabelForPicker()}` : ''
 })
-const backupPickerSelectedId = computed(() => backupPicker.value.day?.effective_backup_driver?.id ?? null)
-const backupPickerAllowClear = computed(() => !!backupPicker.value.day?.backup_driver_id)
+const backupPickerSelectedId = computed(() => dayShiftView(backupPicker.value.day).effective_backup_driver?.id ?? null)
+const backupPickerAllowClear = computed(() => !!dayShiftView(backupPicker.value.day).backup_override_id)
 const backupPickerExcludeIds = computed(() => {
-  const day = backupPicker.value.day
+  const view = dayShiftView(backupPicker.value.day)
   const ids = []
-  if (day?.effective_driver?.id) ids.push(day.effective_driver.id)
+  if (view.effective_driver?.id) ids.push(view.effective_driver.id)
   return ids
 })
 
@@ -466,14 +577,53 @@ async function saveProgramDriver(mode, driverId) {
   }
 }
 
+async function onProgramShiftDriverChange(shift, mode, val) {
+  const id = val != null && val !== '' ? Number(val) : null
+  if (shift === 'morning') {
+    if (mode === 'default') morningDefaultSel.value = id
+    else morningBackupSel.value = id
+  } else {
+    if (mode === 'default') afternoonDefaultSel.value = id
+    else afternoonBackupSel.value = id
+  }
+  await saveProgramShiftDriver(shift, mode, id)
+}
+
+async function saveProgramShiftDriver(shift, mode, driverId) {
+  const settings = JSON.parse(JSON.stringify(props.program.settings || {}))
+  if (!settings[shift] || typeof settings[shift] !== 'object') {
+    settings[shift] = { enabled: true }
+  }
+  const key = mode === 'default' ? 'default_driver_id' : 'backup_driver_id'
+  settings[shift][key] = driverId
+  programBusy.value = true
+  try {
+    await updateProgram(props.program.id, { settings })
+    const label = shift === 'morning' ? 'sáng' : 'chiều'
+    showAppSuccess(
+      mode === 'default'
+        ? `Đã cập nhật tài xế chạy chuyến ca ${label}.`
+        : `Đã cập nhật tài xế sơ cua ca ${label}.`,
+    )
+    emit('refresh')
+    await loadDays()
+  } catch (err) {
+    showAppErrorFromApi(err)
+    syncProgramShiftSelections()
+  } finally {
+    programBusy.value = false
+  }
+}
+
 // ── Per-day main driver ──────────────────────────────────────────────────────
 async function saveDayDriver(day, driverId) {
   if (!day) return
   busyDayId.value = day.id
   try {
+    const q = shiftQueryParam()
     const updated = driverId
-      ? await assignDayDriver(day.id, { driver_id: driverId })
-      : await clearDayDriver(day.id)
+      ? await assignDayDriver(day.id, { driver_id: driverId, ...q })
+      : await clearDayDriver(day.id, q)
     patchRow(updated)
     showAppSuccess(driverId ? 'Đã đổi tài xế chạy chuyến.' : 'Đã trả về tài xế mặc định.')
   } catch (err) {
@@ -492,9 +642,10 @@ async function saveBackupDayDriver(day, driverId) {
   if (!day) return
   busyDayId.value = day.id
   try {
+    const q = shiftQueryParam()
     const updated = driverId
-      ? await assignDayBackupDriver(day.id, { backup_driver_id: driverId })
-      : await clearDayBackupDriver(day.id)
+      ? await assignDayBackupDriver(day.id, { backup_driver_id: driverId, ...q })
+      : await clearDayBackupDriver(day.id, q)
     patchRow(updated)
     showAppSuccess(driverId ? 'Đã đổi tài xế sơ cua cho chuyến.' : 'Đã trả về sơ cua mặc định.')
   } catch (err) {

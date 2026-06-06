@@ -15,6 +15,7 @@ class AssignDayBackupDriverRequest extends ApiFormRequest
     {
         return [
             'backup_driver_id' => ['required', 'integer', 'exists:drivers,id'],
+            'shift' => ['nullable', 'in:morning,afternoon'],
         ];
     }
 }

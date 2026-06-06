@@ -24,7 +24,13 @@ class TpProgramDayDriverController extends Controller
     public function assign(AssignDayDriverRequest $request, TpProgramDay $tpProgramDay): JsonResponse
     {
         $data = $request->validated();
-        $this->assignment->assignDriver($tpProgramDay, $data['driver_id'], $data['vehicle_id'] ?? null, $request->user()?->id);
+        $this->assignment->assignDriver(
+            $tpProgramDay,
+            $data['driver_id'],
+            $data['vehicle_id'] ?? null,
+            $request->user()?->id,
+            $data['shift'] ?? null,
+        );
 
         return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
     }
@@ -34,7 +40,11 @@ class TpProgramDayDriverController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_driver_assign.manage')), 403);
 
-        $this->assignment->clearOverride($tpProgramDay, $request->user()?->id);
+        $shift = $request->query('shift');
+        if ($shift !== null && $shift !== '' && ! in_array($shift, ['morning', 'afternoon'], true)) {
+            abort(422, 'Tham số shift không hợp lệ.');
+        }
+        $this->assignment->clearOverride($tpProgramDay, $request->user()?->id, $shift ?: null);
 
         return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
     }
@@ -42,7 +52,12 @@ class TpProgramDayDriverController extends Controller
     public function assignBackup(AssignDayBackupDriverRequest $request, TpProgramDay $tpProgramDay): JsonResponse
     {
         $data = $request->validated();
-        $this->assignment->assignBackupDriver($tpProgramDay, $data['backup_driver_id'], $request->user()?->id);
+        $this->assignment->assignBackupDriver(
+            $tpProgramDay,
+            $data['backup_driver_id'],
+            $request->user()?->id,
+            $data['shift'] ?? null,
+        );
 
         return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
     }
@@ -52,7 +67,11 @@ class TpProgramDayDriverController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_driver_assign.manage')), 403);
 
-        $this->assignment->clearBackupDriver($tpProgramDay, $request->user()?->id);
+        $shift = $request->query('shift');
+        if ($shift !== null && $shift !== '' && ! in_array($shift, ['morning', 'afternoon'], true)) {
+            abort(422, 'Tham số shift không hợp lệ.');
+        }
+        $this->assignment->clearBackupDriver($tpProgramDay, $request->user()?->id, $shift ?: null);
 
         return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
     }

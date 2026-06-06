@@ -70,8 +70,8 @@ export async function assignDayDriver(dayId, payload) {
   return data.data
 }
 
-export async function clearDayDriver(dayId) {
-  const { data } = await http.delete(`/tp-program-days/${dayId}/driver`)
+export async function clearDayDriver(dayId, params = {}) {
+  const { data } = await http.delete(`/tp-program-days/${dayId}/driver`, { params })
   return data.data
 }
 
@@ -80,8 +80,8 @@ export async function assignDayBackupDriver(dayId, payload) {
   return data.data
 }
 
-export async function clearDayBackupDriver(dayId) {
-  const { data } = await http.delete(`/tp-program-days/${dayId}/backup-driver`)
+export async function clearDayBackupDriver(dayId, params = {}) {
+  const { data } = await http.delete(`/tp-program-days/${dayId}/backup-driver`, { params })
   return data.data
 }
 

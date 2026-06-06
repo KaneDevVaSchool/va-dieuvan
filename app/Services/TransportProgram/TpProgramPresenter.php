@@ -53,8 +53,10 @@ class TpProgramPresenter
     public function programDay(TpProgramDay $day): array
     {
         $day->loadMissing('program', 'driver', 'backupDriver', 'vehicle', 'execution');
-        $effective = app(DriverAssignmentService::class)->resolveEffective($day);
+        $shiftSupport = app(TpShiftDriverSupport::class);
         $program = $day->program;
+        $usesPerShift = $program && $shiftSupport->programUsesPerShiftDrivers($program);
+        $effective = app(DriverAssignmentService::class)->resolveEffective($day, $usesPerShift ? 'morning' : null);
 
         return [
             'id' => $day->id,
@@ -84,7 +86,29 @@ class TpProgramPresenter
             'confirmed_at' => $day->confirmed_at?->toIso8601String(),
             'morning_confirmed_at' => $day->morning_confirmed_at?->toIso8601String(),
             'afternoon_confirmed_at' => $day->afternoon_confirmed_at?->toIso8601String(),
+            'uses_per_shift_drivers' => $usesPerShift,
+            'shift_assignments' => $usesPerShift ? [
+                'morning' => $this->shiftAssignmentBlock($day, 'morning', $shiftSupport),
+                'afternoon' => $this->shiftAssignmentBlock($day, 'afternoon', $shiftSupport),
+            ] : null,
             'notes' => $day->notes,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function shiftAssignmentBlock(TpProgramDay $day, string $shift, TpShiftDriverSupport $shiftSupport): array
+    {
+        $overrides = $shiftSupport->overrideColumnIds($day, $shift);
+
+        return [
+            'driver_id' => $overrides['driver_id'],
+            'backup_driver_id' => $overrides['backup_driver_id'],
+            'effective_driver' => $this->driverMini($shiftSupport->effectiveMainDriver($day, $shift)),
+            'effective_backup_driver' => $this->driverMini($shiftSupport->effectiveBackupDriver($day, $shift)),
+            'effective_source' => $overrides['driver_id'] ? 'override' : 'default',
+            'effective_backup_source' => $overrides['backup_driver_id'] ? 'override' : 'default',
         ];
     }
 

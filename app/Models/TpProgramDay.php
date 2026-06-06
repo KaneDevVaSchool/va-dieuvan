@@ -18,6 +18,8 @@ class TpProgramDay extends Model
         'program_id', 'scheduled_date', 'day_type', 'expected_count',
         'driver_id', 'vehicle_id', 'assigned_at', 'assigned_by',
         'backup_driver_id', 'backup_assigned_at', 'backup_assigned_by',
+        'morning_driver_id', 'morning_backup_driver_id',
+        'afternoon_driver_id', 'afternoon_backup_driver_id',
         'confirmed_at', 'confirmed_by_driver_id',
         'morning_confirmed_at', 'morning_confirmed_by_driver_id',
         'afternoon_confirmed_at', 'afternoon_confirmed_by_driver_id',

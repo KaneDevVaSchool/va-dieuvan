@@ -16,6 +16,7 @@ class AssignDayDriverRequest extends ApiFormRequest
         return [
             'driver_id' => ['required', 'integer', 'exists:drivers,id'],
             'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+            'shift' => ['nullable', 'in:morning,afternoon'],
         ];
     }
 }

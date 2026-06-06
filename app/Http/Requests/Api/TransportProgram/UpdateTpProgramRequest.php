@@ -61,6 +61,7 @@ class UpdateTpProgramRequest extends ApiFormRequest
             'cost_notes' => ['nullable', 'string'],
             'responsible_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'notes' => ['nullable', 'string'],
+            'settings' => ['sometimes', 'array'],
         ];
     }
 }
