@@ -32,6 +32,7 @@ export default defineConfig({
                 ],
             },
             manifest: {
+                id: '/',
                 name: 'VAS Dispatch',
                 short_name: 'Điều Vận',
                 description:

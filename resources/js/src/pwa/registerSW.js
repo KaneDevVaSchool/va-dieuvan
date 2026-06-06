@@ -144,15 +144,19 @@ export function setupServiceWorker() {
     }
   })
 
-  wb.register().then((registration) => {
-    inspectRegistrationForWaiting(registration)
-    attachRegistrationUpdateListener(registration)
-    if (registration) {
-      setInterval(() => {
-        registration.update().catch(() => {})
-      }, 1000 * 60 * 15)
-    }
-  })
+  wb.register()
+    .then((registration) => {
+      inspectRegistrationForWaiting(registration)
+      attachRegistrationUpdateListener(registration)
+      if (registration) {
+        setInterval(() => {
+          registration.update().catch(() => {})
+        }, 1000 * 60 * 15)
+      }
+    })
+    .catch((err) => {
+      console.warn('[PWA] Service worker registration failed', err)
+    })
 
   void pollServiceWorkerUpdate()
 

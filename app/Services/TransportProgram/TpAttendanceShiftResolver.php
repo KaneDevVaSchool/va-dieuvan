@@ -31,10 +31,26 @@ class TpAttendanceShiftResolver
     public function programDayHasPerShiftAttendanceColumns(): bool
     {
         if ($this->programDayPerShiftColumns === null) {
-            $this->programDayPerShiftColumns = Schema::hasColumn('tp_program_days', 'morning_attendance_status');
+            $this->programDayPerShiftColumns = $this->programDayHasFullPerShiftAttendanceColumns();
         }
 
         return $this->programDayPerShiftColumns;
+    }
+
+    private function programDayHasFullPerShiftAttendanceColumns(): bool
+    {
+        foreach ([
+            'morning_attendance_status',
+            'morning_attendance_lock_version',
+            'afternoon_attendance_status',
+            'afternoon_attendance_lock_version',
+        ] as $column) {
+            if (! Schema::hasColumn('tp_program_days', $column)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /** Điểm danh theo ca chỉ bật khi migration 2026_06_14_100001 chạy đủ (absences + program_days). */

@@ -12,6 +12,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Hệ thống quản lý vận tải & điều vận nội bộ" />
     <link rel="icon" type="image/png" href="/icons/pwa-192.png" />
+    <link rel="apple-touch-icon" href="/icons/pwa-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/pwa-192.png" />
     @php
         $pwaManifest = file_exists(public_path('build/manifest.webmanifest'))
             ? asset('build/manifest.webmanifest')

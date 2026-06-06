@@ -3934,6 +3934,7 @@
     "pwa": {
         "install_title": "Thêm vào màn hình chính",
         "install_hint": "Một lần chạm là mở app. Tiện hơn khi di chuyển, vẫn dùng được khi mạng chập chờn.",
+        "install_ios_hint": "Trên Safari: bấm nút Chia sẻ (hình vuông có mũi tên) → Thêm vào Màn hình chính → Thêm.",
         "install_cta": "Thêm ngay",
         "install_later": "Để sau",
         "update_title": "Đã có bản cập nhật",

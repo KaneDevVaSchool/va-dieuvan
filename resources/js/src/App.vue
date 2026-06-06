@@ -24,6 +24,9 @@
 
   <NotificationCenter />
   <NotificationToast />
+
+  <PwaInstallPrompt :allow-show="pwaChromeVisible" />
+  <PwaUpdatePrompt />
 </template>
 
 <script setup>
@@ -39,6 +42,8 @@ import SplashScreen from './components/SplashScreen.vue'
 import Onboarding from './components/Onboarding.vue'
 import NotificationCenter from './components/notifications/NotificationCenter.vue'
 import NotificationToast from './components/notifications/NotificationToast.vue'
+import PwaInstallPrompt from './components/pwa/PwaInstallPrompt.vue'
+import PwaUpdatePrompt from './components/pwa/PwaUpdatePrompt.vue'
 const route = useRoute()
 const auth = useAuthStore()
 const { hasOnboarded, completeOnboarding } = useOnboarding()
@@ -64,6 +69,14 @@ const splashAppReady = ref(false)
 const ONBOARDING_MAX_MQ = '(max-width: 1023px)'
 const onboardingViewportOk = ref(
   typeof window !== 'undefined' && window.matchMedia(ONBOARDING_MAX_MQ).matches,
+)
+
+/** Banner cài PWA: chỉ mobile/tablet, sau splash & onboarding. */
+const pwaChromeVisible = computed(
+  () =>
+    onboardingViewportOk.value
+    && !showSplash.value
+    && (hasOnboarded.value || !isAuthenticated.value || isPortalShell.value || isDeptShell.value),
 )
 
 let onboardingMq = null

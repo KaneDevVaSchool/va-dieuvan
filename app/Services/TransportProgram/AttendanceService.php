@@ -409,7 +409,7 @@ class AttendanceService
      */
     private function sessionState(TpProgramDay $day, string $storageShift): array
     {
-        if ($storageShift !== 'all' && ! $this->shiftResolver->programDayHasPerShiftAttendanceColumns()) {
+        if ($storageShift !== 'all' && ! $this->shiftResolver->perShiftAttendanceReady()) {
             $storageShift = 'all';
         }
 
@@ -441,7 +441,7 @@ class AttendanceService
         ?int $expectedLockVersion,
         ?int $newLockVersion = null,
     ): void {
-        if ($storageShift !== 'all' && ! $this->shiftResolver->programDayHasPerShiftAttendanceColumns()) {
+        if ($storageShift !== 'all' && ! $this->shiftResolver->perShiftAttendanceReady()) {
             $storageShift = 'all';
         }
 

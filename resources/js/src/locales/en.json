@@ -3855,6 +3855,7 @@
     "pwa": {
         "install_title": "Add to Home Screen",
         "install_hint": "Open like an app, one tap. Works smoother on the go and when the network is slow.",
+        "install_ios_hint": "In Safari: tap Share → Add to Home Screen → Add.",
         "install_cta": "Add",
         "install_later": "Not now",
         "update_title": "Update available",
