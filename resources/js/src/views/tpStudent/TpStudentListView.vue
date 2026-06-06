@@ -9,8 +9,10 @@
 
       <div class="flex flex-col items-stretch gap-3 sm:items-end">
         <div class="flex flex-wrap gap-2">
-          <Button variant="secondary" @click="exportList">
-            <ArrowDownTrayIcon class="h-4 w-4" /> Xuất danh sách
+          <Button variant="secondary" :disabled="exporting" @click="exportList">
+            <ArrowPathIcon v-if="exporting" class="h-4 w-4 animate-spin" />
+            <ArrowDownTrayIcon v-else class="h-4 w-4" />
+            {{ exporting ? 'Đang xuất…' : 'Xuất danh sách' }}
           </Button>
           <Button variant="secondary" @click="goImport">
             <ArrowUpTrayIcon class="h-4 w-4" /> Import học sinh
@@ -196,12 +198,13 @@ import {
 import Button from '../../components/ui/Button.vue'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import TpStudentFormModal from '../../components/transportProgram/TpStudentFormModal.vue'
-import { listStudents, deleteStudent } from '../../api/transportProgram'
+import { listStudents, deleteStudent, exportStudentsList } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 
 const router = useRouter()
 const loading = ref(false)
+const exporting = ref(false)
 const items = ref([])
 const selected = ref([])
 const showForm = ref(false)
@@ -289,8 +292,23 @@ function goEnroll(s) {
   if (s.program?.id) router.push({ name: 'tpEnrollStudents', params: { id: s.program.id } })
   else router.push({ name: 'tpPrograms' })
 }
-function exportList() {
-  showAppSuccess('Đang chuẩn bị tệp xuất danh sách…')
+async function exportList() {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    await exportStudentsList({
+      search: filters.search || undefined,
+      class_name: filters.class_name || undefined,
+      transport_status: filters.transport_status || undefined,
+      program_id: filters.program_id || undefined,
+      grade: filters.grade || undefined,
+    })
+    showAppSuccess('Đã tải xuống danh sách học sinh (.xlsx).')
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    exporting.value = false
+  }
 }
 
 async function remove(s) {

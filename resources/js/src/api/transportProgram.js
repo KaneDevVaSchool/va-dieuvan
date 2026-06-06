@@ -1,4 +1,5 @@
 import { http } from './http'
+import { normalizeAxiosBlobError } from '../util/downloadPdfAttachment'
 
 /**
  * Client API cho module Transport Program redesign (tp_*).
@@ -205,6 +206,32 @@ export async function updateExecutionCost(executionId, payload) {
 export async function listStudents(params = {}) {
   const { data } = await http.get('/tp-students', { params })
   return data.data
+}
+
+export async function exportStudentsList(params = {}) {
+  let res
+  try {
+    res = await http.get('/tp-students/export', {
+      params,
+      responseType: 'blob',
+      headers: { Accept: '*/*' },
+      timeout: 120_000,
+    })
+  } catch (e) {
+    await normalizeAxiosBlobError(e)
+    throw e
+  }
+  const blob = res.data
+  if (!(blob instanceof Blob) || blob.size === 0) throw new Error('empty_response')
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_')
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', `danh-sach-hoc-sinh_${stamp}.xlsx`)
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
 }
 
 export async function getStudent(id) {

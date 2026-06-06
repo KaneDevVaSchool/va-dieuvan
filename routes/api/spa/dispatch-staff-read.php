@@ -116,6 +116,8 @@ Route::prefix('tp-program-days')->group(function () {
 Route::get('/tp-absence-reasons', [\App\Http\Controllers\Api\TransportProgram\TpAbsenceReasonController::class, 'index']);
 
 Route::get('/tp-students', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'index']);
+Route::get('/tp-students/export', [\App\Http\Controllers\Api\TpStudent\TpStudentExportController::class, 'download'])
+    ->middleware('throttle:30,1');
 Route::get('/tp-students/{tpStudent}', [\App\Http\Controllers\Api\TpStudent\TpStudentController::class, 'show']);
 Route::get('/tp-students/{tpStudent}/programs', [\App\Http\Controllers\Api\TpStudent\TpStudentProgramHistoryController::class, 'index']);
 
