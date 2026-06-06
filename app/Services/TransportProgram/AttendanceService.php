@@ -74,8 +74,8 @@ class AttendanceService
                 'settings' => $program->settings ?? [],
                 'driver_name' => $day->effectiveDriver()?->full_name,
             ],
-            'shift' => $multiSlot ? $storageShift : null,
-            'multi_slot' => $multiSlot,
+            'shift' => ($multiSlot && $this->shiftResolver->absenceTableHasShiftColumn()) ? $storageShift : null,
+            'multi_slot' => $multiSlot && $this->shiftResolver->absenceTableHasShiftColumn(),
             'items' => $items,
             'summary' => $summary,
             'effective_count' => $summary['present'],
@@ -106,16 +106,16 @@ class AttendanceService
             abort_if($program === null, 404);
             $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
 
+            $identity = $this->shiftResolver->absenceIdentityAttributes($day->id, $studentId, $storageShift);
+
             $existed = TpDayAbsence::query()
-                ->where('program_day_id', $day->id)
-                ->where('student_id', $studentId)
-                ->where('shift', $storageShift)
+                ->where($identity)
                 ->exists();
 
             $resolvedCategory = $category ?? $this->categoryFromAbsenceType($type);
 
             TpDayAbsence::query()->updateOrCreate(
-                ['program_day_id' => $day->id, 'student_id' => $studentId, 'shift' => $storageShift],
+                $identity,
                 [
                     'absence_type' => $type,
                     'category' => $resolvedCategory,
@@ -155,10 +155,10 @@ class AttendanceService
             abort_if($program === null, 404);
             $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
 
+            $identity = $this->shiftResolver->absenceIdentityAttributes($day->id, $studentId, $storageShift);
+
             $deleted = TpDayAbsence::query()
-                ->where('program_day_id', $day->id)
-                ->where('student_id', $studentId)
-                ->where('shift', $storageShift)
+                ->where($identity)
                 ->delete();
 
             if ($deleted && $storageShift === 'all') {
@@ -223,10 +223,12 @@ class AttendanceService
         $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
 
         $query = TpDayAbsence::query()->where('program_day_id', $day->id);
-        if ($storageShift === 'all') {
-            $query->where('shift', 'all');
-        } else {
-            $query->where('shift', $storageShift);
+        if ($this->shiftResolver->absenceTableHasShiftColumn()) {
+            if ($storageShift === 'all') {
+                $query->where('shift', 'all');
+            } else {
+                $query->where('shift', $storageShift);
+            }
         }
 
         $studentIds = $query->pluck('student_id')->all();
