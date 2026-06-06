@@ -140,13 +140,14 @@ function tripDepartMs(trip) {
   return NaN
 }
 
-/** Banner chờ xác nhận: trong vòng 24h trước giờ xuất phát (không gom chuyến xa). */
+/** Banner chờ xác nhận: chỉ chuyến trong ngày hôm nay, chưa qua giờ xuất phát. */
 function isPendingTripStillRelevant(trip) {
+  const today = ymd(new Date())
+  const day = tripDepartYmd(trip)
+  if (day == null || day !== today) return false
   const dep = tripDepartMs(trip)
-  if (!Number.isFinite(dep)) return false
-  const now = Date.now()
-  const oneDayMs = 24 * 60 * 60 * 1000
-  return dep >= now && dep <= now + oneDayMs
+  if (!Number.isFinite(dep)) return true
+  return dep >= Date.now()
 }
 
 function normalizedDashboardEndYmd(dashboardDateTo) {
