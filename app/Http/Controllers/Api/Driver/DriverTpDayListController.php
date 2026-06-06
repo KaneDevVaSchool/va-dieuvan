@@ -27,8 +27,8 @@ class DriverTpDayListController extends Controller
 
         $from = $request->query('date_from', Carbon::today()->toDateString());
         $to = $request->query('date_to', $from);
-        if (Carbon::parse($from)->diffInDays(Carbon::parse($to)) > 7) {
-            $to = Carbon::parse($from)->addDays(7)->toDateString();
+        if (Carbon::parse($from)->diffInDays(Carbon::parse($to)) > 60) {
+            $to = Carbon::parse($from)->addDays(60)->toDateString();
         }
 
         $days = TpProgramDay::query()
@@ -60,6 +60,10 @@ class DriverTpDayListController extends Controller
 
                 $items[] = [
                     'day_id' => $d->id,
+                    'program_id' => $program->id,
+                    'program_code' => $program->code,
+                    'origin_name' => $program->origin_name,
+                    'destination_name' => $program->destination_name,
                     'list_key' => $d->id.'-'.$shift,
                     'shift' => $shift,
                     'multi_slot' => $multiSlot,

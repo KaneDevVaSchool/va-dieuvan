@@ -133,7 +133,7 @@
                     class="inline-flex shrink-0 rounded-md px-2 py-1 text-xs font-bold uppercase tracking-wide sm:text-sm"
                     :class="tripTypeBadgeClass(trip)"
                   >
-                    {{ tripTypeShortLabel(trip) }}
+                    {{ tripTypeBadgeText(trip) }}
                   </span>
                   <span class="text-sm font-semibold text-slate-400">
                     {{ tripCodeDisplay(trip) }}
@@ -215,7 +215,10 @@
           <div
             class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end sm:pt-0.5"
           >
-            <div class="grid min-h-[48px] w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-2">
+            <div
+              class="grid min-h-[48px] w-full gap-2 sm:flex sm:w-auto sm:gap-2"
+              :class="trip._tp ? 'grid-cols-1' : 'grid-cols-2'"
+            >
               <button
                 type="button"
                 class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white shadow shadow-black/30 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
@@ -225,6 +228,7 @@
                 {{ t('driver_home.btn_confirm') }}
               </button>
               <button
+                v-if="!trip._tp"
                 type="button"
                 class="inline-flex min-h-[48px] min-w-0 flex-1 items-center justify-center rounded-lg border border-rose-400/60 bg-rose-950/40 px-3 text-sm font-bold text-rose-200 transition hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:opacity-45 sm:min-w-[7rem]"
                 :disabled="busyId != null"
@@ -346,6 +350,8 @@ import {
   tripOutboundInboundTimeRange,
   tripPassengerLine,
   tripRequesterLine,
+  tripTypeBadgeClass,
+  tripTypeBadgeText,
 } from '../../composables/useDriverTripDisplay'
 
 let tripStatusCooldownUntil = 0
@@ -436,10 +442,6 @@ const declineTripSummary = computed(() => {
   return `#${tag} · ${time} · ${origin}`
 })
 
-function drOf(trip) {
-  return trip?.dispatch_request ?? trip?.dispatchRequest ?? {}
-}
-
 function tripCodeDisplay(trip) {
   return trip?.trip_number || `#${trip?.id ?? ''}`
 }
@@ -462,27 +464,6 @@ function bannerMetaLine(trip) {
   const rq = tripRequesterLine(trip)
   if (rq) parts.push(t('driver_home.pending_requester', { name: rq }))
   return parts.join(' · ')
-}
-
-function tripTypeShortLabel(trip) {
-  const tt = drOf(trip).trip_type
-  if (tt === 'door_to_door') return 'D2D'
-  if (tt === 'point_to_point') return 'P2P'
-  if (tt === 'business') return 'CT'
-  if (tt === 'cargo') return 'HH'
-  const raw = (trip?.type || '').toString()
-  const up = raw.toUpperCase()
-  if (['P2P', 'D2D', 'CT', 'HH', 'CG'].includes(up)) return up === 'CG' ? 'HH' : up
-  return raw.length <= 3 && raw ? raw.toUpperCase() : '—'
-}
-
-function tripTypeBadgeClass(trip) {
-  const lbl = tripTypeShortLabel(trip)
-  if (lbl === 'P2P') return 'bg-blue-500/25 text-blue-200 ring-1 ring-blue-400/30'
-  if (lbl === 'D2D') return 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/30'
-  if (lbl === 'CT') return 'bg-amber-500/25 text-amber-100 ring-1 ring-amber-400/35'
-  if (lbl === 'HH') return 'bg-orange-500/25 text-orange-100 ring-1 ring-orange-400/35'
-  return 'bg-slate-500/20 text-slate-200 ring-1 ring-slate-400/25'
 }
 
 function closeDeclineModal() {

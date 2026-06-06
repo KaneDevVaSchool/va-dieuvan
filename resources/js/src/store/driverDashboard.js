@@ -15,10 +15,11 @@ import {
   dashPerfHydrateDone,
   dashPerfSkipStale,
 } from '../util/devDriverDashboardPerf'
-import { expandTripsForDriverCalendar } from '../composables/driverScheduleExpand'
+import { expandTripsForDriverCalendar, tpItemsToDriverTrips } from '../composables/driverScheduleExpand'
+import { driverConfirmDay, driverListDays, driverStartTrip } from '../api/transportProgram'
 
 const CACHE_KEY = 'va_driver_dash_snap_v1'
-const CACHE_SCHEMA = 1
+const CACHE_SCHEMA = 2
 const STALE_MS = 30_000
 const SILENT_REFETCH_DEBOUNCE_MS = 700
 
@@ -123,6 +124,13 @@ function resolveEffectiveDriverId(idFromSummary, items) {
   return null
 }
 
+/** Chỉ hiển thị chờ xác nhận cho ca từ hôm nay trở đi (tránh kẹt chuyến quá khứ). */
+function isPendingTripStillRelevant(trip) {
+  const d = tripDepartYmd(trip)
+  if (d == null) return true
+  return d >= ymd(new Date())
+}
+
 function normalizedDashboardEndYmd(dashboardDateTo) {
   const s = dashboardDateTo != null ? String(dashboardDateTo).trim() : ''
   const head = s.length >= 10 ? s.slice(0, 10) : ''
@@ -136,6 +144,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
   state: () => ({
     myDriverId: null,
     rawListItems: [],
+    tpListItems: [],
     lastFetchedAt: 0,
     dashboardDateFrom: '',
     dashboardDateTo: '',
@@ -164,10 +173,18 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       return items.slice()
     },
 
+    tpAsDriverTrips() {
+      return tpItemsToDriverTrips(this.tpListItems)
+    },
+
+    dashboardMergedTrips() {
+      return [...this.rawTrips, ...this.tpAsDriverTrips]
+    },
+
     needsConfirmationTrips() {
       const need = new Set(['assigned', 'pending', 'approved'])
-      return this.rawTrips
-        .filter((x) => need.has(tripStatusNorm(x)))
+      return this.dashboardMergedTrips
+        .filter((x) => need.has(tripStatusNorm(x)) && isPendingTripStillRelevant(x))
         .slice()
         .sort(
           (a, b) =>
@@ -180,7 +197,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       const start = ymd(new Date())
       const end = normalizedDashboardEndYmd(this.dashboardDateTo)
       return sortScheduleTrips(
-        this.rawTrips.filter((x) => {
+        this.dashboardMergedTrips.filter((x) => {
           const d = tripDepartYmd(x)
           if (d == null) return false
           if (d < start || d > end) return false
@@ -204,7 +221,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     upcomingBannerTrip() {
       const now = Date.now()
       const limit = now + 120 * 60 * 1000
-      const eligible = this.rawTrips.filter((x) => {
+      const eligible = this.dashboardMergedTrips.filter((x) => {
         const s = tripStatusNorm(x)
         if (!['pending', 'assigned', 'driver_confirmed', 'approved'].includes(s)) return false
         const dep = x.depart_at
@@ -239,12 +256,24 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     listLoadingForUi(state) {
-      return state.loadingInitial && state.rawListItems.length === 0
+      return (
+        state.loadingInitial &&
+        state.rawListItems.length === 0 &&
+        state.tpListItems.length === 0
+      )
     },
 
     /** Chuyến điều vận + từng ca (sáng/chiều) để hiển thị lịch tuần. */
     calendarDispatchEntries() {
-      return expandTripsForDriverCalendar(this.rawTrips)
+      const past = new Date()
+      past.setDate(past.getDate() - 30)
+      const startWindow = ymd(past)
+      const end = normalizedDashboardEndYmd(this.dashboardDateTo)
+      const inWindow = this.dashboardMergedTrips.filter((x) => {
+        const d = tripDepartYmd(x)
+        return d != null && d >= startWindow && d <= end
+      })
+      return expandTripsForDriverCalendar(inWindow)
     },
   },
 
@@ -261,6 +290,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         if (!Array.isArray(snap.rawListItems)) return
         this.myDriverId = snap.myDriverId ?? null
         this.rawListItems = snap.rawListItems
+        this.tpListItems = Array.isArray(snap.tpListItems) ? snap.tpListItems : []
         this.lastFetchedAt = Number(snap.savedAt) || 0
         this.dashboardDateFrom = snap.dashboardDateFrom || ''
         this.dashboardDateTo = snap.dashboardDateTo || ''
@@ -285,6 +315,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
           savedAt: Date.now(),
           myDriverId: this.myDriverId,
           rawListItems: this.rawListItems,
+          tpListItems: this.tpListItems,
           dashboardDateFrom: this.dashboardDateFrom,
           dashboardDateTo: this.dashboardDateTo,
           monthlyTripStats: this.monthlyTripStats,
@@ -328,6 +359,20 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       this.rawListItems = [...this.rawListItems, trip]
     },
 
+    patchTpListItem(dayId, shift, partial) {
+      const idx = this.tpListItems.findIndex((row) => {
+        if (Number(row.day_id) !== Number(dayId)) return false
+        if (row.multi_slot) return (row.shift || 'morning') === (shift || 'morning')
+        return true
+      })
+      if (idx < 0) return
+      const cur = this.tpListItems[idx]
+      const next = { ...cur, ...partial }
+      this.tpListItems = this.tpListItems
+        .slice(0, idx)
+        .concat([next], this.tpListItems.slice(idx + 1))
+    },
+
     scheduleSilentRefetch() {
       if (typeof window === 'undefined') return
       if (this.silentRefetchTimer != null) {
@@ -366,13 +411,14 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
 
       try {
         const dateQuery = { date_from: dateFrom, date_to: dateTo }
-        const [sum, page1] = await Promise.all([
+        const [sum, page1, tpDays] = await Promise.all([
           getDriverSummary(),
           listDriverTrips({
             ...dateQuery,
             per_page: DRIVER_TRIPS_LIST_MAX_PER_PAGE,
             page: 1,
           }),
+          driverListDays(dateQuery).catch(() => ({ items: [] })),
         ])
 
         const batch1 = page1?.items ?? []
@@ -383,6 +429,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         )
 
         this.rawListItems = batch1
+        this.tpListItems = Array.isArray(tpDays?.items) ? tpDays.items : []
         this.myDriverId = resolveEffectiveDriverId(sum?.driver?.id ?? null, batch1)
         this.monthlyTripStats =
           st != null && typeof st === 'object' ? mapHistoryStatsFromApi(st) : emptyStatsShape()
@@ -419,6 +466,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
           this.errorMsg = typeof msg === 'string' ? msg : 'Load error'
           this.myDriverId = null
           this.rawListItems = []
+          this.tpListItems = []
           this.monthlyTripStats = emptyStatsShape()
         }
       } finally {
@@ -437,6 +485,21 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
 
     async confirmTripOptimistic(trip) {
       if (!trip?.id) return
+      if (trip._tp?.day_id) {
+        const { day_id: dayId, shift, multi_slot: multiSlot } = trip._tp
+        const shiftArg = multiSlot ? shift || null : null
+        const confirmedIso = new Date().toISOString()
+        this.patchTpListItem(dayId, shift, { confirmed_at: confirmedIso })
+        try {
+          await driverConfirmDay(dayId, shiftArg)
+          showAppSuccess(t('driver_home.toast_confirm_ok'), t('driver_home.toast_action_title'))
+          this.scheduleSilentRefetch()
+        } catch (e) {
+          this.patchTpListItem(dayId, shift, { confirmed_at: null })
+          throw e
+        }
+        return
+      }
       const backup = this.tripSnapshot(trip.id)
       this.patchTripInList(trip.id, { status: 'driver_confirmed' })
       try {
@@ -467,6 +530,23 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
 
     async startTripOptimistic(tripId) {
       if (tripId == null || this.startBusyTripId != null) return
+      const tpTrip = this.dashboardMergedTrips.find((x) => x.id === tripId && x._tp?.day_id)
+      if (tpTrip?._tp?.day_id) {
+        this.startBusyTripId = tripId
+        try {
+          await driverStartTrip(tpTrip._tp.day_id)
+          showAppSuccess(t('driver_home.toast_start_ok'), t('driver_home.toast_action_title'))
+          this.scheduleSilentRefetch()
+        } catch (e) {
+          void this.refreshTripsQuiet()
+          const fallback = t('driver_trip_detail.status_err')
+          showAppErrorFromApi(e, typeof fallback === 'string' ? fallback : 'Error')
+          throw e
+        } finally {
+          this.startBusyTripId = null
+        }
+        return
+      }
       const backup = this.tripSnapshot(tripId)
       this.startBusyTripId = tripId
       try {

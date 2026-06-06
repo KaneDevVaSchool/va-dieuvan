@@ -151,7 +151,7 @@
 
           <!-- Card -->
           <RouterLink
-            :to="trip._rowKind === 'tp' ? `/driver/tp-days/${trip.day_id}` : `/driver/trips/${trip.id}`"
+            :to="tripDetailRoute(trip)"
             class="mb-3 ml-3 min-w-0 flex-1 overflow-hidden rounded-2xl bg-[#0a1c1a] ring-1 ring-[#7fdcc8]/12 transition active:scale-[0.99]"
             :class="
               trip._rowKind === 'tp'
@@ -175,10 +175,10 @@
                 {{ shiftLabel(trip.shift) }}
               </span>
               <span
-                v-else-if="trip.calendar_shift"
+                v-else-if="trip.calendar_shift || trip._tp?.shift"
                 class="shrink-0 rounded-md bg-violet-500/20 px-2 py-0.5 text-xs font-bold text-violet-200"
               >
-                {{ shiftLabel(trip.calendar_shift) }}
+                {{ shiftLabel(trip.calendar_shift || trip._tp?.shift) }}
               </span>
               <span class="min-w-0 flex-1 truncate text-sm font-semibold text-white/65">
                 {{ trip._rowKind === 'tp' ? (trip.program_name || t('driver_home.svc_name_d2d')) : tripServiceFullName(trip) }}
@@ -435,6 +435,18 @@ function tripVariant(trip) {
 function tripRefLabel(trip) {
   const code = trip.trip_code
   if (code != null && String(code).trim() !== '') return `#${String(code).trim()}`
+  if (trip.trip_number) return String(trip.trip_number)
   return `#${trip.id}`
+}
+
+function tripDetailRoute(trip) {
+  const dayId = trip._tp?.day_id ?? (trip._rowKind === 'tp' ? trip.day_id : null)
+  if (dayId != null) {
+    const shift = trip._tp?.shift ?? trip.shift
+    return shift
+      ? { path: `/driver/tp-days/${dayId}`, query: { shift } }
+      : `/driver/tp-days/${dayId}`
+  }
+  return `/driver/trips/${trip.id}`
 }
 </script>

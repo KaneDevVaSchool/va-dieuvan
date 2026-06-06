@@ -76,7 +76,21 @@ export function tripTypeBadgeText(trip) {
   if (tt === 'point_to_point') return 'P2P'
   if (tt === 'business') return 'CT'
   if (tt === 'cargo') return 'CG'
+  const legacy = String(trip?.type ?? '')
+    .trim()
+    .toUpperCase()
+  if (['P2P', 'D2D', 'CT', 'CG', 'HH'].includes(legacy)) return legacy === 'HH' ? 'CG' : legacy
   return 'TR'
+}
+
+/** Class Tailwind cho chip loại chuyến (banner / list). */
+export function tripTypeBadgeClass(trip) {
+  const lbl = tripTypeBadgeText(trip)
+  if (lbl === 'P2P') return 'bg-blue-500/25 text-blue-200 ring-1 ring-blue-400/30'
+  if (lbl === 'D2D') return 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/30'
+  if (lbl === 'CT') return 'bg-amber-500/25 text-amber-100 ring-1 ring-amber-400/35'
+  if (lbl === 'CG') return 'bg-orange-500/25 text-orange-100 ring-1 ring-orange-400/35'
+  return 'bg-slate-500/20 text-slate-200 ring-1 ring-slate-400/25'
 }
 
 /**

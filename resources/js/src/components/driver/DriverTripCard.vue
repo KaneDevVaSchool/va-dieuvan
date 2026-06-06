@@ -137,6 +137,7 @@ import {
   formatDepartForTrip,
   tripDepartIso,
   tripOutboundInboundTimeRange,
+  tripTypeBadgeText,
 } from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
@@ -172,31 +173,14 @@ const tripCode = computed(() => {
   return tr.trip_number || `#${tr.id}`
 })
 
-const rawType = computed(() => {
-  const dr = drOf(tripRaw.value)
-  const code = (dr.trip_type || '').toString().trim().toLowerCase()
-  const legacy = (tripRaw.value.type || tripRaw.value.trip_type_label || '').toString().trim().toLowerCase()
-  return code || legacy
-})
-
-const typeLabel = computed(() => {
-  const t0 = rawType.value
-  if (t0 === 'point_to_point' || t0 === 'p2p') return 'P2P'
-  if (t0 === 'door_to_door' || t0 === 'd2d') return 'D2D'
-  if (t0 === 'business' || t0 === 'cong_tac' || t0 === 'ct') return 'CT'
-  if (t0 === 'cargo' || t0 === 'hang_hoa' || t0 === 'hh' || t0 === 'delivery') return 'HH'
-  const up = (tripRaw.value.type || '—').toString()
-  if (up === 'P2P' || up === 'D2D' || up === 'CT' || up === 'HH') return up
-  if (up === 'Cargo') return 'HH'
-  return up.length <= 3 ? up.toUpperCase() : '—'
-})
+const typeLabel = computed(() => tripTypeBadgeText(tripRaw.value))
 
 const typeBadgeStyle = computed(() => {
   const lbl = typeLabel.value
   if (lbl === 'P2P') return { backgroundColor: 'rgb(59 130 246 / 0.22)', color: '#93c5fd' }
   if (lbl === 'D2D') return { backgroundColor: 'rgb(168 85 247 / 0.22)', color: '#d8b4fe' }
   if (lbl === 'CT') return { backgroundColor: 'rgb(245 158 11 / 0.22)', color: '#fcd34d' }
-  if (lbl === 'HH') return { backgroundColor: 'rgb(249 115 22 / 0.22)', color: '#fdba74' }
+  if (lbl === 'CG') return { backgroundColor: 'rgb(249 115 22 / 0.22)', color: '#fdba74' }
   return { backgroundColor: 'rgb(148 163 184 / 0.15)', color: '#94a3b8' }
 })
 
@@ -407,6 +391,12 @@ const kmLabel = computed(() => {
 })
 
 function goDetail() {
+  const tp = tripRaw.value._tp
+  if (tp?.day_id) {
+    const query = tp.shift ? { shift: tp.shift } : {}
+    router.push({ path: `/driver/tp-days/${tp.day_id}`, query })
+    return
+  }
   router.push(`/driver/trips/${tripRaw.value.id}`)
 }
 

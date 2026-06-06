@@ -52,8 +52,10 @@
 
         <UpcomingTripBanner
           v-if="dash.upcomingBannerTrip"
-          :trip-id="dash.upcomingBannerTrip.id"
+          :trip-id="dash.upcomingBannerTrip.trip_number || dash.upcomingBannerTrip.id"
           :depart-at="dash.upcomingDepartIso"
+          :tp-day-id="dash.upcomingBannerTrip._tp?.day_id ?? null"
+          :tp-shift="dash.upcomingBannerTrip._tp?.shift ?? null"
         />
 
         <DriverUpcomingTripsSection
@@ -65,8 +67,8 @@
 
         <DriverWeekCalendar
           :raw-trips="dash.calendarDispatchEntries"
-          :tp-slots="tpCalendarSlots"
-          :loading="dash.listLoadingForUi || tpCalendarLoading"
+          :tp-slots="[]"
+          :loading="dash.listLoadingForUi"
         />
       </div>
 
@@ -99,7 +101,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useDriverWebPushBoot } from '../../composables/useDriverWebPushBoot'
@@ -112,9 +114,6 @@ import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverPendingConfirmationSection from '../../components/driver/dashboard/DriverPendingConfirmationSection.vue'
 import DriverUpcomingTripsSection from '../../components/driver/dashboard/DriverUpcomingTripsSection.vue'
 import DriverWeekCalendar from '../../components/driver/DriverWeekCalendar.vue'
-import { driverListDays } from '../../api/transportProgram'
-import { tpItemsToCalendarSlots } from '../../composables/driverScheduleExpand'
-
 const { t } = useI18n()
 const auth = useAuthStore()
 const dash = useDriverDashboardStore()
@@ -131,50 +130,19 @@ const initials = computed(() => {
 
 const dispatcherPhone = import.meta.env.VITE_DISPATCHER_PHONE || null
 
-const tpCalendarSlots = ref([])
-const tpCalendarLoading = ref(false)
-
-function ymdLocal(d) {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-function currentWeekFromTo() {
-  const today = new Date()
-  const dow = today.getDay()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - ((dow + 6) % 7))
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() + 6)
-  return { from: ymdLocal(monday), to: ymdLocal(sunday) }
-}
-
-async function refreshTpCalendar() {
-  tpCalendarLoading.value = true
-  try {
-    const { from, to } = currentWeekFromTo()
-    const res = await driverListDays({ date_from: from, date_to: to })
-    tpCalendarSlots.value = tpItemsToCalendarSlots(res?.items ?? [])
-  } catch {
-    tpCalendarSlots.value = []
-  } finally {
-    tpCalendarLoading.value = false
-  }
-}
-
 const SEEN_PENDING_INIT_KEY = 'va_driver_pending_seen_init'
 const SEEN_PENDING_IDS_KEY = 'va_driver_pending_ids_seen'
+
+function pendingTripKey(trip) {
+  return trip?.id != null ? String(trip.id) : ''
+}
 
 function loadSeenPendingIds() {
   try {
     if (typeof sessionStorage === 'undefined') return null
     if (sessionStorage.getItem(SEEN_PENDING_INIT_KEY) !== '1') return null
     const raw = sessionStorage.getItem(SEEN_PENDING_IDS_KEY) ?? ''
-    return new Set(
-      raw.split(',').map((x) => Number.parseInt(x, 10)).filter((n) => !Number.isNaN(n)),
-    )
+    return new Set(raw.split(',').map((x) => x.trim()).filter(Boolean))
   } catch {
     return null
   }
@@ -184,7 +152,7 @@ function persistSeenPendingSnapshot(ids) {
   try {
     if (typeof sessionStorage === 'undefined') return
     sessionStorage.setItem(SEEN_PENDING_INIT_KEY, '1')
-    sessionStorage.setItem(SEEN_PENDING_IDS_KEY, [...ids].sort((a, b) => a - b).join(','))
+    sessionStorage.setItem(SEEN_PENDING_IDS_KEY, [...ids].sort().join(','))
   } catch {
     /* ignore */
   }
@@ -271,11 +239,12 @@ async function pushNewTripNotif(newTrips) {
 watch(
   () =>
     dash.needsConfirmationTrips
-      .map((x) => x.id)
-      .sort((a, b) => Number(a) - Number(b))
-      .join(','),
+      .map((x) => pendingTripKey(x))
+      .filter(Boolean)
+      .sort()
+      .join('|'),
   (newKey) => {
-    const ids = new Set(newKey ? newKey.split(',').map(Number).filter((n) => !Number.isNaN(n)) : [])
+    const ids = new Set(newKey ? newKey.split('|').filter(Boolean) : [])
     if (knownPendingIds === null) {
       knownPendingIds = ids
       persistSeenPendingSnapshot(ids)
@@ -283,7 +252,7 @@ watch(
     }
     const added = [...ids].filter((id) => !knownPendingIds.has(id))
     if (added.length > 0) {
-      const objs = dash.needsConfirmationTrips.filter((x) => added.includes(Number(x.id)))
+      const objs = dash.needsConfirmationTrips.filter((x) => added.includes(pendingTripKey(x)))
       void pushNewTripNotif(objs)
       playNotificationChime()
     }
@@ -327,14 +296,7 @@ onMounted(() => {
   scheduleDeferredPushBoot()
 
   void nextTick(() => {
-    void dash.fetchDashboard({ silent, force: true }).finally(() => refreshTpCalendar())
+    void dash.fetchDashboard({ silent, force: true })
   })
 })
-
-watch(
-  () => dash.lastFetchedAt,
-  (ts, prev) => {
-    if (ts && ts !== prev) void refreshTpCalendar()
-  },
-)
 </script>

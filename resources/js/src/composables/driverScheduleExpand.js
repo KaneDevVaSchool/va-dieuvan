@@ -10,10 +10,12 @@ export function expandTripsForDriverCalendar(trips) {
   for (const trip of trips) {
     const legs = trip?.schedule_legs
     if (!Array.isArray(legs) || legs.length === 0) {
+      const shift = trip._tp?.shift || inferShiftFromIso(trip.depart_at)
       out.push({
         ...trip,
         calendar_key: String(trip.id),
         calendar_kind: 'dispatch',
+        ...(shift ? { calendar_shift: shift } : {}),
       })
       continue
     }
@@ -59,9 +61,70 @@ function inferShiftFromIso(iso) {
 }
 
 /**
+ * Chuẩn hóa ca chương trình đưa đón thành object chuyến (D2D) cho dashboard / banner / carousel tài xế.
  * @param {object[]} tpItems từ GET /driver/tp-days
  * @returns {object[]}
  */
+export function tpItemsToDriverTrips(tpItems) {
+  if (!Array.isArray(tpItems)) return []
+
+  return tpItems.map((row) => {
+    const date = String(row.scheduled_date || '').slice(0, 10)
+    const time = String(row.departure_time || '00:00').slice(0, 5)
+    const departAt = date ? `${date}T${time}:00` : null
+    let arriveBy = null
+    if (row.arrival_time && date) {
+      arriveBy = `${date}T${String(row.arrival_time).slice(0, 5)}:00`
+    }
+
+    const execStatus = row.execution_status
+    const confirmed = !!row.confirmed_at
+    let status = 'assigned'
+    if (execStatus === 'in_progress') status = 'in_progress'
+    else if (execStatus === 'completed') status = 'completed'
+    else if (execStatus === 'cancelled') status = 'cancelled'
+    else if (confirmed) status = 'driver_confirmed'
+
+    const origin = (row.origin_name || row.program_name || '').toString().trim()
+    const destination = (row.destination_name || '').toString().trim()
+    const pax = Number(row.expected_count) || 0
+    const shift = row.shift || 'morning'
+    const listKey = row.list_key || `${row.day_id}-${shift}`
+    const multiSlot = !!row.multi_slot
+
+    return {
+      id: `tp-${listKey}`,
+      calendar_shift: shift,
+      _tp: {
+        day_id: row.day_id,
+        shift,
+        multi_slot: multiSlot,
+        list_key: listKey,
+        program_id: row.program_id,
+      },
+      trip_number: row.program_code ? String(row.program_code) : 'CPĐD',
+      type: 'D2D',
+      status,
+      depart_at: departAt,
+      depart_date: date || null,
+      pickup_time: time,
+      pickup_location: origin,
+      dropoff_location: destination,
+      passenger_count: pax,
+      arrive_by: arriveBy,
+      dispatch_request: {
+        trip_type: 'door_to_door',
+        origin,
+        destination,
+        depart_at: departAt,
+        arrive_by: arriveBy,
+        passenger_count: pax,
+      },
+      schedule_legs: [],
+    }
+  })
+}
+
 export function tpItemsToCalendarSlots(tpItems) {
   if (!Array.isArray(tpItems)) return []
   return tpItems.map((row) => {

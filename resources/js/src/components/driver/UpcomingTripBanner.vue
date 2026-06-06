@@ -35,8 +35,11 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
-  tripId: { type: Number, required: true },
+  tripId: { type: [Number, String], required: true },
   departAt: { type: String, required: true },
+  /** Ca chương trình đưa đón — điều hướng tới điểm danh thay vì chi tiết chuyến điều vận. */
+  tpDayId: { type: Number, default: null },
+  tpShift: { type: String, default: null },
 })
 
 const router = useRouter()
@@ -78,6 +81,11 @@ const titleLine = computed(() =>
 )
 
 function goTrip() {
+  if (props.tpDayId != null) {
+    const query = props.tpShift ? { shift: props.tpShift } : {}
+    router.push({ path: `/driver/tp-days/${props.tpDayId}`, query })
+    return
+  }
   router.push(`/driver/trips/${props.tripId}`)
 }
 </script>
