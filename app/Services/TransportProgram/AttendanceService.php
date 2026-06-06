@@ -74,8 +74,8 @@ class AttendanceService
                 'settings' => $program->settings ?? [],
                 'driver_name' => $day->effectiveDriver()?->full_name,
             ],
-            'shift' => ($multiSlot && $this->shiftResolver->absenceTableHasShiftColumn()) ? $storageShift : null,
-            'multi_slot' => $multiSlot && $this->shiftResolver->absenceTableHasShiftColumn(),
+            'shift' => ($multiSlot && $this->shiftResolver->perShiftAttendanceReady()) ? $storageShift : null,
+            'multi_slot' => $multiSlot && $this->shiftResolver->perShiftAttendanceReady(),
             'items' => $items,
             'summary' => $summary,
             'effective_count' => $summary['present'],
@@ -223,7 +223,7 @@ class AttendanceService
         $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
 
         $query = TpDayAbsence::query()->where('program_day_id', $day->id);
-        if ($this->shiftResolver->absenceTableHasShiftColumn()) {
+        if ($this->shiftResolver->perShiftAttendanceReady()) {
             if ($storageShift === 'all') {
                 $query->where('shift', 'all');
             } else {
@@ -408,6 +408,10 @@ class AttendanceService
      */
     private function sessionState(TpProgramDay $day, string $storageShift): array
     {
+        if ($storageShift !== 'all' && ! $this->shiftResolver->programDayHasPerShiftAttendanceColumns()) {
+            $storageShift = 'all';
+        }
+
         if ($storageShift === 'all') {
             return [
                 'status' => $day->attendance_status ?? self::STATUS_NOT_STARTED,
@@ -436,6 +440,10 @@ class AttendanceService
         ?int $expectedLockVersion,
         ?int $newLockVersion = null,
     ): void {
+        if ($storageShift !== 'all' && ! $this->shiftResolver->programDayHasPerShiftAttendanceColumns()) {
+            $storageShift = 'all';
+        }
+
         if ($storageShift === 'all') {
             $query = TpProgramDay::query()->where('id', $day->id);
             if ($expectedLockVersion !== null) {

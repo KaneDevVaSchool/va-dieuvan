@@ -13,6 +13,8 @@ class TpAttendanceShiftResolver
 {
     private ?bool $absenceShiftColumn = null;
 
+    private ?bool $programDayPerShiftColumns = null;
+
     public function __construct(
         private readonly TpProgramScheduleSlots $scheduleSlots,
     ) {}
@@ -26,6 +28,22 @@ class TpAttendanceShiftResolver
         return $this->absenceShiftColumn;
     }
 
+    public function programDayHasPerShiftAttendanceColumns(): bool
+    {
+        if ($this->programDayPerShiftColumns === null) {
+            $this->programDayPerShiftColumns = Schema::hasColumn('tp_program_days', 'morning_attendance_status');
+        }
+
+        return $this->programDayPerShiftColumns;
+    }
+
+    /** Điểm danh theo ca chỉ bật khi migration 2026_06_14_100001 chạy đủ (absences + program_days). */
+    public function perShiftAttendanceReady(): bool
+    {
+        return $this->absenceTableHasShiftColumn()
+            && $this->programDayHasPerShiftAttendanceColumns();
+    }
+
     public function isMultiSlot(TpProgram $program): bool
     {
         return count($this->scheduleSlots->slotsForProgram($program)) > 1;
@@ -36,7 +54,7 @@ class TpAttendanceShiftResolver
      */
     public function resolveStorageShift(TpProgram $program, ?string $requested): string
     {
-        if (! $this->absenceTableHasShiftColumn()) {
+        if (! $this->perShiftAttendanceReady()) {
             return 'all';
         }
 
@@ -59,7 +77,7 @@ class TpAttendanceShiftResolver
      */
     public function applyAbsenceScope(Builder $query, string $storageShift): void
     {
-        if (! $this->absenceTableHasShiftColumn()) {
+        if (! $this->perShiftAttendanceReady()) {
             return;
         }
 
@@ -84,7 +102,7 @@ class TpAttendanceShiftResolver
             'student_id' => $studentId,
         ];
 
-        if ($this->absenceTableHasShiftColumn()) {
+        if ($this->perShiftAttendanceReady()) {
             $attrs['shift'] = $storageShift;
         }
 
@@ -96,7 +114,7 @@ class TpAttendanceShiftResolver
      */
     public function applyExactShiftScope(Builder $query, string $storageShift): void
     {
-        if (! $this->absenceTableHasShiftColumn()) {
+        if (! $this->perShiftAttendanceReady()) {
             return;
         }
 
