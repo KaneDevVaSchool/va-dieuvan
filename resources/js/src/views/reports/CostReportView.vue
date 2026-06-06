@@ -244,7 +244,7 @@
       <h2 id="cr-charts" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('cost_report.section_charts') }}
       </h2>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4">
         <div class="cr-chart-card">
           <p class="cr-chart-title">{{ t('cost_report.chart_by_category') }}</p>
           <DashboardEChart :option="chartByCategory" height="220px" :aria-label="t('cost_report.chart_by_category')" />
@@ -257,13 +257,9 @@
           <p class="cr-chart-title">{{ t('cost_report.chart_by_provider') }}</p>
           <DashboardEChart :option="chartByProvider" height="220px" :aria-label="t('cost_report.chart_by_provider')" />
         </div>
-        <div v-if="stats.by_month && stats.by_month.length > 1" class="cr-chart-card lg:col-span-2 xl:col-span-2">
+        <div v-if="stats.by_month && stats.by_month.length > 1" class="cr-chart-card">
           <p class="cr-chart-title">{{ t('cost_report.chart_trend') }}</p>
           <DashboardEChart :option="chartByMonth" height="220px" :aria-label="t('cost_report.chart_trend')" />
-        </div>
-        <div v-if="stats.by_unit && stats.by_unit.length" class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_unit') }}</p>
-          <DashboardEChart :option="chartByUnit" height="220px" :aria-label="t('cost_report.chart_by_unit')" />
         </div>
       </div>
     </section>
@@ -702,7 +698,6 @@ const chartByCategory = computed(() => pieOption(stats.value?.by_category ?? [])
 const chartByStatus = computed(() => pieOption(stats.value?.by_status ?? []))
 const chartByProvider = computed(() => barHorizontalOption(stats.value?.by_provider ?? []))
 const chartByMonth = computed(() => lineOption(stats.value?.by_month ?? []))
-const chartByUnit = computed(() => barHorizontalOption(stats.value?.by_unit ?? []))
 
 function buildApiParams() {
   const p = {}
