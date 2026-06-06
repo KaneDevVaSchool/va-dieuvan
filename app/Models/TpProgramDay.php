@@ -23,6 +23,8 @@ class TpProgramDay extends Model
         'afternoon_confirmed_at', 'afternoon_confirmed_by_driver_id',
         'estimated_cost', 'cancel_reason', 'notes',
         'attendance_status', 'attendance_confirmed_at', 'attendance_confirmed_by', 'attendance_lock_version',
+        'morning_attendance_status', 'morning_attendance_confirmed_at', 'morning_attendance_confirmed_by', 'morning_attendance_lock_version',
+        'afternoon_attendance_status', 'afternoon_attendance_confirmed_at', 'afternoon_attendance_confirmed_by', 'afternoon_attendance_lock_version',
     ];
 
     protected $casts = [
@@ -33,8 +35,12 @@ class TpProgramDay extends Model
         'morning_confirmed_at' => 'datetime',
         'afternoon_confirmed_at' => 'datetime',
         'attendance_confirmed_at' => 'datetime',
+        'morning_attendance_confirmed_at' => 'datetime',
+        'afternoon_attendance_confirmed_at' => 'datetime',
         'expected_count' => 'integer',
         'attendance_lock_version' => 'integer',
+        'morning_attendance_lock_version' => 'integer',
+        'afternoon_attendance_lock_version' => 'integer',
         'estimated_cost' => 'decimal:2',
     ];
 

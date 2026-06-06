@@ -67,7 +67,7 @@
 
         <DriverWeekCalendar
           :raw-trips="dash.calendarDispatchEntries"
-          :tp-slots="[]"
+          :tp-slots="dash.tpCalendarSlots"
           :loading="dash.listLoadingForUi"
         />
       </div>
@@ -163,6 +163,20 @@ let knownPendingIds = loadSeenPendingIds()
 const NOTIF_BODY_MAX = 220
 
 function routeLineForNotif(trip) {
+  if (trip?._tp?.day_id) {
+    const name =
+      trip.program_name ||
+      trip.dispatch_request?.origin ||
+      trip.pickup_location ||
+      t('driver_home.svc_name_transport_program')
+    const shift =
+      trip._tp.shift === 'afternoon'
+        ? t('driver_home.shift_afternoon')
+        : trip._tp.shift === 'morning'
+          ? t('driver_home.shift_morning')
+          : ''
+    return shift ? `${name} (${shift})` : name
+  }
   const o = String(trip.origin ?? trip.pickup_location ?? '').trim()
   const d = String(trip.destination ?? trip.dropoff_location ?? '').trim()
   if (o !== '' && d !== '') return `${o} → ${d}`
@@ -183,15 +197,21 @@ async function pushNewTripNotif(newTrips) {
   if (!newTrips?.length) return
   if (!('Notification' in window) || Notification.permission !== 'granted') return
 
-  const title = t('driver_home.notif_new_trip_title')
+  const allTp = newTrips.length > 0 && newTrips.every((tr) => tr?._tp?.day_id)
+  const title = allTp ? t('driver_home.notif_new_tp_trip_title') : t('driver_home.notif_new_trip_title')
   let body = ''
   if (newTrips.length === 1) {
     const tr = newTrips[0]
-    const route = routeLineForNotif(tr)
     const time = departLabelForNotif(tr)
-    body = time
-      ? t('driver_home.notif_new_trip_detail_one', { route, time })
-      : t('driver_home.notif_new_trip_detail_one_no_time', { route })
+    if (tr?._tp?.day_id) {
+      const program = routeLineForNotif(tr)
+      body = time ? `${program} — ${time}` : program
+    } else {
+      const route = routeLineForNotif(tr)
+      body = time
+        ? t('driver_home.notif_new_trip_detail_one', { route, time })
+        : t('driver_home.notif_new_trip_detail_one_no_time', { route })
+    }
   } else {
     const head = newTrips.slice(0, 2)
     const lines = []

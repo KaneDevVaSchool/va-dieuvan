@@ -15,7 +15,11 @@ import {
   dashPerfHydrateDone,
   dashPerfSkipStale,
 } from '../util/devDriverDashboardPerf'
-import { expandTripsForDriverCalendar, tpItemsToDriverTrips } from '../composables/driverScheduleExpand'
+import {
+  expandTripsForDriverCalendar,
+  tpItemsToCalendarSlots,
+  tpItemsToDriverTrips,
+} from '../composables/driverScheduleExpand'
 import { driverConfirmDay, driverListDays, driverStartTrip } from '../api/transportProgram'
 
 const CACHE_KEY = 'va_driver_dash_snap_v1'
@@ -194,18 +198,20 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     upcomingScheduleTrips() {
-      const start = ymd(new Date())
-      const end = normalizedDashboardEndYmd(this.dashboardDateTo)
+      const today = ymd(new Date())
       return sortScheduleTrips(
         this.dashboardMergedTrips.filter((x) => {
           const d = tripDepartYmd(x)
-          if (d == null) return false
-          if (d < start || d > end) return false
+          if (d == null || d !== today) return false
           const s = tripStatusNorm(x)
           if (s === 'completed' || s === 'cancelled') return false
           return true
         }),
       )
+    },
+
+    tpCalendarSlots() {
+      return tpItemsToCalendarSlots(this.tpListItems)
     },
 
     tripsForMonthCharts() {

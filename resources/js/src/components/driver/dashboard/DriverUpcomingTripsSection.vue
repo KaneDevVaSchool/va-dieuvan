@@ -46,7 +46,7 @@
             v-memo="[trip.id, trip.status, trip.depart_at, trip.depart_date, startBusyTripId]"
             class="w-[min(88vw,20rem)] shrink-0 will-change-transform"
             :trip="trip"
-            :busy="startBusyTripId != null && Number(startBusyTripId) === Number(trip.id)"
+            :busy="startBusyTripId != null && String(startBusyTripId) === String(trip.id)"
             @start="emit('start-trip', $event)"
           />
         </div>

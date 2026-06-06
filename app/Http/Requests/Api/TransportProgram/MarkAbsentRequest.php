@@ -20,6 +20,7 @@ class MarkAbsentRequest extends ApiFormRequest
             'category' => ['nullable', 'in:excused,unexcused'],
             'reason_code' => ['nullable', 'string', 'max:50', 'exists:tp_absence_reasons,code'],
             'absence_reason' => ['nullable', 'string', 'max:500'],
+            'shift' => ['nullable', 'in:morning,afternoon'],
         ];
     }
 }

@@ -181,9 +181,20 @@
               </div>
             </div>
 
-            <footer class="border-t border-slate-100 px-5 py-4">
-              <Button class="w-full justify-center" @click="goAttendance(selected)">
-                <ClipboardDocumentCheckIcon class="h-4 w-4" /> Điểm danh ngày này
+            <footer class="border-t border-slate-100 px-5 py-4 space-y-2">
+              <template v-if="tripsFor(selected).length > 1">
+                <Button
+                  v-for="trip in tripsFor(selected)"
+                  :key="trip.key"
+                  variant="secondary"
+                  class="w-full justify-center"
+                  @click="goAttendance(selected, trip.key)"
+                >
+                  <ClipboardDocumentCheckIcon class="h-4 w-4" /> Điểm danh {{ trip.label }}
+                </Button>
+              </template>
+              <Button v-else class="w-full justify-center" @click="goAttendance(selected)">
+                <ClipboardDocumentCheckIcon class="h-4 w-4" /> Điểm danh chuyến này
               </Button>
             </footer>
           </aside>
@@ -347,8 +358,11 @@ function goToday() {
 function openDay(day) {
   selected.value = day
 }
-function goAttendance(day) {
-  router.push({ name: 'tpDayAttendance', params: { dayId: day.id } })
+function goAttendance(day, shift = null) {
+  const slots = tripsFor(day)
+  const query = shift || (slots.length > 1 ? { shift: slots[0].key } : {})
+  const q = typeof query === 'string' ? { shift: query } : query
+  router.push({ name: 'tpDayAttendance', params: { dayId: day.id }, query: q })
 }
 
 async function load() {

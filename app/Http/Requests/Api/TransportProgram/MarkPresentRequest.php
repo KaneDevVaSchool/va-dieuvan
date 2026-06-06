@@ -17,6 +17,7 @@ class MarkPresentRequest extends ApiFormRequest
             'student_ids' => ['sometimes', 'array'],
             'student_ids.*' => ['integer', 'exists:tp_students,id'],
             'mark_all' => ['sometimes', 'boolean'],
+            'shift' => ['nullable', 'in:morning,afternoon'],
         ];
     }
 }

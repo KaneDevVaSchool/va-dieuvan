@@ -151,10 +151,20 @@ const activeComponent = computed(() => tabs.find((t) => t.key === active.value)?
 
 const timeRange = computed(() => {
   const fmt = (t) => (t ? String(t).slice(0, 5) : null)
-  const a = fmt(program.value?.departure_time)
-  const b = fmt(program.value?.return_time)
-  if (a && b) return `${a} – ${b}`
-  return a || '—'
+  const s = program.value?.settings || {}
+  const morning = s.morning || {}
+  const afternoon = s.afternoon || {}
+  const hasMorning = morning.enabled != null ? !!morning.enabled : !!program.value?.departure_time
+  const hasAfternoon = afternoon.enabled != null ? !!afternoon.enabled : !!program.value?.return_time
+  const parts = []
+  if (hasMorning) {
+    parts.push(`Sáng ${fmt(morning.departure || program.value?.departure_time) || '—'}`)
+  }
+  if (hasAfternoon) {
+    parts.push(`Chiều ${fmt(afternoon.departure || program.value?.return_time) || '—'}`)
+  }
+  if (parts.length) return parts.join(' · ')
+  return fmt(program.value?.departure_time) || '—'
 })
 
 async function load() {

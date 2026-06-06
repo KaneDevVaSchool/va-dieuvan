@@ -8,6 +8,9 @@ export function expandTripsForDriverCalendar(trips) {
   const out = []
 
   for (const trip of trips) {
+    if (trip?._tp?.day_id) {
+      continue
+    }
     const legs = trip?.schedule_legs
     if (!Array.isArray(legs) || legs.length === 0) {
       const shift = trip._tp?.shift || inferShiftFromIso(trip.depart_at)
@@ -95,6 +98,7 @@ export function tpItemsToDriverTrips(tpItems) {
     return {
       id: `tp-${listKey}`,
       calendar_shift: shift,
+      program_name: row.program_name,
       _tp: {
         day_id: row.day_id,
         shift,
@@ -103,7 +107,7 @@ export function tpItemsToDriverTrips(tpItems) {
         program_id: row.program_id,
       },
       trip_number: row.program_code ? String(row.program_code) : 'CPĐD',
-      type: 'D2D',
+      type: 'TP',
       status,
       depart_at: departAt,
       depart_date: date || null,
@@ -113,7 +117,7 @@ export function tpItemsToDriverTrips(tpItems) {
       passenger_count: pax,
       arrive_by: arriveBy,
       dispatch_request: {
-        trip_type: 'door_to_door',
+        trip_type: 'transport_program',
         origin,
         destination,
         depart_at: departAt,
@@ -136,6 +140,7 @@ export function tpItemsToCalendarSlots(tpItems) {
       calendar_kind: 'tp',
       day_id: row.day_id,
       shift: row.shift || 'morning',
+      multi_slot: !!row.multi_slot,
       depart_at: departAt,
       program_name: row.program_name,
       expected_count: row.expected_count,

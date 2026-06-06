@@ -141,4 +141,38 @@ class TpAttendanceSubsystemTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.attendance_status', 'confirmed');
     }
+
+    public function test_morning_and_afternoon_attendance_are_independent(): void
+    {
+        $driver = Driver::create(['full_name' => 'TX 2 ca']);
+        $result = app(CreateTransportProgramAction::class)->execute([
+            'name' => 'CT 2 ca',
+            'departure_time' => '06:30',
+            'return_time' => '17:00',
+            'start_date' => Carbon::today()->toDateString(),
+            'end_date' => Carbon::today()->addDays(2)->toDateString(),
+            'runs_on' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'default_driver_id' => $driver->id,
+            'settings' => [
+                'morning' => ['enabled' => true, 'departure' => '06:30', 'arrival' => '07:30'],
+                'afternoon' => ['enabled' => true, 'departure' => '17:00', 'arrival' => '18:00'],
+            ],
+        ], null);
+
+        $program = TpProgram::findOrFail($result['program']['id']);
+        $s1 = TpStudent::create(['code' => 'AD010', 'full_name' => 'HS 2ca', 'status' => 'active', 'class_name' => '6A']);
+        app(ProgramEnrollmentService::class)->enrollBulk($program, [$s1->id], null);
+        $day = $program->days()->orderBy('scheduled_date')->first();
+
+        $attendance = app(AttendanceService::class);
+        $attendance->markAbsent($day, $s1->id, 'no_notice', null, null, 'dispatcher', 'unexcused', 'no_notice', true, 'morning');
+
+        $morning = $attendance->getAttendance($day->fresh(), 'morning');
+        $afternoon = $attendance->getAttendance($day->fresh(), 'afternoon');
+
+        $this->assertTrue($morning['multi_slot']);
+        $this->assertSame('morning', $morning['shift']);
+        $this->assertSame(0, $morning['summary']['present']);
+        $this->assertSame(1, $afternoon['summary']['present']);
+    }
 }

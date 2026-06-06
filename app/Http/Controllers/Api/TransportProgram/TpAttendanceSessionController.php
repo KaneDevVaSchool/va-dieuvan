@@ -23,20 +23,40 @@ class TpAttendanceSessionController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_attendance.manage')), 403);
 
-        $this->attendance->saveDraft($tpProgramDay, $user->id);
+        $shift = $request->input('shift') ?? $request->query('shift');
+        $shiftArg = is_string($shift) ? $shift : null;
 
-        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh()));
+        $this->attendance->saveDraft($tpProgramDay, $user->id, $shiftArg);
+
+        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh(), $shiftArg));
     }
 
     public function confirm(ConfirmAttendanceRequest $request, TpProgramDay $tpProgramDay): JsonResponse
     {
         $data = $request->validated();
+        $shift = $data['shift'] ?? $request->query('shift');
+        $shiftArg = is_string($shift) ? $shift : null;
+
         $this->attendance->confirmAttendance(
             $tpProgramDay,
             (int) $data['attendance_lock_version'],
             $request->user()?->id,
+            $shiftArg,
         );
 
-        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh()));
+        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh(), $shiftArg));
+    }
+
+    public function reopen(Request $request, TpProgramDay $tpProgramDay): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user && ($user->isSuperAdmin() || $user->can('data.override_confirmed')), 403);
+
+        $shift = $request->input('shift') ?? $request->query('shift');
+        $shiftArg = is_string($shift) ? $shift : null;
+
+        $this->attendance->reopenAttendance($tpProgramDay, $user->id, $shiftArg);
+
+        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh(), $shiftArg));
     }
 }

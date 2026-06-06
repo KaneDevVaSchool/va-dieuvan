@@ -21,6 +21,8 @@ class TpDayAbsenceController extends Controller
     public function store(MarkAbsentRequest $request, TpProgramDay $tpProgramDay): JsonResponse
     {
         $data = $request->validated();
+        $shift = $data['shift'] ?? $request->query('shift');
+
         $this->attendance->markAbsentBulk(
             $tpProgramDay,
             $data['student_ids'],
@@ -29,9 +31,10 @@ class TpDayAbsenceController extends Controller
             $request->user()?->id,
             $data['category'] ?? null,
             $data['reason_code'] ?? null,
+            is_string($shift) ? $shift : null,
         );
 
-        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh()));
+        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh(), is_string($shift) ? $shift : null));
     }
 
     public function destroy(Request $request, TpProgramDay $tpProgramDay, int $student): JsonResponse
@@ -39,8 +42,9 @@ class TpDayAbsenceController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_attendance.manage')), 403);
 
-        $this->attendance->unmarkAbsent($tpProgramDay, $student, $request->user()?->id);
+        $shift = $request->query('shift');
+        $this->attendance->unmarkAbsent($tpProgramDay, $student, $request->user()?->id, is_string($shift) ? $shift : null);
 
-        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh()));
+        return $this->ok($this->attendance->getAttendance($tpProgramDay->fresh(), is_string($shift) ? $shift : null));
     }
 }

@@ -15,6 +15,7 @@ class ConfirmAttendanceRequest extends ApiFormRequest
     {
         return [
             'attendance_lock_version' => ['required', 'integer', 'min:0'],
+            'shift' => ['nullable', 'in:morning,afternoon'],
         ];
     }
 }

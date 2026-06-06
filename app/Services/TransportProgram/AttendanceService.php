@@ -17,21 +17,26 @@ class AttendanceService
 
     public function __construct(
         private readonly TpAuditLogger $audit,
+        private readonly TpAttendanceShiftResolver $shiftResolver,
     ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function getAttendance(TpProgramDay $day): array
+    public function getAttendance(TpProgramDay $day, ?string $shift = null): array
     {
         $day->loadMissing(['program', 'driver', 'program.defaultDriver']);
+        $program = $day->program;
+        abort_if($program === null, 404);
+
+        $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
+        $multiSlot = $this->shiftResolver->isMultiSlot($program);
 
         $enrollments = $this->enrollmentsForDay($day);
 
-        $absenceMap = TpDayAbsence::query()
-            ->where('program_day_id', $day->id)
-            ->get()
-            ->keyBy('student_id');
+        $absenceQuery = TpDayAbsence::query()->where('program_day_id', $day->id);
+        $this->shiftResolver->applyAbsenceScope($absenceQuery, $storageShift);
+        $absenceMap = $absenceQuery->get()->keyBy('student_id');
 
         $items = $enrollments->map(function (TpEnrollment $e) use ($absenceMap) {
             $absence = $absenceMap->get($e->student_id);
@@ -56,23 +61,28 @@ class AttendanceService
         })->values()->all();
 
         $summary = $this->buildSummary($items);
+        $session = $this->sessionState($day, $storageShift);
 
         return [
             'day' => [
                 'id' => $day->id,
                 'program_id' => $day->program_id,
                 'scheduled_date' => $day->scheduled_date->toDateString(),
-                'program_name' => $day->program?->name,
-                'departure_time' => $day->program?->departure_time,
+                'program_name' => $program->name,
+                'departure_time' => $program->departure_time,
+                'return_time' => $program->return_time,
+                'settings' => $program->settings ?? [],
                 'driver_name' => $day->effectiveDriver()?->full_name,
             ],
+            'shift' => $multiSlot ? $storageShift : null,
+            'multi_slot' => $multiSlot,
             'items' => $items,
             'summary' => $summary,
             'effective_count' => $summary['present'],
-            'expected_count' => $day->expected_count,
-            'attendance_status' => $day->attendance_status ?? self::STATUS_NOT_STARTED,
-            'attendance_lock_version' => (int) ($day->attendance_lock_version ?? 0),
-            'attendance_confirmed_at' => $day->attendance_confirmed_at?->toIso8601String(),
+            'expected_count' => $summary['total'],
+            'attendance_status' => $session['status'],
+            'attendance_lock_version' => $session['lock_version'],
+            'attendance_confirmed_at' => $session['confirmed_at']?->toIso8601String(),
             'missing_reason_count' => $summary['missing_reason_count'],
         ];
     }
@@ -87,19 +97,25 @@ class AttendanceService
         ?string $category = null,
         ?string $reasonCode = null,
         bool $syncExecution = true,
+        ?string $shift = null,
     ): void {
-        DB::transaction(function () use ($day, $studentId, $type, $reason, $actorId, $source, $category, $reasonCode, $syncExecution) {
+        DB::transaction(function () use ($day, $studentId, $type, $reason, $actorId, $source, $category, $reasonCode, $syncExecution, $shift) {
             $day = TpProgramDay::query()->lockForUpdate()->findOrFail($day->id);
+            $day->loadMissing('program');
+            $program = $day->program;
+            abort_if($program === null, 404);
+            $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
 
             $existed = TpDayAbsence::query()
                 ->where('program_day_id', $day->id)
                 ->where('student_id', $studentId)
+                ->where('shift', $storageShift)
                 ->exists();
 
             $resolvedCategory = $category ?? $this->categoryFromAbsenceType($type);
 
             TpDayAbsence::query()->updateOrCreate(
-                ['program_day_id' => $day->id, 'student_id' => $studentId],
+                ['program_day_id' => $day->id, 'student_id' => $studentId, 'shift' => $storageShift],
                 [
                     'absence_type' => $type,
                     'category' => $resolvedCategory,
@@ -111,7 +127,7 @@ class AttendanceService
                 ]
             );
 
-            if (! $existed) {
+            if (! $existed && $storageShift === 'all') {
                 $day->decrement('expected_count');
             }
 
@@ -119,27 +135,33 @@ class AttendanceService
                 $this->syncExecutionLogIfInProgress($day, $studentId, $type, $actorId);
             }
 
-            $this->touchDraftStatus($day);
+            $this->touchDraftStatus($day, $storageShift);
 
             $this->audit->log($actorId, 'absence.marked', $day, $day->program, metadata: [
                 'student_id' => $studentId,
                 'type' => $type,
                 'source' => $source,
+                'shift' => $storageShift,
             ]);
         });
     }
 
-    public function unmarkAbsent(TpProgramDay $day, int $studentId, ?int $actorId): void
+    public function unmarkAbsent(TpProgramDay $day, int $studentId, ?int $actorId, ?string $shift = null): void
     {
-        DB::transaction(function () use ($day, $studentId, $actorId) {
+        DB::transaction(function () use ($day, $studentId, $actorId, $shift) {
             $day = TpProgramDay::query()->lockForUpdate()->findOrFail($day->id);
+            $day->loadMissing('program');
+            $program = $day->program;
+            abort_if($program === null, 404);
+            $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
 
             $deleted = TpDayAbsence::query()
                 ->where('program_day_id', $day->id)
                 ->where('student_id', $studentId)
+                ->where('shift', $storageShift)
                 ->delete();
 
-            if ($deleted) {
+            if ($deleted && $storageShift === 'all') {
                 $day->increment('expected_count');
             }
 
@@ -162,14 +184,17 @@ class AttendanceService
                 }
             }
 
-            $this->touchDraftStatus($day);
-            $this->audit->log($actorId, 'absence.unmarked', $day, $day->program, metadata: ['student_id' => $studentId]);
+            $this->touchDraftStatus($day, $storageShift);
+            $this->audit->log($actorId, 'absence.unmarked', $day, $day->program, metadata: [
+                'student_id' => $studentId,
+                'shift' => $storageShift,
+            ]);
         });
     }
 
-    public function markPresent(TpProgramDay $day, int $studentId, ?int $actorId): void
+    public function markPresent(TpProgramDay $day, int $studentId, ?int $actorId, ?string $shift = null): void
     {
-        $this->unmarkAbsent($day, $studentId, $actorId);
+        $this->unmarkAbsent($day, $studentId, $actorId, $shift);
     }
 
     /**
@@ -183,83 +208,102 @@ class AttendanceService
         ?int $actorId,
         ?string $category = null,
         ?string $reasonCode = null,
+        ?string $shift = null,
     ): void {
         foreach ($studentIds as $sid) {
-            $this->markAbsent($day, (int) $sid, $type, $reason, $actorId, 'dispatcher', $category, $reasonCode);
+            $this->markAbsent($day, (int) $sid, $type, $reason, $actorId, 'dispatcher', $category, $reasonCode, true, $shift);
         }
     }
 
-    public function markAllPresent(TpProgramDay $day, ?int $actorId): void
+    public function markAllPresent(TpProgramDay $day, ?int $actorId, ?string $shift = null): void
     {
-        $studentIds = TpDayAbsence::query()
-            ->where('program_day_id', $day->id)
-            ->pluck('student_id')
-            ->all();
+        $day->loadMissing('program');
+        $program = $day->program;
+        abort_if($program === null, 404);
+        $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
+
+        $query = TpDayAbsence::query()->where('program_day_id', $day->id);
+        if ($storageShift === 'all') {
+            $query->where('shift', 'all');
+        } else {
+            $query->where('shift', $storageShift);
+        }
+
+        $studentIds = $query->pluck('student_id')->all();
 
         foreach ($studentIds as $sid) {
-            $this->unmarkAbsent($day, (int) $sid, $actorId);
+            $this->unmarkAbsent($day, (int) $sid, $actorId, $shift);
         }
     }
 
-    public function saveDraft(TpProgramDay $day, ?int $actorId): TpProgramDay
+    public function saveDraft(TpProgramDay $day, ?int $actorId, ?string $shift = null): TpProgramDay
     {
-        return DB::transaction(function () use ($day, $actorId) {
+        return DB::transaction(function () use ($day, $actorId, $shift) {
             $day = TpProgramDay::query()->lockForUpdate()->findOrFail($day->id);
-            if ($day->attendance_status === self::STATUS_CONFIRMED) {
+            $day->loadMissing('program');
+            $program = $day->program;
+            abort_if($program === null, 404);
+            $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
+            $session = $this->sessionState($day, $storageShift);
+
+            if ($session['status'] === self::STATUS_CONFIRMED) {
                 abort(422, 'Điểm danh đã xác nhận, không thể lưu nháp.');
             }
-            $day->update(['attendance_status' => self::STATUS_DRAFT]);
-            $this->audit->log($actorId, 'attendance.draft_saved', $day, $day->program);
+
+            $this->updateSessionStatus($day, $storageShift, self::STATUS_DRAFT, null, null, $session['lock_version']);
+            $this->audit->log($actorId, 'attendance.draft_saved', $day, $day->program, metadata: ['shift' => $storageShift]);
 
             return $day->fresh();
         });
     }
 
-    public function confirmAttendance(TpProgramDay $day, int $expectedLockVersion, ?int $actorId): TpProgramDay
+    public function confirmAttendance(TpProgramDay $day, int $expectedLockVersion, ?int $actorId, ?string $shift = null): TpProgramDay
     {
-        return DB::transaction(function () use ($day, $expectedLockVersion, $actorId) {
+        return DB::transaction(function () use ($day, $expectedLockVersion, $actorId, $shift) {
             $day = TpProgramDay::query()->lockForUpdate()->findOrFail($day->id);
+            $day->loadMissing('program');
+            $program = $day->program;
+            abort_if($program === null, 404);
+            $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
+            $session = $this->sessionState($day, $storageShift);
 
-            if ((int) $day->attendance_lock_version !== $expectedLockVersion) {
+            if ($session['lock_version'] !== $expectedLockVersion) {
                 abort(409, 'Phiên điểm danh đã được cập nhật bởi người khác. Vui lòng tải lại.');
             }
 
-            $payload = $this->getAttendance($day);
+            $payload = $this->getAttendance($day, $shift);
             if ($payload['missing_reason_count'] > 0) {
                 abort(422, 'Còn học sinh vắng chưa có lý do vắng.');
             }
 
-            $updated = TpProgramDay::query()
-                ->where('id', $day->id)
-                ->where('attendance_lock_version', $expectedLockVersion)
-                ->update([
-                    'attendance_status' => self::STATUS_CONFIRMED,
-                    'attendance_confirmed_at' => now(),
-                    'attendance_confirmed_by' => $actorId,
-                    'attendance_lock_version' => $expectedLockVersion + 1,
-                ]);
-
-            if ($updated !== 1) {
-                abort(409, 'Phiên điểm danh đã được cập nhật bởi người khác. Vui lòng tải lại.');
-            }
+            $this->updateSessionStatus(
+                $day,
+                $storageShift,
+                self::STATUS_CONFIRMED,
+                now(),
+                $actorId,
+                $expectedLockVersion,
+                $expectedLockVersion + 1,
+            );
 
             $fresh = $day->fresh();
-            $this->audit->log($actorId, 'attendance.confirmed', $fresh, $fresh->program);
+            $this->audit->log($actorId, 'attendance.confirmed', $fresh, $fresh->program, metadata: ['shift' => $storageShift]);
 
             return $fresh;
         });
     }
 
-    public function reopenAttendance(TpProgramDay $day, ?int $actorId): TpProgramDay
+    public function reopenAttendance(TpProgramDay $day, ?int $actorId, ?string $shift = null): TpProgramDay
     {
-        return DB::transaction(function () use ($day, $actorId) {
+        return DB::transaction(function () use ($day, $actorId, $shift) {
             $day = TpProgramDay::query()->lockForUpdate()->findOrFail($day->id);
-            $day->update([
-                'attendance_status' => self::STATUS_DRAFT,
-                'attendance_confirmed_at' => null,
-                'attendance_confirmed_by' => null,
-            ]);
-            $this->audit->log($actorId, 'attendance.reopened', $day, $day->program);
+            $day->loadMissing('program');
+            $program = $day->program;
+            abort_if($program === null, 404);
+            $storageShift = $this->shiftResolver->resolveStorageShift($program, $shift);
+
+            $this->updateSessionStatus($day, $storageShift, self::STATUS_DRAFT, null, null, null);
+            $this->audit->log($actorId, 'attendance.reopened', $day, $day->program, metadata: ['shift' => $storageShift]);
 
             return $day->fresh();
         });
@@ -346,13 +390,91 @@ class AttendanceService
         return in_array($type, ['parent_notified', 'late_cancel'], true) ? 'excused' : 'unexcused';
     }
 
-    private function touchDraftStatus(TpProgramDay $day): void
+    private function touchDraftStatus(TpProgramDay $day, string $storageShift): void
     {
-        if (($day->attendance_status ?? self::STATUS_NOT_STARTED) === self::STATUS_CONFIRMED) {
+        $session = $this->sessionState($day, $storageShift);
+        if ($session['status'] === self::STATUS_CONFIRMED) {
             return;
         }
-        if ($day->attendance_status !== self::STATUS_DRAFT) {
-            $day->update(['attendance_status' => self::STATUS_DRAFT]);
+        if ($session['status'] !== self::STATUS_DRAFT) {
+            $this->updateSessionStatus($day, $storageShift, self::STATUS_DRAFT, null, null, $session['lock_version']);
+        }
+    }
+
+    /**
+     * @return array{status: string, lock_version: int, confirmed_at: ?\Carbon\Carbon}
+     */
+    private function sessionState(TpProgramDay $day, string $storageShift): array
+    {
+        if ($storageShift === 'all') {
+            return [
+                'status' => $day->attendance_status ?? self::STATUS_NOT_STARTED,
+                'lock_version' => (int) ($day->attendance_lock_version ?? 0),
+                'confirmed_at' => $day->attendance_confirmed_at,
+            ];
+        }
+
+        $statusCol = "{$storageShift}_attendance_status";
+        $lockCol = "{$storageShift}_attendance_lock_version";
+        $confirmedCol = "{$storageShift}_attendance_confirmed_at";
+
+        return [
+            'status' => $day->{$statusCol} ?? self::STATUS_NOT_STARTED,
+            'lock_version' => (int) ($day->{$lockCol} ?? 0),
+            'confirmed_at' => $day->{$confirmedCol},
+        ];
+    }
+
+    private function updateSessionStatus(
+        TpProgramDay $day,
+        string $storageShift,
+        string $status,
+        ?\Carbon\Carbon $confirmedAt,
+        ?int $confirmedBy,
+        ?int $expectedLockVersion,
+        ?int $newLockVersion = null,
+    ): void {
+        if ($storageShift === 'all') {
+            $query = TpProgramDay::query()->where('id', $day->id);
+            if ($expectedLockVersion !== null) {
+                $query->where('attendance_lock_version', $expectedLockVersion);
+            }
+            $updated = $query->update(array_filter([
+                'attendance_status' => $status,
+                'attendance_confirmed_at' => $confirmedAt,
+                'attendance_confirmed_by' => $confirmedBy,
+                'attendance_lock_version' => $newLockVersion,
+            ], fn ($v) => $v !== null));
+
+            if ($expectedLockVersion !== null && $updated !== 1) {
+                abort(409, 'Phiên điểm danh đã được cập nhật bởi người khác. Vui lòng tải lại.');
+            }
+
+            return;
+        }
+
+        $statusCol = "{$storageShift}_attendance_status";
+        $lockCol = "{$storageShift}_attendance_lock_version";
+        $confirmedAtCol = "{$storageShift}_attendance_confirmed_at";
+        $confirmedByCol = "{$storageShift}_attendance_confirmed_by";
+
+        $payload = [
+            $statusCol => $status,
+            $confirmedAtCol => $confirmedAt,
+            $confirmedByCol => $confirmedBy,
+        ];
+        if ($newLockVersion !== null) {
+            $payload[$lockCol] = $newLockVersion;
+        }
+
+        $query = TpProgramDay::query()->where('id', $day->id);
+        if ($expectedLockVersion !== null) {
+            $query->where($lockCol, $expectedLockVersion);
+        }
+        $updated = $query->update($payload);
+
+        if ($expectedLockVersion !== null && $updated !== 1) {
+            abort(409, 'Phiên điểm danh đã được cập nhật bởi người khác. Vui lòng tải lại.');
         }
     }
 

@@ -40,7 +40,7 @@
         <p v-if="data?.day" class="flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
           <CalendarDaysIcon class="h-4 w-4 shrink-0" />
           {{ formatLongDate(data.day.scheduled_date) }}
-          <span v-if="data.day.departure_time" class="before:mr-1 before:content-['·']">{{ data.day.departure_time }}</span>
+          <span v-if="shiftDepartureDisplay" class="before:mr-1 before:content-['·']">{{ shiftDepartureDisplay }}</span>
           <span v-if="data.day.driver_name" class="before:mr-1 before:content-['·']">
             <TruckIcon class="mb-0.5 mr-0.5 inline h-3.5 w-3.5" />{{ data.day.driver_name }}
           </span>
@@ -105,14 +105,16 @@
       >
         <button
           type="button"
-          class="rounded-md px-4 py-1.5 font-medium transition"
+          class="rounded-md px-4 py-1.5 font-medium transition disabled:cursor-not-allowed disabled:opacity-40"
           :class="isMorningShift ? 'bg-va-800 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'"
+          :disabled="!hasMorningShift"
           @click="trySwitchShift('morning')"
         >Sáng</button>
         <button
           type="button"
-          class="rounded-md px-4 py-1.5 font-medium transition"
+          class="rounded-md px-4 py-1.5 font-medium transition disabled:cursor-not-allowed disabled:opacity-40"
           :class="!isMorningShift ? 'bg-va-800 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'"
+          :disabled="!hasAfternoonShift"
           @click="trySwitchShift('afternoon')"
         >Chiều</button>
       </div>
@@ -438,6 +440,7 @@ import {
   markDayAbsence,
   markDayPresent,
   notifyDayParents,
+  reopenDayAttendance,
   saveAttendanceDraft,
 } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
@@ -500,14 +503,57 @@ const filteredItems = computed(() => {
   return rows
 })
 
-const isMorningShift = computed(() => {
-  const t = data.value?.day?.departure_time
-  if (!t) return true
-  const h = parseInt(String(t).split(':')[0], 10)
-  return Number.isNaN(h) ? true : h < 12
+const programSettings = computed(() => data.value?.day?.settings || {})
+
+const hasMorningShift = computed(() => {
+  const s = programSettings.value
+  const morning = s.morning || {}
+  if (morning.enabled != null) return !!morning.enabled
+  return !!data.value?.day?.departure_time
 })
 
+const hasAfternoonShift = computed(() => {
+  const s = programSettings.value
+  const afternoon = s.afternoon || {}
+  if (afternoon.enabled != null) return !!afternoon.enabled
+  return !!data.value?.day?.return_time
+})
+
+const activeShift = computed(() => {
+  const q = route.query.shift
+  if (q === 'morning' && hasMorningShift.value) return 'morning'
+  if (q === 'afternoon' && hasAfternoonShift.value) return 'afternoon'
+  if (hasMorningShift.value) return 'morning'
+  if (hasAfternoonShift.value) return 'afternoon'
+  return 'morning'
+})
+
+const isMorningShift = computed(() => activeShift.value === 'morning')
+
+const usesPerShiftAttendance = computed(() => hasMorningShift.value && hasAfternoonShift.value)
+
+function shiftQueryOpts() {
+  return usesPerShiftAttendance.value ? { shift: activeShift.value } : {}
+}
+
 const shiftLabel = computed(() => (isMorningShift.value ? 'Chuyến Sáng' : 'Chuyến Chiều'))
+
+function formatClockTime(value) {
+  if (!value) return ''
+  return String(value).slice(0, 5)
+}
+
+const shiftDepartureDisplay = computed(() => {
+  const day = data.value?.day
+  if (!day) return ''
+  const s = programSettings.value
+  const morning = s.morning || {}
+  const afternoon = s.afternoon || {}
+  if (activeShift.value === 'afternoon') {
+    return formatClockTime(afternoon.departure || day.return_time)
+  }
+  return formatClockTime(morning.departure || day.departure_time)
+})
 
 const sortedSiblings = computed(() =>
   [...siblingDays.value].sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date)),
@@ -527,7 +573,7 @@ async function load() {
   data.value = null
   try {
     const [att, reasonList] = await Promise.all([
-      getDayAttendance(route.params.dayId),
+      getDayAttendance(route.params.dayId, shiftQueryOpts()),
       listAbsenceReasons().catch(() => ({ items: [] })),
     ])
     data.value = att
@@ -546,6 +592,30 @@ async function load() {
 }
 
 watch(() => route.params.dayId, () => { if (route.params.dayId) load() })
+
+watch(activeShift, (next, prev) => {
+  if (prev && next !== prev && route.params.dayId) load()
+})
+
+watch(
+  () => [data.value?.day?.id, route.query.shift, hasMorningShift.value, hasAfternoonShift.value],
+  () => {
+    if (!data.value?.day?.id) return
+    const q = route.query.shift
+    const valid =
+      (q === 'morning' && hasMorningShift.value) ||
+      (q === 'afternoon' && hasAfternoonShift.value)
+    if (valid) return
+    const fallback = hasMorningShift.value ? 'morning' : hasAfternoonShift.value ? 'afternoon' : 'morning'
+    if (q !== fallback) {
+      router.replace({
+        name: 'tpDayAttendance',
+        params: { dayId: route.params.dayId },
+        query: { shift: fallback },
+      })
+    }
+  },
+)
 
 function categoryForReason(code) {
   const r = reasons.value.find((x) => x.code === code)
@@ -566,9 +636,10 @@ async function togglePresent(s) {
         student_ids: [s.student_id],
         absence_type: 'no_notice',
         category: 'unexcused',
+        ...shiftQueryOpts(),
       })
     } else {
-      data.value = await markDayPresent(route.params.dayId, { student_ids: [s.student_id] })
+      data.value = await markDayPresent(route.params.dayId, { student_ids: [s.student_id], ...shiftQueryOpts() })
     }
   } catch (err) {
     showAppErrorFromApi(err)
@@ -591,6 +662,7 @@ async function onReasonChange(s, code) {
       absence_type: absenceTypeForCategory(category),
       category,
       reason_code: code,
+      ...shiftQueryOpts(),
     })
   } catch (err) {
     showAppErrorFromApi(err)
@@ -613,7 +685,7 @@ async function onMarkAllPresent() {
   markingAllPresent.value = true
   saving.value = true
   try {
-    data.value = await markDayPresent(route.params.dayId, { mark_all: true })
+    data.value = await markDayPresent(route.params.dayId, { mark_all: true, ...shiftQueryOpts() })
     showAppSuccess('Đã đánh dấu tất cả học sinh có mặt.')
   } catch (err) {
     showAppErrorFromApi(err)
@@ -627,7 +699,7 @@ async function onSaveDraft() {
   savingDraft.value = true
   saving.value = true
   try {
-    data.value = await saveAttendanceDraft(route.params.dayId)
+    data.value = await saveAttendanceDraft(route.params.dayId, shiftQueryOpts())
     showAppSuccess('Đã lưu nháp điểm danh.')
   } catch (err) {
     showAppErrorFromApi(err)
@@ -650,7 +722,7 @@ async function onConfirm() {
   confirming.value = true
   saving.value = true
   try {
-    data.value = await confirmDayAttendance(route.params.dayId, data.value.attendance_lock_version)
+    data.value = await confirmDayAttendance(route.params.dayId, data.value.attendance_lock_version, shiftQueryOpts())
     showAppSuccess('Điểm danh đã được xác nhận thành công.')
   } catch (err) {
     showAppErrorFromApi(err)
@@ -670,8 +742,7 @@ async function onReopen() {
 
   saving.value = true
   try {
-    await saveAttendanceDraft(route.params.dayId)
-    await load()
+    data.value = await reopenDayAttendance(route.params.dayId, shiftQueryOpts())
     showAppSuccess('Đã mở lại điểm danh.')
   } catch (err) {
     showAppErrorFromApi(err)
@@ -683,7 +754,7 @@ async function onReopen() {
 async function onExport() {
   exporting.value = true
   try {
-    await downloadDayAttendanceExport(route.params.dayId)
+    await downloadDayAttendanceExport(route.params.dayId, shiftQueryOpts())
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {
@@ -725,19 +796,20 @@ async function shiftDay(delta) {
   const idx = sortedSiblings.value.findIndex((d) => d.id === Number(route.params.dayId))
   const next = sortedSiblings.value[idx + delta]
   if (next) {
-    await router.push({ name: 'tpDayAttendance', params: { dayId: next.id } })
+    const query = activeShift.value ? { shift: activeShift.value } : {}
+    await router.push({ name: 'tpDayAttendance', params: { dayId: next.id }, query })
   }
 }
 
 function trySwitchShift(which) {
-  const wantMorning = which === 'morning'
-  if (wantMorning === isMorningShift.value) return
-  const alt = siblingDays.value.find((d) => d.id !== Number(route.params.dayId))
-  if (alt) {
-    router.push({ name: 'tpDayAttendance', params: { dayId: alt.id } })
-  } else {
-    showAppSuccess('Không tìm thấy ngày ca khác trong tháng này.')
-  }
+  if (which === activeShift.value) return
+  if (which === 'morning' && !hasMorningShift.value) return
+  if (which === 'afternoon' && !hasAfternoonShift.value) return
+  router.replace({
+    name: 'tpDayAttendance',
+    params: { dayId: route.params.dayId },
+    query: { shift: which },
+  })
 }
 
 function goBack() {

@@ -22,8 +22,11 @@ class TpDayAttendanceExportController extends Controller
             403
         );
 
-        $payload = $this->attendance->getAttendance($tpProgramDay);
-        $filename = 'diem-danh-'.$tpProgramDay->scheduled_date->format('Y-m-d').'-'.$tpProgramDay->id.'.csv';
+        $shift = $request->query('shift');
+        $shiftArg = is_string($shift) ? $shift : null;
+        $payload = $this->attendance->getAttendance($tpProgramDay, $shiftArg);
+        $suffix = $payload['shift'] ? '-'.$payload['shift'] : '';
+        $filename = 'diem-danh-'.$tpProgramDay->scheduled_date->format('Y-m-d').'-'.$tpProgramDay->id.$suffix.'.csv';
 
         return response()->streamDownload(function () use ($payload) {
             $out = fopen('php://output', 'w');

@@ -22,6 +22,6 @@ class TpAttendanceController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_program.view') || $user->can('tp_attendance.manage')), 403);
 
-        return $this->ok($this->attendance->getAttendance($tpProgramDay));
+        return $this->ok($this->attendance->getAttendance($tpProgramDay, $request->query('shift')));
     }
 }

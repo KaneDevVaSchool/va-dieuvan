@@ -105,18 +105,28 @@ export async function unenrollStudent(id, studentId, reason) {
 
 // ── Attendance & Absences ──────────────────────────────────────────────────────
 
-export async function getDayAttendance(dayId) {
-  const { data } = await http.get(`/tp-program-days/${dayId}/attendance`)
+function attendanceShiftParams(shift) {
+  return shift === 'morning' || shift === 'afternoon' ? { shift } : {}
+}
+
+export async function getDayAttendance(dayId, { shift } = {}) {
+  const { data } = await http.get(`/tp-program-days/${dayId}/attendance`, { params: attendanceShiftParams(shift) })
   return data.data
 }
 
-export async function markDayAbsence(dayId, payload) {
-  const { data } = await http.post(`/tp-program-days/${dayId}/absences`, payload)
+export async function markDayAbsence(dayId, payload = {}) {
+  const { shift, ...body } = payload
+  const { data } = await http.post(`/tp-program-days/${dayId}/absences`, {
+    ...body,
+    ...attendanceShiftParams(shift),
+  })
   return data.data
 }
 
-export async function unmarkDayAbsence(dayId, studentId) {
-  const { data } = await http.delete(`/tp-program-days/${dayId}/absences/${studentId}`)
+export async function unmarkDayAbsence(dayId, studentId, { shift } = {}) {
+  const { data } = await http.delete(`/tp-program-days/${dayId}/absences/${studentId}`, {
+    params: attendanceShiftParams(shift),
+  })
   return data.data
 }
 
@@ -125,15 +135,21 @@ export async function markDayPresent(dayId, payload = {}) {
   return data.data
 }
 
-export async function saveAttendanceDraft(dayId) {
-  const { data } = await http.post(`/tp-program-days/${dayId}/attendance/draft`)
+export async function saveAttendanceDraft(dayId, { shift } = {}) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/attendance/draft`, attendanceShiftParams(shift))
   return data.data
 }
 
-export async function confirmDayAttendance(dayId, attendanceLockVersion) {
+export async function confirmDayAttendance(dayId, attendanceLockVersion, { shift } = {}) {
   const { data } = await http.post(`/tp-program-days/${dayId}/attendance/confirm`, {
     attendance_lock_version: attendanceLockVersion,
+    ...attendanceShiftParams(shift),
   })
+  return data.data
+}
+
+export async function reopenDayAttendance(dayId, { shift } = {}) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/attendance/reopen`, attendanceShiftParams(shift))
   return data.data
 }
 
@@ -147,8 +163,9 @@ export async function notifyDayParents(dayId) {
   return data.data
 }
 
-export async function downloadDayAttendanceExport(dayId) {
+export async function downloadDayAttendanceExport(dayId, { shift } = {}) {
   const { data } = await http.get(`/tp-program-days/${dayId}/attendance/export`, {
+    params: attendanceShiftParams(shift),
     responseType: 'blob',
   })
   const url = window.URL.createObjectURL(new Blob([data]))

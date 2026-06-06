@@ -70,7 +70,14 @@ export function tripPassengerLine(trip, t) {
   return ''
 }
 
+export function isTransportProgramTrip(trip) {
+  if (trip?._tp?.day_id) return true
+  if (String(trip?.type ?? '').trim().toUpperCase() === 'TP') return true
+  return dispatchReqOf(trip)?.trip_type === 'transport_program'
+}
+
 export function tripTypeBadgeText(trip) {
+  if (isTransportProgramTrip(trip)) return 'ĐĐ'
   const tt = dispatchReqOf(trip)?.trip_type
   if (tt === 'door_to_door') return 'D2D'
   if (tt === 'point_to_point') return 'P2P'
@@ -87,7 +94,7 @@ export function tripTypeBadgeText(trip) {
 export function tripTypeBadgeClass(trip) {
   const lbl = tripTypeBadgeText(trip)
   if (lbl === 'P2P') return 'bg-blue-500/25 text-blue-200 ring-1 ring-blue-400/30'
-  if (lbl === 'D2D') return 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/30'
+  if (lbl === 'ĐĐ' || lbl === 'D2D') return 'bg-violet-500/25 text-violet-200 ring-1 ring-violet-400/30'
   if (lbl === 'CT') return 'bg-amber-500/25 text-amber-100 ring-1 ring-amber-400/35'
   if (lbl === 'CG') return 'bg-orange-500/25 text-orange-100 ring-1 ring-orange-400/35'
   return 'bg-slate-500/20 text-slate-200 ring-1 ring-slate-400/25'
@@ -99,6 +106,7 @@ export function tripTypeBadgeClass(trip) {
  * @param {(key: string) => string} t vue-i18n `t`
  */
 export function tripServiceTypeCalendarLabel(trip, t) {
+  if (isTransportProgramTrip(trip)) return t('driver_home.calendar_svc_tp')
   const tt = dispatchReqOf(trip)?.trip_type
   if (tt === 'door_to_door') return t('driver_home.calendar_svc_d2d')
   if (tt === 'point_to_point') return t('driver_home.calendar_svc_p2p')

@@ -178,7 +178,7 @@ const typeLabel = computed(() => tripTypeBadgeText(tripRaw.value))
 const typeBadgeStyle = computed(() => {
   const lbl = typeLabel.value
   if (lbl === 'P2P') return { backgroundColor: 'rgb(59 130 246 / 0.22)', color: '#93c5fd' }
-  if (lbl === 'D2D') return { backgroundColor: 'rgb(168 85 247 / 0.22)', color: '#d8b4fe' }
+  if (lbl === 'ĐĐ' || lbl === 'D2D') return { backgroundColor: 'rgb(168 85 247 / 0.22)', color: '#d8b4fe' }
   if (lbl === 'CT') return { backgroundColor: 'rgb(245 158 11 / 0.22)', color: '#fcd34d' }
   if (lbl === 'CG') return { backgroundColor: 'rgb(249 115 22 / 0.22)', color: '#fdba74' }
   return { backgroundColor: 'rgb(148 163 184 / 0.15)', color: '#94a3b8' }
@@ -364,7 +364,7 @@ const passengerCount = computed(() => {
 
 const passengerMeta = computed(() => {
   const n = passengerCount.value
-  if (typeLabel.value === 'D2D') {
+  if (typeLabel.value === 'ĐĐ' || typeLabel.value === 'D2D' || tripRaw.value._tp) {
     return t('driver_home.meta_students', { n })
   }
   return `${n} ${n === 1 ? t('trip_history_page.guest_one') : t('trip_history_page.guest_many')}`

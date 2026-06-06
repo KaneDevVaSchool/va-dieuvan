@@ -166,7 +166,7 @@
               <span
                 class="shrink-0 rounded-md bg-white/10 px-2 py-0.5 text-sm font-extrabold uppercase tracking-wide text-white"
               >
-                {{ trip._rowKind === 'tp' ? 'TP' : tripTypeBadgeText(trip) }}
+                {{ trip._rowKind === 'tp' ? t('driver_home.type_tp_badge') : tripTypeBadgeText(trip) }}
               </span>
               <span
                 v-if="trip._rowKind === 'tp' && trip.shift"
@@ -181,7 +181,7 @@
                 {{ shiftLabel(trip.calendar_shift || trip._tp?.shift) }}
               </span>
               <span class="min-w-0 flex-1 truncate text-sm font-semibold text-white/65">
-                {{ trip._rowKind === 'tp' ? (trip.program_name || t('driver_home.svc_name_d2d')) : tripServiceFullName(trip) }}
+                {{ trip._rowKind === 'tp' ? (trip.program_name || t('driver_home.svc_name_transport_program')) : tripServiceFullName(trip) }}
               </span>
               <span
                 class="shrink-0 rounded-lg px-2 py-1 text-xs font-bold"
@@ -327,6 +327,7 @@ function statusLabelForTrip(trip) {
 
 function tripServiceFullName(trip) {
   const tt = trip?.dispatch_request?.trip_type
+  if (tt === 'transport_program') return t('driver_home.svc_name_transport_program')
   if (tt === 'door_to_door') return t('driver_home.svc_name_d2d')
   if (tt === 'point_to_point') return t('driver_home.svc_name_p2p')
   if (tt === 'cargo') return t('driver_home.svc_name_cargo')
