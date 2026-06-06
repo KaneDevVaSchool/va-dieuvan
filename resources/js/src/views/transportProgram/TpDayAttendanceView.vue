@@ -444,6 +444,7 @@ import {
   saveAttendanceDraft,
 } from '../../api/transportProgram'
 import { showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
+import { slotsForProgram } from '../../composables/tpProgramSlots'
 import { confirmAction } from '../../composables/useConfirm'
 import { useAuthStore } from '../../store'
 
@@ -503,37 +504,46 @@ const filteredItems = computed(() => {
   return rows
 })
 
-const programSettings = computed(() => data.value?.day?.settings || {})
-
-const hasMorningShift = computed(() => {
-  const s = programSettings.value
-  const morning = s.morning || {}
-  if (morning.enabled != null) return !!morning.enabled
-  return !!data.value?.day?.departure_time
+const programForSlots = computed(() => {
+  const day = data.value?.day
+  if (!day) return null
+  return {
+    settings: day.settings,
+    departure_time: day.departure_time,
+    return_time: day.return_time,
+  }
 })
 
-const hasAfternoonShift = computed(() => {
-  const s = programSettings.value
-  const afternoon = s.afternoon || {}
-  if (afternoon.enabled != null) return !!afternoon.enabled
-  return !!data.value?.day?.return_time
-})
+const programSlots = computed(() => slotsForProgram(programForSlots.value))
+
+const hasMorningShift = computed(() => programSlots.value.some((s) => s.shift === 'morning'))
+const hasAfternoonShift = computed(() => programSlots.value.some((s) => s.shift === 'afternoon'))
 
 const activeShift = computed(() => {
   const q = route.query.shift
-  if (q === 'morning' && hasMorningShift.value) return 'morning'
-  if (q === 'afternoon' && hasAfternoonShift.value) return 'afternoon'
-  if (hasMorningShift.value) return 'morning'
-  if (hasAfternoonShift.value) return 'afternoon'
-  return 'morning'
+  const shifts = programSlots.value.map((s) => s.shift)
+  if (q === 'morning' || q === 'afternoon') {
+    if (shifts.length && !shifts.includes(q)) {
+      return shifts[0] || 'morning'
+    }
+    return q
+  }
+  return shifts[0] || 'morning'
 })
 
 const isMorningShift = computed(() => activeShift.value === 'morning')
 
-const usesPerShiftAttendance = computed(() => hasMorningShift.value && hasAfternoonShift.value)
+const usesPerShiftAttendance = computed(() => programSlots.value.length > 1)
 
 function shiftQueryOpts() {
-  return usesPerShiftAttendance.value ? { shift: activeShift.value } : {}
+  const shift = activeShift.value
+  if (usesPerShiftAttendance.value) {
+    return { shift }
+  }
+  if (!programForSlots.value && (route.query.shift === 'morning' || route.query.shift === 'afternoon')) {
+    return { shift: route.query.shift }
+  }
+  return {}
 }
 
 const shiftLabel = computed(() => (isMorningShift.value ? 'Chuyến Sáng' : 'Chuyến Chiều'))
@@ -544,15 +554,8 @@ function formatClockTime(value) {
 }
 
 const shiftDepartureDisplay = computed(() => {
-  const day = data.value?.day
-  if (!day) return ''
-  const s = programSettings.value
-  const morning = s.morning || {}
-  const afternoon = s.afternoon || {}
-  if (activeShift.value === 'afternoon') {
-    return formatClockTime(afternoon.departure || day.return_time)
-  }
-  return formatClockTime(morning.departure || day.departure_time)
+  const slot = programSlots.value.find((s) => s.shift === activeShift.value)
+  return slot?.departure ? formatClockTime(slot.departure) : ''
 })
 
 const sortedSiblings = computed(() =>
@@ -598,20 +601,18 @@ watch(activeShift, (next, prev) => {
 })
 
 watch(
-  () => [data.value?.day?.id, route.query.shift, hasMorningShift.value, hasAfternoonShift.value],
+  () => [data.value?.day?.id, route.query.shift, programSlots.value.length],
   () => {
     if (!data.value?.day?.id) return
     const q = route.query.shift
-    const valid =
-      (q === 'morning' && hasMorningShift.value) ||
-      (q === 'afternoon' && hasAfternoonShift.value)
-    if (valid) return
-    const fallback = hasMorningShift.value ? 'morning' : hasAfternoonShift.value ? 'afternoon' : 'morning'
+    const shifts = programSlots.value.map((s) => s.shift)
+    if ((q === 'morning' || q === 'afternoon') && shifts.includes(q)) return
+    const fallback = shifts[0] || 'morning'
     if (q !== fallback) {
       router.replace({
         name: 'tpDayAttendance',
         params: { dayId: route.params.dayId },
-        query: { shift: fallback },
+        query: usesPerShiftAttendance.value ? { shift: fallback } : {},
       })
     }
   },
@@ -796,7 +797,7 @@ async function shiftDay(delta) {
   const idx = sortedSiblings.value.findIndex((d) => d.id === Number(route.params.dayId))
   const next = sortedSiblings.value[idx + delta]
   if (next) {
-    const query = activeShift.value ? { shift: activeShift.value } : {}
+    const query = usesPerShiftAttendance.value ? { shift: activeShift.value } : {}
     await router.push({ name: 'tpDayAttendance', params: { dayId: next.id }, query })
   }
 }

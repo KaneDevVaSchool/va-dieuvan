@@ -11,8 +11,8 @@ export function slotsForProgram(program) {
   const afternoon = settings.afternoon || {}
   const out = []
 
-  const morningEnabled = morning.enabled != null ? !!morning.enabled : !!program.departure_time
-  const afternoonEnabled = afternoon.enabled != null ? !!afternoon.enabled : !!program.return_time
+  const morningEnabled = !!morning.enabled
+  const afternoonEnabled = !!afternoon.enabled
 
   if (morningEnabled) {
     out.push({
@@ -28,6 +28,29 @@ export function slotsForProgram(program) {
       shift: 'afternoon',
       departure: (afternoon.departure || program.return_time || '').toString().slice(0, 5) || null,
       arrival: (afternoon.arrival || '').toString().slice(0, 5) || null,
+      label: 'Chuyến chiều',
+      title: 'Chuyến chiều — Đón về nhà',
+    })
+  }
+
+  if (out.length) {
+    return out
+  }
+
+  if (program.departure_time) {
+    out.push({
+      shift: 'morning',
+      departure: program.departure_time.toString().slice(0, 5),
+      arrival: null,
+      label: 'Chuyến sáng',
+      title: 'Chuyến sáng — Đưa đến trường',
+    })
+  }
+  if (program.return_time) {
+    out.push({
+      shift: 'afternoon',
+      departure: program.return_time.toString().slice(0, 5),
+      arrival: null,
       label: 'Chuyến chiều',
       title: 'Chuyến chiều — Đón về nhà',
     })
