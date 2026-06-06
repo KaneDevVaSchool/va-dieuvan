@@ -20,12 +20,10 @@ return new class extends Migration
         }
 
         if (! $this->indexExists('tp_day_absences', self::DAY_STUDENT_SHIFT_UNIQUE)) {
+            $this->removeDuplicateDayAbsencesBeforeShiftUnique();
+            $this->dropLegacyDayStudentUnique();
+
             Schema::table('tp_day_absences', function (Blueprint $table) {
-                if ($this->indexExists('tp_day_absences', self::DAY_STUDENT_UNIQUE)) {
-                    $table->dropUnique(self::DAY_STUDENT_UNIQUE);
-                } else {
-                    $table->dropUnique(['program_day_id', 'student_id']);
-                }
                 $table->unique(['program_day_id', 'student_id', 'shift'], self::DAY_STUDENT_SHIFT_UNIQUE);
             });
         }
@@ -69,15 +67,68 @@ return new class extends Migration
         }
 
         if (Schema::hasColumn('tp_day_absences', 'shift')) {
-            Schema::table('tp_day_absences', function (Blueprint $table) {
-                if ($this->indexExists('tp_day_absences', self::DAY_STUDENT_SHIFT_UNIQUE)) {
+            if ($this->indexExists('tp_day_absences', self::DAY_STUDENT_SHIFT_UNIQUE)) {
+                Schema::table('tp_day_absences', function (Blueprint $table) {
                     $table->dropUnique(self::DAY_STUDENT_SHIFT_UNIQUE);
-                }
+                });
+            }
+
+            Schema::table('tp_day_absences', function (Blueprint $table) {
                 $table->dropColumn('shift');
-                if (! $this->indexExists('tp_day_absences', self::DAY_STUDENT_UNIQUE)) {
-                    $table->unique(['program_day_id', 'student_id'], self::DAY_STUDENT_UNIQUE);
-                }
             });
+
+            if (! $this->indexExists('tp_day_absences', self::DAY_STUDENT_UNIQUE)) {
+                Schema::table('tp_day_absences', function (Blueprint $table) {
+                    $table->unique(['program_day_id', 'student_id'], self::DAY_STUDENT_UNIQUE);
+                });
+            }
+        }
+    }
+
+    private function dropLegacyDayStudentUnique(): void
+    {
+        if ($this->indexExists('tp_day_absences', self::DAY_STUDENT_UNIQUE)) {
+            Schema::table('tp_day_absences', function (Blueprint $table) {
+                $table->dropUnique(self::DAY_STUDENT_UNIQUE);
+            });
+
+            return;
+        }
+
+        try {
+            Schema::table('tp_day_absences', function (Blueprint $table) {
+                $table->dropUnique(['program_day_id', 'student_id']);
+            });
+        } catch (\Throwable) {
+            // Unique already removed (e.g. partial rerun).
+        }
+    }
+
+    private function removeDuplicateDayAbsencesBeforeShiftUnique(): void
+    {
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            DB::statement('
+                DELETE a FROM tp_day_absences AS a
+                INNER JOIN tp_day_absences AS b
+                    ON a.program_day_id = b.program_day_id
+                    AND a.student_id = b.student_id
+                    AND a.id > b.id
+            ');
+
+            return;
+        }
+
+        if ($driver === 'sqlite') {
+            DB::statement('
+                DELETE FROM tp_day_absences
+                WHERE id NOT IN (
+                    SELECT MIN(id)
+                    FROM tp_day_absences
+                    GROUP BY program_day_id, student_id
+                )
+            ');
         }
     }
 
@@ -100,15 +151,13 @@ return new class extends Migration
         }
 
         if ($driver === 'mysql') {
-            $database = $connection->getDatabaseName();
-            $row = DB::selectOne(
-                'SELECT 1 AS found FROM information_schema.statistics
-                 WHERE table_schema = ? AND table_name = ? AND index_name = ?
-                 LIMIT 1',
-                [$database, $table, $indexName]
+            $prefixedTable = str_replace('`', '``', $connection->getTablePrefix().$table);
+            $rows = DB::select(
+                "SHOW INDEX FROM `{$prefixedTable}` WHERE Key_name = ?",
+                [$indexName]
             );
 
-            return $row !== null;
+            return count($rows) > 0;
         }
 
         return false;
