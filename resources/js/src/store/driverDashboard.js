@@ -128,11 +128,25 @@ function resolveEffectiveDriverId(idFromSummary, items) {
   return null
 }
 
-/** Chỉ hiển thị chờ xác nhận cho ca từ hôm nay trở đi (tránh kẹt chuyến quá khứ). */
+function tripDepartMs(trip) {
+  if (trip?.depart_at) {
+    const t = new Date(trip.depart_at).getTime()
+    if (Number.isFinite(t)) return t
+  }
+  if (trip?.depart_date) {
+    const t = new Date(trip.depart_date).getTime()
+    if (Number.isFinite(t)) return t
+  }
+  return NaN
+}
+
+/** Banner chờ xác nhận: trong vòng 24h trước giờ xuất phát (không gom chuyến xa). */
 function isPendingTripStillRelevant(trip) {
-  const d = tripDepartYmd(trip)
-  if (d == null) return true
-  return d >= ymd(new Date())
+  const dep = tripDepartMs(trip)
+  if (!Number.isFinite(dep)) return false
+  const now = Date.now()
+  const oneDayMs = 24 * 60 * 60 * 1000
+  return dep >= now && dep <= now + oneDayMs
 }
 
 function normalizedDashboardEndYmd(dashboardDateTo) {
