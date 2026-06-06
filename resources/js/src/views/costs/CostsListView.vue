@@ -876,10 +876,10 @@
       >
         <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeAddCostModal" />
         <div
-          class="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10 max-sm:rounded-t-2xl max-sm:rounded-b-none"
+          class="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ring-1 ring-slate-900/10 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
         >
-          <div class="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+          <div class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <div>
               <h2 id="costs-add-title" class="text-base font-semibold text-slate-900">{{ t('costs_page.modal_add_title') }}</h2>
             </div>
@@ -893,7 +893,8 @@
             </button>
           </div>
 
-          <form class="flex min-h-0 flex-1 flex-col overflow-visible px-5 py-4" @submit.prevent="submitCost">
+          <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitCost">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4">
             <div class="grid gap-4">
               <div>
                 <label class="mb-1 block text-xs font-medium text-slate-700"
@@ -975,7 +976,8 @@
             <p v-if="costMsg" class="mt-3 text-sm" :class="costMsgIsError ? 'text-rose-700' : 'text-emerald-800'">
               {{ costMsg }}
             </p>
-            <div class="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4">
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-5 py-4">
               <button type="button" class="costs-btn-ghost" :disabled="submitting" @click="closeAddCostModal">{{
                 t('app.cancel')
               }}</button>
@@ -1002,11 +1004,11 @@
       >
         <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px]" aria-hidden="true" @click="closeRejectModal" />
         <div
-          class="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
+          class="relative z-10 flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/90 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 max-sm:rounded-t-2xl max-sm:rounded-b-none"
           @click.stop
         >
           <div
-            class="flex items-start gap-3 border-b border-rose-100 bg-gradient-to-r from-rose-50/90 via-white to-white px-5 py-4 dark:border-rose-900/40 dark:from-rose-950/40 dark:via-slate-900 dark:to-slate-900"
+            class="flex shrink-0 items-start gap-3 border-b border-rose-100 bg-gradient-to-r from-rose-50/90 via-white to-white px-5 py-4 dark:border-rose-900/40 dark:from-rose-950/40 dark:via-slate-900 dark:to-slate-900"
           >
             <div
               class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700 shadow-inner dark:bg-rose-950/60 dark:text-rose-200"
@@ -1042,7 +1044,8 @@
               <XMarkIcon class="h-5 w-5" />
             </button>
           </div>
-          <div class="flex min-h-0 flex-1 flex-col overflow-visible px-5 py-4">
+          <div class="flex min-h-0 flex-1 flex-col">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4">
             <label class="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">{{
               t('costs_page.reject_modal_reason_label')
             }}</label>
@@ -1053,7 +1056,8 @@
               :placeholder="t('costs_page.reject_modal_reason_placeholder')"
               autocomplete="off"
             />
-            <div class="mt-6 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-100 px-5 py-4 dark:border-slate-700">
               <button type="button" class="costs-btn-ghost" :disabled="decidingId != null" @click="closeRejectModal">
                 {{ t('costs_page.reject_modal_cancel') }}
               </button>

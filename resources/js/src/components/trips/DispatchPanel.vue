@@ -421,7 +421,7 @@
         <Teleport to="body">
             <div
                 v-if="scheduleDetailPopupOpen"
-                class="fixed inset-0 z-[240] flex items-start justify-center overflow-hidden bg-black/45 p-4 pb-10 pt-10 dark:bg-black/55"
+                class="fixed inset-0 z-[240] flex items-start justify-center overflow-y-auto bg-black/45 p-4 pb-10 pt-10 dark:bg-black/55"
                 role="dialog"
                 aria-modal="true"
                 :aria-label="
@@ -430,10 +430,10 @@
                 @click.self="scheduleDetailPopupOpen = false"
             >
                 <div
-                    class="w-full max-w-md rounded-2xl bg-white p-4 shadow-2xl dark:bg-slate-900"
+                    class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"
                     @click.stop
                 >
-                    <div class="mb-3 flex items-center justify-between gap-2">
+                    <div class="mb-0 flex shrink-0 items-center justify-between gap-2 p-4 pb-3">
                         <h2
                             class="text-[13px] font-semibold text-slate-800 dark:text-slate-100"
                         >
@@ -455,6 +455,7 @@
                             }}
                         </button>
                     </div>
+                    <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-4 pb-4">
                     <div
                         class="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50/90 px-3.5 py-3 shadow-sm dark:from-slate-900/50 dark:via-slate-900/35 dark:to-slate-950/60"
                     >
@@ -513,6 +514,7 @@
                                 }}</span>
                             </li>
                         </ul>
+                    </div>
                     </div>
                 </div>
             </div>

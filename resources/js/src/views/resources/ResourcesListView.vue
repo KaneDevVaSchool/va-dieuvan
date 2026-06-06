@@ -1430,7 +1430,7 @@
               </div>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-visible px-3 py-3 sm:px-4">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4">
               <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{{ t('resources.section_default_driver') }}</div>
               <div class="mt-1.5 rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-700 dark:bg-slate-800/40">
                 <div v-if="selectedVehicle.defaultDriver" class="space-y-1 text-sm">
@@ -1772,7 +1772,7 @@
               </div>
             </div>
 
-            <div class="min-h-0 flex-1 overflow-visible p-4">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4">
               <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.section_supplier_contact') }}</div>
               <div class="mt-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-800/40">
                 <div v-if="selectedSupplier.contact_name" class="font-medium text-slate-900 dark:text-white">{{ selectedSupplier.contact_name }}</div>
@@ -1847,7 +1847,7 @@
         @click.self="vehicleModalOpen = false"
       >
         <div
-          class="flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div
@@ -1868,7 +1868,7 @@
             </button>
           </div>
           <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitVehicleForm">
-            <div class="min-h-0 flex-1 overflow-visible px-5 py-5 sm:px-6 sm:py-6">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-5 sm:px-6 sm:py-6">
               <div class="grid gap-6 lg:grid-cols-2">
                 <section class="rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/40">
                   <h3 class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -2156,8 +2156,11 @@
         aria-modal="true"
         @click.self="closeAssignModal"
       >
-        <div class="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40" @click.stop>
-          <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+        <div
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div class="shrink-0 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
             <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
               <template v-if="assignVehicleId != null">{{ t('resources.assign_driver_modal_title') }}</template>
               <template v-else-if="addDriverMode === 'external'">{{ t('resources.add_driver_modal_title_external') }}</template>
@@ -2170,6 +2173,7 @@
             </p>
           </div>
 
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
           <!-- Thêm tài xế: từ user HOẶC ngoài hệ thống (tab Tài xế) -->
           <div v-if="assignVehicleId == null" class="px-5 py-4 sm:px-6">
             <div class="mb-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-700 dark:bg-slate-800/50">
@@ -2353,8 +2357,9 @@
             </div>
             <p v-if="assignError" class="text-xs text-rose-600">{{ assignError }}</p>
           </div>
+          </div>
 
-          <div class="flex flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
+          <div class="flex shrink-0 flex-wrap gap-2 border-t border-slate-200/90 bg-slate-50/90 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
             <button
               type="button"
               class="min-h-[44px] flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:min-h-0 sm:flex-initial sm:px-6"
@@ -2392,7 +2397,7 @@
         @click.self="providerModalOpen = false"
       >
         <div
-          class="flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div
@@ -2413,7 +2418,7 @@
             </button>
           </div>
           <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitProviderForm">
-            <div class="min-h-0 flex-1 space-y-3 overflow-visible px-5 py-4 sm:px-6">
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               <span>{{ t('resources.provider_form_name') }} <span class="text-rose-600" aria-hidden="true">*</span></span>
               <input
@@ -2570,15 +2575,18 @@
         aria-modal="true"
         @click.self="vehicleDocModalOpen = false"
       >
-        <div class="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40" @click.stop>
-          <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+        <div
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          @click.stop
+        >
+          <div class="shrink-0 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
             <h2 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
               {{ editingVehicleDocId ? t('resources.vehicle_doc_modal_edit') : t('resources.vehicle_doc_modal_add') }}
             </h2>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('resources.vehicle_doc_modal_hint') }}</p>
           </div>
-          <form class="flex flex-col" @submit.prevent="submitVehicleDocForm">
-            <div class="min-h-0 flex-1 space-y-3 overflow-visible px-5 py-4 sm:px-6">
+          <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitVehicleDocForm">
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain px-5 py-4 sm:px-6">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               <span>{{ t('driver_detail.col_doc_type') }} <span class="text-rose-600" aria-hidden="true">*</span></span>
               <select
@@ -2661,7 +2669,7 @@
         @click.self="closeVehicleDocDeleteModal"
       >
         <div
-          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
@@ -2719,7 +2727,7 @@
         @click.self="vehicleDeleteModalOpen = false"
       >
         <div
-          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
@@ -2766,7 +2774,7 @@
         aria-modal="true"
         @click.self="driverDeleteModalOpen = false"
       >
-        <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40">
+        <div class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40">
           <div class="flex gap-3 border-b border-slate-100 px-4 py-4 dark:border-slate-700">
             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
               <TrashIcon class="h-5 w-5" aria-hidden="true" />
@@ -2811,7 +2819,7 @@
         @click.self="providerDeleteModalOpen = false"
       >
         <div
-          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
@@ -2860,7 +2868,7 @@
         @click.self="!bulkTrashSubmitting && (bulkTrashModalOpen = false)"
       >
         <div
-          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
@@ -2914,7 +2922,7 @@
         @click.self="!bulkForceSubmitting && (bulkForceModalOpen = false)"
       >
         <div
-          class="w-full max-w-lg overflow-hidden rounded-2xl border border-rose-200/80 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-rose-200/80 bg-white shadow-2xl ring-1 ring-rose-900/10 dark:border-rose-900/50 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div class="border-b border-rose-100 bg-rose-50/80 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/40">
@@ -2965,7 +2973,7 @@
         @click.self="forceDeleteModalOpen = false"
       >
         <div
-          class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900 dark:ring-slate-900/40"
           @click.stop
         >
           <div class="border-b border-rose-200/60 bg-rose-50/50 px-4 py-4 dark:border-rose-900/40 dark:bg-rose-950/30">

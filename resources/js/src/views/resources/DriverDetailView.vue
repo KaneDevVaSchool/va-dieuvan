@@ -322,8 +322,11 @@
         aria-modal="true"
         @click.self="docModalOpen = false"
       >
-        <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900" @click.stop>
-          <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+        <div
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900"
+          @click.stop
+        >
+          <div class="shrink-0 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
             <h2 class="text-base font-semibold text-slate-900 dark:text-white">
               {{
                 !canManage
@@ -334,7 +337,8 @@
               }}
             </h2>
           </div>
-          <form class="space-y-3 p-4" @submit.prevent="submitDocForm">
+          <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submitDocForm">
+            <div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain p-4">
             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400">
               {{ t('driver_detail.col_doc_type') }}
               <select
@@ -399,7 +403,8 @@
               {{ t('driver_detail.replace_file') }}
             </label>
             <p v-if="docFormError" class="text-xs text-rose-600">{{ docFormError }}</p>
-            <div class="flex gap-2 pt-2">
+            </div>
+            <div class="flex shrink-0 gap-2 border-t border-slate-200 p-4 dark:border-slate-700">
               <button
                 type="button"
                 class="flex-1 rounded-lg border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"

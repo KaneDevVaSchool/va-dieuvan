@@ -190,7 +190,7 @@
 
         <div
           v-if="notifStore.loading"
-          class="min-h-0 flex-1 overflow-visible px-3 py-3"
+          class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3"
           aria-busy="true"
           :aria-label="t('notify.skeleton_loading')"
         >
@@ -228,7 +228,7 @@
           </div>
           <ul
             v-else
-            class="min-h-0 flex-1 overflow-visible overscroll-contain px-3 py-3"
+            class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3"
           >
             <template v-for="section in groupedSections" :key="section.key">
               <li

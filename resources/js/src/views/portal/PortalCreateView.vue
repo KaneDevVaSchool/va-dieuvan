@@ -795,10 +795,10 @@
         @click.self="closeDraftsModal"
       >
         <div
-          class="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
           @click.stop
         >
-          <div class="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
+          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/30 px-5 pb-4 pt-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="min-w-0">
                 <h3 id="drafts-library-title" class="text-base font-semibold leading-snug text-slate-900">
@@ -817,7 +817,7 @@
               </button>
             </div>
           </div>
-          <div class="min-h-0 flex-1 overflow-visible px-3 py-3 sm:px-4">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4">
             <p v-if="!savedDraftsList.length" class="rounded-lg border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-slate-600">
               {{ t('dispatch_wizard.create.library_empty', { action: t('dispatch_wizard.create.save_draft') }) }}
             </p>
@@ -969,11 +969,11 @@
         @click.self="templateModalOpen = false"
       >
         <div
-          class="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
+          class="flex max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
           @click.stop
         >
           <!-- Header -->
-          <div class="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
+          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="flex min-w-0 items-center gap-3">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
@@ -990,7 +990,7 @@
           </div>
 
           <!-- Body -->
-          <div class="min-h-0 flex-1 overflow-visible px-3 py-3 sm:px-4">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4">
             <div v-if="templateListLoading" class="flex items-center justify-center py-10">
               <span class="h-5 w-5 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-600" />
             </div>
