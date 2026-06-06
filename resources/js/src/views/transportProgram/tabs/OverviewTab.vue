@@ -60,15 +60,10 @@
         <DashboardEChart :option="expectedOption" height="280px" />
       </ChartCard>
 
-      <!-- Row 3: breakdowns -->
-      <div class="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Ngày vận hành theo tháng" subtitle="Khối lượng vận hành phân bổ theo từng tháng">
-          <DashboardEChart :option="monthlyOption" height="260px" />
-        </ChartCard>
-        <ChartCard title="Phân bố theo thứ trong tuần" subtitle="Tần suất hoạt động theo ngày trong tuần">
-          <DashboardEChart :option="weekdayOption" height="260px" />
-        </ChartCard>
-      </div>
+      <!-- Row 3: weekday breakdown -->
+      <ChartCard title="Phân bố theo thứ trong tuần" subtitle="Tần suất hoạt động theo ngày trong tuần">
+        <DashboardEChart :option="weekdayOption" height="260px" />
+      </ChartCard>
     </template>
   </div>
 </template>
@@ -93,7 +88,6 @@ const loading = ref(false)
 const days = ref([])
 const selectedDayType = ref('')
 
-const PALETTE = ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#06b6d4', '#ec4899']
 const AXIS = { label: '#64748b', line: '#e2e8f0', split: '#f1f5f9' }
 
 const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
@@ -247,41 +241,6 @@ const expectedOption = computed(() => {
         lineStyle: { width: 2, color: '#6366f1' },
         itemStyle: { color: '#6366f1' },
         data: vals,
-      },
-    ],
-  }
-})
-
-const monthlyOption = computed(() => {
-  const op = days.value.filter((d) => d.day_type === 'operating')
-  if (!op.length) return emptyDashboardChartOption('Chưa có ngày vận hành')
-  const counts = {}
-  for (const d of op) {
-    const key = d.scheduled_date.slice(0, 7)
-    counts[key] = (counts[key] || 0) + 1
-  }
-  const keys = Object.keys(counts).sort()
-  const vals = keys.map((k) => counts[k])
-  return {
-    tooltip: { trigger: 'axis', confine: true, axisPointer: { type: 'shadow' } },
-    grid: { left: 8, right: 10, top: 18, bottom: 24, containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: keys.map((k) => `Th${Number(k.slice(5))}`),
-      axisLabel: { color: AXIS.label, fontSize: 10 },
-      axisLine: { lineStyle: { color: AXIS.line } },
-    },
-    yAxis: {
-      type: 'value',
-      minInterval: 1,
-      axisLabel: { color: AXIS.label, fontSize: 10 },
-      splitLine: { lineStyle: { color: AXIS.split } },
-    },
-    series: [
-      {
-        type: 'bar',
-        barMaxWidth: 38,
-        data: vals.map((v, i) => ({ value: v, itemStyle: { color: PALETTE[i % PALETTE.length], borderRadius: [4, 4, 0, 0] } })),
       },
     ],
   }

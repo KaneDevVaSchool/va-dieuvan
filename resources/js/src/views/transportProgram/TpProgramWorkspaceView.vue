@@ -7,10 +7,10 @@
 
     <template v-else>
       <!-- Header banner -->
-      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="relative bg-gradient-to-br from-[color:var(--va-brand)] via-va-800 to-va-900 px-5 py-5 sm:px-6">
+      <div class="overflow-hidden rounded-2xl border border-slate-200 border-t-[3px] border-t-[color:var(--va-brand)] bg-white shadow-sm">
+        <div class="relative border-b border-slate-200 bg-white px-5 py-5 sm:px-6">
           <button
-            class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-white/70 transition hover:text-white"
+            class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-va-800 transition hover:text-va-900"
             @click="goList"
           >
             <ArrowLeftIcon class="h-4 w-4" /> Danh sách chương trình
@@ -18,13 +18,13 @@
           <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
-                <h1 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">{{ program.name }}</h1>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{{ program.name }}</h1>
                 <span :class="statusBadge(program.status)">
                   <span class="h-1.5 w-1.5 rounded-full bg-current opacity-80"></span>
                   {{ statusLabel(program.status) }}
                 </span>
               </div>
-              <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/70">
+              <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
                 <span class="font-mono">{{ program.code }}</span>
                 <span v-if="program.start_date">· {{ program.start_date }} → {{ program.end_date }}</span>
                 <span v-if="program.responsible_user_name">· Phụ trách: {{ program.responsible_user_name }}</span>
@@ -33,21 +33,21 @@
             <div class="flex shrink-0 flex-wrap items-center gap-2">
               <button
                 v-if="program.status === 'draft' || program.status === 'paused'"
-                class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-va-900 shadow-sm transition hover:bg-white/90"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-va-800 bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-900"
                 @click="lifecycle('activate')"
               >
                 <BoltIcon class="h-4 w-4" /> Kích hoạt
               </button>
               <button
                 v-if="program.status === 'active'"
-                class="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-inset ring-white/30 transition hover:bg-white/25"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
                 @click="lifecycle('pause')"
               >
                 <PauseIcon class="h-4 w-4" /> Tạm dừng
               </button>
               <button
                 v-if="program.status !== 'cancelled'"
-                class="inline-flex items-center gap-1.5 rounded-xl bg-rose-500/90 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-500"
+                class="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-400 hover:bg-rose-50"
                 @click="lifecycle('cancel')"
               >
                 <XMarkIcon class="h-4 w-4" /> Hủy
@@ -198,14 +198,14 @@ function statusLabel(s) {
   return { draft: 'Nháp', active: 'Đang chạy', paused: 'Tạm dừng', completed: 'Hoàn thành', cancelled: 'Đã hủy' }[s] || s
 }
 function statusBadge(s) {
-  const base = 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold '
+  const base = 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold '
   return base + ({
-    draft: 'bg-white/20 text-white',
-    active: 'bg-emerald-400/90 text-emerald-950',
-    paused: 'bg-amber-300/90 text-amber-950',
-    completed: 'bg-sky-300/90 text-sky-950',
-    cancelled: 'bg-rose-400/90 text-rose-950',
-  }[s] || 'bg-white/20 text-white')
+    draft: 'border-slate-200 bg-slate-50 text-slate-600',
+    active: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    paused: 'border-amber-200 bg-amber-50 text-amber-900',
+    completed: 'border-sky-200 bg-sky-50 text-sky-800',
+    cancelled: 'border-rose-200 bg-rose-50 text-rose-800',
+  }[s] || 'border-slate-200 bg-slate-50 text-slate-600')
 }
 
 onMounted(load)
