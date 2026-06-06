@@ -113,7 +113,7 @@
       </div>
 
       <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-        <p class="text-sm text-slate-500">Hiển thị {{ visibleItems.length }} chương trình</p>
+        <p class="text-sm text-slate-500">{{ listSummaryText }}</p>
         <label class="flex items-center gap-2 text-sm text-slate-500">
           Sắp xếp:
           <select
@@ -230,7 +230,7 @@
         </thead>
         <tbody class="divide-y divide-slate-100">
           <tr
-            v-for="p in visibleItems"
+            v-for="p in pagedListItems"
             :key="p.id"
             class="cursor-pointer hover:bg-slate-50/60"
             @click="goWorkspace(p.id)"
@@ -253,6 +253,30 @@
           </tr>
         </tbody>
       </table>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm">
+        <div class="flex flex-wrap items-center gap-3 text-slate-500">
+          <span v-if="listTotal > 0">
+            {{ listRangeText }}
+          </span>
+          <label class="inline-flex items-center gap-2">
+            <span class="text-slate-500">Hiển thị</span>
+            <select
+              v-model.number="listPerPage"
+              aria-label="Số dòng mỗi trang"
+              class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 outline-none ring-va-800/20 focus:ring"
+            >
+              <option v-for="n in LIST_PER_PAGE_OPTIONS" :key="n" :value="n">{{ n }}</option>
+            </select>
+            <span class="text-slate-500">dòng</span>
+          </label>
+        </div>
+        <div v-if="listLastPage > 1" class="flex items-center gap-2">
+          <span class="text-xs text-slate-500">Trang {{ listPage }} / {{ listLastPage }}</span>
+          <Button variant="secondary" :disabled="listPage <= 1" @click="changeListPage(listPage - 1)">Trước</Button>
+          <Button variant="secondary" :disabled="listPage >= listLastPage" @click="changeListPage(listPage + 1)">Sau</Button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -287,6 +311,9 @@ const items = ref([])
 const view = ref('grid')
 const sort = ref('newest')
 const filters = reactive({ search: '', status: '', schoolYear: '', route: '' })
+const LIST_PER_PAGE_OPTIONS = [5, 10, 15, 20]
+const listPage = ref(1)
+const listPerPage = ref(10)
 let searchTimer = null
 
 async function load() {
@@ -388,6 +415,45 @@ const visibleItems = computed(() => {
       rows.sort((a, b) => b.id - a.id)
   }
   return rows
+})
+
+const listTotal = computed(() => visibleItems.value.length)
+
+const listLastPage = computed(() => Math.max(1, Math.ceil(listTotal.value / listPerPage.value)))
+
+const pagedListItems = computed(() => {
+  const start = (listPage.value - 1) * listPerPage.value
+  return visibleItems.value.slice(start, start + listPerPage.value)
+})
+
+const listRangeStart = computed(() => (listTotal.value ? (listPage.value - 1) * listPerPage.value + 1 : 0))
+
+const listRangeEnd = computed(() =>
+  listTotal.value ? Math.min(listPage.value * listPerPage.value, listTotal.value) : 0,
+)
+
+const listRangeText = computed(() =>
+  listTotal.value ? `${listRangeStart.value}–${listRangeEnd.value} / ${listTotal.value} chương trình` : '',
+)
+
+const listSummaryText = computed(() => {
+  const n = visibleItems.value.length
+  if (view.value === 'list' && n > 0) {
+    return listRangeText.value
+  }
+  return `Hiển thị ${n} chương trình`
+})
+
+function changeListPage(p) {
+  listPage.value = Math.min(Math.max(1, p), listLastPage.value)
+}
+
+watch([visibleItems, listPerPage], () => {
+  listPage.value = 1
+})
+
+watch(listLastPage, (last) => {
+  if (listPage.value > last) listPage.value = last
 })
 
 const statTiles = computed(() => {

@@ -10,6 +10,7 @@ use App\Http\Requests\Api\TransportProgram\ListTpProgramsRequest;
 use App\Http\Requests\Api\TransportProgram\StoreTpProgramRequest;
 use App\Http\Requests\Api\TransportProgram\UpdateTpProgramRequest;
 use App\Models\TpProgram;
+use App\Services\TransportProgram\TpDriverAssignmentNotifyService;
 use App\Services\TransportProgram\TpProgramPresenter;
 use Illuminate\Http\JsonResponse;
 
@@ -21,6 +22,7 @@ class TpProgramController extends Controller
         private readonly TpProgramPresenter $presenter,
         private readonly CreateTransportProgramAction $createAction,
         private readonly UpdateProgramDateRangeAction $updateDateRangeAction,
+        private readonly TpDriverAssignmentNotifyService $driverAssignmentNotify,
     ) {}
 
     public function index(ListTpProgramsRequest $request): JsonResponse
@@ -62,6 +64,9 @@ class TpProgramController extends Controller
     public function update(UpdateTpProgramRequest $request, TpProgram $tpProgram): JsonResponse
     {
         $data = $request->validated();
+        $previousDefaultDriverId = $tpProgram->default_driver_id;
+        $previousBackupDriverId = $tpProgram->backup_driver_id;
+
         $dateKeys = ['start_date', 'end_date', 'runs_on', 'excluded_dates', 'extra_dates'];
         $touchesDateRange = (bool) array_intersect(array_keys($data), $dateKeys);
 
@@ -71,7 +76,29 @@ class TpProgramController extends Controller
             $tpProgram->update($data);
         }
 
-        return $this->ok($this->presenter->programSummary($tpProgram->fresh()));
+        $tpProgram = $tpProgram->fresh();
+
+        if (array_key_exists('default_driver_id', $data)
+            && (int) ($previousDefaultDriverId ?? 0) !== (int) ($tpProgram->default_driver_id ?? 0)) {
+            $this->driverAssignmentNotify->notifyProgramDefaultDriverChange(
+                $tpProgram,
+                $previousDefaultDriverId,
+                $tpProgram->default_driver_id,
+                backup: false,
+            );
+        }
+
+        if (array_key_exists('backup_driver_id', $data)
+            && (int) ($previousBackupDriverId ?? 0) !== (int) ($tpProgram->backup_driver_id ?? 0)) {
+            $this->driverAssignmentNotify->notifyProgramDefaultDriverChange(
+                $tpProgram,
+                $previousBackupDriverId,
+                $tpProgram->backup_driver_id,
+                backup: true,
+            );
+        }
+
+        return $this->ok($this->presenter->programSummary($tpProgram));
     }
 
     public function destroy(TpProgram $tpProgram): JsonResponse

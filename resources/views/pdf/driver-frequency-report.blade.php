@@ -51,32 +51,42 @@
     <thead>
         <tr>
             <th>#</th>
-            <th>Mã</th>
             <th>Tài xế</th>
+            <th>Mã NV</th>
             <th>Chuyến</th>
-            <th>Giờ</th>
+            <th>Giờ lái</th>
+            <th>TB/tháng</th>
+            <th>CT</th>
+            <th>D2D</th>
+            <th>P2P</th>
+            <th>HH</th>
             <th>Đúng giờ</th>
             <th>KPI</th>
-            <th>Xét thưởng</th>
+            <th>Xếp loại</th>
         </tr>
     </thead>
     <tbody>
         @forelse($drivers as $idx => $d)
             @php
-                $bonusMap = ['A' => 'Thưởng A', 'B' => 'Thưởng B', 'C' => 'Thưởng C'];
+                $types = $d['typesExport'] ?? [0, 0, 0, 0];
             @endphp
             <tr>
                 <td style="text-align:center;">{{ $idx + 1 }}</td>
-                <td style="text-align:center;">{{ $d['code'] ?? '' }}</td>
                 <td>{{ $d['name'] ?? '' }}</td>
+                <td style="text-align:center;">{{ $d['employeeCode'] ?? ($d['code'] ?? '') }}</td>
                 <td style="text-align:right;">{{ (int)($d['trips'] ?? 0) }}</td>
                 <td style="text-align:right;">{{ number_format((float)($d['hours'] ?? 0), 1, ',', '.') }}</td>
+                <td style="text-align:right;">{{ number_format((float)($d['avgTripsPerMonth'] ?? 0), 1, ',', '.') }}</td>
+                <td style="text-align:right;">{{ (int)($types[0] ?? 0) }}</td>
+                <td style="text-align:right;">{{ (int)($types[1] ?? 0) }}</td>
+                <td style="text-align:right;">{{ (int)($types[2] ?? 0) }}</td>
+                <td style="text-align:right;">{{ (int)($types[3] ?? 0) }}</td>
                 <td style="text-align:right;">{{ number_format((float)($d['onTime'] ?? 0), 1, ',', '.') }}%</td>
                 <td style="text-align:center;font-weight:bold;">{{ (int)($d['kpi'] ?? 0) }}</td>
-                <td style="text-align:center;">{{ $bonusMap[$d['bonus'] ?? 'C'] ?? 'Thưởng C' }}</td>
+                <td style="text-align:center;">{{ $d['bonusLabel'] ?? 'Thưởng C' }}</td>
             </tr>
         @empty
-            <tr><td colspan="8" style="text-align:center;color:#888;">Không có dữ liệu trong kỳ đã chọn.</td></tr>
+            <tr><td colspan="13" style="text-align:center;color:#888;">Không có dữ liệu trong kỳ đã chọn.</td></tr>
         @endforelse
     </tbody>
 </table>

@@ -16,6 +16,9 @@ class DriverFrequencyReportService
     /** @var list<string> */
     public const TRIP_TYPE_ORDER = ['point_to_point', 'business', 'door_to_door', 'cargo'];
 
+    /** Thứ tự cột loại chuyến trên file xuất (mẫu TanSuat_TaiXe_Xe). */
+    public const EXPORT_TRIP_TYPE_ORDER = ['business', 'door_to_door', 'point_to_point', 'cargo'];
+
     public const TRIP_TYPE_LABELS = TripCostReportService::TRIP_TYPE_LABELS;
 
     private const DRIVER_TRIP_THRESHOLD = 60;
@@ -58,6 +61,11 @@ class DriverFrequencyReportService
             ? round(100 * ($totalCurrent - $totalPrev) / $totalPrev, 1)
             : null;
 
+        $monthSpan = $this->monthsInPeriod($quarter);
+        $drivers = $this->enrichDriverRowsForExport($drivers, $monthSpan);
+        $vehicles = $this->enrichVehicleRowsForExport($vehicles, $trips, $monthSpan);
+        $driverMonthly = $this->buildDriverMonthlyRows($trips, $drivers, $year, $quarter);
+
         return [
             'year'            => $year,
             'quarter'         => $quarter,
@@ -66,6 +74,8 @@ class DriverFrequencyReportService
             'vehicles'        => $vehicles,
             'quarterly'       => $quarterly,
             'monthly'         => $monthly,
+            'driver_monthly'  => $driverMonthly,
+            'monthly_totals'  => $this->monthlyTotalsFromDriverRows($driverMonthly),
             'year_comparison' => [
                 'previous_year'   => $prevYear,
                 'trips_delta_pct' => $tripsDeltaPct,
@@ -105,7 +115,8 @@ class DriverFrequencyReportService
             ->with([
                 'dispatchRequest:id,trip_type',
                 'driver:id,full_name',
-                'vehicle:id,license_plate',
+                'vehicle:id,license_plate,type,seat_count',
+                'transportProvider:id,name',
             ]);
 
         if (! empty($filters['driver_id'])) {
@@ -167,21 +178,28 @@ class DriverFrequencyReportService
                 continue;
             }
 
-            $typeCounts = $this->typeCountsForTrips($driverTrips);
+            $typeCountsMap = $this->typeCountsMapForTrips($driverTrips);
             $onTime = $this->onTimePercent($driverTrips);
             $hours = round($this->totalHours($driverTrips), 1);
             $tripCount = $driverTrips->count();
 
             $rows[] = [
-                'id'     => (int) $driverId,
-                'code'   => $this->driverCode($driver),
-                'name'   => $driver->full_name ?? ('Tài xế #'.$driverId),
-                'trips'  => $tripCount,
-                'hours'  => $hours,
-                'onTime' => $onTime,
-                'types'  => array_values($typeCounts),
-                'kpi'    => 0,
-                'bonus'  => 'C',
+                'id'           => (int) $driverId,
+                'code'         => $this->driverCode($driver),
+                'employeeCode' => $this->driverEmployeeCode((int) $driverId),
+                'name'         => $driver->full_name ?? ('Tài xế #'.$driverId),
+                'trips'        => $tripCount,
+                'hours'        => $hours,
+                'onTime'       => $onTime,
+                'types'        => array_values($typeCountsMap),
+                'typesExport'  => $this->typeCountsExportOrder($typeCountsMap),
+                'kpi'          => 0,
+                'bonus'        => 'C',
+                'bonusLabel'   => 'Thưởng C',
+                'bonusNote'    => '',
+                'freqScore'    => 0,
+                'diversityScore' => 0,
+                'avgTripsPerMonth' => 0.0,
             ];
         }
 
@@ -191,6 +209,19 @@ class DriverFrequencyReportService
         foreach ($rows as &$row) {
             $row['kpi'] = $this->computeKpiScore($row['trips'], $maxTrips, $row['onTime'], $row['types']);
             $row['bonus'] = $this->bonusTier($row['kpi']);
+            [$freqPts, $divPts] = $this->kpiComponentScores($row['trips'], $maxTrips, $row['types']);
+            $row['freqScore'] = $freqPts;
+            $row['diversityScore'] = $divPts;
+            if (($row['trips'] ?? 0) < self::DRIVER_TRIP_THRESHOLD) {
+                $row['bonusLabel'] = 'Không xét';
+                $row['bonusNote'] = 'Dưới '.self::DRIVER_TRIP_THRESHOLD.' chuyến';
+            } else {
+                $row['bonusLabel'] = match ($row['bonus']) {
+                    'A' => 'Thưởng A',
+                    'B' => 'Thưởng B',
+                    default => 'Thưởng C',
+                };
+            }
         }
         unset($row);
 
@@ -214,10 +245,17 @@ class DriverFrequencyReportService
                 continue;
             }
 
+            $tripCount = $vehicleTrips->count();
+            $hours = round($this->totalHours($vehicleTrips), 1);
+            $category = $this->vehicleCategoryLabel($vehicleTrips);
+
             $rows[] = [
-                'id'    => (int) $vehicleId,
-                'plate' => (string) ($vehicle->license_plate ?? ('#'.$vehicleId)),
-                'trips' => $vehicleTrips->count(),
+                'id'       => (int) $vehicleId,
+                'plate'    => (string) ($vehicle->license_plate ?? ('#'.$vehicleId)),
+                'trips'    => $tripCount,
+                'hours'    => $hours,
+                'category' => $category,
+                'model'    => $this->vehicleModelLabel($vehicle),
             ];
         }
 
@@ -352,7 +390,11 @@ class DriverFrequencyReportService
      * @param  Collection<int, Trip>  $trips
      * @return list<int>
      */
-    private function typeCountsForTrips(Collection $trips): array
+    /**
+     * @param  Collection<int, Trip>  $trips
+     * @return array<string, int>
+     */
+    private function typeCountsMapForTrips(Collection $trips): array
     {
         $counts = array_fill_keys(self::TRIP_TYPE_ORDER, 0);
         foreach ($trips as $trip) {
@@ -362,7 +404,7 @@ class DriverFrequencyReportService
             }
         }
 
-        return array_values($counts);
+        return $counts;
     }
 
     /**
@@ -468,5 +510,214 @@ class DriverFrequencyReportService
         }
 
         return $letters !== '' ? $letters : ('D'.$driver->id);
+    }
+
+    private function driverEmployeeCode(int $driverId): string
+    {
+        return 'TX'.str_pad((string) $driverId, 3, '0', STR_PAD_LEFT);
+    }
+
+    private function monthsInPeriod(?string $quarter): int
+    {
+        if ($quarter !== null && $quarter !== '') {
+            return 3;
+        }
+
+        return 12;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $drivers
+     * @return list<array<string, mixed>>
+     */
+    private function enrichDriverRowsForExport(array $drivers, int $monthSpan): array
+    {
+        foreach ($drivers as &$row) {
+            $trips = (int) ($row['trips'] ?? 0);
+            $row['avgTripsPerMonth'] = $monthSpan > 0
+                ? round($trips / $monthSpan, 1)
+                : 0.0;
+        }
+        unset($row);
+
+        return $drivers;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $vehicles
+     * @param  Collection<int, Trip>  $trips
+     * @return list<array<string, mixed>>
+     */
+    private function enrichVehicleRowsForExport(array $vehicles, Collection $trips, int $monthSpan): array
+    {
+        $maxTrips = 0;
+        foreach ($vehicles as $v) {
+            $maxTrips = max($maxTrips, (int) ($v['trips'] ?? 0));
+        }
+
+        foreach ($vehicles as &$row) {
+            $tripCount = (int) ($row['trips'] ?? 0);
+            $hours = (float) ($row['hours'] ?? 0);
+            $row['totalKm'] = $tripCount * 30;
+            $row['avgTripsPerMonth'] = $monthSpan > 0 ? round($tripCount / $monthSpan, 1) : 0.0;
+            $util = $maxTrips > 0 ? round($tripCount / $maxTrips, 2) : 0.0;
+            $row['utilization'] = $util;
+            $row['statusLabel'] = $this->vehicleUtilizationStatus($util);
+        }
+        unset($row);
+
+        return $vehicles;
+    }
+
+    /**
+     * @param  Collection<int, Trip>  $trips
+     * @param  list<array<string, mixed>>  $drivers
+     * @return list<array<string, mixed>>
+     */
+    private function buildDriverMonthlyRows(Collection $trips, array $drivers, int $year, ?string $quarter): array
+    {
+        $activeMonths = $this->activeMonthIndexes($quarter);
+        $byDriverMonth = [];
+
+        foreach ($trips as $trip) {
+            if ($trip->driver_id === null || ! $trip->depart_at) {
+                continue;
+            }
+            $depart = $trip->depart_at instanceof Carbon
+                ? $trip->depart_at
+                : Carbon::parse($trip->depart_at);
+            if ((int) $depart->year !== $year) {
+                continue;
+            }
+            $m = (int) $depart->month;
+            if (! in_array($m, $activeMonths, true)) {
+                continue;
+            }
+            $driverId = (int) $trip->driver_id;
+            $byDriverMonth[$driverId][$m] = ($byDriverMonth[$driverId][$m] ?? 0) + 1;
+        }
+
+        $rows = [];
+        foreach ($drivers as $driver) {
+            $driverId = (int) $driver['id'];
+            $months = [];
+            $yearTotal = 0;
+            for ($m = 1; $m <= 12; $m++) {
+                $count = in_array($m, $activeMonths, true)
+                    ? (int) ($byDriverMonth[$driverId][$m] ?? 0)
+                    : 0;
+                $months[] = $count;
+                $yearTotal += $count;
+            }
+
+            $rows[] = [
+                'id'         => $driverId,
+                'name'       => $driver['name'] ?? '',
+                'employeeCode' => $driver['employeeCode'] ?? $this->driverEmployeeCode($driverId),
+                'months'     => $months,
+                'yearTotal'  => $yearTotal,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $driverMonthly
+     * @return list<int>
+     */
+    private function monthlyTotalsFromDriverRows(array $driverMonthly): array
+    {
+        $totals = array_fill(0, 12, 0);
+        foreach ($driverMonthly as $row) {
+            foreach ($row['months'] ?? [] as $i => $count) {
+                $totals[$i] += (int) $count;
+            }
+        }
+
+        return $totals;
+    }
+
+    /** @return list<int> */
+    private function activeMonthIndexes(?string $quarter): array
+    {
+        if ($quarter === null || $quarter === '') {
+            return range(1, 12);
+        }
+
+        return match ($quarter) {
+            'q1' => [1, 2, 3],
+            'q2' => [4, 5, 6],
+            'q3' => [7, 8, 9],
+            'q4' => [10, 11, 12],
+            default => range(1, 12),
+        };
+    }
+
+    /**
+     * @param  array<string, int>  $typeCounts
+     * @return list<int>
+     */
+    private function typeCountsExportOrder(array $typeCounts): array
+    {
+        $out = [];
+        foreach (self::EXPORT_TRIP_TYPE_ORDER as $type) {
+            $out[] = (int) ($typeCounts[$type] ?? 0);
+        }
+
+        return $out;
+    }
+
+    /** @param list<int> $typeCounts indexed by TRIP_TYPE_ORDER */
+    private function kpiComponentScores(int $trips, int $maxTrips, array $typeCounts): array
+    {
+        $freqRaw = $maxTrips > 0 ? ($trips / $maxTrips) * 100 : 0.0;
+        $countsMap = array_combine(self::TRIP_TYPE_ORDER, $typeCounts) ?: [];
+        $buckets = count(array_filter(
+            array_map(fn ($t) => (int) ($countsMap[$t] ?? 0), self::TRIP_TYPE_ORDER),
+            fn ($c) => $c > 0,
+        ));
+        $divRaw = ($buckets / count(self::TRIP_TYPE_ORDER)) * 100;
+
+        return [
+            (int) round(0.5 * $freqRaw),
+            (int) round(0.2 * $divRaw),
+        ];
+    }
+
+    private function vehicleUtilizationStatus(float $util): string
+    {
+        if ($util >= 0.8) {
+            return 'Tốt';
+        }
+        if ($util >= 0.55) {
+            return 'Trung bình';
+        }
+
+        return 'Thấp';
+    }
+
+    /**
+     * @param  Collection<int, Trip>  $vehicleTrips
+     */
+    private function vehicleCategoryLabel(Collection $vehicleTrips): string
+    {
+        $hasProvider = $vehicleTrips->contains(fn (Trip $t) => $t->transport_provider_id !== null);
+        if ($hasProvider) {
+            return 'Taxi / Thuê';
+        }
+
+        return 'Xe nội bộ';
+    }
+
+    private function vehicleModelLabel(Vehicle $vehicle): string
+    {
+        $type = trim((string) ($vehicle->type ?? ''));
+        $seats = $vehicle->seat_count ?? null;
+        if ($type !== '' && $seats) {
+            return $type.' · '.$seats.' chỗ';
+        }
+
+        return $type !== '' ? $type : '—';
     }
 }

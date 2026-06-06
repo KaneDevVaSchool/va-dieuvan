@@ -25,7 +25,7 @@
     </div>
 
     <!-- Step progress indicator -->
-    <div class="mx-auto mb-8 max-w-2xl px-2 sm:px-4">
+    <div class="mx-auto mb-8 max-w-6xl px-2 sm:px-4 lg:max-w-[calc(42rem+2rem+20rem)]">
       <ol class="flex items-start">
         <li
           v-for="(step, idx) in STEPS"
@@ -74,8 +74,9 @@
       </ol>
     </div>
 
-    <!-- Step panels -->
-    <div class="mx-auto max-w-2xl px-2 pb-28 sm:px-4">
+    <div class="mx-auto grid max-w-6xl gap-6 px-2 pb-28 sm:px-4 lg:grid-cols-[minmax(0,42rem)_minmax(260px,1fr)] lg:items-start lg:gap-8 lg:max-w-[calc(42rem+2rem+20rem)]">
+      <!-- Step panels (trái — giữ nguyên nội dung) -->
+      <div class="min-w-0">
 
       <!-- ── STEP 1: Thông tin cơ bản ──────────────────── -->
       <section v-show="currentStep === 0" class="space-y-5">
@@ -702,6 +703,39 @@
           <span>Khi lưu, hệ thống sẽ tự sinh các ngày vận hành theo khoảng ngày &amp; lịch chạy đã chọn.</span>
         </div>
       </section>
+      </div>
+
+      <!-- Hướng dẫn (phải) -->
+      <aside class="min-w-0 lg:sticky lg:top-24 lg:self-start" aria-labelledby="tp-create-guide-title">
+        <div class="rounded-2xl border border-sky-200/80 bg-gradient-to-br from-sky-50/95 via-white to-white p-4 shadow-sm ring-1 ring-sky-900/[0.04] sm:p-5">
+          <div class="flex items-start gap-3">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-600">
+              <LightBulbIcon class="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p id="tp-create-guide-title" class="text-xs font-bold uppercase tracking-wide text-sky-950 sm:text-sm">
+                Hướng dẫn tạo chương trình
+              </p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ currentStepGuide.title }}</p>
+            </div>
+          </div>
+          <ol class="mt-4 space-y-2.5 text-[13px] leading-relaxed text-slate-600">
+            <li
+              v-for="(tip, i) in currentStepGuide.tips"
+              :key="i"
+              class="flex gap-2"
+            >
+              <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-100 text-[10px] font-bold text-sky-800">
+                {{ i + 1 }}
+              </span>
+              <span>{{ tip }}</span>
+            </li>
+          </ol>
+          <p v-if="currentStepGuide.note" class="mt-4 rounded-xl border border-sky-100 bg-sky-50/80 px-3 py-2.5 text-xs leading-relaxed text-sky-900">
+            {{ currentStepGuide.note }}
+          </p>
+        </div>
+      </aside>
     </div>
 
     <!-- Sticky footer navigation -->
@@ -754,6 +788,7 @@ import {
   MagnifyingGlassIcon,
   CheckIcon,
   CheckCircleIcon,
+  LightBulbIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import { createProgram } from '../../api/transportProgram'
@@ -776,6 +811,49 @@ const STEPS = [
   { key: 'review', label: 'Hoàn tất' },
 ]
 const currentStep = ref(0)
+
+const STEP_GUIDES = [
+  {
+    title: 'Bước 1 — Thông tin cơ bản',
+    tips: [
+      'Đặt tên rõ ràng: khu vực/tuyến + năm học (VD: Tuyến Bắc — Khu A, 2025-2026).',
+      'Chọn đúng năm học để báo cáo và lọc danh sách sau này.',
+      'Loại chương trình: «2 chiều» nếu vừa đưa sáng vừa đón chiều; chọn «chỉ đưa» hoặc «chỉ đón» nếu trường chỉ cần một chiều.',
+      'Mô tả là tùy chọn — nên ghi khu vực phục vụ hoặc lưu ý đặc biệt cho điều vận.',
+    ],
+    note: 'Sau khi lưu, bạn vẫn có thể chỉnh sửa một số thông tin trong workspace chương trình.',
+  },
+  {
+    title: 'Bước 2 — Tuyến & lịch trình',
+    tips: [
+      'Điểm xuất phát thường là khu dân cư/quận; điểm đến là tên trường hoặc cổng trường.',
+      'Ngày bắt đầu — kết thúc là khoảng thời gian cả năm học hoặc học kỳ; hệ thống chỉ sinh ngày vận hành trong khoảng này.',
+      'Chọn các thứ trong tuần có xe chạy (mặc định T2–T6). Bỏ T7/CN nếu không đưa đón cuối tuần.',
+      'Bật ít nhất một chiều (sáng hoặc chiều). Giờ xuất phát nên sớm hơn giờ vào lớp / tan học đủ buffer.',
+    ],
+    note: 'Ngày nghỉ lễ có thể loại trừ sau khi tạo chương trình, trong phần quản lý lịch.',
+  },
+  {
+    title: 'Bước 3 — Xe & nhân sự',
+    tips: [
+      'Chọn xe từ Quản lý nguồn lực — biển số và sức chứa tự điền; có thể giảm số chỗ tối đa nếu không muốn full xe.',
+      'Tài xế chính là bắt buộc; tài xế phụ giúp thay ca hoặc dự phòng.',
+      'Người phụ trách/giám sát: nhân sự trường theo dõi chương trình (tìm theo tên hoặc email).',
+    ],
+    note: 'Chưa có xe trong hệ thống? Mở Quản lý nguồn lực ở tab mới, thêm xe rồi quay lại trang này.',
+  },
+  {
+    title: 'Bước 4 — Hoàn tất',
+    tips: [
+      'Xem lại toàn bộ mục trong bảng tóm tắt — bấm số bước phía trên để quay sửa nếu sai.',
+      'Ghi chú nội bộ chỉ điều vận thấy (liên hệ khẩn, quy ước điểm đón…).',
+      'Bấm «Lưu & sinh lịch» để tạo chương trình và các ngày vận hành theo lịch đã chọn.',
+    ],
+    note: 'Tiếp theo: đăng ký học sinh vào chương trình và phân công tài xế theo ngày nếu cần.',
+  },
+]
+
+const currentStepGuide = computed(() => STEP_GUIDES[currentStep.value] ?? STEP_GUIDES[0])
 
 function nextStep() {
   if (!validateStep(currentStep.value)) return

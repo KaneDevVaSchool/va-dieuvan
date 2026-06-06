@@ -461,6 +461,9 @@ function classifyKind(n) {
   if (d.event === 'tp.driver.morning_reminder' || type === 'TpDriverMorningReminderNotification') {
     return 'tp_morning'
   }
+  if (d.event === 'tp.driver.assignment_changed' || type === 'TpDriverAssignmentNotification') {
+    return 'tp_assignment'
+  }
   if (d.event === 'dispatch_request.created' || type === 'NewDispatchRequestNotification') {
     return 'new_trip'
   }
@@ -528,6 +531,12 @@ function linesFor(n) {
     const { d } = rawParts(n)
     const sub = d.body != null ? String(d.body).trim() : t('notify.tp_morning_sub')
     return { primary: t('notify.tp_morning_title'), sub }
+  }
+  if (kind === 'tp_assignment') {
+    const { d } = rawParts(n)
+    const primary = d.title != null ? String(d.title).trim() : t('notify.fallback')
+    const sub = d.body != null ? String(d.body).trim() : ''
+    return { primary: clipText(primary, 100), sub: clipText(sub, 120) }
   }
   if (kind === 'new_trip') {
     return { primary: t('notify.trip_new'), sub: t('notify.trip_new_sub') }

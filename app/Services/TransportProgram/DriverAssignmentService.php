@@ -12,6 +12,7 @@ class DriverAssignmentService
 {
     public function __construct(
         private readonly TpAuditLogger $audit,
+        private readonly TpDriverAssignmentNotifyService $driverNotify,
         private readonly int $conflictMinutes = 90,
     ) {}
 
@@ -32,6 +33,7 @@ class DriverAssignmentService
     public function assignDriver(TpProgramDay $day, int $driverId, ?int $vehicleId, ?int $actorId): void
     {
         $day->loadMissing('program');
+        $previousMainId = $day->effectiveDriver()?->id;
         $this->assertNoConflict($day, $driverId);
 
         $day->update([
@@ -45,10 +47,16 @@ class DriverAssignmentService
             'driver_id' => $driverId,
             'vehicle_id' => $vehicleId,
         ]);
+
+        $day->refresh();
+        $this->driverNotify->notifyEffectiveMainChange($day, $previousMainId, $day->effectiveDriver()?->id);
     }
 
     public function clearOverride(TpProgramDay $day, ?int $actorId): void
     {
+        $day->loadMissing('program');
+        $previousMainId = $day->effectiveDriver()?->id;
+
         $day->update([
             'driver_id' => null,
             'vehicle_id' => null,
@@ -57,11 +65,15 @@ class DriverAssignmentService
         ]);
 
         $this->audit->log($actorId, 'day.driver_override_cleared', $day, $day->program);
+
+        $day->refresh();
+        $this->driverNotify->notifyEffectiveMainChange($day, $previousMainId, $day->effectiveDriver()?->id);
     }
 
     public function assignBackupDriver(TpProgramDay $day, int $driverId, ?int $actorId): void
     {
         $day->loadMissing('program');
+        $previousBackupId = $day->effectiveBackupDriver()?->id;
 
         $day->update([
             'backup_driver_id' => $driverId,
@@ -72,10 +84,16 @@ class DriverAssignmentService
         $this->audit->log($actorId, 'day.backup_driver_assigned', $day, $day->program, metadata: [
             'backup_driver_id' => $driverId,
         ]);
+
+        $day->refresh();
+        $this->driverNotify->notifyEffectiveBackupChange($day, $previousBackupId, $day->effectiveBackupDriver()?->id);
     }
 
     public function clearBackupDriver(TpProgramDay $day, ?int $actorId): void
     {
+        $day->loadMissing('program');
+        $previousBackupId = $day->effectiveBackupDriver()?->id;
+
         $day->update([
             'backup_driver_id' => null,
             'backup_assigned_at' => null,
@@ -83,6 +101,9 @@ class DriverAssignmentService
         ]);
 
         $this->audit->log($actorId, 'day.backup_driver_override_cleared', $day, $day->program);
+
+        $day->refresh();
+        $this->driverNotify->notifyEffectiveBackupChange($day, $previousBackupId, $day->effectiveBackupDriver()?->id);
     }
 
     private function assertNoConflict(TpProgramDay $day, int $driverId): void
