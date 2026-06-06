@@ -13,9 +13,14 @@ return new class extends Migration
 
     public function up(): void
     {
-        if (! Schema::hasColumn('tp_day_absences', 'shift')) {
-            Schema::table('tp_day_absences', function (Blueprint $table) {
-                $table->enum('shift', ['morning', 'afternoon', 'all'])->default('all')->after('student_id');
+        if (! $this->hasColumn('tp_day_absences', 'shift')) {
+            $placeShiftAfterStudent = $this->hasColumn('tp_day_absences', 'student_id');
+
+            Schema::table('tp_day_absences', function (Blueprint $table) use ($placeShiftAfterStudent) {
+                $column = $table->enum('shift', ['morning', 'afternoon', 'all'])->default('all');
+                if ($placeShiftAfterStudent) {
+                    $column->after('student_id');
+                }
             });
         }
 
@@ -23,24 +28,44 @@ return new class extends Migration
             $this->removeDuplicateDayAbsencesBeforeShiftUnique();
             $this->dropLegacyDayStudentUnique();
 
-            Schema::table('tp_day_absences', function (Blueprint $table) {
-                $table->unique(['program_day_id', 'student_id', 'shift'], self::DAY_STUDENT_SHIFT_UNIQUE);
-            });
+            try {
+                Schema::table('tp_day_absences', function (Blueprint $table) {
+                    $table->unique(['program_day_id', 'student_id', 'shift'], self::DAY_STUDENT_SHIFT_UNIQUE);
+                });
+            } catch (\Throwable $e) {
+                throw new \RuntimeException(
+                    'Could not add unique index '.self::DAY_STUDENT_SHIFT_UNIQUE.' on tp_day_absences: '.$e->getMessage(),
+                    (int) $e->getCode(),
+                    $e
+                );
+            }
         }
 
-        if (! Schema::hasColumn('tp_program_days', 'morning_attendance_status')) {
-            Schema::table('tp_program_days', function (Blueprint $table) {
-                $table->enum('morning_attendance_status', ['not_started', 'draft', 'confirmed'])
-                    ->nullable()
-                    ->after('attendance_lock_version');
+        if (! $this->hasColumn('tp_program_days', 'morning_attendance_status')) {
+            $anchor = $this->programDaysAttendanceAnchorColumn();
+
+            Schema::table('tp_program_days', function (Blueprint $table) use ($anchor) {
+                $status = $table->enum('morning_attendance_status', ['not_started', 'draft', 'confirmed'])->nullable();
+                if ($anchor !== null) {
+                    $status->after($anchor);
+                }
                 $table->timestamp('morning_attendance_confirmed_at')->nullable()->after('morning_attendance_status');
                 $table->foreignId('morning_attendance_confirmed_by')->nullable()->after('morning_attendance_confirmed_at')
                     ->constrained('users')->nullOnDelete();
                 $table->unsignedInteger('morning_attendance_lock_version')->default(0)->after('morning_attendance_confirmed_by');
+            });
+        }
 
-                $table->enum('afternoon_attendance_status', ['not_started', 'draft', 'confirmed'])
-                    ->nullable()
-                    ->after('morning_attendance_lock_version');
+        if (! $this->hasColumn('tp_program_days', 'afternoon_attendance_status')) {
+            $afternoonAnchor = $this->hasColumn('tp_program_days', 'morning_attendance_lock_version')
+                ? 'morning_attendance_lock_version'
+                : ($this->hasColumn('tp_program_days', 'attendance_lock_version') ? 'attendance_lock_version' : null);
+
+            Schema::table('tp_program_days', function (Blueprint $table) use ($afternoonAnchor) {
+                $status = $table->enum('afternoon_attendance_status', ['not_started', 'draft', 'confirmed'])->nullable();
+                if ($afternoonAnchor !== null) {
+                    $status->after($afternoonAnchor);
+                }
                 $table->timestamp('afternoon_attendance_confirmed_at')->nullable()->after('afternoon_attendance_status');
                 $table->foreignId('afternoon_attendance_confirmed_by')->nullable()->after('afternoon_attendance_confirmed_at')
                     ->constrained('users')->nullOnDelete();
@@ -51,10 +76,14 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasColumn('tp_program_days', 'morning_attendance_status')) {
+        if ($this->hasColumn('tp_program_days', 'morning_attendance_status')) {
             Schema::table('tp_program_days', function (Blueprint $table) {
-                $table->dropConstrainedForeignId('morning_attendance_confirmed_by');
-                $table->dropConstrainedForeignId('afternoon_attendance_confirmed_by');
+                if ($this->hasColumn('tp_program_days', 'morning_attendance_confirmed_by')) {
+                    $table->dropConstrainedForeignId('morning_attendance_confirmed_by');
+                }
+                if ($this->hasColumn('tp_program_days', 'afternoon_attendance_confirmed_by')) {
+                    $table->dropConstrainedForeignId('afternoon_attendance_confirmed_by');
+                }
                 $table->dropColumn([
                     'morning_attendance_status',
                     'morning_attendance_confirmed_at',
@@ -66,7 +95,7 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasColumn('tp_day_absences', 'shift')) {
+        if ($this->hasColumn('tp_day_absences', 'shift')) {
             if ($this->indexExists('tp_day_absences', self::DAY_STUDENT_SHIFT_UNIQUE)) {
                 Schema::table('tp_day_absences', function (Blueprint $table) {
                     $table->dropUnique(self::DAY_STUDENT_SHIFT_UNIQUE);
@@ -85,12 +114,29 @@ return new class extends Migration
         }
     }
 
+    private function programDaysAttendanceAnchorColumn(): ?string
+    {
+        if ($this->hasColumn('tp_program_days', 'attendance_lock_version')) {
+            return 'attendance_lock_version';
+        }
+
+        if ($this->hasColumn('tp_program_days', 'notes')) {
+            return 'notes';
+        }
+
+        return null;
+    }
+
     private function dropLegacyDayStudentUnique(): void
     {
         if ($this->indexExists('tp_day_absences', self::DAY_STUDENT_UNIQUE)) {
-            Schema::table('tp_day_absences', function (Blueprint $table) {
-                $table->dropUnique(self::DAY_STUDENT_UNIQUE);
-            });
+            try {
+                Schema::table('tp_day_absences', function (Blueprint $table) {
+                    $table->dropUnique(self::DAY_STUDENT_UNIQUE);
+                });
+            } catch (\Throwable) {
+                // Partial rerun.
+            }
 
             return;
         }
@@ -132,32 +178,58 @@ return new class extends Migration
         }
     }
 
+    private function hasColumn(string $table, string $column): bool
+    {
+        $connection = Schema::getConnection();
+        $driver = $connection->getDriverName();
+
+        if ($driver === 'mysql') {
+            try {
+                $prefixedTable = str_replace('`', '``', $connection->getTablePrefix().$table);
+                $rows = DB::select(
+                    "SHOW COLUMNS FROM `{$prefixedTable}` LIKE ?",
+                    [$column]
+                );
+
+                return count($rows) > 0;
+            } catch (\Throwable) {
+                return Schema::hasColumn($table, $column);
+            }
+        }
+
+        return Schema::hasColumn($table, $column);
+    }
+
     private function indexExists(string $table, string $indexName): bool
     {
         $connection = Schema::getConnection();
         $driver = $connection->getDriverName();
 
-        if ($driver === 'sqlite') {
-            $quotedTable = '"'.str_replace('"', '""', $table).'"';
-            $rows = DB::select("PRAGMA index_list({$quotedTable})");
+        try {
+            if ($driver === 'sqlite') {
+                $quotedTable = '"'.str_replace('"', '""', $table).'"';
+                $rows = DB::select("PRAGMA index_list({$quotedTable})");
 
-            foreach ($rows as $row) {
-                if (($row->name ?? null) === $indexName) {
-                    return true;
+                foreach ($rows as $row) {
+                    if (($row->name ?? null) === $indexName) {
+                        return true;
+                    }
                 }
+
+                return false;
             }
 
+            if ($driver === 'mysql') {
+                $prefixedTable = str_replace('`', '``', $connection->getTablePrefix().$table);
+                $rows = DB::select(
+                    "SHOW INDEX FROM `{$prefixedTable}` WHERE Key_name = ?",
+                    [$indexName]
+                );
+
+                return count($rows) > 0;
+            }
+        } catch (\Throwable) {
             return false;
-        }
-
-        if ($driver === 'mysql') {
-            $prefixedTable = str_replace('`', '``', $connection->getTablePrefix().$table);
-            $rows = DB::select(
-                "SHOW INDEX FROM `{$prefixedTable}` WHERE Key_name = ?",
-                [$indexName]
-            );
-
-            return count($rows) > 0;
         }
 
         return false;
