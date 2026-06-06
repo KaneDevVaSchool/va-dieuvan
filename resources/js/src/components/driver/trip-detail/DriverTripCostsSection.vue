@@ -42,6 +42,14 @@
           <PlusIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
           {{ t('driver_trip_detail.costs_add') }}
         </button>
+        <RouterLink
+          v-else-if="showPostTripCostLink"
+          :to="postTripCostTo"
+          class="flex min-h-[44px] items-center gap-1 rounded-full bg-driver-accent/20 px-4 py-2 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/35 active:opacity-90 sm:text-base"
+        >
+          <PlusIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          {{ t('driver_trip_detail.costs_add_post_trip') }}
+        </RouterLink>
       </div>
       <ul v-if="tripCosts.length" class="space-y-2">
         <li v-for="c in tripCosts" :key="c.id">
@@ -78,6 +86,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import {
@@ -90,16 +99,23 @@ import {
 } from '@heroicons/vue/24/outline'
 import TripCostApprovalBadge from './TripCostApprovalBadge.vue'
 
-defineProps({
+const props = defineProps({
   tripCosts: { type: Array, default: () => [] },
   costsApprovedTotal: { type: Number, default: 0 },
   costsPendingTotal: { type: Number, default: 0 },
   canAddCost: { type: Boolean, default: false },
+  showPostTripCostLink: { type: Boolean, default: false },
+  tripId: { type: [Number, String], default: null },
   formatVnd: { type: Function, required: true },
   costTypeLabel: { type: Function, required: true },
   costStatusLabel: { type: Function, required: true },
   formatCostTime: { type: Function, required: true },
 })
+
+const postTripCostTo = computed(() => ({
+  name: 'driverCostCreate',
+  query: props.tripId != null && String(props.tripId).trim() !== '' ? { trip_id: String(props.tripId) } : {},
+}))
 
 defineEmits(['open-modal'])
 

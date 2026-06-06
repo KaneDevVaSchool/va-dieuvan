@@ -216,8 +216,7 @@ class TripCostController extends Controller
             abort_unless($trip, 404);
             abort_unless(TripVisibility::userCanViewTrip($user, $trip), 403);
             $trip->refresh();
-            FinancialDataLock::assertTripNotPaid($trip);
-            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($trip);
+            FinancialDataLock::assertTripAllowsNewDriverCost($trip);
         }
 
         unset($data['trip_id']);

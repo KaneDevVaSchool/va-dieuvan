@@ -7,7 +7,7 @@ import { isPassengerRowFilled, isBusinessRowFilled, isCargoRowFilled } from './d
 import { useDriverWebPushBoot } from './useDriverWebPushBoot'
 import { useDriverVisiblePoll } from './useDriverVisiblePoll'
 import { useDriverDashboardStore } from '../store/driverDashboard'
-import { isTripCostEditableStatus } from '../constants/tripStatus'
+import { isTripCompletedForDriver, isTripCostEditableStatus } from '../constants/tripStatus'
 import {
   formatTripDayMonthAndHm24,
   formatTripTimeHm24,
@@ -302,6 +302,10 @@ export function useDriverTripDetailPage() {
   )
 
   const canAddCost = computed(() => isTripCostEditableStatus(trip.value?.status))
+
+  const canAddPostTripCost = computed(
+    () => isTripCompletedForDriver(trip.value?.status) && !canAddCost.value,
+  )
 
   const startKmModel = computed(() => {
     const r = trip.value?.record
@@ -741,6 +745,7 @@ export function useDriverTripDetailPage() {
     costsApprovedTotal,
     costsPendingTotal,
     canAddCost,
+    canAddPostTripCost,
     startKmModel,
     hasEndOdometer,
     distancePreview,

@@ -19,12 +19,22 @@ final class FinancialDataLock
         }
     }
 
-    /** Chuyến completed / cancelled: không chỉnh danh sách hành khách hoặc chi phí. */
+    /** Chuyến completed / cancelled: không chỉnh danh sách hành khách hoặc chi phí trong luồng chuyến đang chạy. */
     public static function assertTripAllowsPassengerAndCostEdits(Trip $trip): void
     {
         $s = (string) ($trip->status ?? '');
 
         if (in_array($s, ['completed', 'cancelled'], true)) {
+            abort(409, Messages::TRIP_TERMINAL_NO_LIST_OR_COST_EDITS);
+        }
+    }
+
+    /** Tài xế ghi chi phí phát sinh gắn chuyến (kể cả chuyến đã hoàn thành, chưa thanh toán). */
+    public static function assertTripAllowsNewDriverCost(Trip $trip): void
+    {
+        self::assertTripNotPaid($trip);
+
+        if ((string) ($trip->status ?? '') === 'cancelled') {
             abort(409, Messages::TRIP_TERMINAL_NO_LIST_OR_COST_EDITS);
         }
     }
@@ -50,7 +60,7 @@ final class FinancialDataLock
 
         $s = (string) ($cost->trip->status ?? '');
 
-        return ! in_array($s, ['completed', 'cancelled'], true);
+        return $s !== 'cancelled';
     }
 
     public static function assertTripCostAllowsDriverEdits(TripCost $cost): void
@@ -68,10 +78,10 @@ final class FinancialDataLock
         $cost->loadMissing('trip');
 
         if ($cost->trip !== null) {
-            self::assertTripAllowsPassengerAndCostEdits($cost->trip);
+            self::assertTripNotPaid($cost->trip);
 
-            if (self::tripIsPaid($cost->trip)) {
-                abort(409, Messages::TRIP_FINANCIALLY_LOCKED);
+            if ((string) ($cost->trip->status ?? '') === 'cancelled') {
+                abort(409, Messages::TRIP_TERMINAL_NO_LIST_OR_COST_EDITS);
             }
         }
 

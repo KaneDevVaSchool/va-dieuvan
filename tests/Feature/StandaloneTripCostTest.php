@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\DispatchRequest;
+use App\Models\Driver;
+use App\Models\Trip;
 use App\Models\TripCost;
 use App\Models\User;
 use Database\Seeders\RbacSeeder;
@@ -79,5 +82,62 @@ class StandaloneTripCostTest extends TestCase
 
         $this->actingAs($other);
         $this->getJson("/api/trip-costs/{$cost->id}")->assertForbidden();
+    }
+
+    public function test_driver_can_submit_cost_linked_to_completed_trip(): void
+    {
+        $this->seed(RbacSeeder::class);
+        Carbon::setTestNow(Carbon::parse('2026-06-06 10:00:00'));
+
+        $driver = User::factory()->create(['is_active' => true]);
+        $driver->assignRole('driver');
+
+        $driverRow = Driver::query()->create([
+            'user_id' => $driver->id,
+            'full_name' => 'TX Test',
+            'phone' => '0900123456',
+            'employment_status' => 'active',
+            'availability_status' => 'available',
+        ]);
+
+        $req = DispatchRequest::create([
+            'requester_id' => $driver->id,
+            'trip_type' => 'point_to_point',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => Carbon::parse('2026-06-05 08:00:00'),
+            'status' => 'approved',
+            'approved_by' => $driver->id,
+            'source_channel' => 'portal',
+            'paper_status' => 'pending',
+        ]);
+
+        $trip = Trip::create([
+            'dispatch_request_id' => $req->id,
+            'dispatcher_id' => $driver->id,
+            'driver_id' => $driverRow->id,
+            'status' => 'completed',
+            'depart_at' => $req->depart_at,
+            'lock_version' => 0,
+            'payment_status' => 'unpaid',
+        ]);
+
+        $this->actingAs($driver);
+
+        $create = $this->postJson('/api/trip-costs', [
+            'trip_id' => $trip->id,
+            'type' => 'toll',
+            'amount' => 45000,
+            'description' => 'Phí cầu bổ sung',
+        ], ['Idempotency-Key' => 'standalone-cost-completed-trip']);
+
+        $create->assertCreated();
+        $create->assertJsonPath('data.trip_id', $trip->id);
+
+        $this->assertDatabaseHas('trip_costs', [
+            'trip_id' => $trip->id,
+            'created_by' => $driver->id,
+            'status' => 'submitted',
+        ]);
     }
 }

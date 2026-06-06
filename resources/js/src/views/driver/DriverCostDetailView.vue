@@ -354,7 +354,7 @@ import { confirmAction } from '../../composables/useConfirm'
 import { showAppSuccess } from '../../composables/appMessage'
 import { deleteTripCost, getTripCost, updateTripCost } from '../../api/costs'
 import { useDriverVisiblePoll } from '../../composables/useDriverVisiblePoll'
-import { isTripCostEditableStatus } from '../../constants/tripStatus'
+import { isTripBlockingDriverCostMutations } from '../../constants/tripStatus'
 import { formatVnd } from '../../util/labels'
 
 const { t, te } = useI18n()
@@ -392,7 +392,7 @@ const id = computed(() => {
 
 const tripAllowsCostEdits = computed(() => {
   if (!cost.value?.trip_id) return true
-  return isTripCostEditableStatus(cost.value?.trip?.status)
+  return !isTripBlockingDriverCostMutations(cost.value?.trip?.status)
 })
 
 const canAct = computed(
@@ -410,7 +410,7 @@ const galleryReadonly = computed(() => !galleryMutable.value)
 const showTripLockedBanner = computed(
   () =>
     !!cost.value?.trip_id &&
-    !tripAllowsCostEdits.value &&
+    isTripBlockingDriverCostMutations(cost.value?.trip?.status) &&
     ['draft', 'submitted'].includes(cost.value.status),
 )
 

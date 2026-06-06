@@ -24,6 +24,21 @@ export function isTripCostEditableStatus(status) {
   return DRIVER_TRIP_ACTIVE_FOR_COSTS.includes(s)
 }
 
+/** Chọn chuyến khi ghi chi phí phát sinh (gồm chuyến đã hoàn thành; loại hủy). */
+export function isTripEligibleForDriverLinkedCost(status) {
+  const s = String(status ?? '').trim().toLowerCase()
+  return s !== 'cancelled' && s !== ''
+}
+
+/** Chuyến đã xong — không thêm chi phí trong màn chi tiết chuyến; dùng màn “Thêm chi phí phát sinh”. */
+export function isTripCompletedForDriver(status) {
+  return String(status ?? '').trim().toLowerCase() === TRIP_STATUS.COMPLETED
+}
+
+export function isTripBlockingDriverCostMutations(status) {
+  return String(status ?? '').trim().toLowerCase() === TRIP_STATUS.CANCELLED
+}
+
 /** Lớp Tailwind pill trạng thái chuyến (theme admin list / light). */
 export function tripStatusAdminPillClass(status) {
   const s = String(status ?? '').trim().toLowerCase()

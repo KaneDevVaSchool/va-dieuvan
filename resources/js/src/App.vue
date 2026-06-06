@@ -25,7 +25,6 @@
   <NotificationCenter />
   <NotificationToast />
 
-  <PwaUpdatePrompt />
 </template>
 
 <script setup>
@@ -41,7 +40,6 @@ import SplashScreen from './components/SplashScreen.vue'
 import Onboarding from './components/Onboarding.vue'
 import NotificationCenter from './components/notifications/NotificationCenter.vue'
 import NotificationToast from './components/notifications/NotificationToast.vue'
-import PwaUpdatePrompt from './components/pwa/PwaUpdatePrompt.vue'
 const route = useRoute()
 const auth = useAuthStore()
 const { hasOnboarded, completeOnboarding } = useOnboarding()

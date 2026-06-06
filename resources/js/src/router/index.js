@@ -626,7 +626,7 @@ const router = createRouter({
             name: "driverCostCreate",
             component: () => import("../views/driver/DriverCostCreateView.vue"),
             meta: {
-                title: "Thêm chi phí",
+                title: "Chi phí phát sinh",
                 subtitle: "Tài xế",
                 driverApp: true,
             },

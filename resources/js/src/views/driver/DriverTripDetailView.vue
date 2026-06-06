@@ -83,6 +83,8 @@
           :costs-approved-total="costsApprovedTotal"
           :costs-pending-total="costsPendingTotal"
           :can-add-cost="canAddCost"
+          :show-post-trip-cost-link="canAddPostTripCost"
+          :trip-id="tripId"
           :format-vnd="formatVnd"
           :cost-type-label="costTypeLabel"
           :cost-status-label="costStatusLabel"
@@ -177,6 +179,7 @@ const {
   costsApprovedTotal,
   costsPendingTotal,
   canAddCost,
+  canAddPostTripCost,
   startKmModel,
   hasEndOdometer,
   distancePreview,

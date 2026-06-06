@@ -4,42 +4,16 @@ import { Workbox } from 'workbox-window'
 /** @type {(reloadPage?: boolean) => Promise<void>} */
 let updateSW = async () => {}
 
-let pwaUpdatePending = false
-
-const DESKTOP_AUTO_UPDATE_MQ = '(min-width: 1024px)'
-
-export function takePendingPwaUpdate() {
-  const v = pwaUpdatePending
-  pwaUpdatePending = false
-  return v
-}
-
-function isDesktopViewport() {
-  return typeof window !== 'undefined' && window.matchMedia(DESKTOP_AUTO_UPDATE_MQ).matches
-}
-
-function notifyPwaUpdateAvailable() {
-  pwaUpdatePending = true
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('pwa:update-available'))
-  }
-}
-
 async function tryAutoApplyPendingUpdate() {
   try {
     await applyServiceWorkerUpdate()
   } catch {
-    if (isDesktopViewport()) {
-      window.location.reload()
-    }
+    window.location.reload()
   }
 }
 
 function onServiceWorkerUpdateDetected() {
-  notifyPwaUpdateAvailable()
-  if (isDesktopViewport()) {
-    void tryAutoApplyPendingUpdate()
-  }
+  void tryAutoApplyPendingUpdate()
 }
 
 /** @param {ServiceWorkerRegistration | undefined | null} reg */
