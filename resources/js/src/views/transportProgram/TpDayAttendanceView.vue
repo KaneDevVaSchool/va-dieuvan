@@ -289,16 +289,31 @@
 
                 <!-- Reason ── -->
                 <td class="px-3 py-3">
-                  <select
+                  <div
                     v-if="s.status === 'absent'"
-                    :value="s.reason_code || ''"
-                    :disabled="isConfirmed || pendingRows.has(s.student_id)"
-                    class="w-full max-w-[190px] rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
-                    @change="onReasonChange(s, $event.target.value)"
+                    class="flex w-full min-w-[200px] max-w-[260px] flex-col gap-1.5"
                   >
-                    <option value="">Chọn lý do…</option>
-                    <option v-for="r in reasons" :key="r.code" :value="r.code">{{ r.label_vi }}</option>
-                  </select>
+                    <select
+                      v-if="reasons.length"
+                      :value="s.reason_code || ''"
+                      :disabled="isConfirmed || pendingRows.has(s.student_id)"
+                      class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+                      @change="onReasonChange(s, $event.target.value)"
+                    >
+                      <option value="">Chọn lý do…</option>
+                      <option v-for="r in reasons" :key="r.code" :value="r.code">{{ r.label_vi }}</option>
+                    </select>
+                    <input
+                      type="text"
+                      :value="s.absence_reason || ''"
+                      :disabled="isConfirmed || pendingRows.has(s.student_id)"
+                      :placeholder="reasons.length ? 'Ghi chú thêm (tuỳ chọn)…' : 'Nhập lý do vắng…'"
+                      maxlength="500"
+                      class="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+                      @blur="onAbsenceNoteBlur(s, $event.target.value)"
+                      @keydown.enter.prevent="blurNoteInput($event)"
+                    />
+                  </div>
                   <span v-else class="text-slate-300">—</span>
                 </td>
 
@@ -355,7 +370,7 @@
           >
             <ExclamationTriangleIcon class="h-4 w-4 shrink-0 text-amber-600" />
             <span class="font-medium text-amber-900">
-              {{ data.missing_reason_count }} học sinh chưa có lý do vắng
+              {{ data.missing_reason_count }} học sinh chưa có lý do vắng (chọn danh mục hoặc nhập ghi chú)
             </span>
           </div>
 
@@ -533,7 +548,12 @@ const activeShift = computed(() => {
 
 const isMorningShift = computed(() => activeShift.value === 'morning')
 
-const usesPerShiftAttendance = computed(() => programSlots.value.length > 1)
+const usesPerShiftAttendance = computed(() => {
+  if (data.value && typeof data.value.multi_slot === 'boolean') {
+    return data.value.multi_slot
+  }
+  return programSlots.value.length > 1
+})
 
 function shiftQueryOpts() {
   const shift = activeShift.value
@@ -663,8 +683,45 @@ async function onReasonChange(s, code) {
       absence_type: absenceTypeForCategory(category),
       category,
       reason_code: code,
+      absence_reason: s.absence_reason || undefined,
       ...shiftQueryOpts(),
     })
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    const next = new Set(pendingRows.value)
+    next.delete(s.student_id)
+    pendingRows.value = next
+    saving.value = false
+  }
+}
+
+function blurNoteInput(ev) {
+  ev?.target?.blur?.()
+}
+
+async function onAbsenceNoteBlur(s, rawNote) {
+  if (isConfirmed.value) return
+  const note = (rawNote || '').trim()
+  const prev = (s.absence_reason || '').trim()
+  if (note === prev) return
+  if (!note && !s.reason_code) return
+
+  pendingRows.value = new Set([...pendingRows.value, s.student_id])
+  saving.value = true
+  try {
+    const category = s.category || (s.reason_code ? categoryForReason(s.reason_code) : 'unexcused')
+    const payload = {
+      student_ids: [s.student_id],
+      absence_type: s.absence_type || absenceTypeForCategory(category),
+      category,
+      absence_reason: note || undefined,
+      ...shiftQueryOpts(),
+    }
+    if (s.reason_code) {
+      payload.reason_code = s.reason_code
+    }
+    data.value = await markDayAbsence(route.params.dayId, payload)
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {

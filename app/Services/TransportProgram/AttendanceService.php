@@ -358,7 +358,8 @@ class AttendanceService
             } else {
                 $unexcused++;
             }
-            if (empty($item['reason_code'])) {
+            $note = trim((string) ($item['absence_reason'] ?? ''));
+            if (empty($item['reason_code']) && $note === '') {
                 $missingReason++;
             }
         }
