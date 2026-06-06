@@ -3878,6 +3878,8 @@
         "hero_sub": "Aggregated statistics & XLSX / PDF export by filter",
         "section_kpi": "Overview KPIs",
         "section_charts": "Charts",
+        "section_charts_breakdown": "Breakdown by type & status",
+        "section_charts_compare": "Providers & trend",
         "table_title": "Cost Line Detail",
         "kpi_total_amount": "Total Amount",
         "kpi_count": "Cost Lines",

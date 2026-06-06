@@ -3963,6 +3963,8 @@
         "hero_sub": "Thống kê tổng hợp & xuất XLSX / PDF theo bộ lọc",
         "section_kpi": "Chỉ số tổng quan",
         "section_charts": "Biểu đồ thống kê",
+        "section_charts_breakdown": "Phân bổ theo loại & trạng thái",
+        "section_charts_compare": "Nhà cung cấp & xu hướng",
         "table_title": "Chi tiết dòng chi phí",
         "kpi_total_amount": "Tổng thành tiền",
         "kpi_count": "Số dòng chi phí",

@@ -204,7 +204,7 @@
       <h2 id="cr-kpi" class="mb-3 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('cost_report.section_kpi') }}
       </h2>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
           <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_total_amount') }}</div>
           <div class="mt-1.5 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
@@ -240,31 +240,52 @@
       </div>
     </section>
 
-    <section v-if="stats && !loading" aria-labelledby="cr-charts" class="space-y-3">
+    <section
+      v-if="stats && !loading"
+      aria-labelledby="cr-charts"
+      class="space-y-6 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800"
+    >
       <h2 id="cr-charts" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('cost_report.section_charts') }}
       </h2>
-      <div class="grid grid-cols-1 gap-4">
-        <div class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_category') }}</p>
-          <DashboardEChart :option="chartByCategory" height="220px" :aria-label="t('cost_report.chart_by_category')" />
+
+      <div class="space-y-3" aria-labelledby="cr-charts-breakdown">
+        <h3 id="cr-charts-breakdown" class="px-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {{ t('cost_report.section_charts_breakdown') }}
+        </h3>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="cr-chart-card">
+            <p class="cr-chart-title">{{ t('cost_report.chart_by_category') }}</p>
+            <DashboardEChart :option="chartByCategory" height="240px" :aria-label="t('cost_report.chart_by_category')" />
+          </div>
+          <div class="cr-chart-card">
+            <p class="cr-chart-title">{{ t('cost_report.chart_by_status') }}</p>
+            <DashboardEChart :option="chartByStatus" height="240px" :aria-label="t('cost_report.chart_by_status')" />
+          </div>
         </div>
-        <div class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_status') }}</p>
-          <DashboardEChart :option="chartByStatus" height="220px" :aria-label="t('cost_report.chart_by_status')" />
-        </div>
-        <div class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_by_provider') }}</p>
-          <DashboardEChart :option="chartByProvider" height="220px" :aria-label="t('cost_report.chart_by_provider')" />
-        </div>
-        <div v-if="stats.by_month && stats.by_month.length > 1" class="cr-chart-card">
-          <p class="cr-chart-title">{{ t('cost_report.chart_trend') }}</p>
-          <DashboardEChart :option="chartByMonth" height="220px" :aria-label="t('cost_report.chart_trend')" />
+      </div>
+
+      <div class="space-y-3" aria-labelledby="cr-charts-compare">
+        <h3 id="cr-charts-compare" class="px-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {{ t('cost_report.section_charts_compare') }}
+        </h3>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div
+            class="cr-chart-card"
+            :class="showTrendChart ? '' : 'lg:col-span-2'"
+          >
+            <p class="cr-chart-title">{{ t('cost_report.chart_by_provider') }}</p>
+            <DashboardEChart :option="chartByProvider" height="240px" :aria-label="t('cost_report.chart_by_provider')" />
+          </div>
+          <div v-if="showTrendChart" class="cr-chart-card">
+            <p class="cr-chart-title">{{ t('cost_report.chart_trend') }}</p>
+            <DashboardEChart :option="chartByMonth" height="240px" :aria-label="t('cost_report.chart_trend')" />
+          </div>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="cr-table-title">
+    <section aria-labelledby="cr-table-title" class="border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800">
       <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
         <div ref="detailTableToolbarRef" class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
           <h2 id="cr-table-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -693,6 +714,8 @@ function lineOption(dataList) {
     }],
   }
 }
+
+const showTrendChart = computed(() => (stats.value?.by_month?.length ?? 0) > 1)
 
 const chartByCategory = computed(() => pieOption(stats.value?.by_category ?? []))
 const chartByStatus = computed(() => pieOption(stats.value?.by_status ?? []))
