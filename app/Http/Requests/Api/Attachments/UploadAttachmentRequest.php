@@ -64,11 +64,11 @@ class UploadAttachmentRequest extends ApiFormRequest
         }
 
         $cost->loadMissing('trip');
-        if (! $cost->trip) {
-            return false;
+        if ($cost->trip !== null) {
+            return TripVisibility::userCanViewTrip($user, $cost->trip);
         }
 
-        return TripVisibility::userCanViewTrip($user, $cost->trip);
+        return (int) $cost->created_by === (int) $user->id;
     }
 
     public function rules(): array

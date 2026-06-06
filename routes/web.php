@@ -26,6 +26,19 @@ Route::get('/sw.js', function () {
 
     return response()->file($path, [
         'Content-Type' => 'application/javascript; charset=UTF-8',
+        'Service-Worker-Allowed' => '/',
+        'Cache-Control' => 'public, max-age=0, must-revalidate',
+    ]);
+});
+
+Route::get('/manifest.webmanifest', function () {
+    $path = is_file(public_path('build/manifest.webmanifest'))
+        ? public_path('build/manifest.webmanifest')
+        : public_path('manifest.webmanifest');
+    abort_unless(is_file($path), 404);
+
+    return response()->file($path, [
+        'Content-Type' => 'application/manifest+json; charset=UTF-8',
         'Cache-Control' => 'public, max-age=0, must-revalidate',
     ]);
 });

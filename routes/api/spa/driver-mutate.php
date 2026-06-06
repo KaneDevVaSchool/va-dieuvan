@@ -26,6 +26,9 @@ Route::prefix('trips')->group(function () {
 });
 
 Route::prefix('trip-costs')->controller(TripCostController::class)->group(function () {
+    Route::post('/', 'storeStandalone')
+        ->middleware(['throttle:60,1', 'idempotency'])
+        ->name('api.trip-costs.store');
     Route::patch('/{tripCost}', 'updateByDriver')->middleware('throttle:30,1');
     Route::delete('/{tripCost}', 'destroyByDriver')->middleware('throttle:20,1');
 });

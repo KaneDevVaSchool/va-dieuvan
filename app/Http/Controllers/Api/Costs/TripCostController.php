@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Costs\ListAllTripCostsRequest;
 use App\Http\Requests\Api\Costs\ListTripCostsRequest;
 use App\Http\Requests\Api\Costs\OverrideTripCostRequest;
 use App\Http\Requests\Api\Costs\ShowTripCostRequest;
+use App\Http\Requests\Api\Costs\SubmitStandaloneTripCostRequest;
 use App\Http\Requests\Api\Costs\SubmitTripCostRequest;
 use App\Http\Requests\Api\Costs\UpdateTripCostByDriverRequest;
 use App\Http\Requests\Api\Costs\UploadTripCostReceiptRequest;
@@ -21,6 +22,7 @@ use App\Support\Messages;
 use App\Services\Costs\BusinessPersonnelCostLinesQuery;
 use App\Services\Costs\WizardSnapshotCostLinesQuery;
 use App\Services\RecurringDispatch\RecurringBudgetAlertService;
+use App\Support\TripCostAccess;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -49,8 +51,7 @@ class TripCostController extends Controller
             ->orderByDesc('id');
 
         if (! $user->hasPermission('trip.view_all')) {
-            $tripIds = TripVisibility::visibleTripsQuery($user)->pluck('id');
-            $q->whereIn('trip_id', $tripIds);
+            TripCostAccess::applyVisibleToUserScope($q, $user);
         }
 
         if (isset($data['trip_id'])) {
@@ -197,6 +198,50 @@ class TripCostController extends Controller
         return $this->created($cost);
     }
 
+    public function storeStandalone(SubmitStandaloneTripCostRequest $request)
+    {
+        $data = $request->validated();
+        $user = $request->user();
+
+        $trip = null;
+        if (! empty($data['trip_id'])) {
+            $trip = Trip::query()->find($data['trip_id']);
+            abort_unless($trip, 404);
+            abort_unless(TripVisibility::userCanViewTrip($user, $trip), 403);
+            $trip->refresh();
+            FinancialDataLock::assertTripNotPaid($trip);
+            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($trip);
+        }
+
+        unset($data['trip_id']);
+
+        $cost = TripCost::create([
+            ...$data,
+            'trip_id' => $trip?->id,
+            'currency' => $data['currency'] ?? 'VND',
+            'created_by' => $user->id,
+            'status' => 'submitted',
+        ]);
+
+        app(AuditLogger::class)->log(
+            actorId: $user->id,
+            event: 'cost.submit',
+            auditable: $cost,
+            before: null,
+            after: $cost->toArray(),
+            metadata: array_filter([
+                'trip_id' => $trip?->id,
+                'standalone' => $trip === null,
+            ]),
+        );
+
+        if ($trip !== null) {
+            app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($trip->fresh());
+        }
+
+        return $this->created($cost);
+    }
+
     public function show(ShowTripCostRequest $request, TripCost $tripCost)
     {
         $tripCost->load([
@@ -207,8 +252,7 @@ class TripCostController extends Controller
             'trip.dispatchRequest:id,origin,destination,status,arrive_by',
         ]);
 
-        abort_unless($tripCost->relationLoaded('trip') && $tripCost->trip, 404);
-        abort_unless(TripVisibility::userCanViewTrip($request->user(), $tripCost->trip), 403);
+        abort_unless(TripCostAccess::userCanView($request->user(), $tripCost), 403);
 
         return $this->ok($tripCost);
     }
@@ -216,12 +260,12 @@ class TripCostController extends Controller
     public function updateByDriver(UpdateTripCostByDriverRequest $request, TripCost $tripCost)
     {
         $user = $request->user();
-        abort_unless((int) $tripCost->created_by === (int) $user->id, 403);
-        abort_unless(in_array($tripCost->status, ['draft', 'submitted'], true), 409, Messages::COST_NOT_ACTIONABLE);
+        abort_unless(TripCostAccess::driverCanMutateCostRow($user, $tripCost), 403);
 
-        $tripCost->load('trip');
-        FinancialDataLock::assertTripNotPaid($tripCost->trip);
-        FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+        if ($tripCost->trip_id !== null) {
+            $tripCost->load('trip');
+            FinancialDataLock::assertTripNotPaid($tripCost->trip);
+        }
 
         $data = $request->validated();
         $before = $tripCost->toArray();
@@ -240,7 +284,9 @@ class TripCostController extends Controller
             after: $tripCost->toArray(),
         );
 
-        app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($tripCost->trip->fresh());
+        if ($tripCost->trip !== null) {
+            app(RecurringBudgetAlertService::class)->refreshAndNotifyForTrip($tripCost->trip->fresh());
+        }
 
         return $this->ok($tripCost);
     }
@@ -251,15 +297,16 @@ class TripCostController extends Controller
         $isReconciler = $user->hasPermission('trip.cost.reconcile');
 
         if (! $isReconciler) {
-            abort_unless((int) $tripCost->created_by === (int) $user->id, 403);
-            abort_unless(in_array($tripCost->status, ['draft', 'submitted'], true), 409, Messages::COST_NOT_ACTIONABLE);
+            abort_unless(TripCostAccess::driverCanMutateCostRow($user, $tripCost), 403);
         }
 
-        $tripCost->load('trip');
-        FinancialDataLock::assertTripNotPaid($tripCost->trip);
+        if ($tripCost->trip_id !== null) {
+            $tripCost->load('trip');
+            FinancialDataLock::assertTripNotPaid($tripCost->trip);
 
-        if (! $isReconciler) {
-            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+            if (! $isReconciler) {
+                FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+            }
         }
 
         $deletedId = $tripCost->id;
@@ -293,8 +340,9 @@ class TripCostController extends Controller
             $before = $tripCost->toArray();
 
             $tripCost->load('trip');
-            // Duyệt / từ chối đối soát vẫn được phép khi chuyến đã hoàn thành hoặc hủy (chỉ chặn khi đã thanh toán / khóa tài chính).
-            FinancialDataLock::assertTripNotPaid($tripCost->trip);
+            if ($tripCost->trip !== null) {
+                FinancialDataLock::assertTripNotPaid($tripCost->trip);
+            }
 
             if (! in_array($tripCost->status, ['submitted', 'draft'], true)) {
                 abort(409, Messages::COST_NOT_ACTIONABLE);
@@ -347,7 +395,9 @@ class TripCostController extends Controller
 
         return DB::transaction(function () use ($tripCost, $data, $user) {
             $tripCost->loadMissing('trip');
-            FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+            if ($tripCost->trip !== null) {
+                FinancialDataLock::assertTripAllowsPassengerAndCostEdits($tripCost->trip);
+            }
 
             $before = $tripCost->toArray();
 

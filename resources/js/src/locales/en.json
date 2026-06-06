@@ -542,8 +542,8 @@
         "trip_finished_readonly": "This trip is completed or cancelled — you can’t add or change receipts, edit, or cancel this cost (view only)."
     },
     "driver_costs": {
-        "title": "Trip costs",
-        "subtitle": "Costs linked to your trips.",
+        "title": "Costs",
+        "subtitle": "Trip-linked and off-trip expenses.",
         "filter_all": "All",
         "filter_submitted": "Pending",
         "filter_confirmed": "Approved",
@@ -553,7 +553,7 @@
         "ptr_refreshing": "Updating…",
         "cta_add": "Add",
         "empty_title": "No costs yet",
-        "empty_hint": "Add from a trip.",
+        "empty_hint": "Add an off-trip cost or record one from a trip.",
         "end_of_list": "End of list.",
         "st_submitted": "Pending",
         "st_confirmed": "Approved",
@@ -562,7 +562,15 @@
         "empty": "No cost records.",
         "open_trip": "Open trip",
         "trip_depart": "Trip departure",
-        "hint_add_from_trip": "Open a trip → costs section"
+        "hint_add_from_trip": "Open a trip → costs section",
+        "badge_standalone": "Off-trip",
+        "create_title": "Add off-trip cost",
+        "create_intro": "Record a cost without linking a trip. You may optionally pick a related trip.",
+        "trip_optional": "Trip (optional)",
+        "trip_none": "No trip",
+        "trips_loading": "Loading trips…",
+        "create_submit": "Submit cost",
+        "create_saving": "Submitting…"
     },
     "portal": {
         "title": "Create dispatch request",

@@ -33,13 +33,17 @@ class DriverContextController extends Controller
             ->count();
 
         $tripIds = $this->newTripListBuilder($user)->pluck('id');
-        $pendingCosts = 0;
-        if ($tripIds->isNotEmpty()) {
-            $pendingCosts = (int) TripCost::query()
-                ->whereIn('trip_id', $tripIds)
-                ->where('status', 'submitted')
-                ->count();
-        }
+        $pendingCosts = (int) TripCost::query()
+            ->where('status', 'submitted')
+            ->where(function ($q) use ($user, $tripIds) {
+                if ($tripIds->isNotEmpty()) {
+                    $q->whereIn('trip_id', $tripIds);
+                }
+                $q->orWhere(function ($inner) use ($user) {
+                    $inner->whereNull('trip_id')->where('created_by', $user->id);
+                });
+            })
+            ->count();
 
         $vehicle = null;
         if ($driver) {

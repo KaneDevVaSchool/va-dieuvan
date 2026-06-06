@@ -51,6 +51,11 @@ function tripDepartYmd(trip) {
     const [y, m, day] = trip.depart_date.slice(0, 10).split('-').map(Number)
     return ymd(new Date(y, m - 1, day, 12, 0, 0, 0))
   }
+  const drDep = trip.dispatch_request?.depart_at
+  if (drDep) {
+    const d = new Date(drDep)
+    if (!Number.isNaN(d.getTime())) return ymd(d)
+  }
   return null
 }
 
@@ -140,14 +145,77 @@ function tripDepartMs(trip) {
   return NaN
 }
 
-/** Banner chờ xác nhận: chỉ chuyến trong ngày hôm nay, chưa qua giờ xuất phát. */
-function isPendingTripStillRelevant(trip) {
+/** Chuyến / ca TP còn chờ tài xế bấm xác nhận. */
+function tripNeedsDriverConfirmation(trip) {
+  const s = tripStatusNorm(trip)
+  if (trip._tp?.day_id) {
+    return s === 'assigned'
+  }
+  if (s === 'assigned') {
+    return true
+  }
+  const legs = trip.schedule_legs
+  if (Array.isArray(legs) && legs.length > 0) {
+    return legs.some((leg) => tripStatusNorm(leg) === 'assigned')
+  }
+  return false
+}
+
+/**
+ * Banner chờ xác nhận: từ hôm nay đến hết cửa sổ dashboard (không chỉ “hôm nay trước giờ đi”).
+ */
+function isConfirmationRelevant(trip, dashboardDateTo) {
   const today = ymd(new Date())
+  const end = normalizedDashboardEndYmd(dashboardDateTo)
   const day = tripDepartYmd(trip)
-  if (day == null || day !== today) return false
-  const dep = tripDepartMs(trip)
-  if (!Number.isFinite(dep)) return true
-  return dep >= Date.now()
+  if (day == null) {
+    return true
+  }
+  if (day < today) {
+    return false
+  }
+  if (day > end) {
+    return false
+  }
+  return true
+}
+
+/** Tách từng lịch (sáng/chiều) khi chuyến có nhiều schedule_legs cần xác nhận. */
+function expandTripsForPendingConfirmation(trips) {
+  const out = []
+  for (const trip of trips) {
+    if (trip?._tp?.day_id) {
+      if (tripNeedsDriverConfirmation(trip)) {
+        out.push(trip)
+      }
+      continue
+    }
+    const legs = trip.schedule_legs
+    if (Array.isArray(legs) && legs.length > 1) {
+      const pendingLegs = legs.filter((leg) => tripStatusNorm(leg) === 'assigned')
+      if (pendingLegs.length === 0) {
+        continue
+      }
+      for (const leg of pendingLegs) {
+        out.push({
+          ...trip,
+          id: `${trip.id}:${leg.key}`,
+          trip_id: trip.id,
+          status: leg.status ?? trip.status,
+          depart_at: leg.depart_at ?? trip.depart_at,
+          arrive_by: leg.arrive_by ?? trip.arrive_by,
+          pickup_location: leg.pickup || trip.pickup_location,
+          dropoff_location: leg.dropoff || trip.dropoff_location,
+          schedule_leg_key: leg.key,
+        })
+      }
+      continue
+    }
+    if (tripNeedsDriverConfirmation(trip)) {
+      out.push(trip)
+    }
+  }
+  return out
 }
 
 function normalizedDashboardEndYmd(dashboardDateTo) {
@@ -201,14 +269,14 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     needsConfirmationTrips() {
-      const need = new Set(['assigned', 'pending', 'approved'])
-      return this.dashboardMergedTrips
-        .filter((x) => need.has(tripStatusNorm(x)) && isPendingTripStillRelevant(x))
+      const candidates = this.dashboardMergedTrips.filter((x) =>
+        isConfirmationRelevant(x, this.dashboardDateTo),
+      )
+      return expandTripsForPendingConfirmation(candidates)
         .slice()
         .sort(
           (a, b) =>
-            (new Date(a.depart_at ?? a.depart_date ?? 0).getTime() || 0) -
-            (new Date(b.depart_at ?? b.depart_date ?? 0).getTime() || 0),
+            (tripDepartMs(a) || 0) - (tripDepartMs(b) || 0),
         )
     },
 
@@ -505,7 +573,8 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     async confirmTripOptimistic(trip) {
-      if (!trip?.id) return
+      const dispatchTripId = trip.trip_id ?? trip.id
+      if (dispatchTripId == null || dispatchTripId === '') return
       if (trip._tp?.day_id) {
         const { day_id: dayId, shift, multi_slot: multiSlot } = trip._tp
         const shiftArg = multiSlot ? shift || null : null
@@ -521,25 +590,26 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
         }
         return
       }
-      const backup = this.tripSnapshot(trip.id)
-      this.patchTripInList(trip.id, { status: 'driver_confirmed' })
+      const backup = this.tripSnapshot(dispatchTripId)
+      this.patchTripInList(dispatchTripId, { status: 'driver_confirmed' })
       try {
-        await updateTripStatus(trip.id, { status: 'driver_confirmed' })
+        await updateTripStatus(dispatchTripId, { status: 'driver_confirmed' })
         showAppSuccess(t('driver_home.toast_confirm_ok'), t('driver_home.toast_action_title'))
         this.scheduleSilentRefetch()
       } catch (e) {
-        if (backup) this.replaceTripInList(trip.id, backup)
+        if (backup) this.replaceTripInList(dispatchTripId, backup)
         else this.refreshTripsQuiet()
         throw e
       }
     },
 
     async declineTripOptimistic(trip, message) {
-      if (!trip?.id) return
-      const backup = this.tripSnapshot(trip.id)
-      this.removeTrip(trip.id)
+      const dispatchTripId = trip.trip_id ?? trip.id
+      if (dispatchTripId == null || dispatchTripId === '') return
+      const backup = this.tripSnapshot(dispatchTripId)
+      this.removeTrip(dispatchTripId)
       try {
-        await updateTripStatus(trip.id, { status: 'cancelled', message })
+        await updateTripStatus(dispatchTripId, { status: 'cancelled', message })
         showAppSuccess(t('driver_home.toast_decline_ok'), t('driver_home.toast_action_title'))
         this.scheduleSilentRefetch()
       } catch (e) {

@@ -29,6 +29,14 @@ export async function submitTripCost(tripId, payload, { idempotencyKey } = {}) {
   return data.data
 }
 
+/** Chi phí phát sinh — có thể gửi không gắn chuyến (trip_id tùy chọn). */
+export async function submitStandaloneTripCost(payload, { idempotencyKey } = {}) {
+  const headers = {}
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
+  const { data } = await http.post('/trip-costs', payload, { headers })
+  return data.data
+}
+
 /**
  * @param {Record<string, unknown>} payload
  * @param {{ idempotencyKey?: string }} [opts]

@@ -40,11 +40,11 @@ class DestroyAttachmentRequest extends ApiFormRequest
         }
 
         $parent->loadMissing('trip');
-        if (! $parent->trip) {
-            return false;
+        if ($parent->trip !== null) {
+            return TripVisibility::userCanViewTrip($user, $parent->trip);
         }
 
-        return TripVisibility::userCanViewTrip($user, $parent->trip);
+        return (int) $parent->created_by === (int) $user->id;
     }
 
     public function rules(): array

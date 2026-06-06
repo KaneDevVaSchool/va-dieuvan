@@ -7,6 +7,7 @@ import {
 } from "../config/dispatchWebBase";
 import { useAuthStore } from "../store";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
+import { setLocale } from "../i18n";
 import { resolvePostLoginTarget } from "../util/loginRedirect";
 import {
     CHUNK_RELOAD_SESSION_KEY,
@@ -621,11 +622,21 @@ const router = createRouter({
             },
         },
         {
+            path: "/driver/costs/new",
+            name: "driverCostCreate",
+            component: () => import("../views/driver/DriverCostCreateView.vue"),
+            meta: {
+                title: "Thêm chi phí",
+                subtitle: "Tài xế",
+                driverApp: true,
+            },
+        },
+        {
             path: "/driver/costs/:id",
             name: "driverCostDetail",
             component: () => import("../views/driver/DriverCostDetailView.vue"),
             meta: {
-                title: "Chi tiết yêu cầu",
+                title: "Chi tiết chi phí",
                 subtitle: "Tài xế",
                 driverApp: true,
             },
@@ -815,6 +826,9 @@ router.beforeEach(async (to) => {
             }
             return { name: "dashboard" };
         }
+    }
+    if (to.matched.some((record) => record.meta.driverApp === true)) {
+        setLocale("vi");
     }
     return true;
 });

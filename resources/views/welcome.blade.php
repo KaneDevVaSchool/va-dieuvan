@@ -15,9 +15,7 @@
     <link rel="apple-touch-icon" href="/icons/pwa-192.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/icons/pwa-192.png" />
     @php
-        $pwaManifest = file_exists(public_path('build/manifest.webmanifest'))
-            ? asset('build/manifest.webmanifest')
-            : asset('manifest.webmanifest');
+        $pwaManifest = '/manifest.webmanifest';
     @endphp
     <link rel="manifest" href="{{ $pwaManifest }}" />
     <title>VA Dispatch — Điều vận</title>

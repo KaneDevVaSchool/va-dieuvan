@@ -30,7 +30,7 @@
           </h1>
         </div>
         <RouterLink
-          to="/driver/schedule"
+          :to="{ name: 'driverCostCreate' }"
           class="flex min-h-[44px] shrink-0 items-center gap-2 rounded-2xl bg-driver-accent/15 px-4 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.98]"
         >
           <PlusCircleIcon class="h-5 w-5" aria-hidden="true" />
@@ -62,7 +62,7 @@
         <p class="mt-5 text-lg font-semibold text-driver-ink">{{ t('driver_costs.empty_title') }}</p>
         <p class="mt-2 text-base text-driver-muted">{{ t('driver_costs.empty_hint') }}</p>
         <RouterLink
-          to="/driver/schedule"
+          :to="{ name: 'driverCostCreate' }"
           class="mt-8 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-driver-accent px-8 text-base font-bold text-driver-bg transition hover:brightness-110 active:scale-[0.99]"
         >
           {{ t('driver_costs.cta_add') }}
@@ -76,6 +76,7 @@
             :status-label="statusLabel"
             :type-label="typeLabel"
             :trip-cta="t('driver_costs.open_trip')"
+            :standalone-badge="t('driver_costs.badge_standalone')"
           />
         </li>
       </ul>

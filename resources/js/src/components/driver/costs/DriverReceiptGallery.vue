@@ -219,7 +219,7 @@ import { confirmAction } from '../../../composables/useConfirm'
 import { showAppError, showAppErrorFromApi } from '../../../composables/appMessage'
 
 const props = defineProps({
-  tripId: { type: Number, required: true },
+  tripId: { type: Number, default: null },
   costId: { type: Number, required: true },
   /** @type {{ id?: number|null, url: string }[]} */
   attachments: { type: Array, default: () => [] },

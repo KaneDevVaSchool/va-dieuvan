@@ -38,9 +38,9 @@
         <DriverPushBanner class="mb-1" />
 
         <DriverPendingConfirmationSection
-          v-if="dash.needsConfirmationTrips.length > 0 || (dash.loadingInitial && dash.rawListItems.length === 0)"
+          v-if="dash.needsConfirmationTrips.length > 0 || dash.loadingInitial"
           :trips="dash.needsConfirmationTrips"
-          :loading="dash.loadingInitial && dash.rawListItems.length === 0"
+          :loading="dash.loadingInitial && dash.needsConfirmationTrips.length === 0"
         />
 
         <p

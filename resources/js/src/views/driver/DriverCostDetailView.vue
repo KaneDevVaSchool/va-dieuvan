@@ -30,7 +30,7 @@
       >
         <div class="mx-auto flex max-w-lg items-center justify-between gap-3 sm:max-w-2xl">
           <p class="text-lg font-bold tabular-nums text-driver-ink">{{ formatVnd(cost.amount) }}</p>
-          <span class="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide" :class="badgeCls(cost.status)">
+          <span class="rounded-full px-3 py-1 text-[11px] font-semibold sm:text-xs" :class="badgeCls(cost.status)">
             {{ badgeTitle(cost.status) }}
           </span>
         </div>
@@ -63,10 +63,16 @@
         <div ref="heroRef" class="relative isolate mb-6 overflow-hidden rounded-[1.5rem] bg-driver-card px-5 pb-6 pt-6 shadow-[0_18px_50px_-24px_rgba(127,220,200,0.35)] ring-1 ring-driver-accent/20">
           <div class="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-driver-accent/[0.08] blur-3xl" aria-hidden="true" />
           <div class="relative flex flex-wrap items-start justify-between gap-3">
-            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide sm:text-[13px]" :class="badgeCls(cost.status)">
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-semibold sm:text-[13px]" :class="badgeCls(cost.status)">
               {{ badgeTitle(cost.status) }}
             </span>
-            <span class="text-sm tabular-nums text-driver-muted">#{{ cost.trip_id }}</span>
+            <span v-if="cost.trip_id" class="text-sm tabular-nums text-driver-muted">#{{ cost.trip_id }}</span>
+            <span
+              v-else
+              class="rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/25"
+            >
+              {{ t('driver_costs.badge_standalone') }}
+            </span>
           </div>
           <div class="relative mt-5 flex items-start gap-4">
             <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.1rem] bg-driver-surface ring-1 ring-white/[0.06]" aria-hidden="true">
@@ -76,7 +82,7 @@
               <MoneyIcon v-else class="h-9 w-9 text-driver-accent" />
             </div>
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-semibold uppercase tracking-wide text-driver-muted">{{ typeLabelUi(cost.type) }}</p>
+              <p class="text-sm font-semibold text-driver-muted">{{ typeLabelUi(cost.type) }}</p>
               <p class="mt-2 text-[clamp(1.65rem,5vw,2.35rem)] font-bold tabular-nums leading-none tracking-tight text-driver-ink">
                 {{ formatVnd(cost.amount) }}
               </p>
@@ -90,7 +96,7 @@
         </div>
 
         <!-- Quick trip -->
-        <details open class="mb-4 overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
+        <details v-if="cost.trip_id" open class="mb-4 overflow-hidden rounded-[1.35rem] bg-driver-card ring-1 ring-white/[0.06]">
           <summary
             class="flex cursor-pointer list-none items-center gap-3 px-4 py-4 text-lg font-bold text-driver-ink outline-none transition hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden"
           >
@@ -100,7 +106,6 @@
           </summary>
           <div class="border-t border-white/[0.06] px-4 pb-5 pt-4">
             <RouterLink
-              v-if="cost.trip_id"
               :to="`/driver/trips/${cost.trip_id}`"
               class="flex min-h-[52px] items-center gap-4 rounded-2xl bg-driver-surface px-4 py-3 ring-1 ring-white/[0.06] transition hover:bg-driver-elevated"
             >
@@ -148,7 +153,7 @@
         <!-- Receipts -->
         <div class="mb-4 overflow-hidden rounded-[1.35rem] bg-driver-card p-4 ring-1 ring-white/[0.06]">
           <DriverReceiptGallery
-            :trip-id="Number(cost.trip_id)"
+            :trip-id="cost.trip_id ? Number(cost.trip_id) : null"
             :cost-id="Number(cost.id)"
             :attachments="attachmentList"
             :legacy-receipt-url="legacyReceiptUrl"
@@ -385,7 +390,10 @@ const id = computed(() => {
   return Number.isFinite(n) && n > 0 ? n : null
 })
 
-const tripAllowsCostEdits = computed(() => isTripCostEditableStatus(cost.value?.trip?.status))
+const tripAllowsCostEdits = computed(() => {
+  if (!cost.value?.trip_id) return true
+  return isTripCostEditableStatus(cost.value?.trip?.status)
+})
 
 const canAct = computed(
   () => cost.value && ['draft', 'submitted'].includes(cost.value.status) && tripAllowsCostEdits.value,
@@ -401,7 +409,7 @@ const galleryReadonly = computed(() => !galleryMutable.value)
 /** Giải thích khi chi phí còn sửa được theo trạng thái dòng nhưng chuyến đã kết thúc/hủy. */
 const showTripLockedBanner = computed(
   () =>
-    !!cost.value &&
+    !!cost.value?.trip_id &&
     !tripAllowsCostEdits.value &&
     ['draft', 'submitted'].includes(cost.value.status),
 )
@@ -440,9 +448,20 @@ function badgeTitle(s) {
 }
 
 function typeLabelUi(type) {
-  const k = `driver_trip_detail.cost_type_${String(type || 'other')}`
+  const n = normType(type)
+  const k = `driver_trip_detail.cost_type_${n || 'other'}`
   if (te(k)) return t(k)
-  return type
+  const fallback = {
+    fuel: 'Đổ xăng',
+    toll: 'Cầu đường',
+    parking: 'Gửi xe',
+    meal: 'Ăn uống',
+    wash: 'Rửa xe',
+    fine: 'Phạt',
+    repair: 'Sửa chữa',
+    other: 'Khác',
+  }
+  return fallback[n] ?? 'Khác'
 }
 
 const dateLabel = computed(() => {

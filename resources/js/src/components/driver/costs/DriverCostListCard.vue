@@ -8,12 +8,18 @@
     >
       <div class="flex items-start justify-between gap-3">
         <span
-          class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide sm:text-[13px]"
+          class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold sm:text-[13px]"
           :class="statusBadgeClass(cost.status)"
         >
           {{ statusLabel(cost.status) }}
         </span>
-        <span class="shrink-0 text-sm tabular-nums text-driver-muted">#{{ cost.trip_id }}</span>
+        <span v-if="cost.trip_id" class="shrink-0 text-sm tabular-nums text-driver-muted">#{{ cost.trip_id }}</span>
+        <span
+          v-else
+          class="shrink-0 rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/25"
+        >
+          {{ standaloneBadge }}
+        </span>
       </div>
       <div class="mt-4 flex gap-4">
         <div
@@ -46,7 +52,7 @@
         <ChevronRightIcon class="mt-1 h-6 w-6 shrink-0 text-driver-muted/40" aria-hidden="true" />
       </div>
     </RouterLink>
-    <div class="border-t border-white/[0.06] px-4 pb-4 pt-3">
+    <div v-if="cost.trip_id" class="border-t border-white/[0.06] px-4 pb-4 pt-3">
       <RouterLink
         :to="`/driver/trips/${cost.trip_id}`"
         class="flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-driver-surface text-base font-semibold text-driver-accent ring-1 ring-driver-accent/25 transition hover:bg-driver-elevated active:scale-[0.99]"
@@ -75,6 +81,7 @@ const props = defineProps({
   statusLabel: { type: Function, required: true },
   typeLabel: { type: Function, required: true },
   tripCta: { type: String, required: true },
+  standaloneBadge: { type: String, default: '' },
 })
 
 function normType(t) {
@@ -94,15 +101,31 @@ function statusBadgeClass(st) {
 
 const departLabel = computed(() => {
   const trip = props.cost?.trip
-  if (!trip?.depart_at) return '—'
-  const d = new Date(trip.depart_at)
-  if (Number.isNaN(d.getTime())) return '—'
-  return d.toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  if (trip?.depart_at) {
+    const d = new Date(trip.depart_at)
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    }
+  }
+  const created = props.cost?.created_at
+  if (created) {
+    const d = new Date(created)
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    }
+  }
+  return '—'
 })
 </script>
