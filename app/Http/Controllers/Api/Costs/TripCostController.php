@@ -63,6 +63,13 @@ class TripCostController extends Controller
         $q->when(isset($data['status']), fn (Builder $b) => $b->where('status', $data['status']));
         $q->when(isset($data['type']), fn (Builder $b) => $b->where('type', $data['type']));
         $q->when(isset($data['trip_id']), fn (Builder $b) => $b->where('trip_id', $data['trip_id']));
+        $q->when(isset($data['standalone']), function (Builder $b) use ($data): void {
+            if ((int) $data['standalone'] === 1) {
+                $b->whereNull('trip_id');
+            } else {
+                $b->whereNotNull('trip_id');
+            }
+        });
         $q->when(
             isset($data['trip_type']) && $data['trip_type'] !== '',
             fn (Builder $b) => $b->whereHas(

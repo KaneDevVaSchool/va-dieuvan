@@ -30,8 +30,28 @@
       <button
         type="button"
         role="tab"
-        :aria-selected="activeTab === 'business_personnel'"
+        :aria-selected="activeTab === 'standalone'"
         class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900 sm:flex-none sm:px-5 sm:text-sm"
+        :class="
+          activeTab === 'standalone'
+            ? 'bg-white text-teal-800 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-teal-300 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
+            : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-slate-200'
+        "
+        @click="activeTab = 'standalone'"
+      >
+        {{ t('costs_page.tab_standalone') }}
+        <span
+          v-if="standaloneTabTotal > 0"
+          class="ml-1 inline-block min-w-[1.125rem] rounded-full bg-amber-100 px-1 py-px text-[10px] font-bold tabular-nums text-amber-900 dark:bg-amber-950/70 dark:text-amber-200"
+        >
+          {{ standaloneTabTotal }}
+        </span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'business_personnel'"
+        class="min-h-[2.75rem] flex-1 rounded-t-lg px-3 py-2 text-center text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 dark:focus-visible:ring-offset-slate-900 sm:flex-none sm:px-5 sm:text-sm"
         :class="
           activeTab === 'business_personnel'
             ? 'bg-white text-teal-800 shadow-[0_-1px_0_0_white] dark:bg-slate-950 dark:text-teal-300 dark:shadow-[0_-1px_0_0_rgb(15,23,42)]'
@@ -49,7 +69,7 @@
       </button>
     </div>
 
-    <template v-if="activeTab === 'all_trips'">
+    <template v-if="activeTab === 'all_trips' || activeTab === 'standalone'">
     <section class="space-y-3" aria-labelledby="costs-section-filters">
       <h2 id="costs-section-filters" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {{ t('costs_page.section_filters') }}
@@ -248,7 +268,7 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            v-if="filterControlVisible.trip_type"
+            v-if="filterControlVisible.trip_type && activeTab !== 'standalone'"
             root-class="shrink-0"
             show-chip-label
             :label="t('costs_page.filter_trip_type')"
@@ -301,7 +321,7 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            v-if="filterControlVisible.trip"
+            v-if="filterControlVisible.trip && activeTab !== 'standalone'"
             root-class="shrink-0"
             show-chip-label
             :label="t('costs_page.filter_trip')"
@@ -400,7 +420,7 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            v-if="filterControlVisible.provider"
+            v-if="filterControlVisible.provider && activeTab !== 'standalone'"
             root-class="shrink-0"
             show-chip-label
             :label="t('costs_page.filter_provider')"
@@ -427,7 +447,7 @@
           </AppFilterDropdown>
 
           <AppFilterDropdown
-            v-if="filterControlVisible.fleet_mode"
+            v-if="filterControlVisible.fleet_mode && activeTab !== 'standalone'"
             root-class="shrink-0"
             show-chip-label
             :label="t('dashboard_analytics.filter_fleet')"
@@ -504,11 +524,12 @@
             </span>
           </button>
           <button
+            v-if="showAddCostButton"
             type="button"
             class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
             @click="openAddCostModal"
           >
-            {{ t('costs_page.add_cost') }}
+            {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
           </button>
         </div>
       </div>
@@ -519,7 +540,12 @@
     <!-- Bảng -->
     <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
       <div class="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
-        <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ t('costs_page.table_title') }}</h2>
+        <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {{ activeTab === 'standalone' ? t('costs_page.table_title_standalone') : t('costs_page.table_title') }}
+        </h2>
+        <p v-if="activeTab === 'standalone'" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          {{ t('costs_page.standalone_intro') }}
+        </p>
       </div>
       <div class="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         <table class="costs-sheet min-w-[1100px] w-full">
@@ -622,6 +648,10 @@
                   :to="`/trips/${c.trip_id}`"
                   >#{{ c.trip_id }}</RouterLink
                 >
+                <span
+                  v-else-if="!isWizardEstimateLine(c)"
+                  class="costs-pill bg-amber-100/90 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
+                >{{ t('costs_page.badge_standalone') }}</span>
                 <span v-else>—</span>
               </td>
               <td v-if="colVisible.trip_type" class="costs-td">
@@ -881,7 +911,10 @@
         >
           <div class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <div>
-              <h2 id="costs-add-title" class="text-base font-semibold text-slate-900">{{ t('costs_page.modal_add_title') }}</h2>
+              <h2 id="costs-add-title" class="text-base font-semibold text-slate-900">
+                {{ addCostTripOptional ? t('costs_page.modal_add_standalone_title') : t('costs_page.modal_add_title') }}
+              </h2>
+              <p v-if="addCostTripOptional" class="mt-1 text-xs text-slate-500">{{ t('costs_page.modal_add_standalone_hint') }}</p>
             </div>
             <button
               type="button"
@@ -897,9 +930,11 @@
             <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4">
             <div class="grid gap-4">
               <div>
-                <label class="mb-1 block text-xs font-medium text-slate-700"
-                  >{{ t('costs_page.modal_trip_label') }} <span class="text-rose-600">*</span></label
-                >
+                <label class="mb-1 block text-xs font-medium text-slate-700">
+                  {{ t('costs_page.modal_trip_label') }}
+                  <span v-if="!addCostTripOptional" class="text-rose-600">*</span>
+                  <span v-else class="font-normal text-slate-500">({{ t('costs_page.modal_trip_optional') }})</span>
+                </label>
                 <input
                   v-model="tripPickerSearch"
                   type="search"
@@ -910,10 +945,13 @@
                 <select
                   v-model="costForm.trip_id"
                   class="costs-input w-full font-medium"
-                  :required="!tripsForModalLoading"
+                  :required="!addCostTripOptional && !tripsForModalLoading"
                   :disabled="tripsForModalLoading"
                 >
-                  <option disabled value="">
+                  <option v-if="addCostTripOptional" value="">
+                    {{ t('costs_page.modal_trip_none') }}
+                  </option>
+                  <option v-else disabled value="">
                     {{ tripsForModalLoading ? t('costs_page.modal_trip_loading') : t('costs_page.modal_trip_pick') }}
                   </option>
                   <option v-for="t in filteredTripsForPicker" :key="t.id" :value="String(t.id)">
@@ -1199,6 +1237,7 @@ import {
   listBusinessPersonnelCostLines,
   listWizardEstimateLines,
   submitTripCost,
+  submitStandaloneTripCost,
   decideTripCost,
   deleteTripCost,
 } from '../../api/costs'
@@ -1212,8 +1251,10 @@ const { t, te, locale } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
 
-/** @type {import('vue').Ref<'all_trips' | 'business_personnel'>} */
+/** @type {import('vue').Ref<'all_trips' | 'standalone' | 'business_personnel'>} */
 const activeTab = ref('all_trips')
+
+const standaloneTabTotal = ref(0)
 
 const DEFAULT_PER_PAGE = 25
 
@@ -1465,6 +1506,7 @@ const filterControlDefs = computed(() => [
 ])
 
 const addCostModalOpen = ref(false)
+const addCostTripOptional = ref(false)
 const tripPickerSearch = ref('')
 const filterTripSearch = ref('')
 const tripOptionsRaw = ref([])
@@ -1597,6 +1639,14 @@ const submitting = ref(false)
 const costMsg = ref('')
 
 const canReconcileCosts = computed(() => auth.hasPermission('trip.cost.reconcile'))
+const canSubmitTripCost = computed(() => auth.hasPermission('trip.record.create'))
+const canSubmitStandaloneCost = computed(() =>
+  auth.hasAnyPermission(['trip.record.create', 'trip.cost.reconcile']),
+)
+const showAddCostButton = computed(() => {
+  if (activeTab.value === 'standalone') return canSubmitStandaloneCost.value
+  return canSubmitTripCost.value
+})
 const colControlDefs = computed(() => {
   const ids = COL_IDS.filter((id) => id !== 'actions' || canReconcileCosts.value)
   return ids.map((id) => ({ id, label: tableColLabel(id) }))
@@ -1810,9 +1860,12 @@ const tripFilterSummaryShort = computed(() => {
 
 const displayedItems = computed(() => {
   const q = searchQ.value.trim().toLowerCase()
-  const est = estimateItems.value.filter((c) => estimatePassesListFilters(c))
+  const est =
+    activeTab.value === 'standalone'
+      ? []
+      : estimateItems.value.filter((c) => estimatePassesListFilters(c))
   let list = items.value.filter((c) => passesClientRowFiltersForCost(c))
-  const merged = [...est, ...list]
+  const merged = activeTab.value === 'standalone' ? list : [...est, ...list]
   if (!q) return merged
   return merged.filter((c) => {
     const d = String(c.description ?? '').toLowerCase()
@@ -1954,6 +2007,7 @@ async function openAddCostModal() {
   costMsgIsError.value = false
   tripPickerSearch.value = ''
   costAmountDigits.value = ''
+  addCostTripOptional.value = activeTab.value === 'standalone'
   costForm.value = { trip_id: '', type: 'fuel', amount: '', description: '', currency: 'VND' }
   addCostModalOpen.value = true
   await loadTripPickerOptions()
@@ -2083,6 +2137,17 @@ function resetFilters() {
   reload()
 }
 
+async function refreshStandaloneTabTotal() {
+  try {
+    const q = { standalone: 1, per_page: 1, page: 1 }
+    if (filters.status) q.status = filters.status
+    const res = await listTripCosts(q)
+    standaloneTabTotal.value = Number(res.meta?.total ?? 0)
+  } catch {
+    standaloneTabTotal.value = 0
+  }
+}
+
 async function reload() {
   loading.value = true
   estimatesLoading.value = true
@@ -2092,6 +2157,12 @@ async function reload() {
       delete p[k]
     }
     Object.keys(p).forEach((k) => (p[k] === '' || p[k] === null ? delete p[k] : null))
+    if (activeTab.value === 'standalone') {
+      p.standalone = 1
+      delete p.trip_id
+      delete p.trip_type
+      delete p.fleet_mode
+    }
     const estimateParams = {
       trip_id: p.trip_id,
       trip_type: p.trip_type,
@@ -2102,13 +2173,22 @@ async function reload() {
     Object.keys(estimateParams).forEach((k) =>
       estimateParams[k] === undefined || estimateParams[k] === '' ? delete estimateParams[k] : null,
     )
-    const [res, estRes] = await Promise.all([
-      listTripCosts(p),
-      listWizardEstimateLines(estimateParams),
-    ])
-    items.value = res.items ?? []
-    meta.value = res.meta ?? {}
-    estimateItems.value = (estRes.items ?? []).map(mapWizardLineToCostRow)
+    if (activeTab.value === 'standalone') {
+      const res = await listTripCosts(p)
+      items.value = res.items ?? []
+      meta.value = res.meta ?? {}
+      estimateItems.value = []
+      standaloneTabTotal.value = Number(res.meta?.total ?? 0)
+    } else {
+      const [res, estRes] = await Promise.all([
+        listTripCosts(p),
+        listWizardEstimateLines(estimateParams),
+      ])
+      items.value = res.items ?? []
+      meta.value = res.meta ?? {}
+      estimateItems.value = (estRes.items ?? []).map(mapWizardLineToCostRow)
+      void refreshStandaloneTabTotal()
+    }
   } finally {
     loading.value = false
     estimatesLoading.value = false
@@ -2154,8 +2234,9 @@ function page(d) {
 async function submitCost() {
   costMsg.value = ''
   costMsgIsError.value = false
-  const tid = Number(costForm.value.trip_id)
-  if (!tid) {
+  const tripRaw = String(costForm.value.trip_id ?? '').trim()
+  const tid = tripRaw ? Number(tripRaw) : null
+  if (!addCostTripOptional.value && !tid) {
     costMsg.value = t('costs_page.err_pick_trip')
     costMsgIsError.value = true
     return
@@ -2168,15 +2249,17 @@ async function submitCost() {
   }
   submitting.value = true
   try {
-    await submitTripCost(
-      tid,
-      {
-        type: costForm.value.type,
-        amount: amt,
-        description: costForm.value.description || null,
-      },
-      { idempotencyKey: newIdempotencyKey() },
-    )
+    const body = {
+      type: costForm.value.type,
+      amount: amt,
+      description: costForm.value.description || null,
+      currency: costForm.value.currency || 'VND',
+    }
+    if (tid) {
+      await submitTripCost(tid, body, { idempotencyKey: newIdempotencyKey() })
+    } else {
+      await submitStandaloneTripCost(body, { idempotencyKey: newIdempotencyKey() })
+    }
     closeAddCostModal()
     await reload()
   } catch (e) {
@@ -2229,6 +2312,11 @@ watch(
 watch(activeTab, (tab) => {
   if (tab === 'business_personnel') {
     reloadBp()
+    return
+  }
+  if (tab === 'standalone' || tab === 'all_trips') {
+    filters.page = 1
+    reload()
   }
 })
 

@@ -45,6 +45,14 @@ class StandaloneTripCostTest extends TestCase
         $ids = collect($list->json('data.items'))->pluck('id')->all();
         $this->assertContains($costId, $ids);
 
+        $onlyStandalone = $this->getJson('/api/trip-costs?standalone=1');
+        $onlyStandalone->assertOk();
+        $standaloneIds = collect($onlyStandalone->json('data.items'))->pluck('id')->all();
+        $this->assertContains($costId, $standaloneIds);
+        $this->assertTrue(
+            collect($onlyStandalone->json('data.items'))->every(fn ($row) => ($row['trip_id'] ?? null) === null),
+        );
+
         $show = $this->getJson("/api/trip-costs/{$costId}");
         $show->assertOk();
         $show->assertJsonPath('data.id', $costId);

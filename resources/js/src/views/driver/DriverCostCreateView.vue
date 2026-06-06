@@ -103,6 +103,7 @@ import { ArrowLeftIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { listDriverTrips } from '../../api/driver'
 import { submitStandaloneTripCost } from '../../api/costs'
 import { isTripCostEditableStatus } from '../../constants/tripStatus'
+import { toLocalDateKey } from '../../util/dates'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -140,10 +141,24 @@ function goBack() {
   else router.push({ name: 'driverCosts' })
 }
 
+/** Khớp cửa sổ dashboard tài xế (~51 ngày, dưới giới hạn API 60). */
+function tripPickerDateRange() {
+  const now = new Date()
+  const past = new Date(now)
+  past.setDate(past.getDate() - 30)
+  const horizon = new Date(now)
+  horizon.setDate(horizon.getDate() + 21)
+  return { date_from: toLocalDateKey(past), date_to: toLocalDateKey(horizon) }
+}
+
 async function loadTrips() {
   tripsLoading.value = true
   try {
-    const res = await listDriverTrips({ per_page: 50, page: 1 })
+    const res = await listDriverTrips({
+      ...tripPickerDateRange(),
+      per_page: 50,
+      page: 1,
+    })
     const items = res?.items ?? []
     tripOptions.value = items.filter((tr) => isTripCostEditableStatus(tr?.status))
   } catch {
