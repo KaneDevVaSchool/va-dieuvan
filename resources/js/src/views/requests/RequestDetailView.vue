@@ -1,8 +1,10 @@
 <template>
   <div
     :class="[
-      'flex flex-col overflow-hidden bg-slate-50',
-      isDeptRequestDetailRoute ? 'min-h-0 min-w-0 flex-1' : 'h-screen',
+      'flex flex-col bg-slate-50',
+      isDeptRequestDetailRoute
+        ? 'min-h-0 min-w-0 flex-1 overflow-hidden'
+        : 'min-h-0 w-full',
     ]"
   >
     <div v-if="loading" class="flex flex-1 items-center justify-center px-4 py-12 text-sm text-slate-500">
@@ -355,7 +357,7 @@
             </button>
           </nav>
 
-          <div class="min-h-0 flex-1 overflow-visible p-3 sm:p-4">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-3 sm:p-4">
             <RequestWorkflowBar
               v-if="workflowTodoItems.length"
               class="mb-4"
