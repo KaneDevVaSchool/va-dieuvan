@@ -1,35 +1,102 @@
 <template>
   <div class="min-h-full w-full max-w-[430px] bg-driver-bg pb-28 text-driver-ink sm:max-w-none">
+    <!-- Header -->
     <header
-      class="sticky top-0 z-[25] flex items-center gap-2 border-b border-white/5 bg-driver-bg/90 px-3 py-3 backdrop-blur-md"
+      class="sticky top-0 z-[25] flex items-center gap-3 border-b border-white/5 bg-driver-bg/90 px-4 py-3 backdrop-blur-md [-webkit-backdrop-filter:blur(12px)]"
       style="padding-top: max(0.75rem, env(safe-area-inset-top))"
     >
-      <RouterLink to="/driver/tp-days" class="flex h-10 w-10 items-center justify-center rounded-full text-[#7fdcc8] transition hover:bg-white/5 active:scale-95">
-        <span class="sr-only">Quay lại</span>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+      <RouterLink
+        to="/driver/tp-days"
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-driver-accent/12 text-driver-accent transition active:scale-95"
+        aria-label="Quay lại"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="h-5 w-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
       </RouterLink>
+
       <div class="min-w-0 flex-1">
-        <h1 class="truncate text-lg font-bold tracking-tight">{{ day?.program?.name || day?.program_id || 'Điểm danh' }}</h1>
-        <p v-if="day" class="truncate text-xs text-driver-ink/50">{{ day.scheduled_date }}</p>
+        <h1 class="truncate text-xl font-bold leading-tight tracking-tight">
+          {{ day?.program_name || 'Điểm danh' }}
+        </h1>
+        <p v-if="day" class="mt-0.5 truncate text-sm text-driver-muted">
+          {{ formattedDate }}
+          <span v-if="day.program_departure_time" class="mx-1 text-driver-accent/50">·</span>
+          <span v-if="day.program_departure_time" class="text-driver-accent">{{ day.program_departure_time }}</span>
+        </p>
       </div>
-      <span v-if="!online" class="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">Ngoại tuyến · {{ pendingCount }}</span>
+
+      <!-- Offline badge -->
+      <span
+        v-if="!online"
+        class="shrink-0 rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-300"
+      >
+        Ngoại tuyến{{ pendingCount ? ` · ${pendingCount}` : '' }}
+      </span>
     </header>
 
-    <div class="px-3 pt-3">
-      <div v-if="loading" class="py-16 text-center text-sm text-driver-ink/60">Đang tải…</div>
+    <div class="px-4 pt-4">
+      <!-- Loading skeleton -->
+      <div v-if="loading" class="space-y-3 py-6">
+        <div class="h-5 w-3/5 animate-pulse rounded-lg bg-driver-accent/10" />
+        <div class="h-4 w-2/5 animate-pulse rounded-lg bg-driver-accent/8" />
+        <div class="mt-4 h-24 animate-pulse rounded-2xl bg-driver-surface" />
+      </div>
 
       <template v-else-if="day">
-        <div v-if="execution" class="mb-3 flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm">
-          <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="execStatusClass(execution.status)">{{ execStatusLabel(execution.status) }}</span>
-          <span><b class="text-[#7fdcc8]">{{ execution.total_boarded }}</b>/{{ execution.total_expected }} · <span class="text-rose-300">{{ execution.total_absent }} vắng</span></span>
+        <!-- Info card: route + vehicle -->
+        <div
+          v-if="day.program_origin || day.program_destination || day.effective_vehicle"
+          class="mb-4 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5"
+        >
+          <!-- Route row -->
+          <div v-if="day.program_origin || day.program_destination" class="flex items-start gap-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="mt-0.5 h-4 w-4 shrink-0 text-driver-accent/60" aria-hidden="true">
+              <path fill-rule="evenodd" d="m7.539 14.841.003.003.002.002a.755.755 0 0 0 .912 0l.002-.002.003-.003.012-.009a5.57 5.57 0 0 0 .19-.153 15.588 15.588 0 0 0 2.046-2.082c1.101-1.364 2.291-3.458 2.291-6.097a5 5 0 0 0-10 0c0 2.639 1.19 4.733 2.291 6.097a15.588 15.588 0 0 0 2.046 2.082 8.916 8.916 0 0 0 .19.153l.012.01ZM8 8.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" clip-rule="evenodd" />
+            </svg>
+            <div class="min-w-0 flex-1 text-sm">
+              <span v-if="day.program_origin" class="font-medium text-driver-ink">{{ day.program_origin }}</span>
+              <span v-if="day.program_origin && day.program_destination" class="mx-1 text-driver-muted">→</span>
+              <span v-if="day.program_destination" class="font-medium text-driver-ink">{{ day.program_destination }}</span>
+            </div>
+          </div>
+
+          <!-- Vehicle row -->
+          <div
+            v-if="day.effective_vehicle"
+            class="mt-2.5 flex items-center gap-2.5"
+            :class="{ 'border-t border-white/6 pt-2.5': day.program_origin || day.program_destination }"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4 shrink-0 text-driver-accent/60" aria-hidden="true">
+              <path d="M6.5 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM12.5 8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+              <path fill-rule="evenodd" d="M1.246 4.421A.75.75 0 0 1 2 4h12a.75.75 0 0 1 .75.75v.573c0 .296-.181.562-.457.671L13.5 6.5v.5h.75a.75.75 0 0 1 0 1.5H13.5v1.75a.75.75 0 0 1-.75.75H11.5a.75.75 0 0 1-.75-.75V10h-5v.25a.75.75 0 0 1-.75.75H3.25a.75.75 0 0 1-.75-.75V8.5H1.75a.75.75 0 0 1 0-1.5H2.5V6.5L1.707 5.994A.75.75 0 0 1 1.246 4.421ZM3.5 6.5v.5h9V6.5L11 5.5H5L3.5 6.5Z" clip-rule="evenodd" />
+            </svg>
+            <span class="text-sm font-medium text-driver-ink">{{ day.effective_vehicle.license_plate }}</span>
+          </div>
+        </div>
+
+        <!-- Execution summary bar -->
+        <div v-if="execution" class="mb-4 flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+          <span class="rounded-lg px-3 py-1 text-sm font-semibold" :class="execStatusClass(execution.status)">
+            {{ execStatusLabel(execution.status) }}
+          </span>
+          <div class="flex items-center gap-3 text-sm">
+            <span class="flex items-center gap-1">
+              <b class="text-lg font-extrabold tabular-nums text-driver-accent">{{ execution.total_boarded }}</b>
+              <span class="text-driver-muted">/{{ execution.total_expected }}</span>
+            </span>
+            <span v-if="execution.total_absent" class="rounded-lg bg-rose-500/15 px-2.5 py-0.5 text-sm font-semibold text-rose-300">
+              {{ execution.total_absent }} vắng
+            </span>
+          </div>
         </div>
 
         <!-- Bước 1: tài xế xác nhận sẽ chạy chuyến -->
-        <div v-if="!execution && !day.confirmed_at" class="space-y-2">
-          <p class="px-1 text-sm text-driver-ink/60">Xác nhận bạn sẽ chạy chuyến này. Sau khi xác nhận mới có thể bắt đầu chuyến.</p>
+        <div v-if="!execution && !day.confirmed_at" class="space-y-3">
+          <p class="text-base text-driver-ink/70">Xác nhận bạn sẽ chạy chuyến này. Sau khi xác nhận mới có thể bắt đầu chuyến.</p>
           <button
             type="button"
-            class="w-full rounded-2xl bg-[#7fdcc8] py-3.5 text-center text-base font-semibold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
+            class="w-full rounded-2xl bg-driver-accent py-4 text-center text-lg font-bold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
             :disabled="busy"
             @click="confirm"
           >
@@ -38,14 +105,19 @@
         </div>
 
         <!-- Bước 2: đã xác nhận → bắt đầu chuyến -->
-        <div v-else-if="!execution" class="space-y-2">
-          <div class="flex items-center justify-between rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-200">
-            <span>Đã xác nhận chuyến</span>
-            <button type="button" class="text-xs text-emerald-200/70 underline disabled:opacity-50" :disabled="busy" @click="unconfirm">Bỏ xác nhận</button>
+        <div v-else-if="!execution" class="space-y-3">
+          <div class="flex items-center justify-between rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
+            <div class="flex items-center gap-2 text-base font-medium text-emerald-200">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-4 w-4 shrink-0" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
+              </svg>
+              Đã xác nhận chuyến
+            </div>
+            <button type="button" class="text-sm text-emerald-200/60 underline disabled:opacity-50" :disabled="busy" @click="unconfirm">Bỏ</button>
           </div>
           <button
             type="button"
-            class="w-full rounded-2xl bg-[#7fdcc8] py-3.5 text-center text-base font-semibold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
+            class="w-full rounded-2xl bg-driver-accent py-4 text-center text-lg font-bold text-driver-bg transition active:scale-[0.99] disabled:opacity-50"
             :disabled="busy"
             @click="start"
           >
@@ -53,40 +125,43 @@
           </button>
         </div>
 
-        <div v-if="execution && execution.status === 'in_progress'" class="space-y-2">
-          <div v-for="s in execution.student_logs" :key="s.student_id" class="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-            <div class="flex items-center justify-between gap-2">
+        <!-- Đang chạy: danh sách học sinh -->
+        <div v-if="execution && execution.status === 'in_progress'" class="space-y-2.5">
+          <div v-for="s in execution.student_logs" :key="s.student_id" class="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5">
+            <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
-                <div class="truncate font-medium">{{ s.full_name }}</div>
-                <div class="text-xs text-driver-ink/50">{{ s.code }}</div>
+                <div class="truncate text-base font-semibold">{{ s.full_name }}</div>
+                <div class="mt-0.5 text-sm text-driver-muted">{{ s.code }}</div>
               </div>
-              <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium" :class="logClass(s.final_status)">{{ logLabel(s.final_status) }}</span>
+              <span class="shrink-0 rounded-lg px-3 py-1 text-sm font-semibold" :class="logClass(s.final_status)">
+                {{ logLabel(s.final_status) }}
+              </span>
             </div>
-            <div class="mt-2 flex gap-2">
+            <div class="mt-3 flex gap-2">
               <button
                 v-if="s.final_status !== 'boarded' && s.final_status !== 'completed' && s.final_status !== 'absent'"
-                class="flex-1 rounded-xl bg-[#7fdcc8]/15 py-2 text-sm font-medium text-[#7fdcc8] active:scale-95"
+                class="flex-1 rounded-xl bg-driver-accent/15 py-2.5 text-base font-semibold text-driver-accent active:scale-95"
                 @click="act('board', s)"
               >
                 Lên xe
               </button>
               <button
                 v-if="s.final_status === 'boarded'"
-                class="flex-1 rounded-xl bg-sky-500/15 py-2 text-sm font-medium text-sky-300 active:scale-95"
+                class="flex-1 rounded-xl bg-sky-500/15 py-2.5 text-base font-semibold text-sky-300 active:scale-95"
                 @click="act('alight', s)"
               >
                 Xuống xe
               </button>
               <button
                 v-if="s.final_status !== 'absent'"
-                class="rounded-xl bg-rose-500/15 px-3 py-2 text-sm font-medium text-rose-300 active:scale-95"
+                class="rounded-xl bg-rose-500/15 px-4 py-2.5 text-base font-semibold text-rose-300 active:scale-95"
                 @click="act('absent', s)"
               >
                 Vắng
               </button>
               <button
                 v-else
-                class="rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-driver-ink/70 active:scale-95"
+                class="rounded-xl bg-white/10 px-4 py-2.5 text-base font-semibold text-driver-ink/60 active:scale-95"
                 @click="act('undo-absent', s)"
               >
                 Hủy vắng
@@ -96,7 +171,7 @@
 
           <button
             type="button"
-            class="mt-4 w-full rounded-2xl bg-sky-500 py-3.5 text-center text-base font-semibold text-white transition active:scale-[0.99] disabled:opacity-50"
+            class="mt-2 w-full rounded-2xl bg-sky-500 py-4 text-center text-lg font-bold text-white transition active:scale-[0.99] disabled:opacity-50"
             :disabled="busy"
             @click="complete"
           >
@@ -104,8 +179,41 @@
           </button>
         </div>
 
-        <div v-else-if="execution && execution.status === 'completed'" class="rounded-2xl border border-sky-400/30 bg-sky-500/10 px-4 py-6 text-center text-sm text-sky-200">
-          Chuyến đã hoàn thành.
+        <!-- Hoàn thành: tóm tắt -->
+        <div v-else-if="execution && execution.status === 'completed'" class="space-y-3">
+          <div class="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-5">
+            <div class="mb-1 flex items-center gap-2 text-base font-bold text-emerald-300">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-5 w-5 shrink-0" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
+              </svg>
+              Chuyến đã hoàn thành
+            </div>
+            <p v-if="execution.completed_at" class="mt-0.5 text-sm text-emerald-200/70">
+              {{ formatTime(execution.completed_at) }}
+            </p>
+          </div>
+
+          <!-- Student breakdown for completed trip -->
+          <div v-if="execution.student_logs?.length" class="rounded-2xl border border-white/8 bg-white/[0.03]">
+            <div class="border-b border-white/6 px-4 py-3">
+              <p class="text-sm font-semibold text-driver-muted uppercase tracking-wide">Danh sách học sinh</p>
+            </div>
+            <div class="divide-y divide-white/5">
+              <div
+                v-for="s in execution.student_logs"
+                :key="s.student_id"
+                class="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div class="min-w-0">
+                  <div class="truncate text-base font-medium">{{ s.full_name }}</div>
+                  <div class="mt-0.5 text-sm text-driver-muted">{{ s.code }}</div>
+                </div>
+                <span class="shrink-0 rounded-lg px-3 py-1 text-sm font-semibold" :class="logClass(s.final_status)">
+                  {{ logLabel(s.final_status) }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </template>
     </div>
@@ -113,7 +221,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   driverGetDay,
@@ -137,6 +245,16 @@ const online = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const pendingCount = ref(0)
 
 function setOnline() { online.value = navigator.onLine }
+
+const formattedDate = computed(() => {
+  if (!day.value?.scheduled_date) return ''
+  return new Date(day.value.scheduled_date + 'T00:00:00').toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  })
+})
 
 async function load() {
   loading.value = true
@@ -198,7 +316,6 @@ async function complete() {
 
 async function act(type, s) {
   const ts = new Date().toISOString()
-  // Optimistic local update — khi offline, request tự được hàng đợi (outbox).
   applyLocal(type, s)
   try {
     const execId = execution.value.id
@@ -206,7 +323,6 @@ async function act(type, s) {
     else if (type === 'alight') await driverAlight(execId, s.student_id, ts)
     else if (type === 'absent') await driverAbsent(execId, s.student_id, { absence_type: 'no_notice', client_timestamp: ts })
     else if (type === 'undo-absent') await driverUndoAbsent(execId, s.student_id)
-    // Đồng bộ lại tổng số khi online thành công
     if (online.value) await refreshTotals()
   } catch (err) {
     if (online.value) {
@@ -241,10 +357,27 @@ function deviceId() {
   return id
 }
 
+function formatTime(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+}
+
 function execStatusLabel(s) { return { in_progress: 'Đang chạy', completed: 'Hoàn thành' }[s] || s }
-function execStatusClass(s) { return { in_progress: 'bg-[#7fdcc8]/20 text-[#7fdcc8]', completed: 'bg-sky-500/20 text-sky-300' }[s] || 'bg-white/10' }
+function execStatusClass(s) {
+  return {
+    in_progress: 'bg-sky-500/20 text-sky-200',
+    completed: 'bg-emerald-500/20 text-emerald-200',
+  }[s] || 'bg-white/10 text-driver-muted'
+}
 function logLabel(s) { return { pending: 'Chờ', boarded: 'Đã lên', completed: 'Đã xuống', absent: 'Vắng' }[s] || s }
-function logClass(s) { return { pending: 'bg-white/10 text-driver-ink/60', boarded: 'bg-[#7fdcc8]/20 text-[#7fdcc8]', completed: 'bg-sky-500/20 text-sky-300', absent: 'bg-rose-500/20 text-rose-300' }[s] || 'bg-white/10' }
+function logClass(s) {
+  return {
+    pending: 'bg-white/10 text-driver-ink/60',
+    boarded: 'bg-driver-accent/20 text-driver-accent',
+    completed: 'bg-sky-500/20 text-sky-300',
+    absent: 'bg-rose-500/20 text-rose-300',
+  }[s] || 'bg-white/10'
+}
 
 onMounted(() => {
   load()

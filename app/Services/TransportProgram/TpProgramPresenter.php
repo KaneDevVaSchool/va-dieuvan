@@ -54,10 +54,17 @@ class TpProgramPresenter
     {
         $day->loadMissing('program', 'driver', 'vehicle', 'execution');
         $effective = app(DriverAssignmentService::class)->resolveEffective($day);
+        $program = $day->program;
 
         return [
             'id' => $day->id,
             'program_id' => $day->program_id,
+            'program_name' => $program?->name,
+            'program_code' => $program?->code,
+            'program_departure_time' => $program?->departure_time,
+            'program_return_time' => $program?->return_time,
+            'program_origin' => $program?->origin_name,
+            'program_destination' => $program?->destination_name,
             'scheduled_date' => $day->scheduled_date->toDateString(),
             'day_type' => $day->day_type,
             'expected_count' => $day->expected_count,
