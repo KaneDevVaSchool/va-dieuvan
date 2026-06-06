@@ -13,6 +13,10 @@ use Illuminate\Http\Request;
 
 /**
  * Tài xế xác nhận sẽ chạy chuyến định kì (trước bước "Bắt đầu chuyến").
+ *
+ * Khi chương trình có cả buổi sáng lẫn buổi chiều (multi_slot), mỗi ca xác nhận
+ * độc lập qua tham số `shift` (morning | afternoon).
+ * Khi chỉ có 1 ca (single-slot), dùng confirmed_at chung như cũ.
  */
 class DriverTpDayConfirmController extends Controller
 {
@@ -31,16 +35,36 @@ class DriverTpDayConfirmController extends Controller
         abort_if($tpProgramDay->day_type === TpProgramDay::DAY_CANCELLED, 422, 'Ngày này đã bị hủy.');
         abort_if($tpProgramDay->execution()->exists(), 422, 'Chuyến đã được bắt đầu.');
 
-        if (! $tpProgramDay->confirmed_at) {
-            $tpProgramDay->forceFill([
-                'confirmed_at' => now(),
-                'confirmed_by_driver_id' => $driver->id,
-            ])->save();
+        $shift = $this->resolveShift($request);
 
-            $this->audit->log($request->user()?->id, 'day.confirmed', $tpProgramDay, $tpProgramDay->program);
+        if ($shift === 'morning') {
+            if (! $tpProgramDay->morning_confirmed_at) {
+                $tpProgramDay->forceFill([
+                    'morning_confirmed_at' => now(),
+                    'morning_confirmed_by_driver_id' => $driver->id,
+                ])->save();
+                $this->audit->log($request->user()?->id, 'day.confirmed', $tpProgramDay, $tpProgramDay->program);
+            }
+        } elseif ($shift === 'afternoon') {
+            if (! $tpProgramDay->afternoon_confirmed_at) {
+                $tpProgramDay->forceFill([
+                    'afternoon_confirmed_at' => now(),
+                    'afternoon_confirmed_by_driver_id' => $driver->id,
+                ])->save();
+                $this->audit->log($request->user()?->id, 'day.confirmed', $tpProgramDay, $tpProgramDay->program);
+            }
+        } else {
+            // Single-slot backward-compat
+            if (! $tpProgramDay->confirmed_at) {
+                $tpProgramDay->forceFill([
+                    'confirmed_at' => now(),
+                    'confirmed_by_driver_id' => $driver->id,
+                ])->save();
+                $this->audit->log($request->user()?->id, 'day.confirmed', $tpProgramDay, $tpProgramDay->program);
+            }
         }
 
-        return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
+        return $this->ok($this->buildPayload($tpProgramDay->fresh(), $shift));
     }
 
     public function unconfirm(Request $request, TpProgramDay $tpProgramDay): JsonResponse
@@ -49,15 +73,54 @@ class DriverTpDayConfirmController extends Controller
 
         abort_if($tpProgramDay->execution()->exists(), 422, 'Chuyến đã được bắt đầu, không thể bỏ xác nhận.');
 
-        if ($tpProgramDay->confirmed_at) {
-            $tpProgramDay->forceFill([
-                'confirmed_at' => null,
-                'confirmed_by_driver_id' => null,
-            ])->save();
+        $shift = $this->resolveShift($request);
 
-            $this->audit->log($request->user()?->id, 'day.unconfirmed', $tpProgramDay, $tpProgramDay->program);
+        if ($shift === 'morning') {
+            if ($tpProgramDay->morning_confirmed_at) {
+                $tpProgramDay->forceFill([
+                    'morning_confirmed_at' => null,
+                    'morning_confirmed_by_driver_id' => null,
+                ])->save();
+                $this->audit->log($request->user()?->id, 'day.unconfirmed', $tpProgramDay, $tpProgramDay->program);
+            }
+        } elseif ($shift === 'afternoon') {
+            if ($tpProgramDay->afternoon_confirmed_at) {
+                $tpProgramDay->forceFill([
+                    'afternoon_confirmed_at' => null,
+                    'afternoon_confirmed_by_driver_id' => null,
+                ])->save();
+                $this->audit->log($request->user()?->id, 'day.unconfirmed', $tpProgramDay, $tpProgramDay->program);
+            }
+        } else {
+            if ($tpProgramDay->confirmed_at) {
+                $tpProgramDay->forceFill([
+                    'confirmed_at' => null,
+                    'confirmed_by_driver_id' => null,
+                ])->save();
+                $this->audit->log($request->user()?->id, 'day.unconfirmed', $tpProgramDay, $tpProgramDay->program);
+            }
         }
 
-        return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
+        return $this->ok($this->buildPayload($tpProgramDay->fresh(), $shift));
+    }
+
+    private function resolveShift(Request $request): ?string
+    {
+        $shift = $request->input('shift');
+        if (in_array($shift, ['morning', 'afternoon'], true)) {
+            return $shift;
+        }
+
+        return null;
+    }
+
+    private function buildPayload(TpProgramDay $day, ?string $shift): array
+    {
+        $payload = $this->presenter->programDay($day);
+        // Thêm confirmed_at theo ca để frontend cập nhật đúng trạng thái card.
+        $payload['slot_confirmed_at'] = $day->slotConfirmedAt($shift)?->toIso8601String();
+        $payload['shift'] = $shift;
+
+        return $payload;
     }
 }

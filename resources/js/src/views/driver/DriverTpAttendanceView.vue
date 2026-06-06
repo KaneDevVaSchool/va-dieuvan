@@ -16,9 +16,20 @@
       </RouterLink>
 
       <div class="min-w-0 flex-1">
-        <h1 class="truncate text-xl font-bold leading-tight tracking-tight">
-          {{ day?.program_name || 'Điểm danh' }}
-        </h1>
+        <div class="flex items-center gap-2">
+          <h1 class="truncate text-xl font-bold leading-tight tracking-tight">
+            {{ day?.program_name || 'Điểm danh' }}
+          </h1>
+          <!-- Hiển thị badge ca khi có multi-slot (tuyến con) -->
+          <span
+            v-if="shift === 'morning'"
+            class="shrink-0 rounded-md bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-300"
+          >Sáng</span>
+          <span
+            v-else-if="shift === 'afternoon'"
+            class="shrink-0 rounded-md bg-violet-500/20 px-2 py-0.5 text-xs font-bold text-violet-300"
+          >Chiều</span>
+        </div>
         <p v-if="day" class="mt-0.5 truncate text-sm text-driver-muted">
           {{ formattedDate }}
           <span v-if="day.program_departure_time" class="mx-1 text-driver-accent/50">·</span>
@@ -91,8 +102,8 @@
           </div>
         </div>
 
-        <!-- Bước 1: tài xế xác nhận sẽ chạy chuyến -->
-        <div v-if="!execution && !day.confirmed_at" class="space-y-3">
+        <!-- Bước 1: tài xế xác nhận sẽ chạy chuyến (kiểm tra theo ca nếu có) -->
+        <div v-if="!execution && !slotConfirmedAt" class="space-y-3">
           <p class="text-base text-driver-ink/70">Xác nhận bạn sẽ chạy chuyến này. Sau khi xác nhận mới có thể bắt đầu chuyến.</p>
           <button
             type="button"
@@ -244,6 +255,20 @@ const execution = ref(null)
 const online = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
 const pendingCount = ref(0)
 
+// Ca của tuyến con mà tài xế đang xem (morning | afternoon | null cho single-slot).
+const shift = computed(() => {
+  const s = route.query.shift
+  return s === 'morning' || s === 'afternoon' ? s : null
+})
+
+// Trạng thái xác nhận riêng của ca này (tuyến con).
+const slotConfirmedAt = computed(() => {
+  if (!day.value) return null
+  if (shift.value === 'morning') return day.value.morning_confirmed_at ?? day.value.confirmed_at
+  if (shift.value === 'afternoon') return day.value.afternoon_confirmed_at ?? day.value.confirmed_at
+  return day.value.confirmed_at
+})
+
 function setOnline() { online.value = navigator.onLine }
 
 const formattedDate = computed(() => {
@@ -271,7 +296,8 @@ async function load() {
 async function confirm() {
   busy.value = true
   try {
-    day.value = await driverConfirmDay(route.params.dayId)
+    const result = await driverConfirmDay(route.params.dayId, shift.value)
+    day.value = result
     showAppSuccess('Đã xác nhận chuyến.')
   } catch (err) {
     showAppErrorFromApi(err)
@@ -283,7 +309,8 @@ async function confirm() {
 async function unconfirm() {
   busy.value = true
   try {
-    day.value = await driverUnconfirmDay(route.params.dayId)
+    const result = await driverUnconfirmDay(route.params.dayId, shift.value)
+    day.value = result
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {

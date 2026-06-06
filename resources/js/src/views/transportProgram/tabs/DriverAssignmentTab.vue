@@ -70,11 +70,57 @@
         </div>
       </div>
 
+      <!-- Shift tabs (chỉ hiện khi chương trình có cả sáng lẫn chiều) -->
+      <div v-if="hasBothShifts" class="flex items-center gap-0 border-b border-slate-100 px-4">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition"
+          :class="activeShift === 'morning'
+            ? 'border-amber-400 text-amber-700'
+            : 'border-transparent text-slate-500 hover:text-slate-800'"
+          @click="activeShift = 'morning'"
+        >
+          <!-- Sun icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0" aria-hidden="true">
+            <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.06 1.06l1.06 1.06Z" />
+          </svg>
+          Sáng
+          <span v-if="morningTime" class="ml-0.5 text-xs font-normal text-slate-400">({{ morningTime }})</span>
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition"
+          :class="activeShift === 'afternoon'
+            ? 'border-violet-400 text-violet-700'
+            : 'border-transparent text-slate-500 hover:text-slate-800'"
+          @click="activeShift = 'afternoon'"
+        >
+          <!-- Moon icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0" aria-hidden="true">
+            <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" />
+          </svg>
+          Chiều
+          <span v-if="afternoonTime" class="ml-0.5 text-xs font-normal text-slate-400">({{ afternoonTime }})</span>
+        </button>
+      </div>
+
       <!-- Legend -->
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-slate-100 bg-slate-50/60 px-4 py-2 text-xs text-slate-500">
+        <span class="inline-flex items-center gap-1.5">
+          <!-- Single shift badge (no tabs) -->
+          <template v-if="!hasBothShifts">
+            <span v-if="hasMorning" class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3" aria-hidden="true"><path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.06 1.06l1.06 1.06Z" /></svg>
+              Sáng{{ morningTime ? ` · ${morningTime}` : '' }}
+            </span>
+            <span v-else-if="hasAfternoon" class="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-700">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3" aria-hidden="true"><path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clip-rule="evenodd" /></svg>
+              Chiều{{ afternoonTime ? ` · ${afternoonTime}` : '' }}
+            </span>
+          </template>
+        </span>
         <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-slate-300"></span> Mặc định</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-amber-400"></span> Sơ cua</span>
-        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-va-800"></span> Tùy chỉnh</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-amber-400"></span> Tùy chỉnh ngày</span>
         <span class="ml-auto inline-flex items-center gap-1.5"><LockClosedIcon class="h-3.5 w-3.5" /> Đã chạy — không đổi được</span>
       </div>
 
@@ -85,34 +131,72 @@
         Không có ngày vận hành trong tháng này.
       </div>
       <div v-else class="overflow-x-auto">
-        <table class="w-full min-w-[44rem] text-left text-base">
+        <table class="w-full min-w-[56rem] text-left text-base">
           <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th class="px-4 py-3 font-medium">Ngày</th>
-              <th class="px-4 py-3 font-medium">Tài xế chạy chuyến</th>
-              <th class="px-4 py-3 font-medium">Nguồn</th>
+              <th class="px-4 py-3 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  <IdentificationIcon class="h-3.5 w-3.5 text-va-800/70" />
+                  Tài xế chạy chuyến
+                </span>
+              </th>
+              <th class="px-4 py-3 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  <LifebuoyIcon class="h-3.5 w-3.5 text-amber-500/80" />
+                  Tài xế sơ cua
+                </span>
+              </th>
               <th class="px-4 py-3 text-right font-medium">Thao tác</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr v-for="d in rows" :key="d.id" class="align-middle hover:bg-slate-50/60">
+              <!-- Ngày -->
               <td class="px-4 py-3">
                 <div class="font-medium text-slate-900">{{ formatDate(d.scheduled_date) }}</div>
                 <div class="text-xs text-slate-400">{{ weekday(d.scheduled_date) }}</div>
               </td>
+
+              <!-- Tài xế chạy chuyến -->
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2.5">
                   <DriverAvatar v-if="d.effective_driver" :driver="d.effective_driver" small />
                   <span v-else class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-300"><UserPlusIcon class="h-4 w-4" /></span>
                   <span class="min-w-0">
-                    <span class="block truncate text-sm font-medium text-slate-800">{{ d.effective_driver?.full_name || 'Chưa có tài xế' }}</span>
+                    <span class="flex items-center gap-1.5">
+                      <span class="block truncate text-sm font-medium text-slate-800">{{ d.effective_driver?.full_name || 'Chưa có tài xế' }}</span>
+                      <span
+                        v-if="d.driver_id"
+                        class="shrink-0 rounded-full bg-va-800/10 px-1.5 py-0.5 text-[10px] font-semibold text-va-800"
+                      >Ngày</span>
+                    </span>
                     <span v-if="d.effective_driver?.phone" class="block truncate text-xs text-slate-400">{{ d.effective_driver.phone }}</span>
                   </span>
                 </div>
               </td>
+
+              <!-- Tài xế sơ cua -->
               <td class="px-4 py-3">
-                <span :class="sourceBadgeClass(sourceOf(d))">{{ sourceLabel(sourceOf(d)) }}</span>
+                <div class="flex items-center gap-2.5">
+                  <DriverAvatar v-if="d.effective_backup_driver" :driver="d.effective_backup_driver" small muted />
+                  <span v-else class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-300"><LifebuoyIcon class="h-4 w-4" /></span>
+                  <span class="min-w-0">
+                    <span class="flex items-center gap-1.5">
+                      <span class="block truncate text-sm font-medium" :class="d.effective_backup_driver ? 'text-slate-700' : 'text-slate-400 italic'">
+                        {{ d.effective_backup_driver?.full_name || 'Chưa có sơ cua' }}
+                      </span>
+                      <span
+                        v-if="d.backup_driver_id"
+                        class="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                      >Ngày</span>
+                    </span>
+                    <span v-if="d.effective_backup_driver?.phone" class="block truncate text-xs text-slate-400">{{ d.effective_backup_driver.phone }}</span>
+                  </span>
+                </div>
               </td>
+
+              <!-- Thao tác -->
               <td class="px-4 py-3">
                 <div class="flex items-center justify-end gap-1.5">
                   <template v-if="d.has_execution">
@@ -121,24 +205,17 @@
                     </span>
                   </template>
                   <template v-else>
-                    <button
-                      v-if="backupDriver && String(d.effective_driver?.id) !== String(backupDriverId)"
-                      type="button"
-                      class="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
-                      :disabled="busyDayId === d.id"
-                      title="Dùng tài xế sơ cua cho chuyến này"
-                      @click="useBackup(d)"
-                    >
-                      <LifebuoyIcon class="h-3.5 w-3.5" /> Sơ cua
-                    </button>
+                    <!-- Đổi tài xế chạy chuyến -->
                     <button
                       type="button"
                       class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
                       :disabled="busyDayId === d.id"
-                      @click="openDayPicker(d)"
+                      title="Đổi tài xế chạy chuyến"
+                      @click="openMainPicker(d)"
                     >
-                      <ArrowsRightLeftIcon class="h-3.5 w-3.5" /> Đổi
+                      <IdentificationIcon class="h-3.5 w-3.5 text-va-800/70" /> Đổi TX
                     </button>
+                    <!-- Reset tài xế chạy chuyến -->
                     <button
                       v-if="d.driver_id"
                       type="button"
@@ -146,6 +223,30 @@
                       :disabled="busyDayId === d.id"
                       title="Trả về tài xế mặc định"
                       @click="resetDay(d)"
+                    >
+                      <ArrowUturnLeftIcon class="h-3.5 w-3.5" />
+                    </button>
+
+                    <span class="h-4 w-px bg-slate-200" />
+
+                    <!-- Đổi tài xế sơ cua -->
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                      :disabled="busyDayId === d.id"
+                      title="Đổi tài xế sơ cua cho chuyến này"
+                      @click="openBackupPicker(d)"
+                    >
+                      <LifebuoyIcon class="h-3.5 w-3.5" /> Đổi SC
+                    </button>
+                    <!-- Reset sơ cua về mặc định -->
+                    <button
+                      v-if="d.backup_driver_id"
+                      type="button"
+                      class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-amber-400 transition hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
+                      :disabled="busyDayId === d.id"
+                      title="Trả về tài xế sơ cua mặc định"
+                      @click="resetBackupDay(d)"
                     >
                       <ArrowUturnLeftIcon class="h-3.5 w-3.5" />
                     </button>
@@ -158,22 +259,38 @@
       </div>
     </div>
 
+    <!-- Modal đổi tài xế chạy chuyến -->
     <DriverPickerModal
-      :open="picker.open"
-      title="Đổi tài xế cho chuyến"
-      :description="pickerDescription"
+      :open="mainPicker.open"
+      title="Đổi tài xế chạy chuyến"
+      :description="mainPickerDescription"
       :drivers="driverOptions"
-      :selected-id="pickerSelectedId"
-      :allow-clear="pickerAllowClear"
+      :selected-id="mainPickerSelectedId"
+      :exclude-ids="mainPickerExcludeIds"
+      :allow-clear="mainPickerAllowClear"
       clear-label="Trả về tài xế mặc định"
-      @select="onPickerSelect"
-      @close="picker.open = false"
+      @select="onMainPickerSelect"
+      @close="mainPicker.open = false"
+    />
+
+    <!-- Modal đổi tài xế sơ cua -->
+    <DriverPickerModal
+      :open="backupPicker.open"
+      title="Đổi tài xế sơ cua"
+      :description="backupPickerDescription"
+      :drivers="driverOptions"
+      :selected-id="backupPickerSelectedId"
+      :exclude-ids="backupPickerExcludeIds"
+      :allow-clear="backupPickerAllowClear"
+      clear-label="Trả về sơ cua mặc định"
+      @select="onBackupPickerSelect"
+      @close="backupPicker.open = false"
     />
   </div>
 </template>
 
 <script setup>
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   IdentificationIcon,
   TruckIcon,
@@ -183,12 +300,19 @@ import {
   LockClosedIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ArrowsRightLeftIcon,
   ArrowUturnLeftIcon,
 } from '@heroicons/vue/24/outline'
+import { h } from 'vue'
 import DriverPickerModal from '../components/DriverPickerModal.vue'
 import DriverCombobox from '../components/DriverCombobox.vue'
-import { listProgramDays, assignDayDriver, clearDayDriver, updateProgram } from '../../../api/transportProgram'
+import {
+  listProgramDays,
+  assignDayDriver,
+  clearDayDriver,
+  assignDayBackupDriver,
+  clearDayBackupDriver,
+  updateProgram,
+} from '../../../api/transportProgram'
 import { listDrivers } from '../../../api/operational'
 import { showAppErrorFromApi, showAppSuccess } from '../../../composables/appMessage'
 
@@ -202,8 +326,10 @@ const drivers = ref([])
 const month = ref(new Date().toISOString().slice(0, 7))
 const busyDayId = ref(null)
 const programBusy = ref(false)
+const activeShift = ref('morning')
 
-const picker = ref({ open: false, day: null })
+const mainPicker = ref({ open: false, day: null })
+const backupPicker = ref({ open: false, day: null })
 
 const WD = ['CN', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
 
@@ -212,14 +338,11 @@ const backupDriver = computed(() => props.program.backup_driver || null)
 const defaultDriverId = computed(() => props.program.default_driver_id ?? null)
 const backupDriverId = computed(() => props.program.backup_driver_id ?? null)
 
-// Lựa chọn inline (đồng bộ từ server, tránh nhấp nháy khi đang lưu)
 const defaultSel = ref(defaultDriverId.value)
 const backupSel = ref(backupDriverId.value)
 watch(defaultDriverId, (v) => { defaultSel.value = v })
 watch(backupDriverId, (v) => { backupSel.value = v })
 
-// Danh sách cho combobox: gộp thêm tài xế đang gán nếu không có trong danh sách tải về
-// (vd. tài xế đã nghỉ việc) để vẫn hiển thị đúng người đang phụ trách.
 const driverOptions = computed(() => {
   const list = [...drivers.value]
   const ids = new Set(list.map((d) => String(d.id)))
@@ -240,29 +363,87 @@ const vehicleLabel = computed(() => {
   return '— chưa gán —'
 })
 
+// ── Shift helpers ────────────────────────────────────────────────────────────
+const morningTime = computed(() => {
+  const s = props.program.settings
+  if (s?.morning?.enabled && s.morning?.departure) return s.morning.departure.slice(0, 5)
+  return props.program.departure_time ? String(props.program.departure_time).slice(0, 5) : null
+})
+
+const afternoonTime = computed(() => {
+  const s = props.program.settings
+  if (s?.afternoon?.enabled && s.afternoon?.departure) return s.afternoon.departure.slice(0, 5)
+  return props.program.return_time ? String(props.program.return_time).slice(0, 5) : null
+})
+
+const hasMorning = computed(() => {
+  const s = props.program.settings
+  if (s?.morning?.enabled) return true
+  if (!s?.morning?.enabled && !s?.afternoon?.enabled) return !!props.program.departure_time
+  return false
+})
+
+const hasAfternoon = computed(() => {
+  const s = props.program.settings
+  if (s?.afternoon?.enabled) return true
+  if (!s?.morning?.enabled && !s?.afternoon?.enabled) return !!props.program.return_time
+  return false
+})
+
+const hasBothShifts = computed(() => hasMorning.value && hasAfternoon.value)
+
+// ── Rows ─────────────────────────────────────────────────────────────────────
 const rows = computed(() => days.value.filter((d) => d.day_type !== 'cancelled'))
 
-// ── Picker config (chỉ dùng cho đổi tài xế theo từng chuyến) ─────────────────────
-const pickerDescription = computed(() => {
-  const day = picker.value.day
+// ── Main picker ──────────────────────────────────────────────────────────────
+const mainPickerDescription = computed(() => {
+  const day = mainPicker.value.day
   return day ? `${formatDate(day.scheduled_date)} · ${weekday(day.scheduled_date)}` : ''
 })
-const pickerSelectedId = computed(() => picker.value.day?.effective_driver?.id ?? null)
-const pickerAllowClear = computed(() => !!picker.value.day?.driver_id)
+const mainPickerSelectedId = computed(() => mainPicker.value.day?.effective_driver?.id ?? null)
+const mainPickerAllowClear = computed(() => !!mainPicker.value.day?.driver_id)
+const mainPickerExcludeIds = computed(() => {
+  const day = mainPicker.value.day
+  const ids = []
+  if (day?.effective_backup_driver?.id) ids.push(day.effective_backup_driver.id)
+  return ids
+})
 
-function openDayPicker(day) {
-  picker.value = { open: true, day }
+function openMainPicker(day) {
+  mainPicker.value = { open: true, day }
 }
 
-async function onPickerSelect(driverId) {
-  await saveDayDriver(picker.value.day, driverId)
-  picker.value.open = false
+async function onMainPickerSelect(driverId) {
+  await saveDayDriver(mainPicker.value.day, driverId)
+  mainPicker.value.open = false
+}
+
+// ── Backup picker ────────────────────────────────────────────────────────────
+const backupPickerDescription = computed(() => {
+  const day = backupPicker.value.day
+  return day ? `${formatDate(day.scheduled_date)} · ${weekday(day.scheduled_date)}` : ''
+})
+const backupPickerSelectedId = computed(() => backupPicker.value.day?.effective_backup_driver?.id ?? null)
+const backupPickerAllowClear = computed(() => !!backupPicker.value.day?.backup_driver_id)
+const backupPickerExcludeIds = computed(() => {
+  const day = backupPicker.value.day
+  const ids = []
+  if (day?.effective_driver?.id) ids.push(day.effective_driver.id)
+  return ids
+})
+
+function openBackupPicker(day) {
+  backupPicker.value = { open: true, day }
+}
+
+async function onBackupPickerSelect(driverId) {
+  await saveBackupDayDriver(backupPicker.value.day, driverId)
+  backupPicker.value.open = false
 }
 
 // ── Program: tài xế chạy chuyến / sơ cua (chọn inline) ──────────────────────────
 function onProgramDriverChange(mode, val) {
   const id = val != null && val !== '' ? Number(val) : null
-  // Cập nhật lạc quan để không nhấp nháy giá trị trong lúc lưu
   if (mode === 'default') defaultSel.value = id
   else backupSel.value = id
   saveProgramDriver(mode, id)
@@ -278,7 +459,6 @@ async function saveProgramDriver(mode, driverId) {
     await loadDays()
   } catch (err) {
     showAppErrorFromApi(err)
-    // Hoàn nguyên lựa chọn về trạng thái server khi lưu lỗi
     defaultSel.value = defaultDriverId.value
     backupSel.value = backupDriverId.value
   } finally {
@@ -286,7 +466,7 @@ async function saveProgramDriver(mode, driverId) {
   }
 }
 
-// ── Per-day overrides ───────────────────────────────────────────────────────────
+// ── Per-day main driver ──────────────────────────────────────────────────────
 async function saveDayDriver(day, driverId) {
   if (!day) return
   busyDayId.value = day.id
@@ -295,7 +475,7 @@ async function saveDayDriver(day, driverId) {
       ? await assignDayDriver(day.id, { driver_id: driverId })
       : await clearDayDriver(day.id)
     patchRow(updated)
-    showAppSuccess(driverId ? 'Đã đổi tài xế cho chuyến.' : 'Đã trả về tài xế mặc định.')
+    showAppSuccess(driverId ? 'Đã đổi tài xế chạy chuyến.' : 'Đã trả về tài xế mặc định.')
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {
@@ -303,36 +483,35 @@ async function saveDayDriver(day, driverId) {
   }
 }
 
-function useBackup(day) {
-  if (!backupDriverId.value) return
-  saveDayDriver(day, backupDriverId.value)
-}
 function resetDay(day) {
   saveDayDriver(day, null)
+}
+
+// ── Per-day backup driver ────────────────────────────────────────────────────
+async function saveBackupDayDriver(day, driverId) {
+  if (!day) return
+  busyDayId.value = day.id
+  try {
+    const updated = driverId
+      ? await assignDayBackupDriver(day.id, { backup_driver_id: driverId })
+      : await clearDayBackupDriver(day.id)
+    patchRow(updated)
+    showAppSuccess(driverId ? 'Đã đổi tài xế sơ cua cho chuyến.' : 'Đã trả về sơ cua mặc định.')
+  } catch (err) {
+    showAppErrorFromApi(err)
+  } finally {
+    busyDayId.value = null
+  }
+}
+
+function resetBackupDay(day) {
+  saveBackupDayDriver(day, null)
 }
 
 function patchRow(updated) {
   if (!updated?.id) return
   const i = days.value.findIndex((d) => d.id === updated.id)
   if (i >= 0) days.value.splice(i, 1, { ...days.value[i], ...updated })
-}
-
-// ── Source classification ───────────────────────────────────────────────────────
-function sourceOf(d) {
-  if (!d.driver_id) return 'default'
-  if (backupDriverId.value && String(d.driver_id) === String(backupDriverId.value)) return 'backup'
-  return 'custom'
-}
-function sourceLabel(s) {
-  return { default: 'Mặc định', backup: 'Sơ cua', custom: 'Tùy chỉnh' }[s]
-}
-function sourceBadgeClass(s) {
-  const base = 'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold '
-  return base + ({
-    default: 'bg-slate-100 text-slate-500',
-    backup: 'bg-amber-50 text-amber-700',
-    custom: 'bg-va-800/10 text-va-800',
-  }[s])
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
@@ -387,5 +566,6 @@ watch(month, loadDays)
 onMounted(() => {
   loadDays()
   loadDrivers()
+  if (hasAfternoon.value && !hasMorning.value) activeShift.value = 'afternoon'
 })
 </script>

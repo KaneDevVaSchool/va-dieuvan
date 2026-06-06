@@ -59,6 +59,32 @@ class DriverAssignmentService
         $this->audit->log($actorId, 'day.driver_override_cleared', $day, $day->program);
     }
 
+    public function assignBackupDriver(TpProgramDay $day, int $driverId, ?int $actorId): void
+    {
+        $day->loadMissing('program');
+
+        $day->update([
+            'backup_driver_id' => $driverId,
+            'backup_assigned_at' => now(),
+            'backup_assigned_by' => $actorId,
+        ]);
+
+        $this->audit->log($actorId, 'day.backup_driver_assigned', $day, $day->program, metadata: [
+            'backup_driver_id' => $driverId,
+        ]);
+    }
+
+    public function clearBackupDriver(TpProgramDay $day, ?int $actorId): void
+    {
+        $day->update([
+            'backup_driver_id' => null,
+            'backup_assigned_at' => null,
+            'backup_assigned_by' => null,
+        ]);
+
+        $this->audit->log($actorId, 'day.backup_driver_override_cleared', $day, $day->program);
+    }
+
     private function assertNoConflict(TpProgramDay $day, int $driverId): void
     {
         $program = $day->program;

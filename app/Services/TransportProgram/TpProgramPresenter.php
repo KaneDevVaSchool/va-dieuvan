@@ -52,7 +52,7 @@ class TpProgramPresenter
 
     public function programDay(TpProgramDay $day): array
     {
-        $day->loadMissing('program', 'driver', 'vehicle', 'execution');
+        $day->loadMissing('program', 'driver', 'backupDriver', 'vehicle', 'execution');
         $effective = app(DriverAssignmentService::class)->resolveEffective($day);
         $program = $day->program;
 
@@ -70,8 +70,11 @@ class TpProgramPresenter
             'expected_count' => $day->expected_count,
             'driver_id' => $day->driver_id,
             'vehicle_id' => $day->vehicle_id,
+            'backup_driver_id' => $day->backup_driver_id,
             'effective_driver' => $this->driverMini($effective['driver']),
             'effective_source' => $day->driver_id ? 'override' : 'default',
+            'effective_backup_driver' => $this->driverMini($day->effectiveBackupDriver()),
+            'effective_backup_source' => $day->backup_driver_id ? 'override' : 'default',
             'effective_vehicle' => $effective['vehicle'] ? [
                 'id' => $effective['vehicle']->id,
                 'license_plate' => $effective['vehicle']->license_plate ?? null,
@@ -79,6 +82,8 @@ class TpProgramPresenter
             'has_execution' => $day->execution !== null,
             'execution_status' => $day->execution?->status,
             'confirmed_at' => $day->confirmed_at?->toIso8601String(),
+            'morning_confirmed_at' => $day->morning_confirmed_at?->toIso8601String(),
+            'afternoon_confirmed_at' => $day->afternoon_confirmed_at?->toIso8601String(),
             'notes' => $day->notes,
         ];
     }

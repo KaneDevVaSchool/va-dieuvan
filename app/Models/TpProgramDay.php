@@ -17,7 +17,10 @@ class TpProgramDay extends Model
     protected $fillable = [
         'program_id', 'scheduled_date', 'day_type', 'expected_count',
         'driver_id', 'vehicle_id', 'assigned_at', 'assigned_by',
+        'backup_driver_id', 'backup_assigned_at', 'backup_assigned_by',
         'confirmed_at', 'confirmed_by_driver_id',
+        'morning_confirmed_at', 'morning_confirmed_by_driver_id',
+        'afternoon_confirmed_at', 'afternoon_confirmed_by_driver_id',
         'estimated_cost', 'cancel_reason', 'notes',
         'attendance_status', 'attendance_confirmed_at', 'attendance_confirmed_by', 'attendance_lock_version',
     ];
@@ -25,7 +28,10 @@ class TpProgramDay extends Model
     protected $casts = [
         'scheduled_date' => 'date',
         'assigned_at' => 'datetime',
+        'backup_assigned_at' => 'datetime',
         'confirmed_at' => 'datetime',
+        'morning_confirmed_at' => 'datetime',
+        'afternoon_confirmed_at' => 'datetime',
         'attendance_confirmed_at' => 'datetime',
         'expected_count' => 'integer',
         'attendance_lock_version' => 'integer',
@@ -40,6 +46,11 @@ class TpProgramDay extends Model
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    public function backupDriver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'backup_driver_id');
     }
 
     public function vehicle(): BelongsTo
@@ -60,6 +71,22 @@ class TpProgramDay extends Model
     public function isConfirmed(): bool
     {
         return $this->confirmed_at !== null;
+    }
+
+    /**
+     * Trả về thời điểm xác nhận cho một ca cụ thể.
+     * Nếu không có ca hoặc cột ca chưa được set, fall-back về confirmed_at chung.
+     */
+    public function slotConfirmedAt(?string $shift): ?\Carbon\Carbon
+    {
+        if ($shift === 'morning') {
+            return $this->morning_confirmed_at ?? $this->confirmed_at;
+        }
+        if ($shift === 'afternoon') {
+            return $this->afternoon_confirmed_at ?? $this->confirmed_at;
+        }
+
+        return $this->confirmed_at;
     }
 
     public function execution(): HasOne
@@ -90,6 +117,26 @@ class TpProgramDay extends Model
         }
         $driver = $this->relationLoaded('driver') && $this->driver_id
             ? $this->driver
+            : Driver::query()->find($driverId);
+
+        if (! $driver || $driver->trashed()) {
+            return null;
+        }
+        if ($driver->employment_status === 'inactive') {
+            return null;
+        }
+
+        return $driver;
+    }
+
+    public function effectiveBackupDriver(): ?Driver
+    {
+        $driverId = $this->backup_driver_id ?? $this->program?->backup_driver_id;
+        if (! $driverId) {
+            return null;
+        }
+        $driver = $this->relationLoaded('backupDriver') && $this->backup_driver_id
+            ? $this->backupDriver
             : Driver::query()->find($driverId);
 
         if (! $driver || $driver->trashed()) {

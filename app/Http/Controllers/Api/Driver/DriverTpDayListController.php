@@ -49,12 +49,20 @@ class DriverTpDayListController extends Controller
                 $slots = [['shift' => 'morning', 'departure_time' => $program->departure_time, 'arrival_time' => null]];
             }
 
+            $multiSlot = count($slots) > 1;
             foreach ($slots as $slot) {
                 $shift = (string) ($slot['shift'] ?? 'morning');
+                // Khi có nhiều ca (tuyến con), trả về confirmed_at riêng của từng ca.
+                // Khi chỉ có 1 ca, dùng confirmed_at chung (backward-compat).
+                $confirmedAt = $multiSlot
+                    ? $d->slotConfirmedAt($shift)?->toIso8601String()
+                    : $d->confirmed_at?->toIso8601String();
+
                 $items[] = [
                     'day_id' => $d->id,
                     'list_key' => $d->id.'-'.$shift,
                     'shift' => $shift,
+                    'multi_slot' => $multiSlot,
                     'program_name' => $program->name,
                     'scheduled_date' => $d->scheduled_date->toDateString(),
                     'departure_time' => $slot['departure_time'] ?? $program->departure_time,
@@ -62,7 +70,7 @@ class DriverTpDayListController extends Controller
                     'expected_count' => $d->expected_count,
                     'is_default_driver' => $d->driver_id === null,
                     'execution_status' => $d->execution?->status,
-                    'confirmed_at' => $d->confirmed_at?->toIso8601String(),
+                    'confirmed_at' => $confirmedAt,
                 ];
             }
         }

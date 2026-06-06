@@ -170,6 +170,8 @@ Route::prefix('tp-program-days')->group(function () {
     Route::patch('/{tpProgramDay}', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayController::class, 'update'])->middleware('throttle:60,1');
     Route::patch('/{tpProgramDay}/assign-driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'assign'])->middleware('throttle:60,1');
     Route::delete('/{tpProgramDay}/driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'remove'])->middleware('throttle:60,1');
+    Route::patch('/{tpProgramDay}/backup-driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'assignBackup'])->middleware('throttle:60,1');
+    Route::delete('/{tpProgramDay}/backup-driver', [\App\Http\Controllers\Api\TransportProgram\TpProgramDayDriverController::class, 'removeBackup'])->middleware('throttle:60,1');
     Route::post('/{tpProgramDay}/absences', [\App\Http\Controllers\Api\TransportProgram\TpDayAbsenceController::class, 'store'])
         ->middleware(['throttle:60,1', 'idempotency']);
     Route::delete('/{tpProgramDay}/absences/{student}', [\App\Http\Controllers\Api\TransportProgram\TpDayAbsenceController::class, 'destroy'])->middleware('throttle:60,1');

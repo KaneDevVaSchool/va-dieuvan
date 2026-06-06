@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\TransportProgram;
 
 use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\TransportProgram\AssignDayBackupDriverRequest;
 use App\Http\Requests\Api\TransportProgram\AssignDayDriverRequest;
 use App\Models\TpProgramDay;
 use App\Services\TransportProgram\DriverAssignmentService;
@@ -34,6 +35,24 @@ class TpProgramDayDriverController extends Controller
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_driver_assign.manage')), 403);
 
         $this->assignment->clearOverride($tpProgramDay, $request->user()?->id);
+
+        return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
+    }
+
+    public function assignBackup(AssignDayBackupDriverRequest $request, TpProgramDay $tpProgramDay): JsonResponse
+    {
+        $data = $request->validated();
+        $this->assignment->assignBackupDriver($tpProgramDay, $data['backup_driver_id'], $request->user()?->id);
+
+        return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
+    }
+
+    public function removeBackup(Request $request, TpProgramDay $tpProgramDay): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_driver_assign.manage')), 403);
+
+        $this->assignment->clearBackupDriver($tpProgramDay, $request->user()?->id);
 
         return $this->ok($this->presenter->programDay($tpProgramDay->fresh()));
     }

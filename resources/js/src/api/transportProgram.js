@@ -74,6 +74,16 @@ export async function clearDayDriver(dayId) {
   return data.data
 }
 
+export async function assignDayBackupDriver(dayId, payload) {
+  const { data } = await http.patch(`/tp-program-days/${dayId}/backup-driver`, payload)
+  return data.data
+}
+
+export async function clearDayBackupDriver(dayId) {
+  const { data } = await http.delete(`/tp-program-days/${dayId}/backup-driver`)
+  return data.data
+}
+
 // ── Enrollments ───────────────────────────────────────────────────────────────
 
 export async function listEnrollments(id) {
@@ -301,13 +311,15 @@ export async function driverGetDay(dayId) {
   return data.data
 }
 
-export async function driverConfirmDay(dayId) {
-  const { data } = await http.post(`/driver/tp-days/${dayId}/confirm`)
+export async function driverConfirmDay(dayId, shift = null) {
+  const payload = shift ? { shift } : {}
+  const { data } = await http.post(`/driver/tp-days/${dayId}/confirm`, payload)
   return data.data
 }
 
-export async function driverUnconfirmDay(dayId) {
-  const { data } = await http.delete(`/driver/tp-days/${dayId}/confirm`)
+export async function driverUnconfirmDay(dayId, shift = null) {
+  const payload = shift ? { shift } : {}
+  const { data } = await http.delete(`/driver/tp-days/${dayId}/confirm`, { data: payload })
   return data.data
 }
 
