@@ -161,15 +161,22 @@ function tripNeedsDriverConfirmation(trip) {
   return false
 }
 
+/** Ngày cuối (YYYY-MM-DD) cho banner chờ xác nhận: chỉ hôm nay và ngày mai. */
+function confirmationBannerEndYmd() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return ymd(d)
+}
+
 /**
- * Banner chờ xác nhận: từ hôm nay đến hết cửa sổ dashboard (không chỉ “hôm nay trước giờ đi”).
+ * Banner chờ xác nhận: chỉ chuyến có ngày đi là hôm nay hoặc ngày mai.
  */
-function isConfirmationRelevant(trip, dashboardDateTo) {
+function isConfirmationRelevant(trip) {
   const today = ymd(new Date())
-  const end = normalizedDashboardEndYmd(dashboardDateTo)
+  const end = confirmationBannerEndYmd()
   const day = tripDepartYmd(trip)
   if (day == null) {
-    return true
+    return false
   }
   if (day < today) {
     return false
@@ -269,9 +276,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     needsConfirmationTrips() {
-      const candidates = this.dashboardMergedTrips.filter((x) =>
-        isConfirmationRelevant(x, this.dashboardDateTo),
-      )
+      const candidates = this.dashboardMergedTrips.filter((x) => isConfirmationRelevant(x))
       return expandTripsForPendingConfirmation(candidates)
         .slice()
         .sort(
