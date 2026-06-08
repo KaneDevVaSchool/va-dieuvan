@@ -1,8 +1,10 @@
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:pb-24">
+  <div
+    class="portal-request-detail mx-auto max-w-7xl px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 xs:px-4 sm:px-6 sm:pt-6 lg:pb-24"
+  >
     <PortalSuccessCard
       v-if="welcomeOpen"
-      class="mb-6"
+      class="mb-5 sm:mb-6"
       :title="t('portal.welcome_banner_title')"
       :badge="t('portal.status_pending')"
       :request-id="Number(route.params.id)"
@@ -10,7 +12,7 @@
       <template #actions>
         <button
           type="button"
-          class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow hover:bg-slate-50"
+          class="min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
           @click="welcomeOpen = false"
         >
           {{ t('portal.welcome_banner_dismiss') }}
@@ -18,105 +20,171 @@
       </template>
     </PortalSuccessCard>
 
-    <div v-if="loading" class="py-14 text-center text-sm text-slate-500">{{ t('portal.detail_loading') }}</div>
+    <PortalRequestDetailSkeleton
+      v-if="loading"
+      :aria-label="t('portal.detail_loading')"
+    />
 
-    <div v-else-if="detailError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-      {{ detailError }}
-      <RouterLink :to="{ name: portalRoutes.home }" class="mt-3 block font-semibold text-va-800 underline">{{ t('portal.back_home') }}</RouterLink>
+    <div
+      v-else-if="detailError"
+      class="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-white px-4 py-5 text-sm text-rose-900 shadow-sm sm:px-6"
+    >
+      <p class="font-medium">{{ detailError }}</p>
+      <RouterLink
+        :to="{ name: portalRoutes.home }"
+        class="mt-4 inline-flex min-h-[44px] items-center font-semibold text-va-800 underline-offset-2 hover:underline"
+      >
+        {{ t('portal.back_home') }}
+      </RouterLink>
     </div>
 
     <template v-else-if="req">
-      <div class="border-b border-slate-200/80 pb-6">
-        <div class="flex min-w-0 items-start gap-3">
-          <RouterLink
-            :to="{ name: portalRoutes.list }"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-va-200 hover:bg-va-50/70 hover:text-va-800"
-            :aria-label="t('portal.back_list')"
-          >
-            <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
-          </RouterLink>
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <h1 class="font-mono text-lg font-bold text-slate-900 sm:text-xl">#{{ req.id }}</h1>
-              <StatusBadge :status="req.status" />
-              <span
-                v-if="req.dispatch_request_template_id"
-                class="inline-flex items-center rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-800"
-              >
-                {{ t('request_detail.badge_recurring') }}
-              </span>
-              <span
-                v-if="req.is_urgent"
-                class="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700"
-              >
-                {{ t('portal.badge_urgent') }}
-              </span>
-            </div>
-            <p class="mt-2 text-sm leading-relaxed text-slate-700">
-              {{ routeSummary }}
-            </p>
-            <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-              <span v-if="departFmt">{{ departFmt }}</span>
-              <span v-if="tripTypeLabel">{{ tripTypeLabel }}</span>
-              <span v-if="pollingRefreshing" class="font-medium text-teal-700">{{ t('portal.auto_refresh_indicator') }}</span>
+      <!-- Hero -->
+      <section
+        class="overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-va-50/50 via-white to-slate-50/80 shadow-sm ring-1 ring-slate-900/5"
+      >
+        <div class="p-4 sm:p-6">
+          <div class="flex min-w-0 items-start gap-3">
+            <RouterLink
+              :to="{ name: portalRoutes.list }"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm transition hover:border-va-200 hover:bg-white hover:text-va-800 active:scale-[0.97]"
+              :aria-label="t('portal.back_list')"
+            >
+              <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
+            </RouterLink>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h1 class="font-mono text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                  #{{ req.id }}
+                </h1>
+                <button
+                  type="button"
+                  class="inline-flex min-h-[32px] items-center gap-1 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 text-xs font-semibold text-slate-600 transition hover:border-va-200 hover:text-va-800"
+                  @click="copyRequestId"
+                >
+                  <ClipboardDocumentIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {{ copyIdFeedback ? t('portal.copied') : t('portal.copy_id') }}
+                </button>
+              </div>
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <StatusBadge :status="req.status" />
+                <span
+                  v-if="req.dispatch_request_template_id"
+                  class="inline-flex items-center rounded-full bg-sky-100/90 px-2.5 py-0.5 text-xs font-semibold text-sky-900"
+                >
+                  {{ t('request_detail.badge_recurring') }}
+                </span>
+                <span
+                  v-if="req.is_urgent"
+                  class="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800"
+                >
+                  <BoltIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                  {{ t('portal.badge_urgent') }}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <PortalStatusTimeline
-        class="mt-6"
-        :title="t('portal.timeline_heading')"
-        :steps="timelineSteps"
-      />
+          <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-stretch sm:gap-4">
+            <div
+              class="flex min-h-[4.5rem] flex-col justify-center rounded-2xl border border-white/90 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-sm"
+            >
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.origin') }}</p>
+              <p class="mt-1 text-sm font-semibold leading-snug text-slate-900">{{ originText }}</p>
+            </div>
+            <div class="hidden items-center justify-center sm:flex" aria-hidden="true">
+              <ArrowLongRightIcon class="h-6 w-6 text-va-800/50" />
+            </div>
+            <div
+              class="flex min-h-[4.5rem] flex-col justify-center rounded-2xl border border-white/90 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-sm"
+            >
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.destination') }}</p>
+              <p class="mt-1 text-sm font-semibold leading-snug text-slate-900">{{ destinationText }}</p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+            <span
+              v-if="departFmt"
+              class="inline-flex min-h-[32px] items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 font-medium ring-1 ring-slate-200/80"
+            >
+              <CalendarDaysIcon class="h-4 w-4 shrink-0 text-va-800" aria-hidden="true" />
+              {{ departFmt }}
+            </span>
+            <span
+              v-if="tripTypeLabel"
+              class="inline-flex min-h-[32px] items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 font-medium ring-1 ring-slate-200/80"
+            >
+              <TruckIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+              {{ tripTypeLabel }}
+            </span>
+            <span
+              v-if="pollingRefreshing"
+              class="inline-flex min-h-[32px] items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 font-semibold text-teal-800"
+            >
+              <span class="h-2 w-2 animate-pulse rounded-full bg-teal-600" aria-hidden="true" />
+              {{ t('portal.auto_refresh_indicator') }}
+            </span>
+          </div>
+        </div>
+      </section>
 
       <div
-        v-if="req.status === 'rejected' && req.rejection_reason"
-        class="mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3"
+        class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_min(100%,19rem)] lg:items-start xl:grid-cols-[minmax(0,1fr)_22rem] xl:gap-8"
       >
-        <div class="flex items-start gap-2.5">
-          <XCircleIcon class="h-6 w-6 shrink-0 text-rose-600" aria-hidden="true" />
-          <div class="min-w-0 flex-1">
-            <p class="text-sm font-semibold text-rose-950">{{ t('portal.rejected_title') }}</p>
-            <p class="mt-1 max-h-32 overflow-y-auto whitespace-pre-wrap text-sm text-rose-900/95">{{ req.rejection_reason }}</p>
-            <button
-              type="button"
-              class="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-900 hover:bg-rose-50"
-              @click="copyRejectionReason"
-            >
-              <ClipboardDocumentIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              {{ copyRejectionFeedback ? t('portal.copied') : t('portal.copy_rejection') }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="detailTabs.length" class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <nav
-          v-if="detailTabs.length > 1"
-          class="flex flex-wrap gap-1 border-b border-slate-100 bg-slate-50/80 px-2 py-1.5 sm:px-3"
-          role="tablist"
-          :aria-label="t('portal.detail_tablist_aria')"
-        >
-          <button
-            v-for="tab in detailTabs"
-            :key="tab.id"
-            type="button"
-            role="tab"
-            :aria-selected="activeTab === tab.id"
-            class="rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
-            :class="
-              activeTab === tab.id
-                ? 'bg-va-50 text-va-900 ring-1 ring-va-800/20'
-                : 'text-slate-600 hover:bg-white'
-            "
-            @click="setActiveTab(tab.id)"
+        <div class="min-w-0 space-y-6 lg:order-1">
+          <div
+            v-if="req.status === 'rejected' && req.rejection_reason"
+            class="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50/90 to-white p-4 shadow-sm sm:p-5"
           >
-            {{ tab.label }}
-          </button>
-        </nav>
+            <div class="flex items-start gap-3">
+              <XCircleIcon class="h-7 w-7 shrink-0 text-rose-600" aria-hidden="true" />
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold text-rose-950">{{ t('portal.rejected_title') }}</p>
+                <p class="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-rose-900/95">
+                  {{ req.rejection_reason }}
+                </p>
+                <button
+                  type="button"
+                  class="mt-3 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-900 transition hover:bg-rose-50 active:scale-[0.98]"
+                  @click="copyRejectionReason"
+                >
+                  <ClipboardDocumentIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {{ copyRejectionFeedback ? t('portal.copied') : t('portal.copy_rejection') }}
+                </button>
+              </div>
+            </div>
+          </div>
 
-        <div class="p-4 sm:p-5">
+          <div
+            v-if="detailTabs.length"
+            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5"
+          >
+            <nav
+              v-if="detailTabs.length > 1"
+              class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 -mx-px flex gap-1 overflow-x-auto border-b border-slate-100 bg-slate-50/95 px-2 py-2 backdrop-blur-md sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-3 sm:py-2"
+              role="tablist"
+              :aria-label="t('portal.detail_tablist_aria')"
+            >
+              <button
+                v-for="tab in detailTabs"
+                :key="tab.id"
+                type="button"
+                role="tab"
+                :aria-selected="activeTab === tab.id"
+                class="shrink-0 snap-start rounded-xl px-3.5 py-2.5 text-xs font-semibold transition sm:text-sm"
+                :class="
+                  activeTab === tab.id
+                    ? 'bg-va-800 text-white shadow-sm shadow-va-900/15'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                "
+                @click="setActiveTab(tab.id)"
+              >
+                {{ tab.label }}
+              </button>
+            </nav>
+
+            <div class="p-4 sm:p-6">
           <div v-show="activeTab === 'form' && showExtracurricularBm03">
             <PortalExtracurricularBm03EditForm
               ref="bm03FormRef"
@@ -179,7 +247,7 @@
               <div class="flex shrink-0 flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  class="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  class="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50 sm:text-sm"
                   :disabled="!pdfBlobUrl"
                   @click="openPdfInNewTab"
                 >
@@ -188,7 +256,7 @@
                 </button>
                 <button
                   type="button"
-                  class="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-900 hover:bg-teal-100 disabled:opacity-50"
+                  class="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-va-200 bg-va-50 px-3.5 py-2 text-xs font-semibold text-va-900 transition hover:bg-va-100 active:scale-[0.98] disabled:opacity-50 sm:text-sm"
                   :disabled="pdfBusy || !pdfBlobUrl"
                   @click="downloadPdf"
                 >
@@ -202,7 +270,7 @@
                 v-if="pdfPreviewLoading"
                 class="flex min-h-[min(50vh,420px)] flex-col items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-12 text-sm text-slate-600"
               >
-                <span class="h-8 w-8 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-700" aria-hidden="true" />
+                <span class="h-8 w-8 animate-spin rounded-full border-2 border-va-200 border-t-va-800" aria-hidden="true" />
                 {{ t('portal.pdf_export_loading') }}
               </div>
               <div
@@ -221,7 +289,7 @@
               <div v-else-if="pdfBlobUrl" class="overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <iframe
                   :src="pdfIframeSrc"
-                  class="block h-[min(55vh,560px)] w-full border-0 bg-white"
+                  class="block h-[min(62vh,560px)] w-full border-0 bg-white sm:h-[min(55vh,560px)]"
                   :title="t('portal.pdf_preview_iframe_title')"
                 />
               </div>
@@ -243,9 +311,50 @@
               :signed-mime="signedPreviewMime"
             />
           </div>
+            </div>
+          </div>
         </div>
+
+        <aside class="space-y-4 lg:order-2 lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+5rem)] lg:self-start">
+          <PortalStatusHint :req="req" />
+          <PortalStatusTimeline
+            :title="t('portal.timeline_heading')"
+            :steps="timelineSteps"
+          />
+          <section
+            class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/5 sm:p-5"
+          >
+            <h2 class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
+              {{ t('portal.detail_facts') }}
+            </h2>
+            <dl class="mt-4 space-y-3 text-sm">
+              <div v-if="requesterLine">
+                <dt class="text-xs font-medium text-slate-500">{{ t('portal.requester') }}</dt>
+                <dd class="mt-0.5 font-semibold text-slate-900">{{ requesterLine }}</dd>
+              </div>
+              <div v-if="passengerLine">
+                <dt class="text-xs font-medium text-slate-500">{{ t('portal.passenger_count') }}</dt>
+                <dd class="mt-0.5 font-semibold text-slate-900">{{ passengerLine }}</dd>
+              </div>
+              <div v-if="purposeLine">
+                <dt class="text-xs font-medium text-slate-500">{{ t('portal.purpose') }}</dt>
+                <dd class="mt-0.5 leading-relaxed text-slate-800">{{ purposeLine }}</dd>
+              </div>
+              <div v-if="notesLine">
+                <dt class="text-xs font-medium text-slate-500">{{ t('portal.notes') }}</dt>
+                <dd class="mt-0.5 line-clamp-4 leading-relaxed text-slate-700">{{ notesLine }}</dd>
+              </div>
+            </dl>
+          </section>
+          <p class="hidden text-center text-xs leading-relaxed text-slate-500 lg:block">
+            {{ t('portal.detail_help_footer') }}
+          </p>
+        </aside>
       </div>
 
+      <p class="mt-8 text-center text-xs leading-relaxed text-slate-500 lg:hidden">
+        {{ t('portal.detail_help_footer') }}
+      </p>
     </template>
   </div>
 </template>
@@ -254,7 +363,17 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeftIcon, ArrowTopRightOnSquareIcon, ClipboardDocumentIcon, DocumentArrowDownIcon, XCircleIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowLeftIcon,
+  ArrowLongRightIcon,
+  ArrowTopRightOnSquareIcon,
+  BoltIcon,
+  CalendarDaysIcon,
+  ClipboardDocumentIcon,
+  DocumentArrowDownIcon,
+  TruckIcon,
+  XCircleIcon,
+} from '@heroicons/vue/24/outline'
 import { saveAs } from 'file-saver'
 import {
   cloneDispatchRequest,
@@ -277,6 +396,8 @@ import { usePortalTimelineSteps } from '../../composables/usePortalTimelineSteps
 import { usePortalDetailPoll } from '../../composables/usePortalDetailPoll.js'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import PortalSuccessCard from '../../components/portal/PortalSuccessCard.vue'
+import PortalRequestDetailSkeleton from '../../components/portal/PortalRequestDetailSkeleton.vue'
+import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import {
@@ -312,6 +433,8 @@ const pdfPreviewError = ref('')
 const welcomeOpen = ref(false)
 const pollingRefreshing = ref(false)
 const copyRejectionFeedback = ref(false)
+const copyIdFeedback = ref(false)
+let copyIdTimer = null
 
 const signedUploadErr = ref('')
 const signedPreviewBlobUrl = ref('')
@@ -498,19 +621,54 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (copyRejectionTimer) clearTimeout(copyRejectionTimer)
+  if (copyIdTimer) clearTimeout(copyIdTimer)
   if (ocrPollTimer) clearInterval(ocrPollTimer)
   revokePdfPreviewUrl()
   revokeSignedPreviewUrl()
 })
 
-const routeSummary = computed(() => {
+const originText = computed(() => {
+  const o = (req.value?.origin || '').trim()
+  return o || '—'
+})
+
+const destinationText = computed(() => {
+  const d = (req.value?.destination || '').trim()
+  return d || '—'
+})
+
+const requesterLine = computed(() => {
   const r = req.value
   if (!r) return ''
-  const o = (r.origin || '').trim()
-  const d = (r.destination || '').trim()
-  if (!o && !d) return t('portal.detail_no_locations')
-  return `${o || '…'} → ${d || '…'}`
+  return (r.requester_name || r.requester?.name || r.user?.name || '').trim()
 })
+
+const passengerLine = computed(() => {
+  const r = req.value
+  if (!r) return ''
+  const n = r.student_count_actual ?? r.passenger_count
+  if (n == null || n === '') return ''
+  return String(n)
+})
+
+const purposeLine = computed(() => (req.value?.purpose || '').trim())
+
+const notesLine = computed(() => (req.value?.notes || '').trim())
+
+async function copyRequestId() {
+  const id = req.value?.id
+  if (id == null) return
+  try {
+    await navigator.clipboard.writeText(String(id))
+    copyIdFeedback.value = true
+    if (copyIdTimer) clearTimeout(copyIdTimer)
+    copyIdTimer = setTimeout(() => {
+      copyIdFeedback.value = false
+    }, 2000)
+  } catch {
+    window.alert(t('portal.copy_failed'))
+  }
+}
 
 const departFmt = computed(() => {
   const r = req.value
@@ -827,3 +985,13 @@ async function downloadPdf() {
 }
 
 </script>
+
+<style scoped>
+.portal-detail-tabs {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.portal-detail-tabs::-webkit-scrollbar {
+  display: none;
+}
+</style>

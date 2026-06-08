@@ -1,6 +1,8 @@
 <template>
-  <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ title }}</h2>
+  <section
+    class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/5 sm:p-5"
+  >
+    <h2 class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{{ title }}</h2>
 
     <!-- Mobile / tablet: vertical timeline -->
     <ol class="mt-6 md:hidden">
@@ -13,13 +15,13 @@
           >
             <CheckIcon v-if="step.state === 'done'" class="h-5 w-5" />
             <span v-else-if="step.state === 'rejected'" class="text-sm font-bold">!</span>
-            <span v-else-if="step.state === 'current'" class="h-2.5 w-2.5 rounded-full bg-teal-600" />
+            <span v-else-if="step.state === 'current'" class="h-2.5 w-2.5 rounded-full bg-va-800" />
             <span v-else class="text-xs text-slate-300">·</span>
           </div>
           <div
             v-if="idx < steps.length - 1"
             class="mt-1 min-h-[2.25rem] w-0.5 flex-1 rounded-full"
-            :class="step.state === 'done' ? 'bg-teal-500' : 'bg-slate-200'"
+            :class="step.state === 'done' ? 'bg-va-700' : 'bg-slate-200'"
             aria-hidden="true"
           />
         </div>
@@ -42,7 +44,7 @@
             >
               <CheckIcon v-if="step.state === 'done'" class="h-6 w-6" />
               <span v-else-if="step.state === 'rejected'" class="text-sm font-bold">!</span>
-              <span v-else-if="step.state === 'current'" class="h-2.5 w-2.5 rounded-full bg-teal-600" />
+              <span v-else-if="step.state === 'current'" class="h-2.5 w-2.5 rounded-full bg-va-800" />
               <span v-else class="text-xs text-slate-300">·</span>
             </div>
             <p class="mt-2 line-clamp-3 text-xs font-semibold leading-tight text-slate-800 lg:text-sm">
@@ -55,7 +57,7 @@
           <div
             v-if="idx < steps.length - 1"
             class="mx-0.5 mt-[1.375rem] h-0.5 min-w-[0.5rem] flex-1 shrink self-start"
-            :class="step.state === 'done' ? 'bg-teal-500' : 'bg-slate-200'"
+            :class="step.state === 'done' ? 'bg-va-700' : 'bg-slate-200'"
             aria-hidden="true"
           />
         </template>
@@ -73,8 +75,8 @@ defineProps({
 })
 
 function circleClass(state) {
-  if (state === 'done') return 'border-teal-500 bg-teal-500 text-white'
-  if (state === 'current') return 'border-teal-500 bg-white text-teal-600 ring-4 ring-teal-500/10'
+  if (state === 'done') return 'border-va-700 bg-va-800 text-white shadow-sm shadow-va-900/10'
+  if (state === 'current') return 'border-va-800 bg-white text-va-800 ring-4 ring-va-800/10'
   if (state === 'rejected') return 'border-rose-400 bg-white text-rose-500'
   return 'border-slate-200 bg-white text-slate-300'
 }
