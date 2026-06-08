@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\Attachments\AttachmentController;
 use App\Http\Controllers\Api\Cargo\CargoController;
 use App\Http\Controllers\Api\Costs\TripCostController;
 use App\Http\Controllers\Api\NavBadgesController;
-use App\Http\Controllers\Api\System\MenuController;
 use App\Http\Controllers\Api\Notifications\InboxController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\Requests\DispatchRequestController;
@@ -57,7 +56,6 @@ Route::controller(CargoController::class)->group(function () {
 });
 
 Route::get('/nav/badges', NavBadgesController::class)->middleware('throttle:60,1');
-Route::get('/menu/me', [MenuController::class, 'me'])->middleware('throttle:60,1');
 
 // Đọc tệp: dùng chung (gắn kèm tài liệu chuyến, O-POD) — tách throttle giống khối staff
 Route::prefix('attachments')->controller(AttachmentController::class)->group(function () {

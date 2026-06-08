@@ -134,7 +134,7 @@ class ReportController extends Controller
             ->clone()
             ->whereNotNull('trips.depart_at')
             ->select(DB::raw("{$hourSql} as hod"), DB::raw('COUNT(*) as total'))
-            ->groupBy('hod')
+            ->groupByRaw($hourSql)
             ->pluck('total', 'hod');
         $tripsByHour = [];
         for ($h = 0; $h < 24; $h++) {

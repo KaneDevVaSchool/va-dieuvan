@@ -20,12 +20,6 @@ export const NAV_SECTIONS = [
         children: [
           { to: DISPATCH_WEB_BASE, labelKey: 'nav.dashboard', icon: 'home', featureKey: 'module.overview' },
           { to: `${DISPATCH_WEB_BASE}/dispatcher`, labelKey: 'nav.dispatcher_board', icon: 'dispatcher', featureKey: 'module.overview' },
-          {
-            to: `${DISPATCH_WEB_BASE}/resources`,
-            labelKey: 'nav.resources_overview',
-            icon: 'resources',
-            featureKey: 'module.operations',
-          },
         ],
       },
     ],

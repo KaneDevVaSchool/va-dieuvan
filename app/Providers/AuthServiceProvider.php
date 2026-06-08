@@ -29,6 +29,9 @@ class AuthServiceProvider extends ServiceProvider
             if ($user->isSuperAdmin()) {
                 return true;
             }
+            if (is_string($ability) && str_contains($ability, '.')) {
+                return $user->hasPermission($ability);
+            }
 
             return null;
         });

@@ -220,10 +220,6 @@ const staffChildRoutes = [
         },
     },
     {
-        path: "resources/dashboard",
-        redirect: { name: "resources" },
-    },
-    {
         path: "resources/list",
         name: "resourcesList",
         component: () => import("../views/resources/ResourcesListView.vue"),
@@ -234,14 +230,12 @@ const staffChildRoutes = [
         },
     },
     {
+        path: "resources/dashboard",
+        redirect: { name: "resourcesList" },
+    },
+    {
         path: "resources",
-        name: "resources",
-        component: () => import("../views/resources/ResourcesDashboardView.vue"),
-        meta: {
-            title: "Dashboard nguồn lực",
-            subtitle: "Lịch & tổng quan",
-            featureKey: "module.operations",
-        },
+        redirect: { name: "resourcesList" },
     },
     {
         path: "resources/drivers/:id",
