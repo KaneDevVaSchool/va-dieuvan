@@ -370,206 +370,26 @@
               :context="isDeptRequestDetailRoute ? 'dept' : 'staff'"
             />
 
-            <div v-show="activeTab === 'route'" class="space-y-4">
-              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{{ t('request_detail.section_progress') }}</p>
-                <div class="mt-3 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
-                  <div class="flex items-start" :class="stepperTrackMinClass">
-                    <template v-for="(step, idx) in stepperSteps" :key="step.key">
-                      <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-                        <div
-                          class="flex h-7 w-7 items-center justify-center rounded-full border-2 text-[10px] font-semibold transition-colors"
-                          :class="stepCircleClass(step.state)"
-                        >
-                          <CheckIcon v-if="step.state === 'done'" class="h-3.5 w-3.5" />
-                          <HandThumbUpIcon
-                            v-else-if="
-                              step.key === 'approved' && (step.state === 'upcoming' || step.state === 'current')
-                            "
-                            class="h-3.5 w-3.5"
-                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                          />
-                          <CurrencyDollarIcon
-                            v-else-if="step.key === 'price_pending' && step.state !== 'done'"
-                            class="h-3.5 w-3.5"
-                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                          />
-                          <BuildingOffice2Icon
-                            v-else-if="step.key === 'dept_pending' && step.state !== 'done'"
-                            class="h-3.5 w-3.5"
-                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                          />
-                          <Cog6ToothIcon
-                            v-else-if="step.key === 'dispatch' && step.state !== 'done'"
-                            class="h-3.5 w-3.5"
-                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                          />
-                          <TruckIcon
-                            v-else-if="step.key === 'running' && step.state !== 'done'"
-                            class="h-3.5 w-3.5"
-                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                          />
-                          <FlagIcon
-                            v-else-if="step.key === 'done' && step.state !== 'done'"
-                            class="h-3.5 w-3.5"
-                            :class="step.state === 'current' ? 'text-teal-600' : 'text-slate-400'"
-                          />
-                          <span
-                            v-else-if="step.state === 'current'"
-                            class="h-1.5 w-1.5 rounded-full bg-teal-600"
-                          />
-                          <span v-else-if="step.state === 'rejected'" class="text-[10px] font-bold">!</span>
-                          <span v-else class="text-slate-300">·</span>
-                        </div>
-                        <p
-                          class="mt-1 text-[9px] font-semibold leading-tight text-slate-800 sm:text-[10px]"
-                        >
-                          {{ step.label }}
-                        </p>
-                      </div>
-                      <div
-                        v-if="idx < stepperSteps.length - 1"
-                        class="mx-0.5 mt-3 h-0.5 w-2 shrink-0 sm:mt-3.5 sm:w-4"
-                        :class="step.state === 'done' ? 'bg-teal-500' : 'bg-slate-200'"
-                        aria-hidden="true"
-                      />
-                    </template>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                  <div class="flex items-center gap-2 text-teal-600">
-                    <InformationCircleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-                    <h2 class="text-sm font-semibold text-slate-900 sm:text-base">{{ t('request_detail.route_map_heading') }}</h2>
-                  </div>
-                  <span
-                    class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold tabular-nums text-teal-800 ring-1 ring-teal-600/20 sm:text-xs"
-                  >
-                    {{
-                      costEstimate?.distanceLabel != null
-                        ? t('request_detail.distance_badge_approx', { label: costEstimate.distanceLabel })
-                        : t('request_detail.distance_badge_empty')
-                    }}
-                  </span>
-                </div>
-                <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-700 sm:text-sm">
-                  <span
-                    class="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1 font-medium ring-1 ring-slate-200/80"
-                  >
-                    <CalendarDaysIcon class="h-3.5 w-3.5 text-slate-400" />
-                    {{ fmtDateVi(req.depart_at) }}
-                  </span>
-                  <span
-                    class="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1 font-medium ring-1 ring-slate-200/80"
-                  >
-                    <ClockIcon class="h-3.5 w-3.5 text-slate-400" />
-                    {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
-                  </span>
-                </div>
-                <div class="mt-5 flex gap-3">
-                  <div class="flex flex-col items-center pt-0.5">
-                    <span class="h-2.5 w-2.5 rounded-full border-2 border-teal-500 bg-white shadow-sm" />
-                    <span class="mt-0.5 min-h-[2.5rem] w-px flex-1 bg-gradient-to-b from-teal-400 to-teal-200" />
-                    <span class="h-2.5 w-2.5 rounded-full border-2 border-teal-500 bg-white shadow-sm" />
-                  </div>
-                  <div class="min-w-0 flex-1 space-y-5">
-                    <div>
-                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">{{ t('request_detail.lbl_origin') }}</p>
-                      <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ req.origin || '—' }}</p>
-                      <p v-if="routeSubFrom" class="mt-0.5 text-xs text-slate-500">{{ routeSubFrom }}</p>
-                    </div>
-                    <div>
-                      <p class="text-[10px] font-bold uppercase tracking-wide text-teal-700/90">{{ t('request_detail.lbl_destination') }}</p>
-                      <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ req.destination || '—' }}</p>
-                      <p v-if="routeSubTo" class="mt-0.5 text-xs text-slate-500">{{ routeSubTo }}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <section
-                v-if="showApprovalDecisionPanel"
-                class="rounded-xl border-2 border-slate-200 bg-white p-4 shadow-sm"
-              >
-                <h2 class="border-b border-slate-200 pb-2 text-sm font-bold text-slate-900 sm:text-base">
-                  {{ t('request_detail.approval_basis_heading') }}
-                </h2>
-                <dl class="mt-3 grid gap-3 text-xs sm:grid-cols-2 sm:text-sm lg:grid-cols-3">
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_status_short') }}</dt>
-                    <dd class="mt-1">
-                      <StatusBadge :status="req.status" />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_trip_type_short') }}</dt>
-                    <dd class="mt-1 font-semibold text-slate-900">
-                      {{ labelTripType(req.trip_type) }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_requester_name') }}</dt>
-                    <dd class="mt-1 font-semibold text-slate-900">
-                      {{ req.requester?.name ?? '—' }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_requester_unit') }}</dt>
-                    <dd class="mt-1 text-slate-900">
-                      {{ req.wizard_snapshot?.form?.requester_unit || requesterSubtitle || '—' }}
-                    </dd>
-                  </div>
-                  <div class="sm:col-span-2">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_usage_window') }}</dt>
-                    <dd class="mt-1 font-medium text-slate-900">
-                      {{ fmtDateVi(req.depart_at) }} · {{ fmtTimeWindow(req.depart_at, req.arrive_by) }}
-                    </dd>
-                  </div>
-                  <div class="lg:col-span-3">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_route_line') }}</dt>
-                    <dd class="mt-1 font-medium text-slate-900">
-                      <span>{{ req.origin || '—' }}</span>
-                      <span class="mx-2 text-slate-400">→</span>
-                      <span>{{ req.destination || '—' }}</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_people_load_compact') }}</dt>
-                    <dd class="mt-1 font-medium text-slate-900">
-                      {{ passengerOrCargoLine }}
-                    </dd>
-                  </div>
-                  <div v-if="wizardPurpose" class="sm:col-span-2">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_purpose') }}</dt>
-                    <dd class="mt-1 text-slate-900">
-                      {{ wizardPurpose }}
-                    </dd>
-                  </div>
-                  <div v-if="costEstimate">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                      {{ t('request_detail.lbl_total_cost_declared') }}
-                    </dt>
-                    <dd class="mt-1 text-base font-bold tabular-nums text-teal-700 sm:text-lg">
-                      {{ formatVndCurrency(costEstimate.total) }}
-                    </dd>
-                  </div>
-                  <div v-if="showDeptDecisionSection && req.service_price != null">
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_dispatcher_unit_price') }}</dt>
-                    <dd class="mt-1 text-base font-bold tabular-nums text-violet-800 sm:text-lg">
-                      {{ formatVndCurrency(req.service_price) }}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{{ t('request_detail.lbl_attachment_count') }}</dt>
-                    <dd class="mt-1 font-semibold text-slate-900">
-                      {{ generalAttachments.length }}
-                    </dd>
-                  </div>
-                </dl>
-              </section>
-            </div>
+            <RequestRouteTab
+              v-show="activeTab === 'route'"
+              v-if="req"
+              :req="req"
+              :timeline-steps="timelineSteps"
+              :cost-estimate="costEstimate"
+              :route-sub-from="routeSubFrom"
+              :route-sub-to="routeSubTo"
+              :passenger-or-cargo-line="passengerOrCargoLine"
+              :purpose="wizardPurpose"
+              :show-approval-panel="showApprovalDecisionPanel"
+              :show-dispatcher-price="showDeptDecisionSection"
+              :attachment-count="generalAttachments.length"
+              :requester-unit-fallback="requesterSubtitle"
+              :depart-date-label="fmtDateVi(req.depart_at)"
+              :time-window-label="fmtTimeWindow(req.depart_at, req.arrive_by)"
+              :trip-type-label="labelTripType(req.trip_type)"
+              :declared-total-label="costEstimate ? formatVndCurrency(costEstimate.total) : '—'"
+              :dispatcher-price-label="req.service_price != null ? formatVndCurrency(req.service_price) : '—'"
+            />
 
             <div v-show="activeTab === 'form'" class="space-y-5">
               <DeptApprovalSection
@@ -758,28 +578,19 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
-  BuildingOffice2Icon,
   CalculatorIcon,
-  CalendarDaysIcon,
   ClipboardDocumentIcon,
-  ClockIcon,
-  Cog6ToothIcon,
   CubeIcon,
-  CurrencyDollarIcon,
   DocumentTextIcon,
   DocumentIcon,
   ArrowDownTrayIcon,
   TrashIcon,
   SparklesIcon,
-  FlagIcon,
-  HandThumbUpIcon,
-  InformationCircleIcon,
   PaperClipIcon,
   TruckIcon,
   UserCircleIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
-import { CheckIcon } from '@heroicons/vue/24/solid'
 import Button from '../../components/ui/Button.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import Input from '../../components/ui/Input.vue'
@@ -794,12 +605,14 @@ import RequestCloneLineageBanner from '../../components/requests/RequestCloneLin
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
 import RequestWorkflowBar from '../../components/requests/RequestWorkflowBar.vue'
+import RequestRouteTab from '../../components/requests/RequestRouteTab.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
 import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import { useDispatchRequestDocs } from '../../composables/useDispatchRequestDocs'
 import { useRequestCostEstimate } from '../../composables/useRequestCostEstimate'
 import { useRequestWorkflowSteps } from '../../composables/useRequestWorkflowSteps'
+import { useRequestTimelineSteps } from '../../composables/useRequestTimelineSteps'
 import ReferencePricingReadOnlyBody from '../../components/pricing/ReferencePricingReadOnlyBody.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
 import { rerunSignedDocumentOcr, verifySignedDocument } from '../../api/signedDocuments'
@@ -933,13 +746,7 @@ const canOpenPricingManagePage = computed(() => auth.hasPermission('reference_pr
 
 const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
 
-const stepperTrackMinClass = computed(() => {
-  if (!req.value) return 'min-w-[560px]'
-  return req.value.trip_type === 'door_to_door' ? 'min-w-[560px]' : 'min-w-[720px]'
-})
-
-
-
+const timelineSteps = useRequestTimelineSteps(req, t, locale)
 
 const showFillPriceSection = computed(
   () =>
@@ -1255,194 +1062,6 @@ function fmtStepDetail(v) {
   } catch {
     return '—'
   }
-}
-
-const stepperSteps = computed(() => {
-  const r = req.value
-  if (!r) return []
-  const trip = r.trip
-  const tripSt = trip?.status
-  const st = r.status
-
-  const approvedAt = trip?.created_at
-  const pendingEndAt = st === 'rejected' ? r.updated_at : approvedAt
-  const isAssignedOrMore =
-    trip &&
-    ['assigned', 'driver_confirmed', 'in_progress', 'completed'].includes(tripSt)
-  const dispatchDoneAt =
-    tripSt === 'approved'
-      ? null
-      : isAssignedOrMore
-        ? ['assigned', 'driver_confirmed'].includes(tripSt)
-          ? trip.updated_at
-          : trip.started_at || trip.updated_at
-        : null
-  const runningAt = trip?.started_at
-  const completedAt = trip?.completed_at
-
-  const deptFlow = r.trip_type !== 'door_to_door'
-
-  if (!deptFlow) {
-    const steps = [
-      { key: 'created', label: t('request_detail.step_label_created'), sub: fmtStepDetail(r.created_at), state: 'upcoming' },
-      { key: 'pending', label: t('request_detail.step_label_pending'), sub: '', state: 'upcoming' },
-      { key: 'approved', label: t('request_detail.step_label_approved_short'), sub: '', state: 'upcoming' },
-      { key: 'dispatch', label: t('request_detail.step_label_dispatch'), sub: '', state: 'upcoming' },
-      { key: 'running', label: t('request_detail.step_label_running'), sub: '', state: 'upcoming' },
-      { key: 'done', label: t('request_detail.step_label_done'), sub: '', state: 'upcoming' },
-    ]
-
-    steps[1].sub =
-      st === 'pending' || st === 'rejected'
-        ? fmtStepDetail(r.created_at)
-        : pendingEndAt
-          ? fmtStepDetail(pendingEndAt)
-          : '—'
-
-    steps[2].sub = approvedAt ? fmtStepDetail(approvedAt) : '—'
-
-    steps[3].sub =
-      tripSt === 'approved'
-        ? '—'
-        : dispatchDoneAt
-          ? fmtStepDetail(dispatchDoneAt)
-          : '—'
-
-    steps[4].sub =
-      tripSt === 'in_progress' || tripSt === 'completed'
-        ? fmtStepDetail(runningAt)
-        : ['assigned', 'driver_confirmed'].includes(tripSt)
-          ? fmtStepDetail(trip.updated_at)
-          : '—'
-
-    steps[5].sub = tripSt === 'completed' && completedAt ? fmtStepDetail(completedAt) : '—'
-
-    let active = 1
-    if (st === 'draft') active = 0
-    else if (st === 'pending' || st === 'rejected') active = 1
-    else if (st === 'cancelled') active = 1
-    else if (st === 'approved') {
-      if (!trip) active = 2
-      else if (tripSt === 'approved') active = 3
-      else if (['assigned', 'driver_confirmed'].includes(tripSt)) active = 4
-      else if (tripSt === 'in_progress') active = 4
-      else if (tripSt === 'completed') active = 5
-      else active = 2
-    }
-
-    steps[0].state = st === 'draft' ? 'current' : 'done'
-    for (let i = 1; i < steps.length; i++) {
-      if (i < active) steps[i].state = 'done'
-      else if (i === active) {
-        if (st === 'rejected' && i === 1) steps[i].state = 'rejected'
-        else if (st === 'cancelled' && i === 1) steps[i].state = 'current'
-        else steps[i].state = 'current'
-      } else steps[i].state = 'upcoming'
-    }
-
-    if (st === 'rejected') {
-      for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
-    }
-    if (st === 'draft') {
-      for (let i = 1; i < steps.length; i++) steps[i].state = 'upcoming'
-    }
-    if (st === 'cancelled') {
-      for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
-    }
-
-    return steps
-  }
-
-  const steps = [
-    { key: 'created', label: t('request_detail.step_label_created'), sub: fmtStepDetail(r.created_at), state: 'upcoming' },
-    {
-      key: 'price_pending',
-      label: t('request_detail.step_price_pending'),
-      sub: '',
-      state: 'upcoming',
-    },
-    {
-      key: 'dept_pending',
-      label: t('request_detail.step_dept_pending'),
-      sub: '',
-      state: 'upcoming',
-    },
-    { key: 'approved', label: t('request_detail.step_label_approved_short'), sub: '', state: 'upcoming' },
-    { key: 'dispatch', label: t('request_detail.step_label_dispatch'), sub: '', state: 'upcoming' },
-    { key: 'running', label: t('request_detail.step_label_running'), sub: '', state: 'upcoming' },
-    { key: 'done', label: t('request_detail.step_label_done'), sub: '', state: 'upcoming' },
-  ]
-
-  steps[1].sub = st === 'pending' ? fmtStepDetail(r.created_at) : '—'
-
-  steps[2].sub =
-    r.price_filled_at && (st === 'price_filled' || st === 'approved' || st === 'rejected')
-      ? fmtStepDetail(r.price_filled_at)
-      : st === 'price_filled'
-        ? fmtStepDetail(r.updated_at)
-        : '—'
-
-  steps[3].sub = approvedAt ? fmtStepDetail(approvedAt) : '—'
-
-  steps[4].sub =
-    tripSt === 'approved'
-      ? '—'
-      : dispatchDoneAt
-        ? fmtStepDetail(dispatchDoneAt)
-        : '—'
-
-  steps[5].sub =
-    tripSt === 'in_progress' || tripSt === 'completed'
-      ? fmtStepDetail(runningAt)
-      : ['assigned', 'driver_confirmed'].includes(tripSt)
-        ? fmtStepDetail(trip.updated_at)
-        : '—'
-
-  steps[6].sub = tripSt === 'completed' && completedAt ? fmtStepDetail(completedAt) : '—'
-
-  let active = 1
-  if (st === 'draft') active = 0
-  else if (st === 'pending') active = 1
-  else if (st === 'price_filled') active = 2
-  else if (st === 'rejected') active = 2
-  else if (st === 'cancelled') active = 2
-  else if (st === 'approved') {
-    if (!trip) active = 3
-    else if (tripSt === 'approved') active = 4
-    else if (['assigned', 'driver_confirmed'].includes(tripSt)) active = 5
-    else if (tripSt === 'in_progress') active = 5
-    else if (tripSt === 'completed') active = 6
-    else active = 3
-  }
-
-  steps[0].state = st === 'draft' ? 'current' : 'done'
-  for (let i = 1; i < steps.length; i++) {
-    if (i < active) steps[i].state = 'done'
-    else if (i === active) {
-      if (st === 'rejected' && i === 2) steps[i].state = 'rejected'
-      else if (st === 'cancelled' && i === 2) steps[i].state = 'current'
-      else steps[i].state = 'current'
-    } else steps[i].state = 'upcoming'
-  }
-
-  if (st === 'rejected') {
-    for (let i = 3; i < steps.length; i++) steps[i].state = 'upcoming'
-  }
-  if (st === 'draft') {
-    for (let i = 1; i < steps.length; i++) steps[i].state = 'upcoming'
-  }
-  if (st === 'cancelled') {
-    for (let i = 3; i < steps.length; i++) steps[i].state = 'upcoming'
-  }
-
-  return steps
-})
-
-function stepCircleClass(state) {
-  if (state === 'done') return 'border-teal-500 bg-teal-500 text-white'
-  if (state === 'current') return 'border-teal-500 bg-white text-teal-600'
-  if (state === 'rejected') return 'border-rose-400 bg-white text-rose-500'
-  return 'border-slate-200 bg-white text-slate-300'
 }
 
 function fmt(v) {
