@@ -103,15 +103,15 @@
               </label>
               <input
                 id="ncc-supplement-price"
-                v-model="priceDraft"
-                type="number"
-                min="0"
-                step="1000"
-                inputmode="decimal"
+                :value="priceDraft"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
                 class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
                 :placeholder="t('trip_detail.coordination.supplement_vendor_price_ph')"
                 :disabled="disabled"
                 :aria-invalid="priceDraftInvalid"
+                @input="onVendorPriceDraftInput"
               />
               <p
                 v-if="priceDraftInvalid"
@@ -388,15 +388,14 @@
                 </label>
                 <input
                   :id="`ncc-item-price-${idx}`"
-                  :value="servicePriceDisplay(item)"
-                  type="number"
-                  min="0"
-                  step="1000"
-                  inputmode="decimal"
+                  :value="servicePriceDisplayVendor(item)"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
                   class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
                   :placeholder="t('trip_detail.coordination.supplement_vendor_price_ph')"
                   :disabled="disabled"
-                  @input="onServicePriceInput(idx, $event)"
+                  @input="onVendorItemPriceInput(idx, $event)"
                 />
               </div>
               <div
@@ -471,6 +470,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { formatVnd } from '../../util/labels'
+import { formatVndWhileTyping, parseMoneyVnd } from '../../util/money'
 import type { ResourceItem } from '../../types/dispatch'
 
 const props = defineProps<{
@@ -654,6 +654,11 @@ function onContactNotesInput(idx: number, e: Event) {
   patchItem(idx, 'contactNotes', el.value)
 }
 
+function onVendorPriceDraftInput(e: Event) {
+  const el = e.target as HTMLInputElement
+  priceDraft.value = formatVndWhileTyping(el.value)
+}
+
 function onServicePriceInput(idx: number, e: Event) {
   const el = e.target as HTMLInputElement
   const raw = el.value.trim()
@@ -666,10 +671,29 @@ function onServicePriceInput(idx: number, e: Event) {
   patchItem(idx, 'servicePrice', n)
 }
 
+function onVendorItemPriceInput(idx: number, e: Event) {
+  const el = e.target as HTMLInputElement
+  const formatted = formatVndWhileTyping(el.value)
+  el.value = formatted
+  if (!formatted.trim()) {
+    patchItem(idx, 'servicePrice', null)
+    return
+  }
+  const n = parseMoneyVnd(formatted)
+  if (!Number.isFinite(n) || n < 0) return
+  patchItem(idx, 'servicePrice', Math.floor(n))
+}
+
 function servicePriceDisplay(item: ResourceItem) {
   const n = Number(item.servicePrice)
   if (!Number.isFinite(n) || n < 0) return ''
   return String(n)
+}
+
+function servicePriceDisplayVendor(item: ResourceItem) {
+  const n = Number(item.servicePrice)
+  if (!Number.isFinite(n) || n < 0) return ''
+  return formatVndWhileTyping(String(Math.floor(n)))
 }
 
 function patchItem(
@@ -712,6 +736,13 @@ function parseSeats(): number | null {
 function parseServicePrice(): number | null {
   const raw = String(priceDraft.value).trim()
   if (!raw) return null
+  if (props.kind === 'vendor') {
+    const digits = raw.replace(/\D/g, '')
+    if (!digits) return null
+    const n = parseMoneyVnd(raw)
+    if (!Number.isFinite(n) || n < 0) return null
+    return Math.floor(n)
+  }
   const n = Number(raw)
   if (!Number.isFinite(n) || n < 0) return null
   return n

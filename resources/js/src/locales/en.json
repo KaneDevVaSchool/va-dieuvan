@@ -3376,7 +3376,7 @@
             "supplement_taxi_plate_aria": "Taxi license plate",
             "supplement_taxi_price_ph": "Service price…",
             "supplement_taxi_price_aria": "Taxi service price",
-            "supplement_vendor_price_ph": "Vendor price…",
+            "supplement_vendor_price_ph": "e.g. 1.500.000",
             "supplement_vendor_price_aria": "Vendor service price",
             "supplement_price_invalid": "Invalid price (must be ≥ 0)",
             "supplement_seats_invalid": "Seats must be at least 1",

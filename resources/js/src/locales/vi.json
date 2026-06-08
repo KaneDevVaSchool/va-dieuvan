@@ -3173,7 +3173,7 @@
             "supplement_taxi_plate_aria": "Biển số xe taxi",
             "supplement_taxi_price_ph": "Giá dịch vụ…",
             "supplement_taxi_price_aria": "Giá dịch vụ taxi",
-            "supplement_vendor_price_ph": "Giá nhà cung cấp…",
+            "supplement_vendor_price_ph": "VD: 1.500.000",
             "supplement_vendor_price_aria": "Giá dịch vụ NCC",
             "supplement_price_invalid": "Giá không hợp lệ (≥ 0)",
             "supplement_seats_invalid": "Số chỗ phải từ 1 trở lên",
