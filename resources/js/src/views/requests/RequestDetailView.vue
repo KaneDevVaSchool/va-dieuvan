@@ -146,32 +146,6 @@
           />
 
           <RequestDetailSection
-            section-id="request-section-route"
-            :title="t('request_detail.section_progress')"
-            :lead="routeSectionLead"
-          >
-            <RequestRouteTab
-              hide-route-summary
-              :req="req"
-              :timeline-steps="timelineSteps"
-              :cost-estimate="costEstimate"
-              :route-sub-from="routeSubFrom"
-              :route-sub-to="routeSubTo"
-              :passenger-or-cargo-line="passengerOrCargoLine"
-              :purpose="wizardPurpose"
-              :show-approval-panel="showApprovalDecisionPanel"
-              :show-dispatcher-price="showDeptDecisionSection"
-              :attachment-count="generalAttachments.length"
-              :requester-unit-fallback="requesterSubtitle"
-              :depart-date-label="fmtDateVi(req.depart_at)"
-              :time-window-label="fmtTimeWindow(req.depart_at, req.arrive_by)"
-              :trip-type-label="labelTripType(req.trip_type)"
-              :declared-total-label="costEstimate ? formatVndCurrency(costEstimate.total) : '—'"
-              :dispatcher-price-label="req.service_price != null ? formatVndCurrency(req.service_price) : '—'"
-            />
-          </RequestDetailSection>
-
-          <RequestDetailSection
             section-id="request-section-form"
             :title="compactDispatcherForm ? t('request_detail.fill_price_title') : t('request_detail.tab_form')"
             :lead="compactDispatcherForm ? t('request_detail.fill_price_lead') : ''"
@@ -423,7 +397,6 @@ import RequestCloneLineageBanner from '../../components/requests/RequestCloneLin
 import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
 import RequestWorkflowBar from '../../components/requests/RequestWorkflowBar.vue'
-import RequestRouteTab from '../../components/requests/RequestRouteTab.vue'
 import RequestDetailTopBar from '../../components/requests/detail/RequestDetailTopBar.vue'
 import RequestDetailOverviewPanel from '../../components/requests/detail/RequestDetailOverviewPanel.vue'
 import RequestDetailSectionNav from '../../components/requests/detail/RequestDetailSectionNav.vue'
@@ -434,7 +407,6 @@ import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import { useDispatchRequestDocs } from '../../composables/useDispatchRequestDocs'
 import { useRequestCostEstimate } from '../../composables/useRequestCostEstimate'
 import { useRequestWorkflowSteps } from '../../composables/useRequestWorkflowSteps'
-import { useRequestTimelineSteps } from '../../composables/useRequestTimelineSteps'
 import ReferencePricingReadOnlyBody from '../../components/pricing/ReferencePricingReadOnlyBody.vue'
 import { deleteAttachment, runAttachmentOcr, uploadAttachment } from '../../api/attachments'
 import { rerunSignedDocumentOcr, verifySignedDocument } from '../../api/signedDocuments'
@@ -568,8 +540,6 @@ const canOpenPricingManagePage = computed(() => auth.hasPermission('reference_pr
 
 const pdfExportDisabled = computed(() => req.value?.status !== 'approved')
 
-const timelineSteps = useRequestTimelineSteps(req, t, locale)
-
 const showFillPriceSection = computed(
   () =>
     req.value?.status === 'pending' &&
@@ -594,13 +564,6 @@ const compactDispatcherForm = computed(
 const wizardPurpose = computed(() => {
   const p = req.value?.wizard_snapshot?.form?.purpose
   return p && String(p).trim() ? String(p).trim() : ''
-})
-
-const showApprovalDecisionPanel = computed(() => {
-  const r = req.value
-  if (!r) return false
-  if (showDeptDecisionSection.value) return true
-  return r.status === 'pending' && canApprove.value && r.trip_type === 'door_to_door'
 })
 
 const isCurrentUserRequester = computed(
@@ -639,16 +602,15 @@ const showResetCloneBtn = computed(() => {
   return ['approved', 'rejected'].includes(String(req.value?.status || ''))
 })
 
-const DETAIL_TABS = ['route', 'form', 'students', 'docs']
+const DETAIL_TABS = ['form', 'students', 'docs']
 
 const REQUEST_SECTION_IDS = {
-  route: 'request-section-route',
   form: 'request-section-form',
   students: 'request-section-students',
   docs: 'request-section-docs',
 }
 
-const activeTab = ref('route')
+const activeTab = ref('form')
 const previewOpen = ref(false)
 const previewAttachment = ref(null)
 
@@ -700,6 +662,7 @@ const FOCUS_TARGETS = {
 function tabFromRouteQuery() {
   const q = route.query.tab
   if (typeof q !== 'string') return null
+  if (q === 'route') return 'form'
   if (q === 'students' && !showStudentCountTab.value) return null
   return DETAIL_TABS.includes(q) ? q : null
 }
@@ -780,8 +743,6 @@ const overviewScheduleLine = computed(() => {
   return dist ? `${window} · ${dist}` : window
 })
 
-const routeSectionLead = computed(() => overviewScheduleLine.value)
-
 function nzFormText(v) {
   const s = v == null ? '' : String(v).trim()
   return s === '' ? '' : s
@@ -826,7 +787,6 @@ const formContextRows = computed(() => {
 
 const sectionNavItems = computed(() => {
   const items = [
-    { id: 'route', label: t('request_detail.tab_route') },
     {
       id: 'form',
       label: compactDispatcherForm.value ? t('request_detail.fill_price_title') : t('request_detail.tab_form'),
@@ -901,22 +861,6 @@ const requesterInitials = computed(() => {
   const parts = name.split(/\s+/).filter(Boolean)
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-})
-
-const routeSubFrom = computed(() => {
-  const snap = req.value?.wizard_snapshot
-  const row = snap?.cargoRows?.[0]
-  if (row?.pickup_place?.trim()) return row.pickup_place.trim()
-  if (row?.pickup_contact?.trim()) return row.pickup_contact.trim()
-  return ''
-})
-
-const routeSubTo = computed(() => {
-  const snap = req.value?.wizard_snapshot
-  const row = snap?.cargoRows?.[0]
-  if (row?.delivery_place?.trim()) return row.delivery_place.trim()
-  if (row?.delivery_contact?.trim()) return row.delivery_contact.trim()
-  return ''
 })
 
 const passengerOrCargoLine = computed(() => {
@@ -1087,6 +1031,9 @@ async function load() {
     passengerPatchErr.value = ''
     const tabQ = tabFromRouteQuery()
     if (tabQ) activeTab.value = tabQ
+    if (route.query.tab === 'route') {
+      router.replace({ query: { ...route.query, tab: 'form' } })
+    }
   } finally {
     loading.value = false
     await nextTick()
