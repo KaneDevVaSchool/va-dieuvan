@@ -2,18 +2,17 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Driver;
 use App\Models\TpProgramDay;
-use App\Notifications\TpDriverMorningReminderNotification;
+use App\Notifications\TpDriverAfternoonReminderNotification;
 use App\Services\TransportProgram\TpProgramScheduleSlots;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
-class RemindTpDriverMorningShiftsCommand extends Command
+class RemindTpDriverAfternoonShiftsCommand extends Command
 {
-    protected $signature = 'tp:remind-driver-morning-shifts {--date= : Y-m-d (mặc định hôm nay)}';
+    protected $signature = 'tp:remind-driver-afternoon-shifts {--date= : Y-m-d (mặc định hôm nay)}';
 
-    protected $description = 'Nhắc tài xế ca sáng chương trình đưa đón (06:00) — xác nhận và bắt đầu chuyến';
+    protected $description = 'Nhắc tài xế ca chiều chương trình đưa đón — xác nhận trên app';
 
     public function handle(TpProgramScheduleSlots $slots): int
     {
@@ -35,13 +34,13 @@ class RemindTpDriverMorningShiftsCommand extends Command
                 continue;
             }
 
-            $morningSlot = collect($slots->slotsForProgram($program))
-                ->firstWhere('shift', 'morning');
-            if ($morningSlot === null || empty($morningSlot['departure_time'])) {
+            $afternoonSlot = collect($slots->slotsForProgram($program))
+                ->firstWhere('shift', 'afternoon');
+            if ($afternoonSlot === null || empty($afternoonSlot['departure_time'])) {
                 continue;
             }
 
-            if ($day->slotConfirmedAt('morning') !== null) {
+            if ($day->slotConfirmedAt('afternoon') !== null) {
                 continue;
             }
 
@@ -59,17 +58,17 @@ class RemindTpDriverMorningShiftsCommand extends Command
                 continue;
             }
 
-            $user->notify(new TpDriverMorningReminderNotification(
+            $user->notify(new TpDriverAfternoonReminderNotification(
                 programDayId: (int) $day->id,
                 programName: (string) $program->name,
                 scheduledDate: $day->scheduled_date->toDateString(),
-                departureTime: (string) $morningSlot['departure_time'],
+                departureTime: (string) $afternoonSlot['departure_time'],
                 expectedCount: (int) $day->expected_count,
             ));
             $sent++;
         }
 
-        $this->info("Đã xếp {$sent} thông báo ca sáng cho ngày {$date}.");
+        $this->info("Đã xếp {$sent} thông báo ca chiều cho ngày {$date}.");
 
         return self::SUCCESS;
     }

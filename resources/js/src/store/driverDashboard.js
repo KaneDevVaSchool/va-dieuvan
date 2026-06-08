@@ -21,6 +21,10 @@ import {
   tpItemsToDriverTrips,
 } from '../composables/driverScheduleExpand'
 import { driverConfirmDay, driverListDays, driverStartTrip } from '../api/transportProgram'
+import {
+  isTpTripVisibleInTodaySchedule,
+  mergeDriverConfirmationBannerTrips,
+} from '../util/driverConfirmPolicy'
 
 const CACHE_KEY = 'va_driver_dash_snap_v1'
 const CACHE_SCHEMA = 2
@@ -161,32 +165,6 @@ function tripNeedsDriverConfirmation(trip) {
   return false
 }
 
-/** Ngày cuối (YYYY-MM-DD) cho banner chờ xác nhận: chỉ hôm nay và ngày mai. */
-function confirmationBannerEndYmd() {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return ymd(d)
-}
-
-/**
- * Banner chờ xác nhận: chỉ chuyến có ngày đi là hôm nay hoặc ngày mai.
- */
-function isConfirmationRelevant(trip) {
-  const today = ymd(new Date())
-  const end = confirmationBannerEndYmd()
-  const day = tripDepartYmd(trip)
-  if (day == null) {
-    return false
-  }
-  if (day < today) {
-    return false
-  }
-  if (day > end) {
-    return false
-  }
-  return true
-}
-
 /** Tách từng lịch (sáng/chiều) khi chuyến có nhiều schedule_legs cần xác nhận. */
 function expandTripsForPendingConfirmation(trips) {
   const out = []
@@ -276,13 +254,8 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
     },
 
     needsConfirmationTrips() {
-      const candidates = this.dashboardMergedTrips.filter((x) => isConfirmationRelevant(x))
-      return expandTripsForPendingConfirmation(candidates)
-        .slice()
-        .sort(
-          (a, b) =>
-            (tripDepartMs(a) || 0) - (tripDepartMs(b) || 0),
-        )
+      const expanded = expandTripsForPendingConfirmation(this.dashboardMergedTrips)
+      return mergeDriverConfirmationBannerTrips(expanded)
     },
 
     upcomingScheduleTrips() {
@@ -293,6 +266,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
           if (d == null || d !== today) return false
           const s = tripStatusNorm(x)
           if (s === 'completed' || s === 'cancelled') return false
+          if (!isTpTripVisibleInTodaySchedule(x)) return false
           return true
         }),
       )
@@ -491,6 +465,10 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       horizon.setDate(horizon.getDate() + 21)
       const dateFrom = ymd(past)
       const dateTo = ymd(horizon)
+      const tpHorizon = new Date(now)
+      tpHorizon.setDate(tpHorizon.getDate() + 7)
+      const tpDateFrom = ymd(now)
+      const tpDateTo = ymd(tpHorizon)
 
       if (!silent) {
         this.loadingInitial = true
@@ -512,7 +490,7 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
             per_page: DRIVER_TRIPS_LIST_MAX_PER_PAGE,
             page: 1,
           }),
-          driverListDays(dateQuery).catch(() => ({ items: [] })),
+          driverListDays({ date_from: tpDateFrom, date_to: tpDateTo }).catch(() => ({ items: [] })),
         ])
 
         const batch1 = page1?.items ?? []

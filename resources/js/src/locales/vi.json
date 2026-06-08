@@ -177,6 +177,7 @@
         "float_call": "Gọi điều phối",
         "pending_banner_title": "{n} chuyến cần xác nhận",
         "pending_banner_sub": "Vui lòng xác nhận hoặc báo bận trước 2 giờ",
+        "pending_banner_sub_tp": "Ca đưa đón: xác nhận từng ca trước giờ chạy (email nhắc trước ca).",
         "pending_banner_expand_list": "Mở danh sách chuyến",
         "pending_banner_collapse_list": "Thu gọn danh sách",
         "pending_item_expand_details": "Mở chi tiết lộ trình",

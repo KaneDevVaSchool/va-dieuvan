@@ -148,6 +148,7 @@
         "float_call": "Call dispatch",
         "pending_banner_title": "{n} trip(s) need confirmation",
         "pending_banner_sub": "Please confirm or decline at least 2 hours ahead",
+        "pending_banner_sub_tp": "School transport: confirm each shift before departure (email reminder sent).",
         "pending_banner_expand_list": "Show trip list",
         "pending_banner_collapse_list": "Collapse list",
         "pending_item_expand_details": "Show route details",

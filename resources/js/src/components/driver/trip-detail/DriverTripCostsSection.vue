@@ -3,8 +3,8 @@
     <button
       type="button"
       class="flex min-h-[48px] w-full items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-3 text-left active:bg-driver-surface/40"
-      :class="canAddCost ? '' : 'cursor-default opacity-95'"
-      @click="canAddCost && $emit('open-modal')"
+      :class="canOpenCostEntry ? '' : 'cursor-default opacity-95'"
+      @click="canOpenCostEntry && $emit('open-modal')"
     >
       <div class="flex min-w-0 flex-1 items-center gap-2.5">
         <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-50">
@@ -18,7 +18,7 @@
           </span>
         </span>
       </div>
-      <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted/60" :class="canAddCost ? '' : 'opacity-0'" aria-hidden="true" />
+      <ChevronRightIcon class="h-5 w-5 shrink-0 text-driver-muted/60" :class="canOpenCostEntry ? '' : 'opacity-0'" aria-hidden="true" />
     </button>
 
     <div class="px-4 pb-4 pt-3">
@@ -42,14 +42,15 @@
           <PlusIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
           {{ t('driver_trip_detail.costs_add') }}
         </button>
-        <RouterLink
+        <button
           v-else-if="showPostTripCostLink"
-          :to="postTripCostTo"
+          type="button"
           class="flex min-h-[44px] items-center gap-1 rounded-full bg-driver-accent/20 px-4 py-2 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/35 active:opacity-90 sm:text-base"
+          @click="$emit('open-modal')"
         >
           <PlusIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
           {{ t('driver_trip_detail.costs_add_post_trip') }}
-        </RouterLink>
+        </button>
       </div>
       <ul v-if="tripCosts.length" class="space-y-2">
         <li v-for="c in tripCosts" :key="c.id">
@@ -112,10 +113,7 @@ const props = defineProps({
   formatCostTime: { type: Function, required: true },
 })
 
-const postTripCostTo = computed(() => ({
-  name: 'driverCostCreate',
-  query: props.tripId != null && String(props.tripId).trim() !== '' ? { trip_id: String(props.tripId) } : {},
-}))
+const canOpenCostEntry = computed(() => props.canAddCost || props.showPostTripCostLink)
 
 defineEmits(['open-modal'])
 

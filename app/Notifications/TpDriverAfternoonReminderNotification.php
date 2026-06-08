@@ -9,9 +9,9 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Nhắc tài xế ca sáng chương trình đưa đón (chạy lúc ~06:00).
+ * Nhắc tài xế ca chiều chương trình đưa đón (trước giờ chạy).
  */
-class TpDriverMorningReminderNotification extends Notification implements ShouldQueue
+class TpDriverAfternoonReminderNotification extends Notification implements ShouldQueue
 {
     use AddsMailWhenValidEmail;
     use Queueable;
@@ -43,9 +43,9 @@ class TpDriverMorningReminderNotification extends Notification implements Should
         }
 
         return (new MailMessage)
-            ->subject('Ca sáng đưa đón — xác nhận trên app')
+            ->subject('Ca chiều đưa đón — xác nhận trên app')
             ->greeting('Xin chào '.$name.',')
-            ->line('Bạn có ca chương trình đưa đón sáng nay. Vui lòng mở app tài xế để xác nhận trước giờ chạy.')
+            ->line('Bạn có ca chương trình đưa đón chiều nay. Vui lòng mở app tài xế để xác nhận trước giờ chạy.')
             ->line($line)
             ->action('Mở app tài xế', rtrim(config('app.url'), '/').'/driver');
     }
@@ -61,13 +61,13 @@ class TpDriverMorningReminderNotification extends Notification implements Should
         }
 
         return [
-            'title' => 'Ca sáng đưa đón hôm nay',
+            'title' => 'Ca chiều đưa đón hôm nay',
             'body' => $body,
             'program_day_id' => $this->programDayId,
             'scheduled_date' => $this->scheduledDate,
             'departure_time' => $this->departureTime,
-            'shift' => 'morning',
-            'event' => 'tp.driver.morning_reminder',
+            'shift' => 'afternoon',
+            'event' => 'tp.driver.afternoon_reminder',
             'url' => '/driver',
             'audience' => 'driver',
         ];

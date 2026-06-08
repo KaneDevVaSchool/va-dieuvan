@@ -2,7 +2,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { addTripEvent, getTrip, updateTripStatus, upsertTripRecord } from '../api/trips'
-import { submitTripCost } from '../api/costs'
+import { submitStandaloneTripCost, submitTripCost } from '../api/costs'
 import { isPassengerRowFilled, isBusinessRowFilled, isCargoRowFilled } from './dispatchWizardConstants'
 import { useDriverWebPushBoot } from './useDriverWebPushBoot'
 import { useDriverVisiblePoll } from './useDriverVisiblePoll'
@@ -307,6 +307,8 @@ export function useDriverTripDetailPage() {
     () => isTripCompletedForDriver(trip.value?.status) && !canAddCost.value,
   )
 
+  const canOpenCostModal = computed(() => canAddCost.value || canAddPostTripCost.value)
+
   const startKmModel = computed(() => {
     const r = trip.value?.record
     if (r?.start_odometer_km != null) return r.start_odometer_km
@@ -398,7 +400,7 @@ export function useDriverTripDetailPage() {
   }
 
   function openCostModal() {
-    if (!canAddCost.value) return
+    if (!canOpenCostModal.value) return
     costError.value = ''
     costForm.value = { type: 'fuel', amount: '', description: '' }
     costModalOpen.value = true
@@ -406,26 +408,28 @@ export function useDriverTripDetailPage() {
 
   async function submitCost() {
     const id = tripId.value
-    if (id == null || costSaving.value || !canAddCost.value) return
+    if (id == null || costSaving.value || !canOpenCostModal.value) return
     const a = String(costForm.value.amount || '').replace(/\D/g, '')
     const num = a === '' ? NaN : parseInt(a, 10)
     if (!Number.isFinite(num) || num < 0) {
       costError.value = t('driver_trip_detail.cost_err_amount')
       return
     }
+    const payload = {
+      type: costForm.value.type,
+      amount: num,
+      description: costForm.value.description?.trim() || null,
+      currency: 'VND',
+    }
+    const idem = `driver-cost-${id}-${Date.now()}`
     costSaving.value = true
     costError.value = ''
     try {
-      await submitTripCost(
-        id,
-        {
-          type: costForm.value.type,
-          amount: num,
-          description: costForm.value.description?.trim() || null,
-          currency: 'VND',
-        },
-        { idempotencyKey: `driver-cost-${id}-${Date.now()}` },
-      )
+      if (canAddPostTripCost.value) {
+        await submitStandaloneTripCost({ ...payload, trip_id: id }, { idempotencyKey: idem })
+      } else {
+        await submitTripCost(id, payload, { idempotencyKey: idem })
+      }
       costModalOpen.value = false
       await refresh()
     } catch {

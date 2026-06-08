@@ -39,7 +39,7 @@
               {{ t('driver_home.pending_banner_title', { n: pendingCount }) }}
             </p>
             <p v-if="pendingCount > 0" class="mt-1 text-sm font-medium text-amber-200/75 sm:text-base">
-              {{ t('driver_home.pending_banner_sub') }}
+              {{ bannerSubline }}
             </p>
             <p
               v-if="!listExpanded && hasTripRows"
@@ -431,6 +431,14 @@ function toggleItemDetails(tripId) {
 }
 
 const pendingCount = computed(() => props.trips.length)
+
+const bannerSubline = computed(() => {
+  const rows = props.trips
+  if (!rows.length) return ''
+  const allTp = rows.every((tr) => tr?._tp?.day_id)
+  if (allTp) return t('driver_home.pending_banner_sub_tp')
+  return t('driver_home.pending_banner_sub')
+})
 
 const declineTripSummary = computed(() => {
   const tr = declineTrip.value

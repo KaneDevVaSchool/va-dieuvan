@@ -62,12 +62,6 @@
           :start-busy-trip-id="dash.startBusyTripId"
           @start-trip="onStartTrip"
         />
-
-        <DriverWeekCalendar
-          :raw-trips="dash.calendarDispatchEntries"
-          :tp-slots="dash.tpCalendarSlots"
-          :loading="dash.listLoadingForUi"
-        />
       </div>
 
       <div
@@ -110,7 +104,6 @@ import DriverHeader from '../../components/driver/DriverHeader.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverPendingConfirmationSection from '../../components/driver/dashboard/DriverPendingConfirmationSection.vue'
 import DriverUpcomingTripsSection from '../../components/driver/dashboard/DriverUpcomingTripsSection.vue'
-import DriverWeekCalendar from '../../components/driver/DriverWeekCalendar.vue'
 const { t } = useI18n()
 const auth = useAuthStore()
 const dash = useDriverDashboardStore()
