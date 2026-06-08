@@ -104,12 +104,15 @@
           :disabled="loggingOut"
           @click="menuOpen = !menuOpen"
         >
-          <span
-            class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-va-700 to-va-800 text-xs font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white/70 sm:h-10 sm:w-10 sm:text-sm"
-            aria-hidden="true"
-          >
-            {{ userInitials }}
-          </span>
+          <UserAvatar
+            class="!h-9 !w-9 !text-xs sm:!h-10 sm:!w-10 sm:!text-sm"
+            :name="auth.user?.name"
+            :email="auth.user?.email"
+            :avatar-url="auth.user?.avatar_url"
+            :title="auth.user?.name ?? ''"
+            size="md"
+            ring-prominent
+          />
           <span class="hidden max-w-[10rem] truncate text-left text-sm font-medium text-slate-800 sm:block md:max-w-[14rem]">
             {{ auth.user?.name || auth.user?.email || '' }}
           </span>
@@ -134,12 +137,15 @@
             class="absolute right-0 z-40 mt-2 w-[min(100vw-2rem,18rem)] origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white pb-2 pt-0 shadow-2xl shadow-slate-900/10 ring-1 ring-slate-900/5"
           >
             <div class="flex items-start gap-3 rounded-t-xl bg-gradient-to-br from-va-700/95 to-va-800 px-4 py-3 text-white shadow-inner">
-              <span
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold uppercase tracking-wide ring-2 ring-white/30"
-                aria-hidden="true"
-              >
-                {{ userInitials }}
-              </span>
+              <UserAvatar
+                class="!h-11 !w-11 shrink-0 !bg-white/20 !text-sm !text-white !ring-2 !ring-white/30"
+                :name="auth.user?.name"
+                :email="auth.user?.email"
+                :avatar-url="auth.user?.avatar_url"
+                :title="auth.user?.name ?? ''"
+                size="lg"
+                ring-prominent
+              />
               <div class="min-w-0 flex-1 pt-0.5">
                 <p v-if="auth.user?.name" class="truncate text-sm font-semibold text-white">{{ auth.user.name }}</p>
                 <p
@@ -217,6 +223,7 @@ import {
   ListBulletIcon,
   PlusCircleIcon,
 } from '@heroicons/vue/24/outline'
+import UserAvatar from '../branding/UserAvatar.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
 import { useAuthStore } from '../../store'
 import { useAuthLogout } from '../../composables/useAuthLogout'
@@ -279,17 +286,6 @@ async function refreshUnreadBadge() {
     unreadBadge.value = 0
   }
 }
-
-const userInitials = computed(() => {
-  const name = auth.user?.name?.trim()
-  const email = auth.user?.email?.trim()
-  const src = name || email || '?'
-  const parts = src.split(/\s+/).filter(Boolean)
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2)
-  }
-  return src.slice(0, 2).toUpperCase()
-})
 
 function onDocPointerDown(e) {
   const root = menuRootRef.value

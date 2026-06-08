@@ -1,9 +1,12 @@
 <template>
   <div>
-    <!-- Desktop -->
-    <div class="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-      <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-        <thead class="bg-slate-50/90 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+    <!-- Tablet / desktop table -->
+    <div
+      class="portal-requests-table-wrap hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:block"
+    >
+      <div class="portal-requests-table-scroll overflow-x-auto">
+      <table class="portal-requests-table min-w-full text-left text-sm">
+        <thead>
           <tr>
             <th class="whitespace-nowrap px-4 py-3">{{ t('portal.table_code') }}</th>
             <th class="min-w-[12rem] px-4 py-3">{{ t('portal.table_route') }}</th>
@@ -12,11 +15,11 @@
             <th class="w-14 px-4 py-3 text-right" :aria-label="t('portal.table_action')"><span class="sr-only">{{ t('portal.table_action') }}</span></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
+        <tbody>
           <tr
             v-for="req in requests"
             :key="req.id"
-            class="group/row transition hover:bg-va-50/40"
+            class="group/row transition"
             :class="rowHighlightClass(req)"
           >
             <td class="whitespace-nowrap px-4 py-3">
@@ -65,10 +68,11 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Mobile -->
-    <div class="space-y-3 md:hidden">
+    <div class="space-y-3 sm:hidden">
       <RouterLink
         v-for="req in requests"
         :key="req.id"
@@ -172,3 +176,49 @@ function arriveFmt(req) {
   return t('portal.time_arrive_by', { time: hm })
 }
 </script>
+
+<style scoped>
+.portal-requests-table-scroll {
+  -webkit-overflow-scrolling: touch;
+  max-height: min(70vh, 42rem);
+  overflow-y: auto;
+}
+
+.portal-requests-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.portal-requests-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgb(248 250 252) 0%, rgb(241 245 249 / 0.98) 100%);
+  box-shadow: 0 1px 0 rgb(226 232 240);
+}
+
+.portal-requests-table thead th {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(71 85 105);
+}
+
+.portal-requests-table tbody tr:nth-child(even) {
+  background-color: rgb(248 250 252 / 0.65);
+}
+
+.portal-requests-table tbody tr:hover {
+  background-color: rgb(240 253 250 / 0.55);
+}
+
+.portal-requests-table tbody td {
+  border-bottom: 1px solid rgb(241 245 249);
+  vertical-align: middle;
+}
+
+.portal-requests-table tbody tr:last-child td {
+  border-bottom: none;
+}
+</style>

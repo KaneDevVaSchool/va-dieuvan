@@ -9,6 +9,16 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import PortalHeader from '../../components/portal/PortalHeader.vue'
+import { useAuthStore } from '../../store'
+
+const auth = useAuthStore()
+
+onMounted(() => {
+  if (auth.isLoggedIn && !auth.user?.avatar_url) {
+    auth.fetchMe().catch(() => {})
+  }
+})
 </script>

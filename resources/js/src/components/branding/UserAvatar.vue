@@ -46,9 +46,27 @@ function onImgError() {
   imgFailed.value = true
 }
 
+/** Same-origin /storage and fix APP_URL localhost leaks on production. */
+function resolveAvatarUrl(raw) {
+  const url = String(raw ?? '').trim()
+  if (!url) return null
+  if (url.startsWith('/')) {
+    try {
+      return new URL(url, window.location.origin).href
+    } catch {
+      return url
+    }
+  }
+  const wrongHostStorage = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/storage\/.*)$/i.exec(url)
+  if (wrongHostStorage) {
+    return `${window.location.origin}${wrongHostStorage[3]}`
+  }
+  return url
+}
+
 const effectiveAvatar = computed(() => {
   if (imgFailed.value || !props.avatarUrl) return null
-  return props.avatarUrl
+  return resolveAvatarUrl(props.avatarUrl)
 })
 
 const initials = computed(() => {

@@ -40,7 +40,7 @@
       <!-- Filter bar -->
       <div class="relative z-40 mt-8">
         <AppFilterBar>
-          <div class="flex flex-col gap-2">
+          <div ref="filterBarRef" class="flex flex-col gap-2">
             <!-- Search — full width on all breakpoints -->
             <div class="relative w-full min-w-0">
               <label class="sr-only" for="portal-list-q">{{ t('portal.search_placeholder') }}</label>
@@ -108,7 +108,7 @@
             <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
 
             <!-- Funnel / phễu -->
-            <details ref="funnelRef" class="group relative">
+            <details ref="funnelRef" class="group relative shrink-0">
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md [&::-webkit-details-marker]:hidden"
                 :aria-label="t('portal.filter_toolbar_label')"
@@ -184,14 +184,21 @@
               </div>
             </details>
 
+            <div
+              class="hidden h-6 w-px shrink-0 bg-slate-200/90 sm:block dark:bg-slate-700"
+              aria-hidden="true"
+            />
+
             <!-- Filter chips -->
             <div class="flex min-w-0 flex-1 items-center gap-x-2 gap-y-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden sm:gap-x-3">
 
               <!-- Status chip -->
               <AppFilterDropdown
                 v-if="filterDropdownVisible.status !== false"
-                :label="t('portal.filter_label_status')"
-                :summary-text="currentStatusLabel"
+                :panel-title="t('portal.filter_label_status')"
+                :summary-text="statusChipSummary"
+                :active="statusFilterActive"
+                :aria-label="t('portal.filter_label_status')"
                 panel-class="min-w-[200px] py-1"
                 class="shrink-0 snap-start"
               >
@@ -205,7 +212,7 @@
                           ? 'bg-teal-50 font-medium text-teal-900'
                           : 'text-slate-700 hover:bg-slate-50',
                       ]"
-                      @click="onFilter(opt.key)"
+                      @click="onFilter(opt.key, $event)"
                     >
                       {{ opt.label }}
                     </button>
@@ -216,8 +223,10 @@
               <!-- Sort chip -->
               <AppFilterDropdown
                 v-if="filterDropdownVisible.sort !== false"
-                :label="t('portal.filter_label_sort')"
-                :summary-text="currentSortLabel"
+                :panel-title="t('portal.filter_label_sort')"
+                :summary-text="sortChipSummary"
+                :active="sortFilterActive"
+                :aria-label="t('portal.filter_label_sort')"
                 panel-class="min-w-[240px] py-1"
                 class="shrink-0 snap-start"
               >
@@ -231,7 +240,7 @@
                           ? 'bg-teal-50 font-medium text-teal-900'
                           : 'text-slate-700 hover:bg-slate-50',
                       ]"
-                      @click="onSort(opt.value)"
+                      @click="onSort(opt.value, $event)"
                     >
                       {{ opt.label }}
                     </button>
@@ -242,8 +251,10 @@
               <!-- Trip type chip -->
               <AppFilterDropdown
                 v-if="filterDropdownVisible.trip_type !== false"
-                :label="t('portal.filter_label_trip_type')"
-                :summary-text="currentTripTypeLabel"
+                :panel-title="t('portal.filter_label_trip_type')"
+                :summary-text="tripTypeChipSummary"
+                :active="tripTypeFilterActive"
+                :aria-label="t('portal.filter_label_trip_type')"
                 panel-class="min-w-[220px] py-1"
                 class="shrink-0 snap-start"
               >
@@ -257,7 +268,7 @@
                           ? 'bg-teal-50 font-medium text-teal-900'
                           : 'text-slate-700 hover:bg-slate-50',
                       ]"
-                      @click="onTripType(opt.key)"
+                      @click="onTripType(opt.key, $event)"
                     >
                       {{ opt.label }}
                     </button>
@@ -268,8 +279,10 @@
               <!-- Urgent chip -->
               <AppFilterDropdown
                 v-if="filterDropdownVisible.urgent !== false"
-                :label="t('portal.filter_label_urgent')"
-                :summary-text="currentUrgentLabel"
+                :panel-title="t('portal.filter_label_urgent')"
+                :summary-text="urgentChipSummary"
+                :active="urgentFilterActive"
+                :aria-label="t('portal.filter_label_urgent')"
                 panel-class="min-w-[180px] py-1"
                 class="shrink-0 snap-start"
               >
@@ -283,7 +296,7 @@
                           ? 'bg-teal-50 font-medium text-teal-900'
                           : 'text-slate-700 hover:bg-slate-50',
                       ]"
-                      @click="onUrgent(opt.key)"
+                      @click="onUrgent(opt.key, $event)"
                     >
                       {{ opt.label }}
                     </button>
@@ -294,8 +307,10 @@
               <!-- Extracurricular chip -->
               <AppFilterDropdown
                 v-if="!isExtracurricularModule && filterDropdownVisible.extracurricular !== false"
-                :label="t('portal.filter_label_extracurricular')"
-                :summary-text="currentExtracurricularLabel"
+                :panel-title="t('portal.filter_label_extracurricular')"
+                :summary-text="extracurricularChipSummary"
+                :active="extracurricularFilterActive"
+                :aria-label="t('portal.filter_label_extracurricular')"
                 panel-class="min-w-[240px] py-1"
                 class="shrink-0 snap-start"
               >
@@ -309,7 +324,7 @@
                           ? 'bg-teal-50 font-medium text-teal-900'
                           : 'text-slate-700 hover:bg-slate-50',
                       ]"
-                      @click="onExtracurricular(opt.key)"
+                      @click="onExtracurricular(opt.key, $event)"
                     >
                       {{ opt.label }}
                     </button>
@@ -320,8 +335,10 @@
               <!-- Date range chip -->
               <AppFilterDropdown
                 v-if="filterDropdownVisible.date_range !== false"
-                :label="t('portal.filter_label_date_range')"
-                :summary-text="currentDateRangeLabel"
+                :panel-title="t('portal.filter_label_date_range')"
+                :summary-text="dateRangeChipSummary"
+                :active="dateRangeFilterActive"
+                :aria-label="t('portal.filter_label_date_range')"
                 panel-class="min-w-[260px] p-3"
                 class="shrink-0 snap-start"
               >
@@ -331,7 +348,7 @@
                     <input
                       v-model="dateFrom"
                       type="date"
-                      class="h-9 rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
                     />
                   </label>
                   <span class="hidden text-slate-400 sm:inline" aria-hidden="true">—</span>
@@ -340,7 +357,7 @@
                     <input
                       v-model="dateTo"
                       type="date"
-                      class="h-9 rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                      class="h-9 w-full rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30"
                     />
                   </label>
                 </div>
@@ -431,12 +448,12 @@
             </div>
             <label
               v-if="extracurricularListView === 'schedule'"
-              class="flex items-center gap-2 text-sm text-slate-700"
+              class="flex w-full min-w-0 flex-col gap-1 text-sm text-slate-700 sm:w-auto sm:flex-row sm:items-center sm:gap-2"
             >
-              <span class="font-medium">{{ t('portal.recurring_plan.schedule_group_label') }}</span>
+              <span class="text-xs font-medium text-slate-600 sm:text-sm">{{ t('portal.recurring_plan.schedule_group_label') }}</span>
               <select
                 v-model="scheduleGroupBy"
-                class="h-9 rounded-lg border border-va-200/80 bg-white px-2.5 text-sm font-medium text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-va-500/30"
+                class="h-9 w-full min-w-0 rounded-lg border border-va-200/80 bg-white px-2.5 text-sm font-medium text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-va-500/30 sm:w-auto"
               >
                 <option value="day">{{ t('portal.recurring_plan.group_by_day') }}</option>
                 <option value="plan">{{ t('portal.recurring_plan.group_by_plan') }}</option>
@@ -445,12 +462,27 @@
               </select>
             </label>
           </div>
-          <div class="flex flex-wrap items-center justify-end gap-2">
+          <div
+            class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 px-3 py-2 sm:justify-end"
+          >
+            <p
+              v-if="pagination && (pagination.total ?? 0) > 0"
+              class="text-xs font-medium text-slate-600 sm:text-sm"
+            >
+              {{
+                t('portal.pagination_summary', {
+                  from: pageFrom,
+                  to: pageTo,
+                  total: pagination.total ?? 0,
+                })
+              }}
+            </p>
             <label class="flex items-center gap-2">
-              <span class="text-sm text-slate-600">{{ t('portal.filter_per_page') }}</span>
+              <span class="sr-only">{{ t('portal.filter_per_page') }}</span>
+              <span class="text-xs text-slate-500 sm:text-sm">{{ t('portal.filter_per_page') }}</span>
               <select
                 v-model.number="perPage"
-                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30"
+                class="h-9 min-w-[3.25rem] rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30"
                 :aria-label="t('portal.filter_per_page')"
                 @change="onPerPageChange"
               >
@@ -530,18 +562,6 @@
               </button>
             </div>
           </nav>
-          <p
-            v-else-if="pagination && (pagination.total ?? 0) > 0"
-            class="text-center text-sm text-slate-500"
-          >
-            {{
-              t('portal.pagination_summary', {
-                from: pageFrom,
-                to: pageTo,
-                total: pagination.total ?? 0,
-              })
-            }}
-          </p>
         </div>
       </template>
     </section>
@@ -564,6 +584,7 @@ import ExtracurricularRequestsDataTable from '../../components/requests/Extracur
 import ExtracurricularRequestsCalendar from '../../components/portal/extracurricular/ExtracurricularRequestsCalendar.vue'
 import ExtracurricularScheduleTable from '../../components/portal/extracurricular/ExtracurricularScheduleTable.vue'
 import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
+import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 
 const PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const PER_PAGE_KEY = 'portal-list-per-page'
@@ -591,6 +612,11 @@ const isExtracurricularMode = computed(
 const extracurricularTableRef = ref(null)
 const extracurricularListView = ref('schedule')
 const scheduleGroupBy = ref('plan')
+const filterBarRef = ref(null)
+const funnelRef = ref(null)
+
+useDetailsAutoCloseWithin(filterBarRef)
+useDetailsAutoClose(funnelRef)
 
 const listViewModes = computed(() => [
   { id: 'calendar', label: t('portal.recurring_plan.list_view_calendar') },
@@ -721,6 +747,56 @@ const currentDateRangeLabel = computed(() => {
   if (dateTo.value) return `${t('portal.filter_date_to')}: ${dateTo.value}`
   return t('portal.filter_all')
 })
+
+const statusFilterActive = computed(() => filterStatus.value !== 'all')
+const sortFilterActive = computed(() => sort.value !== 'depart_desc')
+const tripTypeFilterActive = computed(() => filterTripType.value !== 'all')
+const urgentFilterActive = computed(() => filterUrgent.value !== 'all')
+const extracurricularFilterActive = computed(() => filterExtracurricular.value !== 'all')
+const dateRangeFilterActive = computed(() => Boolean(dateFrom.value || dateTo.value))
+
+function filterChipSummary(fieldLabel, valueLabel, isActive) {
+  return isActive ? valueLabel : fieldLabel
+}
+
+const statusChipSummary = computed(() =>
+  filterChipSummary(
+    t('portal.filter_label_status'),
+    currentStatusLabel.value,
+    statusFilterActive.value,
+  ),
+)
+const sortChipSummary = computed(() =>
+  filterChipSummary(t('portal.filter_label_sort'), currentSortLabel.value, sortFilterActive.value),
+)
+const tripTypeChipSummary = computed(() =>
+  filterChipSummary(
+    t('portal.filter_label_trip_type'),
+    currentTripTypeLabel.value,
+    tripTypeFilterActive.value,
+  ),
+)
+const urgentChipSummary = computed(() =>
+  filterChipSummary(
+    t('portal.filter_label_urgent'),
+    currentUrgentLabel.value,
+    urgentFilterActive.value,
+  ),
+)
+const extracurricularChipSummary = computed(() =>
+  filterChipSummary(
+    t('portal.filter_label_extracurricular'),
+    currentExtracurricularLabel.value,
+    extracurricularFilterActive.value,
+  ),
+)
+const dateRangeChipSummary = computed(() =>
+  filterChipSummary(
+    t('portal.filter_label_date_range'),
+    currentDateRangeLabel.value,
+    dateRangeFilterActive.value,
+  ),
+)
 
 // ── Active filter count + summary lines ──────────────────────
 const activeFilterCount = computed(() => {
@@ -920,28 +996,38 @@ watch([dateFrom, dateTo], () => {
 })
 
 // ── Actions ──────────────────────────────────────────────────
-function onFilter(key) {
+function closeParentDetails(ev) {
+  const el = ev?.currentTarget?.closest?.('details')
+  if (el && 'open' in el) el.open = false
+}
+
+function onFilter(key, ev) {
   filterStatus.value = key
+  closeParentDetails(ev)
   reloadFromStart()
 }
 
-function onTripType(key) {
+function onTripType(key, ev) {
   filterTripType.value = key
+  closeParentDetails(ev)
   reloadFromStart()
 }
 
-function onUrgent(key) {
+function onUrgent(key, ev) {
   filterUrgent.value = key
+  closeParentDetails(ev)
   reloadFromStart()
 }
 
-function onExtracurricular(key) {
+function onExtracurricular(key, ev) {
   filterExtracurricular.value = key
+  closeParentDetails(ev)
   reloadFromStart()
 }
 
-function onSort(value) {
+function onSort(value, ev) {
   sort.value = value
+  closeParentDetails(ev)
   reloadFromStart()
 }
 
@@ -958,6 +1044,7 @@ function resetFilters() {
   searchSuggestions.value = []
   dateFrom.value = ''
   dateTo.value = ''
+  if (funnelRef.value?.open) funnelRef.value.open = false
   reloadFromStart()
 }
 
