@@ -1,11 +1,11 @@
 <template>
   <div class="space-y-4">
     <PortalStatusTimeline
-      :title="t('request_detail.section_progress')"
+      :title="hideRouteSummary ? '' : t('request_detail.section_progress')"
       :steps="timelineSteps"
     />
 
-    <section class="border border-slate-200 bg-white p-4">
+    <section v-if="!hideRouteSummary" class="border border-slate-200 bg-white p-4">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
         <h2 class="text-sm font-semibold text-slate-900">{{ t('request_detail.route_map_heading') }}</h2>
         <p class="text-xs text-slate-600">
@@ -109,6 +109,7 @@ const props = defineProps({
   routeSubTo: { type: String, default: '' },
   passengerOrCargoLine: { type: String, default: '—' },
   purpose: { type: String, default: '' },
+  hideRouteSummary: { type: Boolean, default: false },
   showApprovalPanel: { type: Boolean, default: false },
   showDispatcherPrice: { type: Boolean, default: false },
   attachmentCount: { type: Number, default: 0 },

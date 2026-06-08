@@ -1,10 +1,8 @@
 <template>
   <div
     :class="[
-      'flex flex-col bg-slate-50',
-      isDeptRequestDetailRoute
-        ? 'min-h-0 min-w-0 flex-1 overflow-hidden'
-        : 'min-h-0 w-full',
+      'flex min-h-0 flex-col bg-slate-50',
+      isDeptRequestDetailRoute ? 'min-w-0 flex-1 overflow-hidden' : 'w-full',
     ]"
   >
     <div v-if="loading" class="flex flex-1 items-center justify-center px-4 py-12 text-sm text-slate-500">
@@ -12,108 +10,77 @@
     </div>
 
     <template v-else-if="req">
-      <header
-        class="shrink-0 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/85"
+      <RequestDetailTopBar
+        :back-to="isDeptRequestDetailRoute ? { name: 'deptDashboard' } : '/requests'"
+        :back-aria-label="isDeptRequestDetailRoute ? t('dept.aria_back_pending') : t('request_detail.aria_back_list')"
+        :title="requestRefCode"
+        :status="req.status"
+        :recurring="showRecurringBadge"
+        :inline-alert="
+          msg && req.status === 'pending' && canApprove && req.trip_type === 'door_to_door' ? msg : ''
+        "
       >
-        <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
-          <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <template #meta>
+          {{ t('request_detail.meta_created', { dt: fmt(req.created_at) }) }}
+          <template v-if="req.trip">
+            <span class="text-slate-300"> · </span>
             <RouterLink
-              :to="isDeptRequestDetailRoute ? { name: 'deptDashboard' } : '/requests'"
-              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-              :aria-label="isDeptRequestDetailRoute ? t('dept.aria_back_pending') : t('request_detail.aria_back_list')"
+              :to="`/trips/${req.trip.id}`"
+              class="font-medium text-slate-800 underline decoration-slate-400 underline-offset-2 hover:decoration-slate-700"
             >
-              <ArrowLeftIcon class="h-4 w-4" />
+              {{ t('request_detail.trip_link', { id: req.trip.id }) }}
             </RouterLink>
-            <div
-              class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600 ring-1 ring-teal-600/15 sm:flex"
+          </template>
+        </template>
+        <template #actions>
+          <button
+            type="button"
+            class="inline-flex h-9 items-center justify-center rounded-lg border px-3 text-xs font-medium transition sm:text-sm"
+            :class="
+              pdfExportDisabled
+                ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
+                : 'border-slate-300 bg-white text-slate-800 hover:bg-slate-50'
+            "
+            :disabled="pdfBusy || pdfExportDisabled"
+            :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
+            @click="downloadRequestPdf"
+          >
+            <span
+              v-if="pdfBusy"
+              class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-400/30 border-t-slate-700"
+            />
+            {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
+          </button>
+          <div
+            v-if="req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
+            class="flex gap-2"
+          >
+            <Button
+              variant="danger"
+              :loading="acting"
+              class="min-h-9 !px-3 !py-2 text-xs font-semibold sm:text-sm"
+              @click="onDecideClick('reject')"
             >
-              <TruckIcon class="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-1.5">
-                <h1 class="text-sm font-bold tracking-tight text-slate-900 sm:text-base">
-                  {{ requestRefCode }}
-                </h1>
-                <StatusBadge :status="req.status" />
-                <span
-                  v-if="showRecurringBadge"
-                  class="inline-flex items-center gap-0.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-900 ring-1 ring-indigo-600/15"
-                >
-                  <ArrowPathIcon class="h-3 w-3 shrink-0 text-indigo-700" aria-hidden="true" />
-                  {{ t('request_detail.badge_recurring') }}
-                </span>
-              </div>
-              <p class="mt-0.5 text-[11px] text-slate-600 sm:text-xs">
-                {{ t('request_detail.meta_created', { dt: fmt(req.created_at) }) }}
-                <template v-if="req.trip">
-                  <span class="text-slate-300"> · </span>
-                  <RouterLink
-                    :to="`/trips/${req.trip.id}`"
-                    class="font-medium text-teal-700 underline decoration-teal-600/30 underline-offset-2 hover:decoration-teal-800"
-                  >
-                    {{ t('request_detail.trip_link', { id: req.trip.id }) }}
-                  </RouterLink>
-                </template>
-              </p>
-            </div>
+              {{ t('request_detail.dept_reject') }}
+            </Button>
+            <Button
+              :loading="acting"
+              class="min-h-9 !bg-slate-900 !px-4 !py-2 text-xs font-semibold text-white hover:!bg-slate-800 sm:text-sm"
+              @click="onDecideClick('approve')"
+            >
+              {{ t('request_detail.header_approve') }}
+            </Button>
           </div>
+        </template>
+      </RequestDetailTopBar>
 
-          <div class="flex w-full shrink-0 flex-wrap items-center justify-end gap-2 sm:w-auto">
-            <button
-              type="button"
-              class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-medium shadow-sm transition sm:text-sm"
-              :class="
-                pdfExportDisabled
-                  ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
-                  : 'border-teal-200 bg-white text-teal-800 hover:bg-teal-50'
-              "
-              :disabled="pdfBusy || pdfExportDisabled"
-              :title="pdfExportDisabled ? t('request_detail.pdf_locked_tooltip') : t('request_detail.export_pdf')"
-              @click="downloadRequestPdf"
-            >
-              <span
-                v-if="pdfBusy"
-                class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal-500/30 border-t-teal-600"
-              />
-              {{ pdfBusy ? t('request_detail.pdf_export_loading') : t('request_detail.export_pdf') }}
-            </button>
-
-            <div
-              v-if="req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
-              class="flex gap-2"
-            >
-              <Button
-                variant="danger"
-                :loading="acting"
-                class="min-h-9 !border-rose-200 !bg-white !px-3 !py-2 text-xs font-semibold !text-rose-700 shadow-sm hover:!bg-rose-50 sm:text-sm"
-                @click="onDecideClick('reject')"
-              >
-                {{ t('request_detail.dept_reject') }}
-              </Button>
-              <Button
-                :loading="acting"
-                class="min-h-9 !bg-teal-600 !px-4 !py-2 text-xs font-semibold text-white shadow-sm hover:!bg-teal-700 sm:text-sm"
-                @click="onDecideClick('approve')"
-              >
-                {{ t('request_detail.header_approve') }}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <p
-          v-if="msg && req.status === 'pending' && canApprove && req.trip_type === 'door_to_door'"
-          class="border-t border-amber-100 bg-amber-50/80 px-4 py-1.5 text-xs font-medium text-amber-950 sm:text-sm"
-        >
-          {{ msg }}
-        </p>
-      </header>
-
-      <div
-        v-if="req.status === 'rejected'"
-        class="shrink-0 border-b-2 border-rose-400 bg-gradient-to-r from-rose-100 via-rose-50 to-white px-4 py-4 shadow-sm ring-1 ring-rose-500/15 sm:px-6"
-        role="alert"
-      >
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+        <div class="mx-auto max-w-5xl space-y-5 px-4 py-5 pb-10">
+          <div
+            v-if="req.status === 'rejected'"
+            class="rounded-lg border border-rose-200 bg-rose-50/90 p-4 sm:p-5"
+            role="alert"
+          >
         <div class="flex items-start gap-3">
           <XCircleIcon class="h-9 w-9 shrink-0 text-rose-600" aria-hidden="true" />
           <div class="min-w-0 flex-1">
@@ -142,237 +109,46 @@
             </button>
           </div>
         </div>
-      </div>
-
-      <div class="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
-        <aside
-          class="w-full shrink-0 overflow-y-auto border-b border-slate-200/90 bg-gradient-to-b from-slate-50 to-slate-100/80 lg:sticky lg:top-0 lg:z-[1] lg:w-72 lg:max-h-[calc(100dvh-8rem)] lg:self-start lg:border-b-0 lg:border-r xl:w-80"
-          :class="'max-h-[min(40vh,22rem)] lg:max-h-[calc(100dvh-8rem)]'"
-        >
-          <div class="space-y-3 p-3 sm:p-4">
-            <section
-              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-slate-100 bg-gradient-to-r from-teal-50/90 via-white to-white px-3 py-2"
-              >
-                <UserCircleIcon class="h-4 w-4 shrink-0 text-teal-700" aria-hidden="true" />
-                <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
-                  {{ t('request_detail.aside_requester') }}
-                </h2>
-              </header>
-              <div class="p-3">
-                <div class="flex items-center gap-3">
-                  <img
-                    v-if="req.requester?.avatar_url"
-                    :src="req.requester.avatar_url"
-                    alt=""
-                    class="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-white shadow-sm"
-                  />
-                  <div
-                    v-else
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-teal-50 text-xs font-bold text-teal-900 ring-2 ring-teal-100/80"
-                  >
-                    {{ requesterInitials }}
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-semibold leading-snug text-slate-900">
-                      {{ req.requester?.name ?? '—' }}
-                    </p>
-                    <p
-                      v-if="requesterAsideSubtitle"
-                      class="mt-0.5 truncate text-xs text-slate-600"
-                    >
-                      {{ requesterAsideSubtitle }}
-                    </p>
-                  </div>
-                </div>
-                <dl
-                  v-if="requesterAsideFields.length"
-                  class="mt-3 grid gap-2 border-t border-slate-100 pt-3"
-                >
-                  <div
-                    v-for="row in requesterAsideFields"
-                    :key="row.key"
-                    class="grid grid-cols-[4.5rem_1fr] items-start gap-x-2 gap-y-0.5 text-xs sm:grid-cols-[5rem_1fr]"
-                  >
-                    <dt class="font-medium text-slate-500">{{ row.label }}</dt>
-                    <dd class="min-w-0 break-words text-slate-800">{{ row.value }}</dd>
-                  </div>
-                </dl>
-              </div>
-            </section>
-
-            <section
-              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
-            >
-              <header
-                class="flex items-center gap-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-3 py-2"
-              >
-                <TruckIcon class="h-4 w-4 shrink-0 text-teal-700" aria-hidden="true" />
-                <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
-                  {{ t('request_detail.aside_vehicle_request') }}
-                </h2>
-              </header>
-              <div class="space-y-3 p-3">
-                <div
-                  class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-teal-100 bg-teal-50/80 px-2.5 py-1 text-[11px] font-semibold text-teal-900"
-                >
-                  <TruckIcon class="h-3.5 w-3.5 shrink-0 text-teal-600" aria-hidden="true" />
-                  <span class="truncate">{{ labelTripType(req.trip_type) }}</span>
-                </div>
-                <dl class="rounded-md border border-slate-100 bg-slate-50/60 px-2.5 py-2 text-xs">
-                  <dt class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                    {{ t('request_detail.lbl_passenger_load') }}
-                  </dt>
-                  <dd class="mt-1 flex items-center gap-1.5 font-medium text-slate-900">
-                    <CubeIcon class="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
-                    <span>{{ passengerOrCargoLine }}</span>
-                  </dd>
-                </dl>
-              </div>
-            </section>
-
-            <section
-              v-if="workflowTodoItems.length"
-              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
-            >
-              <header class="border-b border-slate-100 bg-slate-50/90 px-3 py-2">
-                <h2 class="text-[10px] font-bold uppercase tracking-wide text-slate-600">
-                  {{ t('request_detail.aside_todos_heading') }}
-                </h2>
-              </header>
-              <ul class="space-y-1 p-2">
-                <li v-for="item in workflowTodoItems.slice(0, 4)" :key="item.key">
-                  <button
-                    type="button"
-                    class="w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold text-teal-900 hover:bg-teal-50"
-                    @click="onWorkflowNavigate({ tab: item.tab, focus: item.focus })"
-                  >
-                    {{ item.label }}
-                  </button>
-                </li>
-              </ul>
-            </section>
-
-            <section
-              v-if="showResetCloneBtn"
-              class="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/[0.03]"
-            >
-              <ResetCloneSection compact :busy="resetCloneBusy" @clone="onResetCloneRequest" />
-            </section>
           </div>
-        </aside>
 
-        <div class="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50">
-          <nav
-            class="flex shrink-0 flex-wrap gap-1 border-b border-slate-200 bg-white px-2 py-1.5 sm:px-3"
-            role="tablist"
-            :aria-label="t('request_detail.tablist_aria')"
+          <RequestCloneLineageBanner
+            v-if="req?.cloned_from_summary"
+            :summary="req.cloned_from_summary"
+            :context="isDeptRequestDetailRoute ? 'dept' : 'staff'"
+          />
+
+          <RequestWorkflowBar
+            v-if="workflowTodoItems.length"
+            :todos="workflowTodoItems"
+            @navigate="onWorkflowNavigate"
+          />
+
+          <RequestDetailOverviewPanel
+            :avatar-url="req.requester?.avatar_url ?? ''"
+            :initials="requesterInitials"
+            :requester-name="req.requester?.name ?? '—'"
+            :requester-subtitle="requesterAsideSubtitle"
+            :requester-fields="requesterAsideFields"
+            :trip-type-label="labelTripType(req.trip_type)"
+            :load-line="passengerOrCargoLine"
+            :origin="req.origin || '—'"
+            :destination="req.destination || '—'"
+            :schedule-line="overviewScheduleLine"
+          />
+
+          <RequestDetailSectionNav
+            :items="sectionNavItems"
+            :active-id="activeTab"
+            @select="setActiveTab"
+          />
+
+          <RequestDetailSection
+            section-id="request-section-route"
+            :title="t('request_detail.section_progress')"
+            :lead="routeSectionLead"
           >
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="activeTab === 'route'"
-              class="rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
-              :class="
-                activeTab === 'route'
-                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
-                  : 'text-slate-600 hover:bg-slate-50'
-              "
-              @click="setActiveTab('route')"
-            >
-              {{ t('request_detail.tab_route') }}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="activeTab === 'form'"
-              class="relative inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
-              :class="
-                activeTab === 'form'
-                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
-                  : 'text-slate-600 hover:bg-slate-50'
-              "
-              @click="setActiveTab('form')"
-            >
-              {{ t('request_detail.tab_form') }}
-              <span
-                v-if="formTabActionCount > 0"
-                class="ml-1.5 inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-teal-600 px-1 py-px text-[10px] font-bold text-white"
-              >
-                {{ formTabActionCount }}
-              </span>
-              <span
-                v-else-if="approvalTabNeedsFocus"
-                class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-teal-500"
-                aria-hidden="true"
-              />
-            </button>
-            <button
-              v-if="showStudentCountTab"
-              type="button"
-              role="tab"
-              :aria-selected="activeTab === 'students'"
-              class="relative inline-flex items-center rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
-              :class="
-                activeTab === 'students'
-                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
-                  : 'text-slate-600 hover:bg-slate-50'
-              "
-              @click="setActiveTab('students')"
-            >
-              {{ t('request_detail.tab_students') }}
-              <span
-                v-if="studentsTabActionCount > 0"
-                class="ml-1.5 inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-teal-600 px-1 py-px text-[10px] font-bold text-white"
-              >
-                {{ studentsTabActionCount }}
-              </span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="activeTab === 'docs'"
-              class="rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
-              :class="
-                activeTab === 'docs'
-                  ? 'bg-teal-50 text-teal-900 ring-1 ring-teal-600/20'
-                  : 'text-slate-600 hover:bg-slate-50'
-              "
-              @click="setActiveTab('docs')"
-            >
-              {{ t('request_detail.tab_docs') }}
-              <span
-                v-if="docsTabActionCount > 0"
-                class="ml-1.5 inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-amber-500 px-1 py-px text-[10px] font-bold text-white"
-              >
-                {{ docsTabActionCount }}
-              </span>
-              <span
-                v-else-if="docsTabNeedsFocus"
-                class="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-amber-500"
-                aria-hidden="true"
-              />
-            </button>
-          </nav>
-
-          <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-3 sm:p-4">
-            <RequestWorkflowBar
-              v-if="workflowTodoItems.length"
-              class="mb-4"
-              :todos="workflowTodoItems"
-              @navigate="onWorkflowNavigate"
-            />
-            <RequestCloneLineageBanner
-              v-if="req?.cloned_from_summary"
-              :summary="req.cloned_from_summary"
-              :context="isDeptRequestDetailRoute ? 'dept' : 'staff'"
-            />
-
             <RequestRouteTab
-              v-show="activeTab === 'route'"
-              v-if="req"
+              hide-route-summary
               :req="req"
               :timeline-steps="timelineSteps"
               :cost-estimate="costEstimate"
@@ -390,8 +166,13 @@
               :declared-total-label="costEstimate ? formatVndCurrency(costEstimate.total) : '—'"
               :dispatcher-price-label="req.service_price != null ? formatVndCurrency(req.service_price) : '—'"
             />
+          </RequestDetailSection>
 
-            <div v-show="activeTab === 'form'" class="space-y-5">
+          <RequestDetailSection
+            section-id="request-section-form"
+            :title="t('request_detail.tab_form')"
+          >
+            <div class="space-y-5">
               <DeptApprovalSection
                 v-if="showDeptDecisionSection"
                 id="request-focus-dept-decision"
@@ -423,22 +204,33 @@
                 @download-signed="downloadFile"
                 @signed-uploaded="onSignedUploaded"
               />
+              <ResetCloneSection v-if="showResetCloneBtn" :busy="resetCloneBusy" @clone="onResetCloneRequest" />
             </div>
-            <div v-show="activeTab === 'students' && showStudentCountTab" class="space-y-5">
-              <RequestStudentCountTab
-                v-if="req"
-                v-model:passenger-draft="passengerDraft"
-                :req="req"
-                :passenger-saving="passengerSaving"
-                :passenger-patch-err="passengerPatchErr"
-                :passenger-depart-locked="passengerDepartLocked"
-                :passenger-dispatcher-override="passengerDispatcherOverride"
-                :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
-                :show-passenger-adjust-section="showPassengerAdjustSection"
-                @save-passenger="savePassengerDraft"
-              />
-            </div>
-            <div v-show="activeTab === 'docs'">
+          </RequestDetailSection>
+
+          <RequestDetailSection
+            v-if="showStudentCountTab"
+            section-id="request-section-students"
+            :title="t('request_detail.tab_students')"
+          >
+            <RequestStudentCountTab
+              v-if="req"
+              v-model:passenger-draft="passengerDraft"
+              :req="req"
+              :passenger-saving="passengerSaving"
+              :passenger-patch-err="passengerPatchErr"
+              :passenger-depart-locked="passengerDepartLocked"
+              :passenger-dispatcher-override="passengerDispatcherOverride"
+              :depart-at-formatted="req.depart_at ? fmtStepDetail(req.depart_at) : ''"
+              :show-passenger-adjust-section="showPassengerAdjustSection"
+              @save-passenger="savePassengerDraft"
+            />
+          </RequestDetailSection>
+
+          <RequestDetailSection
+            section-id="request-section-docs"
+            :title="t('request_detail.tab_docs')"
+          >
               <RequestDocsPanel
                 v-if="req"
                 :req="req"
@@ -499,8 +291,7 @@
                   </div>
                 </template>
               </RequestDocsPanel>
-            </div>
-          </div>
+          </RequestDetailSection>
         </div>
       </div>
 
@@ -576,23 +367,17 @@ import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, r
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  ArrowLeftIcon,
-  ArrowPathIcon,
   CalculatorIcon,
   ClipboardDocumentIcon,
-  CubeIcon,
   DocumentTextIcon,
   DocumentIcon,
   ArrowDownTrayIcon,
   TrashIcon,
   SparklesIcon,
   PaperClipIcon,
-  TruckIcon,
-  UserCircleIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
-import StatusBadge from '../../components/ui/StatusBadge.vue'
 import Input from '../../components/ui/Input.vue'
 import FileUpload from '../../components/ui/FileUpload.vue'
 const RequestBm03FormTab = defineAsyncComponent(() =>
@@ -606,6 +391,10 @@ import ResetCloneSection from '../../components/requests/ResetCloneSection.vue'
 import RequestDocsPanel from '../../components/requests/RequestDocsPanel.vue'
 import RequestWorkflowBar from '../../components/requests/RequestWorkflowBar.vue'
 import RequestRouteTab from '../../components/requests/RequestRouteTab.vue'
+import RequestDetailTopBar from '../../components/requests/detail/RequestDetailTopBar.vue'
+import RequestDetailOverviewPanel from '../../components/requests/detail/RequestDetailOverviewPanel.vue'
+import RequestDetailSectionNav from '../../components/requests/detail/RequestDetailSectionNav.vue'
+import RequestDetailSection from '../../components/requests/detail/RequestDetailSection.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
 import DeptApprovalSection from '../../components/requests/DeptApprovalSection.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
@@ -814,6 +603,13 @@ const showResetCloneBtn = computed(() => {
 
 const DETAIL_TABS = ['route', 'form', 'students', 'docs']
 
+const REQUEST_SECTION_IDS = {
+  route: 'request-section-route',
+  form: 'request-section-form',
+  students: 'request-section-students',
+  docs: 'request-section-docs',
+}
+
 const activeTab = ref('route')
 const previewOpen = ref(false)
 const previewAttachment = ref(null)
@@ -870,6 +666,12 @@ function tabFromRouteQuery() {
   return DETAIL_TABS.includes(q) ? q : null
 }
 
+async function scrollToSection(tab) {
+  await nextTick()
+  const id = REQUEST_SECTION_IDS[tab]
+  if (id) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 function setActiveTab(tab) {
   if (tab === 'students' && !showStudentCountTab.value) return
   activeTab.value = tab
@@ -877,6 +679,7 @@ function setActiveTab(tab) {
   if (route.query.tab !== tab) {
     router.replace({ query: nextQuery })
   }
+  void scrollToSection(tab)
 }
 
 watch(
@@ -885,6 +688,7 @@ watch(
     if (typeof tab === 'string' && DETAIL_TABS.includes(tab) && activeTab.value !== tab) {
       if (tab === 'students' && !showStudentCountTab.value) return
       activeTab.value = tab
+      void scrollToSection(tab)
     }
   },
 )
@@ -922,10 +726,50 @@ const approvalTabNeedsFocus = computed(() => {
 watch(
   approvalTabNeedsFocus,
   (need, was) => {
-    if (need && was !== true && req.value) activeTab.value = 'form'
+    if (need && was !== true && req.value) setActiveTab('form')
   },
   { immediate: true },
 )
+
+const overviewScheduleLine = computed(() => {
+  const r = req.value
+  if (!r) return ''
+  const window = `${fmtDateVi(r.depart_at)} · ${fmtTimeWindow(r.depart_at, r.arrive_by)}`
+  const dist =
+    costEstimate.value?.distanceLabel != null
+      ? t('request_detail.distance_badge_approx', { label: costEstimate.value.distanceLabel })
+      : ''
+  return dist ? `${window} · ${dist}` : window
+})
+
+const routeSectionLead = computed(() => overviewScheduleLine.value)
+
+const sectionNavItems = computed(() => {
+  const items = [
+    { id: 'route', label: t('request_detail.tab_route') },
+    {
+      id: 'form',
+      label: t('request_detail.tab_form'),
+      badge: formTabActionCount.value > 0 ? formTabActionCount.value : null,
+      dot: formTabActionCount.value === 0 && approvalTabNeedsFocus.value,
+    },
+  ]
+  if (showStudentCountTab.value) {
+    items.push({
+      id: 'students',
+      label: t('request_detail.tab_students'),
+      badge: studentsTabActionCount.value > 0 ? studentsTabActionCount.value : null,
+    })
+  }
+  items.push({
+    id: 'docs',
+    label: t('request_detail.tab_docs'),
+    badge: docsTabActionCount.value > 0 ? docsTabActionCount.value : null,
+    dot: docsTabActionCount.value === 0 && docsTabNeedsFocus.value,
+    dotTone: 'amber',
+  })
+  return items
+})
 
 const showRecurringBadge = computed(() => !!req.value?.dispatch_request_template_id)
 
@@ -1165,6 +1009,8 @@ async function load() {
     if (tabQ) activeTab.value = tabQ
   } finally {
     loading.value = false
+    await nextTick()
+    void scrollToSection(activeTab.value)
   }
 }
 

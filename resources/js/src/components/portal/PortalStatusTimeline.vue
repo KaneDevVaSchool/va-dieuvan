@@ -1,6 +1,6 @@
 <template>
   <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-    <h2 class="text-sm font-semibold text-slate-900">{{ title }}</h2>
+    <h2 v-if="title" class="text-sm font-semibold text-slate-900">{{ title }}</h2>
 
     <!-- Mobile / tablet: vertical -->
     <ol class="mt-4 md:hidden">
