@@ -882,6 +882,7 @@
             "priority_normal": "Normal"
         },
         "info_cards": {
+            "section_title": "Request details",
             "trip_title": "Trip",
             "depart_date": "Date",
             "depart_time": "Time",
@@ -896,7 +897,17 @@
             "trip_status": "Trip status",
             "unassigned": "Not assigned",
             "history_title": "Activity",
-            "history_empty": "No completed milestones yet."
+            "history_empty": "No completed milestones yet.",
+            "empty_date": "No departure date",
+            "empty_time": "No departure time",
+            "empty_route": "No location entered",
+            "empty_passengers": "Passenger count not set",
+            "empty_requester": "Not available",
+            "empty_unit": "Unit not specified",
+            "empty_contact": "No phone or email on file",
+            "empty_dispatch_pending": "Not assigned — dispatch in progress",
+            "empty_dispatch_after_approval": "Available after approval",
+            "empty_trip_status": "No active trip yet"
         },
         "timeline_actor": {
             "requester": "Requester",

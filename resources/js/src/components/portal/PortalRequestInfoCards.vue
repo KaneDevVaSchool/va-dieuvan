@@ -1,109 +1,137 @@
 <template>
-  <div class="space-y-4">
-    <article class="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 class="text-sm font-semibold text-slate-900">{{ t('portal.info_cards.trip_title') }}</h2>
-      <dl class="mt-3 space-y-2.5 text-sm">
-        <div v-if="departDate" class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.depart_date') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ departDate }}</dd>
-        </div>
-        <div v-if="departTime" class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.depart_time') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ departTime }}</dd>
-        </div>
-        <div class="flex justify-between gap-3">
-          <dt class="shrink-0 text-slate-500">{{ t('portal.origin') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ origin }}</dd>
-        </div>
-        <div class="flex justify-between gap-3">
-          <dt class="shrink-0 text-slate-500">{{ t('portal.destination') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ destination }}</dd>
-        </div>
-        <div v-if="passengerCount != null && passengerCount !== ''" class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.passenger_count') }}</dt>
-          <dd class="font-medium text-slate-900">{{ passengerCount }}</dd>
-        </div>
-      </dl>
-    </article>
+  <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+    <h2 class="text-base font-semibold text-slate-900">{{ t('portal.info_cards.section_title') }}</h2>
 
-    <article class="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 class="text-sm font-semibold text-slate-900">{{ t('portal.info_cards.requester_title') }}</h2>
-      <dl class="mt-3 space-y-2.5 text-sm">
-        <div v-if="requesterName" class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.full_name') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ requesterName }}</dd>
-        </div>
-        <div v-if="requesterUnit" class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.unit') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ requesterUnit }}</dd>
-        </div>
-        <div v-if="requesterContact" class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.contact') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ requesterContact }}</dd>
-        </div>
-      </dl>
-    </article>
+    <div class="mt-5 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+      <div class="min-w-0">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {{ t('portal.info_cards.trip_title') }}
+        </h3>
+        <dl class="mt-3 space-y-3">
+          <PortalDetailField
+            :label="t('portal.info_cards.depart_date')"
+            :value="departDate"
+            :empty-text="t('portal.info_cards.empty_date')"
+          />
+          <PortalDetailField
+            :label="t('portal.info_cards.depart_time')"
+            :value="departTime"
+            :empty-text="t('portal.info_cards.empty_time')"
+          />
+          <PortalDetailField
+            :label="t('portal.origin')"
+            :value="originDisplay"
+            :empty-text="t('portal.info_cards.empty_route')"
+          />
+          <PortalDetailField
+            :label="t('portal.destination')"
+            :value="destinationDisplay"
+            :empty-text="t('portal.info_cards.empty_route')"
+          />
+          <PortalDetailField
+            :label="t('portal.passenger_count')"
+            :value="passengerCount"
+            :empty-text="t('portal.info_cards.empty_passengers')"
+          />
+        </dl>
+      </div>
 
-    <article class="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 class="text-sm font-semibold text-slate-900">{{ t('portal.info_cards.dispatch_title') }}</h2>
-      <dl class="mt-3 space-y-2.5 text-sm">
-        <div class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.driver') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ driverLine }}</dd>
-        </div>
-        <div class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.vehicle') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ vehicleLine }}</dd>
-        </div>
-        <div class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.plate') }}</dt>
-          <dd class="text-right font-medium text-slate-900">{{ plateLine }}</dd>
-        </div>
-        <div class="flex justify-between gap-3">
-          <dt class="text-slate-500">{{ t('portal.info_cards.trip_status') }}</dt>
-          <dd class="text-right">
-            <span
-              v-if="tripStatus"
-              class="inline-flex rounded-md px-2 py-0.5 text-xs font-semibold"
-              :class="tripStatusBadgeClass(tripStatus)"
-            >
-              {{ labelTripStatus(tripStatus) }}
-            </span>
-            <span v-else class="font-medium text-slate-500">—</span>
-          </dd>
-        </div>
-      </dl>
-    </article>
+      <div class="min-w-0">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {{ t('portal.info_cards.requester_title') }}
+        </h3>
+        <dl class="mt-3 space-y-3">
+          <PortalDetailField
+            :label="t('portal.info_cards.full_name')"
+            :value="requesterName"
+            :empty-text="t('portal.info_cards.empty_requester')"
+          />
+          <PortalDetailField
+            :label="t('portal.info_cards.unit')"
+            :value="requesterUnit"
+            :empty-text="t('portal.info_cards.empty_unit')"
+          />
+          <PortalDetailField
+            :label="t('portal.info_cards.contact')"
+            :value="requesterContact"
+            :empty-text="t('portal.info_cards.empty_contact')"
+          />
+        </dl>
+      </div>
 
-    <article class="rounded-xl border border-slate-200 bg-white p-4">
-      <h2 class="text-sm font-semibold text-slate-900">{{ t('portal.info_cards.history_title') }}</h2>
-      <ul v-if="historyEntries.length" class="mt-3 space-y-3">
-        <li
-          v-for="(entry, idx) in historyEntries"
-          :key="`${entry.at}-${idx}`"
-          class="border-l-2 border-slate-200 pl-3"
-        >
-          <p class="text-xs text-slate-500">{{ entry.at }}</p>
-          <p class="text-sm font-medium text-slate-900">{{ entry.title }}</p>
-          <p v-if="entry.actor" class="text-xs text-slate-600">{{ entry.actor }}</p>
-        </li>
-      </ul>
-      <p v-else class="mt-3 text-sm text-slate-500">{{ t('portal.info_cards.history_empty') }}</p>
-    </article>
+      <div class="min-w-0 md:col-span-2 xl:col-span-1">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {{ t('portal.info_cards.dispatch_title') }}
+        </h3>
+        <dl class="mt-3 space-y-3">
+          <PortalDetailField
+            :label="t('portal.info_cards.driver')"
+            :value="driverName"
+            :empty-text="dispatchEmptyHint"
+          />
+          <PortalDetailField
+            :label="t('portal.info_cards.vehicle')"
+            :value="vehicleName"
+            :empty-text="dispatchEmptyHint"
+          />
+          <PortalDetailField
+            :label="t('portal.info_cards.plate')"
+            :value="plateNumber"
+            :empty-text="dispatchEmptyHint"
+          />
+          <div class="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,7rem)_1fr] sm:items-start sm:gap-x-4">
+            <dt class="text-sm text-slate-500">{{ t('portal.info_cards.trip_status') }}</dt>
+            <dd class="text-sm">
+              <span
+                v-if="tripStatus"
+                class="inline-flex rounded-md px-2 py-0.5 text-xs font-semibold"
+                :class="tripStatusBadgeClass(tripStatus)"
+              >
+                {{ labelTripStatus(tripStatus) }}
+              </span>
+              <span v-else class="italic text-slate-400">{{ t('portal.info_cards.empty_trip_status') }}</span>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
 
-    <div v-if="purpose || notes" class="rounded-xl border border-slate-200 bg-white p-4">
-      <dl class="space-y-3 text-sm">
-        <div v-if="purpose">
+    <div
+      v-if="purpose || notes"
+      class="mt-6 border-t border-slate-100 pt-6"
+    >
+      <dl class="grid gap-4 sm:grid-cols-2">
+        <div v-if="purpose" class="min-w-0">
           <dt class="text-xs font-medium text-slate-500">{{ t('portal.purpose') }}</dt>
-          <dd class="mt-1 text-slate-800">{{ purpose }}</dd>
+          <dd class="mt-1 text-sm leading-relaxed text-slate-800">{{ purpose }}</dd>
         </div>
-        <div v-if="notes">
+        <div v-if="notes" class="min-w-0">
           <dt class="text-xs font-medium text-slate-500">{{ t('portal.notes') }}</dt>
-          <dd class="mt-1 text-slate-700">{{ notes }}</dd>
+          <dd class="mt-1 text-sm leading-relaxed text-slate-700">{{ notes }}</dd>
         </div>
       </dl>
     </div>
-  </div>
+
+    <div class="mt-6 border-t border-slate-100 pt-6">
+      <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {{ t('portal.info_cards.history_title') }}
+      </h3>
+      <ul v-if="historyEntries.length" class="mt-4 divide-y divide-slate-100">
+        <li
+          v-for="(entry, idx) in historyEntries"
+          :key="`${entry.at}-${idx}`"
+          class="flex flex-col gap-0.5 py-3 first:pt-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
+        >
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-slate-900">{{ entry.title }}</p>
+            <p v-if="entry.actor" class="mt-0.5 text-sm text-slate-600">{{ entry.actor }}</p>
+          </div>
+          <time class="shrink-0 text-xs tabular-nums text-slate-500">{{ entry.at }}</time>
+        </li>
+      </ul>
+      <p v-else class="mt-3 text-sm italic text-slate-400">{{ t('portal.info_cards.history_empty') }}</p>
+    </div>
+  </section>
 </template>
 
 <script setup>
@@ -111,6 +139,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { labelTripStatus } from '../../util/labels'
 import { tripStatusBadgeClass } from '../../composables/useTripStatusWorkflow'
+import PortalDetailField from './PortalDetailField.vue'
 
 const props = defineProps({
   req: { type: Object, required: true },
@@ -123,10 +152,18 @@ const props = defineProps({
 
 const { t } = useI18n()
 
+function isDash(v) {
+  const s = String(v ?? '').trim()
+  return !s || s === '—'
+}
+
+const originDisplay = computed(() => (isDash(props.origin) ? '' : props.origin.trim()))
+const destinationDisplay = computed(() => (isDash(props.destination) ? '' : props.destination.trim()))
+
 const passengerCount = computed(() => {
   const r = props.req
   const n = r?.student_count_actual ?? r?.passenger_count
-  if (n == null || n === '') return null
+  if (n == null || n === '') return ''
   return String(n)
 })
 
@@ -151,23 +188,31 @@ const requesterContact = computed(() => {
 
 const trip = computed(() => props.req?.trip)
 
-const driverLine = computed(() => {
+const dispatchEmptyHint = computed(() => {
+  const st = props.req?.status
+  if (st === 'approved' || trip.value) {
+    return t('portal.info_cards.empty_dispatch_pending')
+  }
+  return t('portal.info_cards.empty_dispatch_after_approval')
+})
+
+const driverName = computed(() => {
   const tr = trip.value
-  if (!tr) return '—'
+  if (!tr) return ''
   const name = tr.driver?.full_name || tr.external_driver_ref
-  return name ? String(name).trim() : t('portal.info_cards.unassigned')
+  return name ? String(name).trim() : ''
 })
 
-const vehicleLine = computed(() => {
+const vehicleName = computed(() => {
   const tr = trip.value
-  if (!tr) return '—'
+  if (!tr) return ''
   const name = tr.vehicle?.name || tr.external_vehicle_ref
-  return name ? String(name).trim() : t('portal.info_cards.unassigned')
+  return name ? String(name).trim() : ''
 })
 
-const plateLine = computed(() => {
+const plateNumber = computed(() => {
   const plate = trip.value?.vehicle?.license_plate
-  return plate ? String(plate).trim() : '—'
+  return plate ? String(plate).trim() : ''
 })
 
 const tripStatus = computed(() => trip.value?.status || '')

@@ -931,6 +931,7 @@
             "priority_normal": "Thường"
         },
         "info_cards": {
+            "section_title": "Chi tiết phiếu",
             "trip_title": "Thông tin chuyến xe",
             "depart_date": "Ngày đi",
             "depart_time": "Giờ đi",
@@ -945,7 +946,17 @@
             "trip_status": "Trạng thái chuyến",
             "unassigned": "Chưa phân công",
             "history_title": "Lịch sử xử lý",
-            "history_empty": "Chưa có mốc hoàn thành."
+            "history_empty": "Chưa có mốc hoàn thành.",
+            "empty_date": "Chưa chọn ngày đi",
+            "empty_time": "Chưa chọn giờ đi",
+            "empty_route": "Chưa nhập địa điểm",
+            "empty_passengers": "Chưa khai báo số khách",
+            "empty_requester": "Chưa có thông tin",
+            "empty_unit": "Chưa khai báo đơn vị",
+            "empty_contact": "Chưa có số hoặc email liên hệ",
+            "empty_dispatch_pending": "Chưa phân công — điều vận đang xử lý",
+            "empty_dispatch_after_approval": "Sẽ có sau khi phiếu được duyệt",
+            "empty_trip_status": "Chưa có chuyến vận hành"
         },
         "timeline_actor": {
             "requester": "Người đề nghị",

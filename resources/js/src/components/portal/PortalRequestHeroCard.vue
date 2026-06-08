@@ -46,39 +46,15 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap gap-2 sm:justify-end">
+      <div v-if="canPrint" class="flex sm:justify-end">
         <button
           type="button"
-          class="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          @click="$emit('copy-id')"
-        >
-          <ClipboardDocumentIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-          {{ copyIdFeedback ? t('portal.copied') : t('portal.copy_id') }}
-        </button>
-        <button
-          type="button"
-          class="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-40"
-          :disabled="!canPrint"
+          class="inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:w-auto"
           @click="$emit('print')"
         >
           <PrinterIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
           {{ t('portal.detail_hero.print') }}
         </button>
-        <button
-          type="button"
-          class="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          @click="$emit('follow')"
-        >
-          <BellIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-          {{ t('portal.detail_hero.follow') }}
-        </button>
-        <a
-          :href="contactHref"
-          class="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-va-200 bg-va-50 px-3 text-sm font-semibold text-va-900 transition hover:bg-va-100"
-        >
-          <PhoneIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-          {{ t('portal.detail_hero.contact_dispatch') }}
-        </a>
       </div>
     </div>
   </section>
@@ -88,14 +64,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowLeftIcon,
-  BellIcon,
-  BoltIcon,
-  ClipboardDocumentIcon,
-  PhoneIcon,
-  PrinterIcon,
-} from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, BoltIcon, PrinterIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
 
 const props = defineProps({
@@ -103,13 +72,11 @@ const props = defineProps({
   backRoute: { type: String, required: true },
   priorityLabel: { type: String, default: '' },
   priorityTone: { type: String, default: 'normal' },
-  copyIdFeedback: { type: Boolean, default: false },
   pollingRefreshing: { type: Boolean, default: false },
   canPrint: { type: Boolean, default: false },
-  contactHref: { type: String, default: 'mailto:dieuhanh@vaschools.edu.vn' },
 })
 
-defineEmits(['copy-id', 'print', 'follow'])
+defineEmits(['print'])
 
 const { t } = useI18n()
 

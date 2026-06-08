@@ -1,6 +1,7 @@
 <template>
   <div
-    class="portal-request-detail mx-auto max-w-7xl px-3 pb-[max(5.5rem,env(safe-area-inset-bottom))] pt-4 xs:px-4 sm:px-6 sm:pt-6 lg:pb-8"
+    class="portal-request-detail mx-auto max-w-7xl px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 xs:px-4 sm:px-6 sm:pt-6 supports-[padding:max(0px)]:pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+    :class="canPrintRequest ? 'max-sm:pb-[max(5rem,env(safe-area-inset-bottom))]' : ''"
   >
     <PortalSuccessCard
       v-if="welcomeOpen"
@@ -45,13 +46,9 @@
           :back-route="portalRoutes.list"
           :priority-label="actionCenter.priorityLabel"
           :priority-tone="actionCenter.priorityTone"
-          :copy-id-feedback="copyIdFeedback"
           :polling-refreshing="pollingRefreshing"
           :can-print="canPrintRequest"
-          :contact-href="dispatchContactHref"
-          @copy-id="copyRequestId"
           @print="onPrintRequest"
-          @follow="onFollowRequest"
         />
 
         <PortalRequestJourneyCard
@@ -71,15 +68,24 @@
         />
       </div>
 
-      <div class="mt-4 grid gap-4 lg:grid-cols-12 lg:items-start lg:gap-6">
-        <div class="min-w-0 space-y-4 lg:col-span-8">
-          <div id="portal-request-timeline">
-            <PortalStatusTimeline
-              :title="t('portal.timeline_heading')"
-              :steps="timelineSteps"
-            />
-          </div>
-          <div
+      <div class="mt-4 space-y-4">
+        <div id="portal-request-timeline" class="w-full">
+          <PortalStatusTimeline
+            :title="t('portal.timeline_heading')"
+            :steps="timelineSteps"
+          />
+        </div>
+
+        <PortalRequestInfoCards
+          :req="req"
+          :origin="originText"
+          :destination="destinationText"
+          :timeline-steps="timelineSteps"
+          :purpose="purposeLine"
+          :notes="notesLine"
+        />
+
+        <div
             v-if="req.status === 'rejected' && req.rejection_reason"
             class="rounded-xl border border-rose-200 bg-rose-50/50 p-4 sm:p-5"
           >
@@ -259,25 +265,10 @@
           </div>
             </div>
           </div>
-        </div>
-
-        <aside class="lg:col-span-4 lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+4.5rem)] lg:self-start">
-          <PortalRequestInfoCards
-            :req="req"
-            :origin="originText"
-            :destination="destinationText"
-            :timeline-steps="timelineSteps"
-            :purpose="purposeLine"
-            :notes="notesLine"
-          />
-        </aside>
       </div>
 
       <PortalRequestMobileActionBar
-        :copy-id-feedback="copyIdFeedback"
-        :can-print="canPrintRequest"
-        :contact-href="dispatchContactHref"
-        @copy-id="copyRequestId"
+        v-if="canPrintRequest"
         @print="onPrintRequest"
       />
     </template>
@@ -357,9 +348,6 @@ const pdfPreviewError = ref('')
 const welcomeOpen = ref(false)
 const pollingRefreshing = ref(false)
 const copyRejectionFeedback = ref(false)
-const copyIdFeedback = ref(false)
-let copyIdTimer = null
-
 const signedUploadErr = ref('')
 const signedPreviewBlobUrl = ref('')
 const signedPreviewMime = ref('')
@@ -370,8 +358,6 @@ let copyRejectionTimer = null
 
 const timelineSteps = usePortalTimelineSteps(req, t)
 const actionCenter = usePortalRequestActionCenter(req, t)
-
-const dispatchContactHref = 'mailto:dieuhanh@vaschools.edu.vn'
 
 const canPrintRequest = computed(() => req.value?.status === 'approved')
 
@@ -550,7 +536,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (copyRejectionTimer) clearTimeout(copyRejectionTimer)
-  if (copyIdTimer) clearTimeout(copyIdTimer)
   if (ocrPollTimer) clearInterval(ocrPollTimer)
   revokePdfPreviewUrl()
   revokeSignedPreviewUrl()
@@ -570,15 +555,6 @@ const purposeLine = computed(() => (req.value?.purpose || '').trim())
 
 const notesLine = computed(() => (req.value?.notes || '').trim())
 
-function onFollowRequest() {
-  const el = document.getElementById('portal-request-timeline')
-  if (el?.scrollIntoView) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    return
-  }
-  router.push({ name: 'portalNotifications' }).catch(() => {})
-}
-
 async function onPrintRequest() {
   if (req.value?.status === 'approved') {
     if (!pdfBlobUrl.value) await loadPdfPreview()
@@ -588,21 +564,6 @@ async function onPrintRequest() {
     }
   }
   window.print()
-}
-
-async function copyRequestId() {
-  const id = req.value?.id
-  if (id == null) return
-  try {
-    await navigator.clipboard.writeText(String(id))
-    copyIdFeedback.value = true
-    if (copyIdTimer) clearTimeout(copyIdTimer)
-    copyIdTimer = setTimeout(() => {
-      copyIdFeedback.value = false
-    }, 2000)
-  } catch {
-    window.alert(t('portal.copy_failed'))
-  }
 }
 
 const departFmt = computed(() => {
