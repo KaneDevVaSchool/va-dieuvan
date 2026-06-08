@@ -35,8 +35,6 @@
 
     <div class="mx-auto w-full min-h-0 min-w-0 max-w-full px-3 pt-4 sm:px-4">
       <div class="min-w-0 space-y-4">
-        <DriverPushBanner class="mb-1" />
-
         <DriverPendingConfirmationSection
           v-if="dash.needsConfirmationTrips.length > 0 || dash.loadingInitial"
           :trips="dash.needsConfirmationTrips"
@@ -109,7 +107,6 @@ import { useAuthStore, useDriverDashboardStore } from '../../store/index'
 import { dashPerfMounted } from '../../util/devDriverDashboardPerf'
 import { playNotificationChime } from '../../util/notificationChime'
 import DriverHeader from '../../components/driver/DriverHeader.vue'
-import DriverPushBanner from '../../components/driver/DriverPushBanner.vue'
 import UpcomingTripBanner from '../../components/driver/UpcomingTripBanner.vue'
 import DriverPendingConfirmationSection from '../../components/driver/dashboard/DriverPendingConfirmationSection.vue'
 import DriverUpcomingTripsSection from '../../components/driver/dashboard/DriverUpcomingTripsSection.vue'

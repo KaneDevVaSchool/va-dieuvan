@@ -100,7 +100,8 @@ export function setupServiceWorker() {
     return { updateSW }
   }
 
-  const wb = new Workbox('/sw.js', { scope: '/', type: 'module' })
+  // injectManifest build ra sw.js dạng bundle cổ điển — không dùng type: 'module' (đăng ký fail → không cài PWA).
+  const wb = new Workbox('/sw.js', { scope: '/' })
 
   wb.addEventListener('waiting', () => {
     onServiceWorkerUpdateDetected()
