@@ -1,8 +1,8 @@
 <template>
   <div class="mb-0">
     <div
-      class="flex items-center gap-1 rounded-t-2xl bg-white/70 px-3 py-2.5 dark:bg-white/5"
-      :class="expanded ? '' : 'rounded-b-2xl'"
+      class="flex items-center gap-1 rounded-t-2xl border-b border-slate-200/70 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900/40"
+      :class="expanded ? '' : 'rounded-b-2xl border-b-0'"
     >
       <button
         type="button"
@@ -28,7 +28,7 @@
         <template v-if="kind === 'vendor' && canQuickCreate && !disabled">
           <button
             type="button"
-            class="whitespace-nowrap text-[11px] font-semibold text-[#8B1A1A] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#e57373]"
+            class="whitespace-nowrap rounded-lg border border-[#8B1A1A]/20 px-2 py-1 text-[11px] font-semibold text-[#8B1A1A] hover:bg-[#8B1A1A]/5 disabled:cursor-not-allowed disabled:opacity-45 dark:border-[#e57373]/20 dark:text-[#e57373] dark:hover:bg-[#e57373]/10"
             :disabled="disabled"
             @click.stop="$emit('create-vendor')"
           >
@@ -37,7 +37,7 @@
         </template>
         <span
           v-if="modelValue.length > 0"
-          class="rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-600 shadow-sm dark:bg-slate-700/90 dark:text-slate-300"
+          class="rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-600 dark:bg-slate-700/90 dark:text-slate-300"
         >
           {{ modelValue.length }}
         </span>
@@ -50,7 +50,7 @@
       leave-active-class="transition duration-150 ease-in motion-reduce:transition-none"
       leave-to-class="opacity-0 -translate-y-0.5"
     >
-      <div v-show="expanded" class="rounded-b-2xl bg-white/50 px-3 pb-3 pt-2 dark:bg-slate-950/25">
+      <div v-show="expanded" class="rounded-b-2xl bg-white px-3 pb-3 pt-2.5 dark:bg-slate-950/30">
         <div v-if="kind === 'vendor'" class="space-y-2.5" :class="indentBody ? 'ml-[38px]' : ''">
           <div>
             <label
@@ -93,8 +93,35 @@
                 </option>
               </select>
           </div>
-          <div class="flex flex-wrap items-end gap-2">
-            <div class="min-w-[5rem] flex-1">
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div>
+              <label
+                class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                for="ncc-supplement-price"
+              >
+                {{ t('trip_detail.coordination.supplement_vendor_price_aria') }}
+              </label>
+              <input
+                id="ncc-supplement-price"
+                v-model="priceDraft"
+                type="number"
+                min="0"
+                step="1000"
+                inputmode="decimal"
+                class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+                :placeholder="t('trip_detail.coordination.supplement_vendor_price_ph')"
+                :disabled="disabled"
+                :aria-invalid="priceDraftInvalid"
+              />
+              <p
+                v-if="priceDraftInvalid"
+                class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
+                role="alert"
+              >
+                {{ t('trip_detail.coordination.supplement_price_invalid') }}
+              </p>
+            </div>
+            <div>
               <label
                 class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                 for="ncc-supplement-seats"
@@ -110,12 +137,22 @@
                 inputmode="numeric"
                 class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
                 :disabled="disabled"
+                :aria-invalid="seatsDraftInvalid"
               />
+              <p
+                v-if="seatsDraftInvalid"
+                class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
+                role="alert"
+              >
+                {{ t('trip_detail.coordination.supplement_seats_invalid') }}
+              </p>
             </div>
+          </div>
+          <div class="flex justify-end">
             <button
               type="button"
-              class="shrink-0 rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/20 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40 dark:shadow-[#8B1A1A]/25"
-              :disabled="disabled"
+              class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/20 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto dark:shadow-[#8B1A1A]/25"
+              :disabled="disabled || !canAddSupplement"
               @click="onAdd"
             >
               {{ t('trip_detail.coordination.supplement_add_btn') }}
@@ -218,7 +255,15 @@
               class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
               :placeholder="t('trip_detail.coordination.supplement_taxi_price_ph')"
               :disabled="disabled"
+              :aria-invalid="priceDraftInvalid"
             />
+            <p
+              v-if="priceDraftInvalid"
+              class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
+              role="alert"
+            >
+              {{ t('trip_detail.coordination.supplement_price_invalid') }}
+            </p>
           </div>
           <div class="flex flex-wrap items-end gap-2">
             <div class="min-w-[5rem] flex-1">
@@ -237,12 +282,20 @@
                 inputmode="numeric"
                 class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
                 :disabled="disabled"
+                :aria-invalid="seatsDraftInvalid"
               />
+              <p
+                v-if="seatsDraftInvalid"
+                class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
+                role="alert"
+              >
+                {{ t('trip_detail.coordination.supplement_seats_invalid') }}
+              </p>
             </div>
             <button
               type="button"
               class="shrink-0 rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/20 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40 dark:shadow-[#8B1A1A]/25"
-              :disabled="disabled"
+              :disabled="disabled || !canAddSupplement"
               @click="onAdd"
             >
               {{ t('trip_detail.coordination.supplement_add_btn') }}
@@ -265,6 +318,13 @@
                 class="shrink-0 rounded-full bg-emerald-100/95 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-emerald-900 shadow-sm dark:bg-emerald-950/65 dark:text-emerald-100"
               >
                 {{ seatBadgeText(item) }}
+              </span>
+              <span
+                v-if="priceBadgeText(item)"
+                class="shrink-0 max-w-[8.5rem] truncate rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-amber-900 shadow-sm dark:bg-amber-950/55 dark:text-amber-100"
+                :title="priceBadgeText(item)"
+              >
+                {{ priceBadgeText(item) }}
               </span>
               <button
                 type="button"
@@ -318,13 +378,33 @@
                 />
               </div>
             </div>
-            <div
-              v-if="kind === 'vendor'"
-              class="ml-0 overflow-hidden rounded-xl bg-slate-100/55 shadow-inner shadow-slate-900/10 dark:bg-slate-900/35 dark:shadow-black/30"
-            >
+            <div v-if="kind === 'vendor'" class="space-y-2">
+              <div>
+                <label
+                  class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                  :for="`ncc-item-price-${idx}`"
+                >
+                  {{ t('trip_detail.coordination.supplement_vendor_price_aria') }}
+                </label>
+                <input
+                  :id="`ncc-item-price-${idx}`"
+                  :value="servicePriceDisplay(item)"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  inputmode="decimal"
+                  class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
+                  :placeholder="t('trip_detail.coordination.supplement_vendor_price_ph')"
+                  :disabled="disabled"
+                  @input="onServicePriceInput(idx, $event)"
+                />
+              </div>
+              <div
+                class="overflow-hidden rounded-xl border border-slate-200/70 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-900/30"
+              >
               <button
                 type="button"
-                class="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400"
+                class="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300"
                 :aria-expanded="refsOpen[itemId(item)]"
                 :disabled="disabled"
                 @click="toggleRefs(itemId(item))"
@@ -377,6 +457,7 @@
                   />
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -389,6 +470,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { formatVnd } from '../../util/labels'
 import type { ResourceItem } from '../../types/dispatch'
 
 const props = defineProps<{
@@ -483,9 +565,45 @@ watch(
   { immediate: true },
 )
 
-function toggle() {
-  expanded.value = !expanded.value
+function resetAddFormDrafts() {
+  priceDraft.value = ''
+  seatDraft.value = String(props.defaultSeat)
+  if (props.kind === 'vendor') {
+    selectedVendorId.value = ''
+    vendorFilter.value = ''
+  } else {
+    selectedTaxiId.value = ''
+    taxiFilter.value = ''
+    nameDraft.value = ''
+    plateDraft.value = ''
+  }
 }
+
+function toggle() {
+  const next = !expanded.value
+  if (!next) resetAddFormDrafts()
+  expanded.value = next
+}
+
+const priceDraftInvalid = computed(() => {
+  const raw = String(priceDraft.value).trim()
+  return raw !== '' && parseServicePrice() === null
+})
+
+const seatsDraftInvalid = computed(() => {
+  const raw = String(seatDraft.value).trim()
+  return raw !== '' && parseSeats() === null
+})
+
+const canAddSupplement = computed(() => {
+  if (props.disabled) return false
+  if (parseSeats() === null) return false
+  if (priceDraftInvalid.value) return false
+  if (props.kind === 'vendor') return selectedVendorId.value.trim() !== ''
+  if (selectedTaxiId.value.trim() !== '') return true
+  if (taxiSelectOptions.value.length === 0) return nameDraft.value.trim() !== ''
+  return false
+})
 
 function itemId(item: ResourceItem) {
   return String(item.id)
@@ -615,6 +733,12 @@ function seatBadgeText(item: ResourceItem) {
   return t('trip_detail.coordination.seats_n', { n })
 }
 
+function priceBadgeText(item: ResourceItem) {
+  const n = Number(item.servicePrice)
+  if (!Number.isFinite(n) || n < 0) return ''
+  return formatVnd(n)
+}
+
 function isCustomDuplicate(name: string) {
   const q = name.toLowerCase()
   return props.modelValue.some((v) => {
@@ -637,12 +761,15 @@ function onAdd() {
       selectedVendorId.value = ''
       return
     }
+    const price = parseServicePrice()
     const enriched: ResourceItem = {
       ...resolved,
       supplementSeats: seats,
+      ...(price != null ? { servicePrice: price } : {}),
     }
     emit('update:modelValue', [...props.modelValue, enriched])
     selectedVendorId.value = ''
+    priceDraft.value = ''
     seatDraft.value = String(props.defaultSeat)
     return
   }

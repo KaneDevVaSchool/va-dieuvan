@@ -8,12 +8,10 @@
       :persist-key="null"
     >
       <template #header-end>
-        <div
-          class="flex shrink-0 flex-wrap items-center justify-end gap-1.5 pb-1 pr-2 pt-1 sm:py-2"
-        >
+        <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 pb-1 pr-2 pt-1 sm:py-2">
           <span
             v-if="showFitCountBadge"
-            class="tabular-nums text-[11px] font-medium text-slate-500 dark:text-slate-400"
+            class="rounded-full bg-slate-100 px-2.5 py-0.5 tabular-nums text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
           >{{
             t('trip_detail.coordination.resource_fit_count', { n: availableCount })
           }}</span>
@@ -43,7 +41,7 @@
       <div class="space-y-2.5 pt-0.5">
         <div
           v-if="!hideInternalVehicleSection"
-          class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
+          class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
         >
           <ResourceSection
             v-model="selected.internalVehicles"
@@ -62,7 +60,7 @@
         <div
           v-if="!hideInternalDriverSection"
           id="dispatch-internal-driver-section"
-          class="overflow-hidden rounded-2xl bg-slate-50/90 shadow-sm shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/25"
+          class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
         >
           <ResourceSection
             v-model="selected.internalDrivers"
@@ -102,7 +100,7 @@
         <template v-if="supplementBlockVisible">
           <div
             v-if="!hideTaxiSection"
-            class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
+            class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
           >
             <SupplementTransportSection
               v-model="selected.taxis"
@@ -122,7 +120,7 @@
 
           <div
             v-if="!hideVendorSection"
-            class="overflow-hidden rounded-2xl bg-slate-50/85 shadow-sm shadow-slate-900/5 dark:bg-slate-900/38 dark:shadow-black/25"
+            class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
           >
             <SupplementTransportSection
               v-model="selected.vendors"
