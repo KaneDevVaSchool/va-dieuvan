@@ -1,8 +1,23 @@
 import { defineStore } from 'pinia'
 import { http, TOKEN_KEY } from '../api/http'
 import * as authApi from '../api/auth'
+import { isUnauthorizedApiError } from '../util/apiError'
+import { resolvePostLoginTarget } from '../util/loginRedirect'
 
 const USER_HINT_KEY = 'vas_user_hint'
+
+/** Trang mặc định đã lưu — dùng khi có token nhưng GET /user tạm lỗi mạng (PWA mở nhanh). */
+export function readCachedDefaultHome() {
+  try {
+    const raw = localStorage.getItem(USER_HINT_KEY)
+    if (!raw) return null
+    const h = JSON.parse(raw)
+    const home = h?.defaultHome
+    return typeof home === 'string' && home.startsWith('/') ? home : null
+  } catch {
+    return null
+  }
+}
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -47,23 +62,15 @@ export const useAuthStore = defineStore('auth', {
           return
         }
         await this.fetchMe()
-        try {
-          if (this.user) {
-            localStorage.setItem(
-              USER_HINT_KEY,
-              JSON.stringify({ id: this.user.id, name: this.user.name }),
-            )
-          }
-        } catch {
-          /* ignore */
-        }
-      } catch {
+      } catch (e) {
         this.user = null
-        this.setToken(null)
-        try {
-          localStorage.removeItem(USER_HINT_KEY)
-        } catch {
-          /* ignore */
+        if (isUnauthorizedApiError(e)) {
+          this.setToken(null)
+          try {
+            localStorage.removeItem(USER_HINT_KEY)
+          } catch {
+            /* ignore */
+          }
         }
       } finally {
         this.isRestoring = false
@@ -87,16 +94,7 @@ export const useAuthStore = defineStore('auth', {
       const res = await authApi.login({ email, password, device_name: deviceName })
       this.setToken(res.token)
       this.user = res.user
-      try {
-        if (res.user) {
-          localStorage.setItem(
-            USER_HINT_KEY,
-            JSON.stringify({ id: res.user.id, name: res.user.name }),
-          )
-        }
-      } catch {
-        /* ignore */
-      }
+      this.persistUserHint()
       return res
     },
     async logout() {
@@ -113,9 +111,25 @@ export const useAuthStore = defineStore('auth', {
         /* ignore */
       }
     },
+    persistUserHint() {
+      try {
+        if (!this.user) return
+        localStorage.setItem(
+          USER_HINT_KEY,
+          JSON.stringify({
+            id: this.user.id,
+            name: this.user.name,
+            defaultHome: resolvePostLoginTarget(this, '/'),
+          }),
+        )
+      } catch {
+        /* ignore */
+      }
+    },
     async fetchMe() {
       const { data } = await http.get('/user')
       this.user = data
+      this.persistUserHint()
       return this.user
     },
     /** Khớp backend User::canAccessDispatchWebApp — superadmin / admin / dispatcher / department_head / internal_user. */

@@ -297,7 +297,7 @@
     </table>
 
     <div class="page-footer">
-        Báo cáo Chi phí Chuyến &nbsp;·&nbsp; VA Điều Vận &nbsp;·&nbsp; Vietnam America Schools
+        Báo cáo doanh thu chuyến &nbsp;·&nbsp; VA Điều Vận &nbsp;·&nbsp; Vietnam America Schools
     </div>
 
 </body>

@@ -50,7 +50,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '../../store'
+import { useAuthStore, readCachedDefaultHome } from '../../store'
+import { TOKEN_KEY } from '../../core/config/authKeys'
+import { isUnauthorizedApiError, isTransientSessionError } from '../../util/apiError'
 import { formatApiError } from '../../api/http'
 import {
   sanitizeLoginRedirect,
@@ -100,6 +102,29 @@ onMounted(async () => {
   }
 
   if (!q.token) {
+    if (localStorage.getItem(TOKEN_KEY)) {
+      bootstrapping.value = true
+      try {
+        if (!auth.user) {
+          await auth.fetchMe()
+        }
+        if (auth.user) {
+          const target = resolvePostLoginTarget(auth, q.redirect)
+          await router.replace(target)
+        }
+      } catch (e) {
+        if (isUnauthorizedApiError(e)) {
+          auth.setToken(null)
+        } else if (isTransientSessionError(e)) {
+          const cached = readCachedDefaultHome()
+          if (cached) {
+            await router.replace(cached)
+          }
+        }
+      } finally {
+        bootstrapping.value = false
+      }
+    }
     return
   }
 
@@ -107,12 +132,19 @@ onMounted(async () => {
   error.value = ''
   try {
     auth.setToken(String(q.token))
+    if (!localStorage.getItem(TOKEN_KEY)) {
+      throw new Error('storage_blocked')
+    }
     await auth.fetchMe()
     const target = resolvePostLoginTarget(auth, q.redirect)
     await router.replace(target)
   } catch (e) {
     auth.setToken(null)
-    error.value = formatApiError(e, 'Phiên đăng nhập không hợp lệ.')
+    const fallback =
+      e?.message === 'storage_blocked'
+        ? 'Thiết bị không cho lưu phiên đăng nhập. Tắt chế độ riêng tư hoặc mở app bằng trình duyệt thường, rồi thử lại.'
+        : 'Phiên đăng nhập không hợp lệ.'
+    error.value = formatApiError(e, fallback)
     const safe = sanitizeLoginRedirect(q.redirect ?? '/')
     await router.replace({
       path: '/login',

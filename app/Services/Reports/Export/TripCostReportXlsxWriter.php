@@ -44,7 +44,7 @@ class TripCostReportXlsxWriter
     ): string {
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
-            ->setTitle('Báo cáo chi phí chuyến')
+            ->setTitle('Báo cáo doanh thu chuyến')
             ->setCreator('VA Điều Vận')
             ->setCompany('Vietnam America Schools');
 
@@ -55,12 +55,12 @@ class TripCostReportXlsxWriter
 
         // Sheet 1 — all rows
         $ws1 = $spreadsheet->getActiveSheet();
-        $ws1->setTitle('Danh sách chi phí');
+        $ws1->setTitle('Danh sách doanh thu');
         $this->buildSheet($ws1, $allRows, 'BÁO CÁO CHI PHÍ CHUYẾN', $filters, $exportedBy, $unitName);
 
         // Sheet 2 — business only
         $ws2 = $spreadsheet->createSheet();
-        $ws2->setTitle('Chi phí công tác');
+        $ws2->setTitle('Doanh thu công tác');
         $this->buildSheet($ws2, $businessRows, 'CHI PHÍ CÔNG TÁC', $filters, $exportedBy, $unitName);
 
         $spreadsheet->setActiveSheetIndex(0);

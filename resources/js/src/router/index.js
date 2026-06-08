@@ -5,7 +5,8 @@ import {
     buildStaffPrefixedPath,
     shouldRewriteLegacyStaffPath,
 } from "../config/dispatchWebBase";
-import { useAuthStore } from "../store";
+import { useAuthStore, readCachedDefaultHome } from "../store";
+import { isUnauthorizedApiError, isTransientSessionError } from "../util/apiError";
 import { applyRouteDocumentTitle } from "../util/routeDocumentTitle";
 import { setLocale } from "../i18n";
 import { resolvePostLoginTarget } from "../util/loginRedirect";
@@ -277,8 +278,8 @@ const staffChildRoutes = [
         name: "costReport",
         component: () => import("../views/reports/CostReportView.vue"),
         meta: {
-            title: "Báo cáo chi phí chuyến",
-            subtitle: "Thống kê & xuất file",
+            title: "Báo cáo doanh thu chuyến",
+            subtitle: "Tổng hợp & xuất file",
             featureKey: "module.reports",
         },
     },
@@ -700,6 +701,25 @@ router.beforeEach(async (to) => {
             if (auth.user) {
                 return resolvePostLoginTarget(auth, to.query.redirect);
             }
+            if (localStorage.getItem(TOKEN_KEY)) {
+                try {
+                    if (!auth.user) {
+                        await auth.fetchMe();
+                    }
+                    if (auth.user) {
+                        return resolvePostLoginTarget(auth, to.query.redirect);
+                    }
+                } catch (e) {
+                    if (isUnauthorizedApiError(e)) {
+                        auth.setToken(null);
+                    } else if (isTransientSessionError(e)) {
+                        const cached = readCachedDefaultHome();
+                        if (cached) {
+                            return { path: cached, replace: true };
+                        }
+                    }
+                }
+            }
         }
         return true;
     }
@@ -711,8 +731,17 @@ router.beforeEach(async (to) => {
         if (!auth.user) {
             await auth.fetchMe();
         }
-    } catch {
-        auth.setToken(null);
+    } catch (e) {
+        if (isUnauthorizedApiError(e)) {
+            auth.setToken(null);
+            return { name: "login", query: { redirect: to.fullPath } };
+        }
+        if (isTransientSessionError(e)) {
+            const cached = readCachedDefaultHome();
+            if (cached && (to.path === "/" || to.path === "/login")) {
+                return { path: cached, replace: true };
+            }
+        }
         return { name: "login", query: { redirect: to.fullPath } };
     }
     const portalUser =

@@ -50,7 +50,7 @@ class TripCostReportController extends Controller
 
         $tmpPath = $this->xlsxWriter->writeTempFile($rows, $filters, $exportedBy);
 
-        $filename = 'chi-phi-chuyen_' . now()->format('Ymd_His') . '.xlsx';
+        $filename = 'doanh-thu-chuyen_' . now()->format('Ymd_His') . '.xlsx';
 
         return response()->download($tmpPath, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -78,8 +78,8 @@ class TripCostReportController extends Controller
 
         $tripType   = $filters['trip_type'] ?? null;
         $sheetTitle = $tripType === 'business'
-            ? 'CHI PHÍ CÔNG TÁC'
-            : 'BÁO CÁO CHI PHÍ CHUYẾN';
+            ? 'DOANH THU CÔNG TÁC'
+            : 'BÁO CÁO DOANH THU CHUYẾN';
 
         $pdf = Pdf::loadView('pdf.trip-cost-report', [
             'rows'          => $rows,
@@ -92,7 +92,7 @@ class TripCostReportController extends Controller
             'sumExtraFee'   => $sumExtraFee,
         ])->setPaper('a4', 'landscape');
 
-        $filename = 'chi-phi-chuyen_' . now()->format('Ymd_His') . '.pdf';
+        $filename = 'doanh-thu-chuyen_' . now()->format('Ymd_His') . '.pdf';
 
         return $pdf->download($filename);
     }

@@ -1,38 +1,39 @@
 ﻿<template>
-  <div class="cost-report-page space-y-5 pb-14 text-slate-900 dark:text-slate-100">
+  <div class="tr-rev space-y-6 pb-14 text-slate-800 dark:text-slate-200">
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl md:text-2xl">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div class="tr-rev-hero">
+        <p class="tr-rev-hero__eyebrow">{{ t('nav.bar.section_reports') }}</p>
+        <h1 class="tr-rev-hero__title">
           {{ t('cost_report.hero_title') }}
         </h1>
-        <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+        <p class="tr-rev-hero__sub">
           {{ t('cost_report.hero_sub') }}
         </p>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2 sm:pt-1">
         <button
           type="button"
           :disabled="exporting"
-          class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-900 shadow-sm transition hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
+          class="tr-rev-export tr-rev-export--sheet"
           @click="doExportXlsx"
         >
-          <span v-if="exporting === 'xlsx'" class="inline-block size-4 animate-spin rounded-full border-2 border-emerald-300 border-t-emerald-700" />
+          <span v-if="exporting === 'xlsx'" class="tr-rev-spinner tr-rev-spinner--teal" />
           <TableCellsIcon v-else class="size-4 shrink-0" aria-hidden="true" />
           {{ t('cost_report.btn_export_xlsx') }}
         </button>
         <button
           type="button"
           :disabled="exporting"
-          class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-900 shadow-sm transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-900/40"
+          class="tr-rev-export tr-rev-export--doc"
           @click="doExportPdf"
         >
-          <span v-if="exporting === 'pdf'" class="inline-block size-4 animate-spin rounded-full border-2 border-rose-300 border-t-rose-700" />
+          <span v-if="exporting === 'pdf'" class="tr-rev-spinner tr-rev-spinner--rose" />
           <DocumentTextIcon v-else class="size-4 shrink-0" aria-hidden="true" />
           {{ t('cost_report.btn_export_pdf') }}
         </button>
       </div>
-    </div>
+    </header>
 
     <AppFilterBar>
       <div ref="filterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
@@ -45,13 +46,13 @@
               <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
               <span
                 v-if="activeFilterCount > 0"
-                class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
+                class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-normal leading-none text-white"
               >{{ activeFilterCount }}</span>
             </span>
             <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
           </summary>
           <div class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30">
-            <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
+            <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-normal text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
               {{ t('dashboard_analytics.filter_applied_title') }}
             </p>
             <div class="p-3 pt-2">
@@ -75,7 +76,7 @@
                 <li v-if="activeFilterCount === 0" class="text-slate-400 dark:text-slate-500">{{ t('filter_bar.empty') }}</li>
               </ul>
               <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                <p class="text-[11px] font-normal text-violet-700 dark:text-violet-300">
                   {{ t('trips_page.filter_show_controls_title') }}
                 </p>
                 <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
@@ -189,7 +190,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
+            class="tr-rev-refresh"
             :disabled="loading"
             @click="reload"
           >
@@ -200,97 +201,97 @@
       </div>
     </AppFilterBar>
 
-    <section aria-labelledby="cr-kpi">
-      <h2 id="cr-kpi" class="mb-3 px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+    <section aria-labelledby="cr-kpi" class="tr-rev-block">
+      <h2 id="cr-kpi" class="tr-rev-block__label">
         {{ t('cost_report.section_kpi') }}
       </h2>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_total_amount') }}</div>
-          <div class="mt-1.5 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <article class="tr-rev-kpi tr-rev-kpi--va">
+          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_total_amount') }}</p>
+          <p class="tr-rev-kpi__value">
             <template v-if="stats">{{ formatVnd(stats.total_amount) }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
+            <template v-else-if="loading"><span class="tr-rev-skel tr-rev-skel--wide" /></template>
             <template v-else>—</template>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_count') }}</div>
-          <div class="mt-1.5 text-xl font-bold tabular-nums text-slate-900 dark:text-white">
+          </p>
+        </article>
+        <article class="tr-rev-kpi tr-rev-kpi--sky">
+          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_count') }}</p>
+          <p class="tr-rev-kpi__value tr-rev-kpi__value--sm">
             <template v-if="stats">{{ stats.count.toLocaleString('vi-VN') }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-16 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
+            <template v-else-if="loading"><span class="tr-rev-skel" /></template>
             <template v-else>—</template>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_top_category') }}</div>
-          <div class="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">
+          </p>
+        </article>
+        <article class="tr-rev-kpi tr-rev-kpi--amber">
+          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_top_category') }}</p>
+          <p class="tr-rev-kpi__text">
             <template v-if="stats && topCategory">{{ topCategory }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
+            <template v-else-if="loading"><span class="tr-rev-skel" /></template>
             <template v-else>—</template>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
-          <div class="text-xs font-medium text-slate-500 dark:text-slate-400">{{ t('cost_report.kpi_top_provider') }}</div>
-          <div class="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">
+          </p>
+        </article>
+        <article class="tr-rev-kpi tr-rev-kpi--emerald">
+          <p class="tr-rev-kpi__label">{{ t('cost_report.kpi_top_provider') }}</p>
+          <p class="tr-rev-kpi__text">
             <template v-if="stats && topProvider">{{ topProvider }}</template>
-            <template v-else-if="loading"><span class="inline-block h-6 w-24 animate-pulse rounded bg-slate-200 dark:bg-slate-700" /></template>
+            <template v-else-if="loading"><span class="tr-rev-skel" /></template>
             <template v-else>—</template>
-          </div>
-        </div>
+          </p>
+        </article>
       </div>
     </section>
 
     <section
       v-if="stats && !loading"
       aria-labelledby="cr-charts"
-      class="space-y-6 border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800"
+      class="tr-rev-block tr-rev-block--divider"
     >
-      <h2 id="cr-charts" class="px-0.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      <h2 id="cr-charts" class="tr-rev-block__label">
         {{ t('cost_report.section_charts') }}
       </h2>
 
-      <div class="space-y-3" aria-labelledby="cr-charts-breakdown">
-        <h3 id="cr-charts-breakdown" class="px-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+      <div class="tr-rev-chart-panel" aria-labelledby="cr-charts-breakdown">
+        <p id="cr-charts-breakdown" class="tr-rev-chart-panel__group">
           {{ t('cost_report.section_charts_breakdown') }}
-        </h3>
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div class="cr-chart-card">
-            <p class="cr-chart-title">{{ t('cost_report.chart_by_category') }}</p>
+        </p>
+        <div class="grid grid-cols-1 gap-0 lg:grid-cols-2 lg:divide-x lg:divide-slate-200/80 dark:lg:divide-slate-700">
+          <div class="tr-rev-chart-cell">
+            <p class="tr-rev-chart-caption">{{ t('cost_report.chart_by_category') }}</p>
             <DashboardEChart :option="chartByCategory" height="240px" :aria-label="t('cost_report.chart_by_category')" />
           </div>
-          <div class="cr-chart-card">
-            <p class="cr-chart-title">{{ t('cost_report.chart_by_status') }}</p>
+          <div class="tr-rev-chart-cell">
+            <p class="tr-rev-chart-caption">{{ t('cost_report.chart_by_status') }}</p>
             <DashboardEChart :option="chartByStatus" height="240px" :aria-label="t('cost_report.chart_by_status')" />
           </div>
         </div>
       </div>
 
-      <div class="space-y-3" aria-labelledby="cr-charts-compare">
-        <h3 id="cr-charts-compare" class="px-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+      <div class="tr-rev-chart-panel mt-4" aria-labelledby="cr-charts-compare">
+        <p id="cr-charts-compare" class="tr-rev-chart-panel__group">
           {{ t('cost_report.section_charts_compare') }}
-        </h3>
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div
-            class="cr-chart-card"
-            :class="showTrendChart ? '' : 'lg:col-span-2'"
-          >
-            <p class="cr-chart-title">{{ t('cost_report.chart_by_provider') }}</p>
+        </p>
+        <div
+          class="grid grid-cols-1 gap-0"
+          :class="showTrendChart ? 'lg:grid-cols-2 lg:divide-x lg:divide-slate-200/80 dark:lg:divide-slate-700' : ''"
+        >
+          <div class="tr-rev-chart-cell">
+            <p class="tr-rev-chart-caption">{{ t('cost_report.chart_by_provider') }}</p>
             <DashboardEChart :option="chartByProvider" height="240px" :aria-label="t('cost_report.chart_by_provider')" />
           </div>
-          <div v-if="showTrendChart" class="cr-chart-card">
-            <p class="cr-chart-title">{{ t('cost_report.chart_trend') }}</p>
+          <div v-if="showTrendChart" class="tr-rev-chart-cell">
+            <p class="tr-rev-chart-caption">{{ t('cost_report.chart_trend') }}</p>
             <DashboardEChart :option="chartByMonth" height="240px" :aria-label="t('cost_report.chart_trend')" />
           </div>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="cr-table-title" class="border-t border-slate-200/80 pt-6 md:pt-7 dark:border-slate-800">
-      <div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
-        <div ref="detailTableToolbarRef" class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
-          <h2 id="cr-table-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+    <section aria-labelledby="cr-table-title" class="tr-rev-block tr-rev-block--divider">
+      <div class="tr-rev-table-panel">
+        <div ref="detailTableToolbarRef" class="tr-rev-table-panel__head">
+          <h2 id="cr-table-title" class="tr-rev-table-panel__title">
             {{ t('cost_report.table_title') }}
-            <span v-if="rows.length" class="ml-1 text-xs font-normal text-slate-500">({{ rows.length }})</span>
+            <span v-if="rows.length" class="tr-rev-table-panel__count">({{ rows.length }})</span>
           </h2>
           <div class="flex flex-wrap items-center gap-2">
             <label class="inline-flex shrink-0 items-center gap-1.5">
@@ -306,13 +307,13 @@
                 <option :value="15">15</option>
                 <option :value="20">20</option>
               </select>
-              <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('costs_page.per_page_unit') }}</span>
+              <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('cost_report.per_page_unit') }}</span>
             </label>
             <details ref="columnPickerRef" class="group relative shrink-0">
               <summary
                 class="flex cursor-pointer list-none items-center rounded-lg border border-slate-200/90 bg-white px-2 py-1.5 text-slate-700 shadow-sm transition hover:border-teal-200/70 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-                :title="t('costs_page.column_visibility_title')"
-                :aria-label="t('costs_page.column_visibility_title')"
+                :title="t('cost_report.column_visibility_title')"
+                :aria-label="t('cost_report.column_visibility_title')"
               >
                 <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
               </summary>
@@ -320,8 +321,8 @@
                 class="absolute right-0 top-[calc(100%+8px)] z-[110] min-w-[240px] rounded-2xl border border-violet-200/50 bg-white p-3 shadow-xl ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
                 @click.stop
               >
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                  {{ t('costs_page.column_visibility_title') }}
+                <p class="text-[11px] font-normal text-violet-700 dark:text-violet-300">
+                  {{ t('cost_report.column_visibility_title') }}
                 </p>
                 <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto pr-0.5">
                   <li v-for="cd in colControlDefs" :key="'cost-report-col-vis-' + cd.id" class="flex items-start gap-2">
@@ -348,16 +349,16 @@
           <table class="cr-sheet min-w-[1100px] w-full">
             <thead>
               <tr>
-                <th class="cr-th w-10 text-center">{{ t('costs_page.col_no') }}</th>
-                <th v-if="colVisible.unit" class="cr-th min-w-[7rem]">{{ t('costs_page.col_unit') }}</th>
-                <th v-if="colVisible.category" class="cr-th min-w-[7rem]">{{ t('costs_page.col_category') }}</th>
-                <th v-if="colVisible.submitter" class="cr-th min-w-[9rem]">{{ t('costs_page.col_submitter') }}</th>
-                <th v-if="colVisible.description" class="cr-th min-w-[16rem]">{{ t('costs_page.col_description') }}</th>
-                <th v-if="colVisible.fleet_source" class="cr-th min-w-[10rem]">{{ t('costs_page.col_fleet_source') }}</th>
-                <th v-if="colVisible.provider" class="cr-th min-w-[9rem]">{{ t('costs_page.col_provider') }}</th>
-                <th v-if="colVisible.unit_price" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_unit_price') }}</th>
-                <th v-if="colVisible.extra_fee" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('costs_page.col_extra_fee') }}</th>
-                <th v-if="colVisible.payment" class="cr-th cr-th--money min-w-[8rem] text-right">{{ t('costs_page.col_payment') }}</th>
+                <th class="cr-th w-10 text-center">{{ t('cost_report.col_no') }}</th>
+                <th v-if="colVisible.unit" class="cr-th min-w-[7rem]">{{ t('cost_report.col_unit') }}</th>
+                <th v-if="colVisible.category" class="cr-th min-w-[7rem]">{{ t('cost_report.col_category') }}</th>
+                <th v-if="colVisible.submitter" class="cr-th min-w-[9rem]">{{ t('cost_report.col_submitter') }}</th>
+                <th v-if="colVisible.description" class="cr-th min-w-[16rem]">{{ t('cost_report.col_description') }}</th>
+                <th v-if="colVisible.fleet_source" class="cr-th min-w-[10rem]">{{ t('cost_report.col_fleet_source') }}</th>
+                <th v-if="colVisible.provider" class="cr-th min-w-[9rem]">{{ t('cost_report.col_provider') }}</th>
+                <th v-if="colVisible.unit_price" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('cost_report.col_unit_price') }}</th>
+                <th v-if="colVisible.extra_fee" class="cr-th cr-th--money min-w-[7rem] text-right">{{ t('cost_report.col_extra_fee') }}</th>
+                <th v-if="colVisible.payment" class="cr-th cr-th--money min-w-[8rem] text-right">{{ t('cost_report.col_payment') }}</th>
                 <th v-if="colVisible.status" class="cr-th min-w-[8rem]">{{ t('filter_bar.status') }}</th>
               </tr>
             </thead>
@@ -381,7 +382,7 @@
                   <span class="line-clamp-2">{{ row.description || '—' }}</span>
                   <span
                     v-if="row.source === 'estimate'"
-                    class="mt-0.5 inline-flex rounded-full bg-violet-100/90 px-2 py-px text-[10px] font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100"
+                    class="tr-rev-badge-estimate"
                   >{{ t('cost_report.badge_estimate') }}</span>
                 </td>
                 <td v-if="colVisible.fleet_source" class="cr-td whitespace-nowrap"><span class="cr-pill">{{ row.fleet_source || '—' }}</span></td>
@@ -392,7 +393,7 @@
                 <td v-if="colVisible.extra_fee" class="cr-td cr-td--money">
                   {{ row.extra_fee != null && row.extra_fee > 0 ? formatVnd(row.extra_fee) : '—' }}
                 </td>
-                <td v-if="colVisible.payment" class="cr-td cr-td--money font-semibold text-slate-900 dark:text-slate-100">{{ formatVnd(row.amount) }}</td>
+                <td v-if="colVisible.payment" class="cr-td cr-td--money cr-td--revenue">{{ formatVnd(row.amount) }}</td>
                 <td v-if="colVisible.status" class="cr-td">
                   <span class="cr-pill" :class="STATUS_PILL_CLASSES[row.status] ?? 'bg-slate-100 text-slate-700'">
                     {{ row.status_label || statusLabel(row.status) || '—' }}
@@ -411,38 +412,38 @@
           </div>
         </div>
 
-        <div v-if="rows.length" class="flex flex-col gap-3 border-t border-slate-200/90 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/50">
+        <div v-if="rows.length" class="tr-rev-table-foot">
           <span class="text-sm text-slate-600 dark:text-slate-400">
             {{
-              t('costs_page.pagination_of', {
+              t('cost_report.pagination_of', {
                 current: detailPage,
                 last: detailLastPage,
               })
             }}
             <span class="text-slate-400"> · </span>
-            {{ rows.length }} {{ t('costs_page.pagination_records_suffix') }}
+            {{ rows.length }} {{ t('cost_report.pagination_records_suffix') }}
           </span>
           <div class="flex flex-wrap items-center gap-4">
             <span class="text-sm text-slate-500 dark:text-slate-400">
               {{ t('cost_report.total_amount_label') }}:
-              <span class="font-semibold tabular-nums text-va-800 dark:text-va-400">{{ formatVnd(totalAmount) }}</span>
+              <span class="tabular-nums text-teal-800 dark:text-teal-300">{{ formatVnd(totalAmount) }}</span>
             </span>
             <div class="flex flex-wrap gap-2">
               <button
                 type="button"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                class="tr-rev-page-btn"
                 :disabled="loading || detailPage <= 1"
                 @click="detailPageStep(-1)"
               >
-                {{ t('costs_page.prev') }}
+                {{ t('cost_report.prev') }}
               </button>
               <button
                 type="button"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                class="tr-rev-page-btn"
                 :disabled="loading || detailPage >= detailLastPage"
                 @click="detailPageStep(1)"
               >
-                {{ t('costs_page.next') }}
+                {{ t('cost_report.next') }}
               </button>
             </div>
           </div>
@@ -554,7 +555,7 @@ function tableColLabel(colId) {
   }
   const k = keys[colId]
   if (k === 'col_status') return t('filter_bar.status')
-  return k ? t(`costs_page.${k}`) : colId
+  return k ? t(`cost_report.${k}`) : colId
 }
 
 const loading = ref(false)
@@ -666,7 +667,7 @@ const tooltipMoney = {
   trigger: 'item',
   formatter: (p) => {
     const v = typeof p.value === 'number' ? p.value : (p.data?.value ?? 0)
-    return `${p.name}<br/><b>${Number(v).toLocaleString('vi-VN')} đ</b>`
+    return `${p.name}<br/>${Number(v).toLocaleString('vi-VN')} đ`
   },
 }
 
@@ -688,7 +689,7 @@ function pieOption(dataList) {
 function barHorizontalOption(dataList, limit = 10) {
   const top = [...dataList].sort((a, b) => b.amount - a.amount).slice(0, limit)
   return {
-    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].name}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} đ</b>` },
+    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].name}<br/>${Number(p[0].value).toLocaleString('vi-VN')} đ` },
     grid: { left: '4%', right: '6%', top: 10, bottom: 10, containLabel: true },
     xAxis: { type: 'value', axisLabel: { formatter: (v) => `${(v / 1000000).toFixed(0)}M`, fontSize: 9 } },
     yAxis: { type: 'category', data: top.map((d) => d.label), axisLabel: { fontSize: 9, overflow: 'truncate', width: 90 } },
@@ -698,7 +699,7 @@ function barHorizontalOption(dataList, limit = 10) {
 
 function lineOption(dataList) {
   return {
-    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].axisValue}<br/><b>${Number(p[0].value).toLocaleString('vi-VN')} đ</b>` },
+    tooltip: { trigger: 'axis', formatter: (p) => `${p[0].axisValue}<br/>${Number(p[0].value).toLocaleString('vi-VN')} đ` },
     grid: { left: '4%', right: '4%', top: 14, bottom: 24, containLabel: true },
     xAxis: { type: 'category', data: dataList.map((d) => d.key), axisLabel: { fontSize: 9, rotate: 30 } },
     yAxis: { type: 'value', axisLabel: { formatter: (v) => `${(v / 1000000).toFixed(0)}M`, fontSize: 9 } },
@@ -891,40 +892,158 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.cost-report-page {
-  @apply text-slate-900 dark:text-slate-100;
+.tr-rev-hero {
+  @apply border-l-[3px] border-teal-600/80 pl-4 dark:border-teal-500/70;
 }
 
-.cr-chart-card {
-  @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50;
+.tr-rev-hero__eyebrow {
+  @apply text-[11px] font-normal tracking-wide text-teal-800/80 dark:text-teal-300/90;
 }
 
-.cr-chart-title {
-  @apply mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400;
+.tr-rev-hero__title {
+  @apply mt-0.5 text-xl font-normal tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl;
+}
+
+.tr-rev-hero__sub {
+  @apply mt-1 max-w-2xl text-sm font-normal leading-relaxed text-slate-500 dark:text-slate-400;
+}
+
+.tr-rev-export {
+  @apply inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-normal transition disabled:opacity-50;
+}
+
+.tr-rev-export--sheet {
+  @apply border-teal-200/90 bg-teal-50/60 text-teal-900 hover:bg-teal-100/80 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-100 dark:hover:bg-teal-900/40;
+}
+
+.tr-rev-export--doc {
+  @apply border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+}
+
+.tr-rev-spinner {
+  @apply inline-block size-4 animate-spin rounded-full border-2;
+}
+
+.tr-rev-spinner--teal {
+  @apply border-teal-200 border-t-teal-700;
+}
+
+.tr-rev-spinner--rose {
+  @apply border-rose-200 border-t-rose-600;
+}
+
+.tr-rev-refresh {
+  @apply inline-flex h-9 shrink-0 items-center justify-center rounded-full bg-teal-800 px-4 text-sm font-normal text-white transition hover:bg-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-600/30 disabled:opacity-50 dark:bg-teal-700 dark:hover:bg-teal-600;
+}
+
+.tr-rev-block__label {
+  @apply mb-3 text-sm font-normal text-slate-500 dark:text-slate-400;
+}
+
+.tr-rev-block--divider {
+  @apply border-t border-dashed border-slate-200/90 pt-6 dark:border-slate-700/80;
+}
+
+.tr-rev-kpi {
+  @apply rounded-xl border border-slate-200/70 bg-gradient-to-br from-white to-slate-50/80 px-4 py-3.5 dark:border-slate-700/80 dark:from-slate-900/60 dark:to-slate-950/40;
+  border-left-width: 3px;
+}
+
+.tr-rev-kpi--va { border-left-color: rgb(154 0 54 / 0.55); }
+.tr-rev-kpi--sky { border-left-color: rgb(14 165 233 / 0.55); }
+.tr-rev-kpi--amber { border-left-color: rgb(245 158 11 / 0.55); }
+.tr-rev-kpi--emerald { border-left-color: rgb(16 185 129 / 0.55); }
+
+.tr-rev-kpi__label {
+  @apply text-xs font-normal text-slate-500 dark:text-slate-400;
+}
+
+.tr-rev-kpi__value {
+  @apply mt-1 text-2xl font-light tabular-nums tracking-tight text-slate-900 dark:text-slate-50;
+}
+
+.tr-rev-kpi__value--sm {
+  @apply text-xl;
+}
+
+.tr-rev-kpi__text {
+  @apply mt-1 text-sm font-normal text-slate-800 dark:text-slate-200;
+}
+
+.tr-rev-skel {
+  @apply inline-block h-5 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-700;
+}
+
+.tr-rev-skel--wide {
+  @apply w-32;
+}
+
+.tr-rev-chart-panel {
+  @apply overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-slate-700 dark:bg-slate-900/40;
+}
+
+.tr-rev-chart-panel__group {
+  @apply border-b border-slate-100 bg-slate-50/80 px-4 py-2 text-xs font-normal text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400;
+}
+
+.tr-rev-chart-cell {
+  @apply px-4 py-3;
+}
+
+.tr-rev-chart-caption {
+  @apply mb-2 text-xs font-normal text-slate-600 dark:text-slate-400;
+}
+
+.tr-rev-table-panel {
+  @apply overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-slate-700 dark:bg-slate-900/40;
+}
+
+.tr-rev-table-panel__head {
+  @apply flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 px-4 py-3 dark:border-slate-700;
+}
+
+.tr-rev-table-panel__title {
+  @apply text-sm font-normal text-slate-800 dark:text-slate-100;
+}
+
+.tr-rev-table-panel__count {
+  @apply ml-1 text-xs text-slate-400;
+}
+
+.tr-rev-table-foot {
+  @apply flex flex-col gap-3 border-t border-slate-200/80 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/30;
+}
+
+.tr-rev-page-btn {
+  @apply rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-normal text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+}
+
+.tr-rev-badge-estimate {
+  @apply mt-0.5 inline-flex rounded-md border border-violet-200/80 bg-violet-50/90 px-1.5 py-px text-[10px] font-normal text-violet-800 dark:border-violet-800/50 dark:bg-violet-950/40 dark:text-violet-200;
 }
 
 .cr-input {
-  @apply rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100;
+  @apply rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100;
 }
 
 .cr-filter-btn {
-  @apply flex w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800;
+  @apply flex w-full rounded-lg px-3 py-2 text-left text-sm font-normal text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800;
 }
 
 .cr-filter-btn--active {
-  @apply bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100;
+  @apply bg-teal-50 text-teal-900 dark:bg-teal-950/50 dark:text-teal-100;
 }
 
 .cr-sheet {
-  @apply border-collapse text-left text-sm;
+  @apply border-collapse text-left text-sm font-normal;
 }
 
 .cr-sheet thead {
-  @apply bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/80 dark:text-slate-400;
+  @apply bg-slate-100/90 text-xs font-normal text-slate-600 dark:bg-slate-800/60 dark:text-slate-400;
 }
 
 .cr-th {
-  @apply border-b border-slate-200/90 px-3 py-2.5 align-top font-semibold dark:border-slate-700;
+  @apply border-b border-slate-200/80 px-3 py-2.5 align-top font-normal dark:border-slate-700;
 }
 
 .cr-th--money {
@@ -932,26 +1051,30 @@ onMounted(() => {
 }
 
 .cr-td {
-  @apply border-b border-slate-100 px-3 py-2.5 align-top text-slate-800 dark:border-slate-800 dark:text-slate-200;
+  @apply border-b border-slate-100 px-3 py-2.5 align-top font-normal text-slate-700 dark:border-slate-800 dark:text-slate-300;
 }
 
 .cr-data-row {
-  @apply transition-colors hover:bg-teal-50/40 dark:hover:bg-teal-950/20;
+  @apply transition-colors hover:bg-teal-50/30 dark:hover:bg-teal-950/15;
 }
 
 .cr-data-row--alt {
-  @apply bg-slate-50/40 dark:bg-slate-900/20;
+  @apply bg-slate-50/30 dark:bg-slate-900/15;
 }
 
 .cr-data-row--estimate {
-  @apply bg-violet-50/35 hover:bg-violet-50/55 dark:bg-violet-950/20 dark:hover:bg-violet-950/30;
+  @apply bg-violet-50/25 hover:bg-violet-50/40 dark:bg-violet-950/15 dark:hover:bg-violet-950/25;
 }
 
 .cr-td--money {
   @apply text-right tabular-nums;
 }
 
+.cr-td--revenue {
+  @apply text-teal-900 dark:text-teal-200;
+}
+
 .cr-pill {
-  @apply inline-flex max-w-full items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300;
+  @apply inline-flex max-w-full items-center rounded-md border border-slate-200/80 bg-white px-2 py-0.5 text-[11px] font-normal text-slate-600 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300;
 }
 </style>

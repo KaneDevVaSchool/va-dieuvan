@@ -2,16 +2,13 @@
   <div class="freq-dash space-y-5 pb-14">
 
     <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div class="flex items-start gap-3">
-        <div class="freq-brand-mark" aria-hidden="true">VA</div>
-        <div>
-          <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
-            {{ t('driver_freq.hero_title') }}
-          </h1>
-          <p class="mt-0.5 max-w-xl text-sm text-slate-500 dark:text-slate-400">
-            {{ t('driver_freq.hero_sub') }}
-          </p>
-        </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white sm:text-xl">
+          {{ t('driver_freq.hero_title') }}
+        </h1>
+        <p class="mt-0.5 max-w-xl text-sm text-slate-500 dark:text-slate-400">
+          {{ t('driver_freq.hero_sub') }}
+        </p>
       </div>
       <div v-if="canExport" class="flex flex-wrap items-center gap-2">
         <button
@@ -98,8 +95,6 @@
       </div>
     </AppFilterBar>
 
-    <p v-if="filterSummaryLine" class="freq-period-line">{{ filterSummaryLine }}</p>
-
     <div
       v-if="loadError"
       role="alert"
@@ -182,13 +177,11 @@
                 <th class="freq-th">{{ t('driver_freq.col_hours') }}</th>
                 <th class="freq-th">{{ t('driver_freq.col_ontime') }}</th>
                 <th class="freq-th min-w-[8rem]">{{ t('driver_freq.col_trip_types') }}</th>
-                <th class="freq-th freq-th--right">{{ t('driver_freq.col_kpi') }}</th>
-                <th class="freq-th freq-th--center min-w-[5.5rem]">{{ t('driver_freq.col_bonus') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="!loading && filteredDrivers.length === 0">
-                <td colspan="8" class="freq-empty">{{ t('driver_freq.empty_ranking') }}</td>
+                <td colspan="6" class="freq-empty">{{ t('driver_freq.empty_ranking') }}</td>
               </tr>
               <tr
                 v-for="(driver, idx) in filteredDrivers"
@@ -232,12 +225,6 @@
                     >{{ TYPE_EXPORT_SHORT[ti] }} {{ count }}</span>
                   </div>
                 </td>
-                <td class="freq-td freq-td--right">
-                  <span class="freq-kpi-pill" :class="kpiBadgeClass(driver.kpi)">{{ driver.kpi }}</span>
-                </td>
-                <td class="freq-td freq-td--center">
-                  <span class="freq-bonus-pill" :class="bonusDisplayClass(driver)">{{ displayBonusLabel(driver) }}</span>
-                </td>
               </tr>
             </tbody>
           </table>
@@ -245,39 +232,7 @@
         <p class="freq-footnote">{{ t('driver_freq.kpi_formula') }}</p>
       </div>
 
-      <!-- Right column: Bonus panel + Quarterly trend (stacked) -->
       <div class="flex flex-col gap-4 lg:col-span-2">
-
-        <!-- Bonus preview panel -->
-        <div class="freq-panel">
-          <div class="freq-panel__head">
-            <h2 class="freq-panel__title">{{ t('driver_freq.section_bonus') }}</h2>
-          </div>
-          <div class="freq-bonus-list">
-            <div
-              v-for="driver in filteredDrivers"
-              :key="driver.code"
-              class="freq-bonus-item"
-            >
-              <div
-                class="freq-avatar"
-                :style="{ backgroundColor: driverAvatarColor(driver.code) }"
-              >{{ driver.code }}</div>
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">{{ driver.name }}</p>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400">
-                  {{ driver.trips }} {{ t('driver_freq.trips_unit') }} · {{ driver.hours }}{{ t('driver_freq.hours_unit') }}
-                  <span v-if="driver.avgTripsPerMonth"> · TB {{ driver.avgTripsPerMonth }}/tháng</span>
-                </p>
-              </div>
-              <div class="flex flex-col items-end gap-0.5">
-                <span class="freq-bonus-pill text-[11px]" :class="bonusDisplayClass(driver)">{{ displayBonusLabel(driver) }}</span>
-                <span class="text-xs font-bold tabular-nums" :class="kpiBadgeClass(driver.kpi)">{{ driver.kpi }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="freq-chart-card">
           <p class="freq-chart-title">{{ t('driver_freq.chart_quarterly') }}</p>
           <DashboardEChart
@@ -362,11 +317,6 @@ const DRIVER_BAR_COLORS = [
 
 const VEHICLE_BAR_COLORS = ['#1b3a5c', '#1e4d8c', '#225499', '#b8860b', '#0f766e', '#6b21a8', '#94a3b8']
 
-const DRIVER_AVATAR_COLORS = [
-  '#9b0036', '#1b3a5c', '#0f766e', '#6b21a8',
-  '#0369a1', '#b45309', '#c41849', '#15803d', '#475569',
-]
-
 const TRIP_TYPE_LABELS = ['Điểm-điểm', 'Công tác', 'Đưa đón', 'Hàng hóa']
 const TRIP_TYPE_COLORS = ['#9b0036', '#1b3a5c', '#b8860b', '#0f766e']
 const TYPE_EXPORT_SHORT = ['CT', 'D2D', 'P2P', 'HH']
@@ -435,24 +385,6 @@ const activeFilterCount = computed(() => {
   return n
 })
 
-const filterSummaryLine = computed(() => {
-  const parts = [t('driver_freq.filter_year') + ' ' + filters.year]
-  if (filters.quarter) {
-    const qKey = `driver_freq.filter_quarter_${filters.quarter}`
-    parts.push(t(qKey))
-  }
-  if (filters.driverId) {
-    const d = filterOptions.value.drivers.find((x) => String(x.id) === String(filters.driverId))
-    if (d) parts.push(d.name)
-  }
-  if (filters.vehiclePlate) parts.push(filters.vehiclePlate)
-  if (filters.tripType) {
-    const tt = TRIP_TYPES.find((x) => x.value === filters.tripType)
-    if (tt) parts.push(tt.label)
-  }
-  return parts.join(' · ')
-})
-
 function resetFilters() {
   filters.quarter = ''
   filters.driverId = ''
@@ -469,17 +401,6 @@ function onTimeClass(pct) {
   if (pct >= 92) return 'text-emerald-600 dark:text-emerald-400'
   if (pct >= 86) return 'text-amber-600 dark:text-amber-400'
   return 'text-rose-600 dark:text-rose-400'
-}
-
-function displayBonusLabel(driver) {
-  if (driver.bonusLabel) return driver.bonusLabel
-  const tier = (driver.bonus || 'C').toLowerCase()
-  return t(`driver_freq.bonus_tier_${tier}`)
-}
-
-function bonusDisplayClass(driver) {
-  if (driver.bonusNote) return 'freq-bonus-pill--none'
-  return bonusTierClass(driver.bonus)
 }
 
 function buildApiParams() {
@@ -721,24 +642,6 @@ function rankBadgeClass(rank) {
   return 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
 }
 
-function kpiBadgeClass(score) {
-  if (score >= 88) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
-  if (score >= 70) return 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300'
-  if (score >= 55) return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
-  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-}
-
-function bonusTierClass(tier) {
-  if (tier === 'A') return 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
-  if (tier === 'B') return 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300'
-  return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-}
-
-function driverAvatarColor(code) {
-  const idx = driversList.value.findIndex((d) => d.code === code)
-  return idx >= 0 ? (DRIVER_AVATAR_COLORS[idx] ?? '#475569') : '#475569'
-}
-
 function toggleSelectedDriver(code) {
   selectedDriverCode.value = selectedDriverCode.value === code ? '' : code
 }
@@ -780,13 +683,7 @@ async function doExportPdf() {
 .freq-dash {
   --freq-va: #9a0036;
   --freq-header: #3a3a5c;
-  --freq-meta: #fdf2f5;
   @apply text-slate-900 dark:text-slate-100;
-}
-
-.freq-brand-mark {
-  @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold tracking-wide text-white shadow-md;
-  background: var(--freq-va);
 }
 
 .freq-btn {
@@ -825,12 +722,6 @@ async function doExportPdf() {
   @apply ml-auto rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200;
 }
 
-.freq-period-line {
-  @apply rounded-xl border px-3 py-2 text-xs font-medium text-[#7d0029] dark:border-rose-900/40 dark:text-rose-200/90;
-  border-color: rgb(249 201 216 / 0.9);
-  background: var(--freq-meta);
-}
-
 .freq-alert {
   @apply rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-100;
 }
@@ -840,18 +731,8 @@ async function doExportPdf() {
 }
 
 .freq-kpi {
-  @apply relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 pl-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/50;
+  @apply flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/50;
 }
-
-.freq-kpi::before {
-  content: '';
-  @apply absolute bottom-0 left-0 top-0 w-1 rounded-l-2xl;
-}
-
-.freq-kpi--va::before { background: var(--freq-va); }
-.freq-kpi--sky::before { @apply bg-sky-500; }
-.freq-kpi--amber::before { @apply bg-amber-500; }
-.freq-kpi--emerald::before { @apply bg-emerald-500; }
 
 .freq-kpi__label {
   @apply text-xs font-medium text-slate-500 dark:text-slate-400;
@@ -906,7 +787,6 @@ async function doExportPdf() {
 
 .freq-panel__head {
   @apply border-b border-slate-100 px-4 py-3 dark:border-slate-700;
-  border-left: 3px solid var(--freq-va);
 }
 
 .freq-panel__title {
@@ -969,32 +849,8 @@ async function doExportPdf() {
   @apply inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300;
 }
 
-.freq-kpi-pill {
-  @apply inline-flex min-w-[2rem] items-center justify-center rounded-full px-2 py-0.5 text-sm font-bold;
-}
-
-.freq-bonus-pill {
-  @apply rounded-full px-2 py-0.5 text-[11px] font-bold;
-}
-
-.freq-bonus-pill--none {
-  @apply bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200;
-}
-
 .freq-footnote {
   @apply border-t border-slate-100 px-4 py-2.5 text-[11px] italic text-slate-400 dark:border-slate-800 dark:text-slate-500;
-}
-
-.freq-bonus-list {
-  @apply divide-y divide-slate-100 dark:divide-slate-700;
-}
-
-.freq-bonus-item {
-  @apply flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40;
-}
-
-.freq-avatar {
-  @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white shadow-sm;
 }
 </style>
 
