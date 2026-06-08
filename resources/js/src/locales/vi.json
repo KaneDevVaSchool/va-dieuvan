@@ -903,6 +903,57 @@
         "pdf_locked_tooltip": "PDF chỉ tải được sau khi yêu cầu được duyệt.",
         "pdf_export_loading": "Đang xuất…",
         "pdf_download_fail": "Không tải được PDF.",
+        "detail_hero": {
+            "created": "Tạo lúc",
+            "print": "In phiếu",
+            "follow": "Theo dõi",
+            "contact_dispatch": "Liên hệ điều vận",
+            "contact_short": "Liên hệ"
+        },
+        "detail_journey": {
+            "open_maps": "Mở bản đồ"
+        },
+        "action_center": {
+            "aria": "Trung tâm hành động",
+            "waiting_label": "Đang chờ",
+            "due_label": "Hạn xử lý / khởi hành",
+            "sla_label": "Thời gian còn lại",
+            "next_label": "Việc tiếp theo",
+            "waiting_dispatch": "Bộ phận điều vận",
+            "waiting_dept_head": "Trưởng đơn vị",
+            "waiting_driver": "Tài xế / vận hành chuyến",
+            "waiting_requester": "Người đề nghị (hoàn thiện phiếu)",
+            "waiting_none": "Không còn bước chờ",
+            "waiting_person": "{name}",
+            "sla_hours": "Còn {hours} giờ đến giờ đi",
+            "sla_under_hour": "Dưới 1 giờ đến giờ đi",
+            "sla_departed": "Đã qua giờ khởi hành",
+            "priority_normal": "Thường"
+        },
+        "info_cards": {
+            "trip_title": "Thông tin chuyến xe",
+            "depart_date": "Ngày đi",
+            "depart_time": "Giờ đi",
+            "requester_title": "Người đề nghị",
+            "full_name": "Họ tên",
+            "unit": "Đơn vị",
+            "contact": "Liên hệ",
+            "dispatch_title": "Thông tin điều vận",
+            "driver": "Tài xế",
+            "vehicle": "Xe",
+            "plate": "Biển số",
+            "trip_status": "Trạng thái chuyến",
+            "unassigned": "Chưa phân công",
+            "history_title": "Lịch sử xử lý",
+            "history_empty": "Chưa có mốc hoàn thành."
+        },
+        "timeline_actor": {
+            "requester": "Người đề nghị",
+            "dispatch_team": "Điều vận",
+            "dept_head": "Trưởng đơn vị",
+            "approver": "Người duyệt",
+            "driver": "Tài xế"
+        },
         "timeline_heading": "Tiến trình xử lý",
         "detail_tablist_aria": "Nội dung chi tiết yêu cầu",
         "detail_tab_form": "Phiếu BM.03",

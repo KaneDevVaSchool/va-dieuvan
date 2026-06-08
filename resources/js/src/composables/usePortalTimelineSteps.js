@@ -101,7 +101,11 @@ export function usePortalTimelineSteps(reqRef, t) {
       if (st === 'draft') for (let i = 1; i < steps.length; i++) steps[i].state = 'upcoming'
       if (st === 'cancelled') for (let i = 2; i < steps.length; i++) steps[i].state = 'upcoming'
 
-      return steps.map((s) => ({ ...s, label: t(s.labelKey) }))
+      return enrichPortalTimelineSteps(
+        steps.map((s) => ({ ...s, label: t(s.labelKey) })),
+        r,
+        t,
+      )
     }
 
     const steps = [
@@ -171,6 +175,43 @@ export function usePortalTimelineSteps(reqRef, t) {
     if (st === 'draft') for (let i = 1; i < steps.length; i++) steps[i].state = 'upcoming'
     if (st === 'cancelled') for (let i = 3; i < steps.length; i++) steps[i].state = 'upcoming'
 
-    return steps.map((s) => ({ ...s, label: t(s.labelKey) }))
+    return enrichPortalTimelineSteps(
+      steps.map((s) => ({ ...s, label: t(s.labelKey) })),
+      r,
+      t,
+    )
   })
+}
+
+function personName(user) {
+  if (!user) return ''
+  const n = user.name || user.full_name
+  return typeof n === 'string' ? n.trim() : ''
+}
+
+function enrichPortalTimelineSteps(steps, r, t) {
+  const requester = personName(r.requester) || (r.requester_name || '').trim()
+  const approver = personName(r.approver)
+  const priceFiller = personName(r.price_filled_by_user) || personName(r.price_filler)
+  const deptHead = personName(r.assigned_dept_head)
+  const dispatcher = personName(r.trip?.dispatcher)
+  const driver =
+    personName(r.trip?.driver) ||
+    (r.trip?.external_driver_ref ? String(r.trip.external_driver_ref).trim() : '')
+
+  const actorByKey = {
+    created: requester || t('portal.timeline_actor.requester'),
+    pending: t('portal.timeline_actor.dispatch_team'),
+    price_pending: t('portal.timeline_actor.dispatch_team'),
+    dept_pending: deptHead || t('portal.timeline_actor.dept_head'),
+    approved: approver || t('portal.timeline_actor.approver'),
+    dispatch: dispatcher || t('portal.timeline_actor.dispatch_team'),
+    running: driver || t('portal.timeline_actor.driver'),
+    done: '',
+  }
+
+  return steps.map((s) => ({
+    ...s,
+    actor: actorByKey[s.key] || '',
+  }))
 }

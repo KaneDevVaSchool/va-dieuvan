@@ -1,6 +1,6 @@
 <template>
   <div
-    class="portal-request-detail mx-auto max-w-7xl px-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 xs:px-4 sm:px-6 sm:pt-6 lg:pb-24"
+    class="portal-request-detail mx-auto max-w-7xl px-3 pb-[max(5.5rem,env(safe-area-inset-bottom))] pt-4 xs:px-4 sm:px-6 sm:pt-6 lg:pb-8"
   >
     <PortalSuccessCard
       v-if="welcomeOpen"
@@ -27,7 +27,7 @@
 
     <div
       v-else-if="detailError"
-      class="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50 to-white px-4 py-5 text-sm text-rose-900 shadow-sm sm:px-6"
+      class="rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-5 text-sm text-rose-900 sm:px-6"
     >
       <p class="font-medium">{{ detailError }}</p>
       <RouterLink
@@ -39,103 +39,49 @@
     </div>
 
     <template v-else-if="req">
-      <!-- Hero -->
-      <section
-        class="overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-va-50/50 via-white to-slate-50/80 shadow-sm ring-1 ring-slate-900/5"
-      >
-        <div class="p-4 sm:p-6">
-          <div class="flex min-w-0 items-start gap-3">
-            <RouterLink
-              :to="{ name: portalRoutes.list }"
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm transition hover:border-va-200 hover:bg-white hover:text-va-800 active:scale-[0.97]"
-              :aria-label="t('portal.back_list')"
-            >
-              <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
-            </RouterLink>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <h1 class="font-mono text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-                  #{{ req.id }}
-                </h1>
-                <button
-                  type="button"
-                  class="inline-flex min-h-[32px] items-center gap-1 rounded-lg border border-slate-200/80 bg-white/80 px-2.5 text-xs font-semibold text-slate-600 transition hover:border-va-200 hover:text-va-800"
-                  @click="copyRequestId"
-                >
-                  <ClipboardDocumentIcon class="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {{ copyIdFeedback ? t('portal.copied') : t('portal.copy_id') }}
-                </button>
-              </div>
-              <div class="mt-2 flex flex-wrap items-center gap-2">
-                <StatusBadge :status="req.status" />
-                <span
-                  v-if="req.dispatch_request_template_id"
-                  class="inline-flex items-center rounded-full bg-sky-100/90 px-2.5 py-0.5 text-xs font-semibold text-sky-900"
-                >
-                  {{ t('request_detail.badge_recurring') }}
-                </span>
-                <span
-                  v-if="req.is_urgent"
-                  class="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800"
-                >
-                  <BoltIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                  {{ t('portal.badge_urgent') }}
-                </span>
-              </div>
-            </div>
-          </div>
+      <div class="space-y-4">
+        <PortalRequestHeroCard
+          :req="req"
+          :back-route="portalRoutes.list"
+          :priority-label="actionCenter.priorityLabel"
+          :priority-tone="actionCenter.priorityTone"
+          :copy-id-feedback="copyIdFeedback"
+          :polling-refreshing="pollingRefreshing"
+          :can-print="canPrintRequest"
+          :contact-href="dispatchContactHref"
+          @copy-id="copyRequestId"
+          @print="onPrintRequest"
+          @follow="onFollowRequest"
+        />
 
-          <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-stretch sm:gap-4">
-            <div
-              class="flex min-h-[4.5rem] flex-col justify-center rounded-2xl border border-white/90 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-sm"
-            >
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.origin') }}</p>
-              <p class="mt-1 text-sm font-semibold leading-snug text-slate-900">{{ originText }}</p>
-            </div>
-            <div class="hidden items-center justify-center sm:flex" aria-hidden="true">
-              <ArrowLongRightIcon class="h-6 w-6 text-va-800/50" />
-            </div>
-            <div
-              class="flex min-h-[4.5rem] flex-col justify-center rounded-2xl border border-white/90 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-sm"
-            >
-              <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{{ t('portal.destination') }}</p>
-              <p class="mt-1 text-sm font-semibold leading-snug text-slate-900">{{ destinationText }}</p>
-            </div>
-          </div>
+        <PortalRequestJourneyCard
+          :origin="originText"
+          :destination="destinationText"
+          :depart-at="departFmt"
+          :trip-type-label="tripTypeLabel"
+        />
 
-          <div class="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-            <span
-              v-if="departFmt"
-              class="inline-flex min-h-[32px] items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 font-medium ring-1 ring-slate-200/80"
-            >
-              <CalendarDaysIcon class="h-4 w-4 shrink-0 text-va-800" aria-hidden="true" />
-              {{ departFmt }}
-            </span>
-            <span
-              v-if="tripTypeLabel"
-              class="inline-flex min-h-[32px] items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 font-medium ring-1 ring-slate-200/80"
-            >
-              <TruckIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-              {{ tripTypeLabel }}
-            </span>
-            <span
-              v-if="pollingRefreshing"
-              class="inline-flex min-h-[32px] items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 font-semibold text-teal-800"
-            >
-              <span class="h-2 w-2 animate-pulse rounded-full bg-teal-600" aria-hidden="true" />
-              {{ t('portal.auto_refresh_indicator') }}
-            </span>
-          </div>
-        </div>
-      </section>
+        <PortalRequestActionCenter
+          :waiting-on-label="actionCenter.waitingOnLabel"
+          :due-label="actionCenter.dueLabel"
+          :sla-label="actionCenter.slaLabel"
+          :next-action-text="actionCenter.nextActionText"
+          :hours-until-depart="actionCenter.hoursUntilDepart"
+          :urgent-threshold-hours="req.threshold_hours ?? 24"
+        />
+      </div>
 
-      <div
-        class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_min(100%,19rem)] lg:items-start xl:grid-cols-[minmax(0,1fr)_22rem] xl:gap-8"
-      >
-        <div class="min-w-0 space-y-6 lg:order-1">
+      <div class="mt-4 grid gap-4 lg:grid-cols-12 lg:items-start lg:gap-6">
+        <div class="min-w-0 space-y-4 lg:col-span-8">
+          <div id="portal-request-timeline">
+            <PortalStatusTimeline
+              :title="t('portal.timeline_heading')"
+              :steps="timelineSteps"
+            />
+          </div>
           <div
             v-if="req.status === 'rejected' && req.rejection_reason"
-            class="rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-50/90 to-white p-4 shadow-sm sm:p-5"
+            class="rounded-xl border border-rose-200 bg-rose-50/50 p-4 sm:p-5"
           >
             <div class="flex items-start gap-3">
               <XCircleIcon class="h-7 w-7 shrink-0 text-rose-600" aria-hidden="true" />
@@ -158,11 +104,11 @@
 
           <div
             v-if="detailTabs.length"
-            class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5"
+            class="overflow-hidden rounded-xl border border-slate-200 bg-white"
           >
             <nav
               v-if="detailTabs.length > 1"
-              class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 -mx-px flex gap-1 overflow-x-auto border-b border-slate-100 bg-slate-50/95 px-2 py-2 backdrop-blur-md sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-3 sm:py-2"
+              class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 -mx-px flex gap-1 overflow-x-auto border-b border-slate-100 bg-slate-50 px-2 py-2 sm:static sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-3 sm:py-2"
               role="tablist"
               :aria-label="t('portal.detail_tablist_aria')"
             >
@@ -315,46 +261,25 @@
           </div>
         </div>
 
-        <aside class="space-y-4 lg:order-2 lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+5rem)] lg:self-start">
-          <PortalStatusHint :req="req" />
-          <PortalStatusTimeline
-            :title="t('portal.timeline_heading')"
-            :steps="timelineSteps"
+        <aside class="lg:col-span-4 lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+4.5rem)] lg:self-start">
+          <PortalRequestInfoCards
+            :req="req"
+            :origin="originText"
+            :destination="destinationText"
+            :timeline-steps="timelineSteps"
+            :purpose="purposeLine"
+            :notes="notesLine"
           />
-          <section
-            class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/5 sm:p-5"
-          >
-            <h2 class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
-              {{ t('portal.detail_facts') }}
-            </h2>
-            <dl class="mt-4 space-y-3 text-sm">
-              <div v-if="requesterLine">
-                <dt class="text-xs font-medium text-slate-500">{{ t('portal.requester') }}</dt>
-                <dd class="mt-0.5 font-semibold text-slate-900">{{ requesterLine }}</dd>
-              </div>
-              <div v-if="passengerLine">
-                <dt class="text-xs font-medium text-slate-500">{{ t('portal.passenger_count') }}</dt>
-                <dd class="mt-0.5 font-semibold text-slate-900">{{ passengerLine }}</dd>
-              </div>
-              <div v-if="purposeLine">
-                <dt class="text-xs font-medium text-slate-500">{{ t('portal.purpose') }}</dt>
-                <dd class="mt-0.5 leading-relaxed text-slate-800">{{ purposeLine }}</dd>
-              </div>
-              <div v-if="notesLine">
-                <dt class="text-xs font-medium text-slate-500">{{ t('portal.notes') }}</dt>
-                <dd class="mt-0.5 line-clamp-4 leading-relaxed text-slate-700">{{ notesLine }}</dd>
-              </div>
-            </dl>
-          </section>
-          <p class="hidden text-center text-xs leading-relaxed text-slate-500 lg:block">
-            {{ t('portal.detail_help_footer') }}
-          </p>
         </aside>
       </div>
 
-      <p class="mt-8 text-center text-xs leading-relaxed text-slate-500 lg:hidden">
-        {{ t('portal.detail_help_footer') }}
-      </p>
+      <PortalRequestMobileActionBar
+        :copy-id-feedback="copyIdFeedback"
+        :can-print="canPrintRequest"
+        :contact-href="dispatchContactHref"
+        @copy-id="copyRequestId"
+        @print="onPrintRequest"
+      />
     </template>
   </div>
 </template>
@@ -364,14 +289,9 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  ArrowLeftIcon,
-  ArrowLongRightIcon,
   ArrowTopRightOnSquareIcon,
-  BoltIcon,
-  CalendarDaysIcon,
   ClipboardDocumentIcon,
   DocumentArrowDownIcon,
-  TruckIcon,
   XCircleIcon,
 } from '@heroicons/vue/24/outline'
 import { saveAs } from 'file-saver'
@@ -394,10 +314,14 @@ import { useExtracurricularRequestRow } from '../../composables/useExtracurricul
 import { confirmAction } from '../../composables/useConfirm'
 import { usePortalTimelineSteps } from '../../composables/usePortalTimelineSteps.js'
 import { usePortalDetailPoll } from '../../composables/usePortalDetailPoll.js'
-import StatusBadge from '../../components/ui/StatusBadge.vue'
+import { usePortalRequestActionCenter } from '../../composables/usePortalRequestActionCenter.js'
 import PortalSuccessCard from '../../components/portal/PortalSuccessCard.vue'
 import PortalRequestDetailSkeleton from '../../components/portal/PortalRequestDetailSkeleton.vue'
-import PortalStatusHint from '../../components/portal/PortalStatusHint.vue'
+import PortalRequestHeroCard from '../../components/portal/PortalRequestHeroCard.vue'
+import PortalRequestJourneyCard from '../../components/portal/PortalRequestJourneyCard.vue'
+import PortalRequestActionCenter from '../../components/portal/PortalRequestActionCenter.vue'
+import PortalRequestInfoCards from '../../components/portal/PortalRequestInfoCards.vue'
+import PortalRequestMobileActionBar from '../../components/portal/PortalRequestMobileActionBar.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import {
@@ -445,6 +369,11 @@ let ocrPollTimer = null
 let copyRejectionTimer = null
 
 const timelineSteps = usePortalTimelineSteps(req, t)
+const actionCenter = usePortalRequestActionCenter(req, t)
+
+const dispatchContactHref = 'mailto:dieuhanh@vaschools.edu.vn'
+
+const canPrintRequest = computed(() => req.value?.status === 'approved')
 
 const PORTAL_DETAIL_TAB_IDS = ['form', 'manage', 'pdf', 'docs']
 const activeTab = ref('form')
@@ -637,23 +566,29 @@ const destinationText = computed(() => {
   return d || '—'
 })
 
-const requesterLine = computed(() => {
-  const r = req.value
-  if (!r) return ''
-  return (r.requester_name || r.requester?.name || r.user?.name || '').trim()
-})
-
-const passengerLine = computed(() => {
-  const r = req.value
-  if (!r) return ''
-  const n = r.student_count_actual ?? r.passenger_count
-  if (n == null || n === '') return ''
-  return String(n)
-})
-
 const purposeLine = computed(() => (req.value?.purpose || '').trim())
 
 const notesLine = computed(() => (req.value?.notes || '').trim())
+
+function onFollowRequest() {
+  const el = document.getElementById('portal-request-timeline')
+  if (el?.scrollIntoView) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    return
+  }
+  router.push({ name: 'portalNotifications' }).catch(() => {})
+}
+
+async function onPrintRequest() {
+  if (req.value?.status === 'approved') {
+    if (!pdfBlobUrl.value) await loadPdfPreview()
+    if (pdfBlobUrl.value) {
+      openPdfInNewTab()
+      return
+    }
+  }
+  window.print()
+}
 
 async function copyRequestId() {
   const id = req.value?.id

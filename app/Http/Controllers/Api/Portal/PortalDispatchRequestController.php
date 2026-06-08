@@ -174,7 +174,12 @@ class PortalDispatchRequestController extends Controller
         $dispatchRequest->load([
             'requester:id,name,email,phone,department_id',
             'requester.department:id,name',
-            'trip',
+            'assignedDeptHead:id,name',
+            'approver:id,name',
+            'priceFiller:id,name',
+            'trip.driver:id,full_name,phone',
+            'trip.vehicle:id,license_plate,name',
+            'trip.dispatcher:id,name',
             'dispatchRequestTemplate.dispatchPackage',
             'attachments' => fn ($q) => $q->orderByDesc('id'),
             'currentSignedVersion.attachment',

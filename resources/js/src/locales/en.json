@@ -854,6 +854,57 @@
         "pdf_locked_tooltip": "PDF is available only after approval.",
         "pdf_export_loading": "Exporting…",
         "pdf_download_fail": "Could not download PDF.",
+        "detail_hero": {
+            "created": "Created",
+            "print": "Print",
+            "follow": "Follow",
+            "contact_dispatch": "Contact dispatch",
+            "contact_short": "Contact"
+        },
+        "detail_journey": {
+            "open_maps": "Open map"
+        },
+        "action_center": {
+            "aria": "Action center",
+            "waiting_label": "Waiting on",
+            "due_label": "Due / departure",
+            "sla_label": "Time remaining",
+            "next_label": "Next step",
+            "waiting_dispatch": "Dispatch team",
+            "waiting_dept_head": "Department head",
+            "waiting_driver": "Driver / trip ops",
+            "waiting_requester": "Requester (complete form)",
+            "waiting_none": "No pending step",
+            "waiting_person": "{name}",
+            "sla_hours": "{hours}h until departure",
+            "sla_under_hour": "Under 1h until departure",
+            "sla_departed": "Departure time passed",
+            "priority_normal": "Normal"
+        },
+        "info_cards": {
+            "trip_title": "Trip",
+            "depart_date": "Date",
+            "depart_time": "Time",
+            "requester_title": "Requester",
+            "full_name": "Name",
+            "unit": "Unit",
+            "contact": "Contact",
+            "dispatch_title": "Dispatch assignment",
+            "driver": "Driver",
+            "vehicle": "Vehicle",
+            "plate": "Plate",
+            "trip_status": "Trip status",
+            "unassigned": "Not assigned",
+            "history_title": "Activity",
+            "history_empty": "No completed milestones yet."
+        },
+        "timeline_actor": {
+            "requester": "Requester",
+            "dispatch_team": "Dispatch",
+            "dept_head": "Dept. head",
+            "approver": "Approver",
+            "driver": "Driver"
+        },
         "timeline_heading": "Progress",
         "detail_tablist_aria": "Request detail sections",
         "detail_tab_form": "Form BM.03",
