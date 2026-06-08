@@ -3,9 +3,14 @@
     class="mb-0"
   >
     <div
-      class="flex items-center justify-between gap-2 rounded-t-2xl border-b border-slate-200/70 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900/40"
+      class="flex flex-wrap items-center gap-2 rounded-t-2xl bg-slate-50 px-3 py-2.5 dark:bg-slate-900/40"
+      :class="
+        inlineNativeSelect && showNativeSelect
+          ? ''
+          : 'border-b border-slate-200/70 dark:border-slate-800'
+      "
     >
-      <div class="flex min-w-0 flex-1 items-center gap-2.5">
+      <div class="flex min-w-0 shrink-0 items-center gap-2">
         <div
           v-if="icon"
           class="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800/90 dark:text-slate-400"
@@ -15,26 +20,53 @@
         <div class="min-w-0">
           <div class="text-[12px] font-semibold tracking-tight text-slate-800 dark:text-slate-100">{{ title }}</div>
           <p
-            v-if="subtitle"
+            v-if="subtitle && !(inlineNativeSelect && showNativeSelect)"
             class="mt-0.5 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
           >
             {{ subtitle }}
           </p>
         </div>
       </div>
+      <div
+        v-if="inlineNativeSelect && showNativeSelect && !isLoading"
+        class="min-w-[10rem] flex-1 basis-full sm:basis-auto"
+      >
+        <label class="sr-only" :for="nativeSelectId">{{ nativeSelectAriaLabel }}</label>
+        <select
+          :id="nativeSelectId"
+          class="w-full appearance-none rounded-xl border border-transparent bg-slate-100/90 py-2 pl-3 pr-8 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:border-slate-300 focus:bg-white focus:shadow-md disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:border-slate-600 dark:focus:bg-slate-900 dark:focus:shadow-black/35"
+          :disabled="disabled"
+          :value="nativeBoundId"
+          :aria-label="nativeSelectAriaLabel"
+          @change="onNativeSelectChange"
+        >
+          <option value="">{{ effectiveNativePlaceholder }}</option>
+          <option
+            v-for="opt in options"
+            :key="opt.id"
+            :value="String(opt.id)"
+            :disabled="opt.available === false"
+          >
+            {{ nativeOptionLine(opt) }}
+          </option>
+        </select>
+      </div>
       <span
         v-if="modelValue.length > 0"
-        class="shrink-0 rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-600 dark:bg-slate-700/80 dark:text-slate-300"
+        class="ml-auto shrink-0 rounded-full bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-600 dark:bg-slate-700/80 dark:text-slate-300"
       >
         {{ modelValue.length }}
       </span>
     </div>
 
-    <div class="space-y-2 rounded-b-2xl bg-white px-3 pb-2.5 pt-2 dark:bg-slate-950/30">
+    <div
+      class="space-y-2 rounded-b-2xl bg-white px-3 pb-2.5 dark:bg-slate-950/30"
+      :class="inlineNativeSelect && showNativeSelect ? 'pt-1.5' : 'pt-2'"
+    >
       <slot v-if="bodySlotBeforeNative" name="body-before-search" />
 
       <div
-        v-if="showNativeSelect && !isLoading"
+        v-if="showNativeSelect && !inlineNativeSelect && !isLoading"
         class="space-y-2"
         :class="indentSearch ? 'ml-[38px]' : ''"
       >
@@ -188,6 +220,8 @@ const props = defineProps({
   showSupplementSeats: { type: Boolean, default: false },
   /** Hiển thị thẻ select đủ lựa chọn (phân bổ xe/tài xế nội bộ). */
   showNativeSelect: { type: Boolean, default: false },
+  /** Tiêu đề + select nội bộ trên cùng một hàng (panel điều chỉnh nguồn lực). */
+  inlineNativeSelect: { type: Boolean, default: false },
   nativeSelectPlaceholder: { type: String, default: '' },
   /** false: với select nội bộ, slot (vd. nút lịch tài xế) nằm dưới select */
   bodySlotBeforeNative: { type: Boolean, default: true },

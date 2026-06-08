@@ -40,6 +40,12 @@
 
       <div class="space-y-2.5 pt-0.5">
         <div
+          class="grid grid-cols-1 gap-2.5 lg:grid-cols-2"
+          :class="
+            hideInternalVehicleSection || hideInternalDriverSection ? 'lg:grid-cols-1' : ''
+          "
+        >
+        <div
           v-if="!hideInternalVehicleSection"
           class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900/50"
         >
@@ -49,6 +55,7 @@
             :is-loading="isLoading"
             :disabled="disabled"
             show-native-select
+            inline-native-select
             :native-select-placeholder="t('trip_detail.coordination.resource_native_pick_vehicle')"
             :title="t('trip_detail.coordination.resource_section_internal_title')"
             :subtitle="t('trip_detail.coordination.resource_section_internal_sub')"
@@ -69,6 +76,7 @@
             :disabled="disabled"
             :multiple="false"
             show-native-select
+            inline-native-select
             :native-select-placeholder="t('trip_detail.coordination.resource_native_pick_driver')"
             :body-slot-before-native="false"
             :title="t('trip_detail.coordination.resource_section_driver_title')"
@@ -96,6 +104,7 @@
             </template>
           </ResourceSection>
         </div>
+        </div>
 
         <template v-if="supplementBlockVisible">
           <div
@@ -108,7 +117,6 @@
               :options="taxiOptions"
               :is-loading="isLoading"
               :default-seat="4"
-              indent-body
               :disabled="disabled"
               :title="t('trip_detail.coordination.resource_section_taxi_title')"
               :subtitle="t('trip_detail.coordination.resource_section_taxi_sub')"
@@ -128,7 +136,6 @@
               :options="vendorOptions"
               :is-loading="isLoading"
               :default-seat="7"
-              indent-body
               :can-quick-create="canQuickCreateVendor"
               :disabled="disabled"
               :title="t('trip_detail.coordination.resource_section_vendor_title')"

@@ -51,32 +51,33 @@
       leave-to-class="opacity-0 -translate-y-0.5"
     >
       <div v-show="expanded" class="rounded-b-2xl bg-white px-3 pb-3 pt-2.5 dark:bg-slate-950/30">
-        <div v-if="kind === 'vendor'" class="space-y-2.5" :class="indentBody ? 'ml-[38px]' : ''">
-          <div>
-            <label
-              class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-              for="ncc-supplement-filter"
-            >
-              {{ nameFieldLabel }}
-            </label>
-            <input
-              id="ncc-supplement-filter"
-            v-model="vendorFilter"
-            type="search"
-            autocomplete="off"
-            class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
-            :placeholder="t('trip_detail.coordination.resource_section_vendor_filter_ph')"
-            :disabled="disabled"
-            />
-          </div>
-          <div>
-            <label
-              class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-              for="ncc-supplement-select"
-            >
-              {{ t('trip_detail.coordination.resource_section_vendor_title') }}
-            </label>
-            <select
+        <div v-if="kind === 'vendor'" class="space-y-1.5" :class="indentBody ? 'ml-[38px]' : ''">
+          <div class="flex flex-wrap items-end gap-2">
+            <div class="min-w-[7.5rem] flex-1 basis-[calc(50%-0.25rem)]">
+              <label
+                class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                for="ncc-supplement-filter"
+              >
+                {{ nameFieldLabel }}
+              </label>
+              <input
+                id="ncc-supplement-filter"
+                v-model="vendorFilter"
+                type="search"
+                autocomplete="off"
+                class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+                :placeholder="t('trip_detail.coordination.resource_section_vendor_filter_ph')"
+                :disabled="disabled"
+              />
+            </div>
+            <div class="min-w-[9rem] flex-[1.35] basis-[calc(50%-0.25rem)]">
+              <label
+                class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                for="ncc-supplement-select"
+              >
+                {{ t('trip_detail.coordination.resource_section_vendor_title') }}
+              </label>
+              <select
                 id="ncc-supplement-select"
                 v-model="selectedVendorId"
                 class="w-full appearance-none rounded-xl border border-transparent bg-slate-100/90 py-2 pl-3 pr-8 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:border-slate-300 focus:bg-white focus:shadow-md disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:border-slate-600 dark:focus:bg-slate-900 dark:focus:shadow-black/35"
@@ -92,9 +93,8 @@
                   {{ opt.label }}{{ opt.sublabel ? ` · ${opt.sublabel}` : '' }}
                 </option>
               </select>
-          </div>
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div>
+            </div>
+            <div class="w-[7.25rem] shrink-0 sm:w-32">
               <label
                 class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                 for="ncc-supplement-price"
@@ -111,17 +111,10 @@
                 :placeholder="t('trip_detail.coordination.supplement_vendor_price_ph')"
                 :disabled="disabled"
                 :aria-invalid="priceDraftInvalid"
-                @input="onVendorPriceDraftInput"
+                @input="onPriceDraftInput"
               />
-              <p
-                v-if="priceDraftInvalid"
-                class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
-                role="alert"
-              >
-                {{ t('trip_detail.coordination.supplement_price_invalid') }}
-              </p>
             </div>
-            <div>
+            <div class="w-14 shrink-0 sm:w-16">
               <label
                 class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                 for="ncc-supplement-seats"
@@ -135,138 +128,130 @@
                 min="1"
                 step="1"
                 inputmode="numeric"
-                class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
+                class="w-full rounded-xl bg-slate-100/90 px-2 py-1.5 text-center text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
                 :disabled="disabled"
                 :aria-invalid="seatsDraftInvalid"
               />
-              <p
-                v-if="seatsDraftInvalid"
-                class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
-                role="alert"
-              >
-                {{ t('trip_detail.coordination.supplement_seats_invalid') }}
-              </p>
             </div>
-          </div>
-          <div class="flex justify-end">
             <button
               type="button"
-              class="w-full rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/20 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto dark:shadow-[#8B1A1A]/25"
+              class="shrink-0 rounded-xl bg-[#8B1A1A] px-3 py-2 text-[12px] font-semibold text-white shadow-md shadow-[#8B1A1A]/20 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-40 dark:shadow-[#8B1A1A]/25"
               :disabled="disabled || !canAddSupplement"
               @click="onAdd"
             >
               {{ t('trip_detail.coordination.supplement_add_btn') }}
             </button>
           </div>
+          <p
+            v-if="priceDraftInvalid || seatsDraftInvalid"
+            class="text-[11px] font-medium text-rose-600 dark:text-rose-400"
+            role="alert"
+          >
+            <template v-if="priceDraftInvalid">{{ t('trip_detail.coordination.supplement_price_invalid') }}</template>
+            <template v-else-if="seatsDraftInvalid">{{ t('trip_detail.coordination.supplement_seats_invalid') }}</template>
+          </p>
         </div>
 
-        <div v-else class="space-y-2.5" :class="indentBody ? 'ml-[38px]' : ''">
-          <template v-if="taxiSelectOptions.length > 0">
-            <div>
+        <div v-else class="space-y-1.5" :class="indentBody ? 'ml-[38px]' : ''">
+          <div class="flex flex-wrap items-end gap-2">
+            <template v-if="taxiSelectOptions.length > 0">
+              <div class="min-w-[7rem] flex-1 basis-[calc(50%-0.25rem)]">
+                <label
+                  class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                  for="taxi-supplement-filter"
+                >
+                  {{ nameFieldLabel }}
+                </label>
+                <input
+                  id="taxi-supplement-filter"
+                  v-model="taxiFilter"
+                  type="search"
+                  autocomplete="off"
+                  class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+                  :placeholder="t('trip_detail.coordination.resource_section_taxi_filter_ph')"
+                  :disabled="disabled"
+                />
+              </div>
+              <div class="min-w-[9rem] flex-[1.35] basis-[calc(50%-0.25rem)]">
+                <label
+                  class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                  for="taxi-supplement-select"
+                >
+                  {{ t('trip_detail.coordination.resource_section_taxi_title') }}
+                </label>
+                <select
+                  id="taxi-supplement-select"
+                  v-model="selectedTaxiId"
+                  class="w-full appearance-none rounded-xl border border-transparent bg-slate-100/90 py-2 pl-3 pr-8 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:border-slate-300 focus:bg-white focus:shadow-md disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:border-slate-600 dark:focus:bg-slate-900 dark:focus:shadow-black/35"
+                  :disabled="disabled"
+                  :aria-label="nameFieldLabel"
+                >
+                  <option value="">{{ namePlaceholder }}</option>
+                  <option
+                    v-for="opt in filteredTaxiSelectOptions"
+                    :key="String(opt.id)"
+                    :value="String(opt.id)"
+                  >
+                    {{ opt.label }}{{ opt.sublabel ? ` · ${opt.sublabel}` : '' }}
+                  </option>
+                </select>
+              </div>
+            </template>
+            <div v-else class="min-w-[8rem] flex-1">
               <label
                 class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                for="taxi-supplement-filter"
+                for="taxi-supplement-name"
               >
                 {{ nameFieldLabel }}
               </label>
               <input
-                id="taxi-supplement-filter"
-                v-model="taxiFilter"
-                type="search"
-                autocomplete="off"
+                id="taxi-supplement-name"
+                v-model="nameDraft"
+                type="text"
                 class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
-                :placeholder="t('trip_detail.coordination.resource_section_taxi_filter_ph')"
+                :placeholder="namePlaceholder"
+                :disabled="disabled"
+                :aria-busy="disabled"
+                @keydown.enter.prevent="onAdd"
+              />
+            </div>
+            <div class="w-[5.5rem] shrink-0 sm:w-28">
+              <label
+                class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                for="taxi-supplement-plate"
+              >
+                {{ t('trip_detail.coordination.supplement_taxi_plate_aria') }}
+              </label>
+              <input
+                id="taxi-supplement-plate"
+                v-model="plateDraft"
+                type="text"
+                class="w-full rounded-xl bg-slate-100/90 px-2 py-1.5 text-[12px] font-normal uppercase tracking-wide text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+                :placeholder="t('trip_detail.coordination.supplement_taxi_plate_ph')"
                 :disabled="disabled"
               />
             </div>
-            <div>
+            <div class="w-[7.25rem] shrink-0 sm:w-32">
               <label
                 class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-                for="taxi-supplement-select"
+                for="taxi-supplement-price"
               >
-                {{ t('trip_detail.coordination.resource_section_taxi_title') }}
+                {{ t('trip_detail.coordination.supplement_taxi_price_aria') }}
               </label>
-              <select
-                id="taxi-supplement-select"
-                v-model="selectedTaxiId"
-                class="w-full appearance-none rounded-xl border border-transparent bg-slate-100/90 py-2 pl-3 pr-8 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:border-slate-300 focus:bg-white focus:shadow-md disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:border-slate-600 dark:focus:bg-slate-900 dark:focus:shadow-black/35"
+              <input
+                id="taxi-supplement-price"
+                :value="priceDraft"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
+                :placeholder="t('trip_detail.coordination.supplement_taxi_price_ph')"
                 :disabled="disabled"
-                :aria-label="nameFieldLabel"
-              >
-                <option value="">{{ namePlaceholder }}</option>
-                <option
-                  v-for="opt in filteredTaxiSelectOptions"
-                  :key="String(opt.id)"
-                  :value="String(opt.id)"
-                >
-                  {{ opt.label }}{{ opt.sublabel ? ` · ${opt.sublabel}` : '' }}
-                </option>
-              </select>
+                :aria-invalid="priceDraftInvalid"
+                @input="onPriceDraftInput"
+              />
             </div>
-          </template>
-          <div v-else>
-            <label
-              class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-              for="taxi-supplement-name"
-            >
-              {{ nameFieldLabel }}
-            </label>
-            <input
-              id="taxi-supplement-name"
-              v-model="nameDraft"
-              type="text"
-              class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
-              :placeholder="namePlaceholder"
-              :disabled="disabled"
-              :aria-busy="disabled"
-              @keydown.enter.prevent="onAdd"
-            />
-          </div>
-          <div>
-            <label
-              class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-              for="taxi-supplement-plate"
-            >
-              {{ t('trip_detail.coordination.supplement_taxi_plate_aria') }}
-            </label>
-            <input
-              id="taxi-supplement-plate"
-              v-model="plateDraft"
-              type="text"
-              class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal uppercase tracking-wide text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
-              :placeholder="t('trip_detail.coordination.supplement_taxi_plate_ph')"
-              :disabled="disabled"
-            />
-          </div>
-          <div>
-            <label
-              class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-              for="taxi-supplement-price"
-            >
-              {{ t('trip_detail.coordination.supplement_taxi_price_aria') }}
-            </label>
-            <input
-              id="taxi-supplement-price"
-              v-model="priceDraft"
-              type="number"
-              min="0"
-              step="1000"
-              inputmode="decimal"
-              class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none placeholder:text-slate-400 focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
-              :placeholder="t('trip_detail.coordination.supplement_taxi_price_ph')"
-              :disabled="disabled"
-              :aria-invalid="priceDraftInvalid"
-            />
-            <p
-              v-if="priceDraftInvalid"
-              class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
-              role="alert"
-            >
-              {{ t('trip_detail.coordination.supplement_price_invalid') }}
-            </p>
-          </div>
-          <div class="flex flex-wrap items-end gap-2">
-            <div class="min-w-[5rem] flex-1">
+            <div class="w-14 shrink-0 sm:w-16">
               <label
                 class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                 for="taxi-supplement-seats"
@@ -280,17 +265,10 @@
                 min="1"
                 step="1"
                 inputmode="numeric"
-                class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
+                class="w-full rounded-xl bg-slate-100/90 px-2 py-1.5 text-center text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50 dark:focus:bg-slate-900"
                 :disabled="disabled"
                 :aria-invalid="seatsDraftInvalid"
               />
-              <p
-                v-if="seatsDraftInvalid"
-                class="mt-1 text-[11px] font-medium text-rose-600 dark:text-rose-400"
-                role="alert"
-              >
-                {{ t('trip_detail.coordination.supplement_seats_invalid') }}
-              </p>
             </div>
             <button
               type="button"
@@ -301,6 +279,14 @@
               {{ t('trip_detail.coordination.supplement_add_btn') }}
             </button>
           </div>
+          <p
+            v-if="priceDraftInvalid || seatsDraftInvalid"
+            class="text-[11px] font-medium text-rose-600 dark:text-rose-400"
+            role="alert"
+          >
+            <template v-if="priceDraftInvalid">{{ t('trip_detail.coordination.supplement_price_invalid') }}</template>
+            <template v-else-if="seatsDraftInvalid">{{ t('trip_detail.coordination.supplement_seats_invalid') }}</template>
+          </p>
         </div>
 
         <div v-if="isLoading" class="mt-2 h-8 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800/70" />
@@ -338,9 +324,9 @@
             </div>
             <div
               v-if="kind === 'taxi'"
-              class="space-y-2 rounded-xl bg-slate-50/80 px-2.5 py-2.5 shadow-inner shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/20"
+              class="flex flex-wrap items-end gap-2 rounded-xl bg-slate-50/80 px-2.5 py-2.5 shadow-inner shadow-slate-900/5 dark:bg-slate-900/35 dark:shadow-black/20"
             >
-              <div>
+              <div class="min-w-[5.5rem] flex-1 sm:max-w-[8rem]">
                 <label
                   class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   :for="`taxi-item-plate-${idx}`"
@@ -357,7 +343,7 @@
                   @input="onExternalVehicleInput(idx, $event)"
                 />
               </div>
-              <div>
+              <div class="min-w-[7rem] flex-1 sm:max-w-[10rem]">
                 <label
                   class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   :for="`taxi-item-price-${idx}`"
@@ -366,20 +352,19 @@
                 </label>
                 <input
                   :id="`taxi-item-price-${idx}`"
-                  :value="servicePriceDisplay(item)"
-                  type="number"
-                  min="0"
-                  step="1000"
-                  inputmode="decimal"
+                  :value="servicePriceDisplayVnd(item)"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
                   class="w-full rounded-xl bg-white/70 px-2.5 py-1.5 text-[13px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/10 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
                   :placeholder="t('trip_detail.coordination.supplement_taxi_price_ph')"
                   :disabled="disabled"
-                  @input="onServicePriceInput(idx, $event)"
+                  @input="onItemPriceInput(idx, $event)"
                 />
               </div>
             </div>
             <div v-if="kind === 'vendor'" class="space-y-2">
-              <div>
+              <div class="max-w-[12rem]">
                 <label
                   class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                   :for="`ncc-item-price-${idx}`"
@@ -388,14 +373,14 @@
                 </label>
                 <input
                   :id="`ncc-item-price-${idx}`"
-                  :value="servicePriceDisplayVendor(item)"
+                  :value="servicePriceDisplayVnd(item)"
                   type="text"
                   inputmode="numeric"
                   autocomplete="off"
                   class="w-full rounded-xl bg-slate-100/90 px-2.5 py-1.5 text-[12px] font-normal tabular-nums text-slate-800 shadow-inner shadow-slate-900/5 outline-none focus:bg-white focus:shadow-md disabled:opacity-55 dark:bg-slate-800/85 dark:text-slate-50"
                   :placeholder="t('trip_detail.coordination.supplement_vendor_price_ph')"
                   :disabled="disabled"
-                  @input="onVendorItemPriceInput(idx, $event)"
+                  @input="onItemPriceInput(idx, $event)"
                 />
               </div>
               <div
@@ -654,24 +639,12 @@ function onContactNotesInput(idx: number, e: Event) {
   patchItem(idx, 'contactNotes', el.value)
 }
 
-function onVendorPriceDraftInput(e: Event) {
+function onPriceDraftInput(e: Event) {
   const el = e.target as HTMLInputElement
   priceDraft.value = formatVndWhileTyping(el.value)
 }
 
-function onServicePriceInput(idx: number, e: Event) {
-  const el = e.target as HTMLInputElement
-  const raw = el.value.trim()
-  if (!raw) {
-    patchItem(idx, 'servicePrice', null)
-    return
-  }
-  const n = Number(raw)
-  if (!Number.isFinite(n) || n < 0) return
-  patchItem(idx, 'servicePrice', n)
-}
-
-function onVendorItemPriceInput(idx: number, e: Event) {
+function onItemPriceInput(idx: number, e: Event) {
   const el = e.target as HTMLInputElement
   const formatted = formatVndWhileTyping(el.value)
   el.value = formatted
@@ -684,13 +657,7 @@ function onVendorItemPriceInput(idx: number, e: Event) {
   patchItem(idx, 'servicePrice', Math.floor(n))
 }
 
-function servicePriceDisplay(item: ResourceItem) {
-  const n = Number(item.servicePrice)
-  if (!Number.isFinite(n) || n < 0) return ''
-  return String(n)
-}
-
-function servicePriceDisplayVendor(item: ResourceItem) {
+function servicePriceDisplayVnd(item: ResourceItem) {
   const n = Number(item.servicePrice)
   if (!Number.isFinite(n) || n < 0) return ''
   return formatVndWhileTyping(String(Math.floor(n)))
@@ -736,16 +703,11 @@ function parseSeats(): number | null {
 function parseServicePrice(): number | null {
   const raw = String(priceDraft.value).trim()
   if (!raw) return null
-  if (props.kind === 'vendor') {
-    const digits = raw.replace(/\D/g, '')
-    if (!digits) return null
-    const n = parseMoneyVnd(raw)
-    if (!Number.isFinite(n) || n < 0) return null
-    return Math.floor(n)
-  }
-  const n = Number(raw)
+  const digits = raw.replace(/\D/g, '')
+  if (!digits) return null
+  const n = parseMoneyVnd(raw)
   if (!Number.isFinite(n) || n < 0) return null
-  return n
+  return Math.floor(n)
 }
 
 function tryResolveOption(name: string): ResourceItem | null {
