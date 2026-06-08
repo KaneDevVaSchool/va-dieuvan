@@ -1,25 +1,24 @@
 <template>
-  <div
-    :class="[
-      'flex min-h-0 flex-col bg-slate-50',
-      isDeptRequestDetailRoute ? 'min-w-0 flex-1 overflow-hidden' : 'w-full',
-    ]"
-  >
+  <div class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
     <div v-if="loading" class="flex flex-1 items-center justify-center px-4 py-12 text-sm text-slate-500">
       {{ t('request_detail.page_loading') }}
     </div>
 
     <template v-else-if="req">
-      <RequestDetailTopBar
-        :back-to="isDeptRequestDetailRoute ? { name: 'deptDashboard' } : '/requests'"
-        :back-aria-label="isDeptRequestDetailRoute ? t('dept.aria_back_pending') : t('request_detail.aria_back_list')"
-        :title="requestRefCode"
-        :status="req.status"
-        :recurring="showRecurringBadge"
-        :inline-alert="
-          msg && req.status === 'pending' && canApprove && req.trip_type === 'door_to_door' ? msg : ''
-        "
+      <div
+        class="sticky top-0 z-40 shrink-0 border-b border-slate-200 bg-white shadow-sm supports-[top:env(safe-area-inset-top)]:top-[env(safe-area-inset-top)]"
       >
+        <RequestDetailTopBar
+          embedded
+          :back-to="isDeptRequestDetailRoute ? { name: 'deptDashboard' } : '/requests'"
+          :back-aria-label="isDeptRequestDetailRoute ? t('dept.aria_back_pending') : t('request_detail.aria_back_list')"
+          :title="requestRefCode"
+          :status="req.status"
+          :recurring="showRecurringBadge"
+          :inline-alert="
+            msg && req.status === 'pending' && canApprove && req.trip_type === 'door_to_door' ? msg : ''
+          "
+        >
         <template #meta>
           {{ t('request_detail.meta_created', { dt: fmt(req.created_at) }) }}
           <template v-if="req.trip">
@@ -72,7 +71,16 @@
             </Button>
           </div>
         </template>
-      </RequestDetailTopBar>
+        </RequestDetailTopBar>
+        <div class="mx-auto max-w-5xl px-4">
+          <RequestDetailSectionNav
+            nested
+            :items="sectionNavItems"
+            :active-id="activeTab"
+            @select="setActiveTab"
+          />
+        </div>
+      </div>
 
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         <div class="mx-auto max-w-5xl space-y-5 px-4 py-5 pb-10">
@@ -124,6 +132,7 @@
           />
 
           <RequestDetailOverviewPanel
+            v-if="!compactDispatcherForm"
             :avatar-url="req.requester?.avatar_url ?? ''"
             :initials="requesterInitials"
             :requester-name="req.requester?.name ?? '—'"
@@ -134,12 +143,6 @@
             :origin="req.origin || '—'"
             :destination="req.destination || '—'"
             :schedule-line="overviewScheduleLine"
-          />
-
-          <RequestDetailSectionNav
-            :items="sectionNavItems"
-            :active-id="activeTab"
-            @select="setActiveTab"
           />
 
           <RequestDetailSection
@@ -170,9 +173,38 @@
 
           <RequestDetailSection
             section-id="request-section-form"
-            :title="t('request_detail.tab_form')"
+            :title="compactDispatcherForm ? t('request_detail.fill_price_title') : t('request_detail.tab_form')"
+            :lead="compactDispatcherForm ? t('request_detail.fill_price_lead') : ''"
           >
             <div class="space-y-5">
+              <template v-if="compactDispatcherForm">
+                <RequestDetailOverviewPanel
+                  :avatar-url="req.requester?.avatar_url ?? ''"
+                  :initials="requesterInitials"
+                  :requester-name="req.requester?.name ?? '—'"
+                  :requester-subtitle="requesterAsideSubtitle"
+                  :requester-fields="requesterAsideFields"
+                  :trip-type-label="labelTripType(req.trip_type)"
+                  :load-line="passengerOrCargoLine"
+                  :origin="req.origin || '—'"
+                  :destination="req.destination || '—'"
+                  :schedule-line="overviewScheduleLine"
+                />
+                <section
+                  v-if="formContextRows.length"
+                  class="rounded-lg border border-slate-200 bg-white p-4 sm:p-5"
+                >
+                  <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {{ t('request_detail.form_context_heading') }}
+                  </h3>
+                  <dl class="mt-3 grid gap-3 sm:grid-cols-2">
+                    <div v-for="row in formContextRows" :key="row.key" class="min-w-0">
+                      <dt class="text-xs font-medium text-slate-500">{{ row.label }}</dt>
+                      <dd class="mt-0.5 whitespace-pre-wrap text-sm text-slate-900">{{ row.value }}</dd>
+                    </div>
+                  </dl>
+                </section>
+              </template>
               <DeptApprovalSection
                 v-if="showDeptDecisionSection"
                 id="request-focus-dept-decision"
@@ -189,6 +221,7 @@
               <RequestBm03FormTab
                 v-if="req"
                 :req="req"
+                :hide-proposal-form="compactDispatcherForm"
                 :fill-price-acting="fillPriceActing"
                 :fill-price-msg="fillPriceMsg"
                 :signed-paper-attachments="signedPaperAttachments"
@@ -553,6 +586,11 @@ const showDeptDecisionSection = computed(
     auth.hasPermission('request.approve_dept'),
 )
 
+/** Màn điều vận: tab xử lý giá — không hiển thị phiếu BM.03, chỉ thông tin + điền giá & trưởng ĐV. */
+const compactDispatcherForm = computed(
+  () => showFillPriceSection.value && !isDeptRequestDetailRoute.value,
+)
+
 const wizardPurpose = computed(() => {
   const p = req.value?.wizard_snapshot?.form?.purpose
   return p && String(p).trim() ? String(p).trim() : ''
@@ -744,12 +782,54 @@ const overviewScheduleLine = computed(() => {
 
 const routeSectionLead = computed(() => overviewScheduleLine.value)
 
+function nzFormText(v) {
+  const s = v == null ? '' : String(v).trim()
+  return s === '' ? '' : s
+}
+
+const formContextRows = computed(() => {
+  if (!compactDispatcherForm.value) return []
+  const form = req.value?.wizard_snapshot?.form ?? {}
+  const rows = []
+  const purpose = wizardPurpose.value
+  if (purpose) {
+    rows.push({ key: 'purpose', label: t('request_detail.lbl_purpose'), value: purpose })
+  }
+  const basis = nzFormText(form.basis_ref)
+  if (basis) {
+    rows.push({ key: 'basis', label: t('request_detail.attachment_kind_proposal_basis'), value: basis })
+  }
+  const dateNeeded = nzFormText(form.date_needed)
+  if (dateNeeded) {
+    rows.push({
+      key: 'date_needed',
+      label: t('request_detail.form_context_date_needed'),
+      value: fmtDateVi(dateNeeded),
+    })
+  }
+  const targets = Array.isArray(form.targets) ? form.targets.map((x) => String(x).trim()).filter(Boolean) : []
+  if (targets.length) {
+    rows.push({
+      key: 'targets',
+      label: t('request_detail.form_context_targets'),
+      value: targets.join(', '),
+    })
+  }
+  const coord = [nzFormText(form.coordinator_name), nzFormText(form.coordinator_phone)]
+    .filter(Boolean)
+    .join(' · ')
+  if (coord) {
+    rows.push({ key: 'coordinator', label: t('request_detail.form_context_coordinator'), value: coord })
+  }
+  return rows
+})
+
 const sectionNavItems = computed(() => {
   const items = [
     { id: 'route', label: t('request_detail.tab_route') },
     {
       id: 'form',
-      label: t('request_detail.tab_form'),
+      label: compactDispatcherForm.value ? t('request_detail.fill_price_title') : t('request_detail.tab_form'),
       badge: formTabActionCount.value > 0 ? formTabActionCount.value : null,
       dot: formTabActionCount.value === 0 && approvalTabNeedsFocus.value,
     },

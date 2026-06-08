@@ -1,6 +1,10 @@
 <template>
   <nav
-    class="sticky top-[calc(env(safe-area-inset-top,0px)+3.25rem)] z-20 -mx-4 border-y border-slate-200 bg-white/95 px-4 py-2 backdrop-blur-sm sm:top-14 sm:mx-0 sm:rounded-lg sm:border sm:shadow-sm"
+    :class="
+      nested
+        ? 'border-t border-slate-200 bg-white px-0 py-2'
+        : 'sticky top-[calc(env(safe-area-inset-top,0px)+3.25rem)] z-20 -mx-4 border-y border-slate-200 bg-white/95 px-4 py-2 backdrop-blur-sm sm:top-14 sm:mx-0 sm:rounded-lg sm:border sm:shadow-sm'
+    "
     role="tablist"
     :aria-label="t('request_detail.tablist_aria')"
   >
@@ -44,6 +48,8 @@ import { useI18n } from 'vue-i18n'
 defineProps({
   items: { type: Array, required: true },
   activeId: { type: String, required: true },
+  /** Gắn dưới top bar trong một khối sticky. */
+  nested: { type: Boolean, default: false },
 })
 
 defineEmits(['select'])

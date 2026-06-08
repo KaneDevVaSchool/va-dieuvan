@@ -1,7 +1,7 @@
 <template>
   <section
     :id="sectionId"
-    class="scroll-mt-36 rounded-lg border border-slate-200 bg-white"
+    class="scroll-mt-44 rounded-lg border border-slate-200 bg-white"
     :aria-labelledby="headingId"
   >
     <header class="border-b border-slate-100 px-4 py-3 sm:px-5">

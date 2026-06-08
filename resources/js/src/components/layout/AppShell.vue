@@ -10,12 +10,14 @@
     <main
       id="app-main-scroll"
       :class="[
-        'min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
+        'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hidden px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5 lg:px-8 lg:py-6',
         isHorizontalMobilePad,
       ]"
     >
       <OperationalStatusBanner class="print:hidden" />
-      <slot />
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+        <slot />
+      </div>
     </main>
     <!-- Menu dưới: chỉ layout ngang + viewport &lt; md -->
     <div

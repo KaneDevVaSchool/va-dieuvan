@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-5 pb-8">
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div class="flex flex-wrap items-start gap-4 border-b border-slate-200 bg-slate-50/80 px-4 py-4 sm:px-5">
+      <div
+        v-if="!hideProposalForm"
+        class="flex flex-wrap items-start gap-4 border-b border-slate-200 bg-slate-50/80 px-4 py-4 sm:px-5"
+      >
         <div class="min-w-0 flex-1 text-center sm:text-left">
           <h2 class="text-base font-bold uppercase tracking-tight text-slate-900 sm:text-lg">Đề Nghị Điều Vận</h2>
           <p class="mt-1 text-xs font-medium text-slate-600 sm:text-sm">{{ tripSubtitle }}</p>
@@ -27,8 +30,18 @@
           </div>
         </div>
       </div>
+      <div
+        v-else
+        class="border-b border-slate-200 bg-slate-50/80 px-4 py-4 sm:px-5"
+      >
+        <h2 class="text-base font-semibold text-slate-900">{{ t('request_detail.fill_price_table_heading') }}</h2>
+        <p class="mt-1 text-xs text-slate-600 sm:text-sm">
+          {{ tripTypeLabel }}<span v-if="req?.id"> · #{{ req.id }}</span>
+        </p>
+      </div>
 
       <div class="divide-y divide-slate-100 px-4 py-4 sm:px-5">
+        <template v-if="!hideProposalForm">
         <!-- A -->
         <div>
           <div class="flex items-center gap-2 rounded-t-lg bg-slate-50 px-3 py-2.5 sm:px-4">
@@ -124,10 +137,14 @@
             </div>
           </div>
         </div>
+        </template>
 
         <!-- E -->
-        <div class="pt-5">
-          <div class="flex flex-wrap items-end gap-2 rounded-t-lg bg-slate-50 px-3 py-2.5 sm:px-4">
+        <div :class="hideProposalForm ? '' : 'pt-5'">
+          <div
+            v-if="!hideProposalForm"
+            class="flex flex-wrap items-end gap-2 rounded-t-lg bg-slate-50 px-3 py-2.5 sm:px-4"
+          >
             <span class="inline-flex items-center justify-center rounded bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">E</span>
             <span class="text-xs font-bold uppercase tracking-wide text-slate-700">Nội dung đề nghị vận chuyển</span>
             <span class="text-[11px] font-semibold text-slate-500">{{ sectionESub }}</span>
@@ -568,7 +585,7 @@
         </div>
 
         <!-- F -->
-        <div class="pt-5">
+        <div v-if="!hideProposalForm" class="pt-5">
           <div class="flex items-center gap-2 rounded-t-lg bg-slate-50 px-3 py-2.5 sm:px-4">
             <span class="inline-flex items-center justify-center rounded bg-slate-800 px-2 py-0.5 text-xs font-bold text-white">F</span>
             <span class="text-xs font-bold uppercase tracking-wide text-slate-700">Phần xác nhận của các bên liên quan</span>
@@ -624,7 +641,7 @@
     />
 
     <div
-      v-if="!approvalTabNeedsFocus"
+      v-if="!approvalTabNeedsFocus && !hideProposalForm"
       class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500"
     >
       Không có hành động cần xử lý
@@ -661,6 +678,8 @@ const props = defineProps({
   },
   signedUploadErr: { type: String, default: '' },
   showFillPriceSection: { type: Boolean, default: false },
+  /** Ẩn phiếu BM.03 (A–D, F); giữ bảng chi phí + gán trưởng đơn vị. */
+  hideProposalForm: { type: Boolean, default: false },
   showSignedPaperSection: { type: Boolean, default: false },
   signedDocumentCurrent: { type: Object, default: null },
   approvalTabNeedsFocus: { type: Boolean, default: false },

@@ -1,5 +1,8 @@
 <template>
-  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white">
+  <header
+    class="bg-white"
+    :class="embedded ? '' : 'sticky top-0 z-30 border-b border-slate-200'"
+  >
     <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
       <div class="flex min-w-0 flex-1 items-center gap-3">
         <RouterLink
@@ -52,6 +55,8 @@ defineProps({
   status: { type: String, default: '' },
   recurring: { type: Boolean, default: false },
   inlineAlert: { type: String, default: '' },
+  /** Nằm trong khối sticky chung (không tự sticky riêng). */
+  embedded: { type: Boolean, default: false },
 })
 
 const { t } = useI18n()
