@@ -5,7 +5,7 @@
         <div class="min-w-0">
           <RouterLink
             :to="{ name: 'portalHome' }"
-            class="text-xs font-semibold text-indigo-600 underline-offset-2 hover:underline"
+            class="text-xs font-semibold text-va-800 underline-offset-2 hover:underline"
           >
             ← {{ t('portal.back_dashboard') }}
           </RouterLink>
@@ -18,7 +18,7 @@
         </div>
         <RouterLink
           :to="{ name: 'portalExtracurricularCreate' }"
-          class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 text-sm font-bold text-white shadow-md transition hover:bg-violet-700"
+          class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-va-800 px-6 text-sm font-bold text-white shadow-md transition hover:bg-va-900"
         >
           <PlusCircleIcon class="h-5 w-5" aria-hidden="true" />
           {{ t('portal.extracurricular_module.cta_create') }}
@@ -28,9 +28,9 @@
       <div class="mt-10 grid gap-4 sm:grid-cols-2">
         <RouterLink
           :to="{ name: 'portalExtracurricularList' }"
-          class="group flex min-h-[120px] flex-col justify-between rounded-3xl border border-violet-200/80 bg-gradient-to-br from-violet-50/90 via-white to-indigo-50/40 p-6 shadow-sm transition hover:border-violet-300 hover:shadow-md"
+          class="group flex min-h-[120px] flex-col justify-between rounded-3xl border border-va-200/80 bg-gradient-to-br from-va-50/90 via-white to-va-50/40 p-6 shadow-sm transition hover:border-va-300 hover:shadow-md"
         >
-          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-md shadow-violet-500/25">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-va-800 text-white shadow-md shadow-va-500/25">
             <ListBulletIcon class="h-6 w-6" aria-hidden="true" />
           </span>
           <span>
@@ -44,9 +44,9 @@
         </RouterLink>
         <RouterLink
           :to="{ name: 'portalExtracurricularCreate' }"
-          class="group flex min-h-[120px] flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-indigo-200 hover:shadow-md"
+          class="group flex min-h-[120px] flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-va-200 hover:shadow-md"
         >
-          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-va-800 text-white shadow-md">
             <PlusCircleIcon class="h-6 w-6" aria-hidden="true" />
           </span>
           <span>

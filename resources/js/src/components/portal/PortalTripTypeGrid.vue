@@ -13,7 +13,7 @@
         :key="tt"
         type="button"
         role="option"
-        class="relative flex min-h-[120px] flex-col items-center rounded-xl border-2 p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 xl:min-h-[124px]"
+        class="relative flex min-h-[120px] flex-col items-center rounded-xl border-2 p-4 text-center outline-none focus-visible:ring-2 focus-visible:ring-va-700 focus-visible:ring-offset-2 xl:min-h-[124px]"
         :class="tripType === tt ? styleFor(tt).selectedCard : styleFor(tt).idleCard"
         :aria-selected="tripType === tt"
         @click="$emit('select', tt)"
@@ -65,23 +65,23 @@ const cargoBadge = computed(() =>
 /** Khớp admin DispatchRequestCreateView — không hover idle */
 const TRIP_STYLE = {
   door_to_door: {
-    iconClass: 'text-violet-600',
-    selectedCard: 'border-indigo-400 bg-violet-50/90 shadow-sm ring-2 ring-indigo-500',
+    iconClass: 'text-va-800',
+    selectedCard: 'border-va-600 bg-va-50/90 shadow-sm ring-2 ring-va-700',
     idleCard: 'border-slate-200 bg-slate-50',
   },
   point_to_point: {
     iconClass: 'text-sky-600',
-    selectedCard: 'border-indigo-400 bg-sky-50/90 shadow-sm ring-2 ring-indigo-500',
+    selectedCard: 'border-va-600 bg-sky-50/90 shadow-sm ring-2 ring-va-700',
     idleCard: 'border-slate-200 bg-slate-50',
   },
   business: {
     iconClass: 'text-emerald-600',
-    selectedCard: 'border-indigo-400 bg-emerald-50/90 shadow-sm ring-2 ring-indigo-500',
+    selectedCard: 'border-va-600 bg-emerald-50/90 shadow-sm ring-2 ring-va-700',
     idleCard: 'border-slate-200 bg-slate-50',
   },
   cargo: {
     iconClass: 'text-orange-600',
-    selectedCard: 'border-indigo-400 bg-orange-50/90 shadow-sm ring-2 ring-indigo-500',
+    selectedCard: 'border-va-600 bg-orange-50/90 shadow-sm ring-2 ring-va-700',
     idleCard: 'border-slate-200 bg-slate-50',
   },
 }

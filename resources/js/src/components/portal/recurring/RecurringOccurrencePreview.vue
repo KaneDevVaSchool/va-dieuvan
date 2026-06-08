@@ -3,7 +3,7 @@
     class="overflow-hidden rounded-2xl border shadow-sm transition-colors"
     :class="
       count > 0
-        ? 'border-indigo-200/80 bg-gradient-to-br from-indigo-50/90 via-white to-teal-50/40 ring-1 ring-indigo-100/60'
+        ? 'border-va-200/80 bg-gradient-to-br from-va-50/90 via-white to-teal-50/40 ring-1 ring-va-100/60'
         : 'border-amber-200/80 bg-amber-50/40'
     "
     role="status"
@@ -12,12 +12,12 @@
     <div class="flex flex-wrap items-center gap-4 border-b border-white/60 px-4 py-3 sm:px-5">
       <div
         class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-bold tabular-nums shadow-inner"
-        :class="count > 0 ? 'bg-indigo-600 text-white' : 'bg-amber-100 text-amber-900'"
+        :class="count > 0 ? 'bg-va-800 text-white' : 'bg-amber-100 text-amber-900'"
       >
         {{ count > 0 ? count : '—' }}
       </div>
       <div class="min-w-0 flex-1">
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-800/80">
+        <p class="text-xs font-semibold uppercase tracking-wide text-va-900/80">
           {{ t('portal.recurring_plan.preview_heading') }}
         </p>
         <p class="mt-0.5 text-base font-semibold text-slate-900">
@@ -40,7 +40,7 @@
         <li
           v-for="d in visibleDates"
           :key="d"
-          class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200/70 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-950 shadow-sm"
+          class="inline-flex items-center gap-1.5 rounded-full border border-va-200/70 bg-white px-3 py-1.5 text-xs font-semibold text-va-900 shadow-sm"
         >
           <span class="h-1.5 w-1.5 rounded-full bg-teal-500" aria-hidden="true" />
           {{ formatDateWithWeekday(d) }}

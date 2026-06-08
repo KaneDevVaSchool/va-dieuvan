@@ -3,7 +3,7 @@
     :is="to ? RouterLink : 'div'"
     v-bind="to ? { to } : {}"
     class="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition"
-    :class="to ? 'block hover:border-indigo-200/90 hover:bg-indigo-50/30 hover:shadow-md' : ''"
+    :class="to ? 'block hover:border-va-200/90 hover:bg-va-50/30 hover:shadow-md' : ''"
   >
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div class="min-w-0 flex-1">
@@ -25,7 +25,7 @@
           <span v-if="departFmt">{{ departFmt }}</span>
         </div>
       </div>
-      <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400 transition group-hover:text-indigo-500" aria-hidden="true" />
+      <ChevronRightIcon class="h-5 w-5 shrink-0 text-slate-400 transition group-hover:text-va-700" aria-hidden="true" />
     </div>
   </component>
 </template>

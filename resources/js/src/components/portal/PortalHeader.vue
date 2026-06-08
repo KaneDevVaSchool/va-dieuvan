@@ -27,7 +27,7 @@
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
             homeNavActive
-              ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100'
+              ? 'bg-va-50 text-va-800 ring-1 ring-inset ring-va-100'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           "
           :aria-current="homeNavActive ? 'page' : undefined"
@@ -41,7 +41,7 @@
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
             isList
-              ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100'
+              ? 'bg-va-50 text-va-800 ring-1 ring-inset ring-va-100'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           "
           :aria-current="isList ? 'page' : undefined"
@@ -55,7 +55,7 @@
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
             isExtracurricularModule
-              ? 'bg-violet-50 text-violet-800 ring-1 ring-inset ring-violet-200'
+              ? 'bg-va-50 text-va-900 ring-1 ring-inset ring-va-200'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           "
           :aria-current="isExtracurricularModule ? 'page' : undefined"
@@ -69,8 +69,8 @@
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
             isCreate
-              ? 'border border-indigo-600 bg-indigo-600 text-white shadow-sm hover:bg-indigo-700'
-              : 'border border-indigo-400/30 text-indigo-600 hover:bg-indigo-50'
+              ? 'border border-va-800 bg-va-800 text-white shadow-sm hover:bg-va-900'
+              : 'border border-va-600/30 text-va-800 hover:bg-va-50'
           "
           :aria-current="isCreate ? 'page' : undefined"
           :title="t('portal.nav_create')"
@@ -98,14 +98,14 @@
         <div ref="menuRootRef" class="relative shrink-0">
         <button
           type="button"
-          class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-slate-200/80 bg-white px-2 py-1 font-semibold text-indigo-900 outline-none ring-indigo-500/30 transition hover:bg-slate-50 focus-visible:ring-2 disabled:opacity-50 sm:min-w-0 sm:gap-2 sm:px-3"
+          class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-slate-200/80 bg-white px-2 py-1 font-semibold text-va-900 outline-none ring-va-700/30 transition hover:bg-slate-50 focus-visible:ring-2 disabled:opacity-50 sm:min-w-0 sm:gap-2 sm:px-3"
           :aria-expanded="menuOpen"
           aria-haspopup="menu"
           :disabled="loggingOut"
           @click="menuOpen = !menuOpen"
         >
           <span
-            class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-xs font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white/70 sm:h-10 sm:w-10 sm:text-sm"
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-va-700 to-va-800 text-xs font-bold uppercase tracking-wide text-white shadow-sm ring-2 ring-white/70 sm:h-10 sm:w-10 sm:text-sm"
             aria-hidden="true"
           >
             {{ userInitials }}
@@ -133,7 +133,7 @@
             role="menu"
             class="absolute right-0 z-40 mt-2 w-[min(100vw-2rem,18rem)] origin-top-right overflow-hidden rounded-2xl border border-slate-200 bg-white pb-2 pt-0 shadow-2xl shadow-slate-900/10 ring-1 ring-slate-900/5"
           >
-            <div class="flex items-start gap-3 rounded-t-xl bg-gradient-to-br from-indigo-500/95 to-indigo-600 px-4 py-3 text-white shadow-inner">
+            <div class="flex items-start gap-3 rounded-t-xl bg-gradient-to-br from-va-700/95 to-va-800 px-4 py-3 text-white shadow-inner">
               <span
                 class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold uppercase tracking-wide ring-2 ring-white/30"
                 aria-hidden="true"
@@ -144,7 +144,7 @@
                 <p v-if="auth.user?.name" class="truncate text-sm font-semibold text-white">{{ auth.user.name }}</p>
                 <p
                   v-if="auth.user?.email"
-                  class="truncate text-indigo-100"
+                  class="truncate text-va-100"
                   :class="auth.user?.name ? 'text-xs' : 'text-sm font-semibold text-white'"
                 >
                   {{ auth.user.email }}
@@ -188,7 +188,7 @@
               <button
                 type="button"
                 role="menuitem"
-                class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-indigo-50 disabled:opacity-50"
+                class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-va-50 disabled:opacity-50"
                 :disabled="loggingOut"
                 @click="closeMenuThenLogout"
               >

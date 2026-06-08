@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="rounded-xl border border-slate-200/90 bg-white/90 p-2 shadow-md shadow-indigo-900/[0.04] backdrop-blur-sm sm:p-3"
+    class="rounded-xl border border-slate-200/90 bg-white/90 p-2 shadow-md shadow-va-900/[0.04] backdrop-blur-sm sm:p-3"
     :aria-label="stepsNavLabel"
   >
     <p class="mb-2 text-center text-xs font-medium text-slate-500 sm:hidden">
@@ -23,7 +23,7 @@
               i > maxReachedStep
                 ? 'cursor-not-allowed opacity-45'
                 : current === i
-                  ? 'border border-indigo-200/50 bg-indigo-50/70 text-slate-900 shadow-sm'
+                  ? 'border border-va-200/50 bg-va-50/70 text-slate-900 shadow-sm'
                   : current > i
                     ? 'border border-transparent text-slate-800 hover:bg-emerald-50'
                     : 'border border-transparent text-slate-500 hover:bg-slate-50'
@@ -36,7 +36,7 @@
               class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm sm:h-9 sm:w-9 sm:text-sm"
               :class="
                 current === i
-                  ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
+                  ? 'bg-va-800 text-white ring-4 ring-va-100'
                   : current > i
                     ? 'bg-emerald-500 text-white'
                     : i <= maxReachedStep
@@ -59,7 +59,7 @@
             class="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left antialiased sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:py-2"
             :class="
               current === i
-                ? 'border border-indigo-200/50 bg-indigo-50/70 text-slate-900 shadow-sm'
+                ? 'border border-va-200/50 bg-va-50/70 text-slate-900 shadow-sm'
                 : current > i
                   ? 'border border-transparent text-slate-800'
                   : 'border border-transparent text-slate-500'
@@ -70,7 +70,7 @@
               class="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm sm:h-9 sm:w-9 sm:text-sm"
               :class="
                 current === i
-                  ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
+                  ? 'bg-va-800 text-white ring-4 ring-va-100'
                   : current > i
                     ? 'bg-emerald-500 text-white'
                     : 'bg-slate-200 text-slate-400'

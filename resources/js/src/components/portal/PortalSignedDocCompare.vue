@@ -6,7 +6,7 @@
         <button
           type="button"
           class="flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold"
-          :class="mobileTab === 'original' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'"
+          :class="mobileTab === 'original' ? 'bg-va-800 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'"
           @click="mobileTab = 'original'"
         >
           {{ t('portal.signed_compare_tab_original') }}
@@ -14,7 +14,7 @@
         <button
           type="button"
           class="flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold"
-          :class="mobileTab === 'signed' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'"
+          :class="mobileTab === 'signed' ? 'bg-va-800 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200'"
           :disabled="!signedBlobUrl"
           @click="mobileTab = 'signed'"
         >

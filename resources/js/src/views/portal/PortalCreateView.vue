@@ -9,7 +9,7 @@
     <!-- Header -->
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">
+        <p class="text-xs font-semibold uppercase tracking-wide text-va-800">
           {{ t('portal.nav_title') }}
         </p>
         <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
@@ -90,7 +90,7 @@
                 class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
                 @click="draftMenuAction(openSaveTemplateModal)"
               >
-                <BookmarkIcon class="h-4 w-4 shrink-0 text-indigo-400" />
+                <BookmarkIcon class="h-4 w-4 shrink-0 text-va-600" />
                 {{ t('portal.template_save_action') }}
               </button>
               <button
@@ -99,7 +99,7 @@
                 class="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
                 @click="draftMenuAction(openTemplateLibrary)"
               >
-                <BookmarkSquareIcon class="h-4 w-4 shrink-0 text-indigo-400" />
+                <BookmarkSquareIcon class="h-4 w-4 shrink-0 text-va-600" />
                 {{ t('portal.template_library_action') }}
               </button>
               <template v-if="activeDraftId">
@@ -199,7 +199,7 @@
                 />
                 <div
                   v-if="requesterSearchLoading"
-                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600"
+                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
                 />
                 <ul
                   v-if="requesterDropdownOpen && requesterSearchQ.trim().length >= 2"
@@ -212,7 +212,7 @@
                     <li v-for="u in requesterSearchResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-indigo-50"
+                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-50"
                         @mousedown.prevent="pickRequester(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -330,8 +330,8 @@
                     role="switch"
                     :aria-checked="form.is_urgent"
                     :disabled="urgentAutoActive || loading || dispatchFormSettingsLoading"
-                    class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60"
-                    :class="form.is_urgent ? 'justify-end bg-indigo-600' : 'justify-start bg-slate-300'"
+                    class="inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-va-700/30 disabled:cursor-not-allowed disabled:opacity-60"
+                    :class="form.is_urgent ? 'justify-end bg-va-800' : 'justify-start bg-slate-300'"
                     @click="toggleUrgentManual"
                   >
                     <span class="pointer-events-none h-7 w-7 rounded-full bg-white shadow-sm ring-1 ring-black/5" />
@@ -508,7 +508,7 @@
                 />
                 <div
                   v-if="coordinatorSearchLoading"
-                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600"
+                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
                 />
                 <ul
                   v-if="coordinatorDropdownOpen && coordinatorSearchQ.trim().length >= 2"
@@ -521,7 +521,7 @@
                     <li v-for="u in coordinatorSearchResults" :key="u.id">
                       <button
                         type="button"
-                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-indigo-50"
+                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-50"
                         @mousedown.prevent="pickCoordinator(u)"
                       >
                         <span class="font-medium text-slate-900">{{ u.name }}</span>
@@ -582,7 +582,7 @@
           <!-- Kênh gửi: read-only badge chip thay vì disabled select -->
           <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
             <span class="text-sm font-semibold text-slate-600">{{ t('dispatch_wizard.create.channel_label') }}</span>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700">
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-va-200 bg-va-50 px-3 py-1 text-sm font-semibold text-va-800">
               <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M2.003 5.884 10 9.882l7.997-3.998A2 2 0 0 0 16 4H4a2 2 0 0 0-1.997 1.884z"/><path d="m18 8.118-8 4-8-4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.118z"/></svg>
               {{ t('dispatch_wizard.create.option_portal') }}
             </span>
@@ -897,9 +897,9 @@
           class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-black/5"
           @click.stop
         >
-          <div class="border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
+          <div class="border-b border-slate-100 bg-gradient-to-br from-va-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
             <div class="flex items-center gap-3">
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-100 text-va-800">
                 <BookmarkIcon class="h-5 w-5" aria-hidden="true" />
               </span>
               <div class="min-w-0">
@@ -921,7 +921,7 @@
               type="text"
               maxlength="100"
               :placeholder="t('portal.template_name_placeholder')"
-              class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300/40"
+              class="mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-va-600 focus:ring-2 focus:ring-va-300/40"
               @keydown.enter.prevent="confirmSaveTemplate"
             />
             <p v-if="templateSaveError" class="mt-2 text-xs font-medium text-rose-600">{{ templateSaveError }}</p>
@@ -937,7 +937,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 sm:w-auto"
+              class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-va-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-va-800 disabled:opacity-50 sm:w-auto"
               :disabled="!saveTemplateName.trim() || templateSaveLoading"
               @click="confirmSaveTemplate"
             >
@@ -973,10 +973,10 @@
           @click.stop
         >
           <!-- Header -->
-          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-indigo-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
+          <div class="shrink-0 border-b border-slate-100 bg-gradient-to-br from-va-50 via-white to-slate-50/30 px-5 pb-4 pt-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="flex min-w-0 items-center gap-3">
-                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-va-100 text-va-800">
                   <BookmarkSquareIcon class="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div class="min-w-0">
@@ -992,7 +992,7 @@
           <!-- Body -->
           <div class="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4">
             <div v-if="templateListLoading" class="flex items-center justify-center py-10">
-              <span class="h-5 w-5 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-600" />
+              <span class="h-5 w-5 animate-spin rounded-full border-2 border-va-300 border-t-va-800" />
             </div>
             <p
               v-else-if="templateListError"
@@ -1020,13 +1020,13 @@
                       type="text"
                       maxlength="100"
                       :placeholder="t('portal.template_name_placeholder')"
-                      class="min-w-0 flex-1 rounded-lg border border-indigo-300 px-2.5 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-indigo-300/40"
+                      class="min-w-0 flex-1 rounded-lg border border-va-300 px-2.5 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-va-300/40"
                       @keydown.enter.prevent="renameTemplate(tmpl.id, templateRenameValue)"
                       @keydown.escape="cancelRename"
                     />
                     <button
                       type="button"
-                      class="shrink-0 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                      class="shrink-0 rounded-lg border border-va-200 bg-va-50 px-2.5 py-1.5 text-xs font-semibold text-va-800 hover:bg-va-100"
                       @click="renameTemplate(tmpl.id, templateRenameValue)"
                     >
                       {{ t('portal.template_rename_save') }}
@@ -1047,7 +1047,7 @@
                     <div class="min-w-0 flex-1">
                       <div class="flex flex-wrap items-center gap-2">
                         <span class="text-sm font-semibold text-slate-900">{{ tmpl.name }}</span>
-                        <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
+                        <span class="rounded-full bg-va-100 px-2 py-0.5 text-xs font-medium text-va-900">
                           {{ TRIP_TYPE_LABELS[tmpl.trip_type] ?? tmpl.trip_type }}
                         </span>
                       </div>
@@ -1058,7 +1058,7 @@
                     <div class="flex shrink-0 flex-wrap gap-1.5">
                       <button
                         type="button"
-                        class="rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                        class="rounded-lg border border-va-200 bg-va-50 px-2.5 py-1 text-xs font-semibold text-va-800 hover:bg-va-100"
                         @click="applyTemplate(tmpl)"
                       >
                         {{ t('portal.template_apply_btn') }}

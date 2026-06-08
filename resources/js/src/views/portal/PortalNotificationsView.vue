@@ -22,7 +22,7 @@
             class="rounded-lg px-4 py-2 text-sm font-semibold transition"
             :class="
               activeTab === 'all'
-                ? 'bg-white text-indigo-700 shadow-sm'
+                ? 'bg-white text-va-800 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             "
             @click="setTab('all')"
@@ -36,7 +36,7 @@
             class="relative rounded-lg px-4 py-2 text-sm font-semibold transition"
             :class="
               activeTab === 'unread'
-                ? 'bg-white text-indigo-700 shadow-sm'
+                ? 'bg-white text-va-800 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             "
             @click="setTab('unread')"
@@ -63,16 +63,16 @@
               type="search"
               autocomplete="off"
               :placeholder="t('portal.notifications_search_placeholder')"
-              class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              class="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-va-300 focus:outline-none focus:ring-2 focus:ring-va-700/20"
             />
           </label>
           <button
             type="button"
-            class="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
+            class="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-va-200 hover:bg-va-50 disabled:opacity-50"
             :disabled="markingAll || loading || unreadTotal === 0"
             @click="markAll"
           >
-            <CheckIcon class="h-4 w-4 text-indigo-600" aria-hidden="true" />
+            <CheckIcon class="h-4 w-4 text-va-800" aria-hidden="true" />
             <span class="hidden sm:inline">{{ t('portal.notifications_mark_all') }}</span>
           </button>
         </div>
@@ -110,7 +110,7 @@
                 :class="
                   n.read
                     ? 'border-slate-100'
-                    : 'border-indigo-100/80 bg-gradient-to-r from-indigo-50/40 to-white'
+                    : 'border-va-100/80 bg-gradient-to-r from-va-50/40 to-white'
                 "
               >
                 <component
@@ -121,7 +121,7 @@
                 >
                   <span
                     class="mt-2 h-2 w-2 shrink-0 rounded-full"
-                    :class="n.read ? 'bg-transparent' : 'bg-indigo-500'"
+                    :class="n.read ? 'bg-transparent' : 'bg-va-700'"
                     aria-hidden="true"
                   />
                   <span
@@ -167,7 +167,7 @@
       <button
         v-if="pagination && pagination.current_page < pagination.last_page"
         type="button"
-        class="mt-8 flex w-full min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
+        class="mt-8 flex w-full min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-800 shadow-sm transition hover:border-va-200 hover:bg-va-50 disabled:opacity-50"
         :disabled="loadingMore"
         @click="loadMore"
       >

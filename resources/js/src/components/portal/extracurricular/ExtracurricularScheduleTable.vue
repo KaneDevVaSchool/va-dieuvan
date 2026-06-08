@@ -15,17 +15,17 @@
     >
       <div class="xc-portal-group-header flex flex-col gap-0">
       <div
-        class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-violet-950"
+        class="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-va-900"
       >
         <button
           type="button"
-          class="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left transition hover:bg-violet-50/60 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+          class="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left transition hover:bg-va-50/60 focus:outline-none focus:ring-2 focus:ring-va-500/30"
           :aria-expanded="isGroupOpen(group.key)"
           :aria-label="t('portal.extracurricular_list.collapse_hint')"
           @click="toggleGroup(group.key)"
         >
           <ChevronRightIcon
-            class="h-4 w-4 shrink-0 text-violet-600 transition"
+            class="h-4 w-4 shrink-0 text-va-800 transition"
             :class="{ 'rotate-90': isGroupOpen(group.key) }"
             aria-hidden="true"
           />
@@ -45,14 +45,14 @@
               v-model="planLabelDraft"
               type="text"
               maxlength="255"
-              class="min-w-[8rem] flex-1 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-sm font-semibold text-indigo-950 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+              class="min-w-[8rem] flex-1 rounded-lg border border-va-300 bg-white px-2 py-1 text-sm font-semibold text-va-900 shadow-sm focus:border-va-700 focus:outline-none focus:ring-2 focus:ring-va-700/30"
               :aria-label="t('portal.extracurricular_list.plan_name_edit_label')"
               @keydown.enter.prevent="savePlanLabel(group)"
               @keydown.escape.prevent="cancelPlanLabelEdit"
             />
             <button
               type="button"
-              class="shrink-0 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+              class="shrink-0 rounded-lg bg-va-800 px-2.5 py-1 text-xs font-semibold text-white hover:bg-va-800 disabled:opacity-60"
               :disabled="planLabelSaving"
               @click="savePlanLabel(group)"
             >
@@ -60,7 +60,7 @@
             </button>
             <button
               type="button"
-              class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-indigo-800 hover:bg-indigo-100/80"
+              class="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-va-900 hover:bg-va-100/80"
               :disabled="planLabelSaving"
               @click="cancelPlanLabelEdit"
             >
@@ -70,7 +70,7 @@
           <button
             v-else-if="templateIdForGroup(group)"
             type="button"
-            class="shrink-0 rounded-md p-1.5 text-indigo-700 hover:bg-indigo-100/80"
+            class="shrink-0 rounded-md p-1.5 text-va-800 hover:bg-va-100/80"
             :title="t('portal.extracurricular_list.plan_name_edit')"
             :aria-label="t('portal.extracurricular_list.plan_name_edit')"
             @click="startPlanLabelEdit(group)"
@@ -87,7 +87,7 @@
 
         <button
           type="button"
-          class="shrink-0 text-xs font-medium text-indigo-800/90 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500/30 rounded"
+          class="shrink-0 text-xs font-medium text-va-900/90 hover:underline focus:outline-none focus:ring-2 focus:ring-va-700/30 rounded"
           @click="toggleGroup(group.key)"
         >
           {{ t('portal.extracurricular_list.group_summary', { count: group.items.length }) }}
@@ -99,7 +99,7 @@
 
       <div
         v-if="packageBudgetUsageForGroup(group)"
-        class="flex flex-wrap items-center gap-2 border-t border-violet-100/70 px-4 py-2 text-xs font-medium"
+        class="flex flex-wrap items-center gap-2 border-t border-va-100/70 px-4 py-2 text-xs font-medium"
         :class="packageBudgetBannerClass(packageBudgetUsageForGroup(group))"
       >
         <span class="tabular-nums text-slate-800">
@@ -126,7 +126,7 @@
       </div>
       </div>
 
-      <div v-show="isGroupOpen(group.key)" class="hidden border-t border-violet-100/80 md:block">
+      <div v-show="isGroupOpen(group.key)" class="hidden border-t border-va-100/80 md:block">
         <div class="xc-portal-table-scroll">
           <table class="xc-portal-table">
             <thead>
@@ -211,7 +211,7 @@
         </div>
       </div>
 
-      <div v-show="isGroupOpen(group.key)" class="space-y-3 border-t border-violet-100/80 bg-slate-50/30 p-3 md:hidden">
+      <div v-show="isGroupOpen(group.key)" class="space-y-3 border-t border-va-100/80 bg-slate-50/30 p-3 md:hidden">
         <article
           v-for="req in group.items"
           :key="'m-' + req.id"
@@ -419,7 +419,7 @@ function packageBudgetBannerClass(usage) {
   if (!usage) return 'bg-slate-50/80'
   if (usage.severity === 'exceeded') return 'bg-rose-50/90'
   if (usage.severity === 'warning') return 'bg-amber-50/90'
-  return 'bg-violet-50/50'
+  return 'bg-va-50/50'
 }
 
 function templateIdFromReq(req) {

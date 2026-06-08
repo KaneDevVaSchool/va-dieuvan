@@ -1,6 +1,6 @@
 <template>
   <section
-    class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-indigo-50/40 via-slate-50/80 to-white p-5 shadow-sm ring-1 ring-slate-900/5"
+    class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-va-50/40 via-slate-50/80 to-white p-5 shadow-sm ring-1 ring-slate-900/5"
   >
     <p class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ t('portal.status_hint_title') }}</p>
     <p class="mt-2 text-sm leading-relaxed text-slate-800">{{ hintText }}</p>

@@ -4,7 +4,7 @@
   >
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700">
+        <p class="text-xs font-semibold uppercase tracking-wide text-va-800">
           {{ t('portal.extracurricular_module.badge') }}
         </p>
         <h1 class="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">

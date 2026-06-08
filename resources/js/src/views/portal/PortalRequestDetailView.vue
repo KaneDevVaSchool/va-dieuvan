@@ -22,7 +22,7 @@
 
     <div v-else-if="detailError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
       {{ detailError }}
-      <RouterLink :to="{ name: portalRoutes.home }" class="mt-3 block font-semibold text-indigo-700 underline">{{ t('portal.back_home') }}</RouterLink>
+      <RouterLink :to="{ name: portalRoutes.home }" class="mt-3 block font-semibold text-va-800 underline">{{ t('portal.back_home') }}</RouterLink>
     </div>
 
     <template v-else-if="req">
@@ -30,7 +30,7 @@
         <div class="flex min-w-0 items-start gap-3">
           <RouterLink
             :to="{ name: portalRoutes.list }"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/70 hover:text-indigo-700"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-va-200 hover:bg-va-50/70 hover:text-va-800"
             :aria-label="t('portal.back_list')"
           >
             <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
@@ -107,7 +107,7 @@
             class="rounded-lg px-3 py-2 text-xs font-semibold transition sm:text-sm"
             :class="
               activeTab === tab.id
-                ? 'bg-indigo-50 text-indigo-900 ring-1 ring-indigo-600/20'
+                ? 'bg-va-50 text-va-900 ring-1 ring-va-800/20'
                 : 'text-slate-600 hover:bg-white'
             "
             @click="setActiveTab(tab.id)"
@@ -157,7 +157,7 @@
               <button
                 v-if="canSubmitPassengerCount"
                 type="button"
-                class="mt-3 inline-flex min-h-[40px] items-center rounded-xl bg-violet-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-violet-500 disabled:opacity-50"
+                class="mt-3 inline-flex min-h-[40px] items-center rounded-xl bg-va-800 px-4 text-sm font-semibold text-white shadow-sm hover:bg-va-900 disabled:opacity-50"
                 :disabled="passengerSubmitting || passengerSaving"
                 @click="submitPassengerCount"
               >

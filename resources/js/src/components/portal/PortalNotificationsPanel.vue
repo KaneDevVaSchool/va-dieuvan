@@ -12,7 +12,7 @@
       </h2>
       <RouterLink
         :to="{ name: 'portalNotifications' }"
-        class="text-xs font-semibold text-indigo-600 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        class="text-xs font-semibold text-va-800 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
       >
         {{ t('portal.notifications_view_all') }}
       </RouterLink>
@@ -35,7 +35,7 @@
           <component
             :is="linkWrapper(n)"
             v-bind="linkBind(n)"
-            class="min-w-0 flex-1 rounded-lg outline-none ring-indigo-500/25 focus-visible:ring-2 focus-visible:ring-indigo-500"
+            class="min-w-0 flex-1 rounded-lg outline-none ring-va-700/25 focus-visible:ring-2 focus-visible:ring-va-700"
           >
             <div class="flex items-start gap-2">
               <span
@@ -54,7 +54,7 @@
           <button
             v-if="!n.read"
             type="button"
-            class="shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold text-indigo-600 opacity-0 transition hover:bg-indigo-50 group-hover/item:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 max-sm:opacity-100"
+            class="shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold text-va-800 opacity-0 transition hover:bg-va-50 group-hover/item:opacity-100 focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800 max-sm:opacity-100"
             :disabled="markingId === n.id"
             @click.stop="markRead(n)"
           >

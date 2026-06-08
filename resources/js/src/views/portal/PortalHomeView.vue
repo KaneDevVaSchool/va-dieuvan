@@ -7,12 +7,12 @@
           <h1 class="text-2xl font-bold tracking-tight text-slate-900">
             {{ greetingTitle }}
           </h1>
-          <p class="mt-1 text-sm font-medium text-indigo-700/90">{{ todayLine }}</p>
+          <p class="mt-1 text-sm font-medium text-va-800/90">{{ todayLine }}</p>
           <p class="mt-2 max-w-2xl text-sm text-slate-600">{{ t('portal.dashboard_lead') }}</p>
         </div>
         <RouterLink
           :to="{ name: 'portalCreate' }"
-          class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-sm font-bold text-white shadow-md transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 max-[379px]:px-3"
+          class="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-va-800 px-6 text-sm font-bold text-white shadow-md transition hover:bg-va-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800 max-[379px]:px-3"
         >
           <PlusCircleIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
           <span class="max-[379px]:sr-only">{{ t('portal.cta_primary') }}</span>
@@ -27,7 +27,7 @@
             <h2 class="text-lg font-bold text-slate-900">{{ t('portal.recent_requests_heading') }}</h2>
             <RouterLink
               :to="{ name: 'portalRequestList' }"
-              class="text-sm font-semibold text-indigo-600 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              class="text-sm font-semibold text-va-800 underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
             >
               {{ t('portal.view_all_requests') }}
             </RouterLink>
@@ -42,10 +42,10 @@
               v-for="chip in recentFilterChips"
               :key="chip.key"
               type="button"
-              class="rounded-full px-3 py-1.5 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              class="rounded-full px-3 py-1.5 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
               :class="
                 recentFilter === chip.key
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-va-800 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               "
               @click="setRecentFilter(chip.key)"
@@ -69,7 +69,7 @@
             <template #action>
               <RouterLink
                 :to="{ name: 'portalCreate' }"
-                class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-indigo-600 px-8 text-sm font-semibold text-white shadow-md hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                class="inline-flex min-h-[48px] items-center justify-center rounded-2xl bg-va-800 px-8 text-sm font-semibold text-white shadow-md hover:bg-va-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
               >
                 {{ t('portal.cta_primary') }}
               </RouterLink>

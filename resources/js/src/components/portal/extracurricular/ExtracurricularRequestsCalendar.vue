@@ -39,13 +39,13 @@
       >
         <div
           class="flex items-center justify-between gap-1 border-b px-1.5 py-1 sm:px-2"
-          :class="cell.inMonth ? 'border-indigo-100/80' : 'border-transparent'"
+          :class="cell.inMonth ? 'border-va-100/80' : 'border-transparent'"
         >
           <span
             class="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-md text-xs font-bold tabular-nums sm:text-sm"
             :class="
               cell.isToday && cell.inMonth
-                ? 'bg-indigo-600 text-white shadow-sm'
+                ? 'bg-va-800 text-white shadow-sm'
                 : cell.inMonth
                   ? 'text-slate-800'
                   : 'text-slate-400'
@@ -55,7 +55,7 @@
           </span>
           <span
             v-if="cell.inMonth && cell.items.length"
-            class="rounded-full bg-indigo-600/90 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-white sm:text-[10px]"
+            class="rounded-full bg-va-800/90 px-1.5 py-0.5 text-[9px] font-bold tabular-nums text-white sm:text-[10px]"
           >
             {{ cell.items.length }}
           </span>
@@ -67,12 +67,12 @@
               v-for="req in cell.items.slice(0, maxCardsPerDay)"
               :key="req.id"
               :to="{ name: detailRouteName, params: { id: req.id } }"
-              class="group block rounded-lg border border-white/80 bg-white p-1.5 shadow-sm ring-1 ring-indigo-200/60 transition hover:border-indigo-300 hover:shadow-md hover:ring-indigo-300/80 sm:p-2"
+              class="group block rounded-lg border border-white/80 bg-white p-1.5 shadow-sm ring-1 ring-va-200/60 transition hover:border-va-300 hover:shadow-md hover:ring-va-300/80 sm:p-2"
             >
               <div class="flex items-start justify-between gap-1">
-                <span class="font-mono text-[11px] font-bold text-indigo-900 sm:text-xs">#{{ req.id }}</span>
+                <span class="font-mono text-[11px] font-bold text-va-900 sm:text-xs">#{{ req.id }}</span>
                 <span
-                  class="shrink-0 rounded px-1 py-0.5 text-[10px] font-bold tabular-nums text-indigo-800 bg-indigo-50"
+                  class="shrink-0 rounded px-1 py-0.5 text-[10px] font-bold tabular-nums text-va-900 bg-va-50"
                 >
                   {{ departTime(req) }}
                 </span>
@@ -101,7 +101,7 @@
             </RouterLink>
             <p
               v-if="cell.items.length > maxCardsPerDay"
-              class="px-0.5 text-center text-[10px] font-semibold text-indigo-700"
+              class="px-0.5 text-center text-[10px] font-semibold text-va-800"
             >
               {{ t('portal.recurring_plan.calendar_more', { n: cell.items.length - maxCardsPerDay }) }}
             </p>
@@ -206,7 +206,7 @@ const cells = computed(() => {
 function cellShellClass(cell) {
   if (!cell.inMonth) return 'border-transparent bg-transparent opacity-35'
   if (cell.items.length) {
-    return 'border-indigo-200/90 bg-gradient-to-b from-indigo-50/90 to-white shadow-sm'
+    return 'border-va-200/90 bg-gradient-to-b from-va-50/90 to-white shadow-sm'
   }
   return 'border-slate-100 bg-slate-50/60'
 }
