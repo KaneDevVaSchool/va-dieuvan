@@ -58,7 +58,7 @@
             </td>
             <td class="px-4 py-3 text-right">
               <RouterLink
-                :to="{ name: 'portalRequestDetail', params: { id: String(req.id) } }"
+                :to="portalDetailRouteForRequest(req)"
                 class="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl text-slate-400 transition group-hover/row:bg-va-50 group-hover/row:text-va-700 hover:text-va-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
                 :aria-label="t('portal.open_request', { id: req.id })"
               >
@@ -76,7 +76,7 @@
       <RouterLink
         v-for="req in requests"
         :key="req.id"
-        :to="{ name: 'portalRequestDetail', params: { id: String(req.id) } }"
+        :to="portalDetailRouteForRequest(req)"
         class="group/card flex gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-va-200/80 hover:bg-va-50/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-va-800"
         :class="cardHighlightClass(req)"
       >
@@ -117,6 +117,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { BoltIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 import StatusBadge from '../ui/StatusBadge.vue'
+import { portalDetailRouteForRequest } from '../../composables/usePortalExtracurricularModule'
 import { formatPortalDepartLine, formatPortalTimeHm } from '../../util/portalDatetime.js'
 
 const props = defineProps({

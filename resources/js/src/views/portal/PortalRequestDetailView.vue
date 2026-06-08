@@ -279,7 +279,10 @@ import StatusBadge from '../../components/ui/StatusBadge.vue'
 import PortalSuccessCard from '../../components/portal/PortalSuccessCard.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
-import { usePortalExtracurricularModule } from '../../composables/usePortalExtracurricularModule'
+import {
+  isExtracurricularDispatchRequest,
+  usePortalExtracurricularModule,
+} from '../../composables/usePortalExtracurricularModule'
 import PortalExtracurricularBm03EditForm from '../../components/portal/extracurricular/PortalExtracurricularBm03EditForm.vue'
 import PortalSignedDocUpload from '../../components/portal/PortalSignedDocUpload.vue'
 import PortalSignedDocCompare from '../../components/portal/PortalSignedDocCompare.vue'
@@ -350,6 +353,19 @@ watch(
   },
 )
 
+function syncPortalDetailRouteName(data) {
+  if (!data?.id) return
+  const target = isExtracurricularDispatchRequest(data)
+    ? 'portalExtracurricularDetail'
+    : 'portalRequestDetail'
+  if (route.name === target) return
+  router.replace({
+    name: target,
+    params: { id: String(data.id) },
+    query: route.query,
+  })
+}
+
 async function load(opts = {}) {
   const silent = opts.silent === true
   if (!silent) {
@@ -368,6 +384,7 @@ async function load(opts = {}) {
       return
     }
     const data = await getPortalDispatchRequest(id)
+    syncPortalDetailRouteName(data)
     req.value = data
     const actual = data.student_count_actual ?? data.passenger_count
     passengerDraft.value = Math.max(1, Math.min(999, Math.round(Number(actual) || 1)))

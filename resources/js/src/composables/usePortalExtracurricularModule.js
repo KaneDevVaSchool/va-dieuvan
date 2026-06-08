@@ -8,6 +8,21 @@ const MODULE_ROUTE_NAMES = new Set([
   'portalExtracurricularDetail',
 ])
 
+export function isExtracurricularDispatchRequest(req) {
+  if (!req) return false
+  const tid = req.dispatch_request_template_id ?? req.dispatch_request_template?.id
+  return tid != null && tid !== ''
+}
+
+/** Route chi tiết portal khớp loại yêu cầu (navbar / module context). */
+export function portalDetailRouteForRequest(req) {
+  const id = req?.id
+  const name = isExtracurricularDispatchRequest(req)
+    ? 'portalExtracurricularDetail'
+    : 'portalRequestDetail'
+  return { name, params: { id: String(id) } }
+}
+
 /**
  * Portal sub-module: point-to-point extracurricular (CLB / ngoại khóa).
  */

@@ -37,14 +37,14 @@
           <span class="hidden sm:inline">{{ t('portal.nav_home') }}</span>
         </RouterLink>
         <RouterLink
-          :to="{ name: listRouteName }"
+          :to="{ name: 'portalRequestList' }"
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
-            isList
+            isGeneralList
               ? 'bg-va-50 text-va-800 ring-1 ring-inset ring-va-100'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           "
-          :aria-current="isList ? 'page' : undefined"
+          :aria-current="isGeneralList ? 'page' : undefined"
           :title="t('portal.nav_list')"
         >
           <ListBulletIcon class="h-5 w-5 shrink-0 sm:mr-1.5" aria-hidden="true" />
@@ -54,11 +54,11 @@
           :to="{ name: 'portalExtracurricularHome' }"
           class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-3 text-sm font-semibold transition sm:min-w-0 sm:px-4 lg:min-w-[8rem]"
           :class="
-            isExtracurricularModule
+            isExtracurricularNavActive
               ? 'bg-va-50 text-va-900 ring-1 ring-inset ring-va-200'
               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
           "
-          :aria-current="isExtracurricularModule ? 'page' : undefined"
+          :aria-current="isExtracurricularNavActive ? 'page' : undefined"
           :title="t('portal.nav_extracurricular')"
         >
           <AcademicCapIcon class="h-5 w-5 shrink-0 sm:mr-1.5" aria-hidden="true" />
@@ -249,10 +249,6 @@ const menuRootRef = ref(null)
 
 const { isExtracurricularModule } = usePortalExtracurricularModule()
 
-const isHome = computed(() => route.name === 'portalHome')
-const listRouteName = computed(() =>
-  isExtracurricularModule.value ? 'portalExtracurricularList' : 'portalRequestList',
-)
 const createRouteName = computed(() =>
   isExtracurricularModule.value ? 'portalExtracurricularCreate' : 'portalCreate',
 )
@@ -260,20 +256,17 @@ const createRouteName = computed(() =>
 const isCreate = computed(
   () => route.name === 'portalCreate' || route.name === 'portalExtracurricularCreate',
 )
-const isDetail = computed(
-  () => route.name === 'portalRequestDetail' || route.name === 'portalExtracurricularDetail',
-)
-const isList = computed(
-  () => route.name === 'portalRequestList' || route.name === 'portalExtracurricularList',
-)
 
-/** Detail là phần mở rộng của trang chủ portal → highlight Home nav */
-const homeNavActive = computed(() => {
-  if (isExtracurricularModule.value) {
-    return route.name === 'portalExtracurricularHome'
-  }
-  return isHome.value || isDetail.value
-})
+/** Danh sách yêu cầu thường — không gộp với extracurricular/requests */
+const isGeneralList = computed(() => route.name === 'portalRequestList')
+
+/** Hub + danh sách/chi tiết/tạo kế hoạch định kỳ */
+const isExtracurricularNavActive = computed(() => isExtracurricularModule.value)
+
+/** Trang chủ portal thường (+ chi tiết yêu cầu thường); không highlight khi đang ở module định kỳ */
+const homeNavActive = computed(
+  () => route.name === 'portalHome' || route.name === 'portalRequestDetail',
+)
 
 const unreadBadge = ref(0)
 let unreadPollTimer = null
