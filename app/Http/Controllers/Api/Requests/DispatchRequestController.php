@@ -348,7 +348,7 @@ class DispatchRequestController extends Controller
         return Pdf::loadView('pdf.dispatch-request', $data)
             ->setPaper('a4', $data['isCargo'] ? 'landscape' : 'portrait')
             ->setOptions([
-                'defaultFont' => 'DejaVu Sans',
+                'defaultFont' => 'GarbataTrial',
                 'enable_unicode' => true,
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => false,

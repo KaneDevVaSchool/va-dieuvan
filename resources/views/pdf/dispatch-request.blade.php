@@ -15,10 +15,7 @@
         $useBranding = ! $isCargo;
     @endphp
     @php
-        // DomPDF parses custom TTF via @font-face and writes .ufm metrics into storage/fonts/.
-        // Skip Garbata when font cache dir is not writable (avoids 500 on export).
         $garbataDir = storage_path('fonts/garbata/');
-        $fontCacheDir = storage_path('fonts');
         $garbataFaces = [
             ['GarbataTrial-Regular',    'normal', 'normal'],
             ['GarbataTrial-Italic',     'italic', 'normal'],
@@ -28,25 +25,18 @@
             ['GarbataTrial-Light',      'normal', '300'],
         ];
         $fontFaceCss = '';
-        $useGarbata = file_exists($garbataDir . 'GarbataTrial-Regular.ttf')
-            && is_dir($fontCacheDir)
-            && is_writable($fontCacheDir);
-        if ($useGarbata) {
-            foreach ($garbataFaces as [$gFile, $gStyle, $gWeight]) {
-                $absPath = $garbataDir . $gFile . '.ttf';
-                if (! file_exists($absPath)) {
-                    continue;
-                }
-                $path = str_replace('\\', '/', $absPath);
-                $fontFaceCss .= "@font-face { font-family: 'GarbataTrial'; font-style: {$gStyle}; font-weight: {$gWeight}; src: url(\"{$path}\") format('truetype'); }\n";
+        foreach ($garbataFaces as [$gFile, $gStyle, $gWeight]) {
+            $absPath = $garbataDir . $gFile . '.ttf';
+            if (! file_exists($absPath)) {
+                continue;
             }
+            $path = str_replace('\\', '/', $absPath);
+            $fontFaceCss .= "@font-face { font-family: 'GarbataTrial'; font-style: {$gStyle}; font-weight: {$gWeight}; src: url(\"{$path}\") format('truetype'); }\n";
         }
-        $pdfFontFamily = $useGarbata
-            ? "'GarbataTrial', 'DejaVu Sans', sans-serif"
-            : "'DejaVu Sans', sans-serif";
+        $pdfFontFamily = "'GarbataTrial', sans-serif";
     @endphp
     <style>
-        @if($fontFaceCss !== ''){!! $fontFaceCss !!}@endif
+        {!! $fontFaceCss !!}
 
         @page {
             margin: {{ $pageMarginTop }} {{ $pageMarginX }} {{ $pageMarginBot }} {{ $pageMarginX }};
@@ -422,8 +412,8 @@
 
         $cb = static function (bool $checked): string {
             return $checked
-                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:8pt;color:#1a1a1a;">&#x2611;</span>'
-                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:8pt;color:#ccc;">&#x2610;</span>';
+                ? '<span style="font-family:GarbataTrial,sans-serif;font-size:8pt;color:#1a1a1a;">&#x2611;</span>'
+                : '<span style="font-family:GarbataTrial,sans-serif;font-size:8pt;color:#ccc;">&#x2610;</span>';
         };
 
         $checkedTargets = array_filter($targetGrid, fn($t) => $t['checked']);
