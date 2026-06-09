@@ -80,54 +80,60 @@
 
         /* ── TITLE BLOCK ── */
         .doc-head {
-            position: relative;
             width: 100%;
             margin-bottom: 5pt;
-            min-height: 50pt;
+        }
+
+        .doc-head::after {
+            content: '';
+            display: block;
+            clear: both;
         }
 
         .doc-meta {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 36%;
-            max-width: 66mm;
-            z-index: 1;
+            float: right;
+            width: 52%;
+            margin-right: -{{ $pageMarginX }};
         }
 
-        .meta-box {
-            border: 0.5pt solid #ccc;
+        .meta-tbl {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 6.5pt;
+            border: 0.5pt solid #ccc;
+            border-right: none;
             background: #fff;
         }
 
-        .meta-row {
-            padding: 2pt 5pt;
+        .meta-tbl td {
+            padding: 2.5pt 5pt;
             border-bottom: 0.5pt solid #eee;
-            overflow: hidden;
+            vertical-align: middle;
         }
 
-        .meta-row:last-child { border-bottom: none; }
+        .meta-tbl tr:last-child td { border-bottom: none; }
 
         .meta-lbl {
-            float: left;
-            width: 54%;
-            color: #999;
+            color: #666;
+            width: 42%;
+            white-space: nowrap;
+            padding-left: 6pt;
         }
 
         .meta-val {
-            float: right;
-            width: 46%;
             text-align: right;
             color: #111;
+            width: 58%;
+            padding-right: {{ $pageMarginX }};
         }
 
         .meta-code { color: #7B1E3B; }
 
         .doc-heading {
+            clear: both;
             width: 100%;
             text-align: center;
-            padding: 28pt 0 1pt;
+            padding: 3pt 0 1pt;
         }
 
         .doc-title {
@@ -420,6 +426,26 @@
 
     {{-- ────────── DOCUMENT TITLE ────────── --}}
     <div class="doc-head">
+        <div class="doc-meta">
+            <table class="meta-tbl">
+                <tr>
+                    <td class="meta-lbl">Ký hiệu</td>
+                    <td class="meta-val">BM.03/MH.QT.04</td>
+                </tr>
+                <tr>
+                    <td class="meta-lbl">Ngày ban hành</td>
+                    <td class="meta-val">29/08/2025</td>
+                </tr>
+                <tr>
+                    <td class="meta-lbl">Lần ban hành</td>
+                    <td class="meta-val">01</td>
+                </tr>
+                <tr>
+                    <td class="meta-lbl">Mã phiếu</td>
+                    <td class="meta-val"><span class="meta-code">{{ $reqCode }}</span></td>
+                </tr>
+            </table>
+        </div>
         <div class="doc-heading">
             <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
             <div class="doc-subtitle">
@@ -428,26 +454,6 @@
                 @elseif($isBusiness) Công tác
                 @else Đưa đón tận nơi
                 @endif
-            </div>
-        </div>
-        <div class="doc-meta">
-            <div class="meta-box">
-                <div class="meta-row">
-                    <span class="meta-lbl">Ký hiệu</span>
-                    <span class="meta-val">BM.03/MH.QT.04</span>
-                </div>
-                <div class="meta-row">
-                    <span class="meta-lbl">Ngày ban hành</span>
-                    <span class="meta-val">29/08/2025</span>
-                </div>
-                <div class="meta-row">
-                    <span class="meta-lbl">Lần ban hành</span>
-                    <span class="meta-val">01</span>
-                </div>
-                <div class="meta-row">
-                    <span class="meta-lbl">Mã phiếu</span>
-                    <span class="meta-val"><span class="meta-code">{{ $reqCode }}</span></span>
-                </div>
             </div>
         </div>
     </div>

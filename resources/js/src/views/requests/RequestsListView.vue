@@ -623,7 +623,7 @@
       <div v-if="loading" class="border-t border-slate-100 px-4 py-5">
         <div class="mb-3 h-4 w-40 animate-pulse rounded bg-slate-100" />
         <div class="space-y-2">
-          <div v-for="n in 7" :key="n" class="h-11 animate-pulse rounded-lg bg-slate-100" />
+          <div v-for="n in 7" :key="n" class="h-14 animate-pulse rounded-lg bg-slate-100" />
         </div>
       </div>
       <div v-else-if="!items.length" class="border-t border-slate-100 px-4 py-10 text-center">
@@ -651,10 +651,10 @@
         />
         <template v-else>
         <div class="hidden overflow-x-auto md:block">
-        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <table class="min-w-full divide-y divide-slate-200 text-left text-base">
           <thead class="bg-slate-50/80">
             <tr>
-              <th v-if="canBulkTrash" class="w-10 px-3 py-3">
+              <th v-if="canBulkTrash" class="w-11 px-4 py-3.5">
                 <input
                   type="checkbox"
                   class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
@@ -664,36 +664,36 @@
                   @change="onToggleHeaderCheckbox"
                 />
               </th>
-              <th class="px-3 py-3 font-semibold text-slate-700">{{ t('requests_page.col_id') }}</th>
-              <th class="px-3 py-3 font-semibold text-slate-700">{{ t('requests_page.col_trip') }}</th>
-              <th v-if="requestColOn('type_channel')" class="px-3 py-3 font-semibold text-slate-700">
+              <th class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">{{ t('requests_page.col_id') }}</th>
+              <th class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">{{ t('requests_page.col_trip') }}</th>
+              <th v-if="requestColOn('type_channel')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_type_channel') }}
               </th>
-              <th v-if="requestColOn('timeline')" class="px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('timeline')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_timeline') }}
               </th>
-              <th v-if="requestColOn('sla')" class="px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('sla')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_sla') }}
               </th>
-              <th v-if="requestColOn('depart_at')" class="px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('depart_at')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_depart_at') }}
               </th>
-              <th v-if="requestColOn('arrive_by')" class="px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('arrive_by')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_arrive_by') }}
               </th>
-              <th v-if="requestColOn('paper')" class="px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('paper')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_paper') }}
               </th>
-              <th v-if="requestColOn('requester')" class="px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('requester')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_requester') }}
               </th>
-              <th v-if="requestColOn('urgent')" class="px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('urgent')" class="px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_urgent') }}
               </th>
-              <th v-if="requestColOn('notes')" class="min-w-[8rem] px-3 py-3 font-semibold text-slate-700">
+              <th v-if="requestColOn('notes')" class="min-w-[8rem] px-4 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_notes') }}
               </th>
-              <th class="min-w-[7.5rem] px-2 py-3 text-right font-semibold text-slate-700">
+              <th class="min-w-[7.5rem] px-4 py-3.5 text-right text-sm font-semibold uppercase tracking-wide text-slate-600">
                 {{ t('requests_page.col_actions') }}
               </th>
             </tr>
@@ -705,7 +705,7 @@
               class="transition"
               :class="requestRowClass(r)"
             >
-              <td v-if="canBulkTrash" class="px-3 py-3 align-top" :class="isTrashTab ? 'text-slate-700' : ''">
+              <td v-if="canBulkTrash" class="px-4 py-3.5 align-top" :class="isTrashTab ? 'text-slate-700' : ''">
                 <input
                   v-if="isTrashTab || canDeleteRow(r)"
                   type="checkbox"
@@ -714,41 +714,41 @@
                   @change="toggleRowSelected(r.id, $event.target.checked)"
                 />
               </td>
-              <td class="px-3 py-3 align-top">
+              <td class="px-4 py-3.5 align-top">
                 <div class="max-w-fit">
                   <div
-                    class="flex items-center gap-1.5 font-semibold text-slate-900"
+                    class="flex items-center gap-1.5 text-base font-semibold text-slate-900"
                   >
                     <span
                       v-if="r.dispatch_request_template_id"
-                      class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
+                      class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-sm font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
                     >
-                      <ArrowPathIcon class="h-3.5 w-3.5 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
+                      <ArrowPathIcon class="h-4 w-4 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
                       {{ t('requests_page.badge_recurring') }}
                     </span>
                     <ExclamationTriangleIcon
                       v-if="r.is_urgent"
-                      class="h-4 w-4 shrink-0 text-amber-600"
+                      class="h-5 w-5 shrink-0 text-amber-600"
                       aria-hidden="true"
                     />
                     <RouterLink
                       :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                      class="text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400"
+                      class="font-mono text-base text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400"
                     >
                       REQ-{{ r.id }}
                     </RouterLink>
                   </div>
-                  <div class="text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
+                  <div class="mt-0.5 text-sm text-slate-500">{{ formatShortDate(r.created_at) }}</div>
                 </div>
               </td>
-              <td class="max-w-xs px-3 py-3 align-top">
-                <div class="flex gap-2">
-                  <component :is="tripTypeIcon(r.trip_type)" class="mt-0.5 h-5 w-5 shrink-0 text-teal-600" />
+              <td class="max-w-xs px-4 py-3.5 align-top">
+                <div class="flex gap-2.5">
+                  <component :is="tripTypeIcon(r.trip_type)" class="mt-0.5 h-6 w-6 shrink-0 text-teal-600" />
                   <div class="min-w-0">
-                    <div class="truncate font-medium text-slate-900">
+                    <div class="truncate text-base font-semibold leading-snug text-slate-900">
                       {{ (r.origin ?? '—') + ' → ' + (r.destination ?? '—') }}
                     </div>
-                    <div class="text-xs text-slate-500">
+                    <div class="mt-0.5 text-sm text-slate-500">
                       <span v-if="r.passenger_count">{{ t('requests_page.passengers', { n: r.passenger_count }) }}</span>
                       <span v-else-if="r.trip_type === 'cargo'">{{ t('requests_page.cargo') }}</span>
                       <span v-else>{{ t('requests_page.no_passenger_info') }}</span>
@@ -756,53 +756,53 @@
                   </div>
                 </div>
               </td>
-              <td v-if="requestColOn('type_channel')" class="px-3 py-3 align-top">
-                <div>{{ labelTripType(r.trip_type) }}</div>
-                <div class="text-xs text-slate-500">{{ labelSourceChannel(r.source_channel) }}</div>
+              <td v-if="requestColOn('type_channel')" class="px-4 py-3.5 align-top">
+                <div class="font-medium text-slate-900">{{ labelTripType(r.trip_type) }}</div>
+                <div class="mt-0.5 text-sm text-slate-500">{{ labelSourceChannel(r.source_channel) }}</div>
               </td>
-              <td v-if="requestColOn('timeline')" class="px-3 py-3 align-top">
-                <StatusBadge :status="r.status" size="sm" />
-                <div class="mt-1 text-xs text-slate-500">{{ tripTimelineHint(r) }}</div>
+              <td v-if="requestColOn('timeline')" class="px-4 py-3.5 align-top">
+                <StatusBadge :status="r.status" />
+                <div class="mt-1.5 text-sm text-slate-500">{{ tripTimelineHint(r) }}</div>
               </td>
-              <td v-if="requestColOn('sla')" class="px-3 py-3 align-top text-xs">
-                <span v-if="slaCell(r).kind === 'ok'" class="inline-flex items-center gap-1 text-emerald-700">
-                  <CheckCircleIcon class="h-4 w-4" />
+              <td v-if="requestColOn('sla')" class="px-4 py-3.5 align-top text-sm">
+                <span v-if="slaCell(r).kind === 'ok'" class="inline-flex items-center gap-1.5 font-medium text-emerald-700">
+                  <CheckCircleIcon class="h-5 w-5" />
                   {{ t('requests_page.sla_on_track') }}
                 </span>
-                <span v-else-if="slaCell(r).kind === 'warn'" class="inline-flex items-center gap-1 text-amber-800">
-                  <ExclamationTriangleIcon class="h-4 w-4 shrink-0" />
+                <span v-else-if="slaCell(r).kind === 'warn'" class="inline-flex items-center gap-1.5 font-medium text-amber-800">
+                  <ExclamationTriangleIcon class="h-5 w-5 shrink-0" />
                   {{ slaCell(r).text }}
                 </span>
                 <span v-else class="text-slate-400">—</span>
               </td>
-              <td v-if="requestColOn('depart_at')" class="whitespace-nowrap px-3 py-3 align-top text-xs text-slate-700">
+              <td v-if="requestColOn('depart_at')" class="whitespace-nowrap px-4 py-3.5 align-top text-sm font-medium tabular-nums text-slate-700">
                 {{ formatDepartDate(r.depart_at) }}
               </td>
-              <td v-if="requestColOn('arrive_by')" class="whitespace-nowrap px-3 py-3 align-top text-xs text-slate-700">
+              <td v-if="requestColOn('arrive_by')" class="whitespace-nowrap px-4 py-3.5 align-top text-sm font-medium tabular-nums text-slate-700">
                 {{ formatDepartDate(r.arrive_by) }}
               </td>
-              <td v-if="requestColOn('paper')" class="max-w-[10rem] px-3 py-3 align-top text-xs">
-                <div>{{ labelPaperStatus(r.paper_status) }}</div>
+              <td v-if="requestColOn('paper')" class="max-w-[10rem] px-4 py-3.5 align-top text-sm">
+                <div class="font-medium text-slate-800">{{ labelPaperStatus(r.paper_status) }}</div>
                 <div v-if="r.paper_reference" class="mt-0.5 truncate text-slate-500" :title="r.paper_reference">
                   {{ r.paper_reference }}
                 </div>
               </td>
-              <td v-if="requestColOn('requester')" class="max-w-[10rem] px-3 py-3 align-top text-xs text-slate-700">
+              <td v-if="requestColOn('requester')" class="max-w-[10rem] px-4 py-3.5 align-top text-sm font-medium text-slate-700">
                 <span class="truncate">{{ r.requester?.name ?? '—' }}</span>
               </td>
-              <td v-if="requestColOn('urgent')" class="px-3 py-3 align-top">
+              <td v-if="requestColOn('urgent')" class="px-4 py-3.5 align-top">
                 <span
                   v-if="r.is_urgent"
-                  class="inline-flex rounded-md bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-800"
+                  class="inline-flex rounded-md bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-800"
                 >
                   {{ t('requests_page.filter_priority_urgent') }}
                 </span>
-                <span v-else class="text-xs text-slate-400">—</span>
+                <span v-else class="text-sm text-slate-400">—</span>
               </td>
-              <td v-if="requestColOn('notes')" class="max-w-xs px-3 py-3 align-top text-xs text-slate-600">
+              <td v-if="requestColOn('notes')" class="max-w-xs px-4 py-3.5 align-top text-sm leading-relaxed text-slate-600">
                 <p class="line-clamp-2">{{ requestNotesListCell(r) }}</p>
               </td>
-              <td class="px-2 py-3 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''">
+              <td class="px-4 py-3.5 align-top text-right" :class="isTrashTab ? 'text-slate-800' : ''">
                 <div class="inline-flex flex-wrap items-center justify-end gap-1">
                   <AppRowActionsMenu
                     align="end"
@@ -858,35 +858,35 @@
         </div>
 
         <ul class="divide-y divide-slate-100 md:hidden" role="list">
-          <li v-for="r in items" :key="`m-${r.id}`" class="px-4 py-3" :class="requestRowClass(r)">
-            <div class="flex items-start justify-between gap-2">
+          <li v-for="r in items" :key="`m-${r.id}`" class="px-4 py-4" :class="requestRowClass(r)">
+            <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-1.5 font-semibold text-slate-900">
+                <div class="flex flex-wrap items-center gap-1.5 text-base font-semibold text-slate-900">
                   <span
                     v-if="r.dispatch_request_template_id"
-                    class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
+                    class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-indigo-50 px-2 py-0.5 text-sm font-bold uppercase text-indigo-900 ring-1 ring-indigo-600/20 dark:bg-indigo-950/60 dark:text-indigo-200 dark:ring-indigo-500/30"
                   >
-                    <ArrowPathIcon class="h-3.5 w-3.5 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
+                    <ArrowPathIcon class="h-4 w-4 shrink-0 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
                     {{ t('requests_page.badge_recurring') }}
                   </span>
                   <ExclamationTriangleIcon
                     v-if="r.is_urgent"
-                    class="h-4 w-4 shrink-0 text-amber-600"
+                    class="h-5 w-5 shrink-0 text-amber-600"
                     aria-hidden="true"
                   />
                   <RouterLink
                     :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
-                    class="underline decoration-slate-300 underline-offset-2 hover:text-va-800"
+                    class="font-mono underline decoration-slate-300 underline-offset-2 hover:text-va-800"
                   >
                     REQ-{{ r.id }}
                   </RouterLink>
                 </div>
-                <div class="mt-0.5 text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
-                <div class="mt-1 truncate text-sm text-slate-800">
+                <div class="mt-0.5 text-sm text-slate-500">{{ formatShortDate(r.created_at) }}</div>
+                <div class="mt-1.5 truncate text-base font-semibold text-slate-800">
                   {{ (r.origin ?? '—') + ' → ' + (r.destination ?? '—') }}
                 </div>
               </div>
-              <StatusBadge class="shrink-0" :status="r.status" size="sm" />
+              <StatusBadge class="shrink-0" :status="r.status" />
             </div>
           </li>
         </ul>
