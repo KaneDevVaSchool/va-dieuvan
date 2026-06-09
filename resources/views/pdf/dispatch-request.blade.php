@@ -8,7 +8,7 @@
         $hdrBandMm = 41.3;
         $pageOrient = $isCargo ? 'landscape' : 'portrait';
         $pageMarginTop = $isCargo ? '12mm' : ($hdrBandMm + 4) . 'mm';
-        $pageMarginX   = $isCargo ? '8mm' : '10mm';
+        $pageMarginX   = '5mm';
         $pageMarginBot = $isCargo ? '12mm' : '14mm';
         $bgW = $isCargo ? '297mm' : '210mm';
         $bgH = $isCargo ? '210mm' : '297mm';
@@ -34,6 +34,7 @@
             $fontFaceCss .= "@font-face { font-family: 'GarbataTrial'; font-style: {$gStyle}; font-weight: {$gWeight}; src: url(\"{$path}\") format('truetype'); }\n";
         }
         $pdfFontFamily = "'GarbataTrial', sans-serif";
+        $pdfTabularFont = "'DejaVu Sans', sans-serif";
     @endphp
     <style>
         {!! $fontFaceCss !!}
@@ -46,10 +47,10 @@
         * { box-sizing: border-box; font-family: {!! $pdfFontFamily !!}; }
 
         body {
-            font-size: 7.5pt;
+            font-size: 8.5pt;
             color: #111;
             margin: 0;
-            line-height: 1.4;
+            line-height: 1.55;
         }
 
         strong, b { font-weight: normal; }
@@ -107,26 +108,37 @@
             margin-bottom: 5pt;
         }
 
-        .doc-head-row {
-            width: 100%;
-            border-collapse: collapse;
+        .doc-head::after {
+            content: '';
+            display: block;
+            clear: both;
         }
 
-        .doc-head-row td { padding: 0; vertical-align: top; }
+        .doc-meta {
+            float: right;
+            width: 42%;
+            max-width: 78mm;
+        }
 
-        .doc-meta { width: 52%; vertical-align: top; }
+        .doc-heading {
+            clear: both;
+            width: 100%;
+            text-align: center;
+            padding: 3pt 0 2pt;
+        }
 
         .meta-tbl {
             width: 100%;
             border-collapse: collapse;
-            font-size: 6.5pt;
+            font-size: 7.5pt;
+            line-height: 1.5;
             border: 0.5pt solid #ccc;
             border-right: none;
             background: #fff;
         }
 
         .meta-tbl td {
-            padding: 2.5pt 5pt;
+            padding: 3.5pt 5pt;
             border-bottom: 0.5pt solid #eee;
             vertical-align: middle;
         }
@@ -149,29 +161,23 @@
 
         .meta-code { color: #7B1E3B; }
 
-        .doc-heading {
-            width: 100%;
-            text-align: center;
-            padding: 4pt 0 2pt;
-        }
-
         .doc-title {
-            font-size: 13.5pt;
+            font-size: 15pt;
             font-weight: normal;
             text-transform: uppercase;
             letter-spacing: 1.5pt;
             text-align: center;
             color: #111;
-            line-height: 1.25;
+            line-height: 1.4;
         }
 
         .doc-subtitle {
-            font-size: 7.5pt;
+            font-size: 8.5pt;
             text-align: center;
             color: #555;
             font-style: italic;
-            margin-top: 2pt;
-            line-height: 1.3;
+            margin-top: 3pt;
+            line-height: 1.5;
         }
 
         /* ── SECTION HEADERS (A–G) ── */
@@ -180,23 +186,23 @@
 
         .sec-hd {
             text-align: left;
-            padding: 4pt 8pt 3.5pt 6pt;
+            padding: 5pt 8pt 4.5pt 6pt;
             border-top: 0.75pt solid #444;
             border-bottom: 0.5pt solid #bbb;
             background: #f2f2f2;
             page-break-after: avoid;
-            line-height: 1.35;
+            line-height: 1.55;
         }
 
         .sec-badge {
             display: inline-block;
-            min-width: 12pt;
+            min-width: 13pt;
             text-align: center;
             border: 0.5pt solid #444;
             background: #fff;
             color: #111;
-            font-size: 7pt;
-            padding: 1pt 4pt;
+            font-size: 8pt;
+            padding: 1.5pt 4pt;
             margin-right: 7pt;
             vertical-align: middle;
             letter-spacing: 0;
@@ -204,7 +210,7 @@
 
         .sec-ttl {
             display: inline;
-            font-size: 7.5pt;
+            font-size: 8.5pt;
             font-weight: normal;
             text-transform: uppercase;
             letter-spacing: 0.35pt;
@@ -214,7 +220,7 @@
 
         .sec-sub {
             display: inline;
-            font-size: 6.5pt;
+            font-size: 7.5pt;
             font-style: italic;
             letter-spacing: 0;
             text-transform: none;
@@ -232,7 +238,7 @@
         table.ft td {
             border-right: 0.5pt solid #ddd;
             border-bottom: 0.5pt solid #ddd;
-            padding: 3pt 6pt 4pt;
+            padding: 4pt 6pt 5pt;
             vertical-align: top;
         }
 
@@ -242,29 +248,41 @@
         table.ft td:last-child     { border-right: none; }
 
         .fl {
-            font-size: 5.5pt;
+            font-size: 6.5pt;
             color: #aaa;
             text-transform: uppercase;
             letter-spacing: 0.5pt;
-            margin-bottom: 2pt;
+            margin-bottom: 2.5pt;
+            line-height: 1.45;
         }
 
         .fl-hint { font-style: italic; color: #ccc; text-transform: none; letter-spacing: 0; }
 
         .fv {
-            font-size: 8pt;
+            font-family: {!! $pdfTabularFont !!};
+            font-size: 9pt;
             color: #111;
-            min-height: 12pt;
+            min-height: 14pt;
+            line-height: 1.55;
             border-bottom: 0.6pt dotted #bbb;
-            padding-bottom: 1.5pt;
+            padding-bottom: 2pt;
+        }
+
+        .meta-tbl,
+        .meta-lbl,
+        .meta-val,
+        .meta-code,
+        .g-dots {
+            font-family: {!! $pdfTabularFont !!};
         }
 
         /* ── HINT BAR ── */
         .hint-bar {
             border-top: 0.5pt solid #ddd;
             border-bottom: 0.5pt solid #ddd;
-            padding: 3pt 6pt;
-            font-size: 6.5pt;
+            padding: 4pt 6pt;
+            font-size: 7.5pt;
+            line-height: 1.5;
             color: #888;
             font-style: italic;
         }
@@ -276,7 +294,8 @@
             display: inline-block;
             border: 0.5pt solid #999;
             color: #333;
-            font-size: 6.5pt;
+            font-size: 7.5pt;
+            line-height: 1.45;
             padding: 1.5pt 7pt;
             border-radius: 10pt;
             margin-right: 4pt;
@@ -284,41 +303,43 @@
         }
 
         /* ── CHECKBOX ── */
-        .cb { font-family: {!! $pdfFontFamily !!}; font-size: 8pt; margin-right: 3pt; }
+        .cb { font-family: {!! $pdfTabularFont !!}; font-size: 9pt; margin-right: 3pt; }
 
         /* ── DATA TABLES ── */
-        table.dt { width: 100%; border-collapse: collapse; font-size: 6.5pt; }
+        table.dt { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
         table.dt thead tr { page-break-inside: avoid; page-break-after: avoid; }
 
         table.dt th {
-            padding: 3.5pt 3pt;
+            padding: 4.5pt 3pt;
             text-align: center;
-            font-size: 5.5pt;
+            font-size: 6.5pt;
             font-weight: normal;
             border: 0.5pt solid #bbb;
             text-transform: uppercase;
             letter-spacing: 0.2pt;
             background: #f4f4f4;
             color: #444;
-            line-height: 1.3;
+            line-height: 1.5;
         }
 
         table.dt th.go   { background: #eaf2fc; color: #2a4a7a; }
         table.dt th.back { background: #eaf6ee; color: #1a4028; }
 
         table.dt td {
-            padding: 3.5pt 3pt;
+            font-family: {!! $pdfTabularFont !!};
+            padding: 4.5pt 3pt;
             border: 0.5pt solid #e0e0e0;
             color: #111;
             vertical-align: top;
-            font-size: 7pt;
-            line-height: 1.4;
+            font-size: 8pt;
+            line-height: 1.55;
         }
 
         table.dt tbody tr:nth-child(even) td { background: #fafafa; }
         table.dt td.tl { text-align: left; }
         table.dt td.tr { text-align: right; white-space: nowrap; }
         table.dt td.tc { text-align: center; }
+        table.dt td.dt-time { white-space: nowrap; font-size: 7.5pt; }
 
         table.dt tr.row-total td {
             background: #f5f5f5;
@@ -328,7 +349,8 @@
         }
 
         table.dt .th-sub {
-            font-size: 5pt;
+            font-size: 6pt;
+            line-height: 1.4;
             text-transform: none;
             display: block;
             margin-top: 1pt;
@@ -341,7 +363,8 @@
         table.sig td { border: 0.5pt solid #bbb; text-align: center; padding: 0; }
 
         .sig-hd {
-            font-size: 6.5pt;
+            font-size: 7.5pt;
+            line-height: 1.5;
             text-align: center;
             vertical-align: middle;
             padding: 4pt 4pt;
@@ -358,11 +381,11 @@
             text-align: center;
         }
 
-        .sig-name { font-size: 7pt; color: #111; }
+        .sig-name { font-size: 8pt; line-height: 1.5; color: #111; }
 
         /* ── SECTION G ── */
-        .g-row { padding: 5pt 6pt; display: block; }
-        .g-lbl { font-size: 7pt; color: #111; }
+        .g-row { padding: 6pt 6pt; display: block; line-height: 1.55; }
+        .g-lbl { font-size: 8pt; color: #111; }
 
         .g-dots {
             border-bottom: 0.6pt dotted #bbb;
@@ -377,16 +400,18 @@
             display: inline-block;
             border: 0.5pt solid #999;
             color: #333;
-            font-size: 6.5pt;
+            font-size: 7.5pt;
+            line-height: 1.45;
             padding: 1pt 6pt;
             border-radius: 2pt;
         }
 
-        .muted { font-size: 6.5pt; color: #aaa; font-style: italic; }
+        .muted { font-size: 7.5pt; line-height: 1.5; color: #aaa; font-style: italic; }
 
         .d1-lbl {
-            padding: 2.5pt 6pt 2pt;
-            font-size: 5.5pt;
+            padding: 3pt 6pt 2.5pt;
+            font-size: 6.5pt;
+            line-height: 1.45;
             color: #aaa;
             text-transform: uppercase;
             letter-spacing: 0.5pt;
@@ -396,7 +421,8 @@
         /* ── PAGE FOOTER ── */
         .pg-footer {
             text-align: center;
-            font-size: 6pt;
+            font-size: 7pt;
+            line-height: 1.5;
             color: #bbb;
             margin-top: 8pt;
             padding-top: 3pt;
@@ -412,8 +438,8 @@
 
         $cb = static function (bool $checked): string {
             return $checked
-                ? '<span style="font-family:GarbataTrial,sans-serif;font-size:8pt;color:#1a1a1a;">&#x2611;</span>'
-                : '<span style="font-family:GarbataTrial,sans-serif;font-size:8pt;color:#ccc;">&#x2610;</span>';
+                ? '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#1a1a1a;">&#x2611;</span>'
+                : '<span style="font-family:DejaVu Sans,sans-serif;font-size:9pt;color:#ccc;">&#x2610;</span>';
         };
 
         $checkedTargets = array_filter($targetGrid, fn($t) => $t['checked']);
@@ -445,40 +471,36 @@
 
     {{-- ────────── DOCUMENT TITLE ────────── --}}
     <div class="doc-head">
-        <table class="doc-head-row">
-            <tr>
-                <td style="width:48%; vertical-align:middle; text-align:center; padding-right:8pt;">
-                    <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
-                    <div class="doc-subtitle">
-                        @if($isCargo) Điều chuyển Hàng hóa
-                        @elseif($isP2P) Vận chuyển Điểm — Điểm
-                        @elseif($isBusiness) Công tác
-                        @else Đưa đón tận nơi
-                        @endif
-                    </div>
-                </td>
-                <td class="doc-meta">
-                    <table class="meta-tbl">
-                        <tr>
-                            <td class="meta-lbl">Ký hiệu</td>
-                            <td class="meta-val">BM.03/MH.QT.04</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-lbl">Ngày ban hành</td>
-                            <td class="meta-val">29/08/2025</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-lbl">Lần ban hành</td>
-                            <td class="meta-val">01</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-lbl">Mã phiếu</td>
-                            <td class="meta-val"><span class="meta-code">{{ $reqCode }}</span></td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
+        <div class="doc-meta">
+            <table class="meta-tbl">
+                <tr>
+                    <td class="meta-lbl">Ký hiệu</td>
+                    <td class="meta-val">BM.03/MH.QT.04</td>
+                </tr>
+                <tr>
+                    <td class="meta-lbl">Ngày ban hành</td>
+                    <td class="meta-val">29/08/2025</td>
+                </tr>
+                <tr>
+                    <td class="meta-lbl">Lần ban hành</td>
+                    <td class="meta-val">01</td>
+                </tr>
+                <tr>
+                    <td class="meta-lbl">Mã phiếu</td>
+                    <td class="meta-val"><span class="meta-code">{{ $reqCode }}</span></td>
+                </tr>
+            </table>
+        </div>
+        <div class="doc-heading">
+            <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
+            <div class="doc-subtitle">
+                @if($isCargo) Điều chuyển Hàng hóa
+                @elseif($isP2P) Vận chuyển Điểm — Điểm
+                @elseif($isBusiness) Công tác
+                @else Đưa đón tận nơi
+                @endif
+            </div>
+        </div>
     </div>
 
     {{-- ────────── A · NGƯỜI ĐỀ NGHỊ ────────── --}}
@@ -568,15 +590,15 @@
                 <tr>
                     <td style="width:60%; vertical-align:middle; border-top:none; padding:4pt 8pt;">
                         <span class="cb">{!! $cb($isUrgent) !!}</span>
-                        <strong style="font-size:7.5pt;">Gấp</strong>
+                        <strong style="font-size:8.5pt;">Gấp</strong>
                         @if($isUrgent)
-                            &nbsp;<span style="font-size:7pt; color:#c0392b;">Lý do: {{ $urgentReason }}</span>
+                            &nbsp;<span style="font-size:8pt; color:#c0392b;">Lý do: {{ $urgentReason }}</span>
                         @else
-                            &nbsp;<span style="font-size:7pt; color:#bbb;">Lý do: —</span>
+                            &nbsp;<span style="font-size:8pt; color:#bbb;">Lý do: —</span>
                         @endif
                     </td>
                     <td style="width:40%; text-align:right; vertical-align:middle; border-top:none; padding:4pt 8pt;">
-                        <span style="font-size:5.5pt; color:#888; text-transform:uppercase; letter-spacing:0.3pt;">Loại yêu cầu:</span>
+                        <span style="font-size:6.5pt; color:#888; text-transform:uppercase; letter-spacing:0.3pt;">Loại yêu cầu:</span>
                         &nbsp;<span class="chip-type">{{ $tripType }}</span>
                     </td>
                 </tr>
@@ -596,7 +618,7 @@
                 @forelse($checkedTargets as $tg)
                     <span class="target-chip">&#x2714;&nbsp;{{ $tg['label'] }}</span>
                 @empty
-                    <span style="font-size:7pt; color:#bbb;">—</span>
+                    <span style="font-size:8pt; color:#bbb;">—</span>
                 @endforelse
             </div>
 
@@ -677,15 +699,15 @@
                                 <td class="tl">{{ $row['dim'] }}</td>
                                 <td class="tl">{{ $row['weight'] }}</td>
                                 <td class="tl">{{ $row['inotes'] }}</td>
-                                <td class="tc">{{ $row['puTime'] }}</td>
+                                <td class="tc dt-time">{{ $row['puTime'] }}</td>
                                 <td class="tl">{{ $row['puPlace'] }}</td>
                                 <td class="tl">{{ $row['puContact'] }}</td>
-                                <td class="tc">{{ $row['delTime'] }}</td>
+                                <td class="tc dt-time">{{ $row['delTime'] }}</td>
                                 <td class="tl">{{ $row['delPlace'] }}</td>
                                 <td class="tl">{{ $row['delContact'] }}</td>
                                 <td class="tc">{{ $row['transport'] }}</td>
                                 <td class="tr">
-                                    {{ DispatchRequestPdfPresenter::formatCostCell($row['name'] ?? '', $row['cost'] ?? '') }}
+                                    {{ $row['cost'] }}
                                 </td>
                             </tr>
                         @endforeach
@@ -746,9 +768,9 @@
                                 <td class="tc">{{ $idx + 1 }}</td>
                                 <td class="tl">{{ $row['name'] }}</td>
                                 <td class="tc">{{ $row['qty'] }}</td>
-                                <td class="tc">{{ $row['puTime'] }}</td>
+                                <td class="tc dt-time">{{ $row['puTime'] }}</td>
                                 <td class="tl">{{ $row['puPlace'] }}</td>
-                                <td class="tc">{{ $row['delTime'] }}</td>
+                                <td class="tc dt-time">{{ $row['delTime'] }}</td>
                                 <td class="tl">{{ $row['delPlace'] }}</td>
                                 <td class="tl">{{ $row['puContact'] }}</td>
                                 <td class="tr">{{ $row['unitPrice'] ?? '' }}</td>
@@ -789,9 +811,9 @@
                                 <td class="tc">{{ $row['qty'] }}</td>
                                 <td class="tl">{{ $row['dim'] }}</td>
                                 <td class="tl">{{ $row['inotes'] }}</td>
-                                <td class="tc">{{ $row['puTime'] }}</td>
+                                <td class="tc dt-time">{{ $row['puTime'] }}</td>
                                 <td class="tl">{{ $row['puPlace'] }}</td>
-                                <td class="tc">{{ $row['delTime'] }}</td>
+                                <td class="tc dt-time">{{ $row['delTime'] }}</td>
                                 <td class="tl">{{ $row['delPlace'] }}</td>
                                 <td class="tc">{{ $row['delContact'] ?: '—' }}</td>
                             </tr>
@@ -823,11 +845,11 @@
             </tr>
             <tr>
                 <td class="sig-bd">
-                    <span style="font-size:6pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span style="font-size:7pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
                     <span class="sig-name">Phạm Thanh Hùng</span>
                 </td>
-                <td class="sig-bd"><span style="font-size:6pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
-                <td class="sig-bd"><span style="font-size:6pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
+                <td class="sig-bd"><span style="font-size:7pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
+                <td class="sig-bd"><span style="font-size:7pt; color:#bbb; font-style:italic;">(Ký, ghi rõ họ tên)</span></td>
             </tr>
             <tr>
                 <td class="sig-hd">Giám đốc Vận hành</td>
@@ -836,12 +858,12 @@
             </tr>
             <tr>
                 <td class="sig-bd">
-                    <span style="font-size:6pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span style="font-size:7pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
                     <span class="sig-name">Vũ Quốc Vương</span>
                 </td>
                 <td class="sig-bd"></td>
                 <td class="sig-bd">
-                    <span style="font-size:6pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
+                    <span style="font-size:7pt; color:#bbb; font-style:italic; display:block; margin-bottom:2pt;">(Ký, ghi rõ họ tên)</span>
                     <span class="sig-name">Nguyễn Ngọc Hiển</span>
                 </td>
             </tr>

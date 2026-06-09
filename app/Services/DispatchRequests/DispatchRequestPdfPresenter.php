@@ -8,6 +8,8 @@ use Illuminate\Support\Carbon;
 
 final class DispatchRequestPdfPresenter
 {
+    private const PDF_TZ = 'Asia/Ho_Chi_Minh';
+
     public static function formatCostCell(string $name, string $cost): string
     {
         $amount = self::parseMoney($cost);
@@ -173,10 +175,10 @@ final class DispatchRequestPdfPresenter
     private static function resolveG2Date(DispatchRequest $dr): string
     {
         if ($dr->paper_received_at) {
-            return Carbon::parse($dr->paper_received_at)->format('d/m/Y');
+            return Carbon::parse($dr->paper_received_at)->timezone(self::PDF_TZ)->format('d/m/Y');
         }
         if ($dr->status === 'approved' && $dr->updated_at) {
-            return $dr->updated_at->format('d/m/Y');
+            return $dr->updated_at->timezone(self::PDF_TZ)->format('d/m/Y');
         }
 
         return '';
@@ -216,18 +218,21 @@ final class DispatchRequestPdfPresenter
     {
         return [
             'name' => self::nzString($r['name'] ?? null),
-            'qty' => self::nzString($r['qty'] ?? null),
+            'qty' => self::fmtPdfQty($r['qty'] ?? null),
             'dim' => self::nzString($r['dimensions'] ?? null),
             'weight' => self::nzString($r['weight'] ?? null),
             'inotes' => self::nzString($r['item_notes'] ?? null),
-            'puTime' => self::nzString($r['pickup_at'] ?? null),
+            'puTime' => self::fmtPdfShortDatetime($r['pickup_at'] ?? null),
             'puPlace' => self::nzString($r['pickup_place'] ?? null),
             'puContact' => self::nzString($r['pickup_contact'] ?? null),
-            'delTime' => self::nzString($r['delivery_at'] ?? null),
+            'delTime' => self::fmtPdfShortDatetime($r['delivery_at'] ?? null),
             'delPlace' => self::nzString($r['delivery_place'] ?? null),
             'delContact' => self::nzString($r['delivery_contact'] ?? null),
             'transport' => self::nzString($r['transport_note'] ?? null),
-            'cost' => self::nzString($r['cost'] ?? null),
+            'cost' => self::formatCostCell(
+                self::nzString($r['name'] ?? null),
+                self::nzString($r['cost'] ?? null),
+            ),
         ];
     }
 
@@ -241,9 +246,9 @@ final class DispatchRequestPdfPresenter
             $name = self::nzString($r['name'] ?? null);
         }
 
-        $qty = self::nzString($r['guests'] ?? null);
+        $qty = self::fmtPdfQty($r['guests'] ?? null);
         if ($qty === '') {
-            $qty = self::nzString(isset($r['passenger_count']) ? (string) $r['passenger_count'] : '');
+            $qty = self::fmtPdfQty($r['passenger_count'] ?? null);
         }
 
         $puPlace = self::nzString($r['pickup_place'] ?? null);
@@ -276,12 +281,12 @@ final class DispatchRequestPdfPresenter
     {
         return [
             'name' => self::nzString($r['description'] ?? null) ?: 'Công tác',
-            'qty' => self::nzString($r['guests'] ?? null),
+            'qty' => self::fmtPdfQty($r['guests'] ?? null),
             'dim' => self::nzString($r['waypoint'] ?? null),
             'inotes' => self::nzString($r['notes'] ?? null),
-            'puTime' => self::nzString($r['depart_at'] ?? null),
+            'puTime' => self::fmtPdfShortDatetime($r['depart_at'] ?? null),
             'puPlace' => self::nzString($r['pickup'] ?? null),
-            'delTime' => self::nzString($r['return_at'] ?? null),
+            'delTime' => self::fmtPdfShortDatetime($r['return_at'] ?? null),
             'delPlace' => self::nzString($r['dropoff'] ?? null),
             'delContact' => self::nzString($r['other'] ?? null),
         ];
@@ -327,11 +332,42 @@ final class DispatchRequestPdfPresenter
         if ($s === '') {
             return '';
         }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m)) {
+            return sprintf('%02d/%02d/%s', (int) $m[3], (int) $m[2], $m[1]);
+        }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/', $s, $m)
+            && ! preg_match('/Z$|[+-]\d{2}:?\d{2}$/', $s)) {
+            return sprintf('%02d/%02d %s:%s', (int) $m[3], (int) $m[2], $m[4], $m[5]);
+        }
+
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/', $s, $m)) {
+            if (isset($m[4], $m[5])) {
+                return sprintf('%02d/%02d %02d:%s', (int) $m[1], (int) $m[2], (int) $m[4], $m[5]);
+            }
+
+            return sprintf('%02d/%02d/%s', (int) $m[1], (int) $m[2], $m[3]);
+        }
+
         try {
-            return Carbon::parse($s)->format('d/m H:i');
+            return Carbon::parse($s)->timezone(self::PDF_TZ)->format('d/m H:i');
         } catch (\Throwable) {
             return $s;
         }
+    }
+
+    private static function fmtPdfQty(mixed $v): string
+    {
+        $s = self::nzString(is_scalar($v) ? (string) $v : null);
+        if ($s === '') {
+            return '';
+        }
+        if (is_numeric($s)) {
+            return (string) (int) round((float) $s);
+        }
+
+        return $s;
     }
 
     private static function fmtPdfVndSuffix(mixed $v): string
@@ -347,8 +383,22 @@ final class DispatchRequestPdfPresenter
         if ($s === '') {
             return '';
         }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m)) {
+            return sprintf('%02d/%02d/%s', (int) $m[3], (int) $m[2], $m[1]);
+        }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $s, $m)
+            && ! preg_match('/Z$|[+-]\d{2}:?\d{2}$/', $s)) {
+            return sprintf('%02d/%02d/%s', (int) $m[3], (int) $m[2], $m[1]);
+        }
+
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $s, $m)) {
+            return sprintf('%02d/%02d/%s', (int) $m[1], (int) $m[2], $m[3]);
+        }
+
         try {
-            return Carbon::parse($s)->format('d/m/Y');
+            return Carbon::parse($s)->timezone(self::PDF_TZ)->format('d/m/Y');
         } catch (\Throwable) {
             return $s;
         }
@@ -359,7 +409,26 @@ final class DispatchRequestPdfPresenter
         if ($v === null || $v === '') {
             return 0;
         }
-        $s = str_replace(['.', ' ', ','], '', (string) $v);
+        if (is_int($v)) {
+            return $v;
+        }
+        if (is_float($v)) {
+            return (int) round($v);
+        }
+
+        $s = trim((string) $v);
+        $s = preg_replace('/[^\d,.-]/u', '', $s) ?? '';
+        if ($s === '' || $s === '-') {
+            return 0;
+        }
+        if (preg_match('/^\d{1,3}(\.\d{3})+$/', $s)) {
+            return (int) str_replace('.', '', $s);
+        }
+        if (preg_match('/^\d+$/', $s)) {
+            return (int) $s;
+        }
+
+        $s = str_replace(['.', ' ', ','], '', $s);
         if ($s === '' || ! is_numeric($s)) {
             return 0;
         }
