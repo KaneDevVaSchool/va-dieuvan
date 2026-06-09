@@ -14,13 +14,31 @@
         $bgH = $isCargo ? '210mm' : '297mm';
         $useBranding = ! $isCargo;
     @endphp
+    @php
+        $garbataDir = storage_path('fonts/garbata/');
+        $garbataFaces = [
+            ['GarbataTrial-Regular',    'normal', 'normal'],
+            ['GarbataTrial-Italic',     'italic', 'normal'],
+            ['GarbataTrial-Bold',       'normal', 'bold'],
+            ['GarbataTrial-BoldItalic', 'italic', 'bold'],
+            ['GarbataTrial-Medium',     'normal', '500'],
+            ['GarbataTrial-Light',      'normal', '300'],
+        ];
+        $fontFaceCss = '';
+        foreach ($garbataFaces as [$gFile, $gStyle, $gWeight]) {
+            $path = str_replace('\\', '/', $garbataDir) . $gFile . '.ttf';
+            $fontFaceCss .= "@font-face { font-family: 'GarbataTrial'; font-style: {$gStyle}; font-weight: {$gWeight}; src: url(\"{$path}\") format('truetype'); }\n";
+        }
+    @endphp
     <style>
+        {!! $fontFaceCss !!}
+
         @page {
             margin: {{ $pageMarginTop }} {{ $pageMarginX }} {{ $pageMarginBot }} {{ $pageMarginX }};
             size: A4 {{ $pageOrient }};
         }
 
-        * { box-sizing: border-box; font-family: 'Garbata', 'DejaVu Sans', sans-serif; }
+        * { box-sizing: border-box; font-family: 'GarbataTrial', 'DejaVu Sans', sans-serif; }
 
         body {
             font-size: 7.5pt;
@@ -261,7 +279,7 @@
         }
 
         /* ── CHECKBOX ── */
-        .cb { font-family: 'Garbata', 'DejaVu Sans', sans-serif; font-size: 8pt; margin-right: 3pt; }
+        .cb { font-family: 'GarbataTrial', 'DejaVu Sans', sans-serif; font-size: 8pt; margin-right: 3pt; }
 
         /* ── DATA TABLES ── */
         table.dt { width: 100%; border-collapse: collapse; font-size: 6.5pt; }
