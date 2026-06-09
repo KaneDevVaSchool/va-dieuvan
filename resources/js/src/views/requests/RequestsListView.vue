@@ -197,35 +197,27 @@
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-          <AppFilterDropdown
-            :panel-title="t('requests_page.filter_trip_type')"
-            :summary-text="tripTypeChipSummary"
-            :active="!!filters.trip_type"
-            :aria-label="t('requests_page.filter_trip_type')"
-            summary-text-class="max-w-[10rem]"
-            panel-class="min-w-[220px] py-1"
-          >
-            <ul class="max-h-[min(60vh,320px)] space-y-0.5 overflow-y-auto px-1 py-1">
-              <li v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                <button
-                  type="button"
-                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                  :class="
-                    filters.trip_type === opt.value
-                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  "
-                  @click="applyFilterPatch($event, { trip_type: opt.value })"
-                >
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
+          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
+            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
+              t('requests_page.filter_trip_type')
+            }}</span>
+            <select
+              v-model="filters.trip_type"
+              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :aria-label="t('requests_page.filter_trip_type')"
+              @change="onFilterChange"
+            >
+              <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </label>
 
           <AppFilterDropdown
             :panel-title="t('requests_page.filter_depart_range')"
-            :summary-text="departRangeChipSummary"
+            :show-chip-label="true"
+            :label="t('requests_page.filter_depart_range')"
+            :summary-text="filterDepartSummary"
             :active="!!(filters.from || filters.to)"
             :aria-label="t('requests_page.filter_depart_range')"
             full-width-summary
@@ -266,83 +258,53 @@
             </div>
           </AppFilterDropdown>
 
-          <AppFilterDropdown
-            :panel-title="t('requests_page.filter_channel')"
-            :summary-text="channelChipSummary"
-            :active="!!filters.source_channel"
-            :aria-label="t('requests_page.filter_channel')"
-            summary-text-class="max-w-[8rem]"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                <button
-                  type="button"
-                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                  :class="
-                    filters.source_channel === opt.value
-                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  "
-                  @click="applyFilterPatch($event, { source_channel: opt.value })"
-                >
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
+          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
+            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
+              t('requests_page.filter_channel')
+            }}</span>
+            <select
+              v-model="filters.source_channel"
+              class="h-9 max-w-[min(100%,10rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :aria-label="t('requests_page.filter_channel')"
+              @change="onFilterChange"
+            >
+              <option v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </label>
 
-          <AppFilterDropdown
-            :panel-title="t('requests_page.filter_paper')"
-            :summary-text="paperChipSummary"
-            :active="!!filters.paper_status"
-            :aria-label="t('requests_page.filter_paper')"
-            summary-text-class="max-w-[9rem]"
-            panel-class="min-w-[220px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                <button
-                  type="button"
-                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                  :class="
-                    filters.paper_status === opt.value
-                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  "
-                  @click="applyFilterPatch($event, { paper_status: opt.value })"
-                >
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
+          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
+            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
+              t('requests_page.filter_paper')
+            }}</span>
+            <select
+              v-model="filters.paper_status"
+              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :aria-label="t('requests_page.filter_paper')"
+              @change="onFilterChange"
+            >
+              <option v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </label>
 
-          <AppFilterDropdown
-            :panel-title="t('requests_page.filter_priority')"
-            :summary-text="priorityChipSummary"
-            :active="filters.priority === 'urgent'"
-            :aria-label="t('requests_page.filter_priority')"
-            summary-text-class="max-w-[9rem]"
-            panel-class="min-w-[200px] py-1"
-          >
-            <ul class="space-y-0.5 px-1 py-1">
-              <li v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_all' : opt.value">
-                <button
-                  type="button"
-                  class="flex w-full rounded-lg px-3 py-2 text-left text-sm transition"
-                  :class="
-                    filters.priority === opt.value
-                      ? 'bg-teal-50 font-medium text-teal-900 dark:bg-teal-950/50 dark:text-teal-100'
-                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  "
-                  @click="applyFilterPatch($event, { priority: opt.value })"
-                >
-                  {{ opt.label }}
-                </button>
-              </li>
-            </ul>
-          </AppFilterDropdown>
+          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
+            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
+              t('requests_page.filter_priority')
+            }}</span>
+            <select
+              v-model="filters.priority"
+              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+              :aria-label="t('requests_page.filter_priority')"
+              @change="onFilterChange"
+            >
+              <option v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </label>
         </div>
 
         <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
@@ -588,20 +550,6 @@
           >
             <ArrowDownTrayIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
             <span class="hidden sm:inline">{{ t('requests_page.export_csv') }}</span>
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-9 items-center rounded-md border border-violet-200 bg-violet-50 px-2 text-xs font-medium text-violet-900 hover:bg-violet-100"
-            @click="saveFilterPreset"
-          >
-            {{ t('requests_page.save_filter_preset') }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-9 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
-            @click="loadFilterPreset"
-          >
-            {{ t('requests_page.load_filter_preset') }}
           </button>
         <details ref="columnPickerRef" class="relative shrink-0">
           <summary
@@ -1087,7 +1035,7 @@ import {
   listRequests,
 } from '../../api/requests'
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
-import { showAppError, showAppErrorFromApi, showAppInfo, showAppSuccess } from '../../composables/appMessage'
+import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useAuthStore } from '../../store'
 import {
   labelPaperStatus,
@@ -1299,8 +1247,6 @@ const filters = reactive({
   sort: 'created_desc',
 })
 
-const FILTER_PRESET_STORAGE_KEY = 'va-requests-filter-preset-v1'
-
 const activeFilterCount = computed(() => {
   let n = 0
   if (activeTab.value !== 'all') n++
@@ -1390,115 +1336,13 @@ function exportRequestsCsv() {
   URL.revokeObjectURL(url)
 }
 
-function saveFilterPreset() {
-  try {
-    const payload = {
-      trip_type: filters.trip_type,
-      source_channel: filters.source_channel,
-      paper_status: filters.paper_status,
-      from: filters.from,
-      to: filters.to,
-      priority: filters.priority,
-      sla_risk_only: filters.sla_risk_only,
-      recurring_only: filters.recurring_only,
-      extracurricular_only: filters.extracurricular_only,
-      per_page: filters.per_page,
-      sort: filters.sort,
-      q: searchInput.value.trim(),
-      tab: activeTab.value,
-    }
-    localStorage.setItem(FILTER_PRESET_STORAGE_KEY, JSON.stringify(payload))
-    showAppSuccess(t('requests_page.preset_saved'), t('requests_page.preset_toast_title'))
-  } catch {
-    showAppError(t('requests_page.preset_save_failed'))
-  }
-}
-
-function loadFilterPreset() {
-  try {
-    const raw = localStorage.getItem(FILTER_PRESET_STORAGE_KEY)
-    if (!raw) {
-      showAppInfo(t('requests_page.preset_none'))
-      return
-    }
-    const o = JSON.parse(raw)
-    if (typeof o.trip_type === 'string') filters.trip_type = o.trip_type
-    if (typeof o.source_channel === 'string') filters.source_channel = o.source_channel
-    if (typeof o.paper_status === 'string') filters.paper_status = o.paper_status
-    if (typeof o.from === 'string') filters.from = o.from
-    if (typeof o.to === 'string') filters.to = o.to
-    if (typeof o.priority === 'string') filters.priority = o.priority
-    if (typeof o.sla_risk_only === 'boolean') filters.sla_risk_only = o.sla_risk_only
-    if (typeof o.recurring_only === 'boolean') filters.recurring_only = o.recurring_only
-    if (typeof o.extracurricular_only === 'boolean') filters.extracurricular_only = o.extracurricular_only
-    if (typeof o.per_page === 'number' && [10, 20, 50, 100].includes(o.per_page)) filters.per_page = o.per_page
-    if (typeof o.sort === 'string' && REQUEST_SORT_VALUES.includes(o.sort)) filters.sort = o.sort
-    if ('q' in o) searchInput.value = typeof o.q === 'string' ? o.q : ''
-    if ('tab' in o && REQUEST_TAB_IDS.includes(o.tab)) activeTab.value = o.tab
-    filters.page = 1
-    router.replace({ query: buildRouteQueryFromState() })
-    showAppSuccess(t('requests_page.preset_loaded'), t('requests_page.preset_toast_title'))
-  } catch {
-    showAppError(t('requests_page.preset_load_failed'))
-  }
-}
-
 const filterDepartSummary = computed(() => {
-  if (!filters.from && !filters.to) return t('requests_page.all')
+  if (!filters.from && !filters.to) return t('requests_page.filter_option_any')
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
-/** Chip: nhãn bộ lọc khi mặc định; giá trị đã chọn khi đang lọc (giống portal). */
-function filterChipSummary(fieldLabel, valueLabel, isActive) {
-  return isActive ? valueLabel : fieldLabel
-}
-
-function optionLabelForValue(options, value) {
-  return options.find((o) => o.value === value)?.label ?? options[0]?.label ?? ''
-}
-
-const tripTypeChipSummary = computed(() =>
-  filterChipSummary(
-    optionLabelForValue(tripTypeFilterOptions.value, ''),
-    optionLabelForValue(tripTypeFilterOptions.value, filters.trip_type),
-    !!filters.trip_type,
-  ),
-)
-
-const departRangeChipSummary = computed(() =>
-  filterChipSummary(
-    t('requests_page.filter_depart_range'),
-    filterDepartSummary.value,
-    !!(filters.from || filters.to),
-  ),
-)
-
-const channelChipSummary = computed(() =>
-  filterChipSummary(
-    optionLabelForValue(channelFilterOptions.value, ''),
-    optionLabelForValue(channelFilterOptions.value, filters.source_channel),
-    !!filters.source_channel,
-  ),
-)
-
-const paperChipSummary = computed(() =>
-  filterChipSummary(
-    optionLabelForValue(paperFilterOptions.value, ''),
-    optionLabelForValue(paperFilterOptions.value, filters.paper_status),
-    !!filters.paper_status,
-  ),
-)
-
-const priorityChipSummary = computed(() =>
-  filterChipSummary(
-    optionLabelForValue(priorityFilterOptions.value, ''),
-    optionLabelForValue(priorityFilterOptions.value, filters.priority),
-    filters.priority === 'urgent',
-  ),
-)
-
 const tripTypeFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.all') },
+  { value: '', label: t('requests_page.filter_option_any') },
   { value: 'door_to_door', label: labelTripType('door_to_door') },
   { value: 'point_to_point', label: labelTripType('point_to_point') },
   { value: 'business', label: labelTripType('business') },
@@ -1506,21 +1350,21 @@ const tripTypeFilterOptions = computed(() => [
 ])
 
 const channelFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.all') },
+  { value: '', label: t('requests_page.filter_option_any') },
   { value: 'portal', label: labelSourceChannel('portal') },
   { value: 'zalo', label: labelSourceChannel('zalo') },
   { value: 'paper', label: labelSourceChannel('paper') },
 ])
 
 const paperFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.all') },
+  { value: '', label: t('requests_page.filter_option_any') },
   { value: 'pending', label: labelPaperStatus('pending') },
   { value: 'received', label: labelPaperStatus('received') },
   { value: 'digitally_signed', label: labelPaperStatus('digitally_signed') },
 ])
 
 const priorityFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_priority_all') },
+  { value: '', label: t('requests_page.filter_option_any') },
   { value: 'urgent', label: t('requests_page.filter_priority_urgent') },
 ])
 
@@ -1541,7 +1385,6 @@ const activeTabSummaryLabel = computed(() => {
   return d ? d.label : activeTab.value
 })
 
-/** Query đồng bộ tab, ô tìm & filter có trong URL — tránh applyRouteQuery ghi đè tab sau tải preset. */
 function buildRouteQueryFromState() {
   const out = {}
   const id = activeTab.value
@@ -1754,12 +1597,6 @@ function closeParentDetails(ev) {
   if (!el || typeof el.closest !== 'function') return
   const d = el.closest('details')
   if (d) d.open = false
-}
-
-function applyFilterPatch(ev, patch) {
-  Object.assign(filters, patch)
-  closeParentDetails(ev)
-  onFilterChange()
 }
 
 function onFilterDropdownChange(ev) {

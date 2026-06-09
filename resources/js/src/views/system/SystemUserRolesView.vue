@@ -6,10 +6,69 @@ import {
   CheckIcon,
   ArrowPathIcon,
   XMarkIcon,
+  ViewColumnsIcon,
+  ChevronDownIcon,
 } from '@heroicons/vue/24/outline'
 import { useUserRoleManager } from '../../composables/useUserRoleManager'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
+import UserAvatar from '../../components/branding/UserAvatar.vue'
+
+const NEEDS_SUPPLEMENT = 'Cần bổ sung'
+const COL_STORAGE_KEY = 'user-roles-table-cols-v1'
+
+const COLUMN_DEFS = [
+  { id: 'employee_code', label: 'Mã nhân viên', defaultOn: true },
+  { id: 'department', label: 'Phòng ban', defaultOn: true },
+  { id: 'position', label: 'Chức vụ', defaultOn: true },
+  { id: 'email', label: 'Email', defaultOn: true },
+  { id: 'role', label: 'Vai trò chính', defaultOn: true },
+  { id: 'status', label: 'Trạng thái', defaultOn: true },
+]
+
+function defaultColumnVisible() {
+  return Object.fromEntries(COLUMN_DEFS.map((c) => [c.id, c.defaultOn]))
+}
+
+function loadColumnVisible() {
+  try {
+    const raw = localStorage.getItem(COL_STORAGE_KEY)
+    if (!raw) return defaultColumnVisible()
+    const parsed = JSON.parse(raw)
+    const base = defaultColumnVisible()
+    for (const c of COLUMN_DEFS) {
+      if (typeof parsed[c.id] === 'boolean') base[c.id] = parsed[c.id]
+    }
+    return base
+  } catch {
+    return defaultColumnVisible()
+  }
+}
+
+const columnVisible = ref(loadColumnVisible())
+
+function setColumnVisible(id, on) {
+  columnVisible.value = { ...columnVisible.value, [id]: on }
+  try {
+    localStorage.setItem(COL_STORAGE_KEY, JSON.stringify(columnVisible.value))
+  } catch {
+    /* ignore */
+  }
+}
+
+function colOn(id) {
+  return columnVisible.value[id] !== false
+}
+
+function displayOrSupplement(val) {
+  const s = val != null ? String(val).trim() : ''
+  return s === '' ? NEEDS_SUPPLEMENT : s
+}
+
+function isSupplementValue(val) {
+  const s = val != null ? String(val).trim() : ''
+  return s === ''
+}
 
 const {
   loading, savingIds, savedIds, bulkApplying,
@@ -118,17 +177,6 @@ onMounted(() => bootstrap())
         <option value="all">Tất cả</option>
       </select>
 
-      <!-- Apply button -->
-      <Button
-        variant="secondary"
-        class="h-9 px-4"
-        :loading="loading"
-        :disabled="isLocked"
-        @click="applyFilters"
-      >
-        Tìm
-      </Button>
-
       <!-- Clear filters -->
       <button
         v-if="activeFilters > 0"
@@ -232,6 +280,36 @@ onMounted(() => bootstrap())
 
     <!-- ── Table ─────────────────────────────────────────────────────────── -->
     <template v-else>
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        <details class="group relative">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+          >
+            <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
+            Cột hiển thị
+            <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[200px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-600 dark:bg-slate-900"
+            @click.stop
+          >
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Chọn cột</p>
+            <ul class="mt-2 space-y-2">
+              <li v-for="col in COLUMN_DEFS" :key="col.id" class="flex items-center gap-2">
+                <input
+                  :id="`urcol-${col.id}`"
+                  type="checkbox"
+                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="colOn(col.id)"
+                  @change="setColumnVisible(col.id, $event.target.checked)"
+                />
+                <label :for="`urcol-${col.id}`" class="cursor-pointer text-xs text-slate-700 dark:text-slate-300">{{ col.label }}</label>
+              </li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
       <div class="overflow-hidden rounded-xl border border-slate-200/90 shadow-sm dark:border-slate-700">
 
         <!-- Desktop -->
@@ -250,10 +328,13 @@ onMounted(() => bootstrap())
                     @change="toggleSelectAll"
                   />
                 </th>
-                <th class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Nhân viên</th>
-                <th class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Email</th>
-                <th class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Vai trò chính</th>
-                <th class="w-20 py-2.5 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-wide">Trạng thái</th>
+                <th class="min-w-[10rem] py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Nhân viên</th>
+                <th v-if="colOn('employee_code')" class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Mã NV</th>
+                <th v-if="colOn('department')" class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Phòng ban</th>
+                <th v-if="colOn('position')" class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Chức vụ</th>
+                <th v-if="colOn('email')" class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Email</th>
+                <th v-if="colOn('role')" class="py-2.5 pr-3 text-xs font-semibold uppercase tracking-wide">Vai trò chính</th>
+                <th v-if="colOn('status')" class="w-24 py-2.5 pl-2 pr-4 text-right text-xs font-semibold uppercase tracking-wide">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -274,24 +355,44 @@ onMounted(() => bootstrap())
                   />
                 </td>
 
-                <!-- Name -->
+                <!-- Name + avatar -->
                 <td class="py-3 pr-3 align-middle">
                   <div class="flex items-center gap-2.5">
-                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                      {{ (user.name ?? '?')[0].toUpperCase() }}
-                    </span>
-                    <div class="min-w-0">
-                      <p class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ user.name }}</p>
-                      <p v-if="user.employee_code" class="text-[11px] text-slate-400">{{ user.employee_code }}</p>
-                    </div>
+                    <UserAvatar
+                      :name="user.name"
+                      :email="user.email"
+                      :avatar-url="user.avatar_url"
+                      size="sm"
+                      class="shrink-0"
+                    />
+                    <p class="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100">{{ user.name }}</p>
                   </div>
                 </td>
 
-                <!-- Email -->
-                <td class="py-3 pr-3 align-middle text-sm text-slate-500 dark:text-slate-400">{{ user.email }}</td>
+                <td v-if="colOn('employee_code')" class="py-3 pr-3 align-middle text-sm">
+                  <span
+                    :class="isSupplementValue(user.employee_code) ? 'italic text-slate-400 dark:text-slate-500' : 'font-mono text-slate-700 dark:text-slate-300'"
+                  >{{ displayOrSupplement(user.employee_code) }}</span>
+                </td>
+
+                <td v-if="colOn('department')" class="max-w-[12rem] py-3 pr-3 align-middle text-sm">
+                  <span
+                    class="line-clamp-2"
+                    :class="isSupplementValue(user.department_name) ? 'italic text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'"
+                  >{{ displayOrSupplement(user.department_name) }}</span>
+                </td>
+
+                <td v-if="colOn('position')" class="max-w-[12rem] py-3 pr-3 align-middle text-sm">
+                  <span
+                    class="line-clamp-2"
+                    :class="isSupplementValue(user.position_name) ? 'italic text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'"
+                  >{{ displayOrSupplement(user.position_name) }}</span>
+                </td>
+
+                <td v-if="colOn('email')" class="py-3 pr-3 align-middle text-sm text-slate-500 dark:text-slate-400">{{ user.email }}</td>
 
                 <!-- Role dropdown -->
-                <td class="py-3 pr-3 align-middle">
+                <td v-if="colOn('role')" class="py-3 pr-3 align-middle">
                   <select
                     v-model="rowRoleId[user.id]"
                     :aria-label="`Vai trò của ${user.name}`"
@@ -307,7 +408,7 @@ onMounted(() => bootstrap())
                 </td>
 
                 <!-- Status -->
-                <td class="py-3 pl-2 pr-4 text-right align-middle">
+                <td v-if="colOn('status')" class="py-3 pl-2 pr-4 text-right align-middle">
                   <span
                     v-if="savingIds.has(user.id)"
                     class="inline-flex items-center gap-1 text-xs text-slate-400"
@@ -344,9 +445,34 @@ onMounted(() => bootstrap())
               @change="toggleSelect(user.id)"
             />
             <div class="min-w-0 flex-1">
-              <p class="font-semibold text-slate-900 dark:text-slate-100">{{ user.name }}</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400">{{ user.email }}</p>
-              <div class="mt-3 flex items-center gap-2">
+              <div class="flex items-center gap-2">
+                <UserAvatar
+                  :name="user.name"
+                  :email="user.email"
+                  :avatar-url="user.avatar_url"
+                  size="sm"
+                  class="shrink-0"
+                />
+                <p class="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100">{{ user.name }}</p>
+              </div>
+              <dl class="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+                <div v-if="colOn('employee_code')" class="flex gap-1">
+                  <dt class="shrink-0 text-slate-500">Mã NV:</dt>
+                  <dd :class="isSupplementValue(user.employee_code) ? 'italic text-slate-400' : ''">{{ displayOrSupplement(user.employee_code) }}</dd>
+                </div>
+                <div v-if="colOn('department')" class="flex gap-1">
+                  <dt class="shrink-0 text-slate-500">Phòng ban:</dt>
+                  <dd :class="isSupplementValue(user.department_name) ? 'italic text-slate-400' : ''">{{ displayOrSupplement(user.department_name) }}</dd>
+                </div>
+                <div v-if="colOn('position')" class="flex gap-1">
+                  <dt class="shrink-0 text-slate-500">Chức vụ:</dt>
+                  <dd :class="isSupplementValue(user.position_name) ? 'italic text-slate-400' : ''">{{ displayOrSupplement(user.position_name) }}</dd>
+                </div>
+                <div v-if="colOn('email')">
+                  <dd class="text-slate-500">{{ user.email }}</dd>
+                </div>
+              </dl>
+              <div v-if="colOn('role')" class="mt-3 flex items-center gap-2">
                 <select
                   v-model="rowRoleId[user.id]"
                   :aria-label="`Vai trò của ${user.name}`"
@@ -357,10 +483,10 @@ onMounted(() => bootstrap())
                   <option :value="null">— Chưa gán —</option>
                   <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.display_name || r.name }}</option>
                 </select>
-                <span v-if="savingIds.has(user.id)" class="text-xs text-slate-400">
+                <span v-if="colOn('status') && savingIds.has(user.id)" class="text-xs text-slate-400">
                   <ArrowPathIcon class="h-4 w-4 animate-spin" aria-hidden="true" />
                 </span>
-                <span v-else-if="savedIds.has(user.id)" class="text-xs font-medium text-teal-600 dark:text-teal-400">
+                <span v-else-if="colOn('status') && savedIds.has(user.id)" class="text-xs font-medium text-teal-600 dark:text-teal-400">
                   <CheckIcon class="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>

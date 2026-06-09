@@ -2320,6 +2320,7 @@
         "filter_extra": "Thuộc tính khác",
         "filter_per_page": "Số dòng/trang",
         "filter_on": "Bật",
+        "filter_option_any": "—",
         "all": "Tất cả",
         "sla_toggle": "Chỉ hiện rủi ro SLA",
         "recurring_toggle": "Chỉ phiếu định kỳ",
