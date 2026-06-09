@@ -156,6 +156,7 @@
         </div>
 
         <div
+          v-if="hasVisibleBarFilters"
           class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
         >
           <select
@@ -671,7 +672,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -710,6 +711,7 @@ import {
 import { dispatchRequestEffectivePassengerCount } from '../../util/dispatchRequestPassengers'
 import { tripStatusAdminPillClass } from '../../constants/tripStatus'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
 import { useVisiblePoll } from '../../composables/useDriverVisiblePoll'
 import { useAuthStore } from '../../store'
 import { buildStaffPrefixedPath as staffPath } from '../../config/dispatchWebBase'
@@ -741,7 +743,6 @@ const filterMenuRef = ref(null)
 const tripsFilterBarRef = ref(null)
 useDetailsAutoCloseWithin(tripsFilterBarRef)
 
-const TRIPS_FILTER_BAR_VIS_KEY = 'va.trips.filter_bar_vis_v2'
 const TRIPS_FILTER_BAR_VIS_IDS = [
   'period',
   'dates',
@@ -753,19 +754,15 @@ const TRIPS_FILTER_BAR_VIS_IDS = [
   'per_page',
   'search',
 ]
-const TRIPS_FILTER_BAR_VIS_DEFAULTS = {
-  period: true,
-  dates: true,
-  run: true,
-  channel: true,
-  paper: true,
-  fleet: true,
-  urgent: true,
-  per_page: false,
-  search: false,
-}
+const TRIPS_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(
+  TRIPS_FILTER_BAR_VIS_IDS.map((id) => [id, false]),
+)
 
-const filterBarVisible = reactive({ ...TRIPS_FILTER_BAR_VIS_DEFAULTS })
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(TRIPS_FILTER_BAR_VIS_IDS, TRIPS_FILTER_BAR_VIS_DEFAULTS)
 
 const filterBarVisibilityOptions = computed(() =>
   TRIPS_FILTER_BAR_VIS_IDS.map((id) => ({
@@ -774,38 +771,9 @@ const filterBarVisibilityOptions = computed(() =>
   })),
 )
 
-function loadFilterBarVisibility() {
-  try {
-    const rawV2 = localStorage.getItem(TRIPS_FILTER_BAR_VIS_KEY)
-    if (rawV2) {
-      const o = JSON.parse(rawV2)
-      for (const id of TRIPS_FILTER_BAR_VIS_IDS) {
-        if (typeof o[id] === 'boolean') filterBarVisible[id] = o[id]
-      }
-      return
-    }
-    const legacy = localStorage.getItem('trips-list-filter-dropdowns')
-    if (!legacy) return
-    const o = JSON.parse(legacy)
-    for (const id of ['run', 'channel', 'paper', 'fleet', 'urgent']) {
-      if (typeof o[id] === 'boolean') filterBarVisible[id] = o[id]
-    }
-  } catch {
-    /* ignore */
-  }
+function onTripsFilterBarEnter() {
+  resetFilterBarVisibility()
 }
-
-watch(
-  () => TRIPS_FILTER_BAR_VIS_IDS.map((id) => filterBarVisible[id]),
-  () => {
-    try {
-      const payload = Object.fromEntries(TRIPS_FILTER_BAR_VIS_IDS.map((id) => [id, filterBarVisible[id]]))
-      localStorage.setItem(TRIPS_FILTER_BAR_VIS_KEY, JSON.stringify(payload))
-    } catch {
-      /* ignore */
-    }
-  },
-)
 
 function closeFilterMenu() {
   filterMenuRef.value?.close?.()
@@ -1539,12 +1507,16 @@ watch(
 )
 
 onMounted(() => {
-  loadFilterBarVisibility()
+  onTripsFilterBarEnter()
   syncRangeForPreset('all')
   syncFiltersFromRange()
   applyStatusFromRoute()
   reloadStats()
   reload()
   startTripsListPoll()
+})
+
+onActivated(() => {
+  onTripsFilterBarEnter()
 })
 </script>

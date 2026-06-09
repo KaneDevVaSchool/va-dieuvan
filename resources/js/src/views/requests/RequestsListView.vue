@@ -127,10 +127,10 @@
 
     <!-- Filters: horizontal bar -->
     <AppFilterBar>
-      <div ref="requestsFilterBarRef" class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+      <div ref="requestsFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
         <details ref="columnPickerRef" class="group relative shrink-0">
           <summary
-            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
             :aria-label="t('requests_page.table_columns')"
           >
             <ViewColumnsIcon class="h-5 w-5 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
@@ -212,6 +212,14 @@
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.extracurricular_toggle') }}</span>
               <span class="font-medium">{{ t('requests_page.filter_on') }}</span>
             </li>
+            <li v-if="filters.student_count_submitted === true" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_vis_student_count') }}</span>
+              <span class="font-medium">{{ t('requests_page.student_count_submitted_chip') }}</span>
+            </li>
+            <li v-if="filters.student_count_submitted === false" class="flex justify-between gap-2">
+              <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_vis_student_count') }}</span>
+              <span class="font-medium">{{ t('requests_page.student_count_pending_chip') }}</span>
+            </li>
             <li v-if="filters.per_page !== 10" class="flex justify-between gap-2">
               <span class="text-slate-500 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
               <span class="font-medium">{{ filters.per_page }}</span>
@@ -269,86 +277,29 @@
           </span>
         </button>
 
-        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-        <button
-          v-if="filterBarVisible.recurring"
-          type="button"
-          role="switch"
-          :aria-checked="filters.recurring_only"
-          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
-          :class="
-            filters.recurring_only
-              ? 'border-indigo-300 bg-indigo-50 text-indigo-950 ring-1 ring-indigo-400/25 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-100'
-              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
-          "
-          :title="t('requests_page.recurring_toggle')"
-          @click="toggleRecurringOnly"
-        >
-          <ArrowPathIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
-          {{ t('requests_page.recurring_filter_chip') }}
-        </button>
-
-        <button
-          v-if="filterBarVisible.extracurricular"
-          type="button"
-          role="switch"
-          :aria-checked="filters.extracurricular_only"
-          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
-          :class="
-            filters.extracurricular_only
-              ? 'border-violet-300 bg-violet-50 text-violet-950 ring-1 ring-violet-400/25 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-100'
-              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
-          "
-          :title="t('requests_page.extracurricular_toggle')"
-          @click="toggleExtracurricularOnly"
-        >
-          <AcademicCapIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
-          {{ t('requests_page.extracurricular_filter_chip') }}
-        </button>
-
-        <button
-          v-if="filters.extracurricular_only"
-          type="button"
-          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
-          :class="
-            filters.student_count_submitted === true
-              ? 'border-sky-300 bg-sky-50 text-sky-950 ring-1 ring-sky-400/25 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-100'
-              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
-          "
-          :title="t('requests_page.student_count_submitted_toggle')"
-          @click="toggleStudentCountSubmittedFilter"
-        >
-          {{ t('requests_page.student_count_submitted_chip') }}
-        </button>
-
-        <button
-          v-if="filters.extracurricular_only"
-          type="button"
-          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
-          :class="
-            filters.student_count_submitted === false
-              ? 'border-amber-300 bg-amber-50 text-amber-950 ring-1 ring-amber-400/25 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
-              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
-          "
-          :title="t('requests_page.student_count_pending_toggle')"
-          @click="toggleStudentCountPendingFilter"
-        >
-          {{ t('requests_page.student_count_pending_chip') }}
-        </button>
-
-        <button
-          type="button"
-          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
-          :aria-expanded="extraFiltersOpen"
-          @click="extraFiltersOpen = !extraFiltersOpen"
-        >
-          {{ t('requests_page.filter_extra') }}
-          <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
-        </button>
+        <div class="ml-auto flex shrink-0 items-center">
+          <button
+            type="button"
+            class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800"
+            :disabled="exportingCsv || !(meta.total ?? 0)"
+            :title="t('requests_page.export_csv_aria')"
+            :aria-label="t('requests_page.export_csv_aria')"
+            @click="exportRequestsCsv"
+          >
+            <ArrowDownTrayIcon
+              class="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400"
+              :class="exportingCsv ? 'animate-pulse' : ''"
+              aria-hidden="true"
+            />
+            <span class="hidden sm:inline">{{
+              exportingCsv ? t('requests_page.export_csv_busy') : t('requests_page.export_csv')
+            }}</span>
+          </button>
+        </div>
       </div>
 
       <div
+        v-if="hasVisibleBarFilters"
         class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
       >
           <select
@@ -513,7 +464,8 @@
             :title="t('requests_page.sla_toggle')"
             @click="toggleSla"
           >
-            {{ t('requests_page.sla_toggle') }}
+            <ExclamationTriangleIcon class="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
+            {{ t('requests_page.sla_filter_chip') }}
           </button>
 
           <select
@@ -545,73 +497,49 @@
               {{ opt.label }}
             </option>
           </select>
-      </div>
 
-      <div
-        v-show="extraFiltersOpen"
-        class="mt-3 flex flex-wrap items-center gap-4 border-t border-violet-100/80 pt-3 dark:border-violet-900/30"
-      >
-        <label class="inline-flex cursor-pointer items-center gap-2">
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="filters.sla_risk_only"
-            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600"
-            :class="filters.sla_risk_only ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
-            @click="toggleSla"
-          >
-            <span
-              class="pointer-events-none inline-block h-5 w-5 translate-x-0.5 translate-y-0.5 rounded-full bg-white shadow transition"
-              :class="filters.sla_risk_only ? 'translate-x-5' : ''"
-            />
-          </button>
-          <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.sla_toggle') }}</span>
-        </label>
-        <label class="inline-flex cursor-pointer items-center gap-2">
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="filters.recurring_only"
-            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600"
-            :class="filters.recurring_only ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
-            @click="toggleRecurringOnly"
-          >
-            <span
-              class="pointer-events-none inline-block h-5 w-5 translate-x-0.5 translate-y-0.5 rounded-full bg-white shadow transition"
-              :class="filters.recurring_only ? 'translate-x-5' : ''"
-            />
-          </button>
-          <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.recurring_toggle') }}</span>
-        </label>
-        <label class="inline-flex cursor-pointer items-center gap-2">
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="filters.extracurricular_only"
-            class="relative inline-flex h-6 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white transition focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:border-slate-600"
-            :class="filters.extracurricular_only ? 'bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'"
-            @click="toggleExtracurricularOnly"
-          >
-            <span
-              class="pointer-events-none inline-block h-5 w-5 translate-x-0.5 translate-y-0.5 rounded-full bg-white shadow transition"
-              :class="filters.extracurricular_only ? 'translate-x-5' : ''"
-            />
-          </button>
-          <span class="text-sm text-slate-700 dark:text-slate-300">{{ t('requests_page.extracurricular_toggle') }}</span>
-        </label>
-        <label class="inline-flex items-center gap-2">
-          <span class="text-sm text-slate-600 dark:text-slate-400">{{ t('requests_page.filter_per_page') }}</span>
           <select
-            v-model.number="filters.per_page"
-            class="h-9 rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-            @change="onFilterChange"
+            v-if="filterBarVisible.recurring"
+            :value="filters.recurring_only ? '1' : ''"
+            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.recurring_only ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('requests_page.filter_vis_recurring')"
+            @change="onRecurringFilterSelect($event.target.value)"
           >
-            <option :value="10">10</option>
-            <option :value="20">20</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
+            <option v-for="opt in recurringFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
           </select>
-        </label>
+
+          <select
+            v-if="filterBarVisible.extracurricular"
+            :value="extracurricularFilterSelectValue"
+            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="filters.extracurricular_only ? 'text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'"
+            :aria-label="t('requests_page.filter_vis_extracurricular')"
+            @change="onExtracurricularFilterSelect($event.target.value)"
+          >
+            <option v-for="opt in extracurricularFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+
+          <select
+            v-if="filterBarVisible.student_count && filters.extracurricular_only"
+            :value="studentCountFilterSelectValue"
+            class="h-9 max-w-[min(100%,12rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="
+              filters.student_count_submitted === true || filters.student_count_submitted === false
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
+            "
+            :aria-label="t('requests_page.filter_vis_student_count')"
+            @change="onStudentCountFilterSelect($event.target.value)"
+          >
+            <option v-for="opt in studentCountFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
       </div>
     </AppFilterBar>
 
@@ -689,15 +617,6 @@
               </option>
             </select>
           </label>
-          <button
-            type="button"
-            class="inline-flex h-9 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-            :disabled="!items.length || loading"
-            @click="exportRequestsCsv"
-          >
-            <ArrowDownTrayIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
-            <span class="hidden sm:inline">{{ t('requests_page.export_csv') }}</span>
-          </button>
         </div>
       </div>
 
@@ -1118,7 +1037,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -1133,7 +1052,6 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
   PencilSquareIcon,
-  PlusCircleIcon,
   PlusIcon,
   RectangleStackIcon,
   ClipboardDocumentCheckIcon,
@@ -1158,6 +1076,7 @@ import {
 import ExtracurricularRequestsDataTable from '../../components/requests/ExtracurricularRequestsDataTable.vue'
 import { showAppError, showAppErrorFromApi, showAppSuccess } from '../../composables/appMessage'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
 import { useAuthStore } from '../../store'
 import {
   labelPaperStatus,
@@ -1176,6 +1095,7 @@ const auth = useAuthStore()
 const extracurricularTableRef = ref(null)
 
 const loading = ref(false)
+const exportingCsv = ref(false)
 const items = ref([])
 const meta = ref({})
 const stats = ref({
@@ -1194,8 +1114,6 @@ const activeTab = ref('all')
 const searchInput = ref('')
 let searchDebounce = null
 const filterMenuRef = ref(null)
-const extraFiltersOpen = ref(false)
-
 const canBulkTrash = computed(
   () =>
     auth.hasPermission('trip.view_all') ||
@@ -1214,7 +1132,6 @@ const columnPickerRef = ref(null)
 const requestsFilterBarRef = ref(null)
 useDetailsAutoCloseWithin(requestsFilterBarRef)
 
-const REQUEST_FILTER_BAR_VIS_KEY = 'va.requests.filter_bar_vis_v1'
 const REQUEST_FILTER_BAR_VIS_IDS = [
   'trip_type',
   'depart',
@@ -1228,48 +1145,21 @@ const REQUEST_FILTER_BAR_VIS_IDS = [
   'per_page',
   'recurring',
   'extracurricular',
+  'student_count',
 ]
-const REQUEST_FILTER_BAR_VIS_DEFAULTS = {
-  trip_type: true,
-  depart: true,
-  channel: true,
-  paper: true,
-  priority: true,
-  request_status: false,
-  trip_status: false,
-  sla_risk: false,
-  sort: false,
-  per_page: false,
-  recurring: true,
-  extracurricular: true,
-}
-
-const filterBarVisible = reactive({ ...REQUEST_FILTER_BAR_VIS_DEFAULTS })
-
-function loadFilterBarVisibility() {
-  try {
-    const raw = localStorage.getItem(REQUEST_FILTER_BAR_VIS_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    for (const id of REQUEST_FILTER_BAR_VIS_IDS) {
-      if (typeof o[id] === 'boolean') filterBarVisible[id] = o[id]
-    }
-  } catch {
-    /* ignore */
-  }
-}
-
-watch(
-  () => REQUEST_FILTER_BAR_VIS_IDS.map((id) => filterBarVisible[id]),
-  () => {
-    try {
-      const payload = Object.fromEntries(REQUEST_FILTER_BAR_VIS_IDS.map((id) => [id, filterBarVisible[id]]))
-      localStorage.setItem(REQUEST_FILTER_BAR_VIS_KEY, JSON.stringify(payload))
-    } catch {
-      /* ignore */
-    }
-  },
+const REQUEST_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(
+  REQUEST_FILTER_BAR_VIS_IDS.map((id) => [id, false]),
 )
+
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(REQUEST_FILTER_BAR_VIS_IDS, REQUEST_FILTER_BAR_VIS_DEFAULTS)
+
+function onRequestsFilterBarEnter() {
+  resetFilterBarVisibility()
+}
 
 const filterBarVisibilityOptions = computed(() => [
   { id: 'trip_type', labelKey: 'requests_page.filter_vis_trip_type' },
@@ -1284,6 +1174,7 @@ const filterBarVisibilityOptions = computed(() => [
   { id: 'per_page', labelKey: 'requests_page.filter_vis_per_page' },
   { id: 'recurring', labelKey: 'requests_page.filter_vis_recurring' },
   { id: 'extracurricular', labelKey: 'requests_page.filter_vis_extracurricular' },
+  { id: 'student_count', labelKey: 'requests_page.filter_vis_student_count' },
 ])
 
 const REQUEST_TRIP_STATUS_FILTER_VALUES = [
@@ -1539,8 +1430,7 @@ function csvEscapeCell(val) {
   return s
 }
 
-function exportRequestsCsv() {
-  if (!items.value.length) return
+function requestRowsToCsvLines(rows) {
   const headers = [
     t('requests_page.col_id'),
     t('requests_page.col_trip'),
@@ -1549,9 +1439,9 @@ function exportRequestsCsv() {
     t('requests_page.col_urgent'),
     t('requests_page.col_type_channel'),
   ]
-  const lines = [
+  return [
     headers.map(csvEscapeCell).join(','),
-    ...items.value.map((r) =>
+    ...rows.map((r) =>
       [
         csvEscapeCell(`REQ-${r.id}`),
         csvEscapeCell(`${r.origin ?? '—'} → ${r.destination ?? '—'}`),
@@ -1562,13 +1452,45 @@ function exportRequestsCsv() {
       ].join(','),
     ),
   ]
-  const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `requests-${new Date().toISOString().slice(0, 10)}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+}
+
+async function fetchAllFilteredRequestRows() {
+  const base = buildListParams()
+  delete base.page
+  delete base.per_page
+  const perPage = 100
+  const all = []
+  let page = 1
+  let lastPage = 1
+  do {
+    const res = await listRequests({ ...base, page, per_page: perPage })
+    const chunk = res.items ?? []
+    all.push(...chunk)
+    lastPage = res.meta?.last_page ?? 1
+    page += 1
+  } while (page <= lastPage)
+  return all
+}
+
+async function exportRequestsCsv() {
+  if (exportingCsv.value || !(meta.value.total ?? 0)) return
+  exportingCsv.value = true
+  try {
+    const rows = await fetchAllFilteredRequestRows()
+    if (!rows.length) return
+    const lines = requestRowsToCsvLines(rows)
+    const blob = new Blob([`\uFEFF${lines.join('\n')}`], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `requests-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    showAppErrorFromApi(e, t('requests_page.export_csv_fail'))
+  } finally {
+    exportingCsv.value = false
+  }
 }
 
 const filterDepartSummary = computed(() => {
@@ -1602,6 +1524,30 @@ const priorityFilterOptions = computed(() => [
   { value: '', label: t('requests_page.filter_priority') },
   { value: 'urgent', label: t('requests_page.filter_priority_urgent') },
 ])
+
+const recurringFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.filter_vis_recurring') },
+  { value: '1', label: t('requests_page.recurring_toggle') },
+])
+
+const extracurricularFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.filter_vis_extracurricular') },
+  { value: '1', label: t('requests_page.extracurricular_toggle') },
+])
+
+const extracurricularFilterSelectValue = computed(() => (filters.extracurricular_only ? '1' : ''))
+
+const studentCountFilterOptions = computed(() => [
+  { value: '', label: t('requests_page.filter_vis_student_count') },
+  { value: 'submitted', label: t('requests_page.student_count_submitted_chip') },
+  { value: 'pending', label: t('requests_page.student_count_pending_chip') },
+])
+
+const studentCountFilterSelectValue = computed(() => {
+  if (filters.student_count_submitted === true) return 'submitted'
+  if (filters.student_count_submitted === false) return 'pending'
+  return ''
+})
 
 const requestStatusFilterOptions = computed(() => [
   { value: '', label: t('requests_page.filter_request_status') },
@@ -1861,6 +1807,41 @@ function onTripStatusFilterChange() {
     activeTab.value = 'all'
   }
   onFilterChange()
+}
+
+function onRecurringFilterSelect(raw) {
+  const on = raw === '1'
+  if (filters.recurring_only === on) return
+  filters.recurring_only = on
+  filters.page = 1
+  const hadPage = !!route.query.page
+  syncRoutePageAfterReset()
+  if (!hadPage) reload()
+}
+
+function onExtracurricularFilterSelect(raw) {
+  const on = raw === '1'
+  filters.extracurricular_only = on
+  if (!on) {
+    filters.student_count_submitted = undefined
+  }
+  filters.page = 1
+  const hadPage = !!route.query.page
+  syncRoutePageAfterReset()
+  if (!hadPage) reload()
+}
+
+function onStudentCountFilterSelect(raw) {
+  if (raw === 'submitted') {
+    filters.student_count_submitted = true
+  } else if (raw === 'pending') {
+    filters.student_count_submitted = false
+  } else {
+    filters.student_count_submitted = undefined
+  }
+  filters.page = 1
+  syncRoutePageAfterReset()
+  reload()
 }
 
 function closeParentDetails(ev) {
@@ -2140,9 +2121,13 @@ watch(
 )
 
 onMounted(() => {
-  loadFilterBarVisibility()
+  onRequestsFilterBarEnter()
   applyRouteQuery()
   reload()
+})
+
+onActivated(() => {
+  onRequestsFilterBarEnter()
 })
 
 onUnmounted(() => {
