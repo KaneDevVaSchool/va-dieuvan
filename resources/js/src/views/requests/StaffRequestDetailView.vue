@@ -272,16 +272,26 @@
                         class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800"
                       >
                         <div class="flex flex-wrap items-start justify-between gap-2">
-                          <div class="flex min-w-0 items-center gap-2.5">
-                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300">{{ card.idx }}</span>
-                            <p class="min-w-0 truncate text-base font-semibold text-slate-900 dark:text-white">{{ card.title }}</p>
+                          <div class="flex min-w-0 flex-1 items-start gap-3">
+                            <span
+                              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-va-50 text-sm font-bold text-va-800 dark:bg-va-950/50 dark:text-va-300"
+                              :aria-label="t('request_detail.ops_row_badge_aria', { n: card.idx })"
+                            >
+                              {{ card.idx }}
+                            </span>
+                            <div class="min-w-0 flex-1 space-y-1">
+                              <p class="text-base font-semibold leading-snug text-slate-900 dark:text-white">
+                                {{ card.title }}
+                              </p>
+                              <ul
+                                v-if="card.summaryLines.length"
+                                class="space-y-0.5 text-sm leading-snug text-slate-600 dark:text-slate-400"
+                              >
+                                <li v-for="(line, li) in card.summaryLines" :key="li" class="break-words">{{ line }}</li>
+                              </ul>
+                            </div>
                           </div>
                           <span v-if="card.price" class="shrink-0 text-base font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ card.price }}</span>
-                        </div>
-                        <div v-if="card.route" class="mt-3 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-                          <span class="min-w-0 truncate">{{ card.route.from || friendlyEmpty }}</span>
-                          <ArrowRightIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                          <span class="min-w-0 truncate">{{ card.route.to || friendlyEmpty }}</span>
                         </div>
                         <dl v-if="card.fields.length" class="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
                           <FieldRow v-for="(f, fi) in card.fields" :key="fi" :label="f.label" :value="f.value" :multiline="f.multiline" />
@@ -589,6 +599,12 @@ import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewM
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { parseMoneyVnd } from '../../util/money'
+import {
+  itineraryRowEndpoints,
+  itineraryRowHeading,
+  itineraryRowSummaryLines,
+  resolveItineraryTripType,
+} from '../../util/requestItineraryRowDisplay'
 import { isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
 
 const FillPricePanel = defineAsyncComponent(() =>
@@ -771,15 +787,25 @@ const quickFacts = computed(() => {
   return facts
 })
 
+const itineraryTripType = computed(() => resolveItineraryTripType(isCargo.value, isBusiness.value))
+
+function buildItineraryCard(r, i, keyPrefix) {
+  const { from, to } = itineraryRowEndpoints(r)
+  return {
+    key: `${keyPrefix}-${i}`,
+    idx: i + 1,
+    title: itineraryRowHeading(r, i, { tripType: itineraryTripType.value, t }),
+    summaryLines: itineraryRowSummaryLines(r, { tripType: itineraryTripType.value, t, index: i }),
+    route: from || to ? { from, to } : null,
+  }
+}
+
 const itineraryCards = computed(() => {
   const s = snap.value
   if (isCargo.value) {
     return (Array.isArray(s.cargoRows) ? s.cargoRows : []).filter((r) => nz(r?.name)).map((r, i) => ({
-      key: `c-${i}`,
-      idx: i + 1,
-      title: nz(r.name) || `#${i + 1}`,
+      ...buildItineraryCard(r, i, 'c'),
       price: money(r.cost),
-      route: { from: nz(r.pickup_place), to: nz(r.delivery_place) },
       fields: [
         { label: t('request_detail.ops_lbl_qty'), value: nz(r.qty) },
         { label: t('request_detail.ops_lbl_weight'), value: nz(r.weight) },
@@ -792,11 +818,8 @@ const itineraryCards = computed(() => {
   }
   if (isBusiness.value) {
     return (Array.isArray(s.businessRows) ? s.businessRows : []).filter(isBusinessRowFilled).map((r, i) => ({
-      key: `b-${i}`,
-      idx: i + 1,
-      title: nz(r.description) || t('request_detail.ops_default_business_title'),
+      ...buildItineraryCard(r, i, 'b'),
       price: money(parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)),
-      route: { from: nz(r.pickup), to: nz(r.dropoff) },
       fields: [
         { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
         { label: t('request_detail.ops_lbl_waypoint'), value: nz(r.waypoint) },
@@ -807,11 +830,8 @@ const itineraryCards = computed(() => {
     }))
   }
   return (Array.isArray(s.passengerRows) ? s.passengerRows : []).filter(isPassengerRowFilled).map((r, i) => ({
-    key: `p-${i}`,
-    idx: i + 1,
-    title: nz(r.description) || nz(r.name) || `#${i + 1}`,
+    ...buildItineraryCard(r, i, 'p'),
     price: money(parseMoneyVnd(r.unit_price) + parseMoneyVnd(r.extra_fee)),
-    route: { from: nz(r.pickup_place) || nz(r.pickup), to: nz(r.dropoff_place) || nz(r.dropoff) },
     fields: [
       { label: t('request_detail.ops_lbl_guests'), value: nz(r.guests) },
       { label: t('request_detail.ops_lbl_depart_time'), value: fmtRowDt(r.depart_at) },

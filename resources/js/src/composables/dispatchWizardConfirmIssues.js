@@ -134,6 +134,9 @@ export function buildConfirmReviewIssues(ctx) {
     if (ctx.step2DateOrderInvalid) add('general', t('dispatch_wizard.validate.date_order'))
   }
   if (f.is_urgent && !f.urgent_reason?.trim()) add('general', t('dispatch_wizard.validate.urgent_reason'))
+  if (ctx.portalNeedsDeptHead && !String(f.dept_head_user_id ?? '').trim()) {
+    add('general', t('request_detail.assign_dept_head_required'))
+  }
 
   if (ctx.isCargo) {
     if (!ctx.cargoRows.some((r) => r.name?.trim())) add('schedule', t('dispatch_wizard.validate.cargo_row'))

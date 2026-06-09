@@ -360,6 +360,62 @@
                   }}
                 </p>
               </div>
+
+              <div v-if="portalNeedsDeptHead" class="relative">
+                <label class="dw-label" for="portal-dept-head">
+                  <span>{{ t('request_detail.assign_dept_head_label') }}</span>
+                  <span
+                    class="inline-flex cursor-help text-slate-400 hover:text-slate-600"
+                    :title="t('portal.create.assign_dept_head_tooltip')"
+                  >
+                    <InformationCircleIcon class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </label>
+                <input
+                  id="portal-dept-head"
+                  v-model="deptHeadQ"
+                  type="search"
+                  role="combobox"
+                  autocomplete="off"
+                  :aria-expanded="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
+                  aria-controls="portal-dept-head-list"
+                  :placeholder="t('request_detail.assign_dept_head_combo_ph')"
+                  :class="['dw-input', deptHeadClientError ? 'ring-1 ring-rose-300' : '']"
+                  @input="scheduleDeptHeadSearch"
+                  @focus="onDeptHeadSearchFocus"
+                  @blur="onDeptHeadSearchBlur"
+                />
+                <div
+                  v-if="deptHeadLoading"
+                  class="absolute right-3 top-[2.625rem] h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-va-800"
+                />
+                <ul
+                  v-if="deptHeadDropdownOpen && deptHeadQ.trim().length >= 2"
+                  id="portal-dept-head-list"
+                  class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg ring-1 ring-black/5"
+                  role="listbox"
+                >
+                  <li v-if="deptHeadLoading" class="px-3 py-2.5 text-slate-500">
+                    {{ t('request_detail.assign_dept_head_loading') }}
+                  </li>
+                  <template v-else-if="deptHeadResults.length">
+                    <li v-for="u in deptHeadResults" :key="u.id">
+                      <button
+                        type="button"
+                        class="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition hover:bg-va-50"
+                        @mousedown.prevent="pickDeptHead(u)"
+                      >
+                        <span class="font-medium text-slate-900">{{ u.name }}</span>
+                        <span class="truncate text-xs text-slate-500">{{ u.email }}</span>
+                      </button>
+                    </li>
+                  </template>
+                  <li v-else class="px-3 py-2.5 text-slate-500">{{ t('request_detail.assign_dept_head_no_match') }}</li>
+                </ul>
+                <p v-if="deptHeadSearchError" class="mt-1 text-xs font-medium text-rose-600">{{ deptHeadSearchError }}</p>
+                <p v-else-if="deptHeadClientError" class="mt-1 text-xs font-medium text-rose-600">{{ deptHeadClientError }}</p>
+                <p v-else class="mt-1 text-xs text-slate-500">{{ t('request_detail.assign_dept_head_combo_hint') }}</p>
+              </div>
             </div>
           </div>
 
@@ -1241,6 +1297,17 @@ const {
   applyTemplate,
   deleteTemplate,
   renameTemplate,
+  portalNeedsDeptHead,
+  deptHeadQ,
+  deptHeadResults,
+  deptHeadLoading,
+  deptHeadDropdownOpen,
+  deptHeadSearchError,
+  deptHeadClientError,
+  scheduleDeptHeadSearch,
+  onDeptHeadSearchFocus,
+  onDeptHeadSearchBlur,
+  pickDeptHead,
 } = wizard
 
 const draftMenuOpen = ref(false)

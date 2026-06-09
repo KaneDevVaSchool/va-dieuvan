@@ -114,6 +114,8 @@ export function createInitialForm() {
     requester_email: '',
     requester_phone: '',
     requester_unit: '',
+    dept_head_user_id: '',
+    dept_head_label: '',
     purpose: '',
     point_purpose_kind: 'point_to_point',
     proposed_date: today,

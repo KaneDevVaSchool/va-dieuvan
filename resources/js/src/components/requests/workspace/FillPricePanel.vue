@@ -19,33 +19,55 @@
       :key="idx"
       class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800 sm:p-5"
     >
-      <div class="flex items-center gap-2.5">
-        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ idx + 1 }}</span>
-        <p class="min-w-0 truncate text-base font-semibold text-slate-900 dark:text-white">{{ rowTitle(row, idx) }}</p>
+      <div class="flex items-start gap-3">
+        <span
+          class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          :aria-label="t('request_detail.ops_row_badge_aria', { n: idx + 1 })"
+        >
+          {{ idx + 1 }}
+        </span>
+        <div class="min-w-0 flex-1 space-y-1">
+          <p class="text-base font-semibold leading-snug text-slate-900 dark:text-white">
+            {{ rowHeading(row, idx) }}
+          </p>
+          <ul
+            v-if="rowSummary(row, idx).length"
+            class="space-y-0.5 text-sm leading-snug text-slate-600 dark:text-slate-400"
+          >
+            <li v-for="(line, li) in rowSummary(row, idx)" :key="li" class="break-words">{{ line }}</li>
+          </ul>
+        </div>
       </div>
-      <p v-if="rowRoute(row)" class="mt-1.5 truncate text-sm text-slate-500 dark:text-slate-400">{{ rowRoute(row) }}</p>
 
       <!-- Cargo inputs -->
       <div v-if="isCargo" class="mt-4 grid gap-4 sm:grid-cols-2">
         <label class="block">
-          <span class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_lbl_transport_type') }}</span>
+          <FillPriceFieldLabel
+            :label="t('request_detail.ops_lbl_transport_type')"
+            :tooltip="t('request_detail.ops_transport_type_tooltip')"
+          />
           <input
             :value="cargoTransport[idx]"
             type="text"
             maxlength="500"
             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             :placeholder="t('request_detail.ops_transport_type_ph')"
+            :title="t('request_detail.ops_transport_type_tooltip')"
             @input="cargoTransport[idx] = String($event.target.value).slice(0, 500)"
           />
         </label>
         <label class="block">
-          <span class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_lbl_cost') }}</span>
+          <FillPriceFieldLabel
+            :label="t('request_detail.ops_lbl_cost')"
+            :tooltip="t('request_detail.ops_cost_tooltip')"
+          />
           <input
             :value="cargoCost[idx]"
             type="text"
             inputmode="numeric"
             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            placeholder="0"
+            :placeholder="t('request_detail.ops_money_ph')"
+            :title="t('request_detail.ops_cost_tooltip')"
             @input="cargoCost[idx] = fmtTyping($event.target.value)"
           />
         </label>
@@ -55,35 +77,48 @@
       <div v-else class="mt-4 space-y-4">
         <div class="grid gap-4 sm:grid-cols-2">
           <label class="block">
-            <span class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_lbl_unit_price') }}</span>
+            <FillPriceFieldLabel
+              :label="t('request_detail.ops_lbl_unit_price')"
+              :tooltip="t('request_detail.ops_unit_price_tooltip')"
+            />
             <input
               :value="unitDraft[idx]"
               type="text"
               inputmode="numeric"
               class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              placeholder="0"
+              :placeholder="t('request_detail.ops_money_ph')"
+              :title="t('request_detail.ops_unit_price_tooltip')"
               @input="unitDraft[idx] = fmtTyping($event.target.value)"
             />
           </label>
           <label class="block">
-            <span class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_lbl_extra_fee') }}</span>
+            <FillPriceFieldLabel
+              :label="t('request_detail.ops_lbl_extra_fee')"
+              :tooltip="t('request_detail.ops_extra_fee_tooltip')"
+            />
             <input
               :value="extraDraft[idx]"
               type="text"
               inputmode="numeric"
               class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              placeholder="0"
+              :placeholder="t('request_detail.ops_money_zero_ph')"
+              :title="t('request_detail.ops_extra_fee_tooltip')"
               @input="extraDraft[idx] = fmtTyping($event.target.value)"
             />
           </label>
         </div>
         <label class="block">
-          <span class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">{{ t('request_detail.ops_lbl_notes') }}</span>
+          <FillPriceFieldLabel
+            :label="t('request_detail.ops_lbl_notes')"
+            :tooltip="t('request_detail.ops_notes_tooltip')"
+          />
           <input
             :value="notesDraft[idx]"
             type="text"
             maxlength="2000"
             class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            :placeholder="t('request_detail.ops_notes_ph')"
+            :title="t('request_detail.ops_notes_tooltip')"
             @input="notesDraft[idx] = String($event.target.value).slice(0, 2000)"
           />
         </label>
@@ -92,14 +127,36 @@
 
     <!-- Total + dept head + save -->
     <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/30 sm:p-5">
-      <div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-700">
-        <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">{{ t('request_detail.fill_price_total') }}</span>
+      <div
+        class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-700"
+        :title="t('request_detail.fill_price_total_tooltip')"
+      >
+        <span class="flex items-center gap-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
+          {{ t('request_detail.fill_price_total') }}
+          <span
+            :title="t('request_detail.fill_price_total_tooltip')"
+            class="inline-flex cursor-help text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+            @click.prevent
+          >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 9a1 1 0 012 0v4a1 1 0 11-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </span>
+        </span>
         <span class="text-xl font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ totalFmt }}</span>
       </div>
 
       <!-- Dept head combobox -->
       <div class="relative mt-4">
-        <label class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300" for="fp-dept-head">{{ t('request_detail.assign_dept_head_label') }}</label>
+        <FillPriceFieldLabel
+          for-id="fp-dept-head"
+          :label="t('request_detail.assign_dept_head_label')"
+          :tooltip="t('request_detail.assign_dept_head_tooltip')"
+        />
         <input
           id="fp-dept-head"
           v-model="deptHeadQ"
@@ -109,6 +166,7 @@
           :aria-expanded="dropdownOpen && deptHeadQ.trim().length >= 2"
           :disabled="acting"
           :placeholder="t('request_detail.assign_dept_head_combo_ph')"
+          :title="t('request_detail.assign_dept_head_tooltip')"
           class="w-full rounded-lg border bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:ring-1 dark:bg-slate-800 dark:text-slate-100"
           :class="clientErr ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/30' : 'border-slate-300 focus:border-sky-500 focus:ring-sky-500/30 dark:border-slate-700'"
           @input="scheduleSearch"
@@ -152,8 +210,15 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CurrencyDollarIcon } from '@heroicons/vue/24/outline'
 import Button from '../../ui/Button.vue'
+import FillPriceFieldLabel from './FillPriceFieldLabel.vue'
 import { getAvailableDeptHeads } from '../../../api/requests'
 import { parseMoneyVnd, formatVndCurrency, formatVndWhileTyping } from '../../../util/money'
+import {
+  itineraryRowHeading,
+  itineraryRowSummaryLines,
+  nz,
+  resolveItineraryTripType,
+} from '../../../util/requestItineraryRowDisplay'
 
 const { t } = useI18n()
 
@@ -175,22 +240,18 @@ const rows = computed(() => {
   return Array.isArray(snap.value.passengerRows) ? snap.value.passengerRows : []
 })
 
-function nz(v) {
-  return v == null ? '' : String(v).trim()
-}
+const itineraryTripType = computed(() => resolveItineraryTripType(isCargo.value, isBusiness.value))
+
 function fmtTyping(v) {
   return formatVndWhileTyping(v)
 }
 
-function rowTitle(row, idx) {
-  if (isCargo.value) return nz(row.name) || `#${idx + 1}`
-  return nz(row.description) || nz(row.name) || (isBusiness.value ? t('request_detail.ops_default_business_title') : `#${idx + 1}`)
+function rowHeading(row, idx) {
+  return itineraryRowHeading(row, idx, { tripType: itineraryTripType.value, t })
 }
-function rowRoute(row) {
-  const from = nz(row.pickup_place) || nz(row.pickup)
-  const to = nz(row.dropoff_place) || nz(row.delivery_place) || nz(row.dropoff)
-  if (!from && !to) return ''
-  return `${from || '—'} → ${to || '—'}`
+
+function rowSummary(row, idx) {
+  return itineraryRowSummaryLines(row, { tripType: itineraryTripType.value, t, index: idx })
 }
 
 // ── Drafts ──

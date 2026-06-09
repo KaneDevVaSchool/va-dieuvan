@@ -54,6 +54,7 @@ import {
   mapApiValidationToConfirmIssues,
 } from './dispatchWizardConfirmIssues'
 import { buildStaffPrefixedPath as staffPath } from '../config/dispatchWebBase'
+import { usePortalDeptHeadSearch } from './usePortalDeptHeadSearch'
 
 /**
  * @param {{ isPortal?: boolean }} [options]
@@ -380,6 +381,9 @@ export function useDispatchRequestWizard(options = {}) {
   const passengerRows = ref([emptyPassengerRow()])
   const businessRows = ref([emptyBusinessRow()])
   const cargoRows = ref([emptyCargoRow()])
+
+  const portalNeedsDeptHead = computed(() => isPortal && form.value.trip_type !== 'door_to_door')
+  const portalDeptHeadSearch = isPortal ? usePortalDeptHeadSearch(form) : null
 
   /** Bước 3: form thẻ — không cho Next khi có lỗi inline hoặc danh sách rỗng (đồng bộ từ DispatchWizardStep3). */
   const detailStepSchedulesValid = ref(true)
@@ -1039,14 +1043,17 @@ export function useDispatchRequestWizard(options = {}) {
         !coordinatorEmailFormatInvalid.value &&
         !!form.value.purpose?.trim() &&
         (!form.value.is_urgent || !!form.value.urgent_reason?.trim())
+      const deptOk =
+        !portalNeedsDeptHead.value || !!String(form.value.dept_head_user_id ?? '').trim()
       if (wantsRecurringTemplate.value) {
-        return base && recurringStep1Complete()
+        return base && recurringStep1Complete() && deptOk
       }
       return (
         base &&
         !!form.value.proposed_date &&
         !!form.value.date_needed &&
-        !step2DateOrderInvalid.value
+        !step2DateOrderInvalid.value &&
+        deptOk
       )
     }
     if (step.value === 2) {
@@ -1162,6 +1169,7 @@ export function useDispatchRequestWizard(options = {}) {
       cargoRows: cargoRows.value,
       coordinatorEmailFormatInvalid: coordinatorEmailFormatInvalid.value,
       step2DateOrderInvalid: step2DateOrderInvalid.value,
+      portalNeedsDeptHead: portalNeedsDeptHead.value,
       detailStepSchedulesValid: detailStepSchedulesValid.value,
       computedDepartAt: computedDepartAt.value,
       isPlausibleEmail,
@@ -1382,6 +1390,9 @@ export function useDispatchRequestWizard(options = {}) {
         is_urgent: !!form.value.is_urgent,
         urgent_reason: form.value.is_urgent ? (form.value.urgent_reason?.trim() || undefined) : undefined,
         wizard_snapshot,
+      }
+      if (portalNeedsDeptHead.value && form.value.dept_head_user_id) {
+        payload.dept_head_user_id = Number(form.value.dept_head_user_id)
       }
       Object.keys(payload).forEach((k) => (payload[k] === '' ? delete payload[k] : null))
       let createdResult = null
@@ -2083,6 +2094,21 @@ export function useDispatchRequestWizard(options = {}) {
     navigateToSubmittedRequestDetail,
     closeSubmitModalAndStartNewDraft,
     onCancel,
+    portalNeedsDeptHead,
+    ...(portalDeptHeadSearch
+      ? {
+          deptHeadQ: portalDeptHeadSearch.deptHeadQ,
+          deptHeadResults: portalDeptHeadSearch.deptHeadResults,
+          deptHeadLoading: portalDeptHeadSearch.deptHeadLoading,
+          deptHeadDropdownOpen: portalDeptHeadSearch.deptHeadDropdownOpen,
+          deptHeadSearchError: portalDeptHeadSearch.deptHeadSearchError,
+          deptHeadClientError: portalDeptHeadSearch.deptHeadClientError,
+          scheduleDeptHeadSearch: portalDeptHeadSearch.scheduleDeptHeadSearch,
+          onDeptHeadSearchFocus: portalDeptHeadSearch.onDeptHeadSearchFocus,
+          onDeptHeadSearchBlur: portalDeptHeadSearch.onDeptHeadSearchBlur,
+          pickDeptHead: portalDeptHeadSearch.pickDeptHead,
+        }
+      : {}),
     // Portal form templates
     ...(isPortal
       ? {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\StorePortalDispatchRequestTemplateRequest;
+use App\Support\DispatchRequestDeptHeadAssignment;
 use App\Http\Requests\Api\Portal\UpdatePortalDispatchPlanLabelRequest;
 use App\Http\Requests\Api\Portal\UpdatePortalDispatchRequestTemplateRequest;
 use App\Http\Requests\Api\Requests\StoreDispatchRequestTemplateRequest;
@@ -83,6 +84,9 @@ class DispatchRequestTemplateController extends Controller
 
         $urgentReasonTrim = isset($data['urgent_reason']) ? trim((string) $data['urgent_reason']) : '';
 
+        $deptHeadId = DispatchRequestDeptHeadAssignment::resolveValidatedId($data['dept_head_user_id'] ?? null);
+        unset($data['dept_head_user_id']);
+
         $arriveOffset = null;
         $arriveBy = null;
         if (! empty($data['arrive_by'])) {
@@ -124,6 +128,7 @@ class DispatchRequestTemplateController extends Controller
             $finalUrgent,
             $urgentTrigger,
             $urgentReasonTrim,
+            $deptHeadId,
             $user,
         ) {
             $template = DispatchRequestTemplate::create([
@@ -162,6 +167,7 @@ class DispatchRequestTemplateController extends Controller
                 'urgent_reason' => $finalUrgent ? ($urgentReasonTrim !== '' ? $urgentReasonTrim : null) : null,
                 'urgent_trigger' => $urgentTrigger,
                 'paper_status' => 'pending',
+                'assigned_dept_head_id' => $deptHeadId,
             ]);
 
             app(AuditLogger::class)->log(

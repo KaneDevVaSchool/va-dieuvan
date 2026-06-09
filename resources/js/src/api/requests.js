@@ -87,6 +87,15 @@ export async function searchUsersForPortalForm(q) {
   return Array.isArray(rows) ? rows : []
 }
 
+/** Trưởng đơn vị (portal tạo phiếu). @param {{ q?: string, pick?: number|string }} opts */
+export async function searchPortalDeptHeads(opts = {}) {
+  const params = {}
+  if (opts.q != null && String(opts.q).trim() !== '') params.q = String(opts.q).trim()
+  if (opts.pick != null && opts.pick !== '') params.pick = opts.pick
+  const { data } = await http.get('/portal/users/dept-heads', { params })
+  return data.data ?? []
+}
+
 /**
  * Portal dashboard KPI counts (scoped to current requester).
  * @returns {Promise<{ processing: number, pending: number, completed_this_month: number, rejected: number }>}

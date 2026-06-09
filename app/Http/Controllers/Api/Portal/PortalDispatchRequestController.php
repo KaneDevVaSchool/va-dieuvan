@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Concerns\ApiResponses;
 use App\Http\Controllers\Api\Concerns\PresentsDispatchRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Portal\CreatePortalDispatchRequestRequest;
+use App\Support\DispatchRequestDeptHeadAssignment;
 use App\Http\Requests\Api\Portal\IndexPortalDispatchRequestsRequest;
 use App\Http\Requests\Api\Portal\PatchPortalRecurringDispatchInstanceRequest;
 use App\Http\Requests\Api\Portal\PortalPatchSigningWorkflowRequest;
@@ -335,8 +336,12 @@ class PortalDispatchRequestController extends Controller
 
         $urgentReasonTrim = isset($data['urgent_reason']) ? trim((string) $data['urgent_reason']) : '';
 
+        $deptHeadId = DispatchRequestDeptHeadAssignment::resolveValidatedId($data['dept_head_user_id'] ?? null);
+        unset($data['dept_head_user_id']);
+
         $dispatchRequest = DispatchRequest::create([
             ...$data,
+            'assigned_dept_head_id' => $deptHeadId,
             'requester_id' => $user->id,
             'status' => 'pending',
             'source_channel' => $data['source_channel'] ?? 'portal',

@@ -4,7 +4,8 @@ namespace App\Http\Requests\Api\Portal;
 
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Models\DispatchRequest;
-use App\Models\User;
+use App\Support\DispatchRequestDeptHeadAssignment;
+use App\Support\Messages;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -14,13 +15,11 @@ use Illuminate\Validation\Validator;
  */
 class CreatePortalDispatchRequestRequest extends ApiFormRequest
 {
+    use EnsuresPortalUser;
+
     public function authorize(): bool
     {
-        $user = $this->user();
-
-        return $user instanceof User
-            && ! $user->canAccessDispatchWebApp()
-            && ! $user->canAccessDriverWebApp();
+        return $this->portalUserMayAccess($this->user());
     }
 
     public function rules(): array
@@ -37,6 +36,19 @@ class CreatePortalDispatchRequestRequest extends ApiFormRequest
             'is_urgent' => ['nullable', 'boolean'],
             'urgent_reason' => ['nullable', 'string', 'max:500'],
             'wizard_snapshot' => ['nullable', 'array'],
+            'dept_head_user_id' => [
+                Rule::requiredIf(fn () => DispatchRequestDeptHeadAssignment::requiresChoice((string) $this->input('trip_type', ''))),
+                'nullable',
+                'integer',
+                'exists:users,id',
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'dept_head_user_id.required' => Messages::REQUEST_DEPT_HEAD_REQUIRED,
         ];
     }
 

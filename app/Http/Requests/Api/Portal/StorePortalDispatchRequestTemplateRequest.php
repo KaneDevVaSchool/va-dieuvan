@@ -4,6 +4,8 @@ namespace App\Http\Requests\Api\Portal;
 
 use App\Http\Requests\Api\Requests\StoreDispatchRequestTemplateRequest;
 use App\Models\User;
+use App\Support\DispatchRequestDeptHeadAssignment;
+use App\Support\Messages;
 use Illuminate\Validation\Rule;
 
 /**
@@ -38,7 +40,20 @@ class StorePortalDispatchRequestTemplateRequest extends StoreDispatchRequestTemp
         $rules['recurrence_rule.freq'] = ['required', 'string', Rule::in(['weekly'])];
         $rules['recurrence_rule.byweekday'] = ['required', 'array', 'min:1'];
         $rules['plan_label'] = ['required', 'string', 'min:1', 'max:255'];
+        $rules['dept_head_user_id'] = [
+            Rule::requiredIf(fn () => DispatchRequestDeptHeadAssignment::requiresChoice((string) $this->input('trip_type', ''))),
+            'nullable',
+            'integer',
+            'exists:users,id',
+        ];
 
         return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'dept_head_user_id.required' => Messages::REQUEST_DEPT_HEAD_REQUIRED,
+        ];
     }
 }
