@@ -373,8 +373,7 @@ class TripController extends Controller
                 abort(422, 'Cần ít nhất một hành khách hợp lệ.');
             }
             $snap['passengerRows'] = $filled;
-            $businessRows = is_array($snap['businessRows'] ?? null) ? $snap['businessRows'] : [];
-            $dr->passenger_count = $this->sumGuestsPassengerAndBusiness($filled, $businessRows);
+            $dr->passenger_count = $this->sumGuestsPassengerAndBusiness($filled, []);
         }
 
         $dr->wizard_snapshot = $snap;

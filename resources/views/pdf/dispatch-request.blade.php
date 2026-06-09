@@ -16,7 +16,7 @@
     @endphp
     <style>
         @page {
-            margin: {{ $pageMarginTop }} 12mm {{ $pageMarginBot }} 12mm;
+            margin: {{ $pageMarginTop }} {{ $pageMarginX }} {{ $pageMarginBot }} {{ $pageMarginX }};
             size: A4 {{ $pageOrient }};
         }
 
@@ -70,7 +70,13 @@
             margin: 0; padding: 0; border: none; display: block;
         }
 
-        .page-content { position: relative; }
+        .page-content { position: relative; width: 100%; }
+
+        /* F + G always start on a dedicated page (signatures / PO confirmation) */
+        .signatures-page {
+            page-break-before: always;
+            page-break-inside: avoid;
+        }
 
         /* ── TITLE BLOCK ── */
         .top-layout { width: 100%; border-collapse: collapse; margin-bottom: 4pt; }
@@ -726,8 +732,10 @@
         </div>
     </div>
 
+    <div class="signatures-page">
+
     {{-- ────────── F · XÁC NHẬN CÁC BÊN ────────── --}}
-    <div class="sec">
+    <div class="sec sec-avoid">
         <div class="sec-hd">
             <span class="sec-badge">F</span>
             <span class="sec-ttl">Xác nhận của các bên liên quan</span>
@@ -788,6 +796,8 @@
     <div class="pg-footer">
         BM.03/MH.QT.04 &nbsp;·&nbsp; Phiếu Đề Nghị Điều Vận &nbsp;·&nbsp; Hệ Thống Trường Việt Mỹ
     </div>
+
+    </div>{{-- /.signatures-page --}}
 
     </div>{{-- /.page-content --}}
 

@@ -896,7 +896,7 @@ class DispatchRequestController extends Controller
                 $sum += $g >= 1 ? $g : 1;
             }
         }
-        if ($tt !== 'point_to_point') {
+        if ($tt === 'business') {
             foreach ($snap['businessRows'] ?? [] as $r) {
                 if (! is_array($r) || ! $this->businessSnapshotRowFilled($r)) {
                     continue;

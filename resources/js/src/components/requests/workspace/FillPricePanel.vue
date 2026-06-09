@@ -1,46 +1,68 @@
 <template>
-  <section id="request-focus-fill-price" class="scroll-mt-24 space-y-4">
-    <!-- Intro -->
-    <div class="rounded-2xl border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-900/50 dark:bg-sky-950/20 sm:p-5">
-      <div class="flex items-start gap-3">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow-sm">
-          <CurrencyDollarIcon class="h-6 w-6" aria-hidden="true" />
-        </span>
-        <div class="min-w-0">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white">{{ t('request_detail.fill_price_title') }}</h2>
-          <p class="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{{ t('request_detail.fill_price_lead') }}</p>
-        </div>
+  <section id="request-focus-fill-price" class="scroll-mt-24 space-y-3">
+    <!-- Intro banner -->
+    <div class="flex items-center gap-3 rounded-2xl border border-sky-200/80 bg-gradient-to-r from-sky-50 to-slate-50 px-5 py-4 dark:border-sky-900/40 dark:from-sky-950/30 dark:to-slate-900">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-600 text-white shadow-sm">
+        <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div class="min-w-0">
+        <h2 class="text-base font-bold text-slate-900 dark:text-white">{{ t('request_detail.fill_price_title') }}</h2>
+        <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{{ t('request_detail.fill_price_lead') }}</p>
       </div>
     </div>
 
-    <!-- Rows -->
+    <!-- Row cards -->
     <div
       v-for="(row, idx) in rows"
       :key="idx"
-      class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800 sm:p-5"
+      class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
-      <div class="flex items-start gap-3">
+      <!-- Card header: route badge + heading -->
+      <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50">
         <span
-          class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sm font-bold text-sky-700 dark:bg-sky-950/50 dark:text-sky-300"
           :aria-label="t('request_detail.ops_row_badge_aria', { n: idx + 1 })"
-        >
-          {{ idx + 1 }}
-        </span>
-        <div class="min-w-0 flex-1 space-y-1">
-          <p class="text-base font-semibold leading-snug text-slate-900 dark:text-white">
-            {{ rowHeading(row, idx) }}
+        >{{ idx + 1 }}</span>
+        <div class="min-w-0 flex-1">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {{ t('request_detail.ops_itinerary_row_label') }}
           </p>
-          <ul
-            v-if="rowSummary(row, idx).length"
-            class="space-y-0.5 text-sm leading-snug text-slate-600 dark:text-slate-400"
-          >
-            <li v-for="(line, li) in rowSummary(row, idx)" :key="li" class="break-words">{{ line }}</li>
-          </ul>
+          <p class="mt-0.5 truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{{ rowHeading(row, idx) }}</p>
         </div>
       </div>
 
+      <!-- Route mini-map -->
+      <div
+        v-if="rowFrom(row) || rowTo(row)"
+        class="grid grid-cols-[1fr_auto_1fr] border-b border-slate-100 dark:border-slate-800"
+      >
+        <div class="bg-emerald-50/50 px-4 py-3 dark:bg-emerald-950/15">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">{{ t('request_detail.lbl_origin') }}</p>
+          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ rowFrom(row) || '—' }}</p>
+        </div>
+        <div class="flex items-center justify-center bg-slate-50/50 px-2 dark:bg-slate-800/30">
+          <svg class="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+        </div>
+        <div class="bg-rose-50/50 px-4 py-3 dark:bg-rose-950/15">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 dark:text-rose-400/80">{{ t('request_detail.lbl_destination') }}</p>
+          <p class="mt-0.5 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{{ rowTo(row) || '—' }}</p>
+        </div>
+      </div>
+
+      <!-- Trip info chips: times + passengers + pic -->
+      <div v-if="rowInfoChips(row).length" class="flex flex-wrap gap-2 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+        <span
+          v-for="chip in rowInfoChips(row)"
+          :key="chip.key"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/70 px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+        >
+          <span class="shrink-0 text-slate-400 dark:text-slate-500">{{ chip.icon }}</span>
+          <span>{{ chip.text }}</span>
+        </span>
+      </div>
+
       <!-- Cargo inputs -->
-      <div v-if="isCargo" class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div v-if="isCargo" class="grid gap-4 px-4 py-4 sm:grid-cols-2">
         <label class="block">
           <FillPriceFieldLabel
             :label="t('request_detail.ops_lbl_transport_type')"
@@ -50,7 +72,7 @@
             :value="cargoTransport[idx]"
             type="text"
             maxlength="500"
-            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             :placeholder="t('request_detail.ops_transport_type_ph')"
             :title="t('request_detail.ops_transport_type_tooltip')"
             @input="cargoTransport[idx] = String($event.target.value).slice(0, 500)"
@@ -61,42 +83,42 @@
             :label="t('request_detail.ops_lbl_cost')"
             :tooltip="t('request_detail.ops_cost_tooltip')"
           />
-          <div class="relative">
+          <div class="relative mt-1.5">
             <input
               :value="cargoCost[idx]"
               type="text"
               inputmode="numeric"
-              class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-sm tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               :placeholder="t('request_detail.ops_money_ph')"
               :title="t('request_detail.ops_cost_tooltip')"
               @input="cargoCost[idx] = fmtTyping($event.target.value)"
               @blur="cargoCost[idx] = fmtBlur(cargoCost[idx])"
             />
-            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">{{ vndSuffix }}</span>
+            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400 dark:text-slate-500">{{ vndSuffix }}</span>
           </div>
         </label>
       </div>
 
-      <!-- Passenger / business inputs -->
-      <div v-else class="mt-4 space-y-4">
-        <div class="grid gap-4 sm:grid-cols-2">
+      <!-- Passenger / business pricing inputs -->
+      <div v-else class="space-y-3 px-4 py-4">
+        <div class="grid gap-3 sm:grid-cols-2">
           <label class="block">
             <FillPriceFieldLabel
               :label="t('request_detail.ops_lbl_unit_price')"
               :tooltip="t('request_detail.ops_unit_price_tooltip')"
             />
-            <div class="relative">
+            <div class="relative mt-1.5">
               <input
                 :value="unitDraft[idx]"
                 type="text"
                 inputmode="numeric"
-                class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-sm tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 :placeholder="t('request_detail.ops_money_ph')"
                 :title="t('request_detail.ops_unit_price_tooltip')"
                 @input="unitDraft[idx] = fmtTyping($event.target.value)"
                 @blur="unitDraft[idx] = fmtBlur(unitDraft[idx])"
               />
-              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">{{ vndSuffix }}</span>
+              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400 dark:text-slate-500">{{ vndSuffix }}</span>
             </div>
           </label>
           <label class="block">
@@ -104,18 +126,18 @@
               :label="t('request_detail.ops_lbl_extra_fee')"
               :tooltip="t('request_detail.ops_extra_fee_tooltip')"
             />
-            <div class="relative">
+            <div class="relative mt-1.5">
               <input
                 :value="extraDraft[idx]"
                 type="text"
                 inputmode="numeric"
-                class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-sm tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 :placeholder="t('request_detail.ops_money_zero_ph')"
                 :title="t('request_detail.ops_extra_fee_tooltip')"
                 @input="extraDraft[idx] = fmtTyping($event.target.value)"
                 @blur="extraDraft[idx] = fmtBlur(extraDraft[idx])"
               />
-              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">{{ vndSuffix }}</span>
+              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400 dark:text-slate-500">{{ vndSuffix }}</span>
             </div>
           </label>
         </div>
@@ -128,7 +150,7 @@
             :value="notesDraft[idx]"
             type="text"
             maxlength="2000"
-            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            class="mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             :placeholder="t('request_detail.ops_notes_ph')"
             :title="t('request_detail.ops_notes_tooltip')"
             @input="notesDraft[idx] = String($event.target.value).slice(0, 2000)"
@@ -137,66 +159,52 @@
       </div>
     </div>
 
-    <!-- Total + dept head + save -->
-    <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/30 sm:p-5">
-      <div
-        class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 dark:border-slate-700"
-        :title="t('request_detail.fill_price_total_tooltip')"
-      >
-        <span class="flex items-center gap-1 text-sm font-semibold text-slate-600 dark:text-slate-300">
+    <!-- Summary: total + dept head + save -->
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <!-- Total row -->
+      <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+        <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">
           {{ t('request_detail.fill_price_total') }}
-          <span
-            :title="t('request_detail.fill_price_total_tooltip')"
-            class="inline-flex cursor-help text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
-            @click.prevent
-          >
-            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 9a1 1 0 012 0v4a1 1 0 11-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </span>
         </span>
-        <span class="text-xl font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ totalFmt }}</span>
+        <span
+          class="text-2xl font-bold tabular-nums"
+          :class="total > 0 ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500'"
+        >{{ totalFmt }}</span>
       </div>
 
-      <div
-        v-if="deptHeadPresetLocked"
-        class="mt-4 rounded-lg border border-sky-200 bg-sky-50/50 px-3 py-3 dark:border-sky-900/40 dark:bg-sky-950/20"
-      >
-        <p class="text-sm font-medium text-slate-700 dark:text-slate-200">
+      <!-- Dept head -->
+      <div class="px-5 py-4">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           {{ t('request_detail.assign_dept_head_preset_label') }}
         </p>
-        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">{{ deptHeadDisplayLine }}</p>
-        <p v-if="deptHeadLoadErr" class="mt-1 text-sm text-rose-600 dark:text-rose-400">{{ deptHeadLoadErr }}</p>
-        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('request_detail.assign_dept_head_preset_hint') }}</p>
-      </div>
-
-      <div
-        v-else
-        class="mt-4 rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-3 dark:border-amber-900/40 dark:bg-amber-950/20"
-        role="alert"
-      >
-        <p class="text-sm font-medium text-amber-900 dark:text-amber-100">
-          {{ t('request_detail.assign_dept_head_missing_staff_title') }}
-        </p>
-        <p class="mt-1 text-sm text-amber-800 dark:text-amber-200/90">
-          {{ t('request_detail.assign_dept_head_missing_staff_body') }}
-        </p>
-      </div>
-
-      <div class="mt-4 flex flex-wrap items-center gap-3">
-        <Button
-          class="!bg-sky-600 hover:!bg-sky-700"
-          :loading="acting"
-          :disabled="!canSubmitFillPrice"
-          @click="onSave"
+        <div
+          v-if="deptHeadPresetLocked"
+          class="mt-2 rounded-xl border border-sky-200/80 bg-sky-50/60 px-3.5 py-3 dark:border-sky-900/40 dark:bg-sky-950/25"
         >
-          {{ t('request_detail.fill_price_submit_preset_dept') }}
-        </Button>
-        <span v-if="message" class="text-sm text-slate-600 dark:text-slate-400">{{ message }}</span>
+          <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ deptHeadDisplayLine }}</p>
+          <p v-if="deptHeadLoadErr" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ deptHeadLoadErr }}</p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('request_detail.assign_dept_head_preset_hint') }}</p>
+        </div>
+        <div
+          v-else
+          class="mt-2 rounded-xl border border-amber-200/80 bg-amber-50/60 px-3.5 py-3 dark:border-amber-900/40 dark:bg-amber-950/20"
+          role="alert"
+        >
+          <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
+          <p class="mt-0.5 text-xs text-amber-700 dark:text-amber-300/80">{{ t('request_detail.assign_dept_head_missing_staff_body') }}</p>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <Button
+            class="!bg-sky-600 hover:!bg-sky-700"
+            :loading="acting"
+            :disabled="!canSubmitFillPrice"
+            @click="onSave"
+          >
+            {{ t('request_detail.fill_price_submit_preset_dept') }}
+          </Button>
+          <span v-if="message" class="text-sm text-slate-500 dark:text-slate-400">{{ message }}</span>
+        </div>
       </div>
     </div>
   </section>
@@ -218,7 +226,8 @@ import {
 } from '../../../util/money'
 import {
   itineraryRowHeading,
-  itineraryRowSummaryLines,
+  itineraryRowEndpoints,
+  formatItineraryRowDt,
   nz,
   resolveItineraryTripType,
 } from '../../../util/requestItineraryRowDisplay'
@@ -260,8 +269,39 @@ function rowHeading(row, idx) {
   return itineraryRowHeading(row, idx, { tripType: itineraryTripType.value, t })
 }
 
-function rowSummary(row, idx) {
-  return itineraryRowSummaryLines(row, { tripType: itineraryTripType.value, t, index: idx })
+function rowFrom(row) {
+  return itineraryRowEndpoints(row).from
+}
+
+function rowTo(row) {
+  return itineraryRowEndpoints(row).to
+}
+
+function rowInfoChips(row) {
+  const chips = []
+  const tripType = itineraryTripType.value
+  const outTime = formatItineraryRowDt(row.depart_at)
+  const backTime = formatItineraryRowDt(row.return_at)
+  const { from, to } = itineraryRowEndpoints(row)
+  if (outTime || from) {
+    chips.push({ key: 'out', icon: '↗', text: [outTime, from].filter(Boolean).join(' · ') })
+  }
+  if (backTime || to) {
+    chips.push({ key: 'back', icon: '↙', text: [backTime, to].filter(Boolean).join(' · ') })
+  }
+  const guests = nz(row.guests)
+  if (guests) {
+    chips.push({ key: 'guests', icon: '👥', text: t('request_detail.ops_row_line_guests', { n: guests }) })
+  }
+  const pic = nz(row.person_in_charge)
+  if (pic && tripType === 'passenger') {
+    chips.push({ key: 'pic', icon: '👤', text: t('request_detail.ops_row_line_pic', { name: pic }) })
+  }
+  const waypoint = nz(row.waypoint)
+  if (waypoint && tripType === 'business') {
+    chips.push({ key: 'waypoint', icon: '📍', text: waypoint })
+  }
+  return chips
 }
 
 // ── Drafts ──

@@ -1101,7 +1101,7 @@ import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewM
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
 import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
-import { formatVndCurrency, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
+import { formatVndCurrency as formatVndMoney, parseMoneyVnd, VND_CURRENCY_SUFFIX, vndAmountInWords } from '../../util/money'
 import {
   itineraryRowEndpoints,
   itineraryRowHeading,
@@ -1221,7 +1221,7 @@ const asidePanelTabs = computed(() => [
 function formatVndSidebar(n) {
   const amount = parseMoneyVnd(n)
   if (!amount) return friendlyEmpty.value
-  return formatVndCurrency(amount, VND_CURRENCY_SUFFIX)
+  return formatVndMoney(amount, VND_CURRENCY_SUFFIX)
 }
 
 const asideServicePriceDisplay = computed(() =>
@@ -1318,7 +1318,7 @@ function buildRowMoney(n) {
   if (!amount) return null
   const words = vndAmountInWords(amount)
   return {
-    display: formatVndCurrency(amount, VND_CURRENCY_SUFFIX),
+    display: formatVndMoney(amount, VND_CURRENCY_SUFFIX),
     words: words && words !== 'Không đồng' ? words : '',
     amount,
   }

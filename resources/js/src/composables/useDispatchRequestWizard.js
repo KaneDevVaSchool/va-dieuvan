@@ -952,11 +952,13 @@ export function useDispatchRequestWizard(options = {}) {
 
   const passengerTotal = computed(() => passengerE1Total.value + passengerE2Total.value)
 
-  const passengerGuestTotal = computed(
-    () =>
-      passengerRows.value.filter(isPassengerRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0) +
-      businessRows.value.filter(isBusinessRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0),
-  )
+  const passengerGuestTotal = computed(() => {
+    const tt = form.value.trip_type
+    if (tt === 'business') {
+      return businessRows.value.filter(isBusinessRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0)
+    }
+    return passengerRows.value.filter(isPassengerRowFilled).reduce((s, r) => s + parseGuests(r.guests), 0)
+  })
 
   const cargoTotal = computed(() =>
     cargoRows.value.reduce(
