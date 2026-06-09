@@ -659,7 +659,7 @@ import BmRoField from './RequestBm03RoField.vue'
 import BmRoTd from './RequestBm03RoTd.vue'
 import { getAvailableDeptHeads } from '../../api/requests'
 import { TARGET_OPTIONS, isPassengerRowFilled, isBusinessRowFilled } from '../../composables/dispatchWizardConstants'
-import { parseMoneyVnd, formatVndWhileTyping } from '../../util/money'
+import { parseMoneyVnd, formatVndWhileTyping, formatMoneyDraftDisplay } from '../../util/money'
 import { labelTripType } from '../../util/labels'
 
 const { t } = useI18n()
@@ -1043,11 +1043,7 @@ function normalizeNoteFromSnapshot(v) {
 }
 
 function fmtDraftStored(v) {
-  if (v == null || v === '') return ''
-  if (typeof v === 'number' && Number.isFinite(v)) {
-    return formatVndWhileTyping(String(Math.round(v)))
-  }
-  return formatVndWhileTyping(String(v))
+  return formatMoneyDraftDisplay(v)
 }
 
 function syncInlinePriceDrafts() {

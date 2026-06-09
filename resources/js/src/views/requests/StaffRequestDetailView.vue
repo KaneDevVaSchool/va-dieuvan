@@ -180,35 +180,11 @@
                       </div>
                     </div>
 
-                    <!-- Horizontal timeline -->
-                    <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
-                      <h2 :class="sectionTitleClass">{{ t('portal.timeline_heading') }}</h2>
-                      <div class="mt-4 overflow-x-auto pb-1">
-                        <ol class="flex min-w-[34rem] items-start">
-                          <template v-for="(step, idx) in timelineSteps" :key="step.key">
-                            <li class="flex min-w-0 flex-1 flex-col items-center px-1 text-center">
-                              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2" :class="timelineDotClass(step.state)">
-                                <CheckIcon v-if="step.state === 'done'" class="h-4 w-4 text-white" aria-hidden="true" />
-                                <span v-else-if="step.state === 'rejected'" class="text-sm font-bold text-rose-600">!</span>
-                                <span v-else-if="step.state === 'current'" class="h-2 w-2 rounded-full bg-va-700 dark:bg-va-400" />
-                                <span v-else class="text-xs font-semibold text-slate-400">{{ idx + 1 }}</span>
-                              </span>
-                              <p
-                                class="mt-2 text-sm font-semibold leading-tight"
-                                :class="step.state === 'current' ? 'text-va-800 dark:text-va-300' : step.state === 'upcoming' ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'"
-                              >{{ step.label }}</p>
-                              <p v-if="step.sub && step.sub !== '—'" class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{{ step.sub }}</p>
-                            </li>
-                            <div
-                              v-if="idx < timelineSteps.length - 1"
-                              class="mt-[1.1rem] h-0.5 flex-1"
-                              :class="timelineSteps[idx + 1].state === 'done' || step.state === 'done' ? 'bg-va-500/70' : 'bg-slate-200 dark:bg-slate-700'"
-                              aria-hidden="true"
-                            />
-                          </template>
-                        </ol>
-                      </div>
-                    </div>
+                    <PortalStatusTimeline
+                      :title="t('portal.timeline_heading')"
+                      :steps="timelineSteps"
+                      variant="staff"
+                    />
 
                     <!-- Quick facts -->
                     <div class="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
@@ -572,7 +548,6 @@ import {
   CalculatorIcon,
   CheckBadgeIcon,
   CheckCircleIcon,
-  CheckIcon,
   ClipboardDocumentIcon,
   ClockIcon,
   CurrencyDollarIcon,
@@ -597,6 +572,7 @@ import Input from '../../components/ui/Input.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import AttachmentPreviewModal from '../../components/requests/AttachmentPreviewModal.vue'
 import RejectReasonModal from '../../components/requests/RejectReasonModal.vue'
+import PortalStatusTimeline from '../../components/portal/PortalStatusTimeline.vue'
 import { useRequestDetailPage } from '../../composables/useRequestDetailPage'
 import { parseMoneyVnd } from '../../util/money'
 import {
@@ -889,13 +865,6 @@ function mapTodoTab(tab) {
 const hasAnyAction = computed(
   () => showD2dDecisionSection.value || showFillPriceSection.value || showResetCloneBtn.value || workflowTodoItems.value.length > 0,
 )
-
-function timelineDotClass(state) {
-  if (state === 'done') return 'border-va-600 bg-va-600 dark:border-va-500 dark:bg-va-500'
-  if (state === 'current') return 'border-va-600 bg-white dark:border-va-400 dark:bg-slate-900'
-  if (state === 'rejected') return 'border-rose-400 bg-white dark:bg-slate-900'
-  return 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
-}
 
 // ── Audit ──
 function auditEventLabel(event) {

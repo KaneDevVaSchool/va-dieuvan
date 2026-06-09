@@ -61,15 +61,19 @@
             :label="t('request_detail.ops_lbl_cost')"
             :tooltip="t('request_detail.ops_cost_tooltip')"
           />
-          <input
-            :value="cargoCost[idx]"
-            type="text"
-            inputmode="numeric"
-            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-            :placeholder="t('request_detail.ops_money_ph')"
-            :title="t('request_detail.ops_cost_tooltip')"
-            @input="cargoCost[idx] = fmtTyping($event.target.value)"
-          />
+          <div class="relative">
+            <input
+              :value="cargoCost[idx]"
+              type="text"
+              inputmode="numeric"
+              class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              :placeholder="t('request_detail.ops_money_ph')"
+              :title="t('request_detail.ops_cost_tooltip')"
+              @input="cargoCost[idx] = fmtTyping($event.target.value)"
+              @blur="cargoCost[idx] = fmtBlur(cargoCost[idx])"
+            />
+            <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">{{ vndSuffix }}</span>
+          </div>
         </label>
       </div>
 
@@ -81,30 +85,38 @@
               :label="t('request_detail.ops_lbl_unit_price')"
               :tooltip="t('request_detail.ops_unit_price_tooltip')"
             />
-            <input
-              :value="unitDraft[idx]"
-              type="text"
-              inputmode="numeric"
-              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              :placeholder="t('request_detail.ops_money_ph')"
-              :title="t('request_detail.ops_unit_price_tooltip')"
-              @input="unitDraft[idx] = fmtTyping($event.target.value)"
-            />
+            <div class="relative">
+              <input
+                :value="unitDraft[idx]"
+                type="text"
+                inputmode="numeric"
+                class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('request_detail.ops_money_ph')"
+                :title="t('request_detail.ops_unit_price_tooltip')"
+                @input="unitDraft[idx] = fmtTyping($event.target.value)"
+                @blur="unitDraft[idx] = fmtBlur(unitDraft[idx])"
+              />
+              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">{{ vndSuffix }}</span>
+            </div>
           </label>
           <label class="block">
             <FillPriceFieldLabel
               :label="t('request_detail.ops_lbl_extra_fee')"
               :tooltip="t('request_detail.ops_extra_fee_tooltip')"
             />
-            <input
-              :value="extraDraft[idx]"
-              type="text"
-              inputmode="numeric"
-              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              :placeholder="t('request_detail.ops_money_zero_ph')"
-              :title="t('request_detail.ops_extra_fee_tooltip')"
-              @input="extraDraft[idx] = fmtTyping($event.target.value)"
-            />
+            <div class="relative">
+              <input
+                :value="extraDraft[idx]"
+                type="text"
+                inputmode="numeric"
+                class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-14 text-right text-base tabular-nums text-slate-900 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                :placeholder="t('request_detail.ops_money_zero_ph')"
+                :title="t('request_detail.ops_extra_fee_tooltip')"
+                @input="extraDraft[idx] = fmtTyping($event.target.value)"
+                @blur="extraDraft[idx] = fmtBlur(extraDraft[idx])"
+              />
+              <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-slate-500 dark:text-slate-400">{{ vndSuffix }}</span>
+            </div>
           </label>
         </div>
         <label class="block">
@@ -212,7 +224,13 @@ import { CurrencyDollarIcon } from '@heroicons/vue/24/outline'
 import Button from '../../ui/Button.vue'
 import FillPriceFieldLabel from './FillPriceFieldLabel.vue'
 import { getAvailableDeptHeads } from '../../../api/requests'
-import { parseMoneyVnd, formatVndCurrency, formatVndWhileTyping } from '../../../util/money'
+import {
+  parseMoneyVnd,
+  formatVndCurrency,
+  formatVndWhileTyping,
+  formatMoneyDraftDisplay,
+  VND_CURRENCY_SUFFIX,
+} from '../../../util/money'
 import {
   itineraryRowHeading,
   itineraryRowSummaryLines,
@@ -242,8 +260,15 @@ const rows = computed(() => {
 
 const itineraryTripType = computed(() => resolveItineraryTripType(isCargo.value, isBusiness.value))
 
+const vndSuffix = VND_CURRENCY_SUFFIX
+
 function fmtTyping(v) {
   return formatVndWhileTyping(v)
+}
+
+function fmtBlur(v) {
+  const n = parseMoneyVnd(v)
+  return n > 0 ? formatVndWhileTyping(String(n)) : ''
 }
 
 function rowHeading(row, idx) {
@@ -265,10 +290,10 @@ function syncDrafts() {
   const r = rows.value
   if (isCargo.value) {
     cargoTransport.value = r.map((x) => nz(x?.transport_note))
-    cargoCost.value = r.map((x) => (x?.cost ? formatVndWhileTyping(String(x.cost)) : ''))
+    cargoCost.value = r.map((x) => formatMoneyDraftDisplay(x?.cost))
   } else {
-    unitDraft.value = r.map((x) => (x?.unit_price ? formatVndWhileTyping(String(x.unit_price)) : ''))
-    extraDraft.value = r.map((x) => (x?.extra_fee ? formatVndWhileTyping(String(x.extra_fee)) : ''))
+    unitDraft.value = r.map((x) => formatMoneyDraftDisplay(x?.unit_price))
+    extraDraft.value = r.map((x) => formatMoneyDraftDisplay(x?.extra_fee))
     notesDraft.value = r.map((x) => nz(x?.notes))
   }
 }
@@ -286,7 +311,7 @@ const total = computed(() => {
   }
   return s
 })
-const totalFmt = computed(() => formatVndCurrency(total.value))
+const totalFmt = computed(() => formatVndCurrency(total.value, VND_CURRENCY_SUFFIX))
 
 // ── Dept head search ──
 const deptHeadQ = ref('')
