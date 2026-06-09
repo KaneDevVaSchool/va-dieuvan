@@ -44,7 +44,7 @@ final class DispatchRequestPdfPresenter
 
         $aName = self::nzString($form['requester_name'] ?? null) ?: self::nzString($user?->name);
         $aEmail = self::nzString($form['requester_email'] ?? null) ?: self::nzString($user?->email);
-        $aPhone = self::nzString($form['requester_phone'] ?? null) ?: self::nzString($user?->phone);
+        $aPhone = self::fmtPdfPhone($form['requester_phone'] ?? null) ?: self::fmtPdfPhone($user?->phone);
         $aUnit = self::nzString($form['requester_unit'] ?? null);
 
         $selectedTargets = [];
@@ -132,10 +132,10 @@ final class DispatchRequestPdfPresenter
             'urgentReason' => self::nzString($form['urgent_reason'] ?? null),
             'coordName' => self::nzString($form['coordinator_name'] ?? null),
             'coordEmail' => self::nzString($form['coordinator_email'] ?? null),
-            'coordPhone' => self::nzString($form['coordinator_phone'] ?? null),
+            'coordPhone' => self::fmtPdfPhone($form['coordinator_phone'] ?? null),
             'tripType' => $tripTypeLabels[$tripTypeRaw] ?? $tripTypeRaw,
             'needPorters' => ! empty($form['need_porters']),
-            'porterQty' => self::nzString($form['porter_qty'] ?? null),
+            'porterQty' => self::fmtPdfQty($form['porter_qty'] ?? null),
             'porterCost' => ! empty($form['porter_cost'])
                 ? number_format(self::parseMoney($form['porter_cost'] ?? null), 0, ',', '.').' đ'
                 : '',
@@ -324,6 +324,45 @@ final class DispatchRequestPdfPresenter
         }
 
         return trim($s);
+    }
+
+    private static function fmtPdfPhone(mixed $v): string
+    {
+        if ($v === null || $v === '') {
+            return '';
+        }
+
+        if (is_int($v) || is_float($v)) {
+            $digits = sprintf('%.0f', (float) $v);
+        } else {
+            $raw = trim((string) $v);
+            if ($raw === '') {
+                return '';
+            }
+            if (preg_match('/^\d+(?:\.\d+)?[eE][+-]?\d+$/', $raw)) {
+                $digits = sprintf('%.0f', (float) $raw);
+            } else {
+                $digits = preg_replace('/\D/', '', $raw) ?? '';
+            }
+        }
+
+        if ($digits === '') {
+            return '';
+        }
+
+        if (str_starts_with($digits, '84') && strlen($digits) >= 10) {
+            $digits = '0'.substr($digits, 2);
+        }
+
+        if (strlen($digits) === 9 && str_starts_with($digits, '9')) {
+            $digits = '0'.$digits;
+        }
+
+        if (strlen($digits) > 11) {
+            $digits = substr($digits, 0, 11);
+        }
+
+        return $digits;
     }
 
     private static function fmtPdfShortDatetime(mixed $v): string

@@ -55,6 +55,20 @@
 
         strong, b { font-weight: normal; }
 
+        /* Garbata render số/ngày kém trong DomPDF — các vùng tabular dùng DejaVu */
+        .fl, .fl-hint, .fv, .fv-phone,
+        .d1-lbl, .g-lbl, .g-row, .g-dots,
+        table.ft, table.ft td,
+        table.dt, table.dt th, table.dt td,
+        .hint-bar, .target-chip, .chip-type, .muted,
+        .cb, .sec-badge, .sec-sub,
+        table.sig, .sig-hd, .sig-bd, .sig-name,
+        .pg-footer,
+        table.ft strong, .hint-bar strong, .fv strong {
+            font-family: {!! $pdfTabularFont !!};
+            letter-spacing: 0;
+        }
+
         /* ── Fixed branding layers ──
            DomPDF positions fixed elements from the content area origin,
            so we use negative offsets to reach the physical page edges.  ── */
@@ -108,62 +122,15 @@
             margin-bottom: 5pt;
         }
 
-        .doc-head::after {
-            content: '';
-            display: block;
-            clear: both;
-        }
-
-        .doc-meta {
-            float: right;
-            width: 42%;
-            max-width: 78mm;
-        }
-
         .doc-heading {
-            clear: both;
             width: 100%;
             text-align: center;
             padding: 3pt 0 2pt;
         }
 
-        .meta-tbl {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 7.5pt;
-            line-height: 1.5;
-            border: 0.5pt solid #ccc;
-            border-right: none;
-            background: #fff;
-        }
-
-        .meta-tbl td {
-            padding: 3.5pt 5pt;
-            border-bottom: 0.5pt solid #eee;
-            vertical-align: middle;
-        }
-
-        .meta-tbl tr:last-child td { border-bottom: none; }
-
-        .meta-lbl {
-            color: #666;
-            width: 42%;
-            white-space: nowrap;
-            padding-left: 6pt;
-        }
-
-        .meta-val {
-            text-align: right;
-            color: #111;
-            width: 58%;
-            padding-right: 8pt;
-        }
-
-        .meta-code { color: #7B1E3B; }
-
         .doc-title {
             font-size: 15pt;
-            font-weight: normal;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1.5pt;
             text-align: center;
@@ -211,7 +178,7 @@
         .sec-ttl {
             display: inline;
             font-size: 8.5pt;
-            font-weight: normal;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.35pt;
             color: #111;
@@ -251,7 +218,6 @@
             font-size: 6.5pt;
             color: #aaa;
             text-transform: uppercase;
-            letter-spacing: 0.5pt;
             margin-bottom: 2.5pt;
             line-height: 1.45;
         }
@@ -259,7 +225,6 @@
         .fl-hint { font-style: italic; color: #ccc; text-transform: none; letter-spacing: 0; }
 
         .fv {
-            font-family: {!! $pdfTabularFont !!};
             font-size: 9pt;
             color: #111;
             min-height: 14pt;
@@ -268,12 +233,9 @@
             padding-bottom: 2pt;
         }
 
-        .meta-tbl,
-        .meta-lbl,
-        .meta-val,
-        .meta-code,
-        .g-dots {
-            font-family: {!! $pdfTabularFont !!};
+        .fv-phone {
+            white-space: nowrap;
+            word-wrap: normal;
         }
 
         /* ── HINT BAR ── */
@@ -303,7 +265,7 @@
         }
 
         /* ── CHECKBOX ── */
-        .cb { font-family: {!! $pdfTabularFont !!}; font-size: 9pt; margin-right: 3pt; }
+        .cb { font-size: 9pt; margin-right: 3pt; }
 
         /* ── DATA TABLES ── */
         table.dt { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
@@ -313,7 +275,7 @@
             padding: 4.5pt 3pt;
             text-align: center;
             font-size: 6.5pt;
-            font-weight: normal;
+            font-weight: bold;
             border: 0.5pt solid #bbb;
             text-transform: uppercase;
             letter-spacing: 0.2pt;
@@ -326,7 +288,6 @@
         table.dt th.back { background: #eaf6ee; color: #1a4028; }
 
         table.dt td {
-            font-family: {!! $pdfTabularFont !!};
             padding: 4.5pt 3pt;
             border: 0.5pt solid #e0e0e0;
             color: #111;
@@ -364,6 +325,7 @@
 
         .sig-hd {
             font-size: 7.5pt;
+            font-weight: bold;
             line-height: 1.5;
             text-align: center;
             vertical-align: middle;
@@ -452,8 +414,6 @@
         $hdrUri  = ($useBranding && file_exists($hdrPath))
             ? 'data:image/png;base64,' . base64_encode(file_get_contents($hdrPath))
             : '';
-
-        $reqCode = 'ĐNDV/' . $dispatchRequest->created_at->format('Y') . '/' . str_pad($dispatchRequest->id, 4, '0', STR_PAD_LEFT);
     @endphp
 
     {{-- ────────── BACKGROUND (watermark + footer) & HEADER (logo + tên trường) ────────── --}}
@@ -471,26 +431,6 @@
 
     {{-- ────────── DOCUMENT TITLE ────────── --}}
     <div class="doc-head">
-        <div class="doc-meta">
-            <table class="meta-tbl">
-                <tr>
-                    <td class="meta-lbl">Ký hiệu</td>
-                    <td class="meta-val">BM.03/MH.QT.04</td>
-                </tr>
-                <tr>
-                    <td class="meta-lbl">Ngày ban hành</td>
-                    <td class="meta-val">29/08/2025</td>
-                </tr>
-                <tr>
-                    <td class="meta-lbl">Lần ban hành</td>
-                    <td class="meta-val">01</td>
-                </tr>
-                <tr>
-                    <td class="meta-lbl">Mã phiếu</td>
-                    <td class="meta-val"><span class="meta-code">{{ $reqCode }}</span></td>
-                </tr>
-            </table>
-        </div>
         <div class="doc-heading">
             <div class="doc-title">Phiếu Đề Nghị Điều Vận</div>
             <div class="doc-subtitle">
@@ -524,7 +464,7 @@
                 <tr>
                     <td>
                         <div class="fl">a.3 &nbsp;Số điện thoại</div>
-                        <div class="fv">{{ $aPhone }}</div>
+                        <div class="fv fv-phone">{{ $aPhone }}</div>
                     </td>
                     <td>
                         <div class="fl">a.4 &nbsp;Đơn vị / Bộ phận</div>
@@ -572,11 +512,11 @@
                 <tr>
                     <td style="width:50%;">
                         <div class="fl">c.1 &nbsp;Ngày đề xuất</div>
-                        <div class="fv">{{ $proposedDate }}</div>
+                        <div class="fv fv-phone">{{ $proposedDate }}</div>
                     </td>
                     <td style="width:50%;">
                         <div class="fl">c.2 &nbsp;Ngày cần sử dụng xe</div>
-                        <div class="fv">{{ $dateNeeded }}</div>
+                        <div class="fv fv-phone">{{ $dateNeeded }}</div>
                     </td>
                 </tr>
             </table>
@@ -634,7 +574,7 @@
                     </td>
                     <td style="width:23%;">
                         <div class="fl">Số điện thoại</div>
-                        <div class="fv">{{ $coordPhone }}</div>
+                        <div class="fv fv-phone">{{ $coordPhone }}</div>
                     </td>
                 </tr>
             </table>

@@ -70,6 +70,29 @@ class DispatchRequestPdfPresenterTest extends TestCase
         $this->assertSame(250000, DispatchRequestPdfPresenter::parseMoney(250000));
     }
 
+    public function test_fmt_pdf_phone_normalizes_numeric_snapshot_values(): void
+    {
+        $dr = new DispatchRequest();
+        $dr->id = 5;
+        $dr->trip_type = 'door_to_door';
+        $dr->status = 'approved';
+        $dr->created_at = Carbon::parse('2026-06-10 09:00:00');
+        $dr->wizard_snapshot = [
+            'form' => [
+                'requester_phone' => 912345678,
+                'coordinator_phone' => '84987654321',
+            ],
+            'passengerRows' => [
+                ['pickup_place' => 'A', 'dropoff_place' => 'B'],
+            ],
+        ];
+
+        $data = DispatchRequestPdfPresenter::buildPdfData($dr);
+
+        $this->assertSame('0912345678', $data['aPhone']);
+        $this->assertSame('0987654321', $data['coordPhone']);
+    }
+
     public function test_build_pdf_data_formats_cargo_datetimes(): void
     {
         $dr = new DispatchRequest();
