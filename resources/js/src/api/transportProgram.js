@@ -159,8 +159,18 @@ export async function listAbsenceReasons() {
   return data.data
 }
 
-export async function notifyDayParents(dayId) {
-  const { data } = await http.post(`/tp-program-days/${dayId}/notify-parents`)
+export async function previewDayParentsNotify(dayId, body = {}) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/notify-parents/preview`, body)
+  return data.data
+}
+
+export async function notifyDayParents(dayId, body = {}) {
+  const { data } = await http.post(`/tp-program-days/${dayId}/notify-parents`, body)
+  return data.data
+}
+
+export async function listDayParentsNotifyLogs(dayId) {
+  const { data } = await http.get(`/tp-program-days/${dayId}/notify-parents/logs`)
   return data.data
 }
 

@@ -28,6 +28,7 @@
     "dependencies": {
         "@heroicons/vue": "^2.2.0",
         "echarts": "^6.0.0",
+        "exceljs": "^4.4.0",
         "file-saver": "^2.0.5",
         "leaflet": "^1.9.4",
         "read-excel-file": "^9.0.10",

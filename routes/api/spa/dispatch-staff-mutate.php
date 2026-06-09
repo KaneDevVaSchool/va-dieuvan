@@ -184,6 +184,8 @@ Route::prefix('tp-program-days')->group(function () {
         ->name('api.tp-program-days.attendance.confirm');
     Route::post('/{tpProgramDay}/attendance/reopen', [\App\Http\Controllers\Api\TransportProgram\TpAttendanceSessionController::class, 'reopen'])
         ->middleware(['throttle:30,1', 'idempotency']);
+    Route::post('/{tpProgramDay}/notify-parents/preview', [\App\Http\Controllers\Api\TransportProgram\TpDayNotifyParentsController::class, 'preview'])
+        ->middleware('throttle:60,1');
     Route::post('/{tpProgramDay}/notify-parents', [\App\Http\Controllers\Api\TransportProgram\TpDayNotifyParentsController::class, 'store'])
         ->middleware(['throttle:30,1', 'idempotency']);
 });

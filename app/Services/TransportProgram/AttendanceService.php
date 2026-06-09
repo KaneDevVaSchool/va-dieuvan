@@ -38,10 +38,13 @@ class AttendanceService
         $this->shiftResolver->applyAbsenceScope($absenceQuery, $storageShift);
         $absenceMap = $absenceQuery->get()->keyBy('student_id');
 
-        $items = $enrollments->map(function (TpEnrollment $e) use ($absenceMap) {
+        $boardedAtMap = $this->boardedAtMapForDay($day);
+
+        $items = $enrollments->map(function (TpEnrollment $e) use ($absenceMap, $boardedAtMap) {
             $absence = $absenceMap->get($e->student_id);
             $status = $absence ? 'absent' : 'attending';
             $category = $absence?->category;
+            $boardedAt = $boardedAtMap[$e->student_id] ?? null;
 
             return [
                 'student_id' => $e->student_id,
@@ -51,6 +54,7 @@ class AttendanceService
                 'class_name' => $e->student->class_name,
                 'parent_phone' => $e->student->parent_phone,
                 'pickup_point' => $e->pickup_point,
+                'boarded_at' => $boardedAt,
                 'status' => $status,
                 'display_status' => $this->displayStatus($status, $category),
                 'absence_type' => $absence?->absence_type,
@@ -519,6 +523,26 @@ class AttendanceService
         if (! $wasAbsent) {
             $execution->increment('total_absent');
         }
+    }
+
+    /**
+     * @return array<int, string|null> student_id => ISO8601 boarded_at
+     */
+    private function boardedAtMapForDay(TpProgramDay $day): array
+    {
+        $execution = $day->execution()->first();
+        if (! $execution) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($execution->studentLogs()->get(['student_id', 'boarded_at', 'final_status']) as $log) {
+            if ($log->final_status === TpTripStudentLog::FINAL_BOARDED && $log->boarded_at) {
+                $map[(int) $log->student_id] = $log->boarded_at->toIso8601String();
+            }
+        }
+
+        return $map;
     }
 
     private function executionAbsenceType(string $type): string

@@ -110,6 +110,8 @@ Route::prefix('tp-program-days')->group(function () {
     Route::get('/{tpProgramDay}/attendance', [\App\Http\Controllers\Api\TransportProgram\TpAttendanceController::class, 'show']);
     Route::get('/{tpProgramDay}/attendance/export', [\App\Http\Controllers\Api\TransportProgram\TpDayAttendanceExportController::class, 'download'])
         ->middleware('throttle:30,1');
+    Route::get('/{tpProgramDay}/notify-parents/logs', [\App\Http\Controllers\Api\TransportProgram\TpDayNotifyParentsController::class, 'logs'])
+        ->middleware('throttle:60,1');
     Route::get('/{tpProgramDay}/live', \App\Http\Controllers\Api\TransportProgram\TpDayLiveUpdatesController::class)->middleware('throttle:30,1');
 });
 
