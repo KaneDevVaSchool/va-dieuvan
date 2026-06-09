@@ -1,48 +1,85 @@
 <template>
   <div class="w-full min-w-0 space-y-4 pb-28">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div class="min-w-0 space-y-0.5">
+    <header
+      class="min-w-0 rounded-2xl border border-slate-200/90 bg-white px-4 py-4 shadow-sm sm:px-5 sm:py-5"
+    >
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 rounded-lg text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+        @click="goBack"
+      >
+        <ArrowLeftIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+        Quay lại
+      </button>
+
+      <nav class="mt-3 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-slate-500" aria-label="breadcrumb">
         <button
           type="button"
-          class="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600"
+          class="shrink-0 font-medium text-slate-600 transition hover:text-va-800"
           @click="goBack"
         >
-          <ArrowLeftIcon class="h-3.5 w-3.5" />
-          Quay lại
+          Chương trình Đưa đón
         </button>
-        <nav class="text-xs text-slate-500" aria-label="breadcrumb">
-          <span>Chương trình Đưa đón</span>
-          <span v-if="data?.day?.program_name"> › {{ data.day.program_name }}</span>
-          <span> › {{ t('tp_attendance_page.title') }}</span>
-        </nav>
-        <div class="flex flex-wrap items-center gap-2 pt-0.5">
-          <h1 class="text-xl font-bold tracking-tight text-slate-900">{{ t('tp_attendance_page.title') }}</h1>
-          <span class="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-800">{{ shiftLabel }}</span>
-          <span
-            v-if="data?.attendance_status === 'confirmed'"
-            class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800"
+        <template v-if="data?.day?.program_name">
+          <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-300" aria-hidden="true" />
+          <button
+            type="button"
+            class="max-w-[min(100%,16rem)] truncate font-medium text-slate-600 transition hover:text-va-800"
+            @click="goBack"
           >
-            <CheckCircleIcon class="h-3.5 w-3.5" />
-            {{ t('tp_attendance_page.session_confirmed') }}
-          </span>
-          <span
-            v-else-if="data?.attendance_status === 'draft'"
-            class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
-          >
-            <ClockIcon class="h-3.5 w-3.5" />
-            {{ t('tp_attendance_page.session_draft') }}
-          </span>
-        </div>
-        <p v-if="data?.day" class="flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
-          <CalendarDaysIcon class="h-4 w-4 shrink-0" />
-          {{ formatLongDate(data.day.scheduled_date) }}
-          <span v-if="shiftDepartureDisplay" class="before:mr-1 before:content-['·']">{{ shiftDepartureDisplay }}</span>
-          <span v-if="data.day.driver_name" class="before:mr-1 before:content-['·']">
-            <TruckIcon class="mb-0.5 mr-0.5 inline h-3.5 w-3.5" />{{ data.day.driver_name }}
-          </span>
-        </p>
+            {{ data.day.program_name }}
+          </button>
+        </template>
+        <ChevronRightIcon class="h-4 w-4 shrink-0 text-slate-300" aria-hidden="true" />
+        <span class="font-semibold text-slate-900">{{ t('tp_attendance_page.title') }}</span>
+      </nav>
+
+      <div class="mt-3 flex flex-wrap items-center gap-2.5 sm:gap-3">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          {{ t('tp_attendance_page.title') }}
+        </h1>
+        <span class="rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-900 ring-1 ring-sky-200/80">
+          {{ shiftLabel }}
+        </span>
+        <span
+          v-if="data?.attendance_status === 'confirmed'"
+          class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-900 ring-1 ring-emerald-200/80"
+        >
+          <CheckCircleIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          {{ t('tp_attendance_page.session_confirmed') }}
+        </span>
+        <span
+          v-else-if="data?.attendance_status === 'draft'"
+          class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900 ring-1 ring-amber-200/80"
+        >
+          <ClockIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
+          {{ t('tp_attendance_page.session_draft') }}
+        </span>
       </div>
-    </div>
+
+      <div v-if="data?.day" class="mt-4 flex flex-wrap gap-2 sm:gap-2.5">
+        <div
+          class="inline-flex min-w-0 items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-2 text-base font-medium text-slate-800"
+        >
+          <CalendarDaysIcon class="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
+          <span>{{ formatLongDate(data.day.scheduled_date) }}</span>
+        </div>
+        <div
+          v-if="shiftDepartureDisplay"
+          class="inline-flex items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-2 text-base font-medium text-slate-800"
+        >
+          <ClockIcon class="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
+          <span>{{ shiftDepartureDisplay }}</span>
+        </div>
+        <div
+          v-if="data.day.driver_name"
+          class="inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-2 text-base font-medium text-slate-800"
+        >
+          <TruckIcon class="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
+          <span class="truncate">{{ data.day.driver_name }}</span>
+        </div>
+      </div>
+    </header>
 
     <div
       v-if="data"
