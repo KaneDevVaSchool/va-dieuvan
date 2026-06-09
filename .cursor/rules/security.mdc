@@ -1,0 +1,54 @@
+---
+description: Security rules cho VA Điều Vận
+globs: ["app/**/*.php", "resources/**/*.vue"]
+alwaysApply: true
+---
+
+# Security Rules
+
+## Authorization (bắt buộc)
+Mọi endpoint PHẢI có authorization check:
+```php
+// Route level
+Route::middleware(['auth:sanctum', 'permission:trips.assign'])->...
+
+// Controller level
+abort_unless($user->hasPermission('trips.view'), 403);
+abort_unless(TripVisibility::userCanViewTrip($user, $trip), 403);
+```
+
+## Mass Assignment
+- Luôn dùng `$fillable` whitelist
+- KHÔNG expose sensitive fields (password, role_id) qua update endpoints
+- Dùng `$request->safe()->only([...])` thay vì `$request->all()`
+
+## File Upload
+Validate MIME type thực sự (không chỉ extension):
+```php
+'file' => ['required', 'file', 'mimes:pdf,jpeg,png', 'max:10240']
+```
+
+## XSS Prevention
+- Blade: luôn dùng `{{ $var }}` (auto-escape), không dùng `{!! $var !!}` trừ khi data đã sanitized
+- Vue: dùng `{{ var }}` (auto-escape), không dùng `v-html` với user data
+
+## SQL Injection
+- Không bao giờ interpolate user input vào raw SQL
+- Luôn dùng Query Builder hoặc parameterized bindings
+
+## CSRF
+- API routes dùng Sanctum token auth (không cần CSRF token)
+- Web routes có VerifyCsrfToken middleware
+
+## Idempotency
+Mutations quan trọng phải hỗ trợ idempotency key:
+```php
+// Header: X-Idempotency-Key: {uuid}
+// Middleware: IdempotencyKey sẽ handle
+```
+
+## Audit Trail
+Mọi thao tác sửa đổi dữ liệu quan trọng phải ghi AuditLog.
+
+## Sensitive Data
+Không log passwords, tokens, hoặc PII trong raw form.

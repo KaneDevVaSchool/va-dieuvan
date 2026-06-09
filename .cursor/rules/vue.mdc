@@ -1,0 +1,59 @@
+---
+description: Vue 3 + Tailwind rules cho VA Điều Vận
+globs: ["resources/js/**/*.vue", "resources/js/**/*.ts", "resources/js/**/*.js"]
+alwaysApply: true
+---
+
+# Vue 3 Rules
+
+## Composition API
+Luôn dùng `<script setup>` (Composition API). Không dùng Options API.
+
+```vue
+<script setup lang="ts">
+// props → emits → composables → state → computed → methods
+</script>
+```
+
+## Props & Emits
+Không mutate props. Dùng emit để thông báo thay đổi cho parent.
+
+```ts
+const props = defineProps<{ tripId: number; readonly?: boolean }>()
+const emit = defineEmits<{ updated: [Trip] }>()
+```
+
+## Composables
+Logic > 20 lines nên extract ra composable `use{Name}.ts`.
+
+## HTTP calls
+Luôn dùng `createHttpClient()` factory, không dùng raw axios.
+
+## i18n
+Text hiển thị người dùng phải dùng `$t('key')`. Không hardcode tiếng Việt trong component.
+
+## Tailwind
+- Không dùng inline styles
+- Mobile-first responsive: `sm:`, `md:`, `lg:`
+- Dùng shared components: `<Button>`, `<Modal>`, `<Card>`, `<Input>`, `<Select>`, `<Toggle>`, `<StatusBadge>`
+
+## State Management
+- Local state: `ref()`, `reactive()` trong composable
+- Global state: Pinia stores trong `stores/`
+
+## Loading/Error
+Luôn xử lý loading và error states trong templates.
+
+## data-testid
+Mọi interactive element phải có `data-testid` attribute cho E2E tests.
+
+## Lazy loading views
+```js
+const TripDetailView = () => import('./views/TripDetailView.vue')
+```
+
+## Naming
+- Views: `{Feature}View.vue`
+- Components: `{Domain}{Name}.vue` hoặc `{Name}.vue`
+- Composables: `use{Name}.ts`
+- Stores: `{domain}.ts`

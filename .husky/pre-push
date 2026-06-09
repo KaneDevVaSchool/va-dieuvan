@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# PHPUnit tests
+echo "→ PHPUnit..."
+php artisan test --parallel --stop-on-failure
+if [ $? -ne 0 ]; then
+  echo "❌ PHPUnit tests failed!"
+  exit 1
+fi
+echo "✅ PHPUnit passed"
+
+# Playwright smoke tests (chỉ chạy nếu có APP_URL)
+if [ -n "$RUN_E2E_ON_PUSH" ]; then
+  echo "→ Playwright smoke tests..."
+  npm run test:e2e:smoke
+  if [ $? -ne 0 ]; then
+    echo "❌ Playwright smoke tests failed!"
+    exit 1
+  fi
+  echo "✅ Playwright smoke tests passed"
+fi
+
+echo "✅ All pre-push checks passed!"

@@ -214,9 +214,13 @@ class AttendanceService
         ?string $reasonCode = null,
         ?string $shift = null,
     ): void {
-        foreach ($studentIds as $sid) {
-            $this->markAbsent($day, (int) $sid, $type, $reason, $actorId, 'dispatcher', $category, $reasonCode, true, $shift);
-        }
+        // Wrap all students in a single outer transaction so the batch is atomic.
+        // Each inner markAbsent() has its own lockForUpdate — they nest within this transaction.
+        DB::transaction(function () use ($day, $studentIds, $type, $reason, $actorId, $category, $reasonCode, $shift) {
+            foreach ($studentIds as $sid) {
+                $this->markAbsent($day, (int) $sid, $type, $reason, $actorId, 'dispatcher', $category, $reasonCode, true, $shift);
+            }
+        });
     }
 
     public function markAllPresent(TpProgramDay $day, ?int $actorId, ?string $shift = null): void

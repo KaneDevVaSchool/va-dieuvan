@@ -1,0 +1,48 @@
+---
+description: Laravel coding rules cho VA Điều Vận
+globs: ["app/**/*.php", "database/**/*.php", "routes/**/*.php", "tests/**/*.php"]
+alwaysApply: true
+---
+
+# Laravel Rules
+
+## Controller Pattern (bắt buộc)
+Controller CHỈ làm: validate (FormRequest) → authorize → gọi service → trả response.
+KHÔNG chứa business logic, query trực tiếp Model, hoặc data transformation phức tạp.
+
+```php
+// ĐÚNG
+public function store(StoreRequest $request, TripService $service)
+{
+    $result = $service->create($request->validated(), $request->user());
+    return $this->ok($result);
+}
+```
+
+## DB::transaction() bắt buộc
+Mọi operation sửa nhiều records hoặc có side effects (audit, notification) PHẢI wrap trong transaction.
+
+## Eager Loading
+Không lazy load trong loops. Luôn dùng `with()` hoặc `load()` trước khi loop.
+
+## Naming
+- Controllers: `{Name}Controller` trong `Api/{Domain}/`
+- Services: `{Name}Service` trong `Services/{Domain}/`
+- FormRequests: `{Action}{Name}Request` trong `Requests/Api/{Domain}/`
+- Models: `{Name}` trong `Models/`
+
+## Audit Log
+Mọi mutation nghiệp vụ phải gọi AuditLogger::log() với before/after state.
+
+## Validation
+Dùng FormRequest thay vì inline `$request->validate()`.
+
+## Error handling
+Dùng `abort(code, 'message')`, `abort_if()`, `abort_unless()`.
+Messages bằng tiếng Việt rõ ràng cho người dùng cuối.
+
+## Return types
+Luôn khai báo return type cho methods PHP 8.1+.
+
+## Type hints
+Luôn khai báo type hints cho parameters.

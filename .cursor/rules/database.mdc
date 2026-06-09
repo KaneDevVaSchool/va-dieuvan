@@ -1,0 +1,43 @@
+---
+description: Database rules cho VA Điều Vận
+globs: ["database/**/*.php", "app/Models/**/*.php"]
+alwaysApply: true
+---
+
+# Database Rules
+
+## Migration Standards
+- Luôn có `timestamps()` trên mọi table
+- Soft delete cho entity nghiệp vụ quan trọng: `softDeletes()`
+- FK luôn khai báo onDelete action: `nullOnDelete()` hoặc `cascadeOnDelete()`
+- Implement `down()` đúng để rollback được
+
+## Model Standards
+- Dùng `$fillable` (whitelist), không dùng `$guarded = []`
+- Khai báo `$casts` cho JSON columns, datetime, boolean
+- Return type cho mọi relationship method
+
+## Query Standards
+- Không lazy load trong loops: luôn dùng `with()` trước
+- Chỉ select cột cần thiết: `select('id', 'status', ...)`
+- Paginate cho lists, không load toàn bộ
+- Chunk cho batch processing
+- Dùng `exists()` thay vì `count() > 0`
+
+## Index Strategy
+- FK columns: tự động với `foreignId()->constrained()`
+- Status, type columns: `$table->index('status')`
+- Date range queries: index trên date column
+- Compound queries: composite index, selective columns trước
+
+## Raw SQL
+Chỉ dùng khi cần thiết. BẮT BUỘC dùng parameterized bindings:
+```php
+DB::select('SELECT * FROM trips WHERE id = ?', [$id]); // ĐÚNG
+DB::select("SELECT * FROM trips WHERE id = {$id}");    // SAI - SQL injection!
+```
+
+## Financial Data
+- Records tài chính không bao giờ hard delete
+- `audit_logs` append-only, không xóa
+- Soft delete cho dispatch_requests, trips, users

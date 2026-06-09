@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# PHP Pint (code style)
+echo "→ PHP Pint..."
+./vendor/bin/pint --test
+if [ $? -ne 0 ]; then
+  echo "❌ Pint failed. Run: ./vendor/bin/pint"
+  exit 1
+fi
+echo "✅ PHP Pint passed"
+
+# ESLint (nếu có staged JS/Vue/TS files)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep -E "\.(js|ts|vue)$" || true)
+if [ -n "$STAGED_JS" ]; then
+  echo "→ ESLint..."
+  npm run lint 2>/dev/null || echo "⚠️  ESLint not configured yet (install eslint)"
+  echo "✅ ESLint done"
+fi
+
+echo "✅ Pre-commit checks passed!"

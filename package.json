@@ -3,9 +3,25 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:headed": "playwright test --headed",
+        "test:e2e:smoke": "playwright test --grep @smoke",
+        "test:e2e:report": "playwright show-report tests/screenshots/report",
+        "lint": "eslint resources/js --ext .vue,.js,.ts",
+        "lint:fix": "eslint resources/js --ext .vue,.js,.ts --fix",
+        "format": "prettier --write resources/js/**/*.{vue,js,ts}",
+        "prepare": "husky"
+    },
+    "lint-staged": {
+        "*.php": ["./vendor/bin/pint"],
+        "*.{js,ts,vue}": ["eslint --fix", "prettier --write"]
     },
     "devDependencies": {
+        "@playwright/test": "^1.49.0",
+        "husky": "^9.0.0",
+        "lint-staged": "^15.0.0",
         "@vitejs/plugin-vue": "^5.2.4",
         "autoprefixer": "^10.4.27",
         "axios": "^1.6.4",

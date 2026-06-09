@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Roles;
 use App\Support\SuperAdminAccess;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -61,13 +62,13 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->hasAnyRole(['admin', 'dispatcher', 'department_head', 'internal_user']);
+        return $this->hasAnyRole(Roles::DISPATCH_WEB_ROLES);
     }
 
     /** Khu vực web tài xế (`/driver`). */
     public function canAccessDriverWebApp(): bool
     {
-        return $this->hasRole('driver');
+        return $this->hasRole(Roles::DRIVER);
     }
 
     public function department(): BelongsTo

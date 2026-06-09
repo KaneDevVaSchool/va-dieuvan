@@ -4,9 +4,14 @@ namespace App\Repositories;
 
 use App\Models\FeatureToggle;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class FeatureToggleRepository
 {
+    private const CACHE_TTL = 300; // 5 minutes
+    private const CACHE_KEY_ALL = 'feature_toggles:all';
+    private const CACHE_KEY_PREFIX = 'feature_toggle:key:';
+
     public function allOrdered(): Collection
     {
         return FeatureToggle::query()
@@ -22,12 +27,19 @@ class FeatureToggleRepository
 
     public function findByKey(string $key): ?FeatureToggle
     {
-        return FeatureToggle::query()->where('key', $key)->first();
+        return Cache::remember(
+            self::CACHE_KEY_PREFIX.$key,
+            self::CACHE_TTL,
+            fn () => FeatureToggle::query()->where('key', $key)->first()
+        );
     }
 
     public function create(array $data): FeatureToggle
     {
-        return FeatureToggle::query()->create($data);
+        $toggle = FeatureToggle::query()->create($data);
+        $this->flushCache($toggle->key ?? null);
+
+        return $toggle;
     }
 
     public function update(FeatureToggle $toggle, array $data): FeatureToggle
@@ -35,11 +47,22 @@ class FeatureToggleRepository
         $toggle->fill($data);
         $toggle->save();
 
+        $this->flushCache($toggle->key ?? null);
+
         return $toggle->refresh();
     }
 
     public function delete(FeatureToggle $toggle): void
     {
+        $this->flushCache($toggle->key ?? null);
         $toggle->delete();
+    }
+
+    private function flushCache(?string $key): void
+    {
+        Cache::forget(self::CACHE_KEY_ALL);
+        if ($key !== null) {
+            Cache::forget(self::CACHE_KEY_PREFIX.$key);
+        }
     }
 }

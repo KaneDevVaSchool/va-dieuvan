@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Validate commit message format
+COMMIT_MSG=$(cat "$1")
+PATTERN="^(feat|fix|refactor|perf|test|docs|chore|style|ci|revert)(\(.+\))?: .{3,}"
+
+if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+  echo ""
+  echo "❌ Commit message không đúng format!"
+  echo ""
+  echo "Format yêu cầu:"
+  echo "  <type>(<scope>): <mô tả>"
+  echo ""
+  echo "Types: feat, fix, refactor, perf, test, docs, chore, style, ci, revert"
+  echo ""
+  echo "Ví dụ:"
+  echo "  feat: thêm tính năng điểm danh theo ca"
+  echo "  fix(trips): sửa lỗi optimistic lock"
+  echo "  refactor(services): extract PassengerListNormalizerService"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Commit message hợp lệ"
