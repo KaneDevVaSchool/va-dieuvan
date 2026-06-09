@@ -76,15 +76,15 @@ final class DispatchRequestPdfPresenter
         $bizRaw = $isBusiness ? self::collectBusinessModels($businessRows) : collect();
 
         $cargoSectionRows = $isCargo
-            ? self::padRows($cargoRaw->map(fn (array $r) => self::cargoRowToPdf($r))->all(), 10)
+            ? $cargoRaw->map(fn (array $r) => self::cargoRowToPdf($r))->all()
             : [];
 
         $passengerSectionRows = $showPassenger
-            ? self::padRows($passRaw->map(fn (array $r) => self::passengerRowToPdf($r))->all(), 5)
+            ? $passRaw->map(fn (array $r) => self::passengerRowToPdf($r))->all()
             : [];
 
         $businessSectionRows = $isBusiness
-            ? self::padRows($bizRaw->map(fn (array $r) => self::businessRowToPdf($r))->all(), 5)
+            ? $bizRaw->map(fn (array $r) => self::businessRowToPdf($r))->all()
             : [];
 
         $grandTotal = match (true) {
@@ -285,28 +285,6 @@ final class DispatchRequestPdfPresenter
             'delPlace' => self::nzString($r['dropoff'] ?? null),
             'delContact' => self::nzString($r['other'] ?? null),
         ];
-    }
-
-    /**
-     * @param  list<array<string, string>>  $rows
-     * @return list<array<string, string>>
-     */
-    private static function padRows(array $rows, int $min): array
-    {
-        $empty = array_fill(
-            0,
-            max(0, $min - count($rows)),
-            array_fill_keys(
-                [
-                    'name', 'qty', 'dim', 'weight', 'inotes', 'puTime', 'puPlace',
-                    'puContact', 'delTime', 'delPlace', 'delContact', 'transport',
-                    'cost', 'waypoint', 'unitPrice', 'extraFee',
-                ],
-                ''
-            )
-        );
-
-        return array_merge($rows, $empty);
     }
 
     private static function resolveLogoDataUri(): string

@@ -34,11 +34,13 @@
 
         strong, b { font-weight: bold; }
 
-        /* ── Fixed branding layers (repeat on every page, portrait only) ── */
+        /* ── Fixed branding layers (repeat on every page, portrait only) ──
+           DomPDF positions fixed elements relative to the content area, so
+           we pull back by the page margins to reach the physical page edges.  ── */
         .bg-shell {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: -{{ $pageMarginTop }};
+            left: -{{ $pageMarginX }};
             width: {{ $bgW }};
             height: {{ $bgH }};
             z-index: -1;
@@ -68,8 +70,8 @@
 
         .hdr-layer {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: -{{ $pageMarginTop }};
+            left: -{{ $pageMarginX }};
             width: {{ $bgW }};
             height: {{ $hdrBandMm }}mm;
             z-index: 2;

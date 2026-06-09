@@ -603,18 +603,52 @@
                 </dl>
               </section>
 
-              <section v-if="costEstimate" :class="cardClass + ' p-5'">
-                <h2 class="flex items-center gap-2" :class="sectionTitleClass">
-                  <CalculatorIcon class="h-4 w-4 shrink-0 text-teal-500 dark:text-teal-400" aria-hidden="true" />
-                  {{ t('request_detail.cost_estimate_heading') }}
-                </h2>
-                <dl class="mt-4 space-y-3">
-                  <FieldRow :label="t('request_detail.lbl_est_distance')" :value="costEstimate.distanceLabel" />
-                  <FieldRow v-if="req.service_price != null" :label="t('request_detail.lbl_dispatcher_unit_price')" :value="formatVndCurrency(req.service_price)" />
-                </dl>
-                <div class="mt-4 rounded-xl bg-teal-50 px-4 py-3 dark:bg-teal-950/30">
-                  <p class="text-xs font-medium text-teal-700/90 dark:text-teal-300/90">{{ t('request_detail.total_per_declaration') }}</p>
-                  <p class="mt-0.5 text-xl font-bold tabular-nums text-teal-600 dark:text-teal-300">{{ costEstimate.declaredTotalLabel ?? friendlyEmpty }}</p>
+              <section
+                v-if="costEstimate"
+                class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              >
+                <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400">
+                    <CalculatorIcon class="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <h2 class="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                    {{ t('request_detail.cost_estimate_heading') }}
+                  </h2>
+                </div>
+
+                <div class="mt-4 space-y-2.5">
+                  <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-800/40">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      {{ t('request_detail.lbl_est_distance') }}
+                    </p>
+                    <p
+                      class="mt-1 text-sm"
+                      :class="costEstimate.distanceLabel ? 'font-semibold text-slate-800 dark:text-slate-200' : 'italic text-slate-400 dark:text-slate-500'"
+                    >
+                      {{ costEstimate.distanceLabel || friendlyEmpty }}
+                    </p>
+                  </div>
+
+                  <div
+                    v-if="req.service_price != null"
+                    class="rounded-xl border border-slate-100 bg-white px-3.5 py-2.5 dark:border-slate-800 dark:bg-slate-900"
+                  >
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      {{ t('request_detail.lbl_dispatcher_unit_price') }}
+                    </p>
+                    <p class="mt-1 text-base font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                      {{ formatVndCurrency(req.service_price) }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mt-4 overflow-hidden rounded-xl border border-teal-200/80 bg-gradient-to-br from-teal-50 to-emerald-50/80 px-4 py-3.5 ring-1 ring-inset ring-teal-100 dark:border-teal-900/50 dark:from-teal-950/40 dark:to-emerald-950/20 dark:ring-teal-900/40">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600/90 dark:text-teal-400/90">
+                    {{ t('request_detail.total_per_declaration') }}
+                  </p>
+                  <p class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-teal-700 dark:text-teal-300">
+                    {{ costEstimate.declaredTotalLabel ?? friendlyEmpty }}
+                  </p>
                 </div>
               </section>
 
