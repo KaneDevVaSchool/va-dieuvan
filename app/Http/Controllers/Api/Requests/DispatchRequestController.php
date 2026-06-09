@@ -51,6 +51,7 @@ class DispatchRequestController extends Controller
         $dispatchRequest->load([
             'requester:id,name,email,employee_code,avatar_url,department_id',
             'approver:id,name,email,employee_code',
+            'assignedDeptHead:id,name,email,employee_code',
             'priceFiller:id,name,email,employee_code',
             'trip',
             'dispatchRequestTemplate.dispatchPackage',
@@ -178,6 +179,9 @@ class DispatchRequestController extends Controller
         $chosenDeptHeadId = isset($data['dept_head_user_id']) ? (int) $data['dept_head_user_id'] : null;
         if ($chosenDeptHeadId === 0) {
             $chosenDeptHeadId = null;
+        }
+        if ($chosenDeptHeadId === null && $dispatchRequest->assigned_dept_head_id !== null) {
+            $chosenDeptHeadId = (int) $dispatchRequest->assigned_dept_head_id;
         }
         if ($chosenDeptHeadId !== null) {
             $eligible = User::query()

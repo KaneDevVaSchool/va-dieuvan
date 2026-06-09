@@ -162,8 +162,20 @@
         <span class="text-xl font-bold tabular-nums text-teal-600 dark:text-teal-400">{{ totalFmt }}</span>
       </div>
 
-      <!-- Dept head combobox -->
-      <div class="relative mt-4">
+      <!-- Trưởng ĐV đã chọn trên portal -->
+      <div
+        v-if="deptHeadPresetLocked"
+        class="mt-4 rounded-lg border border-sky-200 bg-sky-50/50 px-3 py-3 dark:border-sky-900/40 dark:bg-sky-950/20"
+      >
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-200">
+          {{ t('request_detail.assign_dept_head_preset_label') }}
+        </p>
+        <p class="mt-1 text-base font-semibold text-slate-900 dark:text-white">{{ deptHeadDisplayLine }}</p>
+        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">{{ t('request_detail.assign_dept_head_preset_hint') }}</p>
+      </div>
+
+      <!-- Gán trưởng ĐV thủ công (phiếu legacy) -->
+      <div v-else class="relative mt-4">
         <FillPriceFieldLabel
           for-id="fp-dept-head"
           :label="t('request_detail.assign_dept_head_label')"
@@ -209,7 +221,11 @@
 
       <div class="mt-4 flex flex-wrap items-center gap-3">
         <Button class="!bg-sky-600 hover:!bg-sky-700" :loading="acting" @click="onSave">
-          {{ t('request_detail.fill_price_submit') }}
+          {{
+            deptHeadPresetLocked
+              ? t('request_detail.fill_price_submit_preset_dept')
+              : t('request_detail.fill_price_submit')
+          }}
         </Button>
         <span v-if="message" class="text-sm text-slate-600 dark:text-slate-400">{{ message }}</span>
       </div>
@@ -330,26 +346,57 @@ function chosenLabel(u) {
   return email ? `${name} — ${email}` : name
 }
 
+const presetDeptHeadId = computed(() => {
+  const raw = props.req?.assigned_dept_head_id
+  if (raw == null || raw === '') return null
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? n : null
+})
+
+const deptHeadPresetLocked = computed(() => presetDeptHeadId.value != null)
+
+const deptHeadDisplayLine = computed(() => {
+  if (lockedLabel.value.trim()) return lockedLabel.value.trim()
+  const h = props.req?.assigned_dept_head
+  if (h) return chosenLabel(h)
+  const snap = props.req?.wizard_snapshot?.form
+  const fromSnap = nz(snap?.dept_head_label)
+  if (fromSnap) return fromSnap
+  return presetDeptHeadId.value != null ? `#${presetDeptHeadId.value}` : '—'
+})
+
+function applyPresetDeptHeadFromReq() {
+  const hid = presetDeptHeadId.value
+  if (hid == null) return
+  selectedId.value = String(hid)
+  const h = props.req?.assigned_dept_head
+  if (h && Number(h.id) === hid) {
+    lockedLabel.value = chosenLabel(h)
+    deptHeadQ.value = lockedLabel.value
+  }
+}
+
 watch(
-  () => [props.req?.id, props.req?.assigned_dept_head_id],
+  () => [props.req?.id, props.req?.assigned_dept_head_id, props.req?.assigned_dept_head],
   async ([rid, hid]) => {
     if (rid == null) return
-    if (hid != null) {
-      searchLoading.value = true
-      try {
-        const list = await getAvailableDeptHeads(rid, { pick: hid })
-        options.value = list ?? []
-        const u = options.value.find((x) => Number(x.id) === Number(hid))
-        selectedId.value = String(hid)
-        if (u) {
-          lockedLabel.value = chosenLabel(u)
-          deptHeadQ.value = lockedLabel.value
-        }
-      } catch (e) {
-        loadErr.value = e?.response?.data?.message ?? t('request_detail.assign_dept_head_load_err')
-      } finally {
-        searchLoading.value = false
+    applyPresetDeptHeadFromReq()
+    if (hid == null || hid === '') return
+    if (props.req?.assigned_dept_head?.name) return
+    searchLoading.value = true
+    try {
+      const list = await getAvailableDeptHeads(rid, { pick: hid })
+      options.value = list ?? []
+      const u = options.value.find((x) => Number(x.id) === Number(hid))
+      if (u) {
+        lockedLabel.value = chosenLabel(u)
+        deptHeadQ.value = lockedLabel.value
       }
+      loadErr.value = ''
+    } catch (e) {
+      loadErr.value = e?.response?.data?.message ?? t('request_detail.assign_dept_head_load_err')
+    } finally {
+      searchLoading.value = false
     }
   },
   { immediate: true },
@@ -403,9 +450,16 @@ function onBlur() {
   setTimeout(() => (dropdownOpen.value = false), 180)
 }
 
+function resolveDeptHeadUserId() {
+  if (selectedId.value !== '' && selectedId.value != null) return Number(selectedId.value)
+  if (presetDeptHeadId.value != null) return presetDeptHeadId.value
+  return null
+}
+
 function onSave() {
   clientErr.value = ''
-  if (selectedId.value === '' || selectedId.value == null) {
+  const deptHeadUserId = resolveDeptHeadUserId()
+  if (deptHeadUserId == null) {
     clientErr.value = t('request_detail.assign_dept_head_required')
     return
   }
@@ -419,10 +473,13 @@ function onSave() {
         extra_fee: parseMoneyVnd(extraDraft.value[i] ?? ''),
         notes: String(notesDraft.value[i] ?? '').slice(0, 2000),
       }))
-  emit('save', {
+  const payload = {
     rows: payloadRows,
     service_price: total.value,
-    dept_head_user_id: Number(selectedId.value),
-  })
+  }
+  if (!deptHeadPresetLocked.value) {
+    payload.dept_head_user_id = deptHeadUserId
+  }
+  emit('save', payload)
 }
 </script>

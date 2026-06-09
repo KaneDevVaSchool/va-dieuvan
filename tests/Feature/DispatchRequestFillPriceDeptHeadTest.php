@@ -55,6 +55,50 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             ->assertJsonValidationErrors(['dept_head_user_id']);
     }
 
+    public function test_fill_price_uses_preset_assigned_dept_head_without_payload_user_id(): void
+    {
+        $this->seed(RbacSeeder::class);
+
+        $dispatcher = User::factory()->create(['is_active' => true]);
+        $dispatcher->assignRole('dispatcher');
+
+        $requester = User::factory()->create(['is_active' => true]);
+        $requester->assignRole('internal_user');
+
+        $head = User::factory()->create(['is_active' => true, 'email' => 'preset.head@example.test']);
+        $head->assignRole('department_head');
+
+        $dr = DispatchRequest::create([
+            'requester_id' => $requester->id,
+            'trip_type' => 'business',
+            'origin' => 'A',
+            'destination' => 'B',
+            'depart_at' => now()->addDays(5),
+            'status' => 'pending',
+            'source_channel' => 'portal',
+            'assigned_dept_head_id' => $head->id,
+            'is_urgent' => false,
+            'paper_status' => 'pending',
+            'wizard_snapshot' => [],
+        ]);
+
+        Notification::fake();
+
+        $this->actingAs($dispatcher);
+
+        $this->patchJson("/api/dispatch-requests/{$dr->id}/fill-price", [
+            'service_price' => 500000,
+            'rows' => [],
+        ])
+            ->assertSuccessful();
+
+        Notification::assertSentTo($head, DeptHeadApprovalRequestedNotification::class);
+
+        $fresh = DispatchRequest::query()->findOrFail($dr->id);
+        $this->assertSame('price_filled', $fresh->status);
+        $this->assertSame($head->id, $fresh->assigned_dept_head_id);
+    }
+
     public function test_fill_price_dispatches_notification_only_to_assigned_department_head(): void
     {
         $this->seed(RbacSeeder::class);

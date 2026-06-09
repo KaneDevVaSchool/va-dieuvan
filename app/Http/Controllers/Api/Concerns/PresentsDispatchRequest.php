@@ -37,6 +37,17 @@ trait PresentsDispatchRequest
             ];
         }
 
+        $arr['assigned_dept_head'] = null;
+        if ($dispatchRequest->relationLoaded('assignedDeptHead') && $dispatchRequest->assignedDeptHead !== null) {
+            $h = $dispatchRequest->assignedDeptHead;
+            $arr['assigned_dept_head'] = [
+                'id' => $h->id,
+                'name' => $h->name,
+                'email' => $h->email,
+                'employee_code' => $h->employee_code,
+            ];
+        }
+
         $arr['cloned_from_summary'] = null;
         if ($dispatchRequest->cloned_from_id && $dispatchRequest->relationLoaded('clonedFrom') && $dispatchRequest->clonedFrom) {
             $src = $dispatchRequest->clonedFrom;

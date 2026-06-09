@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Requests;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use App\Models\DispatchRequest;
 use App\Models\Role;
 use App\Support\Messages;
 use Illuminate\Validation\Rule;
@@ -46,6 +47,11 @@ class FillPriceDispatchRequestRequest extends ApiFormRequest
     private function requiresDeptHeadUserId(): bool
     {
         if (! Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+            return false;
+        }
+
+        $dr = $this->route('dispatchRequest');
+        if ($dr instanceof DispatchRequest && $dr->assigned_dept_head_id !== null) {
             return false;
         }
 
