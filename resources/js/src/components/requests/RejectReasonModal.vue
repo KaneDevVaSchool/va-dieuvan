@@ -13,8 +13,8 @@
         @click.stop
       >
         <div class="shrink-0 border-b border-violet-100 bg-violet-50/80 px-4 py-3">
-          <h3 class="text-base font-semibold text-violet-950">{{ t('request_detail.dept_reject_modal_title') }}</h3>
-          <p class="mt-0.5 text-xs text-violet-900/80">{{ t('request_detail.dept_reject_modal_lead') }}</p>
+          <h3 class="text-base font-semibold text-violet-950">{{ modalTitle || t('request_detail.dept_reject_modal_title') }}</h3>
+          <p class="mt-0.5 text-xs text-violet-900/80">{{ modalLead || t('request_detail.dept_reject_modal_lead') }}</p>
         </div>
         <div class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-y-contain p-4">
           <label class="block">
@@ -52,6 +52,8 @@ defineProps({
   reason: { type: String, default: '' },
   acting: { type: Boolean, default: false },
   errorMessage: { type: String, default: '' },
+  modalTitle: { type: String, default: '' },
+  modalLead: { type: String, default: '' },
 })
 
 defineEmits(['update:reason', 'confirm', 'close'])

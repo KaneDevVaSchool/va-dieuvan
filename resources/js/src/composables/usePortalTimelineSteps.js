@@ -1,5 +1,5 @@
 /**
- * Luồng tiến độ hiển thị cho portal — tương thích RequestDetailView (D2D vs có phòng ban).
+ * Luồng tiến độ hiển thị cho portal — D2D vs có phòng ban (parity với timeline dept).
  * @param {import('vue').Ref<object|null>|import('vue').ComputedRef<object|null>} reqRef
  * @param {(key: string, ...args: unknown[]) => string} t
  */

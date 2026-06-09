@@ -80,12 +80,12 @@ const staffChildRoutes = [
         },
     },
     {
-        path: "requests/:id",
+        path: "requests/:id(\\d+)",
         name: "requestDetail",
         component: () => import("../views/requests/RequestDetailView.vue"),
         meta: {
             title: "Chi tiết yêu cầu",
-            subtitle: "",
+            subtitle: "Phiếu điều vận",
             featureKey: "module.operations",
         },
     },

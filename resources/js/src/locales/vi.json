@@ -1368,10 +1368,6 @@
             "title": "Yêu cầu điều xe",
             "subtitle": "Danh sách & trạng thái"
         },
-        "requestDetail": {
-            "title": "Chi tiết yêu cầu",
-            "subtitle": ""
-        },
         "deptDashboard": {
             "title": "Chờ duyệt",
             "subtitle": "Trưởng đơn vị"
@@ -2734,6 +2730,8 @@
         "paper_revert_confirm_message": "Yêu cầu sẽ chuyển về chưa nhận phiếu giấy. Bạn có chắc?",
         "paper_revert_confirm_btn": "Hoàn tác",
         "paper_reverted_toast_msg": "Đã hoàn tác trạng thái phiếu.",
+        "d2d_decision_title": "Duyệt đưa đón (D2D)",
+        "d2d_decision_lead": "Kiểm tra lộ trình và thông tin hành khách. Duyệt để mở chuyến hoặc từ chối kèm lý do.",
         "d2d_approve_confirm_title": "Duyệt yêu cầu?",
         "d2d_approve_confirm_message": "Sau khi duyệt, yêu cầu có thể được phân công chuyến. Bạn có chắc muốn duyệt yêu cầu này?",
         "d2d_approve_confirm_btn": "Duyệt",

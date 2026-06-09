@@ -337,17 +337,14 @@
           />
         </div>
         <div v-else-if="recentRequests.length" class="space-y-2">
-          <RouterLink
+          <div
             v-for="rq in recentRequests"
             :key="rq.id"
-            :to="staffPath(`/requests/${rq.id}`)"
             :class="[
-              'group flex gap-3 rounded-xl border p-3 transition',
+              'flex gap-3 rounded-xl border p-3',
               'border-slate-100 bg-gradient-to-br from-white to-violet-50/40 shadow-sm ring-1 ring-slate-900/[0.03]',
-              'hover:border-violet-200/90 hover:shadow-md hover:ring-violet-500/10',
               'dark:border-slate-700/90 dark:from-slate-900 dark:to-violet-950/25 dark:ring-white/[0.04]',
-              'dark:hover:border-violet-800/50',
-              recentRequestsBusy ? 'pointer-events-none opacity-55' : '',
+              recentRequestsBusy ? 'opacity-55' : '',
             ]"
           >
             <div
@@ -390,7 +387,7 @@
                 </span>
               </div>
             </div>
-          </RouterLink>
+          </div>
           <div
             v-if="(recentRequestsMeta.last_page ?? 1) > 1"
             class="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between"

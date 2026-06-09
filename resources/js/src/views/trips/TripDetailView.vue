@@ -112,16 +112,6 @@
                     class="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-2 text-sm text-amber-900"
                 >
                     {{ t("trip_detail.banner.request_pending") }}
-                    <RouterLink
-                        v-if="
-                            trip.dispatch_request?.id &&
-                            auth.canAccessDispatchWebApp()
-                        "
-                        :to="`/requests/${trip.dispatch_request.id}`"
-                        class="ml-1 font-semibold underline decoration-amber-700/40 underline-offset-2"
-                    >
-                        {{ t("trip_detail.banner.open_request") }}
-                    </RouterLink>
                 </div>
 
                 <div class="grid gap-4 xl:grid-cols-12">

@@ -1747,7 +1747,7 @@ export function useDispatchRequestWizard(options = {}) {
         query: { created: '1' },
       })
     } else {
-      router.push(staffPath(`/requests/${id}`))
+      router.push(staffPath('/requests'))
     }
     closeSubmitResultModal()
   }

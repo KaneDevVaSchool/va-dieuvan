@@ -786,12 +786,9 @@
                 />
               </td>
               <td class="px-3 py-3 align-top">
-                <RouterLink
-                  :to="`/requests/${r.id}`"
-                  class="group block max-w-fit rounded-md outline-none ring-teal-500/40 focus-visible:ring-2"
-                >
+                <div class="max-w-fit">
                   <div
-                    class="flex items-center gap-1.5 font-semibold text-slate-900 decoration-teal-600/80 underline-offset-2 group-hover:text-teal-700 group-hover:underline"
+                    class="flex items-center gap-1.5 font-semibold text-slate-900"
                   >
                     <span
                       v-if="r.dispatch_request_template_id"
@@ -805,10 +802,15 @@
                       class="h-4 w-4 shrink-0 text-amber-600"
                       aria-hidden="true"
                     />
-                    REQ-{{ r.id }}
+                    <RouterLink
+                      :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
+                      class="text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-va-800 hover:decoration-va-400"
+                    >
+                      REQ-{{ r.id }}
+                    </RouterLink>
                   </div>
                   <div class="text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
-                </RouterLink>
+                </div>
               </td>
               <td class="max-w-xs px-3 py-3 align-top">
                 <div class="flex gap-2">
@@ -902,23 +904,15 @@
                       </button>
                       <div class="my-1 border-t border-slate-100" role="separator" />
                     </template>
-                    <RouterLink
-                      :to="`/requests/${r.id}`"
-                      class="flex items-center gap-2 px-3 py-2 text-slate-700 transition hover:bg-slate-50"
-                      @click="closeRowActionMenu"
-                    >
-                      <EyeIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                      {{ t('requests_page.view') }}
-                    </RouterLink>
-                    <RouterLink
+                    <button
                       v-if="!isTrashTab && r.status === 'draft'"
-                      :to="`/requests/${r.id}`"
-                      class="flex items-center gap-2 px-3 py-2 text-slate-700 transition hover:bg-slate-50"
-                      @click="closeRowActionMenu"
+                      type="button"
+                      class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
+                      @click="closeRowActionMenuThen(() => openDraftEditor(r.id))"
                     >
                       <PencilSquareIcon class="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
                       {{ t('requests_page.edit') }}
-                    </RouterLink>
+                    </button>
                   </div>
                 </details>
               </td>
@@ -929,7 +923,7 @@
 
         <ul class="divide-y divide-slate-100 md:hidden" role="list">
           <li v-for="r in items" :key="`m-${r.id}`" class="px-4 py-3" :class="requestRowClass(r)">
-            <RouterLink :to="`/requests/${r.id}`" class="flex items-start justify-between gap-2">
+            <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-1.5 font-semibold text-slate-900">
                   <span
@@ -944,7 +938,12 @@
                     class="h-4 w-4 shrink-0 text-amber-600"
                     aria-hidden="true"
                   />
-                  REQ-{{ r.id }}
+                  <RouterLink
+                    :to="{ name: 'requestDetail', params: { id: String(r.id) } }"
+                    class="underline decoration-slate-300 underline-offset-2 hover:text-va-800"
+                  >
+                    REQ-{{ r.id }}
+                  </RouterLink>
                 </div>
                 <div class="mt-0.5 text-xs text-slate-500">{{ formatShortDate(r.created_at) }}</div>
                 <div class="mt-1 truncate text-sm text-slate-800">
@@ -952,7 +951,7 @@
                 </div>
               </div>
               <StatusBadge class="shrink-0" :status="r.status" size="sm" />
-            </RouterLink>
+            </div>
           </li>
         </ul>
         </template>
@@ -1110,7 +1109,6 @@ import {
   ChevronDownIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  EyeIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
   MapPinIcon,
@@ -1862,6 +1860,10 @@ function closeRowActionMenuThen(fn) {
     if (d) d.open = false
     fn()
   }
+}
+
+async function openDraftEditor(id) {
+  await router.push({ name: 'dispatchRequestNew', query: { replace: String(id) } })
 }
 
 function openBulkConfirm(kind, explicitIds = null) {

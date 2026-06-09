@@ -332,8 +332,6 @@ async function submitRow(req) {
 function openDetail(req) {
   if (props.variant === 'portal') {
     router.push({ name: props.detailRouteName, params: { id: String(req.id) } })
-  } else {
-    router.push(`/requests/${req.id}`)
   }
 }
 

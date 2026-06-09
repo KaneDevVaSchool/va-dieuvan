@@ -1297,10 +1297,6 @@
             "title": "Dispatch requests",
             "subtitle": "List & status"
         },
-        "requestDetail": {
-            "title": "Request details",
-            "subtitle": ""
-        },
         "deptDashboard": {
             "title": "Pending",
             "subtitle": "Department head"
@@ -2937,6 +2933,8 @@
         "paper_revert_confirm_message": "The request will go back to «paper not received». Continue?",
         "paper_revert_confirm_btn": "Revert",
         "paper_reverted_toast_msg": "Paper status reverted.",
+        "d2d_decision_title": "Approve door-to-door",
+        "d2d_decision_lead": "Review the route and passenger details. Approve to open a trip or reject with a reason.",
         "d2d_approve_confirm_title": "Approve request?",
         "d2d_approve_confirm_message": "After approval, the request can be assigned to a trip. Approve this request?",
         "d2d_approve_confirm_btn": "Approve",

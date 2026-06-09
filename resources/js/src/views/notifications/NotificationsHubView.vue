@@ -43,7 +43,7 @@
               <RouterLink
                 v-if="n.data?.dispatch_request_id"
                 class="mt-2 inline-block text-xs font-medium text-slate-900 underline"
-                :to="`/requests/${n.data.dispatch_request_id}`"
+                to="/requests"
               >
                 {{ t('notifications_hub.open_request', { id: n.data.dispatch_request_id }) }}
               </RouterLink>

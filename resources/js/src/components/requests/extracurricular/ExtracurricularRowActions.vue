@@ -23,6 +23,7 @@
       </span>
     </button>
     <button
+      v-if="variant === 'portal'"
       type="button"
       role="menuitem"
       class="flex w-full items-center gap-2 px-3 py-2 text-left text-slate-700 transition hover:bg-slate-50"
@@ -93,8 +94,6 @@ function goCompleteBm03() {
       params: { id: String(props.req.id) },
       query: { operate: '1' },
     })
-  } else {
-    router.push(`/requests/${props.req.id}`)
   }
 }
 </script>

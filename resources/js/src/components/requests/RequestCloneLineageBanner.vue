@@ -36,6 +36,6 @@ const detailTo = computed(() => {
   if (props.context === 'dept') {
     return { name: 'deptRequestDetail', params: { id: String(props.summary.id) } }
   }
-  return `/requests/${props.summary.id}`
+  return { name: 'requestDetail', params: { id: String(props.summary.id) } }
 })
 </script>
