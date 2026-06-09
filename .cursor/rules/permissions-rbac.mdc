@@ -13,11 +13,11 @@ Chi tiết + diagram: `docs/PERMISSION_AND_ROLE.md`. Seed: `database/seeders/Rba
 
 ## Roles
 
-`superadmin`, `admin`, `dispatcher`, `driver`, `accountant`, `internal_user`.
+`superadmin`, `admin`, `dispatcher`, `driver`, `accountant`, `internal_user`, `department_head`.
 
 ## Permission keys (đồng bộ seed — không đổi tên tuỳ tiện)
 
-`request.create`, `request.update_own`, `request.cancel_own`, `request.approve`, `request.paper.manage`, `trip.assign`, `trip.view_all`, `trip.view_own`, `trip.update_status`, `trip.record.create`, `trip.event.create`, `trip.cost.view`, `trip.cost.reconcile`, `payment.reconcile`, `payment.execute`, `report.view`, `report.export`, `cargo.manage`, `route.manage`, `student.manage`, `attachment.upload`, `reference_pricing.manage`, `resource.driver.manage`, `resource.vehicle.manage`, `resource.provider.manage`, `user.manage`, `audit_log.view`, `data.override_confirmed`, `system.roles.manage`, `system.permissions.manage`, `system.user_roles.manage`, `system.feature_toggles.manage`, `dispatch.settings.manage`.
+`request.create`, `request.update_own`, `request.cancel_own`, `request.approve`, `request.fill_price`, `request.approve_dept`, `request.paper.manage`, `trip.assign`, `trip.view_all`, `trip.view_own`, `trip.update_status`, `trip.record.create`, `trip.event.create`, `trip.cost.view`, `trip.cost.reconcile`, `payment.reconcile`, `payment.execute`, `report.view`, `report.export`, `cargo.manage`, `attachment.upload`, `reference_pricing.manage`, `resource.driver.manage`, `resource.vehicle.manage`, `resource.provider.manage`, `user.manage`, `audit_log.view`, `data.override_confirmed`, `system.roles.manage`, `system.permissions.manage`, `system.user_roles.manage`, `system.feature_toggles.manage`, `dispatch.settings.manage`, `tp_program.view`, `tp_program.manage`, `tp_student.view`, `tp_student.manage`, `tp_enrollment.manage`, `tp_attendance.manage`, `tp_attendance.confirm`, `tp_driver_assign.manage`, `tp_cost.manage`, `tp_import.manage`, `tp_report.view`, `tp_audit.view`, `tp_execution.force_complete`.
 
 Thêm permission mới: cập nhật **`RbacSeeder`** + (tuỳ chọn) `PermissionPlainVi` / JSON mô tả + docs.
 

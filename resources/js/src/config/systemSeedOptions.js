@@ -10,6 +10,7 @@ export const SEED_ROLE_PRESETS = [
     { name: 'driver', display_name: 'Tài xế' },
     { name: 'accountant', display_name: 'Kế toán' },
     { name: 'internal_user', display_name: 'User nội bộ' },
+    { name: 'department_head', display_name: 'Trưởng đơn vị' },
 ]
 
 /** Same order as RbacSeeder $permissions */
@@ -18,6 +19,8 @@ export const SEED_PERMISSION_PRESETS = [
     { name: 'request.update_own', display_name: 'request.update_own' },
     { name: 'request.cancel_own', display_name: 'request.cancel_own' },
     { name: 'request.approve', display_name: 'request.approve' },
+    { name: 'request.fill_price', display_name: 'request.fill_price' },
+    { name: 'request.approve_dept', display_name: 'request.approve_dept' },
     { name: 'request.paper.manage', display_name: 'request.paper.manage' },
     { name: 'trip.assign', display_name: 'trip.assign' },
     { name: 'trip.view_all', display_name: 'trip.view_all' },
@@ -29,10 +32,11 @@ export const SEED_PERMISSION_PRESETS = [
     { name: 'trip.cost.reconcile', display_name: 'trip.cost.reconcile' },
     { name: 'payment.reconcile', display_name: 'payment.reconcile' },
     { name: 'payment.execute', display_name: 'payment.execute' },
-    { name: 'cargo.manage', display_name: 'cargo.manage' },
-    { name: 'attachment.upload', display_name: 'attachment.upload' },
     { name: 'report.view', display_name: 'report.view' },
     { name: 'report.export', display_name: 'report.export' },
+    { name: 'cargo.manage', display_name: 'cargo.manage' },
+    { name: 'attachment.upload', display_name: 'attachment.upload' },
+    { name: 'reference_pricing.manage', display_name: 'reference_pricing.manage' },
     { name: 'resource.driver.manage', display_name: 'resource.driver.manage' },
     { name: 'resource.vehicle.manage', display_name: 'resource.vehicle.manage' },
     { name: 'resource.provider.manage', display_name: 'resource.provider.manage' },
@@ -44,6 +48,19 @@ export const SEED_PERMISSION_PRESETS = [
     { name: 'system.user_roles.manage', display_name: 'system.user_roles.manage' },
     { name: 'system.feature_toggles.manage', display_name: 'system.feature_toggles.manage' },
     { name: 'dispatch.settings.manage', display_name: 'dispatch.settings.manage' },
+    { name: 'tp_program.view', display_name: 'tp_program.view' },
+    { name: 'tp_program.manage', display_name: 'tp_program.manage' },
+    { name: 'tp_student.view', display_name: 'tp_student.view' },
+    { name: 'tp_student.manage', display_name: 'tp_student.manage' },
+    { name: 'tp_enrollment.manage', display_name: 'tp_enrollment.manage' },
+    { name: 'tp_attendance.manage', display_name: 'tp_attendance.manage' },
+    { name: 'tp_attendance.confirm', display_name: 'tp_attendance.confirm' },
+    { name: 'tp_driver_assign.manage', display_name: 'tp_driver_assign.manage' },
+    { name: 'tp_cost.manage', display_name: 'tp_cost.manage' },
+    { name: 'tp_import.manage', display_name: 'tp_import.manage' },
+    { name: 'tp_report.view', display_name: 'tp_report.view' },
+    { name: 'tp_audit.view', display_name: 'tp_audit.view' },
+    { name: 'tp_execution.force_complete', display_name: 'tp_execution.force_complete' },
 ]
 
 export const SEED_FEATURE_TOGGLE_PRESETS = [

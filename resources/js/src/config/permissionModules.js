@@ -68,6 +68,12 @@ export const PERMISSION_MODULES = Object.freeze([
     icon: 'ShieldCheckIcon',
     prefixes: ['system.'],
   },
+  {
+    id: 'transport_program',
+    label: 'Vận chuyển học sinh (TP)',
+    icon: 'AcademicCapIcon',
+    prefixes: ['tp_'],
+  },
 ])
 
 /**

@@ -158,9 +158,13 @@ class RbacSeeder extends Seeder
                 'tp_execution.force_complete',
             ],
             'department_head' => [
+                'request.create',
+                'request.update_own',
+                'request.cancel_own',
                 'request.approve_dept',
                 'trip.view_own',
                 'attachment.upload',
+                'report.view',
             ],
             'accountant' => [
                 'trip.view_all',

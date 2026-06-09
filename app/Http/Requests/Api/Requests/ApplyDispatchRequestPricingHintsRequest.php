@@ -8,7 +8,7 @@ class ApplyDispatchRequestPricingHintsRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
-        return $this->allowAnyOf(['request.fill_price', 'request.update']);
+        return $this->allowAnyOf(['request.fill_price', 'request.update_own']);
     }
 
     /**
