@@ -16,8 +16,10 @@ import {
   isSameVnCalendarDayAsNow,
   parseTripInstant,
 } from '../util/tripDatetime'
-import { dispatchRequestEffectivePassengerCount } from '../util/dispatchRequestPassengers'
+import { tripNamedPassengerDisplayCount } from '../util/dispatchRequestPassengers'
 import { buildDriverTripPaxList } from '../util/buildDriverTripPaxList'
+import { labelTripStatus, labelTripType } from '../util/labels'
+import { parseMoneyVnd } from '../util/money'
 
 const PASSENGER_PICKUP_EVENT = 'passenger_pickup'
 
@@ -51,9 +53,6 @@ export function useDriverTripDetailPage() {
 
   const expandedStudentIdx = ref(null)
   const isPaused = ref(false)
-
-  const studentFilterStatus = ref('all')
-  const studentSortOrder = ref('default')
 
   function costTypeLabel(type) {
     const k = `driver_trip_detail.cost_type_${String(type || 'other')}`
@@ -108,12 +107,6 @@ export function useDriverTripDetailPage() {
   const dr = computed(() => trip.value?.dispatch_request ?? null)
   const snap = computed(() => dr.value?.wizard_snapshot ?? null)
 
-  function statusLabelTr(st) {
-    const k = `trips_page.trip_status.${st}`
-    const tr = t(k)
-    return tr === k ? st : tr
-  }
-
   const statusBadgeClass = computed(() => {
     const s = trip.value?.status
     if (s === 'in_progress') return 'bg-teal-500/20 text-teal-300 ring-1 ring-teal-400/30'
@@ -126,7 +119,7 @@ export function useDriverTripDetailPage() {
   const headerStatusText = computed(() => {
     if (!trip.value) return '—'
     if (trip.value.status === 'in_progress') return t('driver_trip_detail.status_running')
-    return statusLabelTr(trip.value.status)
+    return labelTripStatus(trip.value.status)
   })
 
   const scheduleDateLine = computed(() => {
@@ -190,6 +183,14 @@ export function useDriverTripDetailPage() {
   const originSub = computed(() => originLines.value.sub)
   const destMain = computed(() => destLines.value.main)
   const destSub = computed(() => destLines.value.sub)
+
+  const routeTripTypeLabel = computed(() => labelTripType(dr.value?.trip_type))
+
+  const routeNotesPreview = computed(() => {
+    const raw = String(dr.value?.notes ?? '').trim()
+    if (!raw) return ''
+    return raw.length > 280 ? `${raw.slice(0, 277)}…` : raw
+  })
 
   const mapUrl = computed(() => {
     const a = (dr.value?.origin || '').trim()
@@ -410,9 +411,8 @@ export function useDriverTripDetailPage() {
   async function submitCost() {
     const id = tripId.value
     if (id == null || costSaving.value || !canOpenCostModal.value) return
-    const a = String(costForm.value.amount || '').replace(/\D/g, '')
-    const num = a === '' ? NaN : parseInt(a, 10)
-    if (!Number.isFinite(num) || num < 0) {
+    const num = parseMoneyVnd(costForm.value.amount)
+    if (!Number.isFinite(num) || num <= 0) {
       costError.value = t('driver_trip_detail.cost_err_amount')
       return
     }
@@ -515,37 +515,7 @@ export function useDriverTripDetailPage() {
 
   const indexedPaxList = computed(() => paxList.value.map((p, i) => ({ ...p, _origIndex: i })))
 
-  const displayedPaxList = computed(() => {
-    let list = indexedPaxList.value
-
-    if (studentFilterStatus.value !== 'all') {
-      list = list.filter((p) => {
-        const st = rowState(p._origIndex)
-        if (studentFilterStatus.value === 'waiting') return st == null
-        return st === studentFilterStatus.value
-      })
-    }
-
-    if (studentSortOrder.value === 'time_asc') {
-      list = [...list].sort((a, b) => (a.time || '').localeCompare(b.time || ''))
-    } else if (studentSortOrder.value === 'time_desc') {
-      list = [...list].sort((a, b) => (b.time || '').localeCompare(a.time || ''))
-    }
-
-    return list
-  })
-
-  function cycleFilter() {
-    const cycle = ['all', 'waiting', 'picked_up', 'absent']
-    const idx = cycle.indexOf(studentFilterStatus.value)
-    studentFilterStatus.value = cycle[(idx + 1) % cycle.length]
-  }
-
-  function cycleSort() {
-    const cycle = ['default', 'time_asc', 'time_desc']
-    const idx = cycle.indexOf(studentSortOrder.value)
-    studentSortOrder.value = cycle[(idx + 1) % cycle.length]
-  }
+  const displayedPaxList = indexedPaxList
 
   function toggleStudent(origIdx) {
     expandedStudentIdx.value = expandedStudentIdx.value === origIdx ? null : origIdx
@@ -558,13 +528,15 @@ export function useDriverTripDetailPage() {
     return n.slice(0, 2).toUpperCase()
   }
 
-  const effectivePassengerCount = computed(() => dispatchRequestEffectivePassengerCount(dr.value))
+  const effectivePassengerCount = computed(() =>
+    tripNamedPassengerDisplayCount(dr.value, trip.value?.trip_passengers),
+  )
 
-  /** Số khách hiển thị (thống kê, tiêu đề, thanh đón) — ưu tiên số trên yêu cầu khi danh sách chi tiết chưa đủ. */
+  /** Số khách hiển thị (thống kê, tiêu đề, thanh đón) — khớp staff TripDetailView. */
   const paxDisplayTotal = computed(() => {
-    const listed = paxList.value.length
     const eff = effectivePassengerCount.value
-    return Math.max(listed, eff) || 0
+    if (eff > 0) return eff
+    return paxList.value.length
   })
 
   const statsStudentCount = computed(() => paxDisplayTotal.value)
@@ -732,8 +704,6 @@ export function useDriverTripDetailPage() {
     costForm,
     expandedStudentIdx,
     isPaused,
-    studentFilterStatus,
-    studentSortOrder,
     costTypes,
     tripId,
     dr,
@@ -748,6 +718,8 @@ export function useDriverTripDetailPage() {
     destSub,
     mapUrl,
     driverRouteLegs,
+    routeTripTypeLabel,
+    routeNotesPreview,
     tripCosts,
     costsApprovedTotal,
     costsPendingTotal,
@@ -782,8 +754,6 @@ export function useDriverTripDetailPage() {
     submitKmModal,
     openCostModal,
     submitCost,
-    cycleFilter,
-    cycleSort,
     toggleStudent,
     studentInitials,
     isNextIndex,

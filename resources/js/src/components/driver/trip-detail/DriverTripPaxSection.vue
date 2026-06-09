@@ -1,31 +1,11 @@
 <template>
   <template v-if="paxKind === 'student'">
     <div v-if="paxList.length" class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/[0.06]">
-      <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+      <div class="px-4 py-3">
         <h2 class="flex min-w-0 items-center gap-2 text-base font-semibold text-driver-ink sm:text-lg">
           <UserGroupIcon class="h-5 w-5 shrink-0 text-driver-muted/80" aria-hidden="true" />
           {{ t('driver_trip_detail.students_title', { n: paxSectionTotal }) }}
         </h2>
-        <div class="flex shrink-0 gap-2">
-          <button
-            type="button"
-            class="flex min-h-[44px] items-center gap-1 rounded-full border px-3 py-2 text-sm font-semibold transition sm:text-base"
-            :class="studentFilterStatus !== 'all' ? 'border-[#7fdcc8] bg-[#7fdcc8]/10 text-driver-accent' : 'border-white/10 bg-driver-surface text-driver-muted'"
-            @click="$emit('cycle-filter')"
-          >
-            <FunnelIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ t('driver_trip_detail.filter_btn') }}
-            <span v-if="studentFilterStatus !== 'all'" class="font-bold text-driver-accent">·</span>
-          </button>
-          <button
-            type="button"
-            class="flex min-h-[44px] items-center gap-1 rounded-full border border-white/10 bg-driver-surface px-3 py-2 text-sm font-semibold text-driver-muted transition sm:text-base"
-            @click="$emit('cycle-sort')"
-          >
-            <ArrowsUpDownIcon class="h-4 w-4 shrink-0" aria-hidden="true" />
-            {{ t('driver_trip_detail.sort_btn') }}
-          </button>
-        </div>
       </div>
 
       <ul class="max-h-[min(52vh,28rem)] divide-y divide-white/10 overflow-y-auto overscroll-y-contain">
@@ -169,10 +149,8 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import {
-  ArrowsUpDownIcon,
   CheckIcon,
   ChevronDownIcon,
-  FunnelIcon,
   MapPinIcon,
   PhoneIcon,
   UserGroupIcon,
@@ -183,7 +161,6 @@ defineProps({
   paxList: { type: Array, default: () => [] },
   displayedPaxList: { type: Array, default: () => [] },
   paxSectionTotal: { type: Number, default: 0 },
-  studentFilterStatus: { type: String, default: 'all' },
   expandedStudentIdx: {
     default: null,
     validator: (v) => v === null || typeof v === 'number',
@@ -195,7 +172,7 @@ defineProps({
   isNextIndex: { type: Function, required: true },
 })
 
-defineEmits(['cycle-filter', 'cycle-sort', 'toggle-student', 'set-row-state'])
+defineEmits(['toggle-student', 'set-row-state'])
 
 const { t } = useI18n()
 

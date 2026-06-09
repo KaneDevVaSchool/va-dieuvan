@@ -5,7 +5,7 @@
   >
     <div
       ref="trackRef"
-      class="flex min-h-[52px] gap-1 px-3 pb-3 pt-2 sm:min-h-[56px]"
+      class="flex min-h-[56px] gap-1.5 px-3 pb-3 pt-2 sm:min-h-[60px]"
       role="tablist"
       :aria-label="ariaLabel"
     >
@@ -14,7 +14,7 @@
         :key="tab.value || 'all'"
         type="button"
         role="tab"
-        class="min-h-[44px] flex-1 rounded-2xl px-2 text-sm font-semibold transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-driver-accent/70 active:scale-[0.98] sm:text-base"
+        class="min-h-[48px] flex-1 rounded-2xl px-2 text-base font-bold transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-driver-accent/70 active:scale-[0.98] sm:min-h-[52px] sm:text-lg"
         :class="
           modelValue === tab.value
             ? 'bg-driver-elevated text-driver-ink shadow-[0_8px_24px_-8px_rgba(127,220,200,0.35)] ring-1 ring-driver-accent/35'

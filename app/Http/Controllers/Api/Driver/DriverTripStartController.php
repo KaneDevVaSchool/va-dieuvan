@@ -23,12 +23,26 @@ class DriverTripStartController extends Controller
 
     public function __invoke(Request $request, TpProgramDay $tpProgramDay): JsonResponse
     {
-        $driver = $this->assertCanStartDay($request->user(), $tpProgramDay);
-
-        abort_unless($tpProgramDay->confirmed_at, 422, 'Bạn cần xác nhận chuyến trước khi bắt đầu.');
+        $shift = $this->resolveShift($request);
+        $driver = $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
+        abort_unless(
+            $tpProgramDay->slotConfirmedAt($shift),
+            422,
+            'Bạn cần xác nhận chuyến trước khi bắt đầu.',
+        );
 
         $execution = $this->executionService->start($tpProgramDay, $driver, $request->input('device_id'));
 
         return $this->created($this->presenter->execution($execution));
+    }
+
+    private function resolveShift(Request $request): ?string
+    {
+        $shift = $request->input('shift');
+        if (in_array($shift, ['morning', 'afternoon'], true)) {
+            return $shift;
+        }
+
+        return null;
     }
 }

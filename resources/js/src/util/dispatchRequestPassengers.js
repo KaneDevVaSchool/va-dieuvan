@@ -3,6 +3,7 @@ import {
   isBusinessRowCounted,
   isCargoRowFilled,
 } from '../composables/dispatchWizardConstants'
+import { isAutoPassengerLabel } from './passengerDisplayName'
 
 function rowGuestsValue(row) {
   const raw = String(row?.guests ?? '').trim().replace(/\s/g, '')
@@ -72,4 +73,35 @@ export function dispatchRequestDisplayPassengerCount(dr) {
   const fromSnapshot = wizardSnapshotGuestTotal(dr?.wizard_snapshot, dr?.trip_type ?? '')
   if (fromSnapshot > 0) return fromSnapshot
   return dispatchRequestEffectivePassengerCount(dr)
+}
+
+/**
+ * Số slot trip_passengers có dữ liệu thực (không chỉ nhãn "Khách N" placeholder).
+ * @param {Array<{ name?: string, phone?: string, note?: string }> | null | undefined} tplist
+ */
+export function meaningfulNamedTripPassengerCount(tplist) {
+  if (!Array.isArray(tplist) || tplist.length === 0) return 0
+  let last = 0
+  for (let i = 0; i < tplist.length; i++) {
+    const p = tplist[i]
+    const name = String(p?.name ?? '').trim()
+    const phone = String(p?.phone ?? '').trim()
+    const note = String(p?.note ?? '').trim()
+    if ((name && !isAutoPassengerLabel(name)) || phone || note) {
+      last = i + 1
+    }
+  }
+  return last
+}
+
+/**
+ * Số khách hiển thị trên màn chi tiết chuyến — không phóng theo length trip_passengers.
+ * (Slot "Hành khách N" vẫn tính vào số khai báo; chỉ dùng passenger_count / snapshot làm nguồn.)
+ * @param {{ wizard_snapshot?: object, trip_type?: string, student_count_actual?: number|string|null, passenger_count?: number|string|null } | null | undefined} dr
+ * @param {Array<{ name?: string, phone?: string, note?: string }> | null | undefined} [_tplist]
+ */
+export function tripNamedPassengerDisplayCount(dr, _tplist) {
+  const display = dispatchRequestDisplayPassengerCount(dr)
+  if (display > 0) return display
+  return meaningfulNamedTripPassengerCount(_tplist)
 }

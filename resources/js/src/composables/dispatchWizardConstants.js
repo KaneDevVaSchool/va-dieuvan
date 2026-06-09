@@ -1,3 +1,5 @@
+import { isAutoPassengerLabel } from '../util/passengerDisplayName'
+
 /** Một nháp / user để tránh chồng nhiều bản khi đổi tài khoản hoặc lặp khóa cũ. */
 export const LEGACY_DRAFT_KEY = 'dispatch-request-wizard-draft-v1'
 
@@ -182,7 +184,9 @@ export function isPassengerRowFilled(r) {
 /** Dòng có dữ liệu thực — bỏ qua dòng chỉ có giờ auto-sync (tránh +1 khách ảo). */
 export function isPassengerRowCounted(r) {
   if (r.pickup?.trim() || r.dropoff?.trim()) return true
-  if (r.person_in_charge?.trim() || r.notes?.trim()) return true
+  const pic = r.person_in_charge?.trim()
+  if (pic && !isAutoPassengerLabel(pic)) return true
+  if (r.notes?.trim()) return true
   if (r.unit_price && String(r.unit_price).trim() !== '') return true
   if (r.extra_fee && String(r.extra_fee).trim() !== '') return true
   const g = String(r.guests ?? '').trim()

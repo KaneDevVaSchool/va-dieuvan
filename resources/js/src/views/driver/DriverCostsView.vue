@@ -25,15 +25,18 @@
     >
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div class="min-w-0">
-          <h1 class="text-2xl font-bold tracking-tight text-driver-ink sm:text-[1.65rem]">
+          <h1 class="text-[1.65rem] font-bold tracking-tight text-driver-ink sm:text-3xl">
             {{ t('driver_costs.title') }}
           </h1>
+          <p class="mt-1 text-base leading-snug text-driver-muted sm:text-lg">
+            {{ t('driver_costs.subtitle') }}
+          </p>
         </div>
         <RouterLink
           :to="{ name: 'driverCostCreate' }"
-          class="flex min-h-[44px] shrink-0 items-center gap-2 rounded-2xl bg-driver-accent/15 px-4 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.98]"
+          class="flex min-h-[52px] shrink-0 items-center gap-2 rounded-2xl bg-driver-accent/15 px-5 text-base font-bold text-driver-accent ring-1 ring-driver-accent/35 transition hover:bg-driver-accent/25 active:scale-[0.98] sm:text-lg"
         >
-          <PlusCircleIcon class="h-5 w-5" aria-hidden="true" />
+          <PlusCircleIcon class="h-6 w-6" aria-hidden="true" />
           {{ t('driver_costs.cta_add') }}
         </RouterLink>
       </div>
@@ -59,8 +62,8 @@
         class="mt-16 rounded-[1.35rem] bg-driver-card px-6 py-14 text-center ring-1 ring-white/[0.06]"
       >
         <ClipboardDocumentListIcon class="mx-auto h-14 w-14 text-driver-muted/45" aria-hidden="true" />
-        <p class="mt-5 text-lg font-semibold text-driver-ink">{{ t('driver_costs.empty_title') }}</p>
-        <p class="mt-2 text-base text-driver-muted">{{ t('driver_costs.empty_hint') }}</p>
+        <p class="mt-5 text-xl font-semibold text-driver-ink sm:text-2xl">{{ t('driver_costs.empty_title') }}</p>
+        <p class="mt-2 text-base leading-relaxed text-driver-muted sm:text-lg">{{ t('driver_costs.empty_hint') }}</p>
         <RouterLink
           :to="{ name: 'driverCostCreate' }"
           class="mt-8 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-driver-accent px-8 text-base font-bold text-driver-bg transition hover:brightness-110 active:scale-[0.99]"
@@ -87,7 +90,7 @@
         <span class="inline-block h-9 w-9 animate-spin rounded-full border-2 border-driver-accent border-t-transparent" />
       </div>
 
-      <p v-if="items.length && noMore" class="pb-8 pt-2 text-center text-sm text-driver-muted/70">
+      <p v-if="items.length && noMore" class="pb-8 pt-2 text-center text-base text-driver-muted/70 sm:text-lg">
         {{ t('driver_costs.end_of_list') }}
       </p>
     </div>
@@ -148,16 +151,16 @@ function statusLabel(st) {
     rejected: t('driver_costs.st_rejected'),
     draft: t('driver_costs.st_draft'),
   }
-  return map[st] ?? st ?? '—'
+  return map[st] ?? t('driver_costs.st_submitted')
 }
 
 function typeLabel(type) {
   const raw = String(type ?? '').trim()
   if (!raw) return '—'
   const slug = raw.toLowerCase().replace(/[^a-z0-9_]/g, '_')
-  const i18nKey = `trip_detail.costs.type_${slug}`
-  if (te(i18nKey)) return t(i18nKey)
-  return raw
+  const driverKey = `driver_trip_detail.cost_type_${slug}`
+  if (te(driverKey)) return t(driverKey)
+  return t('driver_trip_detail.cost_type_other')
 }
 
 onMounted(() => {

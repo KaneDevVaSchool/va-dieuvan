@@ -55,43 +55,14 @@
       <div class="mt-5 space-y-4 rounded-[1.25rem] bg-driver-card p-4 ring-1 ring-white/[0.06] sm:p-5">
         <template v-if="linkMode === 'trip'">
           <div>
-            <label class="text-sm font-semibold text-driver-muted" for="dcc-trip-filter">{{ t('driver_costs.trip_search') }}</label>
-            <input
-              id="dcc-trip-filter"
-              v-model="tripSearch"
-              type="search"
-              autocomplete="off"
-              class="mt-1.5 flex min-h-[48px] w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-driver-accent/45"
-              :placeholder="t('driver_costs.trip_search_ph')"
+            <p class="text-sm font-semibold text-driver-muted">{{ t('driver_costs.step_trip_title') }}</p>
+            <p class="mt-0.5 text-xs leading-snug text-driver-muted/80">{{ t('driver_costs.step_trip_hint') }}</p>
+            <DriverCostTripPicker
+              v-model="form.trip_id"
+              class="mt-2"
+              :trips="tripOptions"
+              :loading="tripsLoading"
             />
-          </div>
-
-          <div>
-            <label class="text-sm font-semibold text-driver-muted" for="dcc-trip">{{ t('driver_costs.step_trip_title') }}</label>
-            <div class="relative mt-1.5">
-              <select
-                id="dcc-trip"
-                v-model="form.trip_id"
-                class="flex min-h-[48px] w-full appearance-none rounded-xl border border-white/10 bg-driver-surface px-3 py-2.5 pr-10 text-base text-driver-ink focus:outline-none focus:ring-2 focus:ring-driver-accent/45"
-                :disabled="tripsLoading"
-              >
-                <option value="">{{ tripsLoading ? t('driver_costs.trips_loading') : t('driver_costs.trip_pick_placeholder') }}</option>
-                <optgroup v-if="completedForSelect.length" :label="t('driver_costs.trip_group_completed')">
-                  <option v-for="tr in completedForSelect" :key="tr.id" :value="String(tr.id)">
-                    {{ tripOptionLabel(tr) }}
-                  </option>
-                </optgroup>
-                <optgroup v-if="activeForSelect.length" :label="t('driver_costs.trip_group_active')">
-                  <option v-for="tr in activeForSelect" :key="tr.id" :value="String(tr.id)">
-                    {{ tripOptionLabel(tr) }}
-                  </option>
-                </optgroup>
-              </select>
-              <ChevronDownIcon class="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-driver-muted/70" aria-hidden="true" />
-            </div>
-            <p v-if="!tripsLoading && !filteredTrips.length" class="mt-2 text-xs text-driver-muted">
-              {{ t('driver_costs.trips_empty') }}
-            </p>
           </div>
         </template>
 
@@ -158,12 +129,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeftIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { listDriverTrips } from '../../api/driver'
 import { submitStandaloneTripCost } from '../../api/costs'
+import DriverCostTripPicker from '../../components/driver/costs/DriverCostTripPicker.vue'
 import { isTripEligibleForDriverLinkedCost } from '../../constants/tripStatus'
-import { tripTimelineRouteLine } from '../../composables/useDriverTripDisplay'
 import { toLocalDateKey } from '../../util/dates'
-import { formatVndWhileTyping } from '../../util/money'
+import { formatVndWhileTyping, parseMoneyVnd } from '../../util/money'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 
@@ -179,7 +150,6 @@ const form = ref({
 const saving = ref(false)
 const errorMsg = ref('')
 const tripsLoading = ref(false)
-const tripSearch = ref('')
 /** @type {import('vue').Ref<object[]>} */
 const tripOptions = ref([])
 
@@ -192,52 +162,12 @@ const costTypes = computed(() => [
 
 const amountDisplay = computed(() => formatVndWhileTyping(form.value.amount))
 
-const filteredTrips = computed(() => {
-  const q = tripSearch.value.trim().toLowerCase()
-  if (!q) return tripOptions.value
-  return tripOptions.value.filter((tr) => {
-    const id = String(tr.id)
-    const label = tripOptionLabel(tr).toLowerCase()
-    return id.includes(q) || label.includes(q)
-  })
-})
-
-const completedForSelect = computed(() =>
-  filteredTrips.value.filter((tr) => String(tr?.status ?? '').toLowerCase() === 'completed'),
-)
-
-const activeForSelect = computed(() =>
-  filteredTrips.value.filter((tr) => String(tr?.status ?? '').toLowerCase() !== 'completed'),
-)
-
 const canSubmit = computed(() => {
-  const a = String(form.value.amount || '').replace(/\D/g, '')
-  const num = a === '' ? NaN : parseInt(a, 10)
+  const num = parseMoneyVnd(form.value.amount)
   if (!Number.isFinite(num) || num <= 0) return false
   if (linkMode.value === 'trip' && !String(form.value.trip_id || '').trim()) return false
   return true
 })
-
-function tripOptionLabel(tr) {
-  const routeLine = tripTimelineRouteLine(tr, t)
-  const dep = tripDepartCompact(tr)
-  const st =
-    String(tr?.status ?? '').toLowerCase() === 'completed'
-      ? t('driver_costs.trip_st_completed')
-      : ''
-  const prefix = `#${tr.id}`
-  const statusBit = st ? ` · ${st}` : ''
-  return dep ? `${prefix}${statusBit} — ${dep} — ${routeLine}` : `${prefix}${statusBit} — ${routeLine}`
-}
-
-function tripDepartCompact(tr) {
-  const iso = tr?.depart_at || tr?.dispatch_request?.depart_at
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
-  return d.toLocaleDateString(loc, { day: 'numeric', month: 'numeric' })
-}
 
 function setLinkMode(mode) {
   linkMode.value = mode
@@ -299,9 +229,8 @@ function applyTripFromQuery() {
 
 async function submit() {
   if (saving.value || !canSubmit.value) return
-  const a = String(form.value.amount || '').replace(/\D/g, '')
-  const num = a === '' ? NaN : parseInt(a, 10)
-  if (!Number.isFinite(num) || num < 0) {
+  const num = parseMoneyVnd(form.value.amount)
+  if (!Number.isFinite(num) || num <= 0) {
     errorMsg.value = t('driver_trip_detail.cost_err_amount')
     return
   }

@@ -174,7 +174,7 @@
       <section class="rounded-[20px] border border-white/[0.06] bg-driver-card p-4 sm:p-5">
         <button
           type="button"
-          class="inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-xl border-2 border-[#f43f5e] bg-transparent px-4 text-base font-bold text-[#f43f5e] transition hover:bg-[#f43f5e]/12 active:scale-[0.99]"
+          class="inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-driver-accent/12 px-4 text-base font-bold text-driver-accent ring-1 ring-driver-accent/30 transition hover:bg-driver-accent/20 active:scale-[0.99]"
           @click="logoutConfirmOpen = true"
         >
           <ArrowRightOnRectangleIcon class="h-6 w-6 shrink-0" aria-hidden="true" />
@@ -213,7 +213,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl bg-[#f43f5e] px-4 text-base font-bold text-driver-ink transition hover:bg-[#e11d48] sm:w-auto"
+              class="inline-flex w-full min-h-[50px] items-center justify-center rounded-xl bg-driver-accent px-4 text-base font-bold text-driver-bg transition hover:brightness-110 sm:w-auto"
               @click="confirmLogout"
             >
               {{ t('app.logout_confirm_action') }}
@@ -232,11 +232,10 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
+  BriefcaseIcon,
   BuildingOffice2Icon,
-  CalendarDaysIcon,
   IdentificationIcon,
   MapPinIcon,
-  UserIcon,
 } from '@heroicons/vue/24/outline'
 import { getDriverSummary } from '../../api/driver'
 import { listTripsAll } from '../../api/trips'
@@ -413,15 +412,11 @@ const statCells = computed(() => [
   },
 ])
 
-function formatDisplayDate(val) {
-  if (val == null || val === '') return '—'
-  const s = String(val)
-  const d = s.length >= 10 ? s.slice(0, 10) : s
-  const parts = d.split('-')
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}`
-  }
-  return s
+function positionDisplay(ci) {
+  const parts = []
+  if (isNonEmpty(ci?.position_name)) parts.push(String(ci.position_name).trim())
+  if (isNonEmpty(ci?.concurrent_position_name)) parts.push(String(ci.concurrent_position_name).trim())
+  return parts.length ? parts.join(' · ') : '—'
 }
 
 const workRows = computed(() => {
@@ -434,26 +429,17 @@ const workRows = computed(() => {
         ? String(u.employee_code).trim()
         : '—'
 
-  const uid =
-    ci && ci.user_id != null && String(ci.user_id).trim() !== ''
-      ? String(ci.user_id)
-      : u?.id != null
-        ? String(u.id)
-        : '—'
-
-  const uidLabel =
-    ci && ci.user_id != null && String(ci.user_id).trim() !== ''
-      ? t('driver_account.label_user_id')
-      : t('driver_account.account_id_fallback')
-
-  const created = ci?.created_at ? formatDisplayDate(ci.created_at) : '—'
   const hq = isNonEmpty(ci.headquarter_name) ? String(ci.headquarter_name) : '—'
   const wp = isNonEmpty(ci.working_place) ? String(ci.working_place) : '—'
 
   return [
     { k: 'code', label: t('driver_account.label_employee_code'), value: code, icon: IdentificationIcon },
-    { k: 'uid', label: uidLabel, value: uid, icon: UserIcon },
-    { k: 'created', label: t('driver_account.label_created'), value: created, icon: CalendarDaysIcon },
+    {
+      k: 'position',
+      label: t('driver_account.label_position'),
+      value: positionDisplay(ci),
+      icon: BriefcaseIcon,
+    },
     { k: 'hq', label: t('driver_account.label_hq'), value: hq, icon: BuildingOffice2Icon },
     { k: 'wp', label: t('driver_account.label_workplace'), value: wp, icon: MapPinIcon },
   ]

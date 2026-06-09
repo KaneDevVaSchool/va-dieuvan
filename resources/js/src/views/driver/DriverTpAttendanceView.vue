@@ -321,7 +321,7 @@ async function unconfirm() {
 async function start() {
   busy.value = true
   try {
-    execution.value = await driverStartTrip(route.params.dayId, deviceId())
+    execution.value = await driverStartTrip(route.params.dayId, deviceId(), shift.value)
   } catch (err) {
     showAppErrorFromApi(err)
   } finally {

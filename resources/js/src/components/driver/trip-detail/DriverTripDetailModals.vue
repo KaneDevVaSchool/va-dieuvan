@@ -127,9 +127,10 @@
           :value="costForm.amount"
           type="text"
           inputmode="numeric"
-          class="mt-0.5 flex min-h-[48px] w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-3 text-base text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50 sm:text-lg"
+          autocomplete="off"
+          class="mt-0.5 flex min-h-[48px] w-full rounded-xl border border-white/10 bg-driver-surface px-3 py-3 text-base tabular-nums text-driver-ink placeholder:text-driver-muted/50 focus:outline-none focus:ring-2 focus:ring-[#7fdcc8]/50 sm:text-lg"
           :placeholder="t('driver_trip_detail.cost_amount_ph')"
-          @input="$emit('update:costForm', { ...costForm, amount: $event.target.value })"
+          @input="onCostAmountInput"
         />
 
         <label class="mt-2.5 block text-sm font-medium text-driver-muted sm:text-base">{{ t('driver_trip_detail.cost_desc') }}</label>
@@ -173,8 +174,9 @@ import {
   MapIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+import { formatVndWhileTyping } from '../../../util/money'
 
-defineProps({
+const props = defineProps({
   kmModalOpen: { type: Boolean, default: false },
   costModalOpen: { type: Boolean, default: false },
   startKmDisplay: { type: String, default: '' },
@@ -206,5 +208,12 @@ const costTitleId = 'driver-trip-cost-modal-title'
 
 function onEndKmInput(ev) {
   emit('update:endKm', ev.target.value)
+}
+
+function onCostAmountInput(ev) {
+  emit('update:costForm', {
+    ...props.costForm,
+    amount: formatVndWhileTyping(ev.target.value),
+  })
 }
 </script>

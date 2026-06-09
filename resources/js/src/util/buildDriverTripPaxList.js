@@ -1,4 +1,4 @@
-import { dispatchRequestEffectivePassengerCount } from './dispatchRequestPassengers'
+import { tripNamedPassengerDisplayCount } from './dispatchRequestPassengers'
 import { isAutoPassengerLabel, passengerDisplayName } from './passengerDisplayName'
 
 export function normalizeTripPassengers(trip) {
@@ -63,7 +63,7 @@ export function buildDriverTripPaxList(options) {
   }
 
   if (tt === 'door_to_door' || tt === 'point_to_point') {
-    const targetN = dispatchRequestEffectivePassengerCount(ttr)
+    const targetN = tripNamedPassengerDisplayCount(ttr, tplist)
     if (targetN > 0) return buildPassengerSlots(targetN)
     return []
   }
@@ -98,7 +98,7 @@ export function buildDriverTripPaxList(options) {
       })
       i += 1
     }
-    const targetBiz = dispatchRequestEffectivePassengerCount(ttr)
+    const targetBiz = tripNamedPassengerDisplayCount(ttr, tplist)
     if (targetBiz > out.length) {
       for (let j = out.length; j < targetBiz; j += 1) {
         out.push(paxFromSlot(j, tplist[j], wizardPassengerRows[j]))
@@ -127,7 +127,7 @@ export function buildDriverTripPaxList(options) {
     })
   }
 
-  const targetN = dispatchRequestEffectivePassengerCount(ttr)
+  const targetN = tripNamedPassengerDisplayCount(ttr, tplist)
   if (targetN > out.length) {
     const start = out.length
     for (let i = start; i < targetN; i += 1) {

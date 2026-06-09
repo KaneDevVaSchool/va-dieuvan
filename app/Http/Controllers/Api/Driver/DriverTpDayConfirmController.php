@@ -30,12 +30,11 @@ class DriverTpDayConfirmController extends Controller
 
     public function confirm(Request $request, TpProgramDay $tpProgramDay): JsonResponse
     {
-        $driver = $this->assertCanStartDay($request->user(), $tpProgramDay);
+        $shift = $this->resolveShift($request);
+        $driver = $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
 
         abort_if($tpProgramDay->day_type === TpProgramDay::DAY_CANCELLED, 422, 'Ngày này đã bị hủy.');
         abort_if($tpProgramDay->execution()->exists(), 422, 'Chuyến đã được bắt đầu.');
-
-        $shift = $this->resolveShift($request);
 
         if ($shift === 'morning') {
             if (! $tpProgramDay->morning_confirmed_at) {
@@ -69,11 +68,10 @@ class DriverTpDayConfirmController extends Controller
 
     public function unconfirm(Request $request, TpProgramDay $tpProgramDay): JsonResponse
     {
-        $this->assertCanStartDay($request->user(), $tpProgramDay);
+        $shift = $this->resolveShift($request);
+        $this->assertCanStartDay($request->user(), $tpProgramDay, $shift);
 
         abort_if($tpProgramDay->execution()->exists(), 422, 'Chuyến đã được bắt đầu, không thể bỏ xác nhận.');
-
-        $shift = $this->resolveShift($request);
 
         if ($shift === 'morning') {
             if ($tpProgramDay->morning_confirmed_at) {

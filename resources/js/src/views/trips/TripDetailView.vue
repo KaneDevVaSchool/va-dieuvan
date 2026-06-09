@@ -1,8 +1,8 @@
 <template>
-    <div class="min-h-screen bg-[#F8F9FA]">
+    <div class="min-h-screen w-full min-w-0 bg-[#F8F9FA]">
         <div
             v-if="loading && !trip"
-            class="mx-auto max-w-7xl space-y-6 px-4 py-10"
+            class="mx-auto w-full max-w-none space-y-6 px-4 py-10 sm:px-6 lg:px-8"
         >
             <div class="animate-pulse space-y-4">
                 <div class="h-10 max-w-md rounded-xl bg-slate-200/90" />
@@ -46,18 +46,18 @@
                 @approve="onApproveTransfer"
                 @reject="onRejectTrip"
             />
-            <p class="mx-auto max-w-7xl px-4 pt-1 text-xs text-slate-500">
+            <p class="mx-auto w-full max-w-none px-4 pt-1 text-xs text-slate-500 sm:px-6 lg:px-8">
                 {{
                     t("trip_detail.created_at", { time: fmt(trip.created_at) })
                 }}
             </p>
             <p
                 v-if="silentLoadError"
-                class="mx-auto max-w-7xl px-4 pt-2 text-xs text-amber-900"
+                class="mx-auto w-full max-w-none px-4 pt-2 text-xs text-amber-900 sm:px-6 lg:px-8"
             >
                 {{ silentLoadError }}
             </p>
-            <div class="mx-auto max-w-7xl space-y-4 px-4 pb-12 pt-3">
+            <div class="mx-auto w-full max-w-none space-y-4 px-4 pb-12 pt-3 sm:px-6 lg:px-8">
                 <TripTimeline
                     class="w-full min-w-0"
                     :current-status="timelineWorkflowStatus"
@@ -66,7 +66,7 @@
 
                 <div
                     v-if="driverCancellationEvent"
-                    class="mx-auto max-w-7xl px-4"
+                    class="mx-auto w-full max-w-none px-4 sm:px-6 lg:px-8"
                     role="alert"
                 >
                     <div
@@ -776,7 +776,10 @@ import {
     isLegacyBm03NotesBlock,
 } from "../../util/formatDispatchNotes";
 import { parseMoneyVnd } from "../../util/money";
-import { dispatchRequestEffectivePassengerCount } from "../../util/dispatchRequestPassengers";
+import {
+    dispatchRequestDisplayPassengerCount,
+    tripNamedPassengerDisplayCount,
+} from "../../util/dispatchRequestPassengers";
 import {
     isAutoPassengerLabel,
     passengerDisplayName,
@@ -1190,7 +1193,7 @@ async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
     const tid = trip.value?.id;
     const dr = trip.value?.dispatch_request;
     if (!tid || !dr) return false;
-    const count = dispatchRequestEffectivePassengerCount(dr);
+    const count = tripNamedPassengerDisplayCount(dr, trip.value?.trip_passengers);
     const totalSlots = Math.max(count, rowIndex + 1);
     const tplist = Array.isArray(trip.value?.trip_passengers)
         ? trip.value.trip_passengers
@@ -1218,7 +1221,7 @@ async function saveNamedPassengerSlot(rowIndex, draft, options = {}) {
             tid,
             withTripLockVersion(
                 {
-                    passenger_count: count,
+                    passenger_count: list.length,
                     passengers: list,
                 },
                 trip.value,
@@ -1352,22 +1355,16 @@ const tripTypeForSnap = computed(
     () => trip.value?.dispatch_request?.trip_type ?? "",
 );
 
-const { scheduleCards, scheduleCount, totalGuests: scheduleGuestSum } =
-    useDispatchScheduleCards(snap, tripTypeForSnap);
+const { scheduleCards, scheduleCount } = useDispatchScheduleCards(
+    snap,
+    tripTypeForSnap,
+);
 
+/** Khớp request detail / list — không phóng số khách theo length trip_passengers (slot placeholder). */
 const unifiedPassengerCount = computed(() => {
     const dr = trip.value?.dispatch_request;
     if (!dr) return 0;
-    const fromRequest = dispatchRequestEffectivePassengerCount(dr);
-    const fromSnap = scheduleGuestSum.value;
-    const listed = Array.isArray(trip.value?.trip_passengers)
-        ? trip.value.trip_passengers.length
-        : 0;
-    return Math.max(
-        fromRequest,
-        fromSnap,
-        listed > 0 ? listed : 0,
-    );
+    return tripNamedPassengerDisplayCount(dr, trip.value?.trip_passengers);
 });
 
 /** Lịch trình: đồng bộ số khách chặng/tổng với unified (vd. CLB định kỳ student_count_actual). */

@@ -7,25 +7,31 @@
       <div class="flex flex-wrap gap-2">
         <button
           type="button"
-          class="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+          class="inline-flex min-h-[32px] items-center gap-1 rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
           @click="$emit('duplicate')"
         >
-          {{ t('dispatch_wizard.s3.card_duplicate') }}
+          <DocumentDuplicateIcon class="h-3.5 w-3.5 shrink-0 sm:hidden" aria-hidden="true" />
+          <span class="hidden sm:inline">{{ t('dispatch_wizard.s3.card_duplicate') }}</span>
+          <span class="sr-only sm:hidden">{{ t('dispatch_wizard.s3.card_duplicate') }}</span>
         </button>
         <button
           type="button"
-          class="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          class="inline-flex min-h-[32px] items-center gap-1 rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           :disabled="index === 0"
           @click="$emit('autofill')"
         >
-          {{ t('dispatch_wizard.s3.card_copy_above') }}
+          <ArrowUpIcon class="h-3.5 w-3.5 shrink-0 sm:hidden" aria-hidden="true" />
+          <span class="hidden sm:inline">{{ t('dispatch_wizard.s3.card_copy_above') }}</span>
+          <span class="sr-only sm:hidden">{{ t('dispatch_wizard.s3.card_copy_above') }}</span>
         </button>
         <button
           type="button"
-          class="rounded border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
+          class="inline-flex min-h-[32px] items-center gap-1 rounded border border-rose-200 px-2 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
           @click="$emit('remove')"
         >
-          {{ t('dispatch_wizard.s3.card_remove') }}
+          <TrashIcon class="h-3.5 w-3.5 shrink-0 sm:hidden" aria-hidden="true" />
+          <span class="hidden sm:inline">{{ t('dispatch_wizard.s3.card_remove') }}</span>
+          <span class="sr-only sm:hidden">{{ t('dispatch_wizard.s3.card_remove') }}</span>
         </button>
       </div>
     </div>
@@ -126,7 +132,7 @@
         @update:model-value="(v) => (row.person_in_charge = v)"
       />
 
-      <template v-if="variant !== 'cargo'">
+      <template v-if="variant !== 'cargo' && !isPortalUser">
         <BaseInput
           :class="moneyFieldClass"
           inputmode="numeric"
@@ -134,7 +140,6 @@
           :label="t('dispatch_wizard.s3.unit_price')"
           :model-value="row.unit_price"
           :placeholder="t('dispatch_wizard.s3.vnd_ph')"
-          :disabled="lockDetailPricing"
           @update:model-value="(v) => vndRow(row, 'unit_price', v)"
         />
         <BaseInput
@@ -144,12 +149,11 @@
           :label="t('dispatch_wizard.s3.extra_fee')"
           :model-value="row.extra_fee"
           :placeholder="t('dispatch_wizard.s3.vnd_ph_small')"
-          :disabled="lockDetailPricing"
           @update:model-value="(v) => vndRow(row, 'extra_fee', v)"
         />
       </template>
 
-      <template v-else>
+      <template v-if="variant === 'cargo'">
         <BaseInput
           :class="costFieldClass"
           inputmode="numeric"
@@ -163,11 +167,11 @@
       </template>
 
       <BaseInput
+        v-if="!isPortalUser"
         :class="notesFieldClass"
         :label="t('dispatch_wizard.s3.notes')"
         :model-value="notesModel"
         :placeholder="notesPh"
-        :disabled="isPortalUser"
         @update:model-value="setNotes"
       />
     </div>
@@ -233,6 +237,11 @@
 <script setup>
 import { computed, inject, unref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import {
+  ArrowUpIcon,
+  DocumentDuplicateIcon,
+  TrashIcon,
+} from '@heroicons/vue/24/outline'
 import BaseInput from '../../../components/base/BaseInput.vue'
 import BaseDateTime from '../../../components/base/BaseDateTime.vue'
 import { dispatchScheduleRowErrors } from '../../../composables/dispatchScheduleRowErrors'
@@ -259,13 +268,13 @@ const isPortalUser = computed(() => Boolean(wizard?.isPortal))
 
 const detailGridClass = computed(() =>
   isPortalUser.value
-    ? 'grid grid-cols-2 gap-3'
+    ? 'grid grid-cols-2 gap-4'
     : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-3 lg:gap-y-3',
 )
 
 const guestsInputClass = computed(() => {
   if (!isPortalUser.value) return 'col-span-2 sm:col-span-1'
-  return props.variant === 'business' ? 'col-span-2' : 'col-span-1'
+  return 'col-span-1'
 })
 
 const picInputClass = computed(() => {

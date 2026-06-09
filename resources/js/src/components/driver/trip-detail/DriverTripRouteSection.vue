@@ -1,120 +1,120 @@
 <template>
   <div class="overflow-hidden rounded-2xl bg-driver-card ring-1 ring-white/[0.06]">
-    <p class="sr-only">{{ t('driver_trip_detail.route_section') }}</p>
-    <div class="px-4 pb-4 pt-4">
+    <div class="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3">
+      <div class="flex min-w-0 items-center gap-2">
+        <div
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#7fdcc8]/15 text-[#7fdcc8] ring-1 ring-[#7fdcc8]/25"
+        >
+          <MapIcon class="h-5 w-5" aria-hidden="true" />
+        </div>
+        <h2 class="text-base font-semibold text-driver-ink sm:text-lg">
+          {{ t('driver_trip_detail.route_section') }}
+        </h2>
+      </div>
+      <span
+        v-if="tripTypeLabel"
+        class="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-driver-muted ring-1 ring-white/10"
+      >
+        {{ tripTypeLabel }}
+      </span>
+    </div>
+
+    <div v-if="hasMeta" class="flex flex-wrap gap-2 border-b border-white/[0.06] px-4 py-3">
+      <span
+        v-if="scheduleSummary && scheduleSummary !== '—'"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-driver-ink/90 ring-1 ring-white/10 sm:text-sm"
+      >
+        <ClockIcon class="h-4 w-4 shrink-0 text-[#7fdcc8]" aria-hidden="true" />
+        {{ scheduleSummary }}
+      </span>
+      <span
+        v-if="distanceLabel && distanceLabel !== '— km'"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-driver-ink/90 ring-1 ring-white/10 sm:text-sm"
+      >
+        <ArrowsRightLeftIcon class="h-4 w-4 shrink-0 text-[#7fdcc8]" aria-hidden="true" />
+        {{ distanceLabel }}
+      </span>
+      <span
+        v-if="passengerCount > 0"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-medium text-driver-ink/90 ring-1 ring-white/10 sm:text-sm"
+      >
+        <UserGroupIcon class="h-4 w-4 shrink-0 text-[#7fdcc8]" aria-hidden="true" />
+        {{ t('driver_trip_detail.route_chip_passengers', { n: passengerCount }) }}
+      </span>
+    </div>
+
+    <div v-if="notesPreview" class="mx-4 mt-3 rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2.5">
+      <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-200/90">
+        {{ t('driver_trip_detail.notes_important') }}
+      </p>
+      <p class="mt-1 whitespace-pre-wrap text-sm leading-snug text-amber-50/95">{{ notesPreview }}</p>
+    </div>
+
+    <div class="px-4 py-4">
       <template v-if="legs && legs.length > 0">
         <div
           v-for="(leg, idx) in legs"
           :key="leg.key || idx"
-          class="space-y-4"
           :class="idx > 0 ? 'mt-6 border-t border-white/10 pt-6' : ''"
         >
           <p
             v-if="leg.label"
-            class="text-xs font-semibold uppercase tracking-wider text-driver-muted/80"
+            class="mb-3 text-xs font-semibold uppercase tracking-wider text-[#7fdcc8]/90"
           >
             {{ leg.label }}
           </p>
-          <div class="flex items-start gap-3">
-            <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm"
-            >
-              <MapPinIcon class="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div class="min-w-0 flex-1 pt-0.5">
-              <p class="text-xs font-semibold uppercase tracking-wider text-driver-muted/80">
-                {{ t('driver_trip_detail.point_start') }}
-              </p>
-              <p class="mt-1 text-base font-semibold leading-snug text-driver-ink sm:text-lg">
-                {{ leg.originMain }}
-              </p>
-              <p v-if="leg.originSub" class="mt-1 text-sm leading-snug text-driver-muted sm:text-base">
-                {{ leg.originSub }}
-              </p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3">
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-sm">
-              <FlagIcon class="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div class="min-w-0 flex-1 pt-0.5">
-              <p class="text-xs font-semibold uppercase tracking-wider text-driver-muted/80">
-                {{ t('driver_trip_detail.point_end') }}
-              </p>
-              <p class="mt-1 text-base font-semibold leading-snug text-driver-ink sm:text-lg">
-                {{ leg.destMain }}
-              </p>
-              <p v-if="leg.destSub" class="mt-1 text-sm leading-snug text-driver-muted sm:text-base">
-                {{ leg.destSub }}
-              </p>
-            </div>
-          </div>
-          <a
-            v-if="leg.mapUrl"
-            :href="leg.mapUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-sky-600 bg-sky-600 px-4 py-3 text-base font-bold text-white transition active:opacity-90 sm:text-lg"
-          >
-            <MapIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-            {{ t('driver_trip_detail.route_map_btn') }}
-          </a>
+          <DriverRouteTimeline
+            :origin-main="leg.originMain"
+            :origin-sub="leg.originSub"
+            :dest-main="leg.destMain"
+            :dest-sub="leg.destSub"
+            :map-url="leg.mapUrl"
+          />
         </div>
       </template>
-      <template v-else>
-        <div class="flex items-start gap-3">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm">
-            <MapPinIcon class="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div class="min-w-0 flex-1 pt-0.5">
-            <p class="text-xs font-semibold uppercase tracking-wider text-driver-muted/80">
-              {{ t('driver_trip_detail.point_start') }}
-            </p>
-            <p class="mt-1 text-base font-semibold leading-snug text-driver-ink sm:text-lg">{{ originMain }}</p>
-            <p v-if="originSub" class="mt-1 text-sm leading-snug text-driver-muted sm:text-base">{{ originSub }}</p>
-          </div>
-        </div>
-
-        <div class="mt-4 flex items-start gap-3">
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white shadow-sm">
-            <FlagIcon class="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div class="min-w-0 flex-1 pt-0.5">
-            <p class="text-xs font-semibold uppercase tracking-wider text-driver-muted/80">
-              {{ t('driver_trip_detail.point_end') }}
-            </p>
-            <p class="mt-1 text-base font-semibold leading-snug text-driver-ink sm:text-lg">{{ destMain }}</p>
-            <p v-if="destSub" class="mt-1 text-sm leading-snug text-driver-muted sm:text-base">{{ destSub }}</p>
-          </div>
-        </div>
-
-        <a
-          v-if="mapUrl"
-          :href="mapUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border-2 border-sky-600 bg-sky-600 px-4 py-3 text-base font-bold text-white transition active:opacity-90 sm:text-lg"
-        >
-          <MapIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
-          {{ t('driver_trip_detail.route_map_btn') }}
-        </a>
-      </template>
+      <DriverRouteTimeline
+        v-else
+        :origin-main="originMain"
+        :origin-sub="originSub"
+        :dest-main="destMain"
+        :dest-sub="destSub"
+        :map-url="mapUrl"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { FlagIcon, MapIcon, MapPinIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowsRightLeftIcon,
+  ClockIcon,
+  MapIcon,
+  UserGroupIcon,
+} from '@heroicons/vue/24/outline'
+import DriverRouteTimeline from './DriverRouteTimeline.vue'
 
-defineProps({
+const props = defineProps({
   originMain: { type: String, default: '' },
   originSub: { type: String, default: '' },
   destMain: { type: String, default: '' },
   destSub: { type: String, default: '' },
   mapUrl: { type: String, default: '' },
   legs: { type: Array, default: () => [] },
+  scheduleSummary: { type: String, default: '' },
+  distanceLabel: { type: String, default: '' },
+  passengerCount: { type: Number, default: 0 },
+  tripTypeLabel: { type: String, default: '' },
+  notesPreview: { type: String, default: '' },
 })
 
 const { t } = useI18n()
+
+const hasMeta = computed(
+  () =>
+    (props.scheduleSummary && props.scheduleSummary !== '—') ||
+    (props.distanceLabel && props.distanceLabel !== '— km') ||
+    props.passengerCount > 0,
+)
 </script>

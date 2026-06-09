@@ -516,17 +516,72 @@
           <div class="grid gap-5 lg:grid-cols-2 lg:items-start lg:gap-6">
             <div class="dw-fieldset">
               <h3 class="dw-section-title">{{ t('dispatch_wizard.create.sec_targets') }}</h3>
-              <div class="max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2 sm:max-h-48">
-                <label
+
+              <!-- Chip grid thay thế checkbox list — dễ tap trên mobile -->
+              <div class="flex flex-wrap gap-2">
+                <button
                   v-for="target in targetOptions"
                   :key="target"
-                  class="flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-white sm:py-1.5"
+                  type="button"
+                  class="inline-flex min-h-[36px] items-center rounded-full border px-3 py-1 text-sm transition select-none"
+                  :class="
+                    form.targets.includes(target)
+                      ? 'border-va-700 bg-va-50 text-va-800 font-medium ring-1 ring-va-200'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-va-300 hover:bg-va-50/50'
+                  "
+                  @click="toggleTarget(target)"
                 >
-                  <input v-model="form.targets" type="checkbox" :value="target" class="h-4 w-4 shrink-0 rounded border-slate-300 text-va-800" />
-                  <span class="text-slate-800">{{ target }}</span>
-                </label>
+                  <CheckIcon
+                    v-if="form.targets.includes(target)"
+                    class="mr-1 h-3.5 w-3.5 shrink-0 text-va-700"
+                    aria-hidden="true"
+                  />
+                  {{ target }}
+                </button>
               </div>
-              <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">{{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}</p>
+
+              <!-- Quick-add đối tượng tùy chỉnh -->
+              <div class="mt-3 flex gap-2">
+                <input
+                  v-model="customTargetInput"
+                  type="text"
+                  class="dw-input flex-1"
+                  placeholder="Thêm đối tượng khác... (VD: Ban Giám Hiệu)"
+                  maxlength="100"
+                  @keydown.enter.prevent="addCustomTarget"
+                />
+                <button
+                  type="button"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-va-800 text-white shadow-sm transition hover:bg-va-700 active:scale-95 disabled:opacity-50"
+                  :disabled="!customTargetInput.trim()"
+                  title="Thêm đối tượng"
+                  @click="addCustomTarget"
+                >
+                  <PlusIcon class="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <!-- Custom chips (đối tượng không có trong danh sách chuẩn) -->
+              <div v-if="customTargetChips.length" class="mt-2 flex flex-wrap gap-1.5">
+                <span
+                  v-for="chip in customTargetChips"
+                  :key="chip"
+                  class="inline-flex items-center gap-1 rounded-full bg-va-100 px-3 py-1 text-sm font-medium text-va-800"
+                >
+                  {{ chip }}
+                  <button
+                    type="button"
+                    class="ml-0.5 rounded-full p-0.5 hover:bg-va-200 hover:text-va-900"
+                    @click="removeTarget(chip)"
+                  >
+                    <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </span>
+              </div>
+
+              <p v-if="form.targets.length" class="mt-2 text-xs text-slate-500">
+                {{ t('dispatch_wizard.create.targets_selected', { n: form.targets.length }) }}
+              </p>
               <p
                 v-else-if="form.trip_type === 'point_to_point'"
                 class="mt-2 text-xs leading-relaxed text-amber-800/90"
@@ -633,15 +688,6 @@
                 </label>
               </div>
             </div>
-          </div>
-
-          <!-- Kênh gửi: read-only badge chip thay vì disabled select -->
-          <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
-            <span class="text-sm font-semibold text-slate-600">{{ t('dispatch_wizard.create.channel_label') }}</span>
-            <span class="inline-flex items-center gap-1.5 rounded-full border border-va-200 bg-va-50 px-3 py-1 text-sm font-semibold text-va-800">
-              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M2.003 5.884 10 9.882l7.997-3.998A2 2 0 0 0 16 4H4a2 2 0 0 0-1.997 1.884z"/><path d="m18 8.118-8 4-8-4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.118z"/></svg>
-              {{ t('dispatch_wizard.create.option_portal') }}
-            </span>
           </div>
         </div>
 
@@ -1167,6 +1213,7 @@ import {
   BookmarkIcon,
   BookmarkSquareIcon,
   CheckCircleIcon,
+  CheckIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
   CloudArrowUpIcon,
@@ -1175,8 +1222,10 @@ import {
   InformationCircleIcon,
   PaperClipIcon,
   PencilIcon,
+  PlusIcon,
   TrashIcon,
   XCircleIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { useDispatchRequestWizard } from '../../composables/useDispatchRequestWizard'
 import { DISPATCH_WIZARD_KEY } from '../requests/dispatch-wizard/injectionKeys'
@@ -1406,6 +1455,33 @@ onMounted(() => {
   }
   form.value.recurring_enabled = false
 })
+
+// --- Custom target quick-add ---
+const customTargetInput = ref('')
+
+const customTargetChips = computed(() =>
+  (form.value.targets ?? []).filter((t) => !targetOptions.includes(t)),
+)
+
+function toggleTarget(val) {
+  const list = form.value.targets
+  const idx = list.indexOf(val)
+  if (idx === -1) list.push(val)
+  else list.splice(idx, 1)
+}
+
+function addCustomTarget() {
+  const val = customTargetInput.value.trim()
+  if (!val || form.value.targets.includes(val)) return
+  form.value.targets.push(val)
+  customTargetInput.value = ''
+}
+
+function removeTarget(val) {
+  const list = form.value.targets
+  const idx = list.indexOf(val)
+  if (idx !== -1) list.splice(idx, 1)
+}
 </script>
 
 <style src="../requests/dispatch-wizard/dispatchWizard.styles.css"></style>

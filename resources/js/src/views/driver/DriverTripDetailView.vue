@@ -39,6 +39,11 @@
           :dest-sub="destSub"
           :map-url="mapUrl"
           :legs="driverRouteLegs"
+          :schedule-summary="scheduleTimeLine"
+          :distance-label="statsDistance"
+          :passenger-count="paxDisplayTotal"
+          :trip-type-label="routeTripTypeLabel"
+          :notes-preview="routeNotesPreview"
         />
 
         <DriverTripPaxSection
@@ -46,15 +51,12 @@
           :pax-list="paxList"
           :displayed-pax-list="displayedPaxList"
           :pax-section-total="paxDisplayTotal"
-          :student-filter-status="studentFilterStatus"
           :expanded-student-idx="expandedStudentIdx"
           :is-paused="isPaused"
           :can-mark-pickup="canMarkPickup"
           :event-posting="eventPosting"
           :row-state="rowState"
           :is-next-index="isNextIndex"
-          @cycle-filter="cycleFilter"
-          @cycle-sort="cycleSort"
           @toggle-student="toggleStudent"
           @set-row-state="(i, st) => setRowState(i, st)"
         />
@@ -162,7 +164,6 @@ const {
   costForm,
   expandedStudentIdx,
   isPaused,
-  studentFilterStatus,
   costTypes,
   statusBadgeClass,
   headerStatusText,
@@ -175,6 +176,8 @@ const {
   destSub,
   mapUrl,
   driverRouteLegs,
+  routeTripTypeLabel,
+  routeNotesPreview,
   tripCosts,
   costsApprovedTotal,
   costsPendingTotal,
@@ -210,8 +213,6 @@ const {
   submitKmModal,
   openCostModal,
   submitCost,
-  cycleFilter,
-  cycleSort,
   toggleStudent,
   isNextIndex,
   onEndTrip,

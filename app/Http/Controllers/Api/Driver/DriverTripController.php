@@ -7,7 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Driver\DriverTripHistoryRequest;
 use App\Models\Driver;
 use App\Models\Trip;
+use App\Models\DispatchRequest;
 use App\Services\Dispatching\TripScheduleLegService;
+use App\Services\DispatchRequests\DispatchRequestMailPresenter;
+use App\Support\DispatchWizardPassengerCount;
 use App\Support\TripVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -41,7 +44,8 @@ class DriverTripController extends Controller
         $q = TripVisibility::visibleTripsQuery($user)
             ->whereHas('dispatchRequest')
             ->with([
-                'dispatchRequest:id,trip_type,origin,destination,passenger_count,is_urgent,depart_at,arrive_by,wizard_snapshot',
+                'dispatchRequest:id,created_at,trip_type,origin,destination,passenger_count,student_count_actual,is_urgent,depart_at,arrive_by,notes,wizard_snapshot,requester_id',
+                'dispatchRequest.requester:id,name',
                 'tripPassengers',
                 'record:id,trip_id,distance_km',
             ]);
@@ -148,7 +152,7 @@ class DriverTripController extends Controller
             $durationMinutes = (int) round($seconds / 60);
         }
 
-        $passengerCount = (int) ($dr?->passenger_count ?? 0);
+        $passengerCount = DispatchWizardPassengerCount::displayFromDispatchRequest($dr);
         if ($passengerCount <= 0 && $trip->relationLoaded('tripPassengers')) {
             $passengerCount = $trip->tripPassengers->count();
         }
@@ -157,29 +161,53 @@ class DriverTripController extends Controller
             ? (float) $trip->record->distance_km
             : null;
 
+        $requestCode = $dr instanceof DispatchRequest
+            ? DispatchRequestMailPresenter::referenceCode($dr)
+            : null;
+
+        $arriveBy = $dr?->arrive_by;
+
         return [
             'id' => $trip->id,
             'driver_id' => $trip->driver_id,
-            'trip_number' => '#'.$trip->id,
+            'request_code' => $requestCode,
+            'trip_number' => $requestCode ?? ('#'.$trip->id),
             'type' => $this->tripTypeCode($dr?->trip_type),
+            'trip_type_label' => $dr?->trip_type
+                ? DispatchRequestMailPresenter::tripTypeLabelVi((string) $dr->trip_type)
+                : null,
             'status' => $trip->status,
             'depart_at' => $depart ? $depart->toIso8601String() : null,
             'depart_date' => $depart ? $depart->format('Y-m-d') : null,
             'pickup_time' => $depart ? $depart->format('H:i') : null,
             'pickup_date' => $depart ? $depart->format('d/m/Y') : null,
+            'arrive_time' => $arriveBy ? $arriveBy->format('H:i') : null,
             'pickup_location' => $dr?->origin,
             'dropoff_location' => $dr?->destination,
             'is_urgent' => (bool) ($dr?->is_urgent),
-            'arrive_by' => $dr?->arrive_by ? $dr->arrive_by->toIso8601String() : null,
+            'arrive_by' => $arriveBy ? $arriveBy->toIso8601String() : null,
             'passenger_count' => $passengerCount,
             'duration_minutes' => $durationMinutes,
             'distance_km' => $distanceKm,
+            'notes_preview' => $this->notesPreview($dr?->notes),
+            'requester_name' => $dr?->relationLoaded('requester') && $dr->requester
+                ? (string) $dr->requester->name
+                : null,
             'dispatch_request' => $dr ? [
+                'id' => $dr->id,
                 'trip_type' => $dr->trip_type,
                 'origin' => $dr->origin,
                 'destination' => $dr->destination,
                 'depart_at' => $dr->depart_at?->toIso8601String(),
                 'arrive_by' => $dr->arrive_by?->toIso8601String(),
+                'passenger_count' => $passengerCount,
+                'student_count_actual' => $dr->student_count_actual,
+                'wizard_snapshot' => $dr->wizard_snapshot,
+                'is_urgent' => (bool) $dr->is_urgent,
+                'notes' => $dr->notes,
+                'requester' => $dr->relationLoaded('requester') && $dr->requester
+                    ? ['name' => (string) $dr->requester->name]
+                    : null,
             ] : null,
             'schedule_legs' => $this->legsForDriver($trip, $driverId),
         ];
@@ -230,5 +258,18 @@ class DriverTripController extends Controller
             'cargo' => 'Cargo',
             default => '—',
         };
+    }
+
+    private function notesPreview(?string $notes): ?string
+    {
+        if ($notes === null) {
+            return null;
+        }
+        $trimmed = trim($notes);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return mb_strlen($trimmed) > 80 ? mb_substr($trimmed, 0, 78).'…' : $trimmed;
     }
 }

@@ -4,58 +4,106 @@
   >
     <RouterLink
       :to="`/driver/costs/${cost.id}`"
-      class="block px-4 pb-3 pt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-driver-accent/60"
+      class="block px-4 pb-4 pt-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-driver-accent/60 sm:px-5 sm:pt-5"
     >
-      <div class="flex items-start justify-between gap-3">
+      <div class="flex flex-wrap items-start justify-between gap-2">
         <span
-          class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold sm:text-[13px]"
+          class="inline-flex items-center rounded-full px-3.5 py-1.5 text-sm font-bold sm:text-base"
           :class="statusBadgeClass(cost.status)"
         >
           {{ statusLabel(cost.status) }}
         </span>
-        <span v-if="cost.trip_id" class="shrink-0 text-sm tabular-nums text-driver-muted">#{{ cost.trip_id }}</span>
+        <span
+          v-if="cost.trip_id"
+          class="font-mono text-sm font-bold tabular-nums text-[#7fdcc8] sm:text-base"
+        >
+          {{ tripCode }}
+        </span>
         <span
           v-else
-          class="shrink-0 rounded-full bg-driver-accent/12 px-2.5 py-0.5 text-xs font-semibold text-driver-accent ring-1 ring-driver-accent/25"
+          class="rounded-full bg-driver-accent/12 px-3 py-1 text-sm font-bold text-driver-accent ring-1 ring-driver-accent/25"
         >
           {{ standaloneBadge }}
         </span>
       </div>
-      <div class="mt-4 flex gap-4">
+
+      <div class="mt-4 flex gap-4 sm:gap-5">
         <div
-          class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-driver-surface ring-1 ring-white/[0.05]"
+          class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-driver-surface ring-1 ring-white/[0.05] sm:h-[4.25rem] sm:w-[4.25rem]"
           aria-hidden="true"
         >
-          <FuelIcon v-if="normType(cost.type) === 'fuel'" class="h-7 w-7 text-driver-accent" />
-          <RoadIcon v-else-if="normType(cost.type) === 'toll'" class="h-7 w-7 text-driver-accent" />
-          <ParkingIcon v-else-if="normType(cost.type) === 'parking'" class="h-7 w-7 text-driver-accent" />
-          <MoneyIcon v-else class="h-7 w-7 text-driver-accent" />
+          <component :is="typeIcon" class="h-8 w-8 text-driver-accent sm:h-9 sm:w-9" />
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-xl font-bold tabular-nums leading-tight text-driver-ink sm:text-2xl">
-            {{ formatVnd(cost.amount) }}
-            <span v-if="cost.currency && cost.currency !== 'VND'" class="ml-1 text-base font-semibold text-driver-muted">
-              {{ cost.currency }}
-            </span>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-driver-muted/80 sm:text-xs">
+            {{ t('driver_costs.card_amount_label') }}
           </p>
-          <p class="mt-2 text-base leading-snug text-driver-muted">
+          <p class="mt-0.5 text-2xl font-bold tabular-nums leading-tight text-driver-ink sm:text-[1.75rem]">
+            {{ formatVnd(cost.amount) }}
+          </p>
+          <p class="mt-2 text-lg font-semibold leading-snug text-driver-ink/95 sm:text-xl">
             {{ typeLabel(cost.type) }}
           </p>
-          <p v-if="cost.description" class="mt-1 line-clamp-2 text-sm text-driver-muted/90">
+          <p v-if="cost.description" class="mt-2 line-clamp-2 text-base leading-snug text-driver-muted">
             {{ cost.description }}
           </p>
-          <p class="mt-3 flex items-center gap-2 text-sm text-driver-muted/85">
-            <CalendarIcon class="h-4 w-4 shrink-0 opacity-80" aria-hidden="true" />
-            {{ departLabel }}
-          </p>
         </div>
-        <ChevronRightIcon class="mt-1 h-6 w-6 shrink-0 text-driver-muted/40" aria-hidden="true" />
+        <ChevronRightIcon class="mt-2 h-7 w-7 shrink-0 text-driver-muted/40" aria-hidden="true" />
       </div>
+
+      <div
+        v-if="hasTripInfo"
+        class="mt-4 space-y-2 rounded-xl border border-white/[0.06] bg-driver-surface/60 p-3.5 sm:p-4"
+      >
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-semibold text-driver-muted sm:text-base">
+            {{ t('driver_costs.card_trip_label', { code: tripCode }) }}
+          </span>
+          <span
+            v-if="tripTypeLabel"
+            class="rounded-md px-2.5 py-0.5 text-xs font-semibold ring-1 sm:text-sm"
+            :class="tripTypeChipClass"
+          >
+            {{ tripTypeLabel }}
+          </span>
+        </div>
+        <p
+          v-if="timeRange"
+          class="flex items-center gap-2 text-base font-semibold tabular-nums text-[#7fdcc8] sm:text-lg"
+        >
+          <ClockIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
+          {{ t('driver_costs.card_time', { range: timeRange }) }}
+        </p>
+        <div v-if="originLine" class="flex items-start gap-2 text-base leading-snug sm:text-lg">
+          <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide text-driver-muted/80">
+              {{ t('driver_costs.card_pickup') }}
+            </p>
+            <p class="font-medium text-driver-ink">{{ originLine }}</p>
+          </div>
+        </div>
+        <div v-if="destinationLine" class="flex items-start gap-2 text-base leading-snug sm:text-lg">
+          <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-rose-400" aria-hidden="true" />
+          <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide text-driver-muted/80">
+              {{ t('driver_costs.card_dropoff') }}
+            </p>
+            <p class="font-medium text-driver-ink">{{ destinationLine }}</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-4 flex items-center gap-2 text-base text-driver-muted sm:text-lg">
+        <CalendarIcon class="h-5 w-5 shrink-0 opacity-80" aria-hidden="true" />
+        {{ submittedLabel }}
+      </p>
     </RouterLink>
-    <div v-if="cost.trip_id" class="border-t border-white/[0.06] px-4 pb-4 pt-3">
+
+    <div v-if="cost.trip_id" class="border-t border-white/[0.06] px-4 pb-4 pt-3 sm:px-5">
       <RouterLink
         :to="`/driver/trips/${cost.trip_id}`"
-        class="flex min-h-[48px] w-full items-center justify-center rounded-2xl bg-driver-surface text-base font-semibold text-driver-accent ring-1 ring-driver-accent/25 transition hover:bg-driver-elevated active:scale-[0.99]"
+        class="flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-driver-surface text-base font-bold text-driver-accent ring-1 ring-driver-accent/25 transition hover:bg-driver-elevated active:scale-[0.99] sm:text-lg"
       >
         {{ tripCta }}
       </RouterLink>
@@ -65,16 +113,27 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import {
+  BanknotesIcon,
   CalendarIcon,
   ChevronRightIcon,
-  BanknotesIcon as MoneyIcon,
-  MapIcon as RoadIcon,
+  ClockIcon,
+  FireIcon,
+  MapIcon,
+  MapPinIcon,
+  TruckIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/vue/24/outline'
-import { FireIcon as FuelIcon } from '@heroicons/vue/24/outline'
-import { MapPinIcon as ParkingIcon } from '@heroicons/vue/24/outline'
-import { formatVnd } from '../../../util/labels'
+import {
+  tripDestination,
+  tripOrigin,
+  tripOutboundInboundTimeRange,
+  tripServiceTypeCalendarLabel,
+  tripTypeBadgeClass,
+} from '../../../composables/useDriverTripDisplay'
+import { formatTripCode, formatVnd } from '../../../util/labels'
 
 const props = defineProps({
   cost: { type: Object, required: true },
@@ -84,11 +143,57 @@ const props = defineProps({
   standaloneBadge: { type: String, default: '' },
 })
 
-function normType(t) {
-  return String(t ?? '')
+const { t, locale } = useI18n()
+
+const localeTag = computed(() => (locale.value === 'vi' ? 'vi' : 'en'))
+
+const trip = computed(() => props.cost?.trip ?? null)
+
+const tripCode = computed(() => formatTripCode(props.cost?.trip_id ?? trip.value?.id))
+
+const tripTypeLabel = computed(() =>
+  trip.value ? tripServiceTypeCalendarLabel(trip.value, t) : '',
+)
+const tripTypeChipClass = computed(() => (trip.value ? tripTypeBadgeClass(trip.value) : ''))
+
+const originLine = computed(() => {
+  if (!trip.value) return ''
+  const o = tripOrigin(trip.value)
+  return o && o !== '—' ? o : ''
+})
+
+const destinationLine = computed(() => {
+  if (!trip.value) return ''
+  const d = tripDestination(trip.value)
+  return d && d !== '—' ? d : ''
+})
+
+const timeRange = computed(() => {
+  if (!trip.value) return ''
+  return tripOutboundInboundTimeRange(trip.value, localeTag.value, t) || ''
+})
+
+const hasTripInfo = computed(
+  () => props.cost?.trip_id && (originLine.value || destinationLine.value || timeRange.value),
+)
+
+function normType(type) {
+  return String(type ?? '')
     .trim()
     .toLowerCase()
 }
+
+const typeIcon = computed(() => {
+  const icons = {
+    fuel: FireIcon,
+    toll: MapIcon,
+    parking: MapPinIcon,
+    meal: BanknotesIcon,
+    wash: TruckIcon,
+    repair: WrenchScrewdriverIcon,
+  }
+  return icons[normType(props.cost?.type)] ?? BanknotesIcon
+})
 
 function statusBadgeClass(st) {
   if (st === 'confirmed')
@@ -99,33 +204,21 @@ function statusBadgeClass(st) {
   return 'bg-white/[0.06] text-driver-ink ring-1 ring-white/10'
 }
 
-const departLabel = computed(() => {
-  const trip = props.cost?.trip
-  if (trip?.depart_at) {
-    const d = new Date(trip.depart_at)
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    }
-  }
-  const created = props.cost?.created_at
-  if (created) {
-    const d = new Date(created)
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    }
-  }
-  return '—'
+const submittedLabel = computed(() => {
+  const raw = props.cost?.created_at
+  if (!raw) return t('driver_costs.card_submitted_unknown')
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return t('driver_costs.card_submitted_unknown')
+  const loc = localeTag.value === 'vi' ? 'vi-VN' : 'en-US'
+  const formatted = d.toLocaleString(loc, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+  return t('driver_costs.card_submitted', { time: formatted })
 })
 </script>

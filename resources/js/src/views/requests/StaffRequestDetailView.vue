@@ -483,6 +483,12 @@
                           </div>
                         </div>
 
+                        <ItineraryRowInfoGrid
+                          v-if="card.sourceRow"
+                          :row="card.sourceRow"
+                          :trip-type="itineraryTripType"
+                        />
+
                         <div
                           v-if="card.timeline.length"
                           class="border-b border-slate-100 px-4 py-4 dark:border-slate-800"
@@ -1118,6 +1124,9 @@ import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequest
 const FillPricePanel = defineAsyncComponent(() =>
   import('../../components/requests/workspace/FillPricePanel.vue'),
 )
+const ItineraryRowInfoGrid = defineAsyncComponent(() =>
+  import('../../components/requests/workspace/ItineraryRowInfoGrid.vue'),
+)
 
 const { t } = useI18n()
 
@@ -1420,6 +1429,7 @@ function buildItineraryCard(r, i, keyPrefix) {
     routeLabel,
     from,
     to,
+    sourceRow: r,
     timeline: buildItineraryTimeline(r, tripType),
     peek: buildItineraryPeek(r, tripType),
   }

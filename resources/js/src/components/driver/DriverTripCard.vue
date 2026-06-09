@@ -139,6 +139,7 @@ import {
   tripOutboundInboundTimeRange,
   tripTypeBadgeText,
 } from '../../composables/useDriverTripDisplay'
+import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
 
 const props = defineProps({
   trip: { type: Object, required: true },
@@ -170,7 +171,7 @@ const pickupTime = computed(() => {
 
 const tripCode = computed(() => {
   const tr = tripRaw.value
-  return tr.trip_number || `#${tr.id}`
+  return tr.request_code || tr.trip_number || `REQ-${tr.id}`
 })
 
 const typeLabel = computed(() => tripTypeBadgeText(tripRaw.value))
@@ -359,7 +360,9 @@ const destLine = computed(() => {
 const passengerCount = computed(() => {
   const tr = tripRaw.value
   const dr = drOf(tr)
-  return Number(dr.passenger_count ?? tr.passenger_count) || 0
+  if (dr) return dispatchRequestDisplayPassengerCount(dr)
+  const n = Number(tr.passenger_count)
+  return Number.isFinite(n) && n > 0 ? n : 0
 })
 
 const passengerMeta = computed(() => {

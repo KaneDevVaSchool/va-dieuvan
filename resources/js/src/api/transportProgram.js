@@ -377,8 +377,11 @@ export async function driverUnconfirmDay(dayId, shift = null) {
   return data.data
 }
 
-export async function driverStartTrip(dayId, deviceId = null) {
-  const { data } = await http.post(`/driver/tp-days/${dayId}/start`, { device_id: deviceId })
+export async function driverStartTrip(dayId, deviceId = null, shift = null) {
+  const payload = {}
+  if (deviceId) payload.device_id = deviceId
+  if (shift) payload.shift = shift
+  const { data } = await http.post(`/driver/tp-days/${dayId}/start`, payload)
   return data.data
 }
 

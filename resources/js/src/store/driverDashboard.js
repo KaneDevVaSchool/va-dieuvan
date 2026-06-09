@@ -629,8 +629,10 @@ export const useDriverDashboardStore = defineStore('driverDashboard', {
       const tpTrip = this.dashboardMergedTrips.find((x) => x.id === tripId && x._tp?.day_id)
       if (tpTrip?._tp?.day_id) {
         this.startBusyTripId = tripId
+        const { day_id: dayId, shift, multi_slot: multiSlot } = tpTrip._tp
+        const shiftArg = multiSlot ? shift || null : null
         try {
-          await driverStartTrip(tpTrip._tp.day_id)
+          await driverStartTrip(dayId, null, shiftArg)
           showAppSuccess(t('driver_home.toast_start_ok'), t('driver_home.toast_action_title'))
           this.scheduleSilentRefetch()
         } catch (e) {

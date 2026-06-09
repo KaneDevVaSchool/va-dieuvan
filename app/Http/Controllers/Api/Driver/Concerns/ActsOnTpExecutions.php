@@ -6,6 +6,7 @@ use App\Models\Driver;
 use App\Models\TpProgramDay;
 use App\Models\TpTripExecution;
 use App\Models\User;
+use App\Services\TransportProgram\TpShiftDriverSupport;
 
 trait ActsOnTpExecutions
 {
@@ -18,13 +19,30 @@ trait ActsOnTpExecutions
         return Driver::query()->where('user_id', $user->id)->first();
     }
 
-    protected function assertCanStartDay(?User $user, TpProgramDay $day): Driver
+    protected function assertCanStartDay(?User $user, TpProgramDay $day, ?string $shift = null): Driver
     {
         $driver = $this->actingDriver($user);
         abort_unless($driver, 403, 'Tài khoản không phải tài xế.');
 
-        $effective = $day->loadMissing('program')->effectiveDriver();
-        abort_unless($effective && $effective->id === $driver->id, 403, 'Bạn không được gán chuyến này.');
+        $day->loadMissing('program');
+        $support = app(TpShiftDriverSupport::class);
+        $effective = null;
+
+        if ($shift !== null) {
+            $effective = $support->effectiveMainDriver($day, $shift);
+        } elseif ($day->program && $support->programUsesPerShiftDrivers($day->program)) {
+            foreach (['morning', 'afternoon'] as $slot) {
+                $candidate = $support->effectiveMainDriver($day, $slot);
+                if ($candidate && (int) $candidate->id === (int) $driver->id) {
+                    $effective = $candidate;
+                    break;
+                }
+            }
+        } else {
+            $effective = $day->effectiveDriver();
+        }
+
+        abort_unless($effective && (int) $effective->id === (int) $driver->id, 403, 'Bạn không được gán chuyến này.');
 
         return $driver;
     }

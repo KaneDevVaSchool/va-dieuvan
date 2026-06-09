@@ -79,6 +79,41 @@ final class DispatchWizardPassengerCount
     }
 
     /**
+     * Số khách hiển thị từ dispatch request — khớp `dispatchRequestDisplayPassengerCount` (JS).
+     *
+     * @param  object{student_count_actual?: mixed, passenger_count?: mixed, trip_type?: ?string, wizard_snapshot?: mixed}|null  $dr
+     */
+    public static function displayFromDispatchRequest(?object $dr): int
+    {
+        if ($dr === null) {
+            return 0;
+        }
+
+        $actual = $dr->student_count_actual ?? null;
+        if ($actual !== null && $actual !== '') {
+            $n = (int) $actual;
+            if ($n > 0) {
+                return $n;
+            }
+        }
+
+        $snap = $dr->wizard_snapshot ?? null;
+        $tripType = (string) ($dr->trip_type ?? '');
+        if (is_array($snap) && $snap !== []) {
+            $fromSnap = self::sumFromSnapshot($snap, $tripType);
+            if ($fromSnap !== null && $fromSnap > 0) {
+                return $fromSnap;
+            }
+        }
+
+        return self::effectiveCount(
+            is_array($snap) ? $snap : null,
+            $tripType,
+            $dr->passenger_count ?? 0,
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $r
      */
     private static function cargoSnapshotRowFilled(array $r): bool
@@ -103,7 +138,11 @@ final class DispatchWizardPassengerCount
         if (trim((string) ($r['pickup'] ?? '')) !== '' || trim((string) ($r['dropoff'] ?? '')) !== '') {
             return true;
         }
-        if (trim((string) ($r['person_in_charge'] ?? '')) !== '' || trim((string) ($r['notes'] ?? '')) !== '') {
+        $pic = trim((string) ($r['person_in_charge'] ?? ''));
+        if ($pic !== '' && ! self::isAutoPassengerLabel($pic)) {
+            return true;
+        }
+        if (trim((string) ($r['notes'] ?? '')) !== '') {
             return true;
         }
         if (trim((string) ($r['unit_price'] ?? '')) !== '' || trim((string) ($r['extra_fee'] ?? '')) !== '') {
@@ -131,5 +170,12 @@ final class DispatchWizardPassengerCount
         $g = trim((string) ($r['guests'] ?? ''));
 
         return $g !== '' && $g !== '1';
+    }
+
+    private static function isAutoPassengerLabel(string $name): bool
+    {
+        $s = trim($name);
+
+        return $s === '' || (bool) preg_match('/^(Khách|Hành khách|Guest|Passengers?|Đoàn công tác|Đoàn|Group)\s*[#№]?\s*\d+$/iu', $s);
     }
 }

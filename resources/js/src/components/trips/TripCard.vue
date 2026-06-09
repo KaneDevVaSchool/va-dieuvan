@@ -14,39 +14,62 @@
       <div class="shrink-0 text-center">
         <p
           class="font-bold tabular-nums leading-tight text-white"
-          :class="comfortable ? 'text-2xl' : 'text-lg'"
+          :class="comfortable ? 'text-3xl' : 'text-lg'"
         >
-          {{ trip.pickup_time || '—' }}
+          {{ displayPickupTime }}
+        </p>
+        <p
+          v-if="comfortable && arriveTimeLabel"
+          class="mt-0.5 tabular-nums font-medium text-[#7fdcc8]"
+          :class="comfortable ? 'text-sm' : 'text-[10px]'"
+        >
+          {{ arriveTimeLabel }}
         </p>
         <p
           class="mt-0.5 tabular-nums text-[#64748b]"
-          :class="comfortable ? 'text-xs' : 'text-[10px]'"
+          :class="comfortable ? 'text-sm' : 'text-[10px]'"
         >
           {{ trip.pickup_date || trip.depart_date || '' }}
         </p>
       </div>
 
-      <!-- Type badge + trip number -->
-      <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 pt-0.5">
-        <span
-          class="inline-flex shrink-0 rounded-lg px-2 py-0.5 font-bold uppercase tracking-wide"
-          :class="comfortable ? 'text-xs' : 'text-[11px]'"
-          :style="typeBadgeStyle"
+      <!-- Type badge + request code -->
+      <div class="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
+        <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+          <span
+            class="inline-flex shrink-0 rounded-lg px-2 py-0.5 font-bold uppercase tracking-wide"
+            :class="comfortable ? 'text-sm' : 'text-[11px]'"
+            :style="typeBadgeStyle"
+          >
+            {{ typeLabel }}
+          </span>
+          <span
+            v-if="trip.is_urgent"
+            class="inline-flex shrink-0 rounded-lg bg-rose-500/20 px-2 py-0.5 font-bold uppercase tracking-wide text-rose-300"
+            :class="comfortable ? 'text-xs' : 'text-[10px]'"
+          >
+            {{ t('trip_history_page.urgent_badge') }}
+          </span>
+        </div>
+        <p
+          class="min-w-0 truncate font-semibold text-[#7fdcc8]"
+          :class="comfortable ? 'text-base' : 'text-xs'"
         >
-          {{ typeLabel }}
-        </span>
-        <span
-          class="font-medium text-[#64748b]"
-          :class="comfortable ? 'text-xs' : 'text-[11px]'"
+          {{ tripCode }}
+        </p>
+        <p
+          v-if="comfortable && serviceTypeLabel"
+          class="min-w-0 truncate font-medium text-[#94a3b8]"
+          :class="comfortable ? 'text-sm' : 'text-[11px]'"
         >
-          {{ trip.trip_number || `#${trip.id}` }}
-        </span>
+          {{ serviceTypeLabel }}
+        </p>
       </div>
 
       <!-- Status badge -->
       <span
         class="shrink-0 rounded-full px-2.5 py-1 font-semibold"
-        :class="comfortable ? 'text-xs' : 'text-[11px]'"
+        :class="comfortable ? 'text-sm' : 'text-[11px]'"
         :style="{ backgroundColor: statusStyle.bg, color: statusStyle.fg }"
       >
         {{ statusLabel }}
@@ -58,48 +81,82 @@
 
     <!-- Origin / Destination -->
     <div :class="comfortable ? 'px-4 pt-3' : 'px-3 pt-2.5'">
-      <div class="flex min-w-0 items-start gap-2">
-        <span aria-hidden="true" class="mt-0.5 shrink-0 text-[10px] text-emerald-400">●</span>
-        <p
-          class="min-w-0 truncate font-medium text-white"
-          :class="comfortable ? 'text-base' : 'text-[13px]'"
-        >
-          {{ trip.pickup_location || trip.origin || '—' }}
-        </p>
+      <div class="flex min-w-0 items-start gap-2.5">
+        <span aria-hidden="true" class="mt-1 shrink-0 text-xs text-emerald-400">●</span>
+        <div class="min-w-0 flex-1">
+          <p
+            v-if="comfortable"
+            class="text-xs font-semibold uppercase tracking-wide text-emerald-400/80"
+          >
+            {{ t('driver_trip_detail.point_start') }}
+          </p>
+          <p
+            class="min-w-0 font-medium text-white"
+            :class="comfortable ? 'line-clamp-2 text-lg leading-snug' : 'truncate text-[13px]'"
+          >
+            {{ trip.pickup_location || trip.origin || '—' }}
+          </p>
+        </div>
       </div>
       <!-- Connector line -->
       <div
-        class="ml-[7px] border-l border-dashed border-white/[0.12]"
-        :class="comfortable ? 'h-4' : 'h-3'"
+        class="ml-[9px] border-l border-dashed border-white/[0.12]"
+        :class="comfortable ? 'h-5' : 'h-3'"
       />
-      <div class="flex min-w-0 items-start gap-2">
-        <span aria-hidden="true" class="mt-0.5 shrink-0 text-[10px] text-blue-400">●</span>
-        <p
-          class="min-w-0 truncate font-medium text-white"
-          :class="comfortable ? 'text-base' : 'text-[13px]'"
-        >
-          {{ trip.dropoff_location || trip.destination || '—' }}
-        </p>
+      <div class="flex min-w-0 items-start gap-2.5">
+        <span aria-hidden="true" class="mt-1 shrink-0 text-xs text-blue-400">●</span>
+        <div class="min-w-0 flex-1">
+          <p
+            v-if="comfortable"
+            class="text-xs font-semibold uppercase tracking-wide text-blue-400/80"
+          >
+            {{ t('driver_trip_detail.point_end') }}
+          </p>
+          <p
+            class="min-w-0 font-medium text-white"
+            :class="comfortable ? 'line-clamp-2 text-lg leading-snug' : 'truncate text-[13px]'"
+          >
+            {{ trip.dropoff_location || trip.destination || '—' }}
+          </p>
+        </div>
       </div>
+    </div>
+
+    <!-- Extra details (comfortable) -->
+    <div
+      v-if="comfortable && (requesterLine || notesPreview || scheduleLegCount > 1)"
+      class="space-y-1 px-4 pt-2"
+    >
+      <p v-if="requesterLine" class="text-sm font-medium text-[#94a3b8]">
+        {{ requesterLine }}
+      </p>
+      <p v-if="scheduleLegCount > 1" class="text-sm font-medium text-[#94a3b8]">
+        {{ t('trip_history_page.schedule_legs', { n: scheduleLegCount }) }}
+      </p>
+      <p v-if="notesPreview" class="line-clamp-2 text-sm italic text-[#64748b]">
+        {{ notesPreview }}
+      </p>
     </div>
 
     <!-- Footer: passengers + km + chevron -->
     <div
       class="flex items-center justify-between pt-2"
-      :class="comfortable ? 'px-4 pb-4' : 'px-3 pb-3'"
+      :class="comfortable ? 'px-4 pb-4 pt-3' : 'px-3 pb-3'"
     >
-      <p :class="comfortable ? 'text-sm text-[#94a3b8]' : 'text-xs text-[#94a3b8]'">
+      <p :class="comfortable ? 'text-base font-semibold text-[#cbd5e1]' : 'text-xs text-[#94a3b8]'">
         <template v-if="passengerCount > 0">
           <span>👥 {{ passengerCount }} {{ passengerLabel }}</span>
           <span v-if="kmPart"> · {{ kmPart }}</span>
+          <span v-if="comfortable && durationPart"> · {{ durationPart }}</span>
         </template>
         <template v-else>
           <span v-if="kmPart">{{ kmPart }}</span>
+          <span v-if="!kmPart && durationPart">{{ durationPart }}</span>
         </template>
       </p>
       <span
         class="font-light leading-none text-[#7fdcc8]"
-        :class="comfortable ? 'text-2xl' : 'text-lg'"
+        :class="comfortable ? 'text-3xl' : 'text-lg'"
         aria-hidden="true"
       >›</span>
     </div>
@@ -110,6 +167,11 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { dispatchRequestDisplayPassengerCount } from '../../util/dispatchRequestPassengers'
+import {
+  tripOutboundInboundTimeRange,
+  tripServiceTypeCalendarLabel,
+} from '../../composables/useDriverTripDisplay'
 
 const props = defineProps({
   trip: { type: Object, required: true },
@@ -117,12 +179,16 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const { t } = useI18n()
+const { locale, t } = useI18n()
+
+function drOf() {
+  return props.trip?.dispatch_request ?? props.trip?.dispatchRequest ?? null
+}
 
 // ── Trip type badge ──────────────────────────────────────────────────
 
 const rawType = computed(() =>
-  (props.trip.trip_type_label || props.trip.type || '').trim().toLowerCase(),
+  (props.trip.trip_type_label || props.trip.type || drOf()?.trip_type || '').trim().toLowerCase(),
 )
 
 const typeLabel = computed(() => {
@@ -134,6 +200,13 @@ const typeLabel = computed(() => {
   return (props.trip.trip_type_label || props.trip.type || '—').toUpperCase()
 })
 
+const serviceTypeLabel = computed(() => {
+  if (props.trip.trip_type_label && !['P2P', 'D2D', 'CT', 'HH', 'CG'].includes(String(props.trip.trip_type_label).toUpperCase())) {
+    return props.trip.trip_type_label
+  }
+  return tripServiceTypeCalendarLabel(props.trip, t)
+})
+
 const typeBadgeStyle = computed(() => {
   const lbl = typeLabel.value
   if (lbl === 'P2P') return { backgroundColor: 'rgb(59 130 246 / 0.18)', color: '#60a5fa' }
@@ -142,6 +215,10 @@ const typeBadgeStyle = computed(() => {
   if (lbl === 'HH') return { backgroundColor: 'rgb(249 115 22 / 0.18)', color: '#fb923c' }
   return { backgroundColor: 'rgb(148 163 184 / 0.12)', color: '#94a3b8' }
 })
+
+const tripCode = computed(() =>
+  props.trip.request_code || props.trip.trip_number || `REQ-${props.trip.id}`,
+)
 
 // ── Status badge ──────────────────────────────────────────────────────
 
@@ -190,9 +267,30 @@ const statusLabel = computed(() => {
   return props.trip.status || '—'
 })
 
+// ── Time display ──────────────────────────────────────────────────────
+
+const displayPickupTime = computed(() => {
+  const tag = locale.value === 'vi' ? 'vi' : 'en'
+  const range = tripOutboundInboundTimeRange(props.trip, tag, t)
+  if (props.comfortable && range) return range
+  return props.trip.pickup_time || '—'
+})
+
+const arriveTimeLabel = computed(() => {
+  if (displayPickupTime.value.includes('\u00a0')) return ''
+  const at = props.trip.arrive_time
+  if (!at) return ''
+  return t('trip_history_page.arrive_by_short', { time: at })
+})
+
 // ── Passenger + km ────────────────────────────────────────────────────
 
-const passengerCount = computed(() => Number(props.trip.passenger_count) || 0)
+const passengerCount = computed(() => {
+  const dr = drOf()
+  if (dr) return dispatchRequestDisplayPassengerCount(dr)
+  const n = Number(props.trip.passenger_count)
+  return Number.isFinite(n) && n > 0 ? n : 0
+})
 
 const passengerLabel = computed(() =>
   passengerCount.value === 1
@@ -204,6 +302,34 @@ const kmPart = computed(() => {
   const km = props.trip.actual_km ?? props.trip.distance_km
   if (km == null || Number.isNaN(Number(km))) return ''
   return t('trip_history_page.km_short', { n: Number(km).toFixed(1) })
+})
+
+const durationPart = computed(() => {
+  const m = props.trip.duration_minutes
+  if (m == null || Number.isNaN(Number(m)) || Number(m) <= 0) return ''
+  return t('trip_history_page.min_short', { n: Math.round(Number(m)) })
+})
+
+const requesterLine = computed(() => {
+  const name =
+    props.trip.requester_name?.trim()
+    || drOf()?.requester?.name?.trim()
+    || ''
+  if (!name) return ''
+  return t('driver_trip_detail.request_from', { name })
+})
+
+const notesPreview = computed(() => {
+  const n = props.trip.notes_preview || drOf()?.notes
+  if (!n || typeof n !== 'string') return ''
+  const trimmed = n.trim()
+  if (!trimmed) return ''
+  return trimmed.length > 80 ? `${trimmed.slice(0, 78)}…` : trimmed
+})
+
+const scheduleLegCount = computed(() => {
+  const legs = props.trip.schedule_legs
+  return Array.isArray(legs) ? legs.length : 0
 })
 
 function goDetail() {

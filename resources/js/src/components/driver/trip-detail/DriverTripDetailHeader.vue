@@ -17,8 +17,8 @@
         >
           <ArrowLeftIcon class="h-5 w-5" />
         </RouterLink>
-        <h1 class="flex-1 text-center text-lg font-bold leading-snug tracking-tight sm:text-xl">
-          {{ trip ? t('driver_trip_detail.header_title', { id: trip.id }) : t('driver_trip_detail.title') }}
+        <h1 class="flex-1 text-center font-mono text-lg font-bold leading-snug tracking-tight sm:text-xl">
+          {{ trip ? t('driver_trip_detail.header_title', { code: tripCodeLabel }) : t('driver_trip_detail.title') }}
         </h1>
         <div ref="overflowWrap" class="relative">
           <button
@@ -105,11 +105,12 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { ArrowLeftIcon, ClockIcon, EllipsisVerticalIcon, MapPinIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
 import TripScheduleCard from './TripScheduleCard.vue'
+import { formatTripCode } from '../../../util/labels'
 
 const props = defineProps({
   trip: { type: Object, default: null },
@@ -128,6 +129,8 @@ const props = defineProps({
 const emit = defineEmits(['toggle-menu', 'close-menu', 'refresh'])
 
 const { t } = useI18n()
+
+const tripCodeLabel = computed(() => formatTripCode(props.trip?.id))
 
 const overflowBtnId = 'driver-trip-detail-overflow-btn'
 const overflowMenuId = 'driver-trip-detail-overflow-menu'
