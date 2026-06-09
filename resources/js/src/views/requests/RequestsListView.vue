@@ -128,6 +128,34 @@
     <!-- Filters: horizontal bar -->
     <AppFilterBar>
       <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <details ref="columnPickerRef" class="group relative shrink-0">
+          <summary
+            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-200 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
+            :aria-label="t('requests_page.table_columns')"
+          >
+            <ViewColumnsIcon class="h-4 w-4 shrink-0 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+            <span class="hidden sm:inline">{{ t('requests_page.table_columns') }}</span>
+            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+          </summary>
+          <div
+            class="absolute left-0 top-[calc(100%+6px)] z-50 min-w-[240px] rounded-xl border border-slate-200/90 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-950"
+            @click.stop
+          >
+            <ul class="max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700 dark:text-slate-300">
+              <li v-for="opt in requestColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
+                <input
+                  :id="`req-col-${opt.id}`"
+                  type="checkbox"
+                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
+                  :checked="requestColumnVisible[opt.id] !== false"
+                  @change="setRequestColumn(opt.id, $event.target.checked)"
+                />
+                <label :for="`req-col-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
+              </li>
+            </ul>
+          </div>
+        </details>
+
         <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
           <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             {{ t('requests_page.filter_menu_title') }}
@@ -196,26 +224,119 @@
 
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
-              t('requests_page.filter_trip_type')
-            }}</span>
-            <select
-              v-model="filters.trip_type"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('requests_page.filter_trip_type')"
-              @change="onFilterChange"
-            >
-              <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
+        <button
+          type="button"
+          class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+          :title="t('requests_page.filter_clear')"
+          @click="resetFilters"
+        >
+          <span class="relative inline-flex">
+            <FunnelIcon class="h-5 w-5" />
+            <XMarkIcon
+              class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+            />
+          </span>
+        </button>
+
+        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
+
+        <button
+          type="button"
+          role="switch"
+          :aria-checked="filters.recurring_only"
+          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+          :class="
+            filters.recurring_only
+              ? 'border-indigo-300 bg-indigo-50 text-indigo-950 ring-1 ring-indigo-400/25 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-100'
+              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
+          "
+          :title="t('requests_page.recurring_toggle')"
+          @click="toggleRecurringOnly"
+        >
+          <ArrowPathIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
+          {{ t('requests_page.recurring_filter_chip') }}
+        </button>
+
+        <button
+          type="button"
+          role="switch"
+          :aria-checked="filters.extracurricular_only"
+          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+          :class="
+            filters.extracurricular_only
+              ? 'border-violet-300 bg-violet-50 text-violet-950 ring-1 ring-violet-400/25 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-100'
+              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
+          "
+          :title="t('requests_page.extracurricular_toggle')"
+          @click="toggleExtracurricularOnly"
+        >
+          <AcademicCapIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
+          {{ t('requests_page.extracurricular_filter_chip') }}
+        </button>
+
+        <button
+          v-if="filters.extracurricular_only"
+          type="button"
+          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+          :class="
+            filters.student_count_submitted === true
+              ? 'border-sky-300 bg-sky-50 text-sky-950 ring-1 ring-sky-400/25 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-100'
+              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
+          "
+          :title="t('requests_page.student_count_submitted_toggle')"
+          @click="toggleStudentCountSubmittedFilter"
+        >
+          {{ t('requests_page.student_count_submitted_chip') }}
+        </button>
+
+        <button
+          v-if="filters.extracurricular_only"
+          type="button"
+          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+          :class="
+            filters.student_count_submitted === false
+              ? 'border-amber-300 bg-amber-50 text-amber-950 ring-1 ring-amber-400/25 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
+              : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
+          "
+          :title="t('requests_page.student_count_pending_toggle')"
+          @click="toggleStudentCountPendingFilter"
+        >
+          {{ t('requests_page.student_count_pending_chip') }}
+        </button>
+
+        <button
+          type="button"
+          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
+          :aria-expanded="extraFiltersOpen"
+          @click="extraFiltersOpen = !extraFiltersOpen"
+        >
+          {{ t('requests_page.filter_extra') }}
+          <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div
+        class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
+      >
+          <select
+            v-model="filters.trip_type"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
+            :class="
+              filters.trip_type
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
+            "
+            :aria-label="t('requests_page.filter_trip_type')"
+            @change="onFilterChange"
+          >
+            <option v-for="opt in tripTypeFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
 
           <AppFilterDropdown
             :panel-title="t('requests_page.filter_depart_range')"
-            :show-chip-label="true"
+            :show-chip-label="false"
             :label="t('requests_page.filter_depart_range')"
             :summary-text="filterDepartSummary"
             :active="!!(filters.from || filters.to)"
@@ -258,146 +379,53 @@
             </div>
           </AppFilterDropdown>
 
-          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
-              t('requests_page.filter_channel')
-            }}</span>
-            <select
-              v-model="filters.source_channel"
-              class="h-9 max-w-[min(100%,10rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('requests_page.filter_channel')"
-              @change="onFilterChange"
-            >
-              <option v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
-
-          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
-              t('requests_page.filter_paper')
-            }}</span>
-            <select
-              v-model="filters.paper_status"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('requests_page.filter_paper')"
-              @change="onFilterChange"
-            >
-              <option v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
-
-          <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-            <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
-              t('requests_page.filter_priority')
-            }}</span>
-            <select
-              v-model="filters.priority"
-              class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
-              :aria-label="t('requests_page.filter_priority')"
-              @change="onFilterChange"
-            >
-              <option v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-          </label>
-        </div>
-
-        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('requests_page.filter_clear')"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" />
-              <XMarkIcon
-                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-              />
-            </span>
-          </button>
-
-          <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
-
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="filters.recurring_only"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+          <select
+            v-model="filters.source_channel"
+            class="h-9 max-w-[min(100%,10rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             :class="
-              filters.recurring_only
-                ? 'border-indigo-300 bg-indigo-50 text-indigo-950 ring-1 ring-indigo-400/25 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-100'
-                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
+              filters.source_channel
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
             "
-            :title="t('requests_page.recurring_toggle')"
-            @click="toggleRecurringOnly"
+            :aria-label="t('requests_page.filter_channel')"
+            @change="onFilterChange"
           >
-            <ArrowPathIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
-            {{ t('requests_page.recurring_filter_chip') }}
-          </button>
+            <option v-for="opt in channelFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
 
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="filters.extracurricular_only"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+          <select
+            v-model="filters.paper_status"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             :class="
-              filters.extracurricular_only
-                ? 'border-violet-300 bg-violet-50 text-violet-950 ring-1 ring-violet-400/25 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-100'
-                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 hover:bg-white dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-slate-800'
+              filters.paper_status
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
             "
-            :title="t('requests_page.extracurricular_toggle')"
-            @click="toggleExtracurricularOnly"
+            :aria-label="t('requests_page.filter_paper')"
+            @change="onFilterChange"
           >
-            <AcademicCapIcon class="h-4 w-4 shrink-0 text-current opacity-80" aria-hidden="true" />
-            {{ t('requests_page.extracurricular_filter_chip') }}
-          </button>
+            <option v-for="opt in paperFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
 
-          <button
-            v-if="filters.extracurricular_only"
-            type="button"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
+          <select
+            v-model="filters.priority"
+            class="h-9 max-w-[min(100%,11rem)] shrink-0 rounded-md border-0 bg-white/90 px-2 text-sm font-medium shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
             :class="
-              filters.student_count_submitted === true
-                ? 'border-sky-300 bg-sky-50 text-sky-950 ring-1 ring-sky-400/25 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-100'
-                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
+              filters.priority
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-600 dark:text-slate-400'
             "
-            :title="t('requests_page.student_count_submitted_toggle')"
-            @click="toggleStudentCountSubmittedFilter"
+            :aria-label="t('requests_page.filter_priority')"
+            @change="onFilterChange"
           >
-            {{ t('requests_page.student_count_submitted_chip') }}
-          </button>
-
-          <button
-            v-if="filters.extracurricular_only"
-            type="button"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition sm:text-sm"
-            :class="
-              filters.student_count_submitted === false
-                ? 'border-amber-300 bg-amber-50 text-amber-950 ring-1 ring-amber-400/25 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
-                : 'border-slate-200/90 bg-white/80 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-900/60 dark:text-slate-300'
-            "
-            :title="t('requests_page.student_count_pending_toggle')"
-            @click="toggleStudentCountPendingFilter"
-          >
-            {{ t('requests_page.student_count_pending_chip') }}
-          </button>
-
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-slate-100"
-            :aria-expanded="extraFiltersOpen"
-            @click="extraFiltersOpen = !extraFiltersOpen"
-          >
-            {{ t('requests_page.filter_extra') }}
-            <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
-          </button>
-        </div>
+            <option v-for="opt in priorityFilterOptions" :key="opt.value === '' ? '_any' : opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
       </div>
 
       <div
@@ -551,32 +579,6 @@
             <ArrowDownTrayIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
             <span class="hidden sm:inline">{{ t('requests_page.export_csv') }}</span>
           </button>
-        <details ref="columnPickerRef" class="relative shrink-0">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 [&::-webkit-details-marker]:hidden"
-          >
-            <ViewColumnsIcon class="h-4 w-4 text-slate-500" aria-hidden="true" />
-            {{ t('requests_page.table_columns') }}
-            <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute right-0 top-[calc(100%+6px)] z-40 min-w-[240px] rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-lg ring-1 ring-slate-900/5"
-            @click.stop
-          >
-            <ul class="mt-2 max-h-[min(50vh,320px)] space-y-2 overflow-y-auto text-slate-700">
-              <li v-for="opt in requestColumnToggleOptions" :key="opt.id" class="flex items-center gap-2">
-                <input
-                  :id="`req-col-${opt.id}`"
-                  type="checkbox"
-                  class="rounded border-slate-300 text-teal-600 focus:ring-teal-500/30"
-                  :checked="requestColumnVisible[opt.id] !== false"
-                  @change="setRequestColumn(opt.id, $event.target.checked)"
-                />
-                <label :for="`req-col-${opt.id}`" class="cursor-pointer text-xs">{{ t(opt.labelKey) }}</label>
-              </li>
-            </ul>
-          </div>
-        </details>
         </div>
       </div>
 
@@ -1337,12 +1339,12 @@ function exportRequestsCsv() {
 }
 
 const filterDepartSummary = computed(() => {
-  if (!filters.from && !filters.to) return t('requests_page.filter_option_any')
+  if (!filters.from && !filters.to) return t('requests_page.filter_depart_range')
   return `${filters.from || '…'} → ${filters.to || '…'}`
 })
 
 const tripTypeFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_option_any') },
+  { value: '', label: t('requests_page.filter_trip_type') },
   { value: 'door_to_door', label: labelTripType('door_to_door') },
   { value: 'point_to_point', label: labelTripType('point_to_point') },
   { value: 'business', label: labelTripType('business') },
@@ -1350,21 +1352,21 @@ const tripTypeFilterOptions = computed(() => [
 ])
 
 const channelFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_option_any') },
+  { value: '', label: t('requests_page.filter_channel') },
   { value: 'portal', label: labelSourceChannel('portal') },
   { value: 'zalo', label: labelSourceChannel('zalo') },
   { value: 'paper', label: labelSourceChannel('paper') },
 ])
 
 const paperFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_option_any') },
+  { value: '', label: t('requests_page.filter_paper') },
   { value: 'pending', label: labelPaperStatus('pending') },
   { value: 'received', label: labelPaperStatus('received') },
   { value: 'digitally_signed', label: labelPaperStatus('digitally_signed') },
 ])
 
 const priorityFilterOptions = computed(() => [
-  { value: '', label: t('requests_page.filter_option_any') },
+  { value: '', label: t('requests_page.filter_priority') },
   { value: 'urgent', label: t('requests_page.filter_priority_urgent') },
 ])
 
