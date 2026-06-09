@@ -156,6 +156,11 @@ export function useRequestDetailPage() {
       auth.hasPermission('request.fill_price'),
   )
 
+  /** Dispatcher / admin: điền giá xong duyệt luôn (không chờ Trưởng BP). */
+  const fillPriceAutoApproves = computed(
+    () => showFillPriceSection.value && auth.hasPermission('request.approve'),
+  )
+
   const showD2dDecisionSection = computed(
     () =>
       isStaffContext.value &&
@@ -504,7 +509,11 @@ export function useRequestDetailPage() {
     fillPriceMsg.value = ''
     try {
       await fillPriceDispatchRequest(Number(route.params.id), payload)
-      showAppSuccess(t('request_detail.fill_price_success'))
+      showAppSuccess(
+        fillPriceAutoApproves.value
+          ? t('request_detail.fill_price_success_approved')
+          : t('request_detail.fill_price_success'),
+      )
       await load()
     } catch (e) {
       fillPriceMsg.value = formatApiError(e, t('request_detail.passenger_save_fail'))
@@ -965,6 +974,7 @@ export function useRequestDetailPage() {
     showD2dDecisionSection,
     showDeptDecisionSection,
     showFillPriceSection,
+    fillPriceAutoApproves,
     focusHighlight,
     costEstimate,
     formatVndCurrency,

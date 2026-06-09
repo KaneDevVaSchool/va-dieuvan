@@ -45,7 +45,6 @@
         :req="req"
         :back-route="portalRoutes.list"
         :priority-label="actionCenter.priorityLabel"
-        :priority-tone="actionCenter.priorityTone"
         :polling-refreshing="pollingRefreshing"
         :can-print="canPrintRequest"
         @print="onPrintRequest"
@@ -53,7 +52,7 @@
 
       <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <nav
-          class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 flex gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 px-2 py-2 sm:static sm:flex-wrap sm:overflow-visible sm:px-3"
+          class="portal-detail-tabs sticky top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-20 flex gap-1 overflow-x-auto overscroll-x-contain border-b border-slate-200 bg-slate-50 px-2 py-2 snap-x snap-mandatory sm:px-3 lg:static lg:flex-wrap lg:overflow-visible lg:snap-none"
           role="tablist"
           :aria-label="t('portal.detail_tablist_aria')"
         >
@@ -63,7 +62,8 @@
             type="button"
             role="tab"
             :aria-selected="activeTab === tab.id"
-            class="shrink-0 snap-start rounded-xl px-3.5 py-2.5 text-xs font-semibold transition sm:text-sm"
+            :aria-controls="`portal-tab-panel-${tab.id}`"
+            class="shrink-0 snap-start rounded-xl px-3.5 py-2.5 text-xs font-semibold transition min-h-[44px] sm:text-sm"
             :class="
               activeTab === tab.id
                 ? 'bg-va-800 text-white shadow-sm shadow-va-900/15'
@@ -76,7 +76,12 @@
         </nav>
 
         <div class="p-4 sm:p-6">
-          <div v-show="activeTab === 'overview'" class="space-y-4">
+          <div
+            v-show="activeTab === 'overview'"
+            id="portal-tab-panel-overview"
+            role="tabpanel"
+            class="space-y-4"
+          >
             <PortalRequestJourneyCard
               :origin="originText"
               :destination="destinationText"
@@ -91,22 +96,6 @@
               :next-action-text="actionCenter.nextActionText"
               :hours-until-depart="actionCenter.hoursUntilDepart"
               :urgent-threshold-hours="req.threshold_hours ?? 24"
-            />
-
-            <div id="portal-request-timeline" class="w-full">
-              <PortalStatusTimeline
-                :title="t('portal.timeline_heading')"
-                :steps="timelineSteps"
-              />
-            </div>
-
-            <PortalRequestInfoCards
-              :req="req"
-              :origin="originText"
-              :destination="destinationText"
-              :timeline-steps="timelineSteps"
-              :purpose="purposeLine"
-              :notes="notesLine"
             />
 
             <div
@@ -133,7 +122,39 @@
             </div>
           </div>
 
-          <div v-show="activeTab === 'form' && showExtracurricularBm03">
+          <div
+            v-show="activeTab === 'progress'"
+            id="portal-tab-panel-progress"
+            role="tabpanel"
+          >
+            <div id="portal-request-timeline" class="w-full">
+              <PortalStatusTimeline
+                :title="t('portal.timeline_heading')"
+                :steps="timelineSteps"
+              />
+            </div>
+          </div>
+
+          <div
+            v-show="activeTab === 'details'"
+            id="portal-tab-panel-details"
+            role="tabpanel"
+          >
+            <PortalRequestInfoCards
+              :req="req"
+              :origin="originText"
+              :destination="destinationText"
+              :timeline-steps="timelineSteps"
+              :purpose="purposeLine"
+              :notes="notesLine"
+            />
+          </div>
+
+          <div
+            v-show="activeTab === 'form' && showExtracurricularBm03"
+            id="portal-tab-panel-form"
+            role="tabpanel"
+          >
             <PortalExtracurricularBm03EditForm
               ref="bm03FormRef"
               :req="req"
@@ -141,7 +162,12 @@
             />
           </div>
 
-          <div v-show="activeTab === 'manage' && showRecurringExtras" class="space-y-4">
+          <div
+            v-show="activeTab === 'manage' && showRecurringExtras"
+            id="portal-tab-panel-manage"
+            role="tabpanel"
+            class="space-y-4"
+          >
             <CostLimitAlert
               v-if="req.dispatch_package_cost_alert || req.dispatch_package_budget_alert"
               :alert="req.dispatch_package_cost_alert"
@@ -186,7 +212,12 @@
             </div>
           </div>
 
-          <div v-show="activeTab === 'pdf' && req.status === 'approved'" class="space-y-3">
+          <div
+            v-show="activeTab === 'pdf' && req.status === 'approved'"
+            id="portal-tab-panel-pdf"
+            role="tabpanel"
+            class="space-y-3"
+          >
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex min-w-0 items-center gap-2">
                 <PdfFileIcon class="shrink-0" size-class="h-8 w-6" />
@@ -244,7 +275,12 @@
             </div>
           </div>
 
-          <div v-show="activeTab === 'docs' && showSignedDocSection" class="space-y-4">
+          <div
+            v-show="activeTab === 'docs' && showSignedDocSection"
+            id="portal-tab-panel-docs"
+            role="tabpanel"
+            class="space-y-4"
+          >
             <PortalSignedDocUpload
               :attachments="signedPaperAttachments"
               upload-component-key="portal-signed"
@@ -357,7 +393,7 @@ const actionCenter = usePortalRequestActionCenter(req, t)
 
 const canPrintRequest = computed(() => req.value?.status === 'approved')
 
-const PORTAL_DETAIL_TAB_IDS = ['overview', 'form', 'manage', 'pdf', 'docs']
+const PORTAL_DETAIL_TAB_IDS = ['overview', 'progress', 'details', 'form', 'manage', 'pdf', 'docs']
 const activeTab = ref('overview')
 
 function revokePdfPreviewUrl() {
@@ -697,8 +733,8 @@ const showRecurringExtras = computed(() => {
   )
 })
 
-const detailTabs = computed(() => {
-  const tabs = [{ id: 'overview', label: t('portal.detail_tab_overview') }]
+const secondaryDetailTabs = computed(() => {
+  const tabs = []
   if (showExtracurricularBm03.value) {
     tabs.push({ id: 'form', label: t('portal.detail_tab_form') })
   }
@@ -714,8 +750,16 @@ const detailTabs = computed(() => {
   return tabs
 })
 
+const detailTabs = computed(() => [
+  { id: 'overview', label: t('portal.detail_tab_overview') },
+  { id: 'progress', label: t('portal.detail_tab_progress') },
+  { id: 'details', label: t('portal.detail_tab_details') },
+  ...secondaryDetailTabs.value,
+])
+
 function portalTabVisible(id) {
-  return detailTabs.value.some((x) => x.id === id)
+  if (id === 'overview' || id === 'progress' || id === 'details') return true
+  return secondaryDetailTabs.value.some((x) => x.id === id)
 }
 
 function tabFromRouteQuery() {
@@ -727,10 +771,6 @@ function tabFromRouteQuery() {
 function resolveDefaultPortalTab() {
   const fromQuery = tabFromRouteQuery()
   if (fromQuery) return fromQuery
-  if (portalTabVisible('docs')) return 'docs'
-  if (portalTabVisible('form')) return 'form'
-  if (portalTabVisible('pdf')) return 'pdf'
-  if (portalTabVisible('manage')) return 'manage'
   return 'overview'
 }
 

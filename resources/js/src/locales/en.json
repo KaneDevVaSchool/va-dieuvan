@@ -862,6 +862,9 @@
             "contact_short": "Contact"
         },
         "detail_journey": {
+            "title": "Route",
+            "depart_label": "Departure",
+            "trip_type_label": "Trip type",
             "open_maps": "Open map"
         },
         "action_center": {
@@ -923,6 +926,8 @@
         "timeline_lbl_time": "Time",
         "detail_tablist_aria": "Request detail sections",
         "detail_tab_overview": "Overview",
+        "detail_tab_progress": "Progress",
+        "detail_tab_details": "Details",
         "detail_tab_form": "Form BM.03",
         "detail_tab_manage": "Adjustments",
         "detail_tab_pdf": "Proposal PDF",
@@ -2778,7 +2783,10 @@
         "assign_dept_head_missing_staff_body": "The requester must assign a department head when creating the request on the portal. Ask them to update the request before you can save pricing.",
         "fill_price_submit": "Save price & submit",
         "fill_price_submit_preset_dept": "Save price & notify dept. head",
+        "fill_price_submit_approve": "Save price & approve",
         "fill_price_success": "Price saved; request forwarded.",
+        "fill_price_success_approved": "Price saved and request approved.",
+        "todo_fill_price_auto": "Enter prices on the Route tab — saving approves immediately",
         "dept_decision_title": "Approve request (department head)",
         "dept_decision_lead": "Review details and filled price. Approve to create the trip or reject with a reason.",
         "dept_approve": "Approve",

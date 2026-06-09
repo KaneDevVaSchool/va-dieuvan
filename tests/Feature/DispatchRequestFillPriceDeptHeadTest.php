@@ -92,11 +92,12 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
         ])
             ->assertSuccessful();
 
-        Notification::assertSentTo($head, DeptHeadApprovalRequestedNotification::class);
+        Notification::assertNotSentTo($head, DeptHeadApprovalRequestedNotification::class);
 
         $fresh = DispatchRequest::query()->findOrFail($dr->id);
-        $this->assertSame('price_filled', $fresh->status);
+        $this->assertSame('approved', $fresh->status);
         $this->assertSame($head->id, $fresh->assigned_dept_head_id);
+        $this->assertNotNull($fresh->approved_by);
     }
 
     public function test_fill_price_dispatches_notification_only_to_assigned_department_head(): void
@@ -155,20 +156,12 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
         ])
             ->assertSuccessful();
 
-        Notification::assertSentTo($headChosen, DeptHeadApprovalRequestedNotification::class);
+        Notification::assertNotSentTo($headChosen, DeptHeadApprovalRequestedNotification::class);
         Notification::assertNotSentTo($headOther, DeptHeadApprovalRequestedNotification::class);
 
         $fresh = DispatchRequest::query()->findOrFail($dr->id);
-        $this->assertSame('price_filled', $fresh->status);
+        $this->assertSame('approved', $fresh->status);
         $this->assertSame($headChosen->id, $fresh->assigned_dept_head_id);
-
-        $notification = new DeptHeadApprovalRequestedNotification($fresh->id);
-        $mail = $notification->toMail($headChosen);
-        $html = method_exists($mail, 'render') ? $mail->render() : '';
-
-        $this->assertNotSame('', trim((string) $html));
-        $this->assertStringContainsString('/dept/requests/'.$fresh->id, (string) $html);
-        $this->assertStringContainsString('Phiếu đề xuất chờ duyệt —', $mail->subject);
     }
 
     public function test_dept_head_approval_mail_grand_total_matches_service_price_without_double_counting_extra(): void
@@ -245,7 +238,7 @@ class DispatchRequestFillPriceDeptHeadTest extends TestCase
             ->assertSuccessful();
 
         $fresh = DispatchRequest::query()->findOrFail($dr->id);
-        $this->assertSame('price_filled', $fresh->status);
+        $this->assertSame('approved', $fresh->status);
         $this->assertSame($headB->id, $fresh->assigned_dept_head_id);
     }
 

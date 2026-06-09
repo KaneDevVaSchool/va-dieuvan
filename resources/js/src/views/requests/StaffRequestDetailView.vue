@@ -367,10 +367,13 @@
                   <div v-show="activeTab === 'route'" class="space-y-4">
                     <FillPricePanel
                       v-if="showFillPriceSection"
+                      ref="fillPricePanelRef"
                       :req="req"
                       :acting="fillPriceActing"
                       :message="fillPriceMsg"
+                      actions-in-sidebar
                       @save="onSaveRowPrices"
+                      @summary-change="fillPriceSummary = $event"
                     />
 
                     <template v-else>
@@ -778,18 +781,66 @@
                     <p v-if="d2dMsg && !d2dRejectOpen" class="text-sm text-rose-600 dark:text-rose-400">{{ d2dMsg }}</p>
                   </div>
 
-                  <button
+                  <div
                     v-if="showFillPriceSection"
-                    type="button"
-                    class="flex w-full items-center gap-3 rounded-lg border border-sky-200 bg-sky-50/70 px-3.5 py-3 text-left transition hover:bg-sky-100/70 dark:border-sky-900/50 dark:bg-sky-950/30 dark:hover:bg-sky-950/50"
-                    @click="onWorkflowNavigate({ tab: 'route', focus: 'fill-price' })"
+                    class="space-y-3 rounded-xl border border-sky-200/80 bg-sky-50/60 px-3.5 py-3.5 dark:border-sky-900/50 dark:bg-sky-950/25"
                   >
-                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white"><CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" /></span>
-                    <span class="min-w-0">
-                      <span class="block text-base font-semibold text-slate-900 dark:text-slate-100">{{ t('request_detail.fill_price_title') }}</span>
-                      <span class="block truncate text-sm text-slate-500 dark:text-slate-400">{{ t('request_detail.todo_fill_price') }}</span>
-                    </span>
-                  </button>
+                    <div class="flex items-start gap-2.5">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white">
+                        <CurrencyDollarIcon class="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-sm font-bold text-slate-900 dark:text-slate-100">{{ t('request_detail.fill_price_title') }}</p>
+                        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                          {{ fillPriceAutoApproves ? t('request_detail.todo_fill_price_auto') : t('request_detail.todo_fill_price') }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2.5 dark:border-sky-900/40 dark:bg-slate-900/60">
+                      <span class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        {{ t('request_detail.fill_price_total') }}
+                      </span>
+                      <span
+                        class="text-lg font-bold tabular-nums"
+                        :class="fillPriceSummary.total > 0 ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500'"
+                      >{{ fillPriceSummary.totalFmt }}</span>
+                    </div>
+
+                    <div v-if="!fillPriceAutoApproves">
+                      <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        {{ t('request_detail.assign_dept_head_preset_label') }}
+                      </p>
+                      <div
+                        v-if="fillPriceSummary.deptHeadPresetLocked"
+                        class="mt-1.5 rounded-lg border border-sky-200/60 bg-white/80 px-3 py-2 dark:border-sky-900/40 dark:bg-slate-900/60"
+                      >
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ fillPriceSummary.deptHeadDisplayLine }}</p>
+                        <p v-if="fillPriceSummary.deptHeadLoadErr" class="mt-1 text-xs text-rose-600 dark:text-rose-400">{{ fillPriceSummary.deptHeadLoadErr }}</p>
+                      </div>
+                      <div
+                        v-else
+                        class="mt-1.5 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20"
+                        role="alert"
+                      >
+                        <p class="text-xs font-semibold text-amber-900 dark:text-amber-100">{{ t('request_detail.assign_dept_head_missing_staff_title') }}</p>
+                      </div>
+                    </div>
+
+                    <Button
+                      class="w-full !bg-sky-600 hover:!bg-sky-700"
+                      :loading="fillPriceActing"
+                      :disabled="!fillPriceSummary.canSubmitFillPrice"
+                      @click="onFillPriceSubmitFromSidebar"
+                    >
+                      {{
+                        fillPriceAutoApproves
+                          ? t('request_detail.fill_price_submit_approve')
+                          : t('request_detail.fill_price_submit_preset_dept')
+                      }}
+                    </Button>
+                    <p v-if="fillPriceMsg" class="text-xs text-slate-500 dark:text-slate-400">{{ fillPriceMsg }}</p>
+                  </div>
 
                   <button
                     v-if="showResetCloneBtn"
@@ -1099,6 +1150,7 @@ const {
   passengerOrCargoLine,
   showD2dDecisionSection,
   showFillPriceSection,
+  fillPriceAutoApproves,
   costEstimate,
   formatVndCurrency,
   d2dActing,
@@ -1164,6 +1216,20 @@ const btnDangerGhostClass = 'inline-flex items-center rounded-md border border-r
 
 const friendlyEmpty = computed(() => t('request_detail.ops_no_data'))
 const linkedTripCode = computed(() => formatTripCode(req.value?.trip?.id))
+
+const fillPricePanelRef = ref(null)
+const fillPriceSummary = ref({
+  totalFmt: '—',
+  total: 0,
+  canSubmitFillPrice: false,
+  deptHeadDisplayLine: '—',
+  deptHeadPresetLocked: false,
+  deptHeadLoadErr: '',
+})
+
+function onFillPriceSubmitFromSidebar() {
+  fillPricePanelRef.value?.submit?.()
+}
 
 const asidePanelTab = ref('info')
 const asidePanelTabs = computed(() => [

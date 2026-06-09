@@ -1,47 +1,76 @@
 <template>
-  <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-        <MapPinIcon class="h-5 w-5" aria-hidden="true" />
-      </div>
+  <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div class="flex items-center gap-2.5 border-b border-va-100 bg-va-50/80 px-4 py-3 sm:px-5">
+      <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-va-100 text-va-700">
+        <MapIcon class="h-4 w-4" aria-hidden="true" />
+      </span>
+      <h2 class="text-sm font-bold text-va-900">{{ t('portal.detail_journey.title') }}</h2>
+    </div>
 
-      <div class="min-w-0 flex-1 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-4">
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-slate-500">{{ t('portal.origin') }}</p>
-          <p class="mt-1 text-base font-semibold leading-snug text-slate-900">{{ origin }}</p>
-        </div>
-
-        <div class="hidden items-center justify-center md:flex" aria-hidden="true">
-          <ArrowLongRightIcon class="h-6 w-6 text-slate-400" />
-        </div>
-        <div class="flex items-center gap-2 py-1 md:hidden" aria-hidden="true">
-          <div class="h-px min-w-[1rem] flex-1 bg-slate-200" />
-          <ArrowDownIcon class="h-4 w-4 text-slate-400" />
-          <div class="h-px min-w-[1rem] flex-1 bg-slate-200" />
-        </div>
-
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-slate-500">{{ t('portal.destination') }}</p>
-          <p class="mt-1 text-base font-semibold leading-snug text-slate-900">{{ destination }}</p>
-        </div>
+    <div class="grid gap-0 lg:grid-cols-[1fr_auto_1fr] lg:items-stretch">
+      <div class="border-b border-slate-100 bg-emerald-50/60 px-4 py-4 sm:px-5 lg:border-b-0 lg:border-r">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600/90">
+          {{ t('portal.origin') }}
+        </p>
+        <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 sm:text-xl">
+          <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
+          <span class="min-w-0">{{ origin }}</span>
+        </p>
       </div>
 
       <div
-        v-if="metaLine || mapsHref"
-        class="flex flex-col gap-2 border-t border-slate-100 pt-3 md:w-48 md:border-l md:border-t-0 md:pl-5 md:pt-0"
+        class="flex items-center justify-center border-b border-slate-100 bg-slate-50/50 px-3 py-2 lg:border-b-0"
+        aria-hidden="true"
       >
-        <p v-if="metaLine" class="text-sm text-slate-600">{{ metaLine }}</p>
-        <a
-          v-if="mapsHref"
-          :href="mapsHref"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-sm font-semibold text-va-800 hover:underline"
-        >
-          {{ t('portal.detail_journey.open_maps') }}
-          <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5" aria-hidden="true" />
-        </a>
+        <ArrowRightIcon class="hidden h-6 w-6 shrink-0 text-slate-300 lg:block" />
+        <ArrowDownIcon class="h-5 w-5 shrink-0 text-slate-300 lg:hidden" />
       </div>
+
+      <div class="border-t border-slate-100 bg-rose-50/60 px-4 py-4 sm:px-5 lg:border-l lg:border-t-0">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600/90">
+          {{ t('portal.destination') }}
+        </p>
+        <p class="mt-1.5 flex items-start gap-2 text-lg font-bold leading-snug text-slate-900 sm:text-xl">
+          <MapPinIcon class="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden="true" />
+          <span class="min-w-0">{{ destination }}</span>
+        </p>
+      </div>
+    </div>
+
+    <div
+      v-if="tripTypeLabel || departAt || mapsHref"
+      class="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+    >
+      <div class="flex flex-wrap gap-2">
+        <div
+          v-if="departAt"
+          class="rounded-xl border border-va-200/80 bg-va-50/70 px-3 py-2"
+        >
+          <p class="text-[10px] font-bold uppercase tracking-wider text-va-600/80">
+            {{ t('portal.detail_journey.depart_label') }}
+          </p>
+          <p class="mt-0.5 text-sm font-semibold tabular-nums text-va-900">{{ departAt }}</p>
+        </div>
+        <div
+          v-if="tripTypeLabel"
+          class="rounded-xl border border-slate-200/80 bg-white px-3 py-2"
+        >
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            {{ t('portal.detail_journey.trip_type_label') }}
+          </p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-800">{{ tripTypeLabel }}</p>
+        </div>
+      </div>
+      <a
+        v-if="mapsHref"
+        :href="mapsHref"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-va-800 hover:underline"
+      >
+        {{ t('portal.detail_journey.open_maps') }}
+        <ArrowTopRightOnSquareIcon class="h-3.5 w-3.5" aria-hidden="true" />
+      </a>
     </div>
   </section>
 </template>
@@ -51,8 +80,9 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDownIcon,
-  ArrowLongRightIcon,
+  ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
+  MapIcon,
   MapPinIcon,
 } from '@heroicons/vue/24/outline'
 
@@ -76,10 +106,4 @@ const mapsHref = computed(() => {
   return u.toString()
 })
 
-const metaLine = computed(() => {
-  const parts = []
-  if (props.tripTypeLabel) parts.push(props.tripTypeLabel)
-  if (props.departAt) parts.push(props.departAt)
-  return parts.join(' · ')
-})
 </script>

@@ -1,10 +1,22 @@
 <template>
-  <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+  <section
+    class="rounded-xl border p-4 sm:p-6 transition-colors"
+    :class="
+      isUrgent
+        ? 'border-rose-200/90 bg-rose-50/45 ring-1 ring-inset ring-rose-100/90'
+        : 'border-slate-200 bg-white'
+    "
+  >
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div class="flex min-w-0 items-start gap-3">
         <RouterLink
           :to="{ name: backRoute }"
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-slate-600 transition hover:text-slate-900"
+          :class="
+            isUrgent
+              ? 'border-rose-200/80 bg-white/80 hover:border-rose-300 hover:bg-white'
+              : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+          "
           :aria-label="t('portal.back_list')"
         >
           <ArrowLeftIcon class="h-5 w-5" aria-hidden="true" />
@@ -19,14 +31,14 @@
             </h1>
             <StatusBadge :status="req.status" />
             <span
-              v-if="priorityTone === 'urgent'"
-              class="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-800 ring-1 ring-rose-200/80"
+              v-if="isUrgent"
+              class="inline-flex items-center gap-1 rounded-md bg-rose-100/90 px-2 py-0.5 text-xs font-semibold text-rose-800 ring-1 ring-rose-200/90"
             >
               <BoltIcon class="h-3.5 w-3.5" aria-hidden="true" />
-              {{ priorityLabel }}
+              {{ priorityLabel || t('portal.badge_urgent') }}
             </span>
             <span
-              v-else
+              v-else-if="priorityLabel"
               class="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
             >
               {{ priorityLabel }}
@@ -75,7 +87,6 @@ const props = defineProps({
   req: { type: Object, required: true },
   backRoute: { type: String, required: true },
   priorityLabel: { type: String, default: '' },
-  priorityTone: { type: String, default: 'normal' },
   pollingRefreshing: { type: Boolean, default: false },
   canPrint: { type: Boolean, default: false },
 })
@@ -83,6 +94,8 @@ const props = defineProps({
 defineEmits(['print'])
 
 const { t } = useI18n()
+
+const isUrgent = computed(() => !!props.req?.is_urgent)
 
 const refCode = computed(() => formatDispatchRequestRefCode(props.req) || '—')
 

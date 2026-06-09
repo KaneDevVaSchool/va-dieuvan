@@ -180,8 +180,11 @@
       </div>
     </div>
 
-    <!-- Summary: total + dept head + save -->
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <!-- Summary: total + dept head + save (inline unless actions live in sidebar) -->
+    <div
+      v-if="!actionsInSidebar"
+      class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
       <!-- Total row -->
       <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
         <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">
@@ -268,9 +271,11 @@ const props = defineProps({
   req: { type: Object, default: null },
   acting: { type: Boolean, default: false },
   message: { type: String, default: '' },
+  /** Khi true: tổng / trưởng BP / nút Lưu do sidebar «Trung tâm xử lý» đảm nhiệm */
+  actionsInSidebar: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['save'])
+const emit = defineEmits(['save', 'summary-change'])
 
 const snap = computed(() => props.req?.wizard_snapshot ?? {})
 const isCargo = computed(() => props.req?.trip_type === 'cargo')
@@ -519,4 +524,21 @@ function onSave() {
     service_price: total.value,
   })
 }
+
+const summaryState = computed(() => ({
+  totalFmt: totalFmt.value,
+  total: total.value,
+  canSubmitFillPrice: canSubmitFillPrice.value,
+  deptHeadDisplayLine: deptHeadDisplayLine.value,
+  deptHeadPresetLocked: deptHeadPresetLocked.value,
+  deptHeadLoadErr: deptHeadLoadErr.value,
+}))
+
+watch(
+  summaryState,
+  (state) => emit('summary-change', { ...state }),
+  { immediate: true, deep: true },
+)
+
+defineExpose({ submit: onSave })
 </script>

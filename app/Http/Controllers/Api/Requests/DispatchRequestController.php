@@ -175,94 +175,115 @@ class DispatchRequestController extends Controller
         }
 
         $user = $request->user();
-        $before = $dispatchRequest->toArray();
 
-        $chosenDeptHeadId = $dispatchRequest->assigned_dept_head_id !== null
-            ? (int) $dispatchRequest->assigned_dept_head_id
-            : null;
-        if ($chosenDeptHeadId !== null) {
-            $eligible = User::query()
-                ->where('is_active', true)
-                ->role('department_head')
-                ->whereKey($chosenDeptHeadId)
-                ->exists();
-            if (! $eligible) {
-                abort(422, Messages::REQUEST_INVALID_DEPT_HEAD);
-            }
-        }
+        return DB::transaction(function () use ($dispatchRequest, $data, $user) {
+            /** @var DispatchRequest $dr */
+            $dr = DispatchRequest::query()->whereKey($dispatchRequest->id)->lockForUpdate()->firstOrFail();
+            $before = $dr->toArray();
 
-        $snap = $dispatchRequest->wizard_snapshot ?? [];
-
-        $tripType = $dispatchRequest->trip_type ?? '';
-        if ($tripType === 'cargo' && ! empty($data['rows'])) {
-            foreach ($data['rows'] as $i => $row) {
-                if (! is_array($row)) {
-                    continue;
-                }
-                if (! isset($snap['cargoRows'][$i]) || ! is_array($snap['cargoRows'][$i])) {
-                    continue;
-                }
-                if (array_key_exists('transport_note', $row)) {
-                    $snap['cargoRows'][$i]['transport_note'] = $row['transport_note'];
-                }
-                if (array_key_exists('cost', $row)) {
-                    $snap['cargoRows'][$i]['cost'] = $row['cost'];
+            $chosenDeptHeadId = $dr->assigned_dept_head_id !== null
+                ? (int) $dr->assigned_dept_head_id
+                : null;
+            if ($chosenDeptHeadId !== null) {
+                $eligible = User::query()
+                    ->where('is_active', true)
+                    ->role('department_head')
+                    ->whereKey($chosenDeptHeadId)
+                    ->exists();
+                if (! $eligible) {
+                    abort(422, Messages::REQUEST_INVALID_DEPT_HEAD);
                 }
             }
-        } elseif ($tripType !== '' && $tripType !== 'cargo' && ! empty($data['rows'])) {
-            $rowKey = $tripType === 'business' ? 'businessRows' : 'passengerRows';
-            foreach ($data['rows'] as $i => $row) {
-                if (! is_array($row)) {
-                    continue;
+
+            $snap = $dr->wizard_snapshot ?? [];
+
+            $tripType = $dr->trip_type ?? '';
+            if ($tripType === 'cargo' && ! empty($data['rows'])) {
+                foreach ($data['rows'] as $i => $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+                    if (! isset($snap['cargoRows'][$i]) || ! is_array($snap['cargoRows'][$i])) {
+                        continue;
+                    }
+                    if (array_key_exists('transport_note', $row)) {
+                        $snap['cargoRows'][$i]['transport_note'] = $row['transport_note'];
+                    }
+                    if (array_key_exists('cost', $row)) {
+                        $snap['cargoRows'][$i]['cost'] = $row['cost'];
+                    }
                 }
-                if (! isset($snap[$rowKey][$i]) || ! is_array($snap[$rowKey][$i])) {
-                    continue;
-                }
-                if (array_key_exists('unit_price', $row)) {
-                    $snap[$rowKey][$i]['unit_price'] = $row['unit_price'];
-                }
-                if (array_key_exists('extra_fee', $row)) {
-                    $snap[$rowKey][$i]['extra_fee'] = $row['extra_fee'];
-                }
-                if (array_key_exists('notes', $row)) {
-                    $snap[$rowKey][$i]['notes'] = $row['notes'];
+            } elseif ($tripType !== '' && $tripType !== 'cargo' && ! empty($data['rows'])) {
+                $rowKey = $tripType === 'business' ? 'businessRows' : 'passengerRows';
+                foreach ($data['rows'] as $i => $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+                    if (! isset($snap[$rowKey][$i]) || ! is_array($snap[$rowKey][$i])) {
+                        continue;
+                    }
+                    if (array_key_exists('unit_price', $row)) {
+                        $snap[$rowKey][$i]['unit_price'] = $row['unit_price'];
+                    }
+                    if (array_key_exists('extra_fee', $row)) {
+                        $snap[$rowKey][$i]['extra_fee'] = $row['extra_fee'];
+                    }
+                    if (array_key_exists('notes', $row)) {
+                        $snap[$rowKey][$i]['notes'] = $row['notes'];
+                    }
                 }
             }
-        }
 
-        $dispatchRequest->update([
-            'status' => 'price_filled',
-            'service_price' => $data['service_price'],
-            'wizard_snapshot' => $snap,
-            'price_filled_by' => $user->id,
-            'price_filled_at' => now(),
-            'assigned_dept_head_id' => $chosenDeptHeadId,
-        ]);
-
-        app(AuditLogger::class)->log(
-            actorId: $user->id,
-            event: 'request.price_filled',
-            auditable: $dispatchRequest,
-            before: $before,
-            after: $dispatchRequest->fresh()->toArray(),
-            metadata: [
+            $dr->update([
+                'status' => 'price_filled',
                 'service_price' => $data['service_price'],
+                'wizard_snapshot' => $snap,
+                'price_filled_by' => $user->id,
+                'price_filled_at' => now(),
                 'assigned_dept_head_id' => $chosenDeptHeadId,
-            ],
-        );
+            ]);
 
-        if ($chosenDeptHeadId !== null
-            && Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
-            $recipients = User::query()->whereKey($chosenDeptHeadId)->get();
-            if ($recipients->isNotEmpty()) {
-                Notification::send(
-                    $recipients,
-                    new DeptHeadApprovalRequestedNotification($dispatchRequest->id),
+            app(AuditLogger::class)->log(
+                actorId: $user->id,
+                event: 'request.price_filled',
+                auditable: $dr,
+                before: $before,
+                after: $dr->fresh()->toArray(),
+                metadata: [
+                    'service_price' => $data['service_price'],
+                    'assigned_dept_head_id' => $chosenDeptHeadId,
+                ],
+            );
+
+            if ($user->can('request.approve')) {
+                $result = app(DispatchRequestApprovalService::class)->createTripAfterApproval(
+                    $dr->fresh(),
+                    $user,
+                    'request.approve',
+                    $before,
                 );
-            }
-        }
 
-        return $this->ok($this->presentDispatchRequest($dispatchRequest->fresh()));
+                $this->scheduleRequesterDeptDecisionNotification($dr->id, 'approve');
+
+                return $this->ok([
+                    'request' => $this->presentDispatchRequest($result['request']),
+                    'trip' => $result['trip'],
+                ]);
+            }
+
+            if ($chosenDeptHeadId !== null
+                && Role::query()->where('name', 'department_head')->where('guard_name', 'web')->exists()) {
+                $recipients = User::query()->whereKey($chosenDeptHeadId)->get();
+                if ($recipients->isNotEmpty()) {
+                    Notification::send(
+                        $recipients,
+                        new DeptHeadApprovalRequestedNotification($dr->id),
+                    );
+                }
+            }
+
+            return $this->ok($this->presentDispatchRequest($dr->fresh()));
+        });
     }
 
     /**

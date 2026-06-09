@@ -911,6 +911,9 @@
             "contact_short": "Liên hệ"
         },
         "detail_journey": {
+            "title": "Lộ trình",
+            "depart_label": "Thời gian đi",
+            "trip_type_label": "Loại chuyến",
             "open_maps": "Mở bản đồ"
         },
         "action_center": {
@@ -972,6 +975,8 @@
         "timeline_lbl_time": "Thời gian",
         "detail_tablist_aria": "Nội dung chi tiết yêu cầu",
         "detail_tab_overview": "Tổng quan",
+        "detail_tab_progress": "Tiến trình",
+        "detail_tab_details": "Chi tiết",
         "detail_tab_form": "Phiếu BM.03",
         "detail_tab_manage": "Điều chỉnh",
         "detail_tab_pdf": "PDF đề nghị",
@@ -2575,7 +2580,10 @@
         "assign_dept_head_missing_staff_body": "Trưởng đơn vị phải được người đề nghị gán khi tạo phiếu trên cổng đề xuất. Liên hệ người đề nghị bổ sung trước khi lưu giá.",
         "fill_price_submit": "Lưu giá & chuyển duyệt",
         "fill_price_submit_preset_dept": "Lưu giá & gửi Trưởng đơn vị",
+        "fill_price_submit_approve": "Lưu giá & duyệt phiếu",
         "fill_price_success": "Đã lưu giá và chuyển phiếu.",
+        "fill_price_success_approved": "Đã lưu giá và duyệt phiếu.",
+        "todo_fill_price_auto": "Nhập giá trên tab Chi tiết chuyến — lưu sẽ duyệt luôn",
         "dept_decision_title": "Duyệt phiếu (Trưởng đơn vị)",
         "dept_decision_lead": "Xem đầy đủ thông tin và giá đã điền. Duyệt để tạo chuyến hoặc từ chối kèm lý do.",
         "dept_approve": "Duyệt",
