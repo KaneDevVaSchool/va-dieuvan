@@ -13,6 +13,8 @@ return new class extends Migration
             $table->string('key')->unique();
             $table->string('name');
             $table->boolean('is_enabled')->default(true);
+            $table->boolean('maintenance_mode')->default(false);
+            $table->boolean('upgrade_notice')->default(false);
             $table->string('module')->nullable()->index();
             $table->timestamps();
         });

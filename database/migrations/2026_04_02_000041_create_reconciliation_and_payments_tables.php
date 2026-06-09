@@ -22,6 +22,7 @@ return new class extends Migration
 
             $table->unique(['start_date', 'end_date']);
             $table->index(['status', 'start_date']);
+            $table->index(['start_date', 'end_date', 'status'], 'reconcile_range_status_idx');
         });
 
         Schema::create('payments', function (Blueprint $table) {
@@ -31,8 +32,8 @@ return new class extends Migration
             $table->enum('status', ['pending', 'paid', 'failed', 'cancelled'])->default('pending');
             $table->decimal('amount', 14, 2)->default(0);
             $table->string('currency', 3)->default('VND');
-            $table->string('method')->nullable(); // bank_transfer, cash...
-            $table->string('reference')->nullable(); // bank ref or voucher
+            $table->string('method')->nullable();
+            $table->string('reference')->nullable();
             $table->foreignId('executed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->dateTime('executed_at')->nullable();
             $table->json('metadata')->nullable();
@@ -40,6 +41,8 @@ return new class extends Migration
 
             $table->unique(['trip_id']);
             $table->index(['status', 'created_at']);
+            $table->index(['reconciliation_period_id', 'status'], 'payments_period_status_idx');
+            $table->index(['executed_by', 'executed_at'], 'payments_executed_by_at_idx');
         });
     }
 
@@ -49,4 +52,3 @@ return new class extends Migration
         Schema::dropIfExists('reconciliation_periods');
     }
 };
-

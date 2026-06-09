@@ -28,6 +28,7 @@ return new class extends Migration
             $table->json('extra_dates')->nullable();
 
             $table->foreignId('default_driver_id')->nullable()->constrained('drivers')->nullOnDelete();
+            $table->foreignId('backup_driver_id')->nullable()->constrained('drivers')->nullOnDelete();
             $table->foreignId('default_vehicle_id')->nullable()->constrained('vehicles')->nullOnDelete();
 
             $table->decimal('cost_per_trip', 12, 2)->nullable();

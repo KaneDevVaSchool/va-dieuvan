@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('unenrolled_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('unenroll_reason')->nullable();
             $table->text('notes')->nullable();
+            $table->string('pickup_point', 255)->nullable();
 
             $table->unique(['program_id', 'student_id']);
             $table->index(['program_id', 'unenrolled_at']);

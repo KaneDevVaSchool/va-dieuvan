@@ -13,6 +13,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedInteger('passenger_urgent_threshold_hours')->default(72);
             $table->unsignedInteger('cargo_urgent_threshold_hours')->default(24);
+            $table->string('reference_pricing_url', 2048)->nullable();
             $table->timestamps();
         });
 

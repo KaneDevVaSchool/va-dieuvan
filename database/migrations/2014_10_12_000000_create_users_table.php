@@ -15,8 +15,16 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('google_id')->nullable()->unique();
+            $table->string('avatar_url', 512)->nullable();
+            $table->string('phone')->nullable();
+            $table->string('employee_code')->nullable();
+            $table->string('primary_role_name', 100)->nullable();
+            $table->unsignedBigInteger('primary_role_id')->nullable();
+            $table->unsignedBigInteger('department_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });

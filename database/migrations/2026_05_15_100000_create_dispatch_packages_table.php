@@ -14,9 +14,10 @@ return new class extends Migration
             $table->string('label')->nullable();
             $table->unsignedSmallInteger('total_sessions');
             $table->unsignedSmallInteger('sessions_used')->default(0);
-            /** Khi số buổi còn lại không vượt quá alert_when_remaining_sessions thì gửi cảnh báo (không chặn nghiệp vụ). */
             $table->unsignedSmallInteger('alert_when_remaining_sessions')->default(3);
             $table->timestamp('last_low_sessions_notified_at')->nullable();
+            $table->decimal('monthly_budget', 14, 2)->nullable();
+            $table->timestamp('last_budget_alert_notified_at')->nullable();
             $table->timestamps();
         });
     }

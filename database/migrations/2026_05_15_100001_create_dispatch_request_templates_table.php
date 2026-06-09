@@ -23,14 +23,14 @@ return new class extends Migration
             $table->string('destination')->nullable();
             $table->unsignedSmallInteger('passenger_count')->nullable();
             $table->text('notes')->nullable();
-            /** đến cùng calendar day với depart_at (null = chỉ có time). */
             $table->unsignedSmallInteger('arrive_offset_minutes')->nullable();
 
             $table->json('recurrence_rule');
-            /** Lặp đến hết ngày này (inclusive, theo TZ app). Null = không giới hạn. */
             $table->date('recurrence_end_date')->nullable();
-            /** Giờ xuất phát (local TZ app) cho các instance sinh ra. */
             $table->time('recurrence_time')->default('08:00:00');
+            $table->date('start_date')->nullable();
+            $table->time('return_time')->nullable();
+            $table->unsignedSmallInteger('repeat_count')->nullable();
 
             $table->json('wizard_snapshot')->nullable();
 

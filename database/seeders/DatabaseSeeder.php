@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,17 +13,9 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RbacSeeder::class,
-            TpAbsenceReasonSeeder::class,
-            TainpDriverSeeder::class,
             FeatureToggleSeeder::class,
+            TpAbsenceReasonSeeder::class,
             ReferencePricingSeeder::class,
-            DemoFlowSeeder::class,
-            VehicleExcelSeeder::class,
         ]);
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
     }
 }

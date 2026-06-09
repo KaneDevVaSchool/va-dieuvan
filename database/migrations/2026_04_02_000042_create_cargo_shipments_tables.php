@@ -21,7 +21,7 @@ return new class extends Migration
             $table->unsignedInteger('weight_grams')->nullable();
             $table->unsignedInteger('quantity')->nullable();
 
-            $table->dateTime('sla_due_at')->nullable(); // SLA <= 3h
+            $table->dateTime('sla_due_at')->nullable();
             $table->enum('status', ['pending', 'picked_up', 'in_transit', 'delivered', 'failed', 'cancelled'])
                 ->default('pending');
 
@@ -30,6 +30,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['status', 'sla_due_at']);
+            $table->index(['status', 'created_at'], 'cargo_status_created_idx');
+            $table->index(['trip_id'], 'cargo_trip_idx');
         });
     }
 
@@ -38,4 +40,3 @@ return new class extends Migration
         Schema::dropIfExists('cargo_shipments');
     }
 };
-

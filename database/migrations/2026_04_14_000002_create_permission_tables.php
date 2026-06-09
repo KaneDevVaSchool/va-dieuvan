@@ -13,19 +13,28 @@ return new class extends Migration
         $columnNames = config('permission.column_names');
         $pivotRole = $columnNames['role_pivot_key'] ?? 'role_id';
         $pivotPermission = $columnNames['permission_pivot_key'] ?? 'permission_id';
+        $rolesTable = $tableNames['roles'];
+        $permissionsTable = $tableNames['permissions'];
 
         throw_if(empty($tableNames), Exception::class, 'Error: config/permission.php not loaded.');
 
-        Schema::create($tableNames['permissions'], static function (Blueprint $table) {
+        Schema::create($permissionsTable, static function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('guard_name');
+            $table->string('display_name')->nullable();
+            $table->text('plain_description')->nullable();
+            $table->string('module', 60)->nullable();
+            $table->string('action_type', 20)->nullable();
+            $table->string('action', 40)->nullable();
+            $table->boolean('is_sensitive')->default(false);
+            $table->integer('sort_order')->default(0);
             $table->timestamps();
 
             $table->unique(['name', 'guard_name']);
         });
 
-        Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
+        Schema::create($rolesTable, static function (Blueprint $table) use ($teams, $columnNames, $rolesTable) {
             $table->bigIncrements('id');
             if ($teams || config('permission.testing')) {
                 $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
@@ -33,7 +42,20 @@ return new class extends Migration
             }
             $table->string('name');
             $table->string('guard_name');
+            $table->string('display_name')->nullable();
+            $table->text('description')->nullable();
+            $table->string('color', 20)->nullable();
+            $table->integer('sort_order')->default(0);
+            $table->string('status', 20)->default('active');
+            $table->boolean('is_system')->default(false);
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('parent_id')->references('id')->on($rolesTable)->nullOnDelete();
+
             if ($teams || config('permission.testing')) {
                 $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
             } else {
@@ -115,10 +137,10 @@ return new class extends Migration
 
         throw_if(empty($tableNames), Exception::class, 'Error: config/permission.php not found.');
 
-        Schema::drop($tableNames['role_has_permissions']);
-        Schema::drop($tableNames['model_has_roles']);
-        Schema::drop($tableNames['model_has_permissions']);
-        Schema::drop($tableNames['roles']);
-        Schema::drop($tableNames['permissions']);
+        Schema::dropIfExists($tableNames['role_has_permissions']);
+        Schema::dropIfExists($tableNames['model_has_roles']);
+        Schema::dropIfExists($tableNames['model_has_permissions']);
+        Schema::dropIfExists($tableNames['roles']);
+        Schema::dropIfExists($tableNames['permissions']);
     }
 };

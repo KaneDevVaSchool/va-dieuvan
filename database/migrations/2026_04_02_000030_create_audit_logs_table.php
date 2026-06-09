@@ -11,20 +11,31 @@ return new class extends Migration
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('actor_name')->nullable();
 
-            $table->string('event'); // e.g. request.approve, trip.assign
+            $table->string('event');
+            $table->string('module', 60)->nullable();
+            $table->string('action', 40)->nullable();
             $table->string('auditable_type')->nullable();
             $table->unsignedBigInteger('auditable_id')->nullable();
 
             $table->json('before')->nullable();
             $table->json('after')->nullable();
-            $table->json('metadata')->nullable(); // ip, user_agent, reason, etc.
+            $table->string('result', 20)->default('success');
+            $table->string('ip_address', 45)->nullable();
+            $table->string('user_agent', 512)->nullable();
+            $table->string('device', 80)->nullable();
+            $table->string('browser', 80)->nullable();
+            $table->string('os', 80)->nullable();
+            $table->json('metadata')->nullable();
 
             $table->timestamps();
 
             $table->index(['auditable_type', 'auditable_id']);
             $table->index(['event', 'created_at']);
             $table->index(['actor_id', 'created_at']);
+            $table->index(['module', 'created_at']);
+            $table->index('ip_address');
         });
     }
 
@@ -33,4 +44,3 @@ return new class extends Migration
         Schema::dropIfExists('audit_logs');
     }
 };
-

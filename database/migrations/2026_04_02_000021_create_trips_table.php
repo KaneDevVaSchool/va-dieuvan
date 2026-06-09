@@ -14,17 +14,15 @@ return new class extends Migration
 
             $table->foreignId('dispatcher_id')->nullable()->constrained('users')->nullOnDelete();
 
-            // internal assignment
             $table->foreignId('vehicle_id')->nullable()->constrained('vehicles')->nullOnDelete();
             $table->foreignId('driver_id')->nullable()->constrained('drivers')->nullOnDelete();
 
-            // external assignment (NCC/taxi)
             $table->foreignId('transport_provider_id')->nullable()->constrained('transport_providers')->nullOnDelete();
             $table->string('external_vehicle_ref')->nullable();
             $table->string('external_driver_ref')->nullable();
 
             $table->enum('status', [
-                'pending',       // created from approved request or direct by dispatcher
+                'pending',
                 'approved',
                 'assigned',
                 'driver_confirmed',
@@ -34,19 +32,30 @@ return new class extends Migration
                 'incident',
             ])->default('pending');
 
+            $table->enum('payment_status', ['unpaid', 'pending', 'paid'])->default('unpaid');
+
             $table->dateTime('depart_at');
             $table->dateTime('arrive_by')->nullable();
+            $table->dateTime('planned_end_at')->nullable();
             $table->dateTime('started_at')->nullable();
             $table->dateTime('completed_at')->nullable();
+            $table->dateTime('paid_at')->nullable();
 
-            // optimistic locking for BR-002 (application checks version on update)
             $table->unsignedInteger('lock_version')->default(0);
+            $table->json('passenger_check_ins')->nullable();
+            $table->json('supplement_transports')->nullable();
+            $table->json('schedule_assignments')->nullable();
 
             $table->timestamps();
 
             $table->index(['status', 'depart_at']);
             $table->index(['vehicle_id', 'depart_at']);
             $table->index(['driver_id', 'depart_at']);
+            $table->index(['dispatcher_id', 'depart_at'], 'trips_dispatcher_depart_idx');
+            $table->index(['transport_provider_id', 'depart_at'], 'trips_provider_depart_idx');
+            $table->index(['status', 'payment_status', 'depart_at'], 'trips_status_pay_depart_idx');
+            $table->index(['vehicle_id', 'depart_at', 'planned_end_at'], 'trips_vehicle_interval_idx');
+            $table->index(['driver_id', 'depart_at', 'planned_end_at'], 'trips_driver_interval_idx');
         });
     }
 
@@ -55,4 +64,3 @@ return new class extends Migration
         Schema::dropIfExists('trips');
     }
 };
-
