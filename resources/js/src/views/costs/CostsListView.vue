@@ -76,29 +76,11 @@
       </h2>
       <div class="relative z-40">
     <AppFilterBar>
-      <div ref="costsFilterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <details ref="funnelDetailsRef" class="group relative">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-              <span
-                v-if="activeFilterCount > 0"
-                class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
-              >
-                {{ activeFilterCount }}
-              </span>
-            </span>
-            <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
-          >
-            <p class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300">
+      <div ref="costsFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+              <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
               {{ t('dashboard_analytics.filter_applied_title') }}
-            </p>
-            <div class="p-3 pt-2">
+              </p>
               <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                 <li v-if="filters.status" class="flex justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
@@ -168,13 +150,11 @@
               <button
                 type="button"
                 class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                @click="resetFilters()"
+                @click="resetFilters(); closeFunnelMenu()"
               >
                 {{ t('dashboard_analytics.filter_clear_all') }}
               </button>
-            </div>
-          </div>
-        </details>
+        </AppFilterFunnelMenu>
 
         <details ref="columnPickerRef" class="group relative shrink-0">
           <summary
@@ -212,7 +192,38 @@
 
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+        <div
+          class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
+        >
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+            :title="t('filter_bar.clear_icon')"
+            :aria-label="t('filter_bar.clear_icon')"
+            @click="resetFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon
+                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+              />
+            </span>
+          </button>
+          <button
+            v-if="showAddCostButton"
+            type="button"
+            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
+            @click="openAddCostModal"
+          >
+            {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
+          </button>
+        </div>
+      </div>
+
+        <div
+          v-if="hasVisibleBarFilters"
+          class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
+        >
           <label v-if="filterControlVisible.status" class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
             <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{ t('filter_bar.status') }}</span>
             <select
@@ -448,34 +459,6 @@
             <span class="hidden whitespace-nowrap text-xs text-slate-500 sm:inline dark:text-slate-400" aria-hidden="true">{{ t('costs_page.per_page_unit') }}</span>
           </label>
         </div>
-
-        <div
-          class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3"
-        >
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('filter_bar.clear_icon')"
-            :aria-label="t('filter_bar.clear_icon')"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon
-                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
-              />
-            </span>
-          </button>
-          <button
-            v-if="showAddCostButton"
-            type="button"
-            class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-va-800 px-3 text-sm font-semibold text-white shadow-sm ring-1 ring-black/5 transition hover:bg-va-900 focus:outline-none focus:ring-2 focus:ring-va-800/35 dark:ring-white/10"
-            @click="openAddCostModal"
-          >
-            {{ activeTab === 'standalone' ? t('costs_page.add_standalone_cost') : t('costs_page.add_cost') }}
-          </button>
-        </div>
-      </div>
     </AppFilterBar>
       </div>
     </section>
@@ -1168,11 +1151,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ChevronDownIcon, FunnelIcon, PlusCircleIcon, ViewColumnsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import AppFilterDropdown from '../../components/filters/AppFilterDropdown.vue'
 import { useDetailsAutoClose, useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import {
@@ -1206,7 +1190,6 @@ const LEGAL_ENTITY_PLACEHOLDER = '—'
 
 const BUILTIN_COST_TYPES = ['fuel', 'toll', 'parking', 'other']
 const EXTRA_TYPES_STORAGE_KEY = 'va.costs.extra_types_v1'
-const COSTS_FILTER_CONTROL_VISIBILITY_KEY = 'va.costs.filter_control_visibility_v1'
 const COSTS_COL_VISIBILITY_KEY = 'va.costs.col_visibility_v1'
 const FILTER_CONTROL_IDS = ['status', 'type', 'trip_type', 'date', 'trip', 'search', 'per_page', 'amount_range', 'provider', 'fleet_mode']
 const COL_IDS = [
@@ -1231,7 +1214,7 @@ const COL_IDS = [
 ]
 
 function defaultFilterControlVisibility() {
-  return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, true]))
+  return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, false]))
 }
 
 function defaultColVisibility() {
@@ -1400,10 +1383,9 @@ const bpFilters = reactive({
   to: '',
 })
 const searchQ = ref('')
-const funnelDetailsRef = ref(null)
+const filterMenuRef = ref(null)
 const columnPickerRef = ref(null)
 const costsFilterBarRef = ref(null)
-useDetailsAutoClose(funnelDetailsRef)
 useDetailsAutoClose(columnPickerRef)
 useDetailsAutoCloseWithin(costsFilterBarRef)
 
@@ -1603,18 +1585,6 @@ watch(extraCostTypes, (v) => {
     /* ignore */
   }
 }, { deep: true })
-
-watch(
-  filterControlVisible,
-  (v) => {
-    try {
-      localStorage.setItem(COSTS_FILTER_CONTROL_VISIBILITY_KEY, JSON.stringify({ ...v }))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
 
 watch(
   colVisible,
@@ -2029,8 +1999,7 @@ function closeParentDetails(ev) {
 }
 
 function closeFunnelMenu() {
-  const el = funnelDetailsRef.value
-  if (el && 'open' in el) el.open = false
+  filterMenuRef.value?.close?.()
 }
 
 function applyFilterPatch(ev, patch) {
@@ -2218,20 +2187,13 @@ async function submitCost() {
   }
 }
 
-function loadFilterControlVisibility() {
-  try {
-    const raw = localStorage.getItem(COSTS_FILTER_CONTROL_VISIBILITY_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    const base = defaultFilterControlVisibility()
-    for (const id of FILTER_CONTROL_IDS) {
-      if (typeof o[id] === 'boolean') base[id] = o[id]
-    }
-    Object.assign(filterControlVisible, base)
-  } catch {
-    /* ignore */
-  }
+function resetFilterBarVisibility() {
+  Object.assign(filterControlVisible, defaultFilterControlVisibility())
 }
+
+const hasVisibleBarFilters = computed(() =>
+  FILTER_CONTROL_IDS.some((id) => filterControlVisible[id] === true),
+)
 
 function loadColVisibility() {
   try {
@@ -2268,13 +2230,21 @@ watch(activeTab, (tab) => {
   }
 })
 
+function onCostsFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
 onMounted(async () => {
-  loadFilterControlVisibility()
+  onCostsFilterBarEnter()
   loadColVisibility()
   loadExtraCostTypesFromStorage()
   hydrateCostStatusFromRoute()
   await loadTripPickerOptions()
   await reload()
+})
+
+onActivated(() => {
+  onCostsFilterBarEnter()
 })
 </script>
 

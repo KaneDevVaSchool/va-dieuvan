@@ -38,79 +38,79 @@
 
     <!-- Filter / toolbar -->
     <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
-      <div class="flex flex-wrap items-center gap-2.5">
-        <div class="relative min-w-[14rem] flex-1">
-          <MagnifyingGlassIcon class="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-          <input
-            v-model="filters.search"
-            type="search"
-            placeholder="Tìm kiếm chương trình, tuyến đường..."
-            aria-label="Tìm kiếm chương trình"
-            class="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-3 pl-11 pr-3 text-base outline-none ring-va-800/20 transition focus:bg-white focus:ring"
-          />
-        </div>
-
-        <select
-          v-model="filters.status"
-          aria-label="Lọc theo trạng thái"
-          class="h-12 rounded-xl border border-slate-200 bg-white px-3.5 text-base text-slate-700 outline-none ring-va-800/20 focus:ring"
-        >
-          <option value="">Tất cả trạng thái</option>
-          <option value="draft">Nháp</option>
-          <option value="active">Hoạt động</option>
-          <option value="paused">Tạm dừng</option>
-          <option value="completed">Hoàn thành</option>
-          <option value="cancelled">Đã hủy</option>
-        </select>
-
-        <select
-          v-model="filters.schoolYear"
-          aria-label="Lọc theo năm học"
-          class="h-12 rounded-xl border border-slate-200 bg-white px-3.5 text-base text-slate-700 outline-none ring-va-800/20 focus:ring"
-        >
-          <option value="">Năm học</option>
-          <option v-for="y in schoolYearOptions" :key="y" :value="y">{{ y }}</option>
-        </select>
-
-        <select
-          v-model="filters.route"
-          aria-label="Lọc theo tuyến"
-          class="h-12 max-w-[12rem] rounded-xl border border-slate-200 bg-white px-3.5 text-base text-slate-700 outline-none ring-va-800/20 focus:ring"
-        >
-          <option value="">Tất cả tuyến</option>
-          <option v-for="r in routeOptions" :key="r" :value="r">{{ r }}</option>
-        </select>
-
-        <button
-          v-if="hasActiveFilters"
-          type="button"
-          class="inline-flex items-center gap-1 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-          @click="clearFilters"
-        >
-          <XMarkIcon class="h-4 w-4" /> Xóa lọc
-        </button>
-
-        <div class="ml-auto flex items-center gap-1 rounded-xl border border-slate-200 p-1">
-          <button
-            type="button"
-            class="grid h-9 w-9 place-items-center rounded-lg transition"
-            :class="view === 'grid' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'"
-            aria-label="Xem dạng lưới"
-            @click="view = 'grid'"
-          >
-            <Squares2X2Icon class="h-5 w-5" />
+      <AppFilterBar>
+        <div ref="tpProgramFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+          <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Bộ lọc đang áp dụng</p>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700">
+              <li v-if="filters.search" class="flex justify-between gap-2">
+                <span class="text-slate-500">Tìm kiếm</span>
+                <span class="max-w-[10rem] truncate font-medium">{{ filters.search }}</span>
+              </li>
+              <li v-if="filters.status" class="flex justify-between gap-2">
+                <span class="text-slate-500">Trạng thái</span>
+                <span class="font-medium">{{ statusLabel(filters.status) }}</span>
+              </li>
+              <li v-if="filters.schoolYear" class="flex justify-between gap-2">
+                <span class="text-slate-500">Năm học</span>
+                <span class="font-medium">{{ filters.schoolYear }}</span>
+              </li>
+              <li v-if="filters.route" class="flex justify-between gap-2">
+                <span class="text-slate-500">Tuyến</span>
+                <span class="max-w-[10rem] truncate font-medium">{{ filters.route }}</span>
+              </li>
+              <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
+            </ul>
+            <div class="mt-3 border-t border-slate-100 pt-3">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700">Hiển thị bộ lọc trên thanh</p>
+              <ul class="mt-2 space-y-2">
+                <li v-for="opt in filterBarVisibilityOptions" :key="opt.id" class="flex items-start gap-2">
+                  <input :id="'tp-prog-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600" />
+                  <label :for="'tp-prog-vis-' + opt.id" class="cursor-pointer text-sm text-slate-700">{{ opt.label }}</label>
+                </li>
+              </ul>
+            </div>
+            <button type="button" class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" @click="clearFilters(); closeFilterMenu()">
+              Xóa tất cả bộ lọc
+            </button>
+          </AppFilterFunnelMenu>
+          <div class="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
+          <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 hover:bg-slate-100" aria-label="Xóa lọc" @click="clearFilters">
+            <FunnelIcon class="h-5 w-5" />
+            <XMarkIcon class="h-3 w-3 text-rose-500" />
           </button>
-          <button
-            type="button"
-            class="grid h-9 w-9 place-items-center rounded-lg transition"
-            :class="view === 'list' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'"
-            aria-label="Xem dạng danh sách"
-            @click="view = 'list'"
-          >
-            <ListBulletIcon class="h-5 w-5" />
-          </button>
+          <div class="ml-auto flex items-center gap-1 rounded-xl border border-slate-200 p-1">
+            <button type="button" class="grid h-9 w-9 place-items-center rounded-lg transition" :class="view === 'grid' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'" aria-label="Xem dạng lưới" @click="view = 'grid'">
+              <Squares2X2Icon class="h-5 w-5" />
+            </button>
+            <button type="button" class="grid h-9 w-9 place-items-center rounded-lg transition" :class="view === 'list' ? 'bg-va-800 text-white' : 'text-slate-400 hover:text-slate-600'" aria-label="Xem dạng danh sách" @click="view = 'list'">
+              <ListBulletIcon class="h-5 w-5" />
+            </button>
+          </div>
         </div>
-      </div>
+        <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2">
+          <div v-if="filterBarVisible.search" class="relative min-w-[14rem] flex-1">
+            <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input v-model="filters.search" type="search" placeholder="Tìm kiếm…" aria-label="Tìm kiếm chương trình" class="h-9 w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-teal-500/20" />
+          </div>
+          <select v-if="filterBarVisible.status" v-model="filters.status" aria-label="Trạng thái" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm" :class="filters.status ? 'text-slate-900' : 'text-slate-500'">
+            <option value="">Trạng thái</option>
+            <option value="draft">Nháp</option>
+            <option value="active">Hoạt động</option>
+            <option value="paused">Tạm dừng</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="cancelled">Đã hủy</option>
+          </select>
+          <select v-if="filterBarVisible.schoolYear" v-model="filters.schoolYear" aria-label="Năm học" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm" :class="filters.schoolYear ? 'text-slate-900' : 'text-slate-500'">
+            <option value="">Năm học</option>
+            <option v-for="y in schoolYearOptions" :key="y" :value="y">{{ y }}</option>
+          </select>
+          <select v-if="filterBarVisible.route" v-model="filters.route" aria-label="Tuyến" class="h-9 max-w-[12rem] rounded-lg border border-slate-200 bg-white px-3 text-sm" :class="filters.route ? 'text-slate-900' : 'text-slate-500'">
+            <option value="">Tuyến</option>
+            <option v-for="r in routeOptions" :key="r" :value="r">{{ r }}</option>
+          </select>
+        </div>
+      </AppFilterBar>
 
       <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
         <p class="text-sm text-slate-500">{{ listSummaryText }}</p>
@@ -282,7 +282,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   PlusIcon,
@@ -302,6 +302,10 @@ import {
   CalendarDaysIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import { listPrograms } from '../../api/transportProgram'
 import { showAppErrorFromApi } from '../../composables/appMessage'
 
@@ -311,6 +315,43 @@ const items = ref([])
 const view = ref('grid')
 const sort = ref('newest')
 const filters = reactive({ search: '', status: '', schoolYear: '', route: '' })
+
+const TP_PROG_FILTER_VIS_IDS = ['search', 'status', 'schoolYear', 'route']
+const TP_PROG_FILTER_VIS_DEFAULTS = Object.fromEntries(TP_PROG_FILTER_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(TP_PROG_FILTER_VIS_IDS, TP_PROG_FILTER_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+const tpProgramFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(tpProgramFilterBarRef)
+
+const filterBarVisibilityOptions = [
+  { id: 'search', label: 'Tìm kiếm' },
+  { id: 'status', label: 'Trạng thái' },
+  { id: 'schoolYear', label: 'Năm học' },
+  { id: 'route', label: 'Tuyến' },
+]
+
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (filters.search?.trim()) n++
+  if (filters.status) n++
+  if (filters.schoolYear) n++
+  if (filters.route) n++
+  return n
+})
+
+function onTpProgramFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
+
 const LIST_PER_PAGE_OPTIONS = [5, 10, 15, 20]
 const listPage = ref(1)
 const listPerPage = ref(10)
@@ -546,5 +587,12 @@ function accent(s) {
   }[s] || { iconBg: 'bg-slate-100', iconText: 'text-slate-500', dot: 'bg-slate-400', bar: 'bg-slate-400' }
 }
 
-onMounted(load)
+onMounted(() => {
+  onTpProgramFilterBarEnter()
+  load()
+})
+
+onActivated(() => {
+  onTpProgramFilterBarEnter()
+})
 </script>

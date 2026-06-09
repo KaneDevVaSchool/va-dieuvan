@@ -3,6 +3,7 @@
  * Singleton để giữ bộ lọc khi chuyển giữa / và /reports.
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useFilterBarVisibility } from './useFilterBarVisibility.js'
 import { getSummary } from '../api/reports'
 import { i18n } from '../i18n'
 import { labelTripStatus, labelTripType, labelRequestStatus } from '../util/labels'
@@ -20,8 +21,11 @@ import {
   tripsByHourLineOption,
 } from '../util/transportDashboardCharts'
 
-const DIMENSION_BAR_VISIBLE_KEY = 'dash-dimension-bar-visible'
 const DIMENSION_FILTER_IDS = ['trip_type', 'channel', 'paper', 'urgent', 'trip_run', 'fleet']
+const REPORT_FILTER_BAR_VIS_IDS = ['period', 'dates', ...DIMENSION_FILTER_IDS]
+const REPORT_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(
+  REPORT_FILTER_BAR_VIS_IDS.map((id) => [id, false]),
+)
 
 const TRIP_RUN_STATUS_KEYS = [
   'pending',
@@ -35,10 +39,6 @@ const TRIP_RUN_STATUS_KEYS = [
 ]
 
 let sharedApi = null
-
-function defaultDimensionBarVisibility() {
-  return Object.fromEntries(DIMENSION_FILTER_IDS.map((id) => [id, true]))
-}
 
 function ymd(d) {
   const x = new Date(d)
@@ -91,7 +91,11 @@ function createSharedApi() {
   const filterTripRunStatus = ref('')
   const filterFleetMode = ref('')
 
-  const dimensionFilterBarVisible = ref(defaultDimensionBarVisibility())
+  const {
+    visible: filterBarVisible,
+    resetVisibility: resetFilterBarVisibility,
+    hasVisibleOnBar: hasVisibleBarFilters,
+  } = useFilterBarVisibility(REPORT_FILTER_BAR_VIS_IDS, REPORT_FILTER_BAR_VIS_DEFAULTS)
 
   const loading = ref(false)
   const loadError = ref('')
@@ -112,22 +116,6 @@ function createSharedApi() {
 
   function onWindowResize() {
     updateChartHeights()
-  }
-
-  function loadDimensionBarVisibility() {
-    try {
-      const raw = sessionStorage.getItem(DIMENSION_BAR_VISIBLE_KEY)
-      if (!raw) return
-      const parsed = JSON.parse(raw)
-      if (!parsed || typeof parsed !== 'object') return
-      const next = defaultDimensionBarVisibility()
-      for (const id of DIMENSION_FILTER_IDS) {
-        if (typeof parsed[id] === 'boolean') next[id] = parsed[id]
-      }
-      dimensionFilterBarVisible.value = next
-    } catch {
-      /* ignore */
-    }
   }
 
   function safeLabel(v, fb = '—') {
@@ -376,7 +364,7 @@ function createSharedApi() {
         typeof fd.label === 'string' &&
         Array.isArray(fd.options) &&
         fd.options.length > 0 &&
-        dimensionFilterBarVisible.value[fd.id] !== false,
+        filterBarVisible[fd.id] === true,
     ),
   )
 
@@ -645,20 +633,7 @@ function createSharedApi() {
     }),
   )
 
-  watch(
-    dimensionFilterBarVisible,
-    (vis) => {
-      try {
-        sessionStorage.setItem(DIMENSION_BAR_VISIBLE_KEY, JSON.stringify(vis))
-      } catch {
-        /* ignore */
-      }
-    },
-    { deep: true },
-  )
-
   onMounted(() => {
-    loadDimensionBarVisibility()
     updateChartHeights()
     if (!resizeAttached && typeof window !== 'undefined') {
       resizeAttached = true
@@ -681,7 +656,10 @@ function createSharedApi() {
     filterIsUrgent,
     filterTripRunStatus,
     filterFleetMode,
-    dimensionFilterBarVisible,
+    filterBarVisible,
+    resetFilterBarVisibility,
+    hasVisibleBarFilters,
+    reportFilterBarVisIds: REPORT_FILTER_BAR_VIS_IDS,
     loading,
     loadError,
     summary,

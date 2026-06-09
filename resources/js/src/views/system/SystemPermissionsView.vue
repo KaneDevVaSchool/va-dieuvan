@@ -1,7 +1,8 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import {
   ChevronDownIcon,
+  FunnelIcon,
   LockClosedIcon,
   MagnifyingGlassIcon,
   PencilSquareIcon,
@@ -9,6 +10,9 @@ import {
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import { PERMISSION_MODULES, groupPermissions, getModuleId } from '../../config/permissionModules.js'
 import { SEED_PERMISSION_PRESETS } from '../../config/systemSeedOptions'
 import permissionPlainVi from '../../data/permission_plain_vi.json'
@@ -48,6 +52,42 @@ const searchQ      = ref('')
 const filterRoleId = ref('')
 const filterModule = ref('all')
 const filterUnassigned = ref(false)
+
+const PERM_FILTER_VIS_IDS = ['search', 'module', 'role', 'unassigned']
+const PERM_FILTER_VIS_DEFAULTS = Object.fromEntries(PERM_FILTER_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(PERM_FILTER_VIS_IDS, PERM_FILTER_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+
+const permFilterVisibilityOptions = [
+  { id: 'search', label: 'Tìm kiếm' },
+  { id: 'module', label: 'Module' },
+  { id: 'role', label: 'Vai trò' },
+  { id: 'unassigned', label: 'Chưa gán vai trò' },
+]
+
+function onPermissionsFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
+
+function moduleFilterSummary() {
+  if (filterModule.value === 'all') return 'Tất cả module'
+  return MODULE_OPTS.value.find((o) => o.value === filterModule.value)?.label ?? filterModule.value
+}
+
+function roleFilterSummary() {
+  if (!filterRoleId.value) return 'Tất cả vai trò'
+  const r = roles.value.find((x) => String(x.id) === filterRoleId.value)
+  return r?.display_name || r?.name || filterRoleId.value
+}
 
 // Module accordions — mở mặc định tất cả
 const openModules = ref(new Set())
@@ -271,7 +311,14 @@ function resetFilters() {
   filterUnassigned.value = false
 }
 
-onMounted(load)
+onMounted(() => {
+  onPermissionsFilterBarEnter()
+  load()
+})
+
+onActivated(() => {
+  onPermissionsFilterBarEnter()
+})
 </script>
 
 <template>
@@ -289,60 +336,91 @@ onMounted(load)
       </Button>
     </div>
 
-    <!-- ── Filter bar ─────────────────────────────────────────────────────── -->
-    <div class="flex flex-wrap items-center gap-2">
-
-      <!-- Search -->
-      <div class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
-        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-        <input
-          v-model="searchRaw"
-          type="search"
-          placeholder="Tìm quyền…"
-          aria-label="Tìm quyền"
-          class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-        />
+    <AppFilterBar>
+      <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilters">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Bộ lọc đang áp dụng</p>
+          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+            <li v-if="searchRaw.trim()" class="flex justify-between gap-2">
+              <span class="text-slate-500">Tìm kiếm</span>
+              <span class="max-w-[60%] truncate text-right font-medium">{{ searchRaw }}</span>
+            </li>
+            <li v-if="filterModule !== 'all'" class="flex justify-between gap-2">
+              <span class="text-slate-500">Module</span>
+              <span class="font-medium">{{ moduleFilterSummary() }}</span>
+            </li>
+            <li v-if="filterRoleId" class="flex justify-between gap-2">
+              <span class="text-slate-500">Vai trò</span>
+              <span class="font-medium">{{ roleFilterSummary() }}</span>
+            </li>
+            <li v-if="filterUnassigned" class="flex justify-between gap-2">
+              <span class="text-slate-500">Gán vai trò</span>
+              <span class="font-medium">Chưa gán</span>
+            </li>
+            <li v-if="activeFilters === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
+          </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Hiển thị bộ lọc trên thanh</p>
+            <ul class="mt-2 space-y-2">
+              <li v-for="opt in permFilterVisibilityOptions" :key="'perm-vis-' + opt.id" class="flex gap-2">
+                <input :id="'perm-filter-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label :for="'perm-filter-vis-' + opt.id" class="text-sm">{{ opt.label }}</label>
+              </li>
+            </ul>
+          </div>
+          <button type="button" class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium dark:border-slate-600" @click="resetFilters(); closeFilterMenu()">
+            Xóa tất cả bộ lọc
+          </button>
+        </AppFilterFunnelMenu>
+        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" aria-hidden="true" />
+        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" title="Xóa bộ lọc" @click="resetFilters">
+          <span class="relative inline-flex">
+            <FunnelIcon class="h-5 w-5" />
+            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" />
+          </span>
+        </button>
       </div>
-
-      <!-- Module -->
-      <select
-        v-model="filterModule"
-        aria-label="Lọc theo module"
-        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-      >
-        <option v-for="opt in MODULE_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-
-      <!-- Role -->
-      <select
-        v-model="filterRoleId"
-        aria-label="Lọc theo vai trò"
-        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-      >
-        <option value="">Tất cả vai trò</option>
-        <option v-for="r in roles" :key="r.id" :value="String(r.id)">
-          {{ r.display_name || r.name }}
-        </option>
-      </select>
-
-      <!-- Chưa gán -->
-      <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
-        <input v-model="filterUnassigned" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
-        Chưa gán vai trò
-      </label>
-
-      <!-- Clear -->
-      <button
-        v-if="activeFilters > 0"
-        type="button"
-        class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-        @click="resetFilters"
-      >
-        <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-        Xóa bộ lọc
-        <span class="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-bold text-white">{{ activeFilters }}</span>
-      </button>
-    </div>
+      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
+        <div v-if="filterBarVisible.search" class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            v-model="searchRaw"
+            type="search"
+            placeholder="Tìm quyền…"
+            aria-label="Tìm quyền"
+            class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+          />
+        </div>
+        <select
+          v-if="filterBarVisible.module"
+          v-model="filterModule"
+          aria-label="Lọc theo module"
+          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900"
+          :class="filterModule === 'all' ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
+        >
+          <option v-for="opt in MODULE_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+        <select
+          v-if="filterBarVisible.role"
+          v-model="filterRoleId"
+          aria-label="Lọc theo vai trò"
+          class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900"
+          :class="!filterRoleId ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100'"
+        >
+          <option value="">Tất cả vai trò</option>
+          <option v-for="r in roles" :key="r.id" :value="String(r.id)">
+            {{ r.display_name || r.name }}
+          </option>
+        </select>
+        <label
+          v-if="filterBarVisible.unassigned"
+          class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          <input v-model="filterUnassigned" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900" />
+          Chưa gán vai trò
+        </label>
+      </div>
+    </AppFilterBar>
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
     <div v-if="loading" class="space-y-3">

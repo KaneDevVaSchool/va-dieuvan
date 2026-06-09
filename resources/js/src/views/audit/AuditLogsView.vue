@@ -18,82 +18,101 @@
       </button>
     </div>
 
-    <!-- ── Filter strip ────────────────────────────────────────────────────── -->
-    <div class="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-
-      <!-- Category tabs -->
-      <div class="flex flex-wrap gap-1.5">
-        <button
-          v-for="cat in CATEGORIES"
-          :key="cat.key"
-          type="button"
-          class="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition"
-          :class="activeCategory === cat.key
-            ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-            : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'"
-          @click="setCategory(cat.key)"
-        >
-          <span>{{ cat.icon }}</span>
-          {{ cat.label }}
+    <AppFilterBar>
+      <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Bộ lọc đang áp dụng</p>
+          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+            <li v-if="activeCategory !== 'all'" class="flex justify-between gap-2">
+              <span class="text-slate-500">Nhóm</span>
+              <span class="font-medium">{{ activeCategoryLabel }}</span>
+            </li>
+            <li v-if="searchInput.trim()" class="flex justify-between gap-2">
+              <span class="text-slate-500">Tìm kiếm</span>
+              <span class="max-w-[60%] truncate text-right font-medium">{{ searchInput }}</span>
+            </li>
+            <li v-if="filters.from || filters.to" class="flex justify-between gap-2">
+              <span class="text-slate-500">Khoảng ngày</span>
+              <span class="font-medium tabular-nums">{{ dateRangeLabel }}</span>
+            </li>
+            <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
+          </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Hiển thị bộ lọc trên thanh</p>
+            <ul class="mt-2 space-y-2">
+              <li class="flex gap-2">
+                <input id="audit-vis-category" v-model="filterBarVisible.category" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label for="audit-vis-category" class="text-sm">Nhóm sự kiện</label>
+              </li>
+              <li class="flex gap-2">
+                <input id="audit-vis-search" v-model="filterBarVisible.search" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label for="audit-vis-search" class="text-sm">Tìm trong trang</label>
+              </li>
+              <li class="flex gap-2">
+                <input id="audit-vis-dates" v-model="filterBarVisible.dates" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label for="audit-vis-dates" class="text-sm">Khoảng ngày</label>
+              </li>
+            </ul>
+          </div>
+          <button type="button" class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium dark:border-slate-600" @click="resetFilters(); closeFilterMenu()">
+            Xóa tất cả bộ lọc
+          </button>
+        </AppFilterFunnelMenu>
+        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" aria-hidden="true" />
+        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" title="Xóa lọc" @click="resetFilters">
+          <span class="relative inline-flex">
+            <FunnelIcon class="h-5 w-5" />
+            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 text-rose-500" />
+          </span>
         </button>
       </div>
-
-      <!-- Search + date -->
-      <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-        <div class="relative min-w-0 flex-1">
-          <MagnifyingGlassIcon class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input
-            v-model="searchInput"
-            type="search"
-            placeholder="Tìm theo tên người, hành động…"
-            class="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-          />
+      <div v-if="hasVisibleBarFilters" class="mt-2 space-y-3 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
+        <div v-if="filterBarVisible.category" class="flex flex-wrap gap-1.5">
+          <button
+            v-for="cat in CATEGORIES"
+            :key="cat.key"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition"
+            :class="activeCategory === cat.key
+              ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'"
+            @click="setCategory(cat.key)"
+          >
+            <span>{{ cat.icon }}</span>
+            {{ cat.label }}
+          </button>
         </div>
-
-        <!-- Date toggle -->
-        <button
-          type="button"
-          class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-medium transition"
-          :class="showDateFilter
-            ? 'border-teal-400 bg-teal-50 text-teal-700 dark:border-teal-700 dark:bg-teal-950/40 dark:text-teal-300'
-            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'"
-          @click="showDateFilter = !showDateFilter"
-        >
-          <CalendarDaysIcon class="h-4 w-4" aria-hidden="true" />
-          {{ dateRangeLabel }}
-        </button>
-
-        <button
-          v-if="hasActiveFilters"
-          type="button"
-          class="inline-flex h-9 shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-500 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
-          @click="resetFilters"
-        >
-          <XMarkIcon class="h-3.5 w-3.5" aria-hidden="true" />
-          Xóa lọc
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <div v-if="filterBarVisible.search" class="relative min-w-0 flex-1">
+            <MagnifyingGlassIcon class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+            <input
+              v-model="searchInput"
+              type="search"
+              placeholder="Tìm theo tên người, hành động…"
+              class="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+            />
+          </div>
+          <template v-if="filterBarVisible.dates">
+            <label class="flex items-center gap-2 text-sm">
+              <span class="w-14 shrink-0 text-slate-500">Từ ngày</span>
+              <input
+                v-model="filters.from"
+                type="date"
+                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <span class="w-14 shrink-0 text-slate-500">Đến ngày</span>
+              <input
+                v-model="filters.to"
+                type="date"
+                class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </label>
+          </template>
+        </div>
       </div>
-
-      <!-- Date range inputs (collapsible) -->
-      <div v-if="showDateFilter" class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-        <label class="flex items-center gap-2 text-sm">
-          <span class="w-14 shrink-0 text-slate-500">Từ ngày</span>
-          <input
-            v-model="filters.from"
-            type="date"
-            class="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          />
-        </label>
-        <label class="flex items-center gap-2 text-sm">
-          <span class="w-14 shrink-0 text-slate-500">Đến ngày</span>
-          <input
-            v-model="filters.to"
-            type="date"
-            class="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          />
-        </label>
-      </div>
-    </div>
+    </AppFilterBar>
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
     <div v-if="loading" class="space-y-2">
@@ -211,19 +230,22 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
   ArrowPathIcon,
   MagnifyingGlassIcon,
-  CalendarDaysIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
+  FunnelIcon,
   XMarkIcon,
   ExclamationCircleIcon,
 } from '@heroicons/vue/24/outline'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import { listAuditLogs } from '../../api/audit'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { formatApiError } from '../../api/http'
@@ -321,15 +343,40 @@ const meta           = ref({})
 const activeCategory = ref('all')
 const searchInput    = ref('')
 const searchQ        = ref('')
-const showDateFilter = ref(false)
 
 const filters = reactive({ from: '', to: '', page: 1, per_page: 50 })
 
+const AUDIT_FILTER_VIS_IDS = ['category', 'search', 'dates']
+const AUDIT_FILTER_VIS_DEFAULTS = Object.fromEntries(AUDIT_FILTER_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(AUDIT_FILTER_VIS_IDS, AUDIT_FILTER_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+
+function onAuditFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
+
 // ─── Computed ─────────────────────────────────────────────────────────────────
 
-const hasActiveFilters = computed(() =>
-  activeCategory.value !== 'all' || searchInput.value.trim() || filters.from || filters.to,
-)
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (activeCategory.value !== 'all') n++
+  if (searchInput.value.trim()) n++
+  if (filters.from || filters.to) n++
+  return n
+})
+
+const activeCategoryLabel = computed(() => CATEGORIES.find((c) => c.key === activeCategory.value)?.label ?? activeCategory.value)
+
+const hasActiveFilters = computed(() => activeFilterCount.value > 0)
 
 const dateRangeLabel = computed(() => {
   if (!filters.from && !filters.to) return 'Khoảng ngày'
@@ -441,7 +488,6 @@ function resetFilters() {
   filters.from         = ''
   filters.to           = ''
   filters.page         = 1
-  showDateFilter.value = false
   if (listReady.value) reload(false)
 }
 
@@ -475,7 +521,12 @@ function goPage(p) {
 }
 
 onMounted(async () => {
+  onAuditFilterBarEnter()
   await reload(false)
   listReady.value = true
+})
+
+onActivated(() => {
+  onAuditFilterBarEnter()
 })
 </script>

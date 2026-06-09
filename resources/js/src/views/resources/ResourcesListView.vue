@@ -177,32 +177,12 @@
       </div>
     </div>
 
-    <!-- Filters: horizontal bar (same pattern as Requests) -->
-    <div
+    <AppFilterBar
       v-show="!(activeTab === 'vehicles' && vehiclesViewMode === 'trash') && !(activeTab === 'drivers' && driversViewMode === 'trash') && !(activeTab === 'suppliers' && suppliersViewMode === 'trash')"
-      ref="resourcesFilterBarRef"
-      class="rounded-2xl border border-violet-100/90 bg-gradient-to-r from-slate-50 via-violet-50/40 to-indigo-50/25 px-2 py-2 shadow-sm sm:px-3 sm:py-2.5 dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900"
     >
-      <div class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-        <details ref="resourceFilterMenuRef" class="group relative">
-          <summary
-            class="flex cursor-pointer list-none items-center gap-1 rounded-lg border border-white/80 bg-white/90 px-2 py-1.5 text-slate-700 shadow-sm transition hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 [&::-webkit-details-marker]:hidden"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-              <span
-                v-if="activeResourceFilterCount > 0"
-                class="absolute -right-1.5 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold leading-none text-white"
-              >
-                {{ activeResourceFilterCount > 9 ? '9+' : activeResourceFilterCount }}
-              </span>
-            </span>
-            <ChevronDownIcon class="h-4 w-4 text-slate-400" aria-hidden="true" />
-          </summary>
-          <div
-            class="absolute left-0 top-[calc(100%+6px)] z-40 min-w-[260px] rounded-xl border border-slate-200/90 bg-white p-3 shadow-lg ring-1 ring-slate-900/5 dark:border-slate-700 dark:bg-slate-900"
-          >
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('resources.filter_menu_title') }}</p>
+      <div ref="resourcesFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeResourceFilterCount">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ t('resources.filter_menu_title') }}</p>
             <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
               <li v-if="filters.status" class="flex justify-between gap-2">
                 <span class="text-slate-500">{{ t('resources.filter_status') }}</span>
@@ -242,6 +222,30 @@
               </li>
               <li v-if="activeResourceFilterCount === 0" class="text-slate-400">{{ t('resources.filter_menu_empty') }}</li>
             </ul>
+            <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                {{ t('trips_page.filter_show_controls_title') }}
+              </p>
+              <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                {{ t('trips_page.filter_show_controls_hint') }}
+              </p>
+              <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+                <li v-for="opt in resourceFilterVisibilityOptions" :key="'res-vis-' + opt.id" class="flex items-start gap-2">
+                  <input
+                    :id="'resource-filter-vis-' + opt.id"
+                    v-model="filterBarVisible[opt.id]"
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
+                  />
+                  <label
+                    :for="'resource-filter-vis-' + opt.id"
+                    class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
+                  >
+                    {{ t(opt.labelKey) }}
+                  </label>
+                </li>
+              </ul>
+            </div>
             <button
               type="button"
               class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -249,14 +253,30 @@
             >
               {{ t('resources.filter_clear_all') }}
             </button>
-          </div>
-        </details>
+        </AppFilterFunnelMenu>
 
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
 
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+            :title="t('resources.filter_clear')"
+            :aria-label="t('resources.filter_clear')"
+            @click="resetResourceFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
+            </span>
+          </button>
+      </div>
+
+      <div
+        v-if="hasVisibleBarFilters"
+        class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
+      >
           <!-- Trạng thái -->
-          <details class="group relative min-w-0">
+          <details v-if="filterBarVisible.status" class="group relative min-w-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
               :class="
@@ -303,7 +323,7 @@
 
           <!-- Xe: loại, tài xế mặc định -->
           <template v-if="activeTab === 'vehicles'">
-            <details class="group relative min-w-0">
+            <details v-if="filterBarVisible.type" class="group relative min-w-0">
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
                 :class="
@@ -348,7 +368,7 @@
               </div>
             </details>
 
-            <details class="group relative min-w-0">
+            <details v-if="filterBarVisible.driver_default" class="group relative min-w-0">
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
                 :class="
@@ -396,7 +416,7 @@
 
           <!-- NCC: hợp đồng -->
           <template v-if="activeTab === 'drivers' && driversViewMode === 'active'">
-            <details class="group relative min-w-0">
+            <details v-if="filterBarVisible.driver_license" class="group relative min-w-0">
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
                 :class="
@@ -441,7 +461,7 @@
               </div>
             </details>
 
-            <details class="group relative min-w-0">
+            <details v-if="filterBarVisible.driver_availability" class="group relative min-w-0">
               <summary
                 class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
                 :class="
@@ -487,7 +507,7 @@
             </details>
           </template>
 
-          <details v-if="activeTab === 'suppliers'" class="group relative min-w-0">
+          <details v-if="activeTab === 'suppliers' && filterBarVisible.contract" class="group relative min-w-0">
             <summary
               class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
               :class="
@@ -532,42 +552,12 @@
             </div>
           </details>
 
-        </div>
-
-        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-            :title="t('resources.filter_clear')"
-            @click="resetResourceFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/50" />
-            </span>
-          </button>
-
-          <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-600" aria-hidden="true" />
-
-          <button
-            v-if="activeTab === 'vehicles' && vehiclesViewMode === 'active'"
-            type="button"
-            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-            :aria-expanded="resourceFiltersExtraOpen"
-            @click="resourceFiltersExtraOpen = !resourceFiltersExtraOpen"
-          >
-            {{ t('requests_page.filter_extra') }}
-            <PlusCircleIcon class="h-5 w-5 text-teal-600 dark:text-teal-400" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-
-      <!-- Thuộc tính khác: BH / ĐK / phí (xe) -->
-      <div
-        v-show="resourceFiltersExtraOpen && activeTab === 'vehicles' && vehiclesViewMode === 'active'"
-        class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-3 dark:border-slate-700"
-      >
-        <details v-for="spec in resourceVehicleDocFiltersExtra" :key="'extra-' + spec.key" class="group relative min-w-0">
+          <template v-if="activeTab === 'vehicles' && vehiclesViewMode === 'active'">
+            <template v-for="spec in resourceVehicleDocFiltersExtra" :key="'extra-' + spec.key">
+            <details
+              v-if="filterBarVisible[spec.key]"
+              class="group relative min-w-0"
+            >
           <summary
             class="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2 py-1.5 shadow-sm transition [&::-webkit-details-marker]:hidden"
             :class="
@@ -611,8 +601,10 @@
             </ul>
           </div>
         </details>
+            </template>
+          </template>
       </div>
-    </div>
+    </AppFilterBar>
 
     <div v-if="loading" class="px-4 py-12 text-center text-sm text-slate-500">{{ t('resources.loading') }}</div>
     <div v-else-if="error" class="px-4 py-12 text-center text-sm text-rose-600">{{ error }}</div>
@@ -3166,7 +3158,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -3178,13 +3170,15 @@ import {
   EyeIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
-  PlusCircleIcon,
   TrashIcon,
   ViewColumnsIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import PdfFileIcon from '../../components/icons/PdfFileIcon.vue'
 import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import {
   bulkDeleteDrivers,
   bulkDeleteTransportProviders,
@@ -3270,6 +3264,52 @@ const filters = ref({
   driver_license: '',
   driver_availability: '',
 })
+
+const RESOURCE_FILTER_VIS_IDS = [
+  'status',
+  'type',
+  'driver_default',
+  'insurance',
+  'inspection',
+  'road_fee',
+  'contract',
+  'driver_license',
+  'driver_availability',
+]
+const RESOURCE_FILTER_VIS_DEFAULTS = Object.fromEntries(RESOURCE_FILTER_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(RESOURCE_FILTER_VIS_IDS, RESOURCE_FILTER_VIS_DEFAULTS)
+
+const resourceFilterVisibilityOptions = computed(() => {
+  const tab = activeTab.value
+  const opts = [{ id: 'status', labelKey: 'resources.filter_vis_status' }]
+  if (tab === 'vehicles') {
+    opts.push(
+      { id: 'type', labelKey: 'resources.filter_vis_type' },
+      { id: 'driver_default', labelKey: 'resources.filter_vis_driver_default' },
+      { id: 'insurance', labelKey: 'resources.filter_vis_insurance' },
+      { id: 'inspection', labelKey: 'resources.filter_vis_inspection' },
+      { id: 'road_fee', labelKey: 'resources.filter_vis_road_fee' },
+    )
+  }
+  if (tab === 'drivers') {
+    opts.push(
+      { id: 'driver_license', labelKey: 'resources.filter_vis_driver_license' },
+      { id: 'driver_availability', labelKey: 'resources.filter_vis_driver_availability' },
+    )
+  }
+  if (tab === 'suppliers') {
+    opts.push({ id: 'contract', labelKey: 'resources.filter_vis_contract' })
+  }
+  return opts
+})
+
+function onResourcesFilterBarEnter() {
+  resetFilterBarVisibility()
+}
 
 const activeResourceFilterCount = computed(() => {
   let n = 0
@@ -3397,8 +3437,7 @@ function resetResourceFilters() {
 }
 
 function closeResourceFilterMenu() {
-  const el = resourceFilterMenuRef.value
-  if (el && 'open' in el) el.open = false
+  filterMenuRef.value?.close?.()
 }
 
 function emptyExternalDriverForm() {
@@ -3480,10 +3519,9 @@ const bulkForceModalOpen = ref(false)
 const bulkForceKind = ref('')
 const bulkForcePendingIds = ref([])
 const bulkForceSubmitting = ref(false)
-const resourceFilterMenuRef = ref(null)
+const filterMenuRef = ref(null)
 const resourcesFilterBarRef = ref(null)
 useDetailsAutoCloseWithin(resourcesFilterBarRef)
-const resourceFiltersExtraOpen = ref(false)
 
 const resourceStatusFilterOptions = computed(() => [
   { value: '', label: t('resources.filter_all') },
@@ -4046,8 +4084,13 @@ watch(
 )
 
 onMounted(() => {
+  onResourcesFilterBarEnter()
   applyTabFromRoute()
   loadAll()
+})
+
+onActivated(() => {
+  onResourcesFilterBarEnter()
 })
 
 function setTab(id) {
@@ -4081,7 +4124,6 @@ function setVehiclesViewMode(mode) {
   vehiclesViewMode.value = mode
   selectedVehicle.value = null
   bulkVehicleIds.value = []
-  resourceFiltersExtraOpen.value = false
   loadAll()
 }
 
@@ -4404,7 +4446,6 @@ watch(filteredSuppliers, (list) => {
 
 watch(activeTab, () => {
   search.value = ''
-  resourceFiltersExtraOpen.value = false
   filters.value = {
     status: '',
     type: '',

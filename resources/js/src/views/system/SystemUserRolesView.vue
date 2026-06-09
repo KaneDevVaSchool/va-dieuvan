@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, ref, watch } from 'vue'
 import {
   MagnifyingGlassIcon,
   UserGroupIcon,
@@ -8,8 +8,13 @@ import {
   XMarkIcon,
   ViewColumnsIcon,
   ChevronDownIcon,
+  FunnelIcon,
 } from '@heroicons/vue/24/outline'
 import { useUserRoleManager } from '../../composables/useUserRoleManager'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 import Card from '../../components/ui/Card.vue'
 import Button from '../../components/ui/Button.vue'
 import UserAvatar from '../../components/branding/UserAvatar.vue'
@@ -92,6 +97,24 @@ const ASSIGNMENT_OPTS = [
 
 const PER_PAGE_OPTS = ['10', '25', '50', '100', 'all']
 
+const USER_ROLES_FILTER_VIS_IDS = ['search', 'assignment', 'per_page']
+const USER_ROLES_FILTER_VIS_DEFAULTS = Object.fromEntries(USER_ROLES_FILTER_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(USER_ROLES_FILTER_VIS_IDS, USER_ROLES_FILTER_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+const userRolesFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(userRolesFilterBarRef)
+
+const filterBarVisibilityOptions = [
+  { id: 'search', label: 'Tìm kiếm' },
+  { id: 'assignment', label: 'Tình trạng gán' },
+  { id: 'per_page', label: 'Số dòng/trang' },
+]
+
 const activeFilters = computed(() => {
   let n = 0
   if (filters.q.trim()) n++
@@ -99,6 +122,14 @@ const activeFilters = computed(() => {
   if (filters.per_page !== '25') n++
   return n
 })
+
+function onUserRolesFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
 
 function resetFilters() {
   filters.q          = ''
@@ -116,7 +147,14 @@ function userCurrentRoleName(user) {
     || null
 }
 
-onMounted(() => bootstrap())
+onMounted(() => {
+  onUserRolesFilterBarEnter()
+  bootstrap()
+})
+
+onActivated(() => {
+  onUserRolesFilterBarEnter()
+})
 </script>
 
 <template>
@@ -136,58 +174,51 @@ onMounted(() => bootstrap())
       </div>
     </div>
 
-    <!-- ── Filter bar ─────────────────────────────────────────────────────── -->
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- Search -->
-      <div class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
-        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-        <input
-          v-model="filters.q"
-          type="search"
-          placeholder="Tìm nhân viên…"
-          aria-label="Tìm nhân viên"
-          class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-          :disabled="isLocked"
-        />
+    <AppFilterBar>
+      <div ref="userRolesFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilters">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Bộ lọc đang áp dụng</p>
+          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+            <li v-if="filters.q.trim()" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ filters.q }}</span></li>
+            <li v-if="filters.assignment !== 'all'" class="flex justify-between gap-2"><span class="text-slate-500">Gán vai trò</span><span class="font-medium">{{ ASSIGNMENT_OPTS.find(o => o.value === filters.assignment)?.label }}</span></li>
+            <li v-if="filters.per_page !== '25'" class="flex justify-between gap-2"><span class="text-slate-500">Số dòng/trang</span><span class="font-medium">{{ filters.per_page }}</span></li>
+            <li v-if="activeFilters === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
+          </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <p class="text-[11px] font-semibold uppercase text-violet-700 dark:text-violet-300">Hiển thị bộ lọc trên thanh</p>
+            <ul class="mt-2 space-y-2">
+              <li v-for="opt in filterBarVisibilityOptions" :key="opt.id" class="flex gap-2">
+                <input :id="'ur-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label :for="'ur-vis-' + opt.id" class="text-sm text-slate-700 dark:text-slate-300">{{ opt.label }}</label>
+              </li>
+            </ul>
+          </div>
+          <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm dark:border-slate-600" @click="resetFilters(); closeFilterMenu()">Xóa tất cả bộ lọc</button>
+        </AppFilterFunnelMenu>
+        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
+        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" @click="resetFilters">
+          <FunnelIcon class="h-5 w-5" /><XMarkIcon class="h-3 w-3 text-rose-500" />
+        </button>
       </div>
-
-      <!-- Tình trạng gán -->
-      <select
-        v-model="filters.assignment"
-        aria-label="Lọc tình trạng gán"
-        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-        :disabled="isLocked"
-        @change="applyFilters"
-      >
-        <option v-for="opt in ASSIGNMENT_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-
-      <!-- Per page -->
-      <select
-        v-model="filters.per_page"
-        aria-label="Số dòng mỗi trang"
-        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-        :disabled="isLocked"
-        @change="applyFilters"
-      >
-        <option value="10">10 / trang</option>
-        <option value="25">25 / trang</option>
-        <option value="50">50 / trang</option>
-        <option value="100">100 / trang</option>
-        <option value="all">Tất cả</option>
-      </select>
-
-      <!-- Clear filters -->
-      <button
-        v-if="activeFilters > 0"
-        type="button"
-        class="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400"
-        @click="resetFilters"
-      >
-        <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-        Xóa bộ lọc
-      </button>
-    </div>
+      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
+        <div v-if="filterBarVisible.search" class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input v-model="filters.q" type="search" placeholder="Tìm nhân viên…" aria-label="Tìm nhân viên" class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm dark:border-slate-600 dark:bg-slate-900" :disabled="isLocked" />
+        </div>
+        <select v-if="filterBarVisible.assignment" v-model="filters.assignment" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900" :class="filters.assignment === 'all' ? 'text-slate-500' : 'text-slate-900'" :disabled="isLocked" @change="applyFilters">
+          <option value="all">Tình trạng gán</option>
+          <option value="assigned">Đã gán vai trò</option>
+          <option value="unassigned">Chưa gán vai trò</option>
+        </select>
+        <select v-if="filterBarVisible.per_page" v-model="filters.per_page" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900" :class="filters.per_page === '25' ? 'text-slate-500' : 'text-slate-900'" :disabled="isLocked" @change="applyFilters">
+          <option value="10">10</option>
+          <option value="25">Số dòng/trang</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">Tất cả</option>
+        </select>
+      </div>
+    </AppFilterBar>
 
     <!-- ── Bulk action bar ────────────────────────────────────────────────── -->
     <Transition

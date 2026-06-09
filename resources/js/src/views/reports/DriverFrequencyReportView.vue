@@ -35,8 +35,83 @@
     </header>
 
     <AppFilterBar>
-      <div class="flex flex-wrap items-center gap-2">
+      <div ref="freqFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {{ t('driver_freq.filter_menu_title') }}
+          </p>
+          <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+            <li class="flex justify-between gap-2">
+              <span class="text-slate-500">{{ t('driver_freq.filter_year') }}</span>
+              <span class="font-medium tabular-nums">{{ filters.year }}</span>
+            </li>
+            <li v-if="filters.quarter" class="flex justify-between gap-2">
+              <span class="text-slate-500">{{ t('driver_freq.filter_quarter') }}</span>
+              <span class="font-medium">{{ filters.quarter.toUpperCase() }}</span>
+            </li>
+            <li v-if="filters.driverId" class="flex justify-between gap-2">
+              <span class="text-slate-500">{{ t('driver_freq.filter_driver') }}</span>
+              <span class="max-w-[10rem] truncate font-medium">{{ driverFilterSummary }}</span>
+            </li>
+            <li v-if="filters.vehiclePlate" class="flex justify-between gap-2">
+              <span class="text-slate-500">{{ t('driver_freq.filter_vehicle') }}</span>
+              <span class="font-medium">{{ filters.vehiclePlate }}</span>
+            </li>
+            <li v-if="filters.tripType" class="flex justify-between gap-2">
+              <span class="text-slate-500">{{ t('driver_freq.filter_trip_type') }}</span>
+              <span class="font-medium">{{ tripTypeFilterSummary }}</span>
+            </li>
+            <li v-if="activeFilterCount === 0" class="text-slate-400">{{ t('filter_bar.empty') }}</li>
+          </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+              {{ t('trips_page.filter_show_controls_title') }}
+            </p>
+            <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+              {{ t('trips_page.filter_show_controls_hint') }}
+            </p>
+            <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
+              <li v-for="opt in filterBarVisibilityOptions" :key="'df-vis-' + opt.id" class="flex items-start gap-2">
+                <input
+                  :id="'driver-freq-filter-vis-' + opt.id"
+                  v-model="filterBarVisible[opt.id]"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900"
+                />
+                <label :for="'driver-freq-filter-vis-' + opt.id" class="cursor-pointer text-sm text-slate-700 dark:text-slate-300">
+                  {{ t(opt.labelKey) }}
+                </label>
+              </li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+            @click="resetFilters(); closeFilterMenu()"
+          >
+            {{ t('driver_freq.clear_filters') }}
+          </button>
+        </AppFilterFunnelMenu>
+        <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
+        <button
+          type="button"
+          class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+          :title="t('filter_bar.clear_icon')"
+          :aria-label="t('filter_bar.clear_icon')"
+          @click="resetFilters"
+        >
+          <span class="relative inline-flex">
+            <FunnelIcon class="h-5 w-5" />
+            <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40" />
+          </span>
+        </button>
+      </div>
+      <div
+        v-if="hasVisibleBarFilters"
+        class="mt-2 flex min-w-0 flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30"
+      >
         <select
+          v-if="filterBarVisible.year"
           v-model.number="filters.year"
           class="freq-select"
           :aria-label="t('driver_freq.filter_year')"
@@ -45,53 +120,48 @@
           <option v-for="y in YEAR_OPTIONS" :key="y" :value="y">{{ y }}</option>
         </select>
         <select
+          v-if="filterBarVisible.quarter"
           v-model="filters.quarter"
           class="freq-select"
           :aria-label="t('driver_freq.filter_quarter')"
           @change="onFilterChange"
         >
-          <option value="">{{ t('driver_freq.all_quarters') }}</option>
+          <option value="">{{ t('driver_freq.filter_quarter') }}</option>
           <option value="q1">{{ t('driver_freq.filter_quarter_q1') }}</option>
           <option value="q2">{{ t('driver_freq.filter_quarter_q2') }}</option>
           <option value="q3">{{ t('driver_freq.filter_quarter_q3') }}</option>
           <option value="q4">{{ t('driver_freq.filter_quarter_q4') }}</option>
         </select>
         <select
+          v-if="filterBarVisible.driverId"
           v-model="filters.driverId"
           class="freq-select freq-select--wide"
           :aria-label="t('driver_freq.filter_driver')"
           @change="onFilterChange"
         >
-          <option value="">{{ t('driver_freq.all_drivers') }}</option>
+          <option value="">{{ t('driver_freq.filter_driver') }}</option>
           <option v-for="d in filterOptions.drivers" :key="d.id" :value="d.id">{{ d.name }}</option>
         </select>
         <select
+          v-if="filterBarVisible.vehiclePlate"
           v-model="filters.vehiclePlate"
           class="freq-select"
           :aria-label="t('driver_freq.filter_vehicle')"
           @change="onFilterChange"
         >
-          <option value="">{{ t('driver_freq.all_vehicles') }}</option>
+          <option value="">{{ t('driver_freq.filter_vehicle') }}</option>
           <option v-for="v in filterOptions.vehicles" :key="v.id" :value="v.plate">{{ v.plate }}</option>
         </select>
         <select
+          v-if="filterBarVisible.tripType"
           v-model="filters.tripType"
           class="freq-select freq-select--wide"
           :aria-label="t('driver_freq.filter_trip_type')"
           @change="onFilterChange"
         >
-          <option value="">{{ t('driver_freq.all_trip_types') }}</option>
+          <option value="">{{ t('driver_freq.filter_trip_type') }}</option>
           <option v-for="tt in TRIP_TYPES" :key="tt.value" :value="tt.value">{{ tt.label }}</option>
         </select>
-        <button
-          v-if="activeFilterCount > 0"
-          type="button"
-          class="freq-clear-filters"
-          :title="t('driver_freq.clear_filters')"
-          @click="resetFilters"
-        >
-          {{ t('driver_freq.clear_filters') }}
-        </button>
       </div>
     </AppFilterBar>
 
@@ -271,10 +341,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { DocumentTextIcon, TableCellsIcon } from '@heroicons/vue/24/outline'
+import { DocumentTextIcon, FunnelIcon, TableCellsIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import {
   downloadDriverFrequencyPdf,
@@ -337,6 +410,44 @@ const filters = reactive({
   vehiclePlate: '',
   tripType: '',
 })
+
+const FREQ_FILTER_BAR_VIS_IDS = ['year', 'quarter', 'driverId', 'vehiclePlate', 'tripType']
+const FREQ_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(FREQ_FILTER_BAR_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(FREQ_FILTER_BAR_VIS_IDS, FREQ_FILTER_BAR_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+const freqFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(freqFilterBarRef)
+
+const filterBarVisibilityOptions = computed(() =>
+  FREQ_FILTER_BAR_VIS_IDS.map((id) => ({
+    id,
+    labelKey: `driver_freq.filter_vis_${id}`,
+  })),
+)
+
+const driverFilterSummary = computed(() => {
+  const id = filters.driverId
+  if (!id) return ''
+  return filterOptions.value.drivers?.find((d) => String(d.id) === String(id))?.name ?? String(id)
+})
+
+const tripTypeFilterSummary = computed(() => {
+  const hit = TRIP_TYPES.find((tt) => tt.value === filters.tripType)
+  return hit?.label ?? filters.tripType
+})
+
+function onDriverFreqFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
 
 const selectedDriverCode = ref('')
 const reportData = ref(null)
@@ -433,7 +544,14 @@ async function fetchReport() {
   }
 }
 
-onMounted(fetchReport)
+onMounted(() => {
+  onDriverFreqFilterBarEnter()
+  fetchReport()
+})
+
+onActivated(() => {
+  onDriverFreqFilterBarEnter()
+})
 watch(() => ({ ...filters }), fetchReport, { deep: true })
 
 const chartDriverTrips = computed(() => {

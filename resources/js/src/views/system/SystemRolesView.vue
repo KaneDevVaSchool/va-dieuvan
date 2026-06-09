@@ -1,8 +1,10 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onActivated, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   MagnifyingGlassIcon,
+  FunnelIcon,
+  XMarkIcon,
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -21,8 +23,35 @@ import { formatApiError } from '../../api/http'
 import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 import { debounceTrailing } from '../../composables/useDebounce'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
 
 const router = useRouter()
+
+const ROLE_FILTER_VIS_IDS = ['search']
+const ROLE_FILTER_VIS_DEFAULTS = { search: false }
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(ROLE_FILTER_VIS_IDS, ROLE_FILTER_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+const activeRoleSearchFilter = computed(() => (debouncedQuery.value.trim() ? 1 : 0))
+
+function onSystemRolesFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
+
+function clearRoleSearch() {
+  query.value = ''
+  debouncedQuery.value = ''
+}
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -156,7 +185,14 @@ async function remove(role) {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  onSystemRolesFilterBarEnter()
+  load()
+})
+
+onActivated(() => {
+  onSystemRolesFilterBarEnter()
+})
 </script>
 
 <template>
@@ -197,17 +233,31 @@ onMounted(load)
       </div>
     </div>
 
-    <!-- ── Search ──────────────────────────────────────────────────────────── -->
-    <div class="relative">
-      <MagnifyingGlassIcon class="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-      <input
-        v-model="query"
-        type="search"
-        placeholder="Tìm theo tên vai trò hoặc mô tả…"
-        class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-        @input="bumpQ"
-      />
-    </div>
+    <AppFilterBar>
+      <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeRoleSearchFilter">
+          <p class="text-xs font-semibold uppercase text-slate-500">Bộ lọc đang áp dụng</p>
+          <ul class="mt-2 text-sm text-slate-700">
+            <li v-if="query.trim()" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ query }}</span></li>
+            <li v-else class="text-slate-400">Chưa có điều kiện lọc</li>
+          </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3">
+            <label class="flex gap-2 text-sm"><input v-model="filterBarVisible.search" type="checkbox" class="h-4 w-4 rounded" /> Hiển thị ô tìm kiếm trên thanh</label>
+          </div>
+          <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm" @click="clearRoleSearch(); closeFilterMenu()">Xóa bộ lọc</button>
+        </AppFilterFunnelMenu>
+        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
+        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" @click="clearRoleSearch">
+          <FunnelIcon class="h-5 w-5" /><XMarkIcon class="h-3 w-3 text-rose-500" />
+        </button>
+      </div>
+      <div v-if="hasVisibleBarFilters" class="mt-2 border-t border-slate-100 pt-2 dark:border-slate-700">
+        <div class="relative">
+          <MagnifyingGlassIcon class="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input v-model="query" type="search" placeholder="Tìm theo tên vai trò hoặc mô tả…" class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm dark:border-slate-700 dark:bg-slate-900" @input="bumpQ" />
+        </div>
+      </div>
+    </AppFilterBar>
 
     <!-- ── Loading ─────────────────────────────────────────────────────────── -->
     <div v-if="loading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -41,54 +41,63 @@
       </div>
     </div>
 
-    <!-- Filter bar -->
-    <div class="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-      <div class="relative min-w-[14rem] flex-1">
-        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
-          v-model="filters.search"
-          type="search"
-          placeholder="Tìm theo tên, mã HS, SĐT..."
-          class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-va-500 focus:outline-none focus:ring-2 focus:ring-va-500/20"
-        />
+    <AppFilterBar>
+      <div ref="tpStudentFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Bộ lọc đang áp dụng</p>
+          <ul class="mt-2 space-y-2 text-sm text-slate-700">
+            <li v-if="filters.search" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ filters.search }}</span></li>
+            <li v-if="filters.class_name" class="flex justify-between gap-2"><span class="text-slate-500">Lớp</span><span class="font-medium">{{ filters.class_name }}</span></li>
+            <li v-if="filters.transport_status" class="flex justify-between gap-2"><span class="text-slate-500">Trạng thái</span><span class="font-medium">{{ transportStatusLabel(filters.transport_status) }}</span></li>
+            <li v-if="filters.program_id" class="flex justify-between gap-2"><span class="text-slate-500">Chương trình</span><span class="truncate font-medium">{{ programFilterLabel }}</span></li>
+            <li v-if="filters.grade" class="flex justify-between gap-2"><span class="text-slate-500">Khối</span><span class="font-medium">{{ filters.grade }}</span></li>
+            <li v-if="activeFilterCount === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
+          </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3">
+            <p class="text-[11px] font-semibold uppercase text-violet-700">Hiển thị bộ lọc trên thanh</p>
+            <ul class="mt-2 space-y-2">
+              <li v-for="opt in filterBarVisibilityOptions" :key="opt.id" class="flex gap-2">
+                <input :id="'tp-stu-vis-' + opt.id" v-model="filterBarVisible[opt.id]" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                <label :for="'tp-stu-vis-' + opt.id" class="text-sm text-slate-700">{{ opt.label }}</label>
+              </li>
+            </ul>
+          </div>
+          <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm" @click="clearFilters(); closeFilterMenu()">Xóa tất cả bộ lọc</button>
+        </AppFilterFunnelMenu>
+        <div class="hidden h-6 w-px bg-slate-200 sm:block" />
+        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 hover:bg-slate-100" @click="clearFilters">
+          <FunnelIcon class="h-5 w-5" /><XMarkIcon class="h-3 w-3 text-rose-500" />
+        </button>
+        <span class="ml-auto text-xs text-slate-400">
+          Hiển thị <span class="font-semibold text-slate-600">{{ items.length }}</span> / {{ stats.total }} học sinh
+        </span>
       </div>
-
-      <select v-model="filters.class_name" class="filter-select">
-        <option value="">Tất cả lớp</option>
-        <option v-for="c in filterOptions.classes" :key="c" :value="c">{{ c }}</option>
-      </select>
-
-      <select v-model="filters.transport_status" class="filter-select">
-        <option value="">Tất cả trạng thái vận chuyển</option>
-        <option value="transporting">Đang đưa đón</option>
-        <option value="pending">Chờ duyệt</option>
-        <option value="paused">Tạm dừng</option>
-        <option value="unregistered">Chưa đăng ký</option>
-      </select>
-
-      <select v-model="filters.program_id" class="filter-select">
-        <option value="">Tất cả chương trình</option>
-        <option v-for="p in filterOptions.programs" :key="p.id" :value="p.id">{{ p.name }}</option>
-      </select>
-
-      <select v-model="filters.grade" class="filter-select">
-        <option value="">Tất cả khối</option>
-        <option v-for="g in filterOptions.grades" :key="g" :value="g">{{ g }}</option>
-      </select>
-
-      <button
-        v-if="hasActiveFilters"
-        type="button"
-        class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-        @click="clearFilters"
-      >
-        <XMarkIcon class="h-4 w-4" /> Xóa lọc
-      </button>
-
-      <span class="ml-auto text-xs text-slate-400">
-        Hiển thị <span class="font-semibold text-slate-600">{{ items.length }}</span> / {{ stats.total }} học sinh
-      </span>
-    </div>
+      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2">
+        <div v-if="filterBarVisible.search" class="relative min-w-[14rem] flex-1">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input v-model="filters.search" type="search" placeholder="Tìm theo tên, mã HS…" class="h-9 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm focus:ring-2 focus:ring-teal-500/20" />
+        </div>
+        <select v-if="filterBarVisible.class_name" v-model="filters.class_name" class="filter-select" :class="filters.class_name ? 'text-slate-900' : 'text-slate-500'">
+          <option value="">Lớp</option>
+          <option v-for="c in filterOptions.classes" :key="c" :value="c">{{ c }}</option>
+        </select>
+        <select v-if="filterBarVisible.transport_status" v-model="filters.transport_status" class="filter-select" :class="filters.transport_status ? 'text-slate-900' : 'text-slate-500'">
+          <option value="">Trạng thái vận chuyển</option>
+          <option value="transporting">Đang đưa đón</option>
+          <option value="pending">Chờ duyệt</option>
+          <option value="paused">Tạm dừng</option>
+          <option value="unregistered">Chưa đăng ký</option>
+        </select>
+        <select v-if="filterBarVisible.program_id" v-model="filters.program_id" class="filter-select" :class="filters.program_id ? 'text-slate-900' : 'text-slate-500'">
+          <option value="">Chương trình</option>
+          <option v-for="p in filterOptions.programs" :key="p.id" :value="p.id">{{ p.name }}</option>
+        </select>
+        <select v-if="filterBarVisible.grade" v-model="filters.grade" class="filter-select" :class="filters.grade ? 'text-slate-900' : 'text-slate-500'">
+          <option value="">Khối</option>
+          <option v-for="g in filterOptions.grades" :key="g" :value="g">{{ g }}</option>
+        </select>
+      </div>
+    </AppFilterBar>
 
     <!-- Table -->
     <div v-if="loading" class="flex items-center justify-center rounded-xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
@@ -188,14 +197,18 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   PlusIcon, ArrowPathIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, MagnifyingGlassIcon,
-  XMarkIcon, UsersIcon, TruckIcon, ClockIcon, UserMinusIcon, PencilSquareIcon,
+  XMarkIcon, FunnelIcon, UsersIcon, TruckIcon, ClockIcon, UserMinusIcon, PencilSquareIcon,
   TrashIcon, AcademicCapIcon, CalendarDaysIcon, PauseCircleIcon, ExclamationCircleIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import { useDetailsAutoCloseWithin } from '../../composables/useDetailsAutoClose.js'
 import AppRowActionsMenu from '../../components/ui/AppRowActionsMenu.vue'
 import TpStudentFormModal from '../../components/transportProgram/TpStudentFormModal.vue'
 import { listStudents, deleteStudent, exportStudentsList } from '../../api/transportProgram'
@@ -215,9 +228,56 @@ const meta = reactive({ current_page: 1, last_page: 1, per_page: 15, total: 0 })
 const filters = reactive({ search: '', class_name: '', transport_status: '', program_id: '', grade: '', page: 1 })
 let timer = null
 
-const hasActiveFilters = computed(
-  () => !!(filters.search || filters.class_name || filters.transport_status || filters.program_id || filters.grade),
-)
+const TP_STU_FILTER_VIS_IDS = ['search', 'class_name', 'transport_status', 'program_id', 'grade']
+const TP_STU_FILTER_VIS_DEFAULTS = Object.fromEntries(TP_STU_FILTER_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(TP_STU_FILTER_VIS_IDS, TP_STU_FILTER_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+const tpStudentFilterBarRef = ref(null)
+useDetailsAutoCloseWithin(tpStudentFilterBarRef)
+
+const filterBarVisibilityOptions = [
+  { id: 'search', label: 'Tìm kiếm' },
+  { id: 'class_name', label: 'Lớp' },
+  { id: 'transport_status', label: 'Trạng thái vận chuyển' },
+  { id: 'program_id', label: 'Chương trình' },
+  { id: 'grade', label: 'Khối' },
+]
+
+const activeFilterCount = computed(() => {
+  let n = 0
+  if (filters.search?.trim()) n++
+  if (filters.class_name) n++
+  if (filters.transport_status) n++
+  if (filters.program_id) n++
+  if (filters.grade) n++
+  return n
+})
+
+const programFilterLabel = computed(() => {
+  const id = filters.program_id
+  if (!id) return ''
+  return filterOptions.programs.find((p) => String(p.id) === String(id))?.name ?? String(id)
+})
+
+function transportStatusLabel(s) {
+  const map = { transporting: 'Đang đưa đón', pending: 'Chờ duyệt', paused: 'Tạm dừng', unregistered: 'Chưa đăng ký' }
+  return map[s] ?? s
+}
+
+function onTpStudentFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
+
+const hasActiveFilters = computed(() => activeFilterCount.value > 0)
 const allSelected = computed(() => items.value.length > 0 && selected.value.length === items.value.length)
 
 async function load() {
@@ -383,7 +443,14 @@ function transportDotClass(s) {
   }[s] || 'bg-slate-400'
 }
 
-onMounted(load)
+onMounted(() => {
+  onTpStudentFilterBarEnter()
+  load()
+})
+
+onActivated(() => {
+  onTpStudentFilterBarEnter()
+})
 </script>
 
 <style scoped>

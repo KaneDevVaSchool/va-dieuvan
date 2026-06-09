@@ -1,8 +1,9 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import {
   ChevronDownIcon,
   MagnifyingGlassIcon,
+  FunnelIcon,
   PlusIcon,
   TrashIcon,
   XMarkIcon,
@@ -25,6 +26,27 @@ import { showAppError, showAppSuccess } from '../../composables/appMessage'
 import { confirmAction } from '../../composables/useConfirm'
 import { debounceTrailing } from '../../composables/useDebounce'
 import { useAuthStore } from '../../store'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
+import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+
+const FT_FILTER_VIS_IDS = ['search', 'status']
+const FT_FILTER_VIS_DEFAULTS = Object.fromEntries(FT_FILTER_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(FT_FILTER_VIS_IDS, FT_FILTER_VIS_DEFAULTS)
+
+const filterMenuRef = ref(null)
+
+function onFeatureTogglesFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
 
 // ─── Nav clusters: featureKey → links ─────────────────────────────────────────
 // Tính một lần, dùng per-row khi expand
@@ -244,7 +266,14 @@ function toggleExpand(id) {
   expandedId.value = expandedId.value === id ? null : id
 }
 
-onMounted(load)
+onMounted(() => {
+  onFeatureTogglesFilterBarEnter()
+  load()
+})
+
+onActivated(() => {
+  onFeatureTogglesFilterBarEnter()
+})
 </script>
 
 <template>
@@ -264,37 +293,40 @@ onMounted(load)
       </Button>
     </div>
 
-    <!-- ── Filter bar ─────────────────────────────────────────────────────── -->
-    <div class="flex flex-wrap items-center gap-2">
-      <div class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
-        <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-        <input
-          v-model="searchRaw"
-          type="search"
-          placeholder="Tìm tính năng…"
-          aria-label="Tìm tính năng"
-          class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-        />
+    <AppFilterBar>
+      <div class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilters">
+          <p class="text-xs font-semibold uppercase text-slate-500">Bộ lọc đang áp dụng</p>
+          <ul class="mt-2 space-y-2 text-sm text-slate-700">
+            <li v-if="searchRaw.trim()" class="flex justify-between gap-2"><span class="text-slate-500">Tìm kiếm</span><span class="truncate font-medium">{{ searchRaw }}</span></li>
+            <li v-if="filterStatus !== 'all'" class="flex justify-between gap-2"><span class="text-slate-500">Trạng thái</span><span class="font-medium">{{ STATUS_OPTS.find(o => o.value === filterStatus)?.label }}</span></li>
+            <li v-if="activeFilters === 0" class="text-slate-400">Chưa có điều kiện lọc</li>
+          </ul>
+          <div class="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+            <p class="text-[11px] font-semibold uppercase text-violet-700">Hiển thị bộ lọc trên thanh</p>
+            <ul class="mt-2 space-y-2">
+              <li class="flex gap-2"><input id="ft-vis-search" v-model="filterBarVisible.search" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-search" class="text-sm">Tìm kiếm</label></li>
+              <li class="flex gap-2"><input id="ft-vis-status" v-model="filterBarVisible.status" type="checkbox" class="h-4 w-4 rounded" /><label for="ft-vis-status" class="text-sm">Trạng thái</label></li>
+            </ul>
+          </div>
+          <button type="button" class="mt-3 w-full rounded-lg border py-2 text-sm dark:border-slate-600" @click="resetFilters(); closeFilterMenu()">Xóa tất cả bộ lọc</button>
+        </AppFilterFunnelMenu>
+        <div class="hidden h-6 w-px bg-slate-200 sm:block dark:bg-slate-700" />
+        <button type="button" class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500" @click="resetFilters">
+          <FunnelIcon class="h-5 w-5" /><XMarkIcon class="h-3 w-3 text-rose-500" />
+        </button>
       </div>
-
-      <select
-        v-model="filterStatus"
-        aria-label="Lọc theo trạng thái"
-        class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-      >
-        <option v-for="opt in STATUS_OPTS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-
-      <button
-        v-if="activeFilters > 0"
-        type="button"
-        class="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-        @click="resetFilters"
-      >
-        <XMarkIcon class="h-4 w-4" aria-hidden="true" />
-        Xóa bộ lọc
-      </button>
-    </div>
+      <div v-if="hasVisibleBarFilters" class="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30">
+        <div v-if="filterBarVisible.search" class="relative min-w-0 w-full flex-1 sm:min-w-[12rem]">
+          <MagnifyingGlassIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input v-model="searchRaw" type="search" placeholder="Tìm tính năng…" class="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm dark:border-slate-600 dark:bg-slate-900" />
+        </div>
+        <select v-if="filterBarVisible.status" v-model="filterStatus" class="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-900" :class="filterStatus === 'all' ? 'text-slate-500' : 'text-slate-900'">
+          <option value="all">Trạng thái</option>
+          <option v-for="opt in STATUS_OPTS.filter(o => o.value !== 'all')" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+    </AppFilterBar>
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
     <div v-if="loading" class="space-y-2">

@@ -63,7 +63,7 @@
     <!-- Filters: wrapper z-index so dropdowns stack above the search card (sibling below in DOM) -->
     <div class="relative z-40">
       <AppFilterBar>
-        <div ref="tripsFilterBarRef" class="flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+        <div ref="tripsFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
           <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {{ t('trips_page.filter_menu_title') }}

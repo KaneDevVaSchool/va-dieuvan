@@ -36,7 +36,7 @@
     </header>
 
     <AppFilterBar>
-      <div ref="filterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+      <div ref="filterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
 
         <details ref="funnelRef" class="group relative">
           <summary
@@ -107,7 +107,34 @@
 
         <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
+        <div class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+            :title="t('filter_bar.clear_icon')"
+            @click="resetFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
+              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40" />
+            </span>
+          </button>
+          <button
+            type="button"
+            class="tr-rev-refresh"
+            :disabled="loading"
+            @click="reload"
+          >
+            <span v-if="loading" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            <template v-else>{{ t('cost_report.btn_refresh') }}</template>
+          </button>
+        </div>
+      </div>
+
+        <div
+          v-if="hasVisibleBarFilters"
+          class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
+        >
           <AppFilterDropdown
             v-if="filterControlVisible.date"
             root-class="shrink-0"
@@ -175,30 +202,6 @@
             </ul>
           </AppFilterDropdown>
         </div>
-
-        <div class="ml-auto flex shrink-0 items-center gap-1 pl-2 sm:gap-2 sm:pl-3">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
-            :title="t('filter_bar.clear_icon')"
-            @click="resetFilters"
-          >
-            <span class="relative inline-flex">
-              <FunnelIcon class="h-5 w-5" aria-hidden="true" />
-              <XMarkIcon class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40" />
-            </span>
-          </button>
-          <button
-            type="button"
-            class="tr-rev-refresh"
-            :disabled="loading"
-            @click="reload"
-          >
-            <span v-if="loading" class="inline-block size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            <template v-else>{{ t('cost_report.btn_refresh') }}</template>
-          </button>
-        </div>
-      </div>
     </AppFilterBar>
 
     <section aria-labelledby="cr-kpi" class="tr-rev-block">
@@ -458,7 +461,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   FunnelIcon,
@@ -499,7 +502,6 @@ const STATUS_PILL_CLASSES = {
 
 const CHART_PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#f97316']
 
-const COST_REPORT_FILTER_VISIBILITY_KEY = 'va.cost_report.filter_control_visibility_v1'
 const COST_REPORT_COL_VISIBILITY_KEY = 'va.cost_report.col_visibility_v1'
 const COST_REPORT_DETAIL_PER_PAGE_KEY = 'va.cost_report.detail_per_page_v1'
 
@@ -520,7 +522,7 @@ const COL_IDS = [
 const DEFAULT_DETAIL_PER_PAGE = 10
 
 function defaultFilterControlVisibility() {
-  return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, true]))
+  return Object.fromEntries(FILTER_CONTROL_IDS.map((id) => [id, false]))
 }
 
 function defaultColVisibility() {
@@ -789,20 +791,13 @@ function onDetailPerPageChange() {
   }
 }
 
-function loadFilterControlVisibility() {
-  try {
-    const raw = localStorage.getItem(COST_REPORT_FILTER_VISIBILITY_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    const base = defaultFilterControlVisibility()
-    for (const id of FILTER_CONTROL_IDS) {
-      if (typeof o[id] === 'boolean') base[id] = o[id]
-    }
-    Object.assign(filterControlVisible, base)
-  } catch {
-    /* ignore */
-  }
+function resetFilterBarVisibility() {
+  Object.assign(filterControlVisible, defaultFilterControlVisibility())
 }
+
+const hasVisibleBarFilters = computed(() =>
+  FILTER_CONTROL_IDS.some((id) => filterControlVisible[id] === true),
+)
 
 function loadColVisibility() {
   try {
@@ -828,18 +823,6 @@ function loadDetailPerPage() {
     /* ignore */
   }
 }
-
-watch(
-  filterControlVisible,
-  (v) => {
-    try {
-      localStorage.setItem(COST_REPORT_FILTER_VISIBILITY_KEY, JSON.stringify({ ...v }))
-    } catch {
-      /* ignore */
-    }
-  },
-  { deep: true },
-)
 
 watch(
   colVisible,
@@ -883,11 +866,19 @@ async function doExportPdf() {
   }
 }
 
+function onCostReportFilterBarEnter() {
+  resetFilterBarVisibility()
+}
+
 onMounted(() => {
-  loadFilterControlVisibility()
+  onCostReportFilterBarEnter()
   loadColVisibility()
   loadDetailPerPage()
   reload()
+})
+
+onActivated(() => {
+  onCostReportFilterBarEnter()
 })
 </script>
 

@@ -47,32 +47,12 @@
 
     <div class="relative z-40">
       <AppFilterBar>
-        <div ref="cargoFilterBarRef" class="relative flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
-          <details ref="funnelDetailsRef" class="group relative">
-            <summary
-              class="flex cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
-            >
-              <span class="relative inline-flex">
-                <FunnelIcon class="h-5 w-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
-                <span
-                  v-if="activeFilterCount > 0"
-                  class="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-500 px-1 text-[10px] font-bold leading-none text-white"
-                >
-                  {{ activeFilterCount }}
-                </span>
-              </span>
-              <ChevronDownIcon class="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </summary>
-            <div
-              class="absolute left-0 top-[calc(100%+8px)] z-[100] min-w-[260px] overflow-hidden rounded-2xl border border-violet-200/50 bg-white shadow-xl shadow-violet-500/10 ring-1 ring-slate-900/5 dark:border-violet-800/40 dark:bg-slate-900 dark:shadow-black/30 dark:ring-slate-950/50"
-            >
-              <p
-                class="border-b border-violet-100/80 bg-gradient-to-r from-violet-50/60 to-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:border-violet-900/40 dark:from-violet-950/50 dark:text-violet-300"
-              >
-                {{ t('dashboard_analytics.filter_applied_title') }}
-              </p>
-              <div class="p-3 pt-2">
-                <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+        <div ref="cargoFilterBarRef" class="flex w-full flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-2">
+          <AppFilterFunnelMenu ref="filterMenuRef" :badge-count="activeFilterCount">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {{ t('cargo_page.filter_menu_title') }}
+            </p>
+            <ul class="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-300">
                   <li class="flex justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-700">
                     <span class="text-slate-500 dark:text-slate-400">{{ t('dashboard_analytics.filter_period_label') }}</span>
                     <span class="font-medium text-slate-900 dark:text-slate-100">{{ currentPresetLabel }}</span>
@@ -106,42 +86,59 @@
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                     {{ t('trips_page.filter_show_controls_title') }}
                   </p>
+                  <p class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                    {{ t('trips_page.filter_show_controls_hint') }}
+                  </p>
                   <ul class="mt-2 max-h-[min(40vh,220px)] space-y-2 overflow-y-auto pr-0.5">
-                    <li v-for="fd in dimensionFilters" :key="'vis-' + fd.id" class="flex items-start gap-2">
+                    <li v-for="opt in cargoFilterVisOptions" :key="'vis-' + opt.id" class="flex items-start gap-2">
                       <input
-                        :id="'cargo-filter-vis-' + fd.id"
-                        v-model="filterDropdownVisible[fd.id]"
+                        :id="'cargo-filter-vis-' + opt.id"
+                        v-model="filterBarVisible[opt.id]"
                         type="checkbox"
                         class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-teal-600 focus:ring-teal-500/30 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-offset-slate-900"
                       />
                       <label
-                        :for="'cargo-filter-vis-' + fd.id"
+                        :for="'cargo-filter-vis-' + opt.id"
                         class="cursor-pointer text-sm leading-snug text-slate-700 dark:text-slate-300"
                       >
-                        {{ fd.label }}
+                        {{ t(opt.labelKey) }}
                       </label>
                     </li>
                   </ul>
                 </div>
                 <button
                   type="button"
-                  class="mt-3 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-                  @click="resetFilters"
+                  class="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                  @click="resetFilters(); closeFilterMenu()"
                 >
                   {{ t('dashboard_analytics.filter_clear_all') }}
                 </button>
-              </div>
-            </div>
-          </details>
+          </AppFilterFunnelMenu>
 
           <div class="hidden h-6 w-px bg-slate-200/90 sm:block dark:bg-slate-700" aria-hidden="true" />
 
-          <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
-            <label class="inline-flex min-w-0 shrink-0 items-center gap-1.5">
-              <span class="whitespace-nowrap text-xs font-medium text-slate-600 dark:text-slate-400">{{
-                t('dashboard_analytics.filter_period_label')
-              }}</span>
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-200"
+            :title="t('filter_bar.clear_icon')"
+            :aria-label="t('filter_bar.clear_icon')"
+            @click="resetFilters"
+          >
+            <span class="relative inline-flex">
+              <FunnelIcon class="h-5 w-5" />
+              <XMarkIcon
+                class="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-white text-rose-500 ring-1 ring-rose-100 dark:bg-slate-900 dark:ring-rose-900/40"
+              />
+            </span>
+          </button>
+        </div>
+
+        <div
+          v-if="hasVisibleBarFilters"
+          class="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-t border-violet-100/80 pt-2 dark:border-violet-900/30 sm:gap-x-3"
+        >
               <select
+                v-if="filterBarVisible.period"
                 :value="preset"
                 class="h-9 max-w-[min(100%,11rem)] rounded-md border-0 bg-white/90 px-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-slate-200/80 focus:outline-none focus:ring-2 focus:ring-teal-500/30 dark:bg-slate-950 dark:text-slate-100 dark:ring-slate-600"
                 :aria-label="t('dashboard_analytics.filter_period_label')"
@@ -149,9 +146,8 @@
               >
                 <option v-for="p in presetDefs" :key="p.id" :value="p.id">{{ p.label }}</option>
               </select>
-            </label>
 
-            <details class="group relative min-w-0">
+            <details v-if="filterBarVisible.dates" class="group relative min-w-0">
               <summary
                 class="flex max-w-full cursor-pointer list-none items-center gap-1.5 rounded-xl border border-white/90 bg-white/95 px-2.5 py-2 text-slate-700 shadow-sm ring-1 ring-slate-200/50 transition hover:border-teal-200/70 hover:bg-white hover:shadow-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:ring-slate-700/60 dark:hover:border-teal-800/40 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden"
               >
@@ -292,7 +288,6 @@
                 </select>
               </label>
             </template>
-          </div>
         </div>
       </AppFilterBar>
     </div>
@@ -428,7 +423,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onActivated, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -443,9 +438,12 @@ import {
   FunnelIcon,
   PlusIcon,
   TruckIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import Button from '../../components/ui/Button.vue'
 import AppFilterBar from '../../components/filters/AppFilterBar.vue'
+import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vue'
+import { useFilterBarVisibility } from '../../composables/useFilterBarVisibility.js'
 import DashboardEChart from '../../components/dashboard/DashboardEChart.vue'
 import { listCargoShipments } from '../../api/cargo'
 import { useNotificationStore } from '../../store/notificationCenter'
@@ -460,42 +458,38 @@ const kpiLoading = ref(false)
 const items = ref([])
 const meta = ref({})
 const filters = reactive({ status: '', from: '', to: '', q: '', page: 1, per_page: 20 })
-const funnelDetailsRef = ref(null)
+const filterMenuRef = ref(null)
 const cargoFilterBarRef = ref(null)
 useDetailsAutoCloseWithin(cargoFilterBarRef)
 
 const searchInput = ref('')
 const searchDebounce = ref(null)
 
-const CARGO_FILTER_ROW_IDS = ['status', 'search', 'per_page']
-const CARGO_FILTER_VISIBILITY_KEY = 'cargo-list-filter-dropdowns'
-const filterDropdownVisible = reactive(Object.fromEntries(CARGO_FILTER_ROW_IDS.map((id) => [id, true])))
+const CARGO_FILTER_BAR_VIS_IDS = ['period', 'dates', 'status', 'search', 'per_page']
+const CARGO_FILTER_BAR_VIS_DEFAULTS = Object.fromEntries(CARGO_FILTER_BAR_VIS_IDS.map((id) => [id, false]))
+const {
+  visible: filterBarVisible,
+  resetVisibility: resetFilterBarVisibility,
+  hasVisibleOnBar: hasVisibleBarFilters,
+} = useFilterBarVisibility(CARGO_FILTER_BAR_VIS_IDS, CARGO_FILTER_BAR_VIS_DEFAULTS)
 
-function loadFilterDropdownVisibility() {
-  try {
-    const raw = localStorage.getItem(CARGO_FILTER_VISIBILITY_KEY)
-    if (!raw) return
-    const o = JSON.parse(raw)
-    for (const id of CARGO_FILTER_ROW_IDS) {
-      if (typeof o[id] === 'boolean') {
-        filterDropdownVisible[id] = o[id]
-      }
-    }
-  } catch {
-    /* ignore */
-  }
+const cargoFilterVisOptions = computed(() =>
+  CARGO_FILTER_BAR_VIS_IDS.map((id) => ({
+    id,
+    labelKey:
+      id === 'status'
+        ? 'cargo_page.filter_vis_status'
+        : `trips_page.filter_vis_${id}`,
+  })),
+)
+
+function onCargoFilterBarEnter() {
+  resetFilterBarVisibility()
 }
 
-watch(
-  () => CARGO_FILTER_ROW_IDS.map((id) => filterDropdownVisible[id]),
-  () => {
-    try {
-      localStorage.setItem(CARGO_FILTER_VISIBILITY_KEY, JSON.stringify({ ...filterDropdownVisible }))
-    } catch {
-      /* ignore */
-    }
-  },
-)
+function closeFilterMenu() {
+  filterMenuRef.value?.close?.()
+}
 
 const CARGO_STATUS_VALUES = ['pending', 'picked_up', 'in_transit', 'delivered', 'failed', 'cancelled']
 
@@ -738,7 +732,9 @@ const dimensionFilters = computed(() => {
   ]
 })
 
-const visibleDimensionFilters = computed(() => dimensionFilters.value.filter((fd) => filterDropdownVisible[fd.id] !== false))
+const visibleDimensionFilters = computed(() =>
+  dimensionFilters.value.filter((fd) => filterBarVisible[fd.id] === true),
+)
 
 const activeFilterLines = computed(() => {
   const rows = []
@@ -937,7 +933,7 @@ function resetFilters() {
   preset.value = 'all'
   syncRangeForPreset('all')
   syncFiltersFromRange()
-  if (funnelDetailsRef.value) funnelDetailsRef.value.open = false
+  closeFilterMenu()
   reloadKpis()
   loadChartSeries()
   reload()
@@ -978,12 +974,16 @@ watch(searchInput, () => {
 })
 
 onMounted(() => {
-  loadFilterDropdownVisibility()
+  onCargoFilterBarEnter()
   syncRangeForPreset('all')
   syncFiltersFromRange()
   searchInput.value = filters.q
   reloadKpis()
   loadChartSeries()
   reload()
+})
+
+onActivated(() => {
+  onCargoFilterBarEnter()
 })
 </script>
