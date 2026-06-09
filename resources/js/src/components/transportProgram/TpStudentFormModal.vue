@@ -194,26 +194,30 @@ const props = defineProps({ student: { type: Object, default: null } })
 const emit = defineEmits(['close', 'saved'])
 const saving = ref(false)
 
-const form = reactive({
-  code: props.student?.code ?? '',
-  full_name: props.student?.full_name ?? '',
-  grade: props.student?.grade ?? '',
-  class_name: props.student?.class_name ?? '',
-  parent_name: props.student?.parent_name ?? '',
-  parent_phone: props.student?.parent_phone ?? '',
-  address: props.student?.address ?? '',
-  status: props.student?.status ?? 'active',
-  metadata: {
-    gender: props.student?.gender ?? '',
-    date_of_birth: props.student?.date_of_birth ?? '',
-    father_name: props.student?.father_name ?? '',
-    father_phone: props.student?.father_phone ?? '',
-    mother_name: props.student?.mother_name ?? '',
-    mother_phone: props.student?.mother_phone ?? '',
-    pickup_point: props.student?.pickup_point ?? '',
-    note: props.student?.note ?? '',
-  },
-})
+function buildForm(student) {
+  return {
+    code: student?.code ?? '',
+    full_name: student?.full_name ?? '',
+    grade: student?.grade ?? '',
+    class_name: student?.class_name ?? '',
+    parent_name: student?.parent_name ?? '',
+    parent_phone: student?.parent_phone ?? '',
+    address: student?.address ?? '',
+    status: student?.status ?? 'active',
+    metadata: {
+      gender: student?.gender ?? student?.metadata?.gender ?? '',
+      date_of_birth: student?.date_of_birth ?? student?.metadata?.date_of_birth ?? '',
+      father_name: student?.father_name ?? student?.metadata?.father_name ?? '',
+      father_phone: student?.father_phone ?? student?.metadata?.father_phone ?? '',
+      mother_name: student?.mother_name ?? student?.metadata?.mother_name ?? '',
+      mother_phone: student?.mother_phone ?? student?.metadata?.mother_phone ?? '',
+      pickup_point: student?.pickup_point ?? student?.metadata?.pickup_point ?? '',
+      note: student?.note ?? student?.metadata?.note ?? '',
+    },
+  }
+}
+
+const form = reactive(buildForm(props.student))
 
 async function submit() {
   saving.value = true

@@ -8,8 +8,10 @@ use App\Models\TpEnrollment;
 use App\Models\TpProgram;
 use App\Models\TpProgramDay;
 use App\Models\TpStudent;
+use App\Models\TpTripStudentLog;
 use App\Services\TransportProgram\AttendanceService;
 use App\Services\TransportProgram\ProgramEnrollmentService;
+use App\Services\TransportProgram\TripExecutionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -63,6 +65,7 @@ class TpDayAttendanceDemoSeeder extends Seeder
         $studentIds = $this->ensureDemoStudents();
         $this->enrollStudents($day->program, $studentIds);
         $this->seedMorningAttendanceSamples($day->fresh(), $studentIds);
+        $this->seedBoardedTimeSpread($day->fresh(), $this->demoDriver());
 
         $day = $day->fresh();
         $url = url("/mng/transport-program-days/{$day->id}/attendance?shift=morning");
@@ -268,6 +271,43 @@ class TpDayAttendanceDemoSeeder extends Seeder
         $day->update([
             'morning_attendance_status' => AttendanceService::STATUS_DRAFT,
         ]);
+    }
+
+    /** Giờ lên xe rải từ 06:02–06:58 để test bộ lọc khoảng giờ trên màn điểm danh. */
+    private function seedBoardedTimeSpread(TpProgramDay $day, Driver $driver): void
+    {
+        $execution = $day->execution()->first();
+        if (! $execution) {
+            try {
+                $execution = app(TripExecutionService::class)->start($day->fresh(), $driver);
+            } catch (\Throwable $e) {
+                $this->command?->warn('TpDayAttendanceDemoSeeder: không tạo được chuyến demo — '.$e->getMessage());
+
+                return;
+            }
+        }
+
+        $date = $day->scheduled_date->toDateString();
+        $times = ['06:02', '06:08', '06:15', '06:22', '06:30', '06:38', '06:45', '06:52', '06:58'];
+
+        $logs = $execution->studentLogs()
+            ->where('final_status', '!=', TpTripStudentLog::FINAL_ABSENT)
+            ->orderBy('student_id')
+            ->get();
+
+        foreach ($logs as $index => $log) {
+            $hm = $times[$index % count($times)];
+            $boardedAt = Carbon::parse("{$date} {$hm}:00", config('app.timezone'));
+            $log->update([
+                'initial_status' => 'boarded',
+                'final_status' => TpTripStudentLog::FINAL_BOARDED,
+                'boarded_at' => $boardedAt,
+            ]);
+        }
+
+        $execution->update(['total_boarded' => $logs->count()]);
+
+        $this->command?->info("TpDayAttendanceDemoSeeder: đã gán giờ lên xe cho {$logs->count()} học sinh (khoảng 06:02–06:58).");
     }
 
     private function demoDriver(): Driver

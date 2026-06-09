@@ -79,7 +79,14 @@
                   {{ initials(s.full_name) }}
                 </div>
                 <div class="min-w-0">
-                  <div class="truncate font-semibold text-slate-900">{{ s.full_name }}</div>
+                  <button
+                    type="button"
+                    class="max-w-full truncate rounded font-semibold text-left text-slate-900 hover:text-teal-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/40"
+                    :aria-label="t('tp_attendance_page.student_detail_open', { name: s.full_name })"
+                    @click="$emit('open-student', s)"
+                  >
+                    {{ s.full_name }}
+                  </button>
                   <div v-if="colOn('code')" class="text-xs text-slate-400">{{ s.code }}</div>
                   <div v-else-if="colOn('parent_phone') && s.parent_phone" class="text-xs text-slate-400">
                     PH: {{ s.parent_phone }}
@@ -191,6 +198,7 @@ defineEmits([
   'toggle-present',
   'reason-change',
   'note-blur',
+  'open-student',
 ])
 
 const { t } = useI18n()

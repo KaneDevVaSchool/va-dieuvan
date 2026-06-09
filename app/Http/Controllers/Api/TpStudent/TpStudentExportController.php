@@ -21,24 +21,13 @@ class TpStudentExportController extends Controller
         $user = $request->user();
         abort_unless($user && ($user->isSuperAdmin() || $user->can('tp_student.view') || $user->can('tp_student.manage')), 403);
 
-        $transportStatus = $request->query('transport_status');
-
         $students = TpStudent::query()
             ->with(['enrollments' => function ($q) {
                 $q->whereNull('unenrolled_at')
                     ->with('program:id,name,code,status,start_date')
                     ->latest('enrolled_at');
             }])
-            ->search($request->query('search'))
-            ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
-            ->when($request->query('grade'), fn ($q, $g) => $q->where('grade', $g))
-            ->when($request->query('class_name'), fn ($q, $c) => $q->where('class_name', $c))
-            ->when($request->query('campus_id'), fn ($q, $c) => $q->where('campus_id', $c))
-            ->when($request->query('program_id'), fn ($q, $p) => $q->whereHas(
-                'enrollments',
-                fn ($e) => $e->whereNull('unenrolled_at')->where('program_id', $p)
-            ))
-            ->when($transportStatus, fn ($q) => $this->presenter->applyTransportStatusFilter($q, (string) $transportStatus))
+            ->tap(fn ($q) => $this->presenter->applyListFilters($q, $request))
             ->orderBy('full_name')
             ->get();
 

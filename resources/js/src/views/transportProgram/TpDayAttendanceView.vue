@@ -343,20 +343,33 @@
               <option value="">{{ t('tp_attendance_page.filter_vis_grade') }}</option>
               <option v-for="g in gradeOptions" :key="g" :value="g">{{ g }}</option>
             </select>
-            <template v-if="filterBarVisible.boarded_time">
-              <input
-                v-model="filters.boardedFrom"
-                type="time"
-                class="h-9 rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80"
-                :aria-label="t('tp_attendance_page.filter_vis_boarded_time')"
-              />
-              <span class="text-xs text-slate-400">–</span>
-              <input
-                v-model="filters.boardedTo"
-                type="time"
-                class="h-9 rounded-lg border-0 bg-white/90 px-2 text-sm ring-1 ring-slate-200/80"
-              />
-            </template>
+            <div
+              v-if="filterBarVisible.boarded_time"
+              class="inline-flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-2.5 py-1.5 shadow-sm"
+            >
+              <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {{ t('tp_attendance_page.filter_boarded_range') }}
+              </span>
+              <label class="inline-flex items-center gap-1.5 text-sm text-slate-600">
+                <span class="whitespace-nowrap text-xs font-medium text-slate-500">{{ t('tp_attendance_page.filter_boarded_from') }}</span>
+                <input
+                  v-model="filters.boardedFrom"
+                  type="time"
+                  class="h-9 min-w-[7.5rem] rounded-lg border-0 bg-white px-2 text-sm font-medium tabular-nums text-slate-900 ring-1 ring-slate-200/90 focus:ring-2 focus:ring-teal-500/40"
+                  :aria-label="t('tp_attendance_page.filter_boarded_from')"
+                />
+              </label>
+              <span class="text-sm font-medium text-slate-300" aria-hidden="true">→</span>
+              <label class="inline-flex items-center gap-1.5 text-sm text-slate-600">
+                <span class="whitespace-nowrap text-xs font-medium text-slate-500">{{ t('tp_attendance_page.filter_boarded_to') }}</span>
+                <input
+                  v-model="filters.boardedTo"
+                  type="time"
+                  class="h-9 min-w-[7.5rem] rounded-lg border-0 bg-white px-2 text-sm font-medium tabular-nums text-slate-900 ring-1 ring-slate-200/90 focus:ring-2 focus:ring-teal-500/40"
+                  :aria-label="t('tp_attendance_page.filter_boarded_to')"
+                />
+              </label>
+            </div>
             <select
               v-if="filterBarVisible.sort"
               v-model="sortPreset"
@@ -397,6 +410,7 @@
         @toggle-present="togglePresent"
         @reason-change="onReasonChange"
         @note-blur="onAbsenceNoteBlur"
+        @open-student="openStudentDetail"
       >
         <template #bulk-actions>
           <Button variant="secondary" class="!py-1 !text-xs" :disabled="isConfirmed" @click="openNotifyPanel">
@@ -496,6 +510,14 @@
       @send="onSendNotify"
       @retry="onRetryNotify"
     />
+
+    <TpStudentDetailModal
+      :open="studentDetailOpen"
+      :student-id="studentDetailId"
+      :attendance-row="studentDetailRow"
+      :reasons="reasons"
+      @close="closeStudentDetail"
+    />
   </div>
 </template>
 
@@ -529,6 +551,7 @@ import AppFilterFunnelMenu from '../../components/filters/AppFilterFunnelMenu.vu
 import AttendanceStatsBar from './attendance/AttendanceStatsBar.vue'
 import AttendanceDataTable from './attendance/AttendanceDataTable.vue'
 import AttendanceParentNotifyPanel from './attendance/AttendanceParentNotifyPanel.vue'
+import TpStudentDetailModal from '../../components/transportProgram/TpStudentDetailModal.vue'
 
 import {
   confirmDayAttendance,
@@ -570,11 +593,30 @@ const exportingExcel = ref(false)
 const notifying = ref(false)
 const pendingRows = ref(new Set())
 
+const studentDetailOpen = ref(false)
+const studentDetailId = ref(null)
+const studentDetailRow = ref(null)
+
+function openStudentDetail(row) {
+  studentDetailId.value = row?.student_id ?? null
+  studentDetailRow.value = row ?? null
+  studentDetailOpen.value = true
+}
+
+function closeStudentDetail() {
+  studentDetailOpen.value = false
+  studentDetailId.value = null
+  studentDetailRow.value = null
+}
+
 const data = ref(null)
 const reasons = ref([])
 const siblingDays = ref([])
 
-const filterBarDefaults = Object.fromEntries(ATTENDANCE_FILTER_VIS_IDS.map((id) => [id, false]))
+const filterBarDefaults = {
+  ...Object.fromEntries(ATTENDANCE_FILTER_VIS_IDS.map((id) => [id, false])),
+  boarded_time: true,
+}
 const { visible: filterBarVisible, resetVisibility: resetFilterBarVisibility, hasVisibleOnBar: hasVisibleBarFilters } =
   useFilterBarVisibility(ATTENDANCE_FILTER_VIS_IDS, filterBarDefaults)
 

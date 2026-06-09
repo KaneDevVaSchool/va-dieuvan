@@ -128,17 +128,10 @@ export function useTpAttendanceList(getItems) {
     } else if (filters.marked === 'not_marked') {
       rows = rows.filter((r) => r.status === 'attending' && !r.boarded_at)
     }
-    if (filters.boardedFrom) {
-      rows = rows.filter((r) => {
-        if (!r.boarded_at) return false
-        return String(r.boarded_at).slice(11, 16) >= filters.boardedFrom
-      })
-    }
-    if (filters.boardedTo) {
-      rows = rows.filter((r) => {
-        if (!r.boarded_at) return false
-        return String(r.boarded_at).slice(11, 16) <= filters.boardedTo
-      })
+    if (filters.boardedFrom || filters.boardedTo) {
+      const fromHm = filters.boardedFrom || null
+      const toHm = filters.boardedTo || null
+      rows = rows.filter((r) => matchesBoardedTimeRange(r, fromHm, toHm))
     }
 
     const keyFn = SORT_KEYS[sort.key] || SORT_KEYS.student
@@ -251,6 +244,28 @@ export function attendanceStatusLabel(s, t) {
   if (s.display_status === 'present') return t('tp_attendance_page.status_present')
   if (s.display_status === 'excused') return t('tp_attendance_page.status_excused')
   return t('tp_attendance_page.status_unexcused')
+}
+
+/** @returns {string|null} HH:mm theo giờ máy người dùng */
+export function boardedTimeHm(iso) {
+  if (!iso) return null
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return null
+    const h = String(d.getHours()).padStart(2, '0')
+    const m = String(d.getMinutes()).padStart(2, '0')
+    return `${h}:${m}`
+  } catch {
+    return null
+  }
+}
+
+function matchesBoardedTimeRange(row, fromHm, toHm) {
+  const hm = boardedTimeHm(row.boarded_at)
+  if (!hm) return false
+  if (fromHm && hm < fromHm) return false
+  if (toHm && hm > toHm) return false
+  return true
 }
 
 export function formatBoardedTime(iso) {

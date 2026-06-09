@@ -4,9 +4,40 @@ namespace App\Services\TpStudent;
 
 use App\Models\TpStudent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class TpStudentPresenter
 {
+    public function applyListFilters(Builder $query, Request $request): Builder
+    {
+        $transportStatus = $request->query('transport_status');
+
+        return $query
+            ->search($request->query('search'))
+            ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
+            ->when($request->query('grade'), fn ($q, $g) => $q->where('grade', $g))
+            ->when($request->query('class_name'), fn ($q, $c) => $q->where('class_name', $c))
+            ->when($request->query('campus_id'), fn ($q, $c) => $q->where('campus_id', $c))
+            ->when($request->query('gender'), fn ($q, $g) => $q->where('metadata->gender', $g))
+            ->when($request->query('pickup_point'), fn ($q, $p) => $q->where('metadata->pickup_point', $p))
+            ->when($request->filled('address_contains'), function ($q) use ($request) {
+                $q->where('address', 'like', '%'.$request->query('address_contains').'%');
+            })
+            ->when($request->filled('parent_phone'), function ($q) use ($request) {
+                $needle = '%'.$request->query('parent_phone').'%';
+                $q->where(function (Builder $inner) use ($needle) {
+                    $inner->where('parent_phone', 'like', $needle)
+                        ->orWhere('metadata->father_phone', 'like', $needle)
+                        ->orWhere('metadata->mother_phone', 'like', $needle);
+                });
+            })
+            ->when($request->query('program_id'), fn ($q, $p) => $q->whereHas(
+                'enrollments',
+                fn ($e) => $e->whereNull('unenrolled_at')->where('program_id', $p)
+            ))
+            ->when($transportStatus, fn ($q) => $this->applyTransportStatusFilter($q, (string) $transportStatus));
+    }
+
     public function applyTransportStatusFilter(Builder $query, string $status): Builder
     {
         $activeEnrollment = fn ($e) => $e->whereNull('unenrolled_at');

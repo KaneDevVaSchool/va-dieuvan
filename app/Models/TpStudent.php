@@ -53,9 +53,22 @@ class TpStudent extends Model
         }
         $like = '%'.$term.'%';
 
-        return $query->where(function (Builder $q) use ($like) {
+        return $query->where(function (Builder $q) use ($like, $term) {
             $q->where('full_name', 'like', $like)
-                ->orWhere('code', 'like', $like);
+                ->orWhere('code', 'like', $like)
+                ->orWhere('parent_name', 'like', $like)
+                ->orWhere('parent_phone', 'like', $like)
+                ->orWhere('address', 'like', $like)
+                ->orWhere('class_name', 'like', $like)
+                ->orWhere('grade', 'like', $like);
+
+            foreach (['gender', 'father_name', 'father_phone', 'mother_name', 'mother_phone', 'pickup_point', 'note'] as $key) {
+                $q->orWhere('metadata->'.$key, 'like', $like);
+            }
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($term))) {
+                $q->orWhere('metadata->date_of_birth', trim($term));
+            }
         });
     }
 }
