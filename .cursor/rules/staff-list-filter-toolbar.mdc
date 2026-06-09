@@ -1,50 +1,58 @@
 ---
 description: >-
   Thanh lọc list staff (requests, trips) — 2 hàng AppFilterBar, phễu + checkbox
-  hiển thị, reset visibility khi vào trang; tách state lọc vs hiển thị ô trên thanh.
+  hiển thị, xuất Excel (CSV) theo filter trên hàng 1, reset visibility khi vào trang;
+  tách state lọc vs hiển thị ô trên thanh.
 globs:
   - resources/js/src/views/requests/RequestsListView.vue
   - resources/js/src/views/trips/TripsListView.vue
   - resources/js/src/components/filters/**
   - resources/js/src/composables/useFilterBarVisibility.js
+  - resources/js/src/api/requests.js
 alwaysApply: false
 ---
 
 # Staff list filter toolbar
 
-Chi tiết Tailwind/vỏ `AppFilterBar`: xem skill `.cursor/skills/staff-list-filter-toolbar/SKILL.md` và pattern có sẵn trong `AppFilterBar.vue`, `AppFilterFunnelMenu.vue`, `AppFilterDropdown.vue`.
+Hướng dẫn đầy đủ: `.cursor/skills/staff-list-filter-toolbar/SKILL.md`.
 
 ## UX bắt buộc (production)
 
-1. **Hàng 1 gọn** — `flex flex-wrap gap-x-1`: chọn cột (icon + chevron), `AppFilterFunnelMenu`, divider, xóa lọc (phễu + X). **Không** chip Định kỳ/Ngoại khóa và **không** nút «Thuộc tính khác» — mọi ô (kể cả SLA, sắp xếp, số dòng, định kỳ, ngoại khóa) chỉ bật qua checkbox trong phễu.
-2. **Hàng 2** — `v-if="hasVisibleOnBar"`, `border-t`; chỉ render khi user bật ≥1 checkbox trong phễu.
-3. **Nhãn trên thanh** — không đặt `<span>` cạnh `select`; option đầu (`value=""`) = tên trường; giá trị chọn → chữ đậm `text-slate-900`.
-4. **Tách state** — `filters` / query API ≠ `filterBarVisible`; ẩn ô **không** xóa điều kiện; tóm tắt đầy đủ trong phễu.
-5. **Vào trang** — `onMounted` + `onActivated` → `resetVisibility()` + đóng panel phụ (vd. `extraFiltersOpen = false`); **không** reset `filters` / URL.
-6. **Không** persist visibility vào `localStorage`.
+1. **Hàng 1** — `flex w-full flex-wrap gap-x-1`: chọn cột (icon + chevron, `aria-label`), `AppFilterFunnelMenu`, divider, xóa lọc (phễu + X), **xuất Excel (CSV)** trong `ml-auto` (requests). **Không** chip Định kỳ/Ngoại khóa, **không** «Thuộc tính khác» — SLA, sort, per_page, định kỳ, ngoại khóa, chốt số HS chỉ bật qua checkbox phễu.
+2. **Hàng 2** — `v-if="hasVisibleOnBar"`, `border-t`; chỉ khi ≥1 checkbox phễu bật.
+3. **Nhãn trên thanh** — không `<span>` cạnh `select`; option đầu (`value=""`) = tên trường; đã chọn → `text-slate-900`.
+4. **Tách state** — `filters` / query ≠ `filterBarVisible`; ẩn ô không xóa điều kiện; tóm tắt đầy đủ trong phễu.
+5. **Vào trang** — `onMounted` + `onActivated` → `resetVisibility()`; **không** reset `filters` / URL.
+6. **Không** persist visibility `localStorage`.
+
+## Xuất CSV (requests)
+
+- Nút chỉ trên **hàng 1** thanh lọc, không trên toolbar bảng.
+- Dữ liệu = toàn bộ kết quả **theo filter hiện tại**: `buildListParams()` + lặp trang API (`per_page` tối đa 100) tới `meta.last_page`.
+- UTF-8 BOM; `exportingCsv`; disabled khi `meta.total === 0`.
+- i18n: `export_csv`, `export_csv_aria`, `export_csv_busy`, `export_csv_fail`.
 
 ## Composable
 
-`useFilterBarVisibility(ids, defaults)` trong `resources/js/src/composables/useFilterBarVisibility.js`:
-
-- `defaults`: mọi id → `false`.
-- `hasVisibleOnBar`: computed cho `v-if` hàng 2.
+`useFilterBarVisibility(ids, defaults)` — `defaults` mọi id `false`; `hasVisibleOnBar` cho hàng 2.
 
 ## Panel phễu
 
-1. Danh sách điều kiện đang áp dụng (kể cả khi ô ẩn trên thanh).
-2. «Hiển thị bộ lọc trên thanh» + checkbox `{page}-filter-vis-{id}`.
-3. Nút xóa hết → `resetFilters()` + đóng phễu.
+1. Điều kiện đang áp dụng (kể cả ô ẩn trên thanh).
+2. «Hiển thị bộ lọc trên thanh» + `{page}-filter-vis-{id}`.
+3. Xóa hết → `resetFilters()` + đóng phễu.
 
 ## Mẫu tham chiếu
 
-- `RequestsListView.vue` — `onRequestsFilterBarEnter`
+- `RequestsListView.vue` — `onRequestsFilterBarEnter`, `exportRequestsCsv`, `fetchAllFilteredRequestRows`
 - `TripsListView.vue` — `onTripsFilterBarEnter`
 
 ## Checklist màn list mới
 
 - [ ] `useFilterBarVisibility`, defaults all `false`
 - [ ] `onMounted` + `onActivated` → reset visibility
+- [ ] Hàng 1 `w-full`; export `ml-auto` nếu có
 - [ ] Hàng 2 `v-if="hasVisibleOnBar"`
-- [ ] Checkbox phễu khớp mọi ô hàng 1–2
-- [ ] i18n `filter_vis_*`, `filter_show_controls_*` (`vi.json` / `en.json`)
+- [ ] Checkbox phễu khớp mọi ô hàng 2
+- [ ] Export dùng cùng params list + phân trang đủ
+- [ ] i18n `filter_vis_*`, `filter_show_controls_*`, export keys (`vi.json` / `en.json`)
